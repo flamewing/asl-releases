@@ -1,8 +1,8 @@
-		ifndef  stddef37inc     ; verhindert Mehrfacheinbindung
+		ifndef  stddef37inc     ; avoid multiple inclusion
 stddef37inc     equ     1
 
 		save
-                listing off   ; no listing over this file
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *

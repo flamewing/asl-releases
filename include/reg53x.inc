@@ -1,33 +1,30 @@
-                save
-;                listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.41 - Datei REG53x.INC                                             *
-;*   								            *
-;*   Sinn : enthält Register- und Adreßdefinitionen für H8/53x              *
-;* 									    *
-;*   letzte Änderungen : 12.11.1995                                         *
-;*                                                                          *
-;****************************************************************************
-
-		ifndef  reg53xinc       ; verhindert Mehrfacheinbindung
-
+		ifndef  reg53xinc       ; avoid multiple inclusion
 reg53xinc       equ     1
 
+                save
+                listing off   		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File REG53x.INC                                              *
+;*   								            *
+;*   Contains Register and Address Definitions for H8/53x                   *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPUNAME<>"HD6475328")&&(MOMCPUNAME<>"HD6475348")&&(MOMCPUNAME<>"HD6475368")&&(MOMCPUNAME<>"HD6475388")
-                 fatal  "Falscher Prozessortyp eingestellt: nur HD6475328, HD6475348, HD6475368 oder HD6475388 erlaubt!"
+                 fatal  "wrong target selected: only HD6475328, HD6475348, HD6475368, or HD6475388 supported"
 		endif
 
 
                 if      MOMPASS=1
-		 message "H8/53x-Definitionen (C) 1994 Alfred Arnold"
+		 message "H8/53x Definitions (C) 1995 Alfred Arnold"
 		endif
 
-__cpunum        equ     MOMCPU-$6475000 ; ist halt bequemer...
+__cpunum        equ     MOMCPU-$6475000 ; more comfortable this way...
 
-		if	__cpunum=$328	; Peripherie verschiebt sich beim
-__regbase	 equ	$ff00		; H8/532 um eine Seite nach oben
+		if	__cpunum=$328	; For H8/532, register base moves
+__regbase	 equ	$ff00		; one page upward
                 elseif
 __regbase	 equ	$fe00
 		endif
@@ -36,23 +33,23 @@ __regbase	 equ	$fe00
 ; Adressen:
 
 		if 	__cpunum=$328
-IRAM		 equ	$fb80		; Anfang internes RAM (1 kByte)
-IRAMEND		 equ	$ff7f		; Ende internes RAM
+IRAM		 equ	$fb80		; Internal RAM Start (1 kByte)
+IRAMEND		 equ	$ff7f		; Internal RAM End
                 elseif
-IRAM		 equ	$f680		; Anfang internes RAM (2 kByte)
-IRAMEND		 equ	$fe7f		; Ende internes RAM
+IRAM		 equ	$f680		; Internal RAM Start (2 kByte)
+IRAMEND		 equ	$fe7f		; Internal RAM End
 		endif
 
-IROM		equ	$0000		; Anfang internes ROM
+IROM		equ	$0000		; Internal ROM Start
                 if	__cpunum=$368
-IROMEND		 equ	$f67f		; Ende internes ROM (62 kByte)
+IROMEND		 equ	$f67f		; Internal ROM End (62 kByte)
                 elseif
-IROMEND		 equ	$7fff		; Ende internes ROM (32 kByte)
+IROMEND		 equ	$7fff		; Internal ROM End (32 kByte)
 		endif
 
 
 ;----------------------------------------------------------------------------
-; CPU-Konfiguration:
+; CPU Configuration
 
 		if	__cpunum=$328
 __sysbase	 equ	$fff8
@@ -60,46 +57,46 @@ __sysbase	 equ	$fff8
 __sysbase	 equ	$ff10
 		endif
 
-WCR		equ	__sysbase+0		; Wait-state control register
-WC0		equ	0		; Anzahl Wartezyklen (rw)
+WCR		equ	__sysbase+0	; Wait State Control Register
+WC0		equ	0		; Number of Wait Cycles (rw)
 WC1		equ	1
-WMS0		equ	2		; Wartemodus (rw)
+WMS0		equ	2		; Wait Mode (rw)
 WMS1		equ	3
 
-RAMCR		equ	__sysbase+1	; RAM control register
-RAME		equ	7		; Freigabe internes RAM
+RAMCR		equ	__sysbase+1	; RAM Control Register
+RAME		equ	7		; Internal RAM Enable
 
-MDCR		equ	__sysbase+2	; Mode control register
-MDS0		equ	0		; Modusauswahl (r)
+MDCR		equ	__sysbase+2	; Mode Control Register
+MDS0		equ	0		; Mode Select (r)
 MDS1		equ	1
 MDS2		equ	2
 
-SBYCR		equ	__sysbase+3	; Software standby control register
-SSBY		equ	7		; Sleep/Standby-Moduswahl (rw)
+SBYCR		equ	__sysbase+3	; Software Standby Control Register
+SSBY		equ	7		; Sleep/Standby Mode Select (rw)
 
 ;----------------------------------------------------------------------------
-; Interruptsteuerung:
+; Interrupt Control
 
 		if	__cpunum=$328
-IPRA		 equ	$fff0		; Interrupt-Priorität IRQ1 / IRQ0 (rw)
-IPRB		 equ	$fff1		; Interrupt-Priorität FRT2 / FRT1 (rw)
-IPRC		 equ	$fff2		; Interrupt-Priorität 8-Bit-Timer / FRT3 (rw)
-IPRD		 equ	$fff3		; Interrupt-Priorität AD-Wandler / SCI (rw)
+IPRA		 equ	$fff0		; IRQ1 / IRQ0 Interrupt Priority (rw)
+IPRB		 equ	$fff1		; FRT2 / FRT1 Interrupt Priority (rw)
+IPRC		 equ	$fff2		; 8 Bit Timer Interrupt Priority / FRT3 (rw)
+IPRD		 equ	$fff3		; AD Converter / SCI Interrupt Priority (rw)
                 elseif
-IPRA		 equ	$ff00		; Interrupt-Priorität IRQ1 / IRQ0|I.-Timer (rw)
-IPRB		 equ	$ff01		; Interrupt-Priorität IRQ5|IRQ4 / IRQ3|IRQ2 (rw)
-IPRC		 equ	$ff02		; Interrupt-Priorität FRT2 / FRT1 (rw)
-IPRD		 equ	$ff03		; Interrupt-Priorität 8-Bit-Timer / FTR3 (rw)
-IPRE		 equ	$ff04		; Interrupt-Priorität SCI2 / SCI1 (rw)
-IPRF		 equ	$ff05		; Interrupt-Priorität - / AD-Wandler
+IPRA		 equ	$ff00		; IRQ1 / IRQ0|I.-Timer Interrupt Priority (rw)
+IPRB		 equ	$ff01		; IRQ5|IRQ4 / IRQ3|IRQ2 Interrupt Priority (rw)
+IPRC		 equ	$ff02		; FRT2 / FRT1 Interrupt Priority (rw)
+IPRD		 equ	$ff03		; 8 Bit Timer / FTR3 Interrupt Priority (rw)
+IPRE		 equ	$ff04		; SCI2 / SCI1 Interrupt Priority (rw)
+IPRF		 equ	$ff05		; - / AD Converter Interrupt Priority
                 endif
 
 ;----------------------------------------------------------------------------
 ; Data Transfer Controller:
 
 		if	__cpunum=$328
-DTEA		 equ	$fff4		; Umschaltung normaler/DTC-Interrupt
-DTEB		 equ	$fff5		; (Belegung der Nibbles analog zu IPRx)
+DTEA		 equ	$fff4		; Normal/DTC Interrupt Selection
+DTEB		 equ	$fff5		; (Population of Nibbles analogous to IPRx)
 DTEC		 equ	$fff6
 DTED		 equ	$fff7
                 elseif
@@ -116,174 +113,174 @@ DTEF		 equ	$ff0d
 
 __portbase	equ	__regbase+$80
 
-P1DR		equ	__portbase+2	; Datenregister Port 1 (rw/r)
-P1DDR		equ	__portbase+0	; Datenrichtungsregister Port 1 (w)
+P1DR		equ	__portbase+2	; Port 1 Data Register (rw/r)
+P1DDR		equ	__portbase+0	; Port 1 Data Direction Register (w)
 		if	__cpunum=$328
-P1CR		 equ	$fffc		; Steuerregister Port 1 (rw)
+P1CR		 equ	$fffc		; Port 1 Control Register (rw)
                 elseif
-SYSCR1		 equ	$fefc		; Systemsteuerregister 1 (rw)
+SYSCR1		 equ	$fefc		; System Control Register 1 (rw)
 		endif
-BRLE		equ	3		; P1CR/SYSCR1: Bus-Release-Modus
-NMIEG		equ	4		;              Flanke, auf die NMI-Eingang triggert
-IRQ0E		equ	5		;              Nutzung P15 als IRQ0 ?
-IRQ1E		equ	6		;              Nutzung P16 als IRQ1 ?
+BRLE		equ	3		; P1CR/SYSCR1: Bus Release Modus
+NMIEG		equ	4		;              Edge to trigger NMI Input
+IRQ0E		equ	5		;              Use P15 as IRQ0 ?
+IRQ1E		equ	6		;              Use P16 as IRQ1 ?
 
-P2DR		equ	__portbase+3	; Datenregister Port 2 (rw)
-P2DDR		equ	__portbase+1	; Datenrichtungsregister Port 2 (w)
+P2DR		equ	__portbase+3	; Port 2 Data Register (rw)
+P2DDR		equ	__portbase+1	; Port 2 Data Direction Register (w)
 
-P3DR		equ	__portbase+6	; Datenregister Port 3 (rw)
-P3DDR		equ	__portbase+4	; Datenrichtungsregister Port 3 (w)
+P3DR		equ	__portbase+6	; Port 3 Data Register (rw)
+P3DDR		equ	__portbase+4	; Port 3 Data Direction Register (w)
 
-P4DR		equ	__portbase+7	; Datenregister Port 4 (rw)
-P4DDR		equ	__portbase+5	; Datenrichtungsregister Port 4 (w)
+P4DR		equ	__portbase+7	; Port 4 Data Register (rw)
+P4DDR		equ	__portbase+5	; Port 4 Data Direction Register (w)
 
-P5DR		equ	__portbase+10	; Datenregister Port 5 (rw)
-P5DDR		equ	__portbase+8	; Datenrichtungsregister Port 5 (w)
+P5DR		equ	__portbase+10	; Port 5 Data Register (rw)
+P5DDR		equ	__portbase+8	; Port 5 Data Direction Register (w)
 
-P6DR		equ	__portbase+11	; Datenregister Port 6 (rw)
-P6DDR		equ	__portbase+9	; Datenrichtungsregister Port 6 (w)
+P6DR		equ	__portbase+11	; Port 6 Data Register (rw)
+P6DDR		equ	__portbase+9	; Port 6 Data Direction Register (w)
 		if	__cpunum<>$328
-SYSCR2		 equ	$fefd		; Systemsteuerregister 2 (w)
-P9SCI2E		 equ	0		; P92..P94 für SCI2 nutzen ?
-P9PWME		 equ	1		; P92..P94 für PWM nutzen ?
-P6PWME		 equ	2		; P61..P63 als PWM-Ausgang nutzen ?
-IRQ2E		 equ	3		; Nutzung P60 als IRQ2 ?
-IRQ3E		 equ	4		; Nutzung P61 als IRQ3 ?
-IRQ4E		 equ	5		; Nutzung P62 als IRQ4 ?
-IRQ5E		 equ	6		; Nutzung P63 als IRQ5 ?
+SYSCR2		 equ	$fefd		; System Control Register 2 (w)
+P9SCI2E		 equ	0		; Use P92..P94 for SCI2
+P9PWME		 equ	1		; Use P92..P94 for PWM
+P6PWME		 equ	2		; Use P61..P63 as PWM Output
+IRQ2E		 equ	3		; Use P60 as IRQ2 ?
+IRQ3E		 equ	4		; Use P61 as IRQ3 ?
+IRQ4E		 equ	5		; Use P62 as IRQ4 ?
+IRQ5E		 equ	6		; Use P63 as IRQ5 ?
                 endif
 
-P7DR            equ     __portbase+14   ; Datenregister Port 7 (rw)
-P7DDR		equ	__portbase+12	; Datenrichtungsregister Port 7 (w)
+P7DR            equ     __portbase+14   ; Port 7 Data Register (rw)
+P7DDR		equ	__portbase+12	; Port 7 Data Direction Register (w)
 
-P8DR		equ	__portbase+15	; Datenregister Port 8 (r)
+P8DR		equ	__portbase+15	; Port 8 Data Register (r)
 
                 if      __cpunum=$388
-P9DR             equ    __portbase+18   ; Datenregister Port 9 (r)
+P9DR             equ    __portbase+18   ; Port 9 Data Register (r)
 
-PADR             equ    __portbase+19   ; Datenregister Port A (rw)
-PADDR            equ    __portbase+17   ; Datenrichtungsregister Port A (w)
+PADR             equ    __portbase+19   ; Port A Data Register (rw)
+PADDR            equ    __portbase+17   ; Port A Data Direction Register (w)
 
-PBDR             equ    __portbase+22   ; Datenregister Port B (rw)
-PBDDR            equ    __portbase+20   ; Datenrichtungsregister Port B (w)
-PBPCR            equ    __portbase+24   ; Pullup-Register Port B (w)
+PBDR             equ    __portbase+22   ; Port B Data Register (rw)
+PBDDR            equ    __portbase+20   ; Port B Data Direction Register (w)
+PBPCR            equ    __portbase+24   ; Port B Pullup Register (w)
 
-PCDR             equ    __portbase+23   ; Datenregister Port C (rw)
-PCDDR            equ    __portbase+21   ; Datenrichtungsregister Port C (w)
-PCPCR            equ    __portbase+25   ; Pullup-Register Port C (w)
+PCDR             equ    __portbase+23   ; Port C Data Register (rw)
+PCDDR            equ    __portbase+21   ; Port C Data Direction Register (w)
+PCPCR            equ    __portbase+25   ; Port C Pullup Register (w)
                 elseif  __cpunum=$328
-P9DR             equ    __portbase+$7f  ; Datenregister Port 9 (rw)
-P9DDR            equ    __portbase+$7e  ; Datenrichtungsregister Port 9 (w)
+P9DR             equ    __portbase+$7f  ; Port 9 Data Register (rw)
+P9DDR            equ    __portbase+$7e  ; Port 9 Data Direction Register (w)
                 elseif
-P9DR             equ    __portbase+$ff  ; Datenregister Port 9 (rw)
-P9DDR            equ    __portbase+$fe  ; Datenrichtungsregister Port 9 (w)
+P9DR             equ    __portbase+$ff  ; Port 9 Data Register (rw)
+P9DDR            equ    __portbase+$fe  ; Port 9 Data Direction Register (w)
                 endif
 
 ;----------------------------------------------------------------------------
 ; Timer:
 
 __deftimer      macro   Base,NAME
-TCR{NAME}	equ	Base+0		; Steuerregister (rw)
-TCSR{NAME}	equ	Base+1		; Steuer/Statusregister (rw/r)
-FRC{NAME}	equ	Base+2		; Zählerregister (rw, 16 Bit)
-OCRA{NAME}	equ	Base+4		; Vergleicher A (rw, 16 Bit)
-OCRB{NAME}	equ	Base+6		; Vergleicher B (rw, 16 Bit)
-ICR{NAME}	equ	Base+8		; Eingabe-Fangregister (r, 16 Bit)
+TCR{NAME}	equ	Base+0		; Control Register (rw)
+TCSR{NAME}	equ	Base+1		; Control/Status Register (rw/r)
+FRC{NAME}	equ	Base+2		; Count Register (rw, 16 Bit)
+OCRA{NAME}	equ	Base+4		; Comparator A (rw, 16 Bit)
+OCRB{NAME}	equ	Base+6		; Comparator B (rw, 16 Bit)
+ICR{NAME}	equ	Base+8		; Input Capture Register (r, 16 Bit)
 		endm
 
 		__deftimer __regbase+$90,"1"
 		__deftimer __regbase+$a0,"2"
 		__deftimer __regbase+$b0,"3"
 
-CKS0		equ	0		; TCRx: Taktquellenwahl (rw)
+CKS0		equ	0		; TCRx: Clock Source Select (rw)
 CKS1		equ	1
-OEA		equ	2		;       Vergleichsergebnis OCRA ausgeben ? (rw)
-OEB		equ	3		;       Vergleichsergebnis OCRB ausgeben ? (rw)
-OVIE		equ	4		;       Interrupt bei FRC-Überlauf auslösen? (rw)
-OCIEA		equ	5		;       Interrupt bei Gleichheit mit OCRA auslösen? (rw)
-OCIEB		equ	6		;       Interrupt bei Gleichheit mit OCRB auslösen? (rw)
-ICIE		equ	7		;       Interrupt bei ICR-Fang auslösen? (rw)
+OEA		equ	2		;       Output Comparison Result OCRA (rw)
+OEB		equ	3		;       Output Comparison Result OCRB (rw)
+OVIE		equ	4		;       FRC Overflow Interrupt Enable (rw)
+OCIEA		equ	5		;       OCRA Compare Match Interrupt Enable (rw)
+OCIEB		equ	6		;       OCRB Compare Match Interrupt Enable (rw)
+ICIE		equ	7		;       ICR Capture Interrupt Enable (rw)
 
-CCLRA		equ	0		; TCSRx: FRC bei Gleichheit mit OCRA rücksetzen ? (rw)
-IEDG		equ	1		;	 Eingabefang bei welcher Flanke ? (rw)
-OLVLA		equ	2		;	 Polarität für OCRA-Ausgangssignal (rw)
-OLVLB		equ	3		;	 Polarität für OCRB-Ausgangssignal (rw)
-OVF		equ	4		;	 FRC-Überlauf aufgetreten ? (r)
-OCFA		equ	5		;        war FRC=OCRA ? (r)
-OCFB		equ	6		;        war FRC=OCRB ? (r)
-ICF		equ	7		;        Eingabe-Fang aufgetreten ? (r)
+CCLRA		equ	0		; TCSRx: Reset FRC upon OCRA Compare Match (rw)
+IEDG		equ	1		;	 Input Capture Edge Select (rw)
+OLVLA		equ	2		;	 OCRA Output Signal Polarity Select (rw)
+OLVLB		equ	3		;	 OCRB Output Signal Polarity Select (rw)
+OVF		equ	4		;	 FRC Overflow Flag (r)
+OCFA		equ	5		;        FRC=OCRA ? (r)
+OCFB		equ	6		;        FRC=OCRB ? (r)
+ICF		equ	7		;        Input Capture Flag (r)
 
 ; 8-Bit-Timer:
 
 __tcntbase	equ	__regbase+$d0
 
-TCR4		equ	__tcntbase+0	; Steuerregister (rw)
-CKS2		equ	2		; Taktauswahl (Rest identisch zu FRCx)
-CCLR0		equ	3		; Rücksetzmodus
+TCR4		equ	__tcntbase+0	; Control Register (rw)
+CKS2		equ	2		; Clock Select (Remainder identical to FRCx)
+CCLR0		equ	3		; Reset Mode
 CCLR1		equ	4
-OVIE_4		equ	5		; Interrupt bei Überlauf auslösen ?
-CMIEA		equ	6		; Interrupt bei TCNT=TCORA?
-CMIEB		equ	7		; Interrupt bei TCNT=TCORB?
+OVIE_4		equ	5		; Overflow Interrupt Enable
+CMIEA		equ	6		; TCNT=TCORA Interrupt Enable
+CMIEB		equ	7		; TCNT=TCORB Interrupt Enable
 
-TCSR4		equ	__tcntbase+1	; Steuer/Statusregister (rw/r)
-OS0		equ	0		; Auswirkung von TCORA=TCNT auf TMO
+TCSR4		equ	__tcntbase+1	; Control/Status Register (rw/r)
+OS0		equ	0		; TCORA=TCNT -> TMO
 OS1		equ	1
-OS2		equ	2		; Auswirkung von TCORB=TCNT auf TMO
+OS2		equ	2		; TCORB=TCNT -> TMO
 OS3		equ	3
-OVF_4		equ	5		; Überlauf aufgetreten
-CMFA		equ	6		; TCNT=TCORA aufgetreten
-CMFB		equ	7		; TCNT=TCORB aufgetreten
+OVF_4		equ	5		; Overflow Flag
+CMFA		equ	6		; TCNT=TCORA Flag
+CMFB		equ	7		; TCNT=TCORB Flag
 
-TCORA		equ	__tcntbase+2	; Zeitkonstante 1 (rw)
-TCORB		equ	__tcntbase+3	; Zeitkonstante 2 (rw)
-TCNT		equ	__tcntbase+4	; Zählwert (rw)
+TCORA		equ	__tcntbase+2	; Time Constant 1 (rw)
+TCORB		equ	__tcntbase+3	; Time Constant 2 (rw)
+TCNT		equ	__tcntbase+4	; Count Value (rw)
 
 ;----------------------------------------------------------------------------
-; Pulsweitenmodulatoren:
+; Puls Width Modulators:
 
 __defpwm        macro   Base,NAME
-PW{NAME}_TCR	equ	Base		; Steuerregister (rw)
-PW{NAME}_DTR	equ	Base+1		; Pulsweitenregister (rw)
-PW{NAME}_TCNT	equ	Base+2		; Zählwert (rw)
+PW{NAME}_TCR	equ	Base		; Control Register (rw)
+PW{NAME}_DTR	equ	Base+1		; Pulse Width Register (rw)
+PW{NAME}_TCNT	equ	Base+2		; Count Value (rw)
 		endm
 
 		__defpwm __regbase+$c0,"1"
 		__defpwm __regbase+$c4,"2"
 		__defpwm __regbase+$c8,"3"
 
-OS		equ	6		; PWx_TCR: Logik des Ausgangs
-OE		equ	7		;          Ausgang freischalten
+OS		equ	6		; PWx_TCR: Output Logic
+OE		equ	7		;          Output Enable
 
 ;----------------------------------------------------------------------------
 ; Watchdog:
 
 __wdtbase	equ	__regbase+$ec
 
-WDT_TCSR_R	equ	__wdtbase+0	; Steuer/Statusregister (unterschied-
-WDT_TCSR_W	equ	__wdtbase+1	; liche Schreib/Leseadressen)
-TME		equ	5		; Timer freigeben
-WTIT		equ	6		; Watchdog/Timermodus
-WDT_OVF		equ	7		; Watchdog-Überlauf ?
+WDT_TCSR_R	equ	__wdtbase+0	; Control/Status Register (different
+WDT_TCSR_W	equ	__wdtbase+1	; Write/Read Addresses)
+TME		equ	5		; Timer Enable
+WTIT		equ	6		; Watchdog/Timer Mode
+WDT_OVF		equ	7		; Watchdog Overflow
 
-WDT_TCNT	equ	__wdtbase+1	; Zählregister (rw)
+WDT_TCNT	equ	__wdtbase+1	; Count Register (rw)
 
 		if	__cpunum<>$328
-RSTCSR_W	 equ	$ff14		; Reset-Register (unterschiedliche
-RSTCSR_R	 equ	$ff15		; Schreib/Leseadressen)
-RSTOE		 equ	6		; Watchdog-Reset nach außen geben ?
-WRST		 equ	7               ; Reset durch Watchdog ?
+RSTCSR_W	 equ	$ff14		; Reset Register (different
+RSTCSR_R	 equ	$ff15		; Write/Read Addresses)
+RSTOE		 equ	6		; Output Watchdog Reset
+WRST		 equ	7               ; Reset by Watchdog ?
                 endif
 
 ;----------------------------------------------------------------------------
 ; serielle Schnittstelle:
 
 __defsci        macro   Base,NAME
-SMR{NAME}	equ	Base+0		; Modusregister (rw)
-BRR{NAME}	equ	Base+1		; Bitratenregister (rw)
-SCR{NAME}	equ	Base+2		; Steuerregister (rw)
-TDR{NAME}	equ	Base+3		; Sendedaten (rw)
-SSR{NAME}	equ	Base+4		; Statusregister (rw)
-RDR{NAME}	equ	Base+5		; Empfangsdaten (r)
+SMR{NAME}	equ	Base+0		; Mode Register (rw)
+BRR{NAME}	equ	Base+1		; Bit Raten Register (rw)
+SCR{NAME}	equ	Base+2		; Control Register (rw)
+TDR{NAME}	equ	Base+3		; Transmit Data (rw)
+SSR{NAME}	equ	Base+4		; Status Register (rw)
+RDR{NAME}	equ	Base+5		; Receive Data (r)
 		endm
 
 		if	__cpunum=$328
@@ -293,52 +290,52 @@ RDR{NAME}	equ	Base+5		; Empfangsdaten (r)
 		 __defsci __regbase+$f0,"2"
 		endif
 
-STOP		equ	3		; SMRx: #Stopp-Bits
+STOP		equ	3		; SMRx: Number of Stop Bits
 O_E		equ	4		;       odd/even Parity
-PE		equ	5		;       mit/ohne Parität
-CHR		equ	6		;       7/8 Datenbits
-C_A		equ	7		;       synchron/asynchron
+PE		equ	5		;       with/without Parität
+CHR		equ	6		;       7/8 Data Bits
+C_A		equ	7		;       synchronous/asynchronous
 
-CKE0		equ	0		; SCRx: bei synchroner Kommunikation Takt an SCK ausgeben ?
-CKE1		equ	1		;       Takt intern/extern (-->SCK Ein-oder Ausgang) ?
-RE		equ	4		;       Empfänger freigeben
-TE		equ	5		;       Sender freigeben
-RIE		equ	6		;       Empfangs-Interrupt freigeben
-TIE		equ	7		;       Sende-Interrupt freigeben
+CKE0		equ	0		; SCRx: Output Clock if communicating synchronously
+CKE1		equ	1		;       Clock internal/external (-->SCK Input or Output)
+RE		equ	4		;       Receiver Enable
+TE		equ	5		;       Transmitter Enable
+RIE		equ	6		;       Receive Interrupt Enable
+TIE		equ	7		;       Transmit Interrupt Enable
 
-PER		equ	3		; SSRx: Paritäts-Fehler
-FER		equ	4		;       ungültiger Rahmen
-ORER		equ	5		;       Empfänger-Überlauf
-RDRF		equ     6		;       Empfänger voll ?
-TDRE		equ	7		;       Sender leer ?
+PER		equ	3		; SSRx: Parity Error
+FER		equ	4		;       Framing Error
+ORER		equ	5		;       Receiver Overflow
+RDRF		equ     6		;       Receiver Full
+TDRE		equ	7		;       Transmitter Empty
 
 ;----------------------------------------------------------------------------
-; A/D-Wandler
+; A/D Converter
 
 __adbase	equ	__regbase+$e0
 
-ADDRA		equ	__adbase+0	; Wandelergebnis Kanal A (r, 16Bit)
-ADDRB		equ	__adbase+2	; Wandelergebnis Kanal B (r, 16Bit)
-ADDRC		equ	__adbase+4	; Wandelergebnis Kanal C (r, 16Bit)
-ADDRD		equ	__adbase+6	; Wandelergebnis Kanal D (r, 16Bit)
+ADDRA		equ	__adbase+0	; Channel A Conversion Result (r, 16Bit)
+ADDRB		equ	__adbase+2	; Channel B Conversion Result (r, 16Bit)
+ADDRC		equ	__adbase+4	; Channel C Conversion Result (r, 16Bit)
+ADDRD		equ	__adbase+6	; Channel D Conversion Result (r, 16Bit)
 
-ADCSR		equ	__adbase+8	; Steuer/Statusregister (rw)
-CH0		equ	0		; Kanalauswahl
+ADCSR		equ	__adbase+8	; Control/Status Register (rw)
+CH0		equ	0		; Channel Selection
 CH1		equ	1
 CH2		equ	2
-CKS		equ	3		; Wandelzeit 274/138 Takte
-SCAN		equ	4		; Single Channel/Scan-Modus
-ADST		equ	5		; Wandler starten/stoppen
-ADIE		equ	6		; Interrupt bei Wandelende auslösen ?
-ADF		equ	7		; Wandlung abgeschlossen ?
+CKS		equ	3		; 274/138 Clocks Conversion Time
+SCAN		equ	4		; Single Channel/Scan-Mode
+ADST		equ	5		; Start/Stop Converter
+ADIE		equ	6		; End of Conversion Interrupt Enable
+ADF		equ	7		; End of Conversion Flag
 
 		if	__cpunum<>$328
-ADCR		 equ	__adbase+9	; Steuerregister (rw)
-TRGE             equ    7               ; externer Trigger ?
+ADCR		 equ	__adbase+9	; Control Register (rw)
+TRGE             equ    7               ; External Trigger
 		endif
 
 ;----------------------------------------------------------------------------
 
-		endif
+		restore                 ; re-allow listing
 
-		restore                 ; wieder erlauben
+		endif			; reg53xinc

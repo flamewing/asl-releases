@@ -1,27 +1,22 @@
-		save
-		listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.40 - Datei STDDEF2X.INC                                           *
-;*   								            *
-;*   Sinn : enthält die globalen Register-Definitionen für die              *
-;*          TMS320C2x Prozessoren                                           *
-;* 									    *
-;*   letzte Änderungen : 27.02.1994                                         *
-;*                                                                          *
-;****************************************************************************
-
-		ifndef  stddef2xinc     ; verhindert Mehrfacheinbindung
-
+		ifndef  stddef2xinc     ; avoid multiple inclusion
 stddef2xinc     equ     1
 
+		save
+		listing off   ; no listing over this file
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File STDDEF2X.INC                                            *
+;*   								            *
+;*   Holds register definitions for TMS320C2x Processors                    *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPUNAME<>"320C25") && (MOMCPUNAME<>"320C26") && (MOMCPUNAME<>"320C28")
-		 fatal  "Falscher Prozessortyp eingestellt: nur 320C25, 320C26 und 320C28 erlaubt!"
+		 fatal  "wrong target set: only 320C25, 320C26 und 320C28 supported"
 		endif
 
                 if      MOMPASS=1
-		 message "TMS320C2x Register-Definitionen (C) 1994 Thomas Sailer"
+		 message "TMS320C2x Register Definitions (C) 1994 Thomas Sailer"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -47,7 +42,6 @@ B3_P		equ	0fe00h
 
 ;---------------------------------------------------------------------------
 
-                endif
+                restore                 ; re-allow listing
 
-                restore                 ; wieder erlauben
-
+                endif			; stddef2xinc

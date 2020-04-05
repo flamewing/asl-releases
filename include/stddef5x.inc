@@ -1,27 +1,23 @@
-		save
-		listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.40 - Datei STDDEF2X.INC                                           *
-;*   								            *
-;*   Sinn : enthält die globalen Register-Definitionen für die              *
-;*          TMS320C5x Prozessoren                                           *
-;* 									    *
-;*   letzte Änderungen : 03.11.1995                                         *
-;*                                                                          *
-;****************************************************************************
-
-		ifndef  stddef5xinc     ; verhindert Mehrfacheinbindung
-
+		ifndef  stddef5xinc     ; avoid multiple inclusion
 stddef5xinc     equ     1
 
+		save
+		listing off		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File STDDEF2X.INC                                            *
+;*   								            *
+;*   Contains Global Register Definitions for TMS320C5x Processors          *                                           *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPU<>3279952) && (MOMCPU<>3279953) && (MOMCPU<>3279955)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 320C50, 320C51 und 320C53 erlaubt!"
+		 fatal  "wrong target selected: only 320C50, 320C51 und 320C53 supported"
 		endif
 
                 if      MOMPASS=1
-		 message "TMS320C5x Register-Definitionen (C) 1995 Thomas Sailer"
+		 message "TMS320C5x Register Definitions (C) 1995 Thomas Sailer"
 		endif
 
 ;----------------------------------------------------------------------------
@@ -103,7 +99,7 @@ PA15            res     1
 
 ;---------------------------------------------------------------------------
 
-                endif
+                restore                 ; allow listing again
 
-                restore                 ; wieder erlauben
+                endif			; stddef5xinc
 

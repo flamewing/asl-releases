@@ -1,19 +1,16 @@
+                ifndef  reg7000inc      ; avoid multiple inclusion
+reg7000inc      equ     1
+
                 save
-;                listing off   ; kein Listing über diesen File
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.41 - Datei REG7000.INC                                            *
+;*   AS 1.42 - File REG7000.INC                                             *
 ;*   								            *
-;*   Sinn : enthält SFR- und Bitdefinitionen für die TMS70Cxx-Prozessoren   *
-;* 									    *
-;*   letzte Änderungen : 15. 2.1997                                         *
+;*   Contains SFR and Bit Definitions for TMS70Cxx Processors               *
 ;*									    *
 ;****************************************************************************
-
-                ifndef  reg7000inc      ; verhindert Mehrfacheinbindung
-
-reg7000inc      equ     1
 
                 switch  MOMCPUNAME
                 case    "TMS70C40"
@@ -47,15 +44,15 @@ __group          equ     4
 IROM             equ     10000h
 __group          equ     4
                 elsecase
-                 fatal  "Fehler: nur TMS70Cxx-Prozessoren erlaubt!"
+                 fatal  "wrong target selected: only TMS70Cxx Processors supported"
                 endcase
 
                 if      MOMPASS=1
-                 message "TMS7000-Register-Definitionen (C) 1997 Alfred Arnold"
+                 message "TMS7000 Register Definitions (C) 1997 Alfred Arnold"
 		endif
 
 ;----------------------------------------------------------------------------
-; Speicherbereiche
+; Memory Areas
 
 IRAM            equ     0
 IROMEND         equ     0ffffh
@@ -66,7 +63,7 @@ IRAMEND          equ     255
                 endif
 
 ;----------------------------------------------------------------------------
-; Peripherie
+; Peripherals
 
 IOCNT0          equ     p0              ; I/O Control Register 0
 APORT            equ     p4             ; Port A Data
@@ -113,8 +110,6 @@ GDDR             equ     p33            ; Port G Data Direction Register
 
 ;----------------------------------------------------------------------------
 
-		endif
+		endif			; reg7000inc
 
-		restore                 ; wieder erlauben
-
-
+		restore                 ; allow listing again

@@ -1,36 +1,30 @@
-                save
-                listing off     ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.39 - Datei STDDEF96.INC                                           *
-;*                                                                          *
-;*   Sinn : enthält Register- und Speicheradressen für TLCS-900-Prozessoren *
-;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
-;*          aus dem Handbuch zur Prozessorfamilie TLCS-900                  *
-;*                                                                          *
-;*   Original von Ernst Ahlers, Oktober 1993                                *
-;*   für AS angepaßt von Alfred Arnold                                      *
-;*                                                                          *
-;*   letzte Änderungen :  30.10.1993                                        *
-;*                                                                          *
-;****************************************************************************
-
-                ifndef  stddef96inc     ; verhindert Mehrfacheinbindung
-
+                ifndef  stddef96inc     ; avoid multiple inclusion
 stddef96inc     equ     1
 
+                save
+                listing off		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - Datei STDDEF96.INC                                           *
+;*                                                                          *
+;*   Contains Register and Memory Addresses for TLCS-900 Processoren        *
+;*                                                                          *
+;*   Original by Ernst Ahlers, October 1993                                 *
+;*   Adapted to AS by Alfred Arnold                                         *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPU<>9879873)&&(MOMCPU<>9683265)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 96C141 oder 93C141 erlaubt"
+		 fatal  "wrong target selected: only 96C141 oder 93C141 allowed"
                 endif
 
                 if      MOMPASS=1
-                 message "TLCS-900(L)-Adreßdefinitionen"
+                 message "TLCS-900(L) Address Definitions"
                  message "(C) 1993 Ernst Ahlers, Alfred Arnold"
                 endif
 
 ;----------------------------------------------------------------------------
-; hier geht's los...
 
 P0              equ     0000H   ; Port 0 Register
 P0CR            equ     0002H   ; Port 0 Control
@@ -150,7 +144,7 @@ DMA1V           equ     007DH   ; fDMA 1 Start Vector
 DMA2V           equ     007EH   ; fDMA 2 Start Vector
 DMA3V           equ     007FH   ; fDMA 3 Start Vector
 
-; feste Speicherbereiche
+; Fixed Memory Areas
 
 IRAM            equ     000080H ; Internal RAM 1K...
 IRAMEND         equ     00047FH ; ...up to 00047FH
@@ -162,9 +156,7 @@ EXTMEM          equ     010000H ; External Memory
 MEMEND          equ     0FFFFFFH ; ...up to FFFFFFH
 
 ;---------------------------------------------------------------------------
-; das war's...
 
-                endif
+                restore		; allow listing again
 
-                restore
-
+                endif		; stddef96inc

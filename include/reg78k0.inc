@@ -1,72 +1,69 @@
-                save
-                listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.41 - Datei REG78K0.INC                                            *
-;*   								            *
-;*   Sinn : enthält Registerdefinitionen für 78K0 (uPD78070A)               *
-;* 									    *
-;*   letzte Änderungen :  1.10.1996                                         *
-;*                                                                          *
-;****************************************************************************
-
-                ifndef  regz78k0inc      ; verhindert Mehrfacheinbindung
-
+                ifndef  regz78k0inc     ; avoid multiple inclusion
 reg8k0inc       equ     1
 
+                save
+                listing off		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File REG78K0.INC                                             *
+;*   								            *
+;*   Contains Register Definitions for 78K0 (uPD78070A)                     *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPUNAME<>"78070")
-                 fatal  "Falscher Prozessortyp eingestellt: nur 78070 erlaubt!"
+                 fatal  "wrong target selected: only 78070 supported"
 		endif
 
 
                 if      MOMPASS=1
-                 message "78K0-Register-Definitionen (C) 1996 Alfred Arnold"
+                 message "78K0 Register Definitions (C) 1996 Alfred Arnold"
 		endif
 
 ;----------------------------------------------------------------------------
-; CPU-Kern
+; CPU Core
 
-SP              equ     0ff1ch          ; Stackpointer
+SP              equ     0ff1ch          ; Stack Pointer
 
-PSW             equ     0ff1eh          ; Statuswort
-
-;----------------------------------------------------------------------------
-; Taktgenerator
-
-PCC             equ     0fffbh          ; Steuerung Prozessortakt
-
-OSMS            equ     0fff2h          ; Taktteiler ein/ausschalten
-
-OSTS            equ     0fffah          ; Wartezeit, um nach STOP-Auflösung
+PSW             equ     0ff1eh          ; Processor Status Word
 
 ;----------------------------------------------------------------------------
-; Bus-Interface
+; Clock Generator
 
-EBTS            equ     0ff3fh          ; Multiplex an/aus (fest auf aus)
+PCC             equ     0fffbh          ; Prozessor Clock Control
 
-IMS             equ     0fff0h          ; Größe internes RAM (fest 1K)
+OSMS            equ     0fff2h          ; Clock Divider Enable/Disable
 
-MM              equ     0fff8h          ; Wait-State-Steuerung
+OSTS            equ     0fffah          ; Wait Time after STOP Resolution
 
 ;----------------------------------------------------------------------------
-; Interrupt-Steuerung
+; Bus Interface
 
-INTM0           equ     0ffech          ; Flankenwahl INTP0...INTP2
-INTM1           equ     0ffedh          ; Flankenwahl INTP3...INTP6
-SCS             equ     0ff47h          ; Auswahl Abtastrate INTP0
+EBTS            equ     0ff3fh          ; Multiplex on/off (hardwired to off)
 
-IF0L            equ     0ffe0h          ; Interrupts aufgetreten ?
+IMS             equ     0fff0h          ; Size of Internal RAM (hardwired to 1K)
+
+MM              equ     0fff8h          ; Wait State Control
+
+;----------------------------------------------------------------------------
+; Interrupt Control
+
+INTM0           equ     0ffech          ; INTP0...INTP2 Edge Selection
+INTM1           equ     0ffedh          ; INTP3...INTP6 Edge Selection
+SCS             equ     0ff47h          ; INTP0 Sample Rate Selection
+
+IF0L            equ     0ffe0h          ; Interrupt Flags
 IF0H            equ     0ffe1h
 IF0             equ     IF0L
 IF1L            equ     0ffe2h
 
-MK0L            equ     0ffe4h          ; Maskierungsregister
+MK0L            equ     0ffe4h          ; Mask Registers
 MK0H            equ     0ffe5h
 MK0             equ     IF0L
 MK1L            equ     0ffe6h
 
-PR0L            equ     0ffe8h          ; Prioritäten
+PR0L            equ     0ffe8h          ; Priorities
 PR0H            equ     0ffe9h
 PR0             equ     IF0L
 PR1L            equ     0ffeah
@@ -74,172 +71,173 @@ PR1L            equ     0ffeah
 ;----------------------------------------------------------------------------
 ; Ports
 
-P0              equ     0ff00h          ; Datenregister Port 0
-PM0             equ     0ff20h          ; Datenrichtungsregister Port 0
+P0              equ     0ff00h          ; Port 0 Data Register
+PM0             equ     0ff20h          ; Port 0 Data Direction Register
 
-P1              equ     0ff01h          ; Datenregister Port 1
-PM1             equ     0ff21h          ; Datenrichtungsregister Port 1
+P1              equ     0ff01h          ; Port 1 Data Register
+PM1             equ     0ff21h          ; Port 1 Data Direction Register
 
-P2              equ     0ff02h          ; Datenregister Port 2
-PM2             equ     0ff22h          ; Datenrichtungsregister Port 2
+P2              equ     0ff02h          ; Port 2 Data Register
+PM2             equ     0ff22h          ; Port 2 Data Direction Register
 
-P3              equ     0ff03h          ; Datenregister Port 3
-PM3             equ     0ff23h          ; Datenrichtungsregister Port 3
+P3              equ     0ff03h          ; Port 3 Data Register
+PM3             equ     0ff23h          ; Port 3 Data Direction Register
 
-P6              equ     0ff06h          ; Datenregister Port 6
-PM6             equ     0ff26h          ; Datenrichtungsregister Port 6
+P6              equ     0ff06h          ; Port 6 Data Register
+PM6             equ     0ff26h          ; Port 6 Data Direction Register
 
-P7              equ     0ff07h          ; Datenregister Port 7
-PM7             equ     0ff27h          ; Datenrichtungsregister Port 7
+P7              equ     0ff07h          ; Port 7 Data Register
+PM7             equ     0ff27h          ; Port 7 Data Direction Register
 
-P9              equ     0ff09h          ; Datenregister Port 9
-PM9             equ     0ff29h          ; Datenrichtungsregister Port 9
+P9              equ     0ff09h          ; Port 9 Data Register
+PM9             equ     0ff29h          ; Port 9 Data Direction Register
 
-P10             equ     0ff0ah          ; Datenregister Port 10
-PM10            equ     0ff2ah          ; Datenrichtungsregister Port10
+P10             equ     0ff0ah          ; Port 10 Data Register
+PM10            equ     0ff2ah          ; Port 10 Data Direction Register
 
-P12             equ     0ff0ch          ; Datenregister Port 12
-PM12            equ     0ff2ch          ; Datenrichtungsregister Port 12
+P12             equ     0ff0ch          ; Port 12 Data Register
+PM12            equ     0ff2ch          ; Port 12 Data Direction Register
 
-P13             equ     0ff0dh          ; Datenregister Port 13
-PM13            equ     0ff2dh          ; Datenrichtungsregister Port 13
+P13             equ     0ff0dh          ; Port 13 Data Register
+PM13            equ     0ff2dh          ; Port 13 Data Direction Register
 
-PUOH            equ     0fff3h          ; Pull-Up-Register Port 0..7
-PUOL            equ     0fff7h          ; Pull-Up-Register Port 8..13
+PUOH            equ     0fff3h          ; Port 0..7 Pull Up Register
+PUOL            equ     0fff7h          ; Port 8..13 Pull Up Register
 
 ;----------------------------------------------------------------------------
 ; Timer
 
-TM0             equ     0ff14h          ; Zählwert Timer 0
-CR00            equ     0ff10h          ; Vergleichs/Fangregister 0 Timer 0
-CR01            equ     0ff12h          ; Vergleichs/Fangregister 1 Timer 0
-TCL0            equ     0ff40h          ; Taktauswahl Timer 0
-TMC0            equ     0ff48h          ; Betriebsart Timer 0
-CRC0            equ     0ff4ch          ; Steuerung Fang/Vergleichsregister Timer 0
-TOC0            equ     0ff4eh          ; Ausgabesteuerung Timer 0
+TM0             equ     0ff14h          ; Timer 0 Counter Value
+CR00            equ     0ff10h          ; Timer 0 Capture/Compare Register 0
+CR01            equ     0ff12h          ; Timer 0 Capture/Compare Register 1
+TCL0            equ     0ff40h          ; Timer 0 Clock Select
+TMC0            equ     0ff48h          ; Timer 0 Operation Mode
+CRC0            equ     0ff4ch          ; Timer 0 Capture/Compare Register Control
+TOC0            equ     0ff4eh          ; Timer 0 Output Control
 
-TM1             equ     0ff18h          ; Zählwert Timer 1
-CR10            equ     0ff16h          ; Vergleichs/Fangregister Timer 1
-TCL1            equ     0ff41h          ; Taktauswahl Timer 1
-TMC1            equ     0ff49h          ; Betriebsart Timer 1
+TM1             equ     0ff18h          ; Timer 1 Counter Value
+CR10            equ     0ff16h          ; Timer 1 Capture/Compare Register
+TCL1            equ     0ff41h          ; Timer 1 Clock Select
+TMC1            equ     0ff49h          ; Timer 1 Operation Mode
 
-TM2             equ     0ff19h          ; Zählwert Timer 2
-CR20            equ     0ff17h          ; Vergleichs/Fangregister Timer 2
-TCL2            equ     0ff42h          ; Taktauswahl Timer 2 / Uhren-Timer / Watchdog / Summer
-TMC2            equ     0ff4ah          ; Betriebsart Timer 2 / Uhren-Timer
+TM2             equ     0ff19h          ; Timer 2 Counter Value
+CR20            equ     0ff17h          ; Timer 2 Capture/Compare Register
+TCL2            equ     0ff42h          ; Timer 2 / RTC-Timer / Watchdog / Buzzer Clock Select
+TMC2            equ     0ff4ah          ; Timer 2 / RTC-Timer Operation Mode
 
-TMS             equ     TM1             ; Zählwert Timer 1+2 im 16-Bit-Modus
-TOC1            equ     0ff4fh          ; Ausgabesteuerung Timer 1+2
+TMS             equ     TM1             ; Timer 1+2 Counter Value in 16 Bit Mode
+TOC1            equ     0ff4fh          ; Timer 1+2 Output Control
 
-TM5             equ     0ff51h          ; Zählwert Timer 5
-CR50            equ     0ff50h          ; Vergleichsregister Timer 5
-TCL5            equ     0ff52h          ; Taktauswahl Timer 5
-TMC5            equ     0ff53h          ; Betriebsart Timer 5
+TM5             equ     0ff51h          ; Timer 5 Counter Value
+CR50            equ     0ff50h          ; Timer 5 Compare Register
+TCL5            equ     0ff52h          ; Timer 5 Clock Select
+TMC5            equ     0ff53h          ; Timer 5 Operation Mode
 
-TM6             equ     0ff55h          ; Zählwert Timer 6
-CR60            equ     0ff54h          ; Vergleichsregister Timer 6
-TCL6            equ     0ff56h          ; Taktauswahl Timer 6
-TMC6            equ     0ff57h          ; Betriebsart Timer 6
+TM6             equ     0ff55h          ; Timer 6 Counter Value
+CR60            equ     0ff54h          ; Timer 6 Compare Register
+TCL6            equ     0ff56h          ; Timer 6 Clock Select
+TMC6            equ     0ff57h          ; Timer 6 Operation Mode
 
 ;----------------------------------------------------------------------------
 ; Watchdog
 
-WDTM            equ     0fff9h          ; Betriebsart
+WDTM            equ     0fff9h          ; Operation Mode
 
 ;----------------------------------------------------------------------------
-; serielle Schnittstelle
+; Serial Interface
 
 ; Kanal 0
-SIO0            equ     0ff1ah          ; Datenregister
-SVA             equ     0ff62h          ; Slave-Adresse
-TCL3            equ     0ff43h          ; Taktauswahl Kanal 0/1
-CSIM0           equ     0ff60h          ; Betriebsart
-SBIC            equ     0ff61h          ; Bus-Steuerung
-SINT            equ     0ff63h          ; Interrupt-Timing
+SIO0            equ     0ff1ah          ; Data Register
+SVA             equ     0ff62h          ; Slave Address
+TCL3            equ     0ff43h          ; Channel 0/1 Clock Select
+CSIM0           equ     0ff60h          ; Operation Mode
+SBIC            equ     0ff61h          ; Bus Control
+SINT            equ     0ff63h          ; Interrupt Timing
 
 ; Kanal 1
-SIO1            equ     0ff1bh          ; Datenregister
-ADTP            equ     0ff6ah          ; Adreßzeiger bei Blockempfang/versand
-CSIM1           equ     0ff68h          ; Betriebsart
-ADTC            equ     0ff69h          ; Steuerung Blockbetrieb
-ADTI            equ     0ff6bh          ; Geschwindigkeit Blockversand
+SIO1            equ     0ff1bh          ; Data Register
+ADTP            equ     0ff6ah          ; Adress Pointer Block Reception/Transmission
+CSIM1           equ     0ff68h          ; Operation Mode
+ADTC            equ     0ff69h          ; Block Mode Control
+ADTI            equ     0ff6bh          ; Block Mode Speed
 
 ; Kanal 2
-TXS             equ     0ff74h          ; Datenregister
+TXS             equ     0ff74h          ; Data Register
 RXB             equ     0ff74h
 SIO2            equ     TXS
-ASIM            equ     0ff70h          ; Schnittstellenparameter
-ASIS            equ     0ff71h          ; Statusregister
-CSIM2           equ     0ff72h          ; Betriebsart
-BRGC            equ     0ff73h          ; Baudratenwahl
+ASIM            equ     0ff70h          ; Interface Parameters
+ASIS            equ     0ff71h          ; Status Register
+CSIM2           equ     0ff72h          ; Operation Mode
+BRGC            equ     0ff73h          ; Baud Rate Select
 
 ;----------------------------------------------------------------------------
-; A/D-Wandler
+; A/D Converter
 
-ADCR            equ     0ff1fh          ; Ergebnisregister Wandlung
+ADCR            equ     0ff1fh          ; Conversion result Register
 
-ADM             equ     0ff80h          ; Betriebsart
+ADM             equ     0ff80h          ; Operation Mode
 
-ADIS            equ     0ff84h          ; Umschaltung Ports als Analogeingänge
-
-;----------------------------------------------------------------------------
-; D/A-Wandler
-
-DACS0           equ     0ff90h          ; Analogwert Wandler 0
-
-DACS1           equ     0ff91h          ; Analogwert Wandler 1
-
-DAM             equ     0ff96h          ; Betriebsart
+ADIS            equ     0ff84h          ; Port Pin Analog Input Select
 
 ;----------------------------------------------------------------------------
-; Echtzeitausgabe
+; D/A Converter
 
-RTBL            equ     0ff30h          ; Ausgabedaten
+DACS0           equ     0ff90h          ; Converter 0 Analog Value
+
+DACS1           equ     0ff91h          ; Converter 1 Analog Value
+
+DAM             equ     0ff96h          ; Operation Mode
+
+;----------------------------------------------------------------------------
+; Real Time Output
+
+RTBL            equ     0ff30h          ; Output Data
 RTBH            equ     0ff31h
-RTPM            equ     0ff34h          ; Betriebsart
-RTPC            equ     0ff36h          ; Steuerung
+RTPM            equ     0ff34h          ; Operation Mode
+RTPC            equ     0ff36h          ; Control
 
 ;----------------------------------------------------------------------------
-; Vektoradressen
+; Vector Addresses
 
 Vec_Reset       equ     0000h           ; Reset
 Vec_INTWDT      equ     0004h           ; Watchdog
-Vec_INTP0       equ     0006h           ; externe Interrupts
+Vec_INTP0       equ     0006h           ; External Interrupts
 Vec_INTP1       equ     0008h
 Vec_INTP2       equ     000ah
 Vec_INTP3       equ     000ch
 Vec_INTP4       equ     000eh
 Vec_INTP5       equ     0010h
 Vec_INTP6       equ     0012h
-Vec_INTCSI0     equ     0014h           ; serielle Schnittstellen
+Vec_INTCSI0     equ     0014h           ; Serial Interfaces
 Vec_INTCSI1     equ     0016h
 Vec_INTSER      equ     0018h
 Vec_INTSR       equ     001ah
 Vec_INTCSI2     equ     Vec_INTSR
 Vec_INTST       equ     001ch
-Vec_INTTM3      equ     001eh           ; Uhren-Timer
+Vec_INTTM3      equ     001eh           ; RTC Timer
 Vec_INTTM00     equ     0020h           ; Timer
 Vec_INTTM01     equ     0022h
-Vec_INTTM1      equ     0024h           ; Vergleicher Timer 1
-Vec_INTTM2      equ     0026h           ; Vergleicher Timer 2
-Vec_INTAD       equ     0028h           ; A/D-Wandler
-Vec_INTTM5      equ     002ah           ; Vergleicher Timer 5
-Vec_INTTM6      equ     002ch           ; Vergleicher Timer 6
-Vec_BRK         equ     003eh           ; BRK-Befehl
+Vec_INTTM1      equ     0024h           ; Timer 1 Compare
+Vec_INTTM2      equ     0026h           ; Timer 2 Compare
+Vec_INTAD       equ     0028h           ; A/D Converter
+Vec_INTTM5      equ     002ah           ; Timer 5 Compare
+Vec_INTTM6      equ     002ch           ; Timer 6 Compare
+Vec_BRK         equ     003eh           ; BRK Instruction
 
 ;----------------------------------------------------------------------------
-; Speicheradressen
+; Memory Addresses
 
-BUFRAM          equ     0fac0h          ; Puffer-RAM
+BUFRAM          equ     0fac0h          ; Buffer RAM
 BUFRAMEND       equ     0fadfh
 
-IRAM            equ     0fb00h          ; internes RAM
-IRAMEND         equ     0fedfh          ; dahinter sind die Register gemappt!
+IRAM            equ     0fb00h          ; Internal RAM
+IRAMEND         equ     0fedfh          ; Registers follow
 
 ;----------------------------------------------------------------------------
 
-                endif                   ; von IFDEF...
-		restore                 ; wieder erlauben
+		restore                 ; allow listing again
+
+                endif                   ; reg8k0inc
 
 
 

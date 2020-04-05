@@ -1,188 +1,182 @@
+		ifndef  stddef16inc     ; avoid multiple inclusion
+stddef16inc     equ     1
+
                 save
-                listing off   ; kein Listing über diesen File
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.39 - Datei STDDEF16.INC                                           *
+;*   AS 1.42 - File STDDEF16.INC                                            *
 ;*   								            *
-;*   Sinn : enthält SFR- und Makrodefinitionen für die PIC 16C5x-Familie    *
+;*   Contains SFR and Macro Definitions for PIC 16C5x MCUs                  *
 ;* 									    *
-;*   letzte Änderungen : 13. 4.1993                                         *
-;*                        5. 6.1993 SAVE & RESTORE                          *
-;*                                  Prozessorsperre (Idee von Matthias)     *
-;*                       11. 9.1993 Meldung nur im 1.Pass                   *
-;*									    *
 ;****************************************************************************
 
-		ifndef  stddef16inc     ; verhindert Mehrfacheinbindung
-
-stddef16inc     equ     1
-
                 if      (MOMCPU<93268)&&(MOMCPU>93271)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 16C54..16C57 erlaubt"
+		 fatal  "wrong target selected: only 16C54..16C57 supported"
 		endif
 
                 if      MOMPASS=1
-		 message "PIC16C5x-Definitionen (C) 1993 Alfred Arnold"
+		 message "PIC16C5x Definitions (C) 1993 Alfred Arnold"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal die Spezialregister :
+; Special Registers
 
-Indirect	SFR	0		; indirekte Adressierung
-PCLo            SFR     2               ; PC Bits 0..7
-RTCC            SFR     1               ; Zähler
-Status		SFR	3		; Status-Register
-FSR		SFR	4		; File-Select-Register
+Indirect	SFR	0		; Indirect Addressierung
+PCLo            SFR     2               ; Program Counter LSB
+RTCC            SFR     1               ; Counter
+Status		SFR	3		; Status Register
+FSR		SFR	4		; File Select Register
 Port_A		SFR	5		; Ports
 Port_B		SFR	6
 Port_C		SFR	7
 
 ;----------------------------------------------------------------------------
-; Bits im Statusregister
+; Bits in Status Register
 
 Flag_C		EQU	0		; Carry
-Flag_DC		EQU	1		; Digit-Carry
+Flag_DC		EQU	1		; Digit Carry
 Flag_Z		EQU	2		; Zero
 
 PA1		EQU	5		; Bank-Select Bit 9
 PA2		EQU	6		;  "     "     "  10
 
-
 ;----------------------------------------------------------------------------
-; Flags setzen/löschen:
+; Set/Clear Flags
 
-clrc		macro			; Carry löschen
+clrc		macro			; Clear Carry
 		bcf	Status,Flag_C
 		endm
 
-setc		macro			; Carry setzen
+setc		macro			; Set Carry
 		bsf	Status,Flag_C
 		endm
 
-clrdc		macro			; Digit-Carry löschen
+clrdc		macro			; Clear Digit Carry
 		bcf	Status,Flag_DC
 		endm
 
-setdc		macro			; Digit_Carry setzen
+setdc		macro			; Set Digit Carry
 		bsf	Status,Flag_DC
 		endm
 
-clrz		macro			; Zero-Flag löschen
+clrz		macro			; Clear Zero Flag
 		bcf	Status,Flag_Z
 		endm
 
-setz		macro			; Zero-Flag setzen
+setz		macro			; Set Zero Flag
                 bsf     Status,Flag_Z
 		endm
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; einfachere Skip-Befehle
+; Simplified Skip Instructions
 
-skpc		macro			; Sprung, falls C=1
+skpc		macro			; Skip if C=1
 		btfss	Status,Flag_C
 		endm
 
-skpnc		macro			; Sprung, falls C=0
+skpnc		macro			; Skip if C=0
 		btfsc	Status,Flag_C
 		endm
 
-skpdc		macro			; Sprung, falls DC=1
+skpdc		macro			; Skip if DC=1
 		btfss	Status,Flag_DC
 		endm
 
-skpndc		macro			; Sprung, falls DC=0
+skpndc		macro			; Skip if DC=0
 		btfsc	Status,Flag_DC
 		endm
 
-skpz		macro			; Sprung, falls Z=1
+skpz		macro			; Skip if Z=1
 		btfss	Status,Flag_Z
 		endm
 
-skpnz		macro			; Sprung, falls Z=0
+skpnz		macro			; Skip if Z=0
 		btfsc	Status,Flag_Z
 		endm
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; bedingte Sprünge:
-; VORSICHT: Mehrbyteanweisungen, nicht skip-bar!!!!
+; Conditional Branches
+; CAUTION: Multi-Word Instructions, can not be skipped!!!!
 
-b		macro	target		; unbedingter Sprung
+b		macro	target		; Unconditional Branch
 		goto	target
 		endm
 
-bc		macro	target		; Sprung, falls C=1
+bc		macro	target		; Branch if C=1
 		btfsc	Status,Flag_C
 		goto	target
 		endm
 
-bnc		macro	target		; Sprung, falls C=0
+bnc		macro	target		; Branch if C=0
 		btfss	Status,Flag_C
 		goto	target
 		endm
 
-bdc		macro	target		; Sprung, falls DC=1
+bdc		macro	target		; Branch if DC=1
 		btfsc	Status,Flag_DC
 		goto	target
 		endm
 
-bndc		macro	target		; Sprung, falls DC=0
+bndc		macro	target		; Branch if DC=0
 		btfss	Status,Flag_DC
 		goto	target
 		endm
 
-bz		macro	target		; Sprung, falls Z=1
+bz		macro	target		; Branch if Z=1
 		btfss	Status,Flag_Z
 		goto	target
 		endm
 
-bnz		macro	target		; Sprung, falls Z=0
+bnz		macro	target		; Branch if Z=0
 		btfsc	Status,Flag_Z
 		goto	target
 		endm
 
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; Carry-Arithmetik
-; wieder VORSICHT!!!
+; Carry Arithmetic
+; see above for CAUTION
 
-addcf		macro	reg,dest	; Carry zu Register addieren
+addcf		macro	reg,dest	; Add Carry to Register
 		btfsc	Status,Flag_C
 		incf	reg,dest
 		endm
 
-adddcf		macro	reg,dest	; Digit-Carry zu Register addieren
+adddcf		macro	reg,dest	; Add Digit Carry to Register
 		btfsc	Status,Flag_DC
 		incf	reg,dest
 		endm
 
-subcf		macro	reg,dest	; Carry von Register subtrahieren
+subcf		macro	reg,dest	; Subtract Carry from Register
 		btfsc	Status,Flag_C
 		decf	reg,dest
 		endm
 
-subdcf		macro	reg,dest	; Digit-Carry von Register subtrahieren
+subdcf		macro	reg,dest	; Substract Digit Carry from Register
 		btfsc	Status,Flag_DC
 		decf	reg,dest
 		endm
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; vermischtes...
+; Miscellaneous
 
 movfw		macro	reg		; Transfer Register-->W
 		movf	reg,0
 		endm
 
-negf		macro	reg,dest	; Zweierkomplement
+negf		macro	reg,dest	; Two's Complement
 		comf	reg,1
 		incf	reg,dest
 		endm
 
-tstf		macro	reg		; Flags entspr. Register bilden
+tstf		macro	reg		; Set Flags according to Register Content
 		movf	reg,1
 		endm
 
-		endif
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-                restore                 ; wieder erlauben
+                restore                 ; allow listing again
 
+		endif			; stddef16inc

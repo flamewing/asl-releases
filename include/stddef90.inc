@@ -1,23 +1,16 @@
-                save
-                listing off     ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.39 - Datei STDDEF90.INC                                           *
-;*                                                                          *
-;*   Sinn : enthält Register- und Speicheradressen für TLCS-90-Prozessoren  *
-;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
-;*          aus dem Handbuch zur Prozessorfamilie TLCS-90                   *
-;*                                                                          *
-;*   Author Alfred Arnold                                                   *
-;*                                                                          *
-;*   letzte Änderungen :  1.11.1993                                         *
-;*                                                                          *
-;****************************************************************************
-
-                ifndef  stddef90inc     ; verhindert Mehrfacheinbindung
-
+                ifndef  stddef90inc     ; avoid multiple inclusion
 stddef90inc     equ     1
+
+                save
+                listing off		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File STDDEF90.INC                                            *
+;*                                                                          *
+;*   Contains Register and Memory Addresses for TLCS-90 Processors          *
+;*                                                                          *
+;****************************************************************************
 
                 if      (MOMCPU<>9486657)
 		 fatal  "Wrong processor type set: only 90C141 allowed"
@@ -29,9 +22,7 @@ stddef90inc     equ     1
                 endif
 
 ;----------------------------------------------------------------------------
-; hier geht's los...
-
-;Ports
+; Ports
 
 P0              equ     0ffc0h
 P1              equ     0ffc1h
@@ -55,7 +46,7 @@ P67CR           equ     0ffceh
 P8              equ     0ffd0h
 P8CR            equ     0ffd1h
 
-; Timer
+; Timers
 
 TMOD            equ     0ffdah
 TCLK            equ     0ffd8h
@@ -81,34 +72,34 @@ CAL2H           equ     0ffdfh
 SMMOD           equ     0ffcbh
 SMCR            equ     0ffcfh
 
-; Seriell
+; Serial
 
-SCMOD           equ     0ffe9h  ; Betriebsart
-SCCR            equ     0ffeah  ; Steuerregister
-SCBUF           equ     0ffebh  ; Datenregister
+SCMOD           equ     0ffe9h  ; Operating Mode
+SCCR            equ     0ffeah  ; Control Register
+SCBUF           equ     0ffebh  ; Data Register
 
 ; Watchdog, Misc
 
-BX              equ     0ffech  ; Bank-Register IX
-BY              equ     0ffedh  ;               IY
+BX              equ     0ffech  ; Bank-Registers IX
+BY              equ     0ffedh  ;                IY
 
-WDMOD           equ     0ffd2h  ; Watchdog, Halt-Modus
-WDCR            equ     0ffd3h  ; Steuerregister
+WDMOD           equ     0ffd2h  ; Watchdog, Halt Mode
+WDCR            equ     0ffd3h  ; Control Register
 
-; AD-Wandler
+; AD Converter
 
-ADMOD           equ     0ffefh  ; Betriebsart
-ADREG           equ     0ffeeh  ; Datenregister
+ADMOD           equ     0ffefh  ; Operating Mode
+ADREG           equ     0ffeeh  ; Data Register
 
-; Interrupt
+; Interrupts
 
-IRFL            equ     0ffc2h  ; Request Flip-Flops
+IRFL            equ     0ffc2h  ; Request Flip Flops
 IRFH            equ     0ffc3h
-INTEL           equ     0ffe6h  ; Freigabe Interrupts
+INTEL           equ     0ffe6h  ; Interrupt Enable
 INTEH           equ     0ffe7h
-DMAEH           equ     0ffe8h  ; Freigabe Micro-DMA
+DMAEH           equ     0ffe8h  ; Micro-DMA Enable
 
-; feste Speicherbereiche
+; Fixed Memory Areas
 
 IRAM            equ     0fec0H    ; Internal RAM 256 Byte...
 IRAMEND         equ     0ffbfH
@@ -120,10 +111,7 @@ EXTMEM          equ     IROMEND+1 ; External Memory
 MEMEND          equ     IRAM-1    ; ...up to FFFFH
 
 ;---------------------------------------------------------------------------
-; das war's...
 
-                endif
+                restore		; allow listing again
 
-                restore
-
-
+                endif		; stddef90inc

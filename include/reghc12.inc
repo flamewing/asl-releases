@@ -1,4 +1,7 @@
-                save
+                ifndef  reghc12inc      ; avoid multiple inclusion
+reghc12inc      equ     1
+
+                save			; no listing over this file
                 listing off
 
 ;*****************************************************************************
@@ -9,16 +12,12 @@
 ;   Oliver Thamm (othamm@aol.com)
 ;*****************************************************************************
 
-                ifndef  reghc12inc      ; verhindert Mehrfacheinbindung
-
-reghc12inc      equ     1
-
                 if      (MOMCPUNAME<>"68HC12")
-                 fatal  "Falscher Prozessortyp eingestellt: nur 68HC12 erlaubt!"
+                 fatal  "wrong target selected: only 68HC12 allowed"
 		endif
 
                 if      MOMPASS=1
-                 message "68HC812A4/68HC912B32-Registerdefinitionen"
+                 message "68HC812A4/68HC912B32 Register Definitions"
                  message "(C) 1996,1997 Oliver Thamm"
 		endif
 
@@ -222,7 +221,6 @@ DDRDLC	equ	REGBASE+$00ff	; [-|B] Port DLC Data Direction Register
 
 ;-----------------------------------------------------------------------------
 
-                endif                   ; von IFDEF...
-		restore                 ; wieder erlauben
+		restore                 ; allow listing again
 
-
+                endif                   ; reghc12inc

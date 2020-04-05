@@ -1,3 +1,8 @@
+2020-04-05 [1.42 Bld 162]
+
+- Change      : rework remaining include files to English comments
+- Bugfix      : correct 4004 RnP register pair syntax
+
 2020-04-04 [1.42 Bld 161]
 
 - Addition    : Allow numeric condition argument to JCN on 4004

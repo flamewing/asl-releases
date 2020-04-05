@@ -1,42 +1,39 @@
-                save
-                listing off   ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.39 - Datei STDDEF62.INC                                           *
-;*   								            *
-;*   Sinn : enthält SFR- und Makrodefinitionen für die ST62xx-Prozessoren   *
-;* 									    *
-;*   letzte Änderungen :  7. 8.1993                                         *
-;*                       11. 9.1993 Meldung nur im 1.Pass                   *
-;*                       21.11.1993 ROMWIN eingebaut                        *
-;*                                                                          *
-;****************************************************************************
-
-		ifndef  stddef62inc     ; verhindert Mehrfacheinbindung
-
+		ifndef  stddef62inc     ; avoid multiple inclusion
 stddef62inc     equ     1
 
+                save
+                listing off		; no  listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File STDDEF62.INC                                            *
+;*   								            *
+;*   Contains SFR and Macro Definitions for ST62xx Processors               *
+;*   NOTE: This file is obsolete, use REGST6.INC in new projects.           *
+;* 									    *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPU<>25104)&&(MOMCPU<>25109)&&(MOMCPU<>25120)&&(MOMCPU<>25125)
-		 fatal  "Falscher Prozessortyp eingestellt: nur ST6210, ST6215, ST6220 oder ST6225 erlaubt!"
+		 fatal  "Wrong target selected: only ST6210, ST6215, ST6220 oder ST6225 supported"
 		endif
 
                 if      MOMPASS=1
-		 message "ST62xx-SFR-Definitionen (C) 1993 Alfred Arnold"
-		 message "Zielprozessor: ST\{MOMCPU}"
+		 message "ST62xx SFR Definitions (C) 1993 Alfred Arnold"
+		 message "Target Processor: ST\{MOMCPU}"
 		endif
 
 ;----------------------------------------------------------------------------
-; erstmal die Sachen, die es überall gibt :
+; Things Present on All Variants:
 
-RegX            SFR     80h             ; Registeradressen (die kennt AS aber
-RegY            SFR     81h             ; auch schon intern, nur der Voll-
-RegV            SFR     82h             ; ständigkeit halber)
+RegX            SFR     80h             ; Register Addresses (also defined as
+RegY            SFR     81h             ; internal sysmbols, just for complete-
+RegV            SFR     82h             ; ness)
 RegW            SFR     83h
 RegA            SFR     0ffh
 
-RomBase         SFR     40h             ; Basisadresse ROM-Fenster (besser
-RDW             SFR     0c9h            ; aber das ASSUME-Feature nutzen)
+RomBase         SFR     40h             ; Base Addresse ROM Window (consider
+RDW             SFR     0c9h            ; using ASSUME)
 
 PA              SFR     0c0h            ; Port A
 DDRA            SFR     0c4h
@@ -45,9 +42,9 @@ PB              SFR     0c1h            ; Port B
 DDRB            SFR     0c5h
 OPTB            SFR     0cdh
 
-IOPT            SFR     0c8h            ; Interrupt-Steuerung
+IOPT            SFR     0c8h            ; Interrupt Control
 
-ADDATA          SFR     0d0h            ; A/D-Wandler
+ADDATA          SFR     0d0h            ; A/D Converter
 ADCTRL          SFR     0d1h
 
 TPSC            SFR     0d2h            ; Timer
@@ -57,7 +54,7 @@ TSCR            SFR     0d4h
 WDOG            SFR     0d8h            ; Watchdog
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; Port C nur mit den 28-Pinnern:
+; Port C only on 28-Pin Devices:
 
                 if      (MOMCPU=6215H)||(MOMCPU=6225H)
 PC               SFR    0c2h            ; Port C
@@ -69,7 +66,6 @@ OPTC             SFR    0ceh
 
 ;---------------------------------------------------------------------------
 
-		endif
+		restore                 ; enable listing again
 
-		restore                 ; wieder erlauben
-
+		endif			; stddef62inc

@@ -30,34 +30,49 @@ Next:
 	fim	r0r1, 12h
 	fim	r0p, 12h
 	fim	r2r3, 23h
-	fim	r2p, 23h
+	fim	r1p, 23h
 	fim	r4r5, 34h
-	fim	r4p, 34h
+	fim	r2p, 34h
 	fim	r6r7, 45h
-	fim	r6p, 45h
+	fim	r3p, 45h
 	fim	r8r9, 56h
-	fim	r8p, 56h
+	fim	r4p, 56h
 	fim	rarb, 67h
-	fim	rap, 67h
+	fim	r5p, 67h
         fim	r10r11, 67h
-	fim	r10p, 67h
+	fim	r5p, 67h
 	fim	rcrd, 78h
-	fim	rcp, 78h
+	fim	r6p, 78h
         fim     r12r13, 78h
-	fim	r12p, 78h
+	fim	r6p, 78h
 	fim	rerf, 89h
-	fim	rep, 89h
+	fim	r7p, 89h
         fim     r14r15, 89h
-	fim	r14p, 89h
+	fim	r7p, 89h
 
 	; some broken register names
 
-        ;fim	rr,12h		; both numbers missing
-	;fim	r1r3,12h	; numbers not consecutive
-	;fim	r3r4,12h	; invalid even/odd pairing
-	;fim	rr3,12h		; first number missing
-	;fim	r2r,12h		; second number missing
-	;fim	r16r17,12h	; number out of range
+	expect	1445
+        fim	rr,12h		; both numbers missing
+	endexpect
+	expect	1445
+	fim	r1r3,12h	; numbers not consecutive
+	endexpect
+	expect	1445
+	fim	r3r4,12h	; invalid even/odd pairing
+	endexpect
+	expect	1445
+	fim	rr3,12h		; first number missing
+	endexpect
+	expect	1445
+	fim	r2r,12h		; second number missing
+	endexpect
+	expect	1445
+	fim	r16r17,12h	; number out of range
+	endexpect
+	expect	1445
+	fim	r9p,12h		; number out of range
+	endexpect
 
 	src	r0r1
 	src	r2r3

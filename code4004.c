@@ -94,12 +94,17 @@ static Boolean DecodeRReg(char *pAsc, Byte *pErg)
 
   l = strlen(pAsc);
 
-  /* syntax RnP (n even): */
+  /* syntax RnP: */
 
   if ((l >= 3) && (l <= 4)
    && (mytoupper(pAsc[l -1]) == 'P')
    && DecodeRegCore(pAsc, pErg, l - 1))
-    return !Odd(*pErg);
+  {
+    if (*pErg > 7)
+      return False;
+    *pErg <<= 1;
+    return True;
+  }
 
   /* syntax RnRn+1 */
 

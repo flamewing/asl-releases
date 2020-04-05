@@ -1,126 +1,124 @@
-                save
-                listing off   ; kein Listing ¸ber diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.41 - Datei REG29K.INC                                             *
-;*   								            *
-;*   Sinn : enth‰lt Adreﬂdefinitionen f¸r die 2924x-Prozessoren             *
-;* 									    *
-;*   letzte ƒnderungen : 20. 7.1995                                         *
-;*                                                                          *
-;****************************************************************************
-
-                ifndef  reg29kinc       ; verhindert Mehrfacheinbindung
-
+                ifndef  reg29kinc       ; avoid multiple inclusion
 reg29kinc       equ     1
 
+                save
+                listing off		; no listing over this file
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File REG29K.INC                                              *
+;*   								            *
+;*   Contains Address Definitions for 2924x Processors                      *
+;* 									    *
+;****************************************************************************
+
                 if      (MOMCPU<>168512)&&(MOMCPU<>168515)&&(MOMCPU<>168517)
-                 fatal  "Falscher Prozessortyp eingestellt: nur AM29240, AM29243 oder AM29245 erlaubt!"
+                 fatal  "wrong target selected: only AM29240, AM29243 oder AM29245 supported"
 		endif
 
 
                 if      MOMPASS=1
-                 message "AM2924x-SFR-Definitionen (C) 1995 Alfred Arnold"
-                 message "binde AM\{MOMCPU}-SFRs ein"
+                 message "AM2924x SFR Definitions (C) 1995 Alfred Arnold"
+                 message "including AM\{MOMCPU} SFRs"
 		endif
 
 ;----------------------------------------------------------------------------
-; Registerbasis
+; Register Base
 
 RegBase         equ     0x80000000
 
 ;----------------------------------------------------------------------------
-; ROM-Controller
+; ROM Controller
 
-RMCT            equ     RegBase+0x00    ; ROM-Steuerregister
-RMCF            equ     RegBase+0x04    ; ROM-Konfigurationsregister
+RMCT            equ     RegBase+0x00    ; ROM Control Register
+RMCF            equ     RegBase+0x04    ; ROM Configuration Register
 
 ;----------------------------------------------------------------------------
-; DRAM-Controller
+; DRAM Controller
 
-DRCT            equ     RegBase+0x08    ; DRAM-Steuerregister
-DRCF            equ     RegBase+0x0c    ; DRAM-Konfigurationsregister
+DRCT            equ     RegBase+0x08    ; DRAM Control Register
+DRCF            equ     RegBase+0x0c    ; DRAM Configuration Register
 
 ;----------------------------------------------------------------------------
 ; PIA
 
-PICT0           equ     RegBase+0x20    ; PIA Steuerregister 0
-PICT1           equ     RegBase+0x24    ; PIA Steuerregister 1
+PICT0           equ     RegBase+0x20    ; PIA Control Register 0
+PICT1           equ     RegBase+0x24    ; PIA Control Register 1
 
 ;----------------------------------------------------------------------------
-; DMA-Controller
+; DMA Controller
 
-DMCT0           equ     RegBase+0x30    ; Steuerregister Kanal 0
-DMAD0           equ     RegBase+0x34    ; Adreﬂregister Kanal 0
-TAD0            equ     RegBase+0x70    ; Queued-Adreﬂregister Kanal 0
-DMCN0           equ     RegBase+0x38    ; Z‰hlregister Kanal 0
-TCN0            equ     RegBase+0x3c    ; Queued-Z‰hlregister Kanal 0
-DMCT1           equ     RegBase+0x40    ; Steuerregister Kanal 1
-DMAD1           equ     RegBase+0x44    ; Adreﬂregister Kanal 1
-TAD1            equ     RegBase+0x74    ; Queued-Adreﬂregister Kanal 1
-DMCN1           equ     RegBase+0x48    ; Z‰hlregister Kanal 1
-TCN1            equ     RegBase+0x4c    ; Queued-Z‰hlregister Kanal 1
+DMCT0           equ     RegBase+0x30    ; Channel 0 Control Register
+DMAD0           equ     RegBase+0x34    ; Channel 0 Address Register
+TAD0            equ     RegBase+0x70    ; Channel 0 Queued Address Register
+DMCN0           equ     RegBase+0x38    ; Channel 0 Count Register
+TCN0            equ     RegBase+0x3c    ; Channel 0 Queued Count Register
+DMCT1           equ     RegBase+0x40    ; Channel 1 Control Register
+DMAD1           equ     RegBase+0x44    ; Channel 1 Address Register
+TAD1            equ     RegBase+0x74    ; Channel 1 Queued-Address Register
+DMCN1           equ     RegBase+0x48    ; Channel 1 Count Register
+TCN1            equ     RegBase+0x4c    ; Channel 1 Queued-Count Register
                 if      MOMCPU<>0x29245
-DMCT2            equ     RegBase+0x50   ; Steuerregister Kanal 2
-DMAD2            equ     RegBase+0x54   ; Adreﬂregister Kanal 2
-TAD2             equ     RegBase+0x78   ; Queued-Adreﬂregister Kanal 2
-DMCN2            equ     RegBase+0x58   ; Z‰hlregister Kanal 2
-TCN2             equ     RegBase+0x5c   ; Queued-Z‰hlregister Kanal 2
-DMCT3            equ     RegBase+0x60   ; Steuerregister Kanal 3
-DMAD3            equ     RegBase+0x64   ; Adreﬂregister Kanal 3
-TAD3             equ     RegBase+0x7c   ; Queued-Adreﬂregister Kanal 3
-DMCN3            equ     RegBase+0x68   ; Z‰hlregister Kanal 3
-TCN3             equ     RegBase+0x6c   ; Queued-Z‰hlregister Kanal 3
+DMCT2            equ     RegBase+0x50   ; Channel 2 Control Register
+DMAD2            equ     RegBase+0x54   ; Channel 2 Address Register
+TAD2             equ     RegBase+0x78   ; Channel 2 Queued-Address Register
+DMCN2            equ     RegBase+0x58   ; Channel 2 Count Register
+TCN2             equ     RegBase+0x5c   ; Channel 2 Queued-Count Register
+DMCT3            equ     RegBase+0x60   ; Channel 3 Control Register
+DMAD3            equ     RegBase+0x64   ; Channel 3 Address Register
+TAD3             equ     RegBase+0x7c   ; Channel 3 Queued-Address Register
+DMCN3            equ     RegBase+0x68   ; Channel 3 Count Register
+TCN3             equ     RegBase+0x6c   ; Channel 3 Queued-Count Register
                 endif
 
 ;----------------------------------------------------------------------------
 ; PIO
 
-POCT            equ     RegBase+0xd0    ; PIO-Steuerregister
-PIN             equ     RegBase+0xd4    ; PIO-Eingangsregister
-POUT            equ     RegBase+0xd8    ; PIO-Ausgangsregister
-POEN            equ     RegBase+0xdc    ; PIO-Richtungssteuerung
+POCT            equ     RegBase+0xd0    ; PIO Control Register
+PIN             equ     RegBase+0xd4    ; PIO Input Register
+POUT            equ     RegBase+0xd8    ; PIO Output Register
+POEN            equ     RegBase+0xdc    ; PIO Direction Control
 
 ;----------------------------------------------------------------------------
 ; Parallelport
 
-PPCT            equ     RegBase+0xc0    ; Steuerregister
-PPST            equ     RegBase+0xc8    ; Statusrtegister
-PPDT            equ     RegBase+0xc4    ; Datenregister
+PPCT            equ     RegBase+0xc0    ; Control Register
+PPST            equ     RegBase+0xc8    ; Status Register
+PPDT            equ     RegBase+0xc4    ; Data Register
 
 ;----------------------------------------------------------------------------
-; serielle Ports
+; Serial Ports
 
-SPCTA           equ     RegBase+0x80    ; Steuerregister Kanal A
-SPSTA           equ     RegBase+0x84    ; Statusregister Kanal A
-SPTHA           equ     RegBase+0x88    ; Senderegister Kanal A
-SPRBA           equ     RegBase+0x8c    ; Empfangsregister Kanal A
-BAUDA           equ     RegBase+0x90    ; Baudratenregister Kanal A
+SPCTA           equ     RegBase+0x80    ; Channel A Control Register
+SPSTA           equ     RegBase+0x84    ; Channel A Status Register
+SPTHA           equ     RegBase+0x88    ; Channel A Transmit Register
+SPRBA           equ     RegBase+0x8c    ; Channel A Receive Register
+BAUDA           equ     RegBase+0x90    ; Channel A Baud Rate Register
                 if      MOMCPU<>0x29245
-SPCTB            equ     RegBase+0xa0   ; Steuerregister Kanal A
-SPSTB            equ     RegBase+0xa4   ; Statusregister Kanal A
-SPTHB            equ     RegBase+0xa8   ; Senderegister Kanal A
-SPRBB            equ     RegBase+0xac   ; Empfangsregister Kanal A
-BAUDB            equ     RegBase+0xb0   ; Baudratenregister Kanal A
+SPCTB            equ     RegBase+0xa0   ; Channel B Control Register
+SPSTB            equ     RegBase+0xa4   ; Channel B Status Register
+SPTHB            equ     RegBase+0xa8   ; Channel B Transmit Register
+SPRBB            equ     RegBase+0xac   ; Channel B Receive Register
+BAUDB            equ     RegBase+0xb0   ; Channel B Baud Rate Register
                 endif
 
 ;----------------------------------------------------------------------------
-; Video-Interface
+; Video Interface
 
                 if      MOMCPU<>0x29243
-VCT              equ     RegBase+0xe0   ; Steuerregister
-TOP              equ     RegBase+0xe4   ; Zeilennummer oberer Rand
-SIDE             equ     RegBase+0xe8   ; Spaltennummer linker/rechter Rand
-VDT              equ     RegBase+0xec   ; Datenregister
+VCT              equ     RegBase+0xe0   ; Control Register
+TOP              equ     RegBase+0xe4   ; Line Number Upper Border
+SIDE             equ     RegBase+0xe8   ; Column Number Left/Right Border
+VDT              equ     RegBase+0xec   ; Data Register
                 endif
 
 ;----------------------------------------------------------------------------
-; Interrupt-Steuerung
+; Interrupt Control
 
-ICT             equ     RegBase+0x28    ; Steuerregister
-IMASK           equ     RegBase+0x2c    ; Maskenregister
+ICT             equ     RegBase+0x28    ; Control Register
+IMASK           equ     RegBase+0x2c    ; Mask Register
 
+;----------------------------------------------------------------------------
 
                 endif
 

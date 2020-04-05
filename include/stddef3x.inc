@@ -1,31 +1,28 @@
+                ifndef  stddef3xinc     ; avoid multiple inclusion
+stddef3xinc     equ     1
+
                 save
-                listing off   ; kein Listing über diesen File
+                listing off		; kein Listing über diesen File
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.40 - Datei STDDEF3X.INC                                           *
+;*   AS 1.42 - File STDDEF3X.INC                                            *
 ;*   								            *
-;*   Sinn : enthält Register- und Adreßdefinitionen für die TMS320C3x-CPUs  *
-;* 									    *
-;*   letzte Änderungen : 27. 9.1994                                         *
+;*   Contains Register and Address Definitions for TMS320C3x CPUs           *
 ;*									    *
 ;****************************************************************************
 
-                ifndef  stddef3xinc     ; verhindert Mehrfacheinbindung
-
-stddef3xinc     equ     1
-
                 if      (MOMCPU<>3279920)&&(MOMCPU<>3279921)
-                 fatal  "Falscher Prozessortyp eingestellt: nur 320C30/320C31 erlaubt!"
+                 fatal  "wrong target selected: only 320C30/320C31 supported"
 		endif
 
 
                 if      MOMPASS=1
-                 message "TMS320C3x-Definitionen (C) 1994 Alfred Arnold"
+                 message "TMS320C3x Definitions (C) 1994 Alfred Arnold"
 		endif
 
 ;------------------------------------------------------------------------------
-; Timer
+; Timers
 
 T0CTRL          equ     808020h
 T0CNT           equ     808024h
@@ -36,7 +33,7 @@ T1CNT           equ     808034h
 T1PERIOD        equ     808038h
 
 ;------------------------------------------------------------------------------
-; serielle Ports
+; Serial Ports
 
 S0CTRL          equ     808040h
 S0TXPORTCTRL    equ     808042h
@@ -67,7 +64,7 @@ DMADESTADR      equ     808006h
 DMACNT          equ     808008h
 
 ;------------------------------------------------------------------------------
-; Adressen Interrupt-Vektoren
+; Interrupt Vector Addresses
 
 INTVEC_RESET    equ     0
 INTVEC_INT0     equ     1
@@ -89,8 +86,10 @@ INTVEC_TRAP{"\{__TMPINTVEC}"} equ __TMPINTVEC+20h
 __TMPINTVEC     set     __TMPINTVEC+1
                 endm
 
-                endif
+;------------------------------------------------------------------------------
 
-                restore                 ; Listing wieder erlauben
+                restore                 ; allow listing again
+
+                endif			; stddef3xinc
 
 

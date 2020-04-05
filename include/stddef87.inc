@@ -1,37 +1,29 @@
-		save
-		listing off     ; kein Listing über diesen File
-
-;****************************************************************************
-;*                                                                          *
-;*   AS 1.40 - Datei STDDEF87.INC                                           *
-;*                                                                          *
-;*   Sinn : enthält Register- und Speicheradressen für TLCS-870-Prozessoren *
-;*          Port- bzw. Registernamen nach Toshiba-Konvention                *
-;*          aus dem Handbuch zur Prozessorfamilie TLCS-870                  *
-;*                                                                          *
-;*   Author Alfred Arnold                                                   *
-;*                                                                          *
-;*   letzte Änderungen :  9.1.1994                                          *
-;*                                                                          *
-;****************************************************************************
-
-		ifndef  stddef87inc     ; verhindert Mehrfacheinbindung
-
+		ifndef  stddef87inc     ; avoid multiple inclusion
 stddef87inc     equ     1
 
+		save
+		listing off		; kein Listing über diesen File
+
+;****************************************************************************
+;*                                                                          *
+;*   AS 1.42 - File STDDEF87.INC                                            *
+;*                                                                          *
+;*   Contains Register and Memory Addresses for TLCS-870 Processors         *
+;*   Port and Register Namen according to Toshiba Convention                *
+;*                                                                          *
+;****************************************************************************
+
                 if      (MOMCPU<>556032)&&(MOMCPU<>556064)&&(MOMCPU<>556096)&&(MOMCPU<>556144)
-		 fatal  "Falscher Prozessortyp eingestellt: nur 87C00, 87C20, 87C40 oder 87C70 erlaubt"
+		 fatal  "wrong target set: only 87C00, 87C20, 87C40 oder 87C70 supported"
 		endif
 
                 if      MOMPASS=1
-		 message "TLCS-870-Adreßdefinitionen"
+		 message "TLCS-870 Address Definitions"
 		 message "(C) 1994 Alfred Arnold"
-                 message "Zielprozessor: \{MOMCPU}"
+                 message "Target: \{MOMCPU}"
 		endif
 
 ;----------------------------------------------------------------------------
-; hier geht's los...
-
 ; Ports
 
 P0		equ	00h
@@ -61,21 +53,21 @@ P7CR		 equ	0Dh
 P6CR		 equ	29h
 		endif
 
-; Tastaturinterface
+; Keyboard Interface
 
                 if      MOMCPU=87C70h
 KEYDR		 equ	P4
 KEYSR		 equ	2Ah
 		endif
 
-; Vergleicher
+; Comparators
 
                 if      MOMCPU=87C70h
 CMPCR		 equ	0Eh
 CMPDR		 equ	0Fh
 		endif
 
-; Timer: hier geht es ziemlich durcheinander
+; Timers: a bit messy
 
                 if      MOMCPU=87C70h
 TREG1		 equ	10h
@@ -113,7 +105,7 @@ TC3CR		equ	1Ah
 TREG4		equ	1Bh
 TC4CR		equ	1Ch
 
-; Seriell: auch nicht viel übersichtlicher
+; Serial: not that simple either
 
                 if      (MOMCPU=87C00h)||(MOMCPU=87C40h)
 SIO1SR		 equ	20h
@@ -140,7 +132,7 @@ SIO_BUFFER	 equ	0FF0h
 		endif
 
 
-; High-Speed-seriell
+; High Speed Serial
 
                 if      MOMCPU=87C70h
 HSOSR		 equ	24h
@@ -148,7 +140,7 @@ HSOCR		 equ	24h
 HSO_BUFFER	 equ	0FF8H
 		endif
 
-; AD-Wandler
+; AD Converter
 
                 if      MOMCPU=87C40h
 ADCCR		 equ	0Eh
@@ -162,7 +154,7 @@ LCDCR		 equ	28h
 LCD_BUFFER	 equ	0F80h
 		endif
 
-; Fluoreszenz-Display
+; Vacuum Fluorescent Display
 
                 if      MOMCPU=87C70h
 VFTCR1		 equ	28h
@@ -175,7 +167,7 @@ VFTCR2		 equ	29h
 WDTCR1		equ	34h
 WDTCR2		equ	35h
 
-; Systemsteuerung
+; System Control
 
 TBTCR		equ	36h
 SYSCR1		equ	38h
@@ -183,7 +175,7 @@ SYSCR2		equ	39h
 GPSW		equ	3Fh
 GRBS		equ	3Fh
 
-; Interrupt
+; Interrupts
 
 EINTCR		equ	37h
 EIR		equ	3Ah
@@ -193,26 +185,23 @@ IL		equ	3ch
 ILL		equ	EIR
 ILH		equ	EIR+1
 
-; feste Speicherbereiche
+; Fixed Memory Areas
 
-IRAM            equ     000C0H    ; Internal RAM 256/512/512/512 Byte...
+IRAM            equ     000C0H    ; Internal RAM 256/512/512/512 Bytes
                 if      MOMCPU=87C00h
 IRAMEND          equ    0013FH
 		elseif
 IRAMEND		 equ	0023FH
 		endif
-IEAREA          equ     0FFC0H    ; Interrupt Entry Area...
-IEAREAEND       equ     0FFFFH    ; ...up to 007FH
-IROM            equ     0E000H    ; Internal (P)ROM 8K...
-IROMEND         equ     0FFFFH    ;
+IEAREA          equ     0FFC0H    ; Interrupt Entry Area
+IEAREAEND       equ     0FFFFH
+IROM            equ     0E000H    ; Internal (P)ROM 8K
+IROMEND         equ     0FFFFH
 EXTMEM          equ     IRAMEND+1 ; External Memory
-MEMEND          equ     IROM-1    ; ...up to ROM-Start
+MEMEND          equ     IROM-1
 
 ;---------------------------------------------------------------------------
-; das war's...
 
-		endif
+		restore		; allow listing again
 
-		restore
-
-
+		endif		; stddef87inc
