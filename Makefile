@@ -7,7 +7,7 @@ OBLANK=$(NULL) $(NULL)
 
 DATE=`date +"%d%m%Y"`
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+ALLFLAGS = $(CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 include makedefs.files
 
@@ -108,9 +108,11 @@ test: binaries
 	cd tests; OBJDIR=$(TARG_OBJDIR) RUNCMD=$(TARG_RUNCMD) ./testall "$(TESTDIRS)"
 
 install: all
-	PREFIX=$(PREFIX) OBJDIR=$(TARG_OBJDIR) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
+	INSTROOT=$(INSTROOT) OBJDIR=$(OBJDIR) TARG_OBJDIR=$(TARG_OBJDIR) TARG_EXEXTENSION=$(TARG_EXEXTENSION) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
-clean: clean_doc_DE clean_doc_EN
+clean_doc: clean_doc_DE clean_doc_EN
+
+clean: clean_doc
 	if test "$(HOST_OBJEXTENSION)" != ""; then $(RM) *$(HOST_OBJEXTENSION) $(OBJDIR)*$(HOST_OBJEXTENSION); fi
 	if test "$(TARG_OBJEXTENSION)" != ""; then $(RM) *$(TARG_OBJEXTENSION) $(TARG_OBJDIR)*$(TARG_OBJEXTENSION); fi
 	$(RM) $(ALLTARGETS) $(HOSTTARGETS) $(OBJDIR)*.dep $(TARG_OBJDIR)*.dep *.p $(TARG_OBJDIR)*.msg *.rsc tests/testlog testlog
@@ -139,6 +141,7 @@ bindist-tgz: distdir
 
 bindist-zip: distdir
 	mv asl-$(VERSION)/lib/*.msg asl-$(VERSION)/bin/
+	rmdir asl-$(VERSION)/lib
 	mv asl-$(VERSION)/man/man1/* asl-$(VERSION)/man/
 	rmdir asl-$(VERSION)/man/man1/
 	cd asl-$(VERSION) && zip -9 -r ../asl-$(VERSION)-bin.zip .

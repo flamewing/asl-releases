@@ -24,9 +24,6 @@
 #include "nlmessages.h"
 #include "cmdarg.rsc"
 
-LongInt ParamCount;                   /* Kommandozeilenparameter */
-char **ParamStr;
-
 TMsgCat MsgCat;
 StringList FileArgList;
 
@@ -43,15 +40,15 @@ Boolean ProcessedEmpty(CMDProcessed Processed)
 {
   int z;
    
-  for (z = 1; z <= ParamCount; z++)
+  for (z = 1; z <= MAXPARAM; z++)
     if (Processed[z])
       return False;
    return True; 
 }
 
-static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback ErrProc);
+static void ProcessFile(char *Name_O, const CMDRec *pCMDRecs, int CMDRecCnt, CMDErrCallback ErrProc);
 
-static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
+static CMDResult ProcessParam(const CMDRec *pCMDRecs, int CMDRecCnt, char *O_Param,
                               char *O_Next, Boolean AllowLink,
                               CMDErrCallback ErrProc)
 {
@@ -75,7 +72,7 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
   {
     if (AllowLink)
     {
-      ProcessFile(Param + 1, Def, Cnt, ErrProc);
+      ProcessFile(Param + 1, pCMDRecs, CMDRecCnt, ErrProc);
       return CMDOK;
     }
     else
@@ -112,11 +109,11 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
     strmaxcpy(s, Param + Start, STRINGSIZE);
     for (z = 0; z < (int)strlen(s); z++)
       s[z] = mytoupper(s[z]);
-    for (Search = 0; Search < Cnt; Search++)
-      if ((strlen(Def[Search].Ident) > 1) && (!strcmp(s, Def[Search].Ident)))
+    for (Search = 0; Search < CMDRecCnt; Search++)
+      if ((strlen(pCMDRecs[Search].Ident) > 1) && (!strcmp(s, pCMDRecs[Search].Ident)))
         break;
-    if (Search < Cnt) 
-      TempRes = Def[Search].Callback(Negate,Next);
+    if (Search < CMDRecCnt) 
+      TempRes = pCMDRecs[Search].Callback(Negate, Next);
 
     else
     {
@@ -124,14 +121,14 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
         if (TempRes != CMDErr)
         {
           Search = 0;
-          for (Search = 0; Search < Cnt; Search++)
-            if ((strlen(Def[Search].Ident) == 1) && (Def[Search].Ident[0] == Param[z]))
+          for (Search = 0; Search < CMDRecCnt; Search++)
+            if ((strlen(pCMDRecs[Search].Ident) == 1) && (pCMDRecs[Search].Ident[0] == Param[z]))
               break;
-          if (Search >= Cnt)
+          if (Search >= CMDRecCnt)
             TempRes = CMDErr;
           else
           {
-            switch (Def[Search].Callback(Negate,Next))
+            switch (pCMDRecs[Search].Callback(Negate, Next))
             {
               case CMDErr:
                 TempRes = CMDErr;
@@ -153,7 +150,7 @@ static CMDResult ProcessParam(CMDRec *Def, Integer Cnt, char *O_Param,
     return CMDFile;
 }
 
-static void DecodeLine(CMDRec *Def, Integer Cnt, char *OneLine,
+static void DecodeLine(const CMDRec *pCMDRecs, int CMDRecCnt, char *OneLine,
                        CMDErrCallback ErrProc)
 {
   int z;
@@ -183,7 +180,7 @@ static void DecodeLine(CMDRec *Def, Integer Cnt, char *OneLine,
     EnvStr[EnvCnt] = start;
 
     for (z = 0; z < EnvCnt; z++)
-      switch (ProcessParam(Def, Cnt, EnvStr[z], EnvStr[z + 1], False, ErrProc))
+      switch (ProcessParam(pCMDRecs, CMDRecCnt, EnvStr[z], EnvStr[z + 1], False, ErrProc))
       {
         case CMDFile:
           AddStringListLast(&FileArgList, EnvStr[z]);
@@ -200,7 +197,7 @@ static void DecodeLine(CMDRec *Def, Integer Cnt, char *OneLine,
   }
 }
 
-static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback ErrProc)
+static void ProcessFile(char *Name_O, const CMDRec *pCMDRecs, int CMDRecCnt, CMDErrCallback ErrProc)
 {
   FILE *KeyFile;
   String Name, OneLine;
@@ -217,35 +214,55 @@ static void ProcessFile(char *Name_O, CMDRec *Def, Integer Cnt, CMDErrCallback E
     ReadLn(KeyFile, OneLine);
     if ((errno != 0) && (!feof(KeyFile)))
       ErrProc(True, catgetmessage(&MsgCat, Num_ErrMsgKeyFileError));
-    DecodeLine(Def, Cnt, OneLine, ErrProc);
+    DecodeLine(pCMDRecs, CMDRecCnt, OneLine, ErrProc);
   }
   fclose(KeyFile);
 }
 
-void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
+/*!------------------------------------------------------------------------
+ * \fn     ProcessCMD(int argc, char **argv,
+                const CMDRec *pCMDRecs, int CMDRecCnt,
+                CMDProcessed Unprocessed,
+                char *EnvName, CMDErrCallback ErrProc)
+ * \brief  arguments from command line and environment 
+ * \param  argc command line arg count as handed to main()
+ * \param  argv command line args as handed to main()
+ * \param  pCMDRecs command line switch descriptors
+ * \param  CMDRecCnt # of command line switch descriptors
+ * \param  Unprocessed returns bit mask of args not handled
+ * \param  EnvName environment variable to draw additional args from
+ * \param  CMDErrCallback called upon faulty args
+ * ------------------------------------------------------------------------ */
+
+void ProcessCMD(int argc, char **argv,
+                const CMDRec *pCMDRecs, int CMDRecCnt,
+                CMDProcessed Unprocessed,
                 char *EnvName, CMDErrCallback ErrProc)
 {
   int z;
-  String OneLine;
+  String EnvLine;
   char *pEnv;
 
   pEnv = getenv(EnvName);
-  strmaxcpy(OneLine, pEnv ? pEnv : "", STRINGSIZE);
+  strmaxcpy(EnvLine, pEnv ? pEnv : "", STRINGSIZE);
 
-  if (OneLine[0] == '@')
-    ProcessFile(OneLine + 1, Def, Cnt, ErrProc);
+  if (EnvLine[0] == '@')
+    ProcessFile(EnvLine + 1, pCMDRecs, CMDRecCnt, ErrProc);
   else
-    DecodeLine(Def,Cnt,OneLine,ErrProc);
+    DecodeLine(pCMDRecs, CMDRecCnt, EnvLine, ErrProc);
 
-  for (z = 0; z <= ParamCount; z++)
+  for (z = 0; z < argc; z++)
     Unprocessed[z] = (z != 0);
-  for (z = 1; z <= ParamCount; z++)
+  for (z = argc; z <= MAXPARAM; z++)
+    Unprocessed[z] = False;
+
+  for (z = 1; z < argc; z++)
     if (Unprocessed[z])
-      switch (ProcessParam(Def, Cnt, ParamStr[z], (z < ParamCount) ? ParamStr[z + 1] : "",
+      switch (ProcessParam(pCMDRecs, CMDRecCnt, argv[z], (z + 1 < argc) ? argv[z + 1] : "",
                            True, ErrProc))
       {
         case CMDErr:
-          ErrProc(False, ParamStr[z]);
+          ErrProc(False, argv[z]);
           break;
         case CMDOK:
           Unprocessed[z] = False;
@@ -254,17 +271,17 @@ void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
           Unprocessed[z] = Unprocessed[z + 1] = False;
           break;
         case CMDFile:
-          AddStringListLast(&FileArgList, ParamStr[z]);
+          AddStringListLast(&FileArgList, argv[z]);
           break;
       }
 }
 
-const char *GetEXEName(void)
+const char *GetEXEName(const char *argv0)
 {
   char *pos;
 
-  pos = strrchr(ParamStr[0], '/');
-  return (pos) ? pos + 1 : ParamStr[0];
+  pos = strrchr(argv0, '/');
+  return (pos) ? pos + 1 : argv0;
 }
 
 void cmdarg_init(char *ProgPath)

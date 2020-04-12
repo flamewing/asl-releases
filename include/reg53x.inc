@@ -292,7 +292,7 @@ RDR{NAME}	equ	Base+5		; Receive Data (r)
 
 STOP		equ	3		; SMRx: Number of Stop Bits
 O_E		equ	4		;       odd/even Parity
-PE		equ	5		;       with/without Parität
+PE		equ	5		;       With/Without Parity
 CHR		equ	6		;       7/8 Data Bits
 C_A		equ	7		;       synchronous/asynchronous
 

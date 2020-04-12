@@ -124,9 +124,9 @@ extern void AddCopyright(char *NewLine);
 extern void WriteCopyrights(TSwitchProc NxtProc);
 
 
-extern Boolean ChkSymbName(char *sym);
+extern Boolean ChkSymbName(const char *pSym);
 
-extern Boolean ChkMacSymbName(char *sym);
+extern Boolean ChkMacSymbName(const char *pSym);
 
 
 

@@ -2,20 +2,23 @@
 # choose your compiler (must be ANSI-compliant!) and linker command, plus
 # any additionally needed flags
 
-OBJDIR =
+# NOTE: The egcs version shipped with Cygwin B20 seems to have trouble with
+#       optimization level 3, don't use it :-/
+
+# ...for host-side build tools:
+
 CC = gcc
-CFLAGS = -O3 -Wall -D__USE_FIXED_PROTOTYPES__
+OBJDIR =
+CFLAGS = -O2 -mcpu=i486 -Wall 
 HOST_OBJEXTENSION = .o
-LD = gcc
+LD = $(CC)
 LDFLAGS =
-HOST_EXEXTENSION =
+HOST_EXEXTENSION = .exe
 
-# no cross build
-
-TARG_OBJDIR = $(OBJDIR)
 TARG_CC = $(CC)
+TARG_OBJDIR = $(OBJDIR)
 TARG_CFLAGS = $(CFLAGS)
-TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_OBJEXTENSION = .o
 TARG_LD = $(LD)
 TARG_LDFLAGS = $(LDFLAGS)
 TARG_EXEXTENSION = $(HOST_EXEXTENSION)

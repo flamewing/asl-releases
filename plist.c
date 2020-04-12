@@ -43,11 +43,9 @@ int main(int argc, char **argv)
   String Ver;
   PFamilyDescr FoundId;
 
-  ParamCount = argc - 1;
-  ParamStr = argv;
-
   nls_init();
-  NLS_Initialize();
+  if (!NLS_Initialize(&argc, argv))
+    exit(4);
 
   endian_init();
   bpemu_init();
@@ -59,20 +57,25 @@ int main(int argc, char **argv)
   as_snprintf(Ver, sizeof(Ver), "PLIST/C V%s", Version);
   WrCopyRight(Ver);
 
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
+    int l;
+
     errno = 0;
     printf("%s", getmessage(Num_MessFileRequest));
     if (!fgets(ProgName, STRINGSIZE, stdin))
       return 0;
+    l = strlen(ProgName);
+    if ((l > 0) && (ProgName[l - 1] == '\n'))
+      ProgName[--l] = '\0';
     ChkIO(OutName);
   }
-  else if (ParamCount == 1)
-    strmaxcpy(ProgName, ParamStr[1], STRINGSIZE);
+  else if (argc == 2)
+    strmaxcpy(ProgName, argv[1], STRINGSIZE);
   else
   {
     errno = 0;
-    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(), getmessage(Num_InfoMessHead2));
+    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]), getmessage(Num_InfoMessHead2));
     ChkIO(OutName);
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2; ph1 = ph2 + 1, ph2 = strchr(ph1, '\n'))
     {

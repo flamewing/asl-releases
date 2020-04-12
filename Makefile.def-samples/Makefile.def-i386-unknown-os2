@@ -32,11 +32,3 @@ INCDIR = /usr/local/include/asl
 MANDIR = /usr/local/man
 LIBDIR = /usr/local/lib/asl
 DOCDIR = /usr/local/doc/asl
-
-# -------------------------------------------------------------------------
-# character encoding to use (choose one of them)
-
-# CHARSET = CHARSET_ISO8859_1
-# CHARSET = CHARSET_ASCII7
-# CHARSET = CHARSET_IBM437
-CHARSET = CHARSET_IBM850

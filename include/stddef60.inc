@@ -2,7 +2,7 @@
 stddef60inc     equ     1
 
                 save
-                listing off		; kein Listing über diesen File
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *
@@ -95,7 +95,7 @@ mf{"NAME"}      macro      reg
 
                 __defspr XER,0x001      ; Integer Exception Register
                 __defspr LR,0x008       ; Link Register
-                __defspr CTR,0x009      ; Zählregister
+                __defspr CTR,0x009      ; Count Register
                 __defspr SRR0,0x01a     ; Save/Restore Register
                 __defspr SRR1,0x01b
                 __defspr SPRG0,0x110    ; Special Purpose Register

@@ -2961,13 +2961,13 @@ static void AssembleFile(char *Name)
       switch (ShareMode)
       {
         case 1:
-          fprintf(ShareFile, "(* %s-Includefile f%sr CONST-Sektion *)\n", SourceFile, CH_ue);
+          fprintf(ShareFile, "(* %s-Include File for CONST Section *)\n", SourceFile);
           break;
         case 2:
-          fprintf(ShareFile, "/* %s-Includefile f%sr C-Programm */\n", SourceFile, CH_ue);
+          fprintf(ShareFile, "/* %s-Include File for C Program */\n", SourceFile);
           break;
         case 3:
-          fprintf(ShareFile, "; %s-Includefile f%sr Assembler-Programm\n", SourceFile, CH_ue);
+          fprintf(ShareFile, "; %s-Include File for Assembler Program\n", SourceFile);
           break;
       }
       ChkIO(ErrNum_ListWrError);
@@ -3017,13 +3017,13 @@ static void AssembleFile(char *Name)
       switch (ShareMode)
       {
         case 1:
-          fprintf(ShareFile, "(* Ende Includefile f%sr CONST-Sektion *)\n", CH_ue);
+          fprintf(ShareFile, "(* Ende Include File for CONST Section *)\n");
           break;
         case 2:
-          fprintf(ShareFile, "/* Ende Includefile f%sr C-Programm */\n", CH_ue);
+          fprintf(ShareFile, "/* Ende Include File for C Program */\n");
           break;
         case 3:
-          fprintf(ShareFile, "; Ende Includefile f%sr Assembler-Programm\n", CH_ue);
+          fprintf(ShareFile, "; Ende Include File for Assembler Program\n");
           break;
       }
       ChkIO(ErrNum_ListWrError);
@@ -4016,9 +4016,6 @@ int main(int argc, char **argv)
 
   FileMask = (char*)malloc(sizeof(char) * STRINGSIZE);
 
-  ParamCount = argc - 1;
-  ParamStr = argv;
-
   if (First)
   {
     endian_init();
@@ -4027,7 +4024,8 @@ int main(int argc, char **argv)
     stdhandl_init();
     strutil_init();
     chunks_init();
-    NLS_Initialize();
+    if (!NLS_Initialize(&argc, argv))
+      exit(4);
 
     nlmessages_init("as.msg", *argv, MsgId1, MsgId2);
     ioerrs_init(*argv);
@@ -4212,10 +4210,10 @@ int main(int argc, char **argv)
 
   LineZ = 0;
 
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
     WrHead();
-    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(), getmessage(Num_InfoMessHead2));
+    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]), getmessage(Num_InfoMessHead2));
     NxtLine();
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2; ph1 = ph2 + 1, ph2 = strchr(ph1, '\n'))
     {
@@ -4232,7 +4230,7 @@ int main(int argc, char **argv)
 #if defined(INCDIR)
   CMD_IncludeList(False, INCDIR);
 #endif
-  ProcessCMD(ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
+  ProcessCMD(argc, argv, ASParams, ASParamCnt, ParUnprocessed, EnvName, ParamError);
 
   /* wegen QuietMode dahinter */
 

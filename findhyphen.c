@@ -22,6 +22,8 @@
 #include "ushyph.h"
 #endif
 
+#include "findhyphen.h"
+
 /*****************************************************************************/
 
 #define LCNT (26 + 1 + 4)
@@ -39,11 +41,6 @@ typedef struct sHyphenException
   char *word;
   int poscnt, *posis;
 } THyphenException, *PHyphenException;
-
-#define INTCHR_AE '\344'
-#define INTCHR_OE '\366'
-#define INTCHR_UE '\374'
-#define INTCHR_SZ '\337'
 
 /*****************************************************************************/
 
@@ -85,16 +82,14 @@ static int GetIndex(char ch)
     return (mytolower(ch) - ('a' - 1));
   else if (ch == '.')
     return 0;
-#ifndef CHARSET_ASCII7
-  else if ((ch == *CH_ae) || (ch == *CH_Ae) || (ch == INTCHR_AE))
+  else if ((ch == *HYPHEN_CHR_ae) || (ch == *HYPHEN_CHR_AE))
     return 27;
-  else if ((ch == *CH_oe) || (ch == *CH_Oe) || (ch == INTCHR_OE))
+  else if ((ch == *HYPHEN_CHR_oe) || (ch == *HYPHEN_CHR_OE))
     return 28;
-  else if ((ch == *CH_ue) || (ch == *CH_Ue) || (ch == INTCHR_UE))
+  else if ((ch == *HYPHEN_CHR_ue) || (ch == *HYPHEN_CHR_UE))
     return 29;
-  else if ((ch == *CH_sz) || (ch == INTCHR_SZ))
+  else if ((ch == *HYPHEN_CHR_sz))
     return 30;
-#endif
   else
   {
     printf("unallowed character %d\n", ch); return -1;

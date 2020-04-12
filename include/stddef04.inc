@@ -2,8 +2,8 @@
 stddef04inc     equ     1
 
 		save
-		listing off		; kein Listing über diesen File
-
+		listing off		; no listing over this file
+		
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.42 - File STDDEF04.INC                                            *

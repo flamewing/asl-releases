@@ -24,7 +24,7 @@
 typedef struct
 {
   Word Country;        /* = internationale Vorwahl */
-  Word CodePage;       /* mom. gewaehlter Zeichensatz */
+  tCodepage Codepage; /* mom. gewaehlter Zeichensatz */
   void (*DateString)(Word Year, Word Month, Word Day, char *Dest, int DestSize);
   void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize);
 #if (defined OS2_NLS) || (defined DOS_NLS)
@@ -52,6 +52,21 @@ CharTable LowCaseTable;
 
 static NLS_CountryInfo NLSInfo;
 static CharTable CollateTable;
+static tCodepage OverrideCodepage = eCodepageCnt;
+
+static const char *CodepageNames[eCodepageCnt] =
+{
+  "ascii",
+  "iso8859-1",
+  "iso8859-15",
+  "koi8-r",
+  "437",
+  "850",
+  "866",
+  "1251",
+  "1252",
+  "utf-8",
+};
 
 /*-------------------------------------------------------------------------------*/
 
@@ -69,10 +84,10 @@ static void TranslateString(char *s, CharTable Table)
 static void DumpNLSInfo(void)
 {
 #ifdef DEBUG_NLS
-  int z, z2;
+  unsigned z, z2;
 
   printf("Country      = %d\n", NLSInfo.Country);
-  printf("CodePage     = %d\n", NLSInfo.CodePage);
+  printf("Codepage     = %s\n", CodepageNames[NLSInfo.Codepage]);
 #if (defined OS2_NLS) || (defined DOS_NLS)
   printf("DateFmt      = ");
   switch(NLSInfo.DateFmt)
@@ -135,31 +150,19 @@ static void DumpNLSInfo(void)
   printf("DataSep      = %s\n", NLSInfo.DataSep);
 
   printf("\nUpcaseTable:\n");
-  for (z = 0; z < 4; z++)
+  for (z = 0; z < 256; z++)
   {
-    for (z2 = 0; z2 < 63; z2++)
-      if (z * 64 + z2 > 32)
-        putchar(z * 64 + z2);
-    putchar('\n');
-    for (z2 = 0; z2 < 63; z2++)
-      if (z * 64 + z2 > 32)
-        putchar(UpCaseTable[z * 64 + z2]);
-    putchar('\n');
-    putchar('\n');
+    z2 = (unsigned char)UpCaseTable[z];
+    if (z2 != z)
+      printf("0x%02x -> %02x\n", z, z2);
   }
 
   printf("\nLowcaseTable:\n");
-  for (z = 0; z < 4; z++)
+  for (z = 0; z < 256; z++)
   {
-    for (z2 = 0; z2 < 63; z2++)
-      if (z * 64 + z2 > 32)
-        putchar(z * 64 + z2);
-    putchar('\n');
-    for (z2 = 0; z2 < 63; z2++)
-      if (z * 64 + z2 > 32)
-        putchar(LowCaseTable[z * 64 + z2]);
-    putchar('\n');
-    putchar('\n');
+    z2 = (unsigned char)LowCaseTable[z];
+    if (z2 != z)
+      printf("0x%02x -> %02x\n", z, z2);
   }
 
   printf("\nCollateTable:\n");
@@ -179,6 +182,135 @@ static void DumpNLSInfo(void)
 }
 
 /*-------------------------------------------------------------------------------*/
+
+static void SetLoUp(Byte Lo, Byte Up)
+{
+  UpCaseTable[Lo] = Up;
+  LowCaseTable[Up] = Lo;
+}
+
+void UpCaseFromCodeTable(void)
+{
+  int z;
+
+  for (z = 0; z < 128; z++)
+  {
+    UpCaseTable[z] = toupper(z);
+    LowCaseTable[z] = tolower(z);
+  }
+  for (; z < 256; z++)
+  {
+    UpCaseTable[z] = z;
+    LowCaseTable[z] = z;
+  }
+
+  switch (NLSInfo.Codepage)
+  {
+    case eCodepage866:
+      for (z = 0x80; z <= 0x8f; z++)
+        SetLoUp(z + 0x20, z);
+      for (z = 0x90; z <= 0x9f; z++)
+        SetLoUp(z + 0x50, z);
+      for (z = 0xf0; z <= 0xf6; z += 2)
+        SetLoUp(z + 1, z);
+      break;
+    case eCodepage850:
+      SetLoUp(0xa0, 0xb5); /* &aacute; */
+      SetLoUp(0xa1, 0xd6); /* &iacute; */
+      SetLoUp(0xa2, 0xe0); /* &oacute; */
+      SetLoUp(0xa3, 0xe9); /* &uacute; */
+      SetLoUp(0x85, 0xb7); /* &agrave; */
+      SetLoUp(0x8a, 0xd4); /* &egrave; */
+      SetLoUp(0x8d, 0xde); /* &igrave; */
+      SetLoUp(0x95, 0xe3); /* &ograve; */
+      SetLoUp(0x97, 0xeb); /* &ugrave; */
+      SetLoUp(0x83, 0xb6); /* &acirc; */
+      SetLoUp(0x88, 0xd2); /* &ecirc; */
+      SetLoUp(0x8c, 0xd6); /* &icirc; */
+      SetLoUp(0x93, 0xe2); /* &ocirc; */
+      SetLoUp(0x96, 0xea); /* &ucirc; */
+      SetLoUp(0xec, 0xed); /* &yacute; */
+      SetLoUp(0x9b, 0x9d); /* &oslash; */
+      SetLoUp(0xe8, 0xe7); /* &thorn; */
+      /* fall-through */
+    case eCodepage437:
+      SetLoUp(0x80, 0x87); /* &ccedil; */
+      SetLoUp(0x84, 0x8e); /* &auml; */
+      SetLoUp(0x94, 0x99); /* &ouml; */
+      SetLoUp(0x81, 0x9a); /* &uuml; */
+      SetLoUp(0x82, 0x90); /* &eacute; */
+      SetLoUp(0xa4, 0xa5); /* &ntilde; */
+      SetLoUp(0x86, 0x8f); /* &aring; */
+      SetLoUp(0x91, 0x92); /* &aelig; */
+      break;
+    case eCodepage1251:
+      SetLoUp(0x90, 0x80);
+      SetLoUp(0x9a, 0x8a);
+      SetLoUp(0x9c, 0x8c);
+      SetLoUp(0x9d, 0x8d);
+      SetLoUp(0x9e, 0x8e);
+      SetLoUp(0x9f, 0x8f);
+      SetLoUp(0xa2, 0xa1);
+      SetLoUp(0xb3, 0xb2);
+      SetLoUp(0xb4, 0xa5);
+      SetLoUp(0xb8, 0xa8);
+      SetLoUp(0xba, 0xaa);
+      SetLoUp(0xbe, 0xbd);
+      SetLoUp(0xbf, 0xaf);
+      for (z = 0xc0; z <= 0xdf; z++)
+        SetLoUp(z + 0x20, z);
+      break;
+    case eCodepage1252:
+      SetLoUp(0x9a, 0x8a); /* &scaron */
+      SetLoUp(0x9e, 0x8e); /* &zcaron; */
+      SetLoUp(0x9c, 0x8c); /* &oelog; */
+      goto iso8859_1;
+    case eCodepageISO8859_15:
+      SetLoUp(0xa8, 0xa6); /* &scaron */
+      SetLoUp(0xb8, 0xb4); /* &zcaron; */
+      SetLoUp(0xbd, 0xbc); /* &oelog; */
+      /* fall-through */
+    case eCodepageISO8859_1:
+    case eCodepageUTF8:
+      iso8859_1:
+      SetLoUp(0xe0, 0xc0); /* &agrave; */
+      SetLoUp(0xe1, 0xc1); /* &aacute; */
+      SetLoUp(0xe2, 0xc2); /* &acirc; */
+      SetLoUp(0xe3, 0xc3); /* &atilde; */
+      SetLoUp(0xe4, 0xc4); /* &auml; */
+      SetLoUp(0xe5, 0xc5); /* &aring; */
+      SetLoUp(0xe6, 0xc6); /* &aelig; */
+      SetLoUp(0xe7, 0xc7); /* &ccedil; */
+      SetLoUp(0xe8, 0xc8); /* &egrave; */
+      SetLoUp(0xe9, 0xc9); /* &eacute; */
+      SetLoUp(0xea, 0xca); /* &ecirc; */
+      SetLoUp(0xeb, 0xcb); /* &euml; */
+      SetLoUp(0xec, 0xcc); /* &igrave; */
+      SetLoUp(0xed, 0xcd); /* &iacute; */
+      SetLoUp(0xee, 0xce); /* &icirc; */
+      SetLoUp(0xef, 0xcf); /* &iuml; */
+      SetLoUp(0xf1, 0xd1); /* &ntilde; */
+      SetLoUp(0xf2, 0xd2); /* &ograve; */
+      SetLoUp(0xf3, 0xd3); /* &oacute; */
+      SetLoUp(0xf4, 0xd4); /* &ocirc; */
+      SetLoUp(0xf5, 0xd5); /* &otilde; */
+      SetLoUp(0xf6, 0xd6); /* &ouml; */
+      SetLoUp(0xf8, 0xd8); /* &oslash; */
+      SetLoUp(0xf9, 0xd9); /* &ugrave; */
+      SetLoUp(0xfa, 0xda); /* &uacute; */
+      SetLoUp(0xfb, 0xdb); /* &ucirc; */
+      SetLoUp(0xfc, 0xdc); /* &uuml; */
+      SetLoUp(0xfd, 0xdd); /* &yacute; */
+      SetLoUp(0xfe, 0xde); /* &thorn; */
+      break;
+    case eCodepageKOI8_R:
+      SetLoUp(0xa3, 0xb3);
+      for (z = 0xc0; z <= 0xdf; z++)
+        SetLoUp(z, z + 0x20);
+    default:
+      break;
+  }
+}
 
 #if (defined OS2_NLS) || (defined DOS_NLS)
 
@@ -236,7 +368,18 @@ static void QueryInfo(void)
   DosQueryCtryInfo(sizeof(cinfo), &ccode, &cinfo, &erglen);
 
   NLSInfo.Country = cinfo.country;
-  NLSInfo.CodePage = cinfo.codepage;
+  switch (cinfo.codepage)
+  {
+    case 437: NLSInfo.Codepage = eCodepage437; break;
+    case 850: NLSInfo.Codepage = eCodepage850; break;
+    case 866: NLSInfo.Codepage = eCodepage866; break;
+    case 1251: NLSInfo.Codepage = eCodepage1251; break;
+    case 1252: NLSInfo.Codepage = eCodepage1252; break;
+    case 20866: NLSInfo.Codepage = eCodepageKOI8_R; break;
+    case 28591: NLSInfo.Codepage = eCodepageISO8859_1; break;
+    case 28605: NLSInfo.Codepage = eCodepageISO8859_15; break;
+    default: NLSInfo.Codepage = eCodepageASCII;
+  }
   NLSInfo.DecSep = as_strdup(cinfo.szDecimal);
   NLSInfo.DataSep = as_strdup(cinfo.szDataSeparator);
   NLSInfo.ThouSep = as_strdup(cinfo.szThousandsSeparator);
@@ -264,6 +407,57 @@ static void QueryInfo(void)
   DosQueryCollate(sizeof(CollateTable), &ccode, CollateTable, &erglen);
 }
 
+#elif defined W32_NLS
+
+static void Default_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
+{
+  as_snprintf(Dest, DestSize, "%u/%u/%u", Month, Day, Year);
+}
+
+static void Default_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize)
+{
+  (void)Sec100;
+  as_snprintf(Dest, DestSize, "%u:%u:%u", Hour, Minute, Second);
+}
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+
+static void QueryInfo(void)
+{
+  int z;
+
+  NLSInfo.DecSep = ".";
+  NLSInfo.DataSep = ",";
+  NLSInfo.ThouSep = ",";
+  NLSInfo.Currency = "$";
+  NLSInfo.CurrDecimals = 2;
+  NLSInfo.CurrFmt = CurrFormatPreNoBlank;
+  NLSInfo.DateString = Default_DateString;
+  NLSInfo.TimeString = Default_TimeString;
+
+  switch (GetACP())
+  {
+    case 437: NLSInfo.Codepage = eCodepage437; break;
+    case 850: NLSInfo.Codepage = eCodepage850; break;
+    case 866: NLSInfo.Codepage = eCodepage866; break;
+    case 1251: NLSInfo.Codepage = eCodepage1251; break;
+    case 1252: NLSInfo.Codepage = eCodepage1252; break;
+    case 20866: NLSInfo.Codepage = eCodepageKOI8_R; break;
+    case 28591: NLSInfo.Codepage = eCodepageISO8859_1; break;
+    case 28605: NLSInfo.Codepage = eCodepageISO8859_15; break;
+    default: NLSInfo.Codepage = eCodepageASCII;
+  }
+
+  UpCaseFromCodeTable();
+
+  for (z = 0; z < 256; z++)
+    CollateTable[z] = z;
+  for (z = 'a'; z <= 'z'; z++)
+    CollateTable[z] = toupper(z);
+}
+
 #elif defined DOS_NLS
 
 #include <dos.h>
@@ -282,15 +476,6 @@ char *DosCopy(char *Src, int Len)
   return res;
 }
 
-void StandardUpCases(void)
-{
-  char *s1, *s2;
-
-  s1 = CH_ae; s2 = CH_Ae; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-  s1 = CH_oe; s2 = CH_Oe; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-  s1 = CH_ue; s2 = CH_Ue; UpCaseTable[((unsigned int) *s1) & 0xff] = *s2;
-}
-
 static void QueryInfo(void)
 {
   union REGS Regs;
@@ -298,6 +483,8 @@ static void QueryInfo(void)
   struct COUNTRY country_info;
   DosTableRec DOSTablePtr;
   int z;
+  Word CodePage;
+  Boolean GotTable = False;
 
   if (_osmajor < 3)
   {
@@ -306,12 +493,24 @@ static void QueryInfo(void)
   }
 
   if (_osminor < 30)
-    NLSInfo.CodePage = 437;
+    CodePage = 437;
   else
   {
     Regs.x.ax = 0x6601;
     int86(0x21, &Regs, &Regs);
-    NLSInfo.CodePage = Regs.x.bx;
+    CodePage = Regs.x.bx;
+  }
+  switch (CodePage)
+  {
+    case 437: NLSInfo.Codepage = eCodepage437; break;
+    case 850: NLSInfo.Codepage = eCodepage850; break;
+    case 866: NLSInfo.Codepage = eCodepage866; break;
+    case 1251: NLSInfo.Codepage = eCodepage1251; break;
+    case 1252: NLSInfo.Codepage = eCodepage1252; break;
+    case 20866: NLSInfo.Codepage = eCodepageKOI8_R; break;
+    case 28591: NLSInfo.Codepage = eCodepageISO8859_1; break;
+    case 28605: NLSInfo.Codepage = eCodepageISO8859_15; break;
+    default: NLSInfo.Codepage = eCodepageASCII;
   }
 
   country(0x0000, &country_info);
@@ -333,17 +532,15 @@ static void QueryInfo(void)
   NLSInfo.TimeSep = DosCopy(country_info.co_tmsep, 2);
   NLSInfo.TimeString = DOS_OS2_TimeString;
 
+#ifndef __DPMI16__
   for (z = 0; z < 256; z++)
     UpCaseTable[z] = (char) z;
   for (z = 'a'; z <= 'z'; z++)
     UpCaseTable[z] -= 'a' - 'A';
-#ifdef __DPMI16__
-  StandardUpCases();
-#else
   if ((((Word)_osmajor) * 100) + _osminor >= 330)
   {
     Regs.x.ax = 0x6502;
-    Regs.x.bx = NLSInfo.CodePage;
+    Regs.x.bx = CodePage;
     Regs.x.dx = NLSInfo.Country;
     Regs.x.cx = sizeof(DOSTablePtr);
     info = &DOSTablePtr;
@@ -354,19 +551,21 @@ static void QueryInfo(void)
     {
       DOSTablePtr.Result += sizeof(Word);
       memcpy(UpCaseTable + 128, DOSTablePtr.Result, 128);
+      GotTable = True;
     }
-    else
-      StandardUpCases();
   }
-  else
-    StandardUpCases();
 #endif /* __DPMI16__ */
 
-  for (z = 0; z < 256; z++)
-    LowCaseTable[z] = (char) z;
-  for (z = 255; z >= 0; z--)
-    if (UpCaseTable[z] != (char) z)
-      LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
+  if (GotTable)
+  {
+    for (z = 0; z < 256; z++)
+      LowCaseTable[z] = (char) z;
+    for (z = 255; z >= 0; z--)
+      if (UpCaseTable[z] != (char) z)
+        LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
+  }
+  else
+    UpCaseFromCodeTable();
 
   for (z = 0; z < 256; z++)
     CollateTable[z] = (char) z;
@@ -376,7 +575,7 @@ static void QueryInfo(void)
   if ((((Word)_osmajor)*100) + _osminor >= 330)
   {
     Regs.x.ax = 0x6506;
-    Regs.x.bx = NLSInfo.CodePage;
+    Regs.x.bx = CodePage;
     Regs.x.dx = NLSInfo.Country;
     Regs.x.cx = sizeof(DOSTablePtr);
     info = &DOSTablePtr;
@@ -428,6 +627,7 @@ static void QueryInfo(void)
 {
   struct lconv *lc;
   int z;
+  const char *pCodepage;
 
   lc = localeconv();
 
@@ -458,11 +658,30 @@ static void QueryInfo(void)
     NLSInfo.TimeFmtStr = "%H:%M:%S";
   NLSInfo.TimeString = Locale_TimeString;
 
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = toupper(z);
+  NLSInfo.Codepage = eCodepageASCII;
+  pCodepage = getenv("LC_CTYPE");
+  if (!pCodepage)
+    pCodepage = getenv("LC_ALL");
+  if (!pCodepage)
+    pCodepage = getenv("LANG");
+  if (pCodepage)
+  {
+    pCodepage = strchr(pCodepage, '.');
+    if (pCodepage)
+    {
+      pCodepage++;
+      if (!as_strcasecmp(pCodepage, "ISO-8859-1"))
+        NLSInfo.Codepage = eCodepageISO8859_1;
+      else if (!as_strcasecmp(pCodepage, "ISO-8859-15"))
+        NLSInfo.Codepage = eCodepageISO8859_15;
+      else if (!as_strcasecmp(pCodepage, "UTF-8") || !as_strcasecmp(pCodepage, "UTF8"))
+        NLSInfo.Codepage = eCodepageUTF8;
+      else if (!as_strcasecmp(pCodepage, "KOI8-R"))
+        NLSInfo.Codepage = eCodepageKOI8_R;
+    }
+  }
 
-  for (z = 0; z < 256; z++)
-    LowCaseTable[z] = tolower(z);
+  UpCaseFromCodeTable();
 
   for (z = 0; z < 256; z++)
     CollateTable[z] = z;
@@ -487,6 +706,7 @@ static void QueryInfo(void)
 {
   int z;
 
+  NLSInfo.Codepage = eCodepageASCII;
   NLSInfo.DecSep = ".";
   NLSInfo.DataSep = ",";
   NLSInfo.ThouSep = ",";
@@ -496,11 +716,7 @@ static void QueryInfo(void)
   NLSInfo.DateString = Default_DateString;
   NLSInfo.TimeString = Default_TimeString;
 
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = toupper(z);
-
-  for (z = 0; z < 256; z++)
-    LowCaseTable[z] = tolower(z);
+  UpCaseFromCodeTable();
 
   for (z = 0; z < 256; z++)
     CollateTable[z] = z;
@@ -517,13 +733,41 @@ static void QueryInfo(void)
    her.  Wen das stoert, der schreibe einfach einen Aufruf in den Initiali-
    sierungsteil der Unit hinein. */
 
-void NLS_Initialize(void)
+Boolean NLS_Initialize(int *argc, char **argv)
 {
   QueryInfo();
+
+  /* query overrides */
+
+  if (argc)
+  {
+    int z, dest;
+
+    z = dest = 1;
+    while (z < *argc)
+      if ((z < *argc - 1) && !as_strcasecmp(argv[z], "-codepage"))
+      {
+        for (OverrideCodepage = (tCodepage)0; OverrideCodepage < eCodepageCnt; OverrideCodepage++)
+          if (!as_strcasecmp(argv[z + 1], CodepageNames[OverrideCodepage]))
+            break;
+        if (OverrideCodepage >= eCodepageCnt)
+        {
+          fprintf(stderr, "unknown codepage: %s\n", argv[z + 1]);
+          return False;
+        }
+        z += 2;
+      }
+      else
+        argv[dest++] = argv[z++];
+    *argc = dest;
+  }
+  if (OverrideCodepage < eCodepageCnt)
+    NLSInfo.Codepage = OverrideCodepage;
 
   DumpNLSInfo();
 
   NLSInfo.Initialized = True;
+  return True;
 }
 
 void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize)
@@ -620,20 +864,46 @@ char Upcase(char inp)
   return UpCaseTable[((unsigned int) inp) & 0xff];
 }
 
-void NLS_UpString(char *s)
+void NLS_UpString(char *pStr)
 {
-  char *z;
+  unsigned Unicode;
+  const char *pSrc = pStr;
 
-  for (z = s; *z != '\0'; z++)
-    *z = UpCaseTable[((unsigned int)*z) & 0xff];
+  /* TODO: assure pSrc & pStr remain in-sync for UTF-8 */
+
+  while (*pStr)
+  {
+    if (eCodepageUTF8 == NLSInfo.Codepage)
+      Unicode = UTF8ToUnicode(&pSrc);
+    else
+      Unicode = ((unsigned int)(*pSrc++)) & 0xff;
+    Unicode = (Unicode < 256) ? (unsigned int)(UpCaseTable[Unicode] & 0xff) : Unicode;
+    if (eCodepageUTF8 == NLSInfo.Codepage)
+      UnicodeToUTF8(&pStr, Unicode);
+    else
+      *pStr++ = Unicode;
+  }
 }
 
-void NLS_LowString(char *s)
+void NLS_LowString(char *pStr)
 {
-  char *z;
+  unsigned Unicode;
+  const char *pSrc = pStr;
 
-  for (z = s; *z != '\0'; z++)
-    *z = LowCaseTable[((unsigned int)*z) & 0xff];
+  /* TODO: assure pSrc & pStr remain in-sync for UTF-8 */
+
+  while (*pStr)
+  {
+    if (eCodepageUTF8 == NLSInfo.Codepage)
+      Unicode = UTF8ToUnicode(&pSrc);
+    else
+      Unicode = ((unsigned int)(*pSrc++)) & 0xff;
+    Unicode = (Unicode < 256) ? (unsigned int)(LowCaseTable[Unicode] & 0xff) : Unicode;
+    if (eCodepageUTF8 == NLSInfo.Codepage)
+      UnicodeToUTF8(&pStr, Unicode);
+    else
+      *pStr++ = Unicode;
+  }
 }
 
 int NLS_StrCmp(const char *s1, const char *s2)
@@ -656,6 +926,16 @@ Word NLS_GetCountryCode(void)
     exit(255);
   }
   return NLSInfo.Country;
+}
+
+tCodepage NLS_GetCodepage(void)
+{
+  if (!NLSInfo.Initialized)
+  {
+    fprintf(stderr, "NLS_GetCodepage() called before initialization\n");
+    exit(255);
+  }
+  return NLSInfo.Codepage;
 }
 
 void nls_init(void)

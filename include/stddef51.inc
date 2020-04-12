@@ -178,10 +178,10 @@ TA		 SFR	0c7h		; write AA 55 to get access to special
 ;
                           
                 if      MOMCPU=80C320H
-SADDR0           SFR    0a9h            ; Slave-Adresse für seriellen Port 0
-SADDR1           SFR    0aah            ; Slave-Adresse für seriellen Port 1
-SADEN0           SFR    0b9h            ; Bits in SADDR0 freigeben
-SADEN1           SFR    0bah            ; Bits in SADDR1 freigeben
+SADDR0           SFR    0a9h            ; Serial Port 0 Slave Address
+SADDR1           SFR    0aah            ; Serial Port 1 Slave Address
+SADEN0           SFR    0b9h            ; Enable Bits in SADDR0
+SADEN1           SFR    0bah            ; Enable Bits in SADDR1
 		endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -213,7 +213,7 @@ DAPR             SFR    0dah
 		endif
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; zusätzliche 80517-Register
+; Additional 80517-Register
 
                if      MOMCPU=80517h
 

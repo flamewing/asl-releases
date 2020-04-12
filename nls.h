@@ -12,18 +12,22 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "chardefs.h"
+
 typedef enum
 {
   TimeFormatUSA,
   TimeFormatEurope,
   TimeFormatJapan
 } TimeFormat;
+
 typedef enum
 {
   DateFormatMTY,
   DateFormatTMY,
   DateFormatYMT
 } DateFormat;
+
 typedef enum
 {
   CurrFormatPreNoBlank,
@@ -34,12 +38,14 @@ typedef enum
 
 typedef char CharTable[256];
 
-extern CharTable UpCaseTable,LowCaseTable;
+extern CharTable UpCaseTable, LowCaseTable;
 
 
-extern void NLS_Initialize(void);
+extern Boolean NLS_Initialize(int *argc, char **argv);
 
 extern Word NLS_GetCountryCode(void);
+
+extern tCodepage NLS_GetCodepage(void);
 
 extern void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize);
 

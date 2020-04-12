@@ -2,6 +2,14 @@
 #ifndef _FINDHYPHEN_H
 #define _FINDHYPHEN_H
 
+#define HYPHEN_CHR_ae "\344"
+#define HYPHEN_CHR_oe "\366"
+#define HYPHEN_CHR_ue "\374"
+#define HYPHEN_CHR_AE "\304"
+#define HYPHEN_CHR_OE "\326"
+#define HYPHEN_CHR_UE "\334"
+#define HYPHEN_CHR_sz "\337"
+
 extern void BuildTree(char **Patterns);
 
 extern void AddException(char *Name);

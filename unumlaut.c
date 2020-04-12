@@ -5,29 +5,6 @@
 #include <string.h>
 #include "strutil.h"
 
-#include "chardefs.h"
-
-typedef struct
-{
-  int isochar;
-  char *syschar;
-} chartrans;
-
-static chartrans specchars[] =
-{
-  {0344, CH_ae},
-  {0366, CH_oe},
-  {0374, CH_ue},
-  {0304, CH_Ae},
-  {0326, CH_Oe},
-  {0334, CH_Ue},
-  {0337, CH_sz},
-  {0262, CH_e2},
-  {0265, CH_mu},
-  {0340, CH_agrave},
-  {0000, ""}
-};
-
 #define TMPNAME "tempfile"
 
 #ifdef CKMALLOC
@@ -72,7 +49,6 @@ int main(int argc, char **argv)
   int ch;
   char cmdline[1024];
   long charcnt,metacnt,crcnt;
-  chartrans *z2;
 
   if (argc<2)
   {
@@ -133,15 +109,13 @@ int main(int argc, char **argv)
         crcnt++;
         break;
       default:
-        for (z2=specchars; z2->isochar != 0000; z2++)
-          if (ch == z2->isochar)
-          {
-            fputs(z2->syschar, dest);
-            metacnt++;
-            break;
-          }
-        if (z2->isochar == 0000)
-          fputc(ch, dest);
+        if (ch & 0x80)
+        {
+          fprintf(stderr, "%s: non-ASCII character 0x%02x @ 0x%x\n",
+                  argv[1], ch, (unsigned)ftell(src));
+          metacnt++;
+        }
+        fputc(ch, dest);
     }
   }
   fclose(src);
@@ -156,8 +130,8 @@ int main(int argc, char **argv)
     doexec(cmdline);
     unlink(TMPNAME);
   }
-  printf("%s: %ld char(s), %ld cr(s) added, %ld meta char(s) reconverted\n",
+  printf("%s: %ld char(s), %ld cr(s) added, %ld meta char(s) detected\n",
          argv[1], charcnt, crcnt, metacnt);
 
-  return 0;
+  return metacnt ? 2 : 0;
 }

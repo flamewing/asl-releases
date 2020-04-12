@@ -188,14 +188,14 @@ _MR3            equ     5
 _TCK0           equ     6               ; Clock Source Selection
 _TCK1           equ     7
 
-TA0             equ     0386h           ; Timer A0 Zählregister
-TA1             equ     0388h           ; Timer A1 Zählregister
-TA2             equ     038ah           ; Timer A2 Zählregister
-TA3             equ     038ch           ; Timer A3 Zählregister
-TA4             equ     038eh           ; Timer A4 Zählregister
-TB0             equ     0390h           ; Timer B0 Zählregister
-TB1             equ     0392h           ; Timer B1 Zählregister
-TB2             equ     0394h           ; Timer B2 Zählregister
+TA0             equ     0386h           ; Timer A0 Count Register
+TA1             equ     0388h           ; Timer A1 Count Register
+TA2             equ     038ah           ; Timer A2 Count Register
+TA3             equ     038ch           ; Timer A3 Count Register
+TA4             equ     038eh           ; Timer A4 Count Register
+TB0             equ     0390h           ; Timer B0 Count Register
+TB1             equ     0392h           ; Timer B1 Count Register
+TB2             equ     0394h           ; Timer B2 Count Register
 
 TABSR           equ     0380h           ; Start/Stop Registers:
 TA0S            equ     TABSR<<3+0      ; Timer A0
@@ -268,8 +268,8 @@ _SMD1           equ     1
 _SMD2           equ     2
 _CKDIR          equ     3               ; Internal/External Clock
 _STPS           equ     4               ; Anzahl Stopbits
-_PRY            equ     5               ; Paritätswahl
-_PRYE           equ     6               ; Paritätsart
+_PRY            equ     5               ; Parity Enable
+_PRYE           equ     6               ; Parity Type
 _SLEP           equ     7               ; Sleep-Modus
 
 U0C0            equ     03a4h           ; UART0 Control Register 0

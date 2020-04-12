@@ -35,7 +35,7 @@
 
 #ifdef __TURBOC__
 #ifdef __DPMI16__
-#define STKSIZE 37888
+#define STKSIZE 36864
 #else
 #define STKSIZE 49152
 #endif
@@ -50,6 +50,7 @@ static StringList CopyrightList, OutList, ShareOutList, ListOutList;
 
 static LongWord StartStack, MinStack, LowStack;
 
+static unsigned ValidSymCharLen;
 static Byte *ValidSymChar;
 
 /****************************************************************************/
@@ -844,32 +845,36 @@ void PrLineMarker(FILE *pFile, const char *pLine, const char *pPrefix, const cha
 /****************************************************************************/
 /* einen Symbolnamen auf Gueltigkeit ueberpruefen */
 
-Boolean ChkSymbName(char *sym)
+static Boolean ChkName(const char *pSym, Byte _Mask)
 {
-  char *z;
+  Byte Mask = _Mask;
+  unsigned Ch;
 
-  if (!(ValidSymChar[((unsigned int) *sym) & 0xff] & VALID_S1))
+  if (!*pSym)
     return False;
 
-  for (z = sym + 1; *z != '\0'; z++)
-    if (!(ValidSymChar[((unsigned int) *z) & 0xff] & VALID_SN))
-      return False;
+  while (*pSym)
+  {
+    if (ValidSymCharLen > 256)
+      Ch = UTF8ToUnicode(&pSym);
+    else
+      Ch = ((unsigned int)*pSym++) & 0xff;
 
+    if ((Ch >= ValidSymCharLen) || !(ValidSymChar[Ch] & Mask))
+      return False;
+    Mask = _Mask << 1;
+  }
   return True;
 }
 
-Boolean ChkMacSymbName(char *sym)
+Boolean ChkSymbName(const char *pSym)
 {
-  char *z;
+  return ChkName(pSym, VALID_S1);
+}
 
-  if (!(ValidSymChar[((unsigned int) *sym) & 0xff] & VALID_M1))
-    return False;
-
-  for (z = sym + 1; *z != '\0'; z++)
-    if (!(ValidSymChar[((unsigned int) *z) & 0xff] & VALID_MN))
-      return False;
-
-  return True;
+Boolean ChkMacSymbName(const char *pSym)
+{
+  return ChkName(pSym, VALID_M1);
 }
 
 /****************************************************************************/
@@ -1534,8 +1539,12 @@ void asmsub_init(void)
 
   /* initialize array of valid characters */
 
-  ValidSymChar = (Byte*) malloc(sizeof(Byte) * 256);
-  memset(ValidSymChar, 0, sizeof(Byte) * 256);
+  ValidSymCharLen = (NLS_GetCodepage() == eCodepageUTF8) ? 1024 : 256;
+  ValidSymChar = (Byte*) calloc(ValidSymCharLen, sizeof(Byte));
+
+  /* The basic ASCII stuff: letters, dot and underbar are allowed
+     anwhere, numbers not at beginning: */
+
   for (z = 'a'; z <= 'z'; z++)
     ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
   for (z = 'A'; z <= 'Z'; z++)
@@ -1544,16 +1553,107 @@ void asmsub_init(void)
     ValidSymChar[z] =            VALID_SN |            VALID_MN;
   ValidSymChar[(unsigned int) '.'] = VALID_S1 | VALID_SN;
   ValidSymChar[(unsigned int) '_'] = VALID_S1 | VALID_SN;
-#if (defined CHARSET_IBM437) || (defined CHARSET_IBM850)
-  for (z = 128; z <= 165; z++)
-    ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
-  ValidSymChar[225] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
-#elif defined CHARSET_ISO8859_1
-  for (z = 192; z <= 255; z++)
-    ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
-#elif (defined CHARSET_ASCII7) || (defined CHARSET_UTF8)
-#else
-#error Oops, unkown charset - you will have to add some work here...
+
+  /* Extensions, depending on character set: */
+
+  switch (NLS_GetCodepage())
+  {
+    case eCodepage1251:
+      ValidSymChar[0xa3] =
+      ValidSymChar[0xb3] =
+      ValidSymChar[0xa8] =
+      ValidSymChar[0xb8] =
+      ValidSymChar[0xaa] =
+      ValidSymChar[0xba] =
+      ValidSymChar[0xaf] =
+      ValidSymChar[0xbf] =
+      ValidSymChar[0xbd] =
+      ValidSymChar[0xbe] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      goto iso8859_1;
+    case eCodepage1252:
+      ValidSymChar[0x8a] =
+      ValidSymChar[0x9a] =
+      ValidSymChar[0x8c] =
+      ValidSymChar[0x9c] =
+      ValidSymChar[0x8e] =
+      ValidSymChar[0x9e] =
+      ValidSymChar[0x9f] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      goto iso8859_1;
+    case eCodepage850:
+      for (z = 0xb5; z <= 0xb7; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      for (z = 0xc6; z <= 0xc7; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      for (z = 0xd0; z <= 0xd9; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      ValidSymChar[0xde] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      for (z = 0xe0; z <= 0xed; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      /* fall-through */
+    case eCodepage437:
+      for (z = 128; z <= 165; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      ValidSymChar[225] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      break;
+    case eCodepage866:
+      for (z = 0x80; z <= 0xaf; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      break;
+      for (z = 0xe0; z <= 0xf7; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      break;
+    case eCodepageISO8859_15:
+      ValidSymChar[0xa6] =
+      ValidSymChar[0xa8] =
+      ValidSymChar[0xb4] =
+      ValidSymChar[0xb8] =
+      ValidSymChar[0xbc] =
+      ValidSymChar[0xbd] =
+      ValidSymChar[0xbe] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      /* fall-through */
+    case eCodepageISO8859_1:
+    iso8859_1:
+      ValidSymChar[0xa1] =
+      ValidSymChar[0xa2] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      for (z = 0xc0; z <= 0xff; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      break;
+    case eCodepageKOI8_R:
+      ValidSymChar[0xa3] =
+      ValidSymChar[0xb3] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      for (z = 0xc0; z <= 0xff; z++)
+        ValidSymChar[z] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      break;
+    case eCodepageUTF8:
+    {
+      const tNLSCharacterTab *pTab = GetCharacterTab(eCodepageUTF8);
+      tNLSCharacter ch;
+      unsigned Unicode;
+      const char *pCh;
+
+      for (ch = (tNLSCharacter)0; ch < eCH_cnt; ch++)
+      {
+        if ((ch == eCH_e2) || (ch == eCH_mu) || (ch == eCH_iquest) || (ch == eCH_iexcl))
+          continue;
+        pCh = &((*pTab)[ch][0]);
+        Unicode = UTF8ToUnicode(&pCh);
+        if (Unicode < ValidSymCharLen)
+          ValidSymChar[Unicode] = VALID_S1 | VALID_SN | VALID_M1 | VALID_MN;
+      }      
+    }
+    default:
+      break;
+  }
+
+#if 0
+  for (z = 0; z < ValidSymCharLen; z++)
+  {
+    if (!(z & 15))
+      fprintf(stderr, "%02x:", z);
+    fprintf(stderr, " %x", ValidSymChar[z]);
+    if ((z & 15) == 15)
+      fprintf(stderr, "\n");
+  }
 #endif
 
   version_init();

@@ -2,7 +2,7 @@
 stddef17inc     equ     1
 
                 save
-                listing off		; kein Listing über diesen File
+                listing off		; no listing over this file
 
 ;****************************************************************************
 ;*                                                                          *

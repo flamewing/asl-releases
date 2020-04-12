@@ -644,6 +644,90 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
   return Result;
 }
 
+unsigned as_strnlen(const char *pStr, unsigned MaxLen)
+{
+  unsigned Res = 0;
+  
+  for (; (MaxLen > 0); MaxLen--, pStr++, Res++)
+    if (!*pStr)
+      break;
+  return Res;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     strreplace(char *pHaystack, const char *pFrom, const char *pTo, int ToMaxLen, unsigned HaystackSize)
+ * \brief  replaces all occurences of From to To in Haystack
+ * \param  pHaystack string to search in
+ * \param  pFrom what to find
+ * \param  pFrom what to find
+ * \param  pTo what to replace it with
+ * \param  ToMaxLen if not -1, max. length of pTo (not NUL-terminated)
+ * \param  HaystackSize buffer capacity
+ * \return # of occurences
+ * ------------------------------------------------------------------------ */
+
+int strreplace(char *pHaystack, const char *pFrom, const char *pTo, int ToMaxLen, unsigned HaystackSize)
+{
+  int HaystackLen = -1, FromLen = -1, ToLen = -1, Count = 0;
+  int HeadLen, TailLen;
+  char *pSearch, *pPos;
+
+  pSearch = pHaystack;
+  while (True)
+  {
+    /* find an occurence */
+
+    pPos = strstr(pSearch, pFrom);
+    if (!pPos)
+      return Count;
+      
+    /* compute some stuff upon first occurence when needed */
+      
+    if (FromLen < 0)
+    {
+      HaystackLen = strlen(pHaystack);
+      FromLen = strlen(pFrom);
+    }
+    ToLen = (ToMaxLen > 0) ? as_strnlen(pTo, ToMaxLen) : strlen(pTo);
+
+    /* See how much of the remainder behind 'To' still fits into buffer after replacement,
+       and move accordingly: */
+
+    HeadLen = pPos - pHaystack;
+    TailLen = HaystackLen - HeadLen - FromLen;
+    if (HeadLen + ToLen + TailLen >= (int)HaystackSize)
+    {
+      TailLen = HaystackSize - 1 - HeadLen - ToLen;
+      if (TailLen < 0)
+        TailLen = 0;
+    }
+    if (TailLen > 0)
+      memmove(pPos + ToLen, pPos + FromLen, TailLen); 
+
+    /* See how much of 'To' still fits into buffer, and set accordingly: */
+      
+    if (HeadLen + ToLen >= (int)HaystackSize)
+    {
+      ToLen = HaystackSize - 1 - ToLen;
+      if (ToLen < 0)
+        ToLen = 0;
+    }
+    if (ToLen > 0)
+      memcpy(pPos, pTo, ToLen);
+      
+    /* Update length & terminate new string */
+      
+    HaystackLen = HeadLen + ToLen + TailLen;
+    pHaystack[HaystackLen] = '\0';
+
+    /* continue searching behind replacement: */
+
+    pSearch = &pHaystack[HeadLen + ToLen];
+    
+    Count++;
+  }
+}
+
 /*---------------------------------------------------------------------------*/
 /* Bis Zeilenende lesen */
 
@@ -1020,8 +1104,11 @@ char *strcpy(char *pDest, const char *pSrc)
   }
 
   if (Overlap)
+  {
     fprintf(stderr, "overlapping strcpy() called from address %p, resolve this address with addr2line and report to author\n",
             __builtin_return_address(0));
+    abort();
+  }
 
   return strmov(pDest, pSrc);
 }

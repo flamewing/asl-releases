@@ -15,13 +15,13 @@ HOST_EXEXTENSION =
 
 # ...for the actual build targets.  This is the simple case for no cross-build:
 
-#TARG_OBJDIR = x86_64-linux/
-#TARG_CC = $(CC)
-#TARG_CFLAGS = $(CFLAGS)
-#TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
-#TARG_LD = $(LD)
-#TARG_LDFLAGS = $(LDFLAGS)
-#TARG_EXEXTENSION = $(HOST_EXEXTENSION)
+TARG_OBJDIR = x86_64-linux/
+TARG_CC = $(CC)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = $(HOST_OBJEXTENSION)
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
 
 # build 32 bit Linux binary on 64 bit system
 
@@ -35,14 +35,15 @@ HOST_EXEXTENSION =
 
 # cross Build with MinGW32
 
-TARG_OBJDIR = i686-w32/
-TARG_CC = i686-w64-mingw32-gcc
-TARG_CFLAGS = $(CFLAGS)
-TARG_OBJEXTENSION = .o
-TARG_LD = $(TARG_CC)
-TARG_LDFLAGS = $(LDFLAGS)
-TARG_EXEXTENSION = .exe
-TARG_RUNCMD = wine
+#TARG_OBJDIR = i686-w32/
+#TARG_CC = i686-w64-mingw32-gcc
+#TARG_CFLAGS = $(CFLAGS)
+#TARG_OBJEXTENSION = .o
+#TARG_LD = $(TARG_CC)
+#TARG_LDFLAGS = $(LDFLAGS)
+#TARG_EXEXTENSION = .exe
+#TARG_RUNCMD = wine
+#TEX2DOC_FLAGS=-codepage 1252
 
 # cross Build with MinGW64
 
@@ -54,6 +55,7 @@ TARG_RUNCMD = wine
 #TARG_LDFLAGS = $(LDFLAGS)
 #TARG_EXEXTENSION = .exe
 #TARG_RUNCMD = wine
+#TEX2DOC_FLAGS=-codepage 1252
 
 # -------------------------------------------------------------------------
 # directories where binaries, includes, and manpages should go during
@@ -64,10 +66,3 @@ INCDIR = /usr/local/include/asl
 MANDIR = /usr/local/man
 LIBDIR = /usr/local/lib/asl
 DOCDIR = /usr/local/doc/asl
-
-# -------------------------------------------------------------------------
-# character encoding to use (choose one of them)
-
-# CHARSET = CHARSET_ASCII7
-# CHARSET = CHARSET_IBM437
-CHARSET = CHARSET_ISO8859_1

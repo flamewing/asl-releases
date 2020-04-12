@@ -37,16 +37,16 @@ typedef struct
 #define MAXPARAM 256
 typedef Boolean CMDProcessed[MAXPARAM + 1];
 
-extern LongInt ParamCount;
-extern char **ParamStr;
 extern StringList FileArgList;
 
 extern Boolean ProcessedEmpty(CMDProcessed Processed);
 
-extern void ProcessCMD(CMDRec *Def, Integer Cnt, CMDProcessed Unprocessed,
+extern void ProcessCMD(int argc, char **argv,
+                       const CMDRec *pCMDRecs, int CMDRecCnt,
+                       CMDProcessed Unprocessed,
                        char *EnvName, CMDErrCallback ErrProc);
 
-extern const char *GetEXEName(void);
+extern const char *GetEXEName(const char *argv0);
 
 extern void cmdarg_init(char *ProgPath);
 

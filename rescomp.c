@@ -57,59 +57,6 @@ static char *IncSym;
 
 static TransRec TransRecs[] =
 {
-  { "&auml;"  , CH_ae     },
-  { "&euml;"  , CH_ee     },
-  { "&iuml;"  , CH_ie     },
-  { "&ouml;"  , CH_oe     },
-  { "&uuml;"  , CH_ue     },
-  { "&Auml;"  , CH_Ae     },
-  { "&Euml;"  , CH_Ee     },
-  { "&Iuml;"  , CH_Ie     },
-  { "&Ouml;"  , CH_Oe     },
-  { "&Uuml;"  , CH_Ue     },
-  { "&szlig;" , CH_sz     },
-  { "&sup2;"  , CH_e2     },
-  { "&micro;" , CH_mu     },
-  { "&agrave;", CH_agrave },
-  { "&Agrave;", CH_Agrave },
-  { "&egrave;", CH_egrave },
-  { "&Egrave;", CH_Egrave },
-  { "&igrave;", CH_igrave },
-  { "&Igrave;", CH_Igrave },
-  { "&ograve;", CH_ograve },
-  { "&Ograve;", CH_Ograve },
-  { "&ugrave;", CH_ugrave },
-  { "&Ugrave;", CH_Ugrave },
-  { "&aacute;", CH_aacute },
-  { "&Aacute;", CH_Aacute },
-  { "&eacute;", CH_eacute },
-  { "&Eacute;", CH_Eacute },
-  { "&iacute;", CH_iacute },
-  { "&Iacute;", CH_Iacute },
-  { "&oacute;", CH_oacute },
-  { "&Oacute;", CH_Oacute },
-  { "&uacute;", CH_uacute },
-  { "&Uacute;", CH_Uacute },
-  { "&acirc;" , CH_acirc  },
-  { "&Acirc;" , CH_Acirc  },
-  { "&ecirc;" , CH_ecirc  },
-  { "&Ecirc;" , CH_Ecirc  },
-  { "&icirc;" , CH_icirc  },
-  { "&Icirc;" , CH_Icirc  },
-  { "&ocirc;" , CH_ocirc  },
-  { "&Ocirc;" , CH_Ocirc  },
-  { "&ucirc;" , CH_ucirc  },
-  { "&Ucirc;" , CH_Ucirc  },
-  { "&ccedil;", CH_ccedil },
-  { "&Ccedil;", CH_Ccedil },
-  { "&ntilde;", CH_ntilde },
-  { "&Ntilde;", CH_Ntilde },
-  { "&aring;" , CH_aring  },
-  { "&Aring;" , CH_Aring  },
-  { "&aelig;" , CH_aelig  },
-  { "&Aelig;" , CH_Aelig  },
-  { "&iquest;", CH_iquest },
-  { "&iexcl;" , CH_iexcl  },
   { "\\n"     , "\n"      },
   { NULL      , NULL      }
 };
@@ -270,7 +217,6 @@ static void Process_MESSAGE(char *Line)
   int l;
   PMsgCat z;
   TransRec *PRec;
-  char *pos;
   PMsgList List;
   Boolean Cont;
 
@@ -298,14 +244,7 @@ static void Process_MESSAGE(char *Line)
     }
     while (Cont);
     for (PRec = TransRecs; PRec->AbbString; PRec++)
-      while (True)
-      {
-        pos = strstr(Msg, PRec->AbbString);
-        if (!pos)
-          break;
-        strmov(pos, pos + strlen(PRec->AbbString) - strlen(PRec->Character));
-        memcpy(pos, PRec->Character, strlen(PRec->Character));
-      }
+      strreplace(Msg, PRec->AbbString, PRec->Character, -1, sizeof(Msg));
     List = (PMsgList) malloc(sizeof(TMsgList));
     List->Next = NULL;
     List->Position = z->TotLength;

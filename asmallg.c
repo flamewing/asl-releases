@@ -16,7 +16,6 @@
 #include "strutil.h"
 #include "stringlists.h"
 #include "bpemu.h"
-#include "cmdarg.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -53,6 +52,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
   char *z, *dest;
   Boolean ECPU;
   char s[20];
+  tStrComp TmpComp;
 
   strmaxcpy(MomCPUIdent, pCPUDef->Name, sizeof(MomCPUIdent));
   MomCPU = pCPUDef->Orig;
@@ -69,13 +69,9 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
     strmov(s, z);
   strprep(s, "$");
   HCPU = ConstLongInt(s, &ECPU, 10);
-  if (ParamCount != 0)
-  {
-    tStrComp TmpComp;
 
-    StrCompMkTemp(&TmpComp, MomCPUName); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
-    StrCompMkTemp(&TmpComp, MomCPUIdentName); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
-  }
+  StrCompMkTemp(&TmpComp, MomCPUName); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
+  StrCompMkTemp(&TmpComp, MomCPUIdentName); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
   SetIsOccupiedFnc = NULL;

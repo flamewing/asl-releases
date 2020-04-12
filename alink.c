@@ -170,7 +170,7 @@ static Boolean GetExport(char *Name, LargeWord *Result)
 /****************************************************************************/
 /* read the symbol exports/relocations from a file */
 
-static void ReadSymbols(int Index)
+static void ReadSymbols(const char *pSrcName, int Index)
 {
   FILE *f;
   String SrcName;
@@ -182,7 +182,7 @@ static void ReadSymbols(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  strmaxcpy(SrcName, pSrcName, STRINGSIZE);
   DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...\n", getmessage(Num_InfoMsgGetSyms), SrcName);
@@ -289,7 +289,7 @@ static void ReadSymbols(int Index)
 /****************************************************************************/
 /* do the relocation */
 
-static void ProcessFile(int Index)
+static void ProcessFile(const char *pSrcName, int Index)
 {
   FILE *f;
   String SrcName;
@@ -304,7 +304,7 @@ static void ProcessFile(int Index)
 
   /* open this file - we're only reading */
 
-  strmaxcpy(SrcName, ParamStr[Index], STRINGSIZE);
+  strmaxcpy(SrcName, pSrcName, STRINGSIZE);
   DelSuffix(SrcName); AddSuffix(SrcName, STRINGSIZE, getmessage(Num_Suffix));
   if (Verbose >= 2)
     printf("%s '%s'...", getmessage(Num_InfoMsgOpenSrc), SrcName);
@@ -480,15 +480,11 @@ int main(int argc, char **argv)
   PPart PartRun;
   LargeInt Diff;
 
-  /* save command line arguments for processing */
-
-  ParamStr = argv;
-  ParamCount = argc - 1;
-
   /* the initialization orgy... */
 
   nls_init();
-  NLS_Initialize();
+  if (!NLS_Initialize(&argc, argv))
+    exit(4);
 
   endian_init();
   bpemu_init();
@@ -508,13 +504,13 @@ int main(int argc, char **argv)
 
   /* no commandline arguments -->print help */
 
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
     char *ph1, *ph2;
 
     errno = 0;
-    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(),
-          getmessage(Num_InfoMessHead2));
+    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]),
+           getmessage(Num_InfoMessHead2));
     ChkIO(OutName);
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1,'\n'); ph2; ph1 = ph2+1, ph2 = strchr(ph1,'\n'))
     {
@@ -531,9 +527,9 @@ int main(int argc, char **argv)
 
   /* process arguments */
 
-  ProcessCMD(ALINKParams, ALINKParamCnt, ParUnprocessed, "ALINKCMD", ParamError);
+  ProcessCMD(argc, argv, ALINKParams, ALINKParamCnt, ParUnprocessed, "ALINKCMD", ParamError);
 
-  if ((Verbose >= 1) && (ParamCount != 0))
+  if ((Verbose >= 1) && (argc > 1))
    printf("\n");
 
   /* extract target file */
@@ -545,10 +541,10 @@ int main(int argc, char **argv)
     ChkIO(OutName);
     exit(1);
   }
-  for (z = ParamCount; z > 0; z--)
+  for (z = argc - 1; z > 0; z--)
     if (ParUnprocessed[z])
       break;
-  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
+  strmaxcpy(TargName, argv[z], STRINGSIZE);
   DelSuffix(TargName);
   AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   ParUnprocessed[z] = False;
@@ -567,9 +563,9 @@ int main(int argc, char **argv)
 
   DoubleErr = False;
   PartList = NULL;
-  for (z = 1; z <= ParamCount; z++)
+  for (z = 1; z < argc; z++)
     if (ParUnprocessed[z])
-      ReadSymbols(z);
+      ReadSymbols(argv[z], z);
 
   /* double-defined symbols? */
 
@@ -615,9 +611,9 @@ int main(int argc, char **argv)
   /* do relocations, underwhile write target file */
 
   UndefErr = 0;
-  for (z = 1; z <= ParamCount; z++)
+  for (z = 1; z < argc; z++)
     if (ParUnprocessed[z])
-      ProcessFile(z);
+      ProcessFile(argv[z], z);
 
   /* write final creator record */
 

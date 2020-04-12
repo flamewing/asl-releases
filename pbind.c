@@ -159,10 +159,8 @@ int main(int argc, char **argv)
   char *ph1, *ph2;
   String Ver;
 
-  ParamCount = argc-1;
-  ParamStr = argv;
-
-  NLS_Initialize();
+  if (!NLS_Initialize(&argc, argv))
+    exit(4);
   endian_init();
 
   as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
@@ -177,9 +175,9 @@ int main(int argc, char **argv)
 
   Buffer = (Byte*) malloc(sizeof(Byte) * BufferSize);
 
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
-    errno = 0; printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(), getmessage(Num_InfoMessHead2)); ChkIO(OutName);
+    errno = 0; printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]), getmessage(Num_InfoMessHead2)); ChkIO(OutName);
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2; ph1 = ph2+1, ph2 = strchr(ph1, '\n'))
     {
       *ph2 = '\0';
@@ -189,9 +187,9 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  ProcessCMD(BINDParams, BINDParamCnt, ParUnprocessed, "BINDCMD", ParamError);
+  ProcessCMD(argc, argv, BINDParams, BINDParamCnt, ParUnprocessed, "BINDCMD", ParamError);
 
-  z = ParamCount;
+  z = argc - 1;
   while ((z > 0) && (!ParUnprocessed[z]))
     z--;
   if (z == 0)
@@ -201,15 +199,15 @@ int main(int argc, char **argv)
   }
   else
   {
-    strmaxcpy(TargName, ParamStr[z], STRINGSIZE); ParUnprocessed[z] = False;
+    strmaxcpy(TargName, argv[z], STRINGSIZE); ParUnprocessed[z] = False;
     AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
   }
 
   OpenTarget();
 
-  for (z = 1; z <= ParamCount; z++)
+  for (z = 1; z < argc; z++)
    if (ParUnprocessed[z])
-     DirScan(ParamStr[z], ProcessFile);
+     DirScan(argv[z], ProcessFile);
 
   CloseTarget();
 

@@ -4,7 +4,7 @@ CURRDIR=.\\
 RM=del
 OBLANK=
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
+ALLFLAGS = $(CFLAGS) -DINCDIR="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
 
 !include makedefs.files
 
@@ -62,7 +62,10 @@ $(RESCOMPTARGET): $(RESCOMP_OBJECTS)
 	$(LD) -ml -e$(RESCOMPTARGET) $(RESCOMP_OBJECTS) $(LDFLAGS)
 
 $(TEX2DOCTARGET): $(TEX2DOC_OBJECTS)
-	$(LD) -ml -e$(TEX2DOCTARGET) $(TEX2DOC_OBJECTS) $(LDFLAGS)
+	$(LD) @&&!
+-ml -e$(TEX2DOCTARGET)
+$(TEX2DOC_OBJECTS) $(LDFLAGS)
+!
 
 $(TEX2HTMLTARGET): $(TEX2HTML_OBJECTS)
 	$(LD) -ml -e$(TEX2HTMLTARGET) $(TEX2HTML_OBJECTS) $(LDFLAGS)
@@ -110,7 +113,9 @@ test: binaries
 install: all $(UNUMLAUTTARGET)
 	install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
-clean: clean_doc_DE clean_doc_EN
+clean_doc: clean_doc_DE clean_doc_EN
+
+clean: clean_doc
 	$(RM) $(ALLTARGETS)
 	$(RM) $(TEX2DOCTARGET)
 	$(RM) $(TEX2HTMLTARGET)

@@ -18,8 +18,8 @@ $(DOC_EN_DIR)as.dvi: $(DOC_EN_DIR)as.tex $(INCFILES)
 	latex -aux-directory=$(DOC_EN_DIR) -output-directory=$(DOC_EN_DIR) $(DOC_EN_DIR)as
 
 $(DOC_EN_DIR)as.doc: $(DOC_EN_DIR)as.tex $(INCFILES) $(TEX2DOCTARGET)
-	$(CURRDIR)$(TEX2DOCTARGET) $(DOC_EN_DIR)as.tex $(DOC_EN_DIR)as.doc
-	$(CURRDIR)$(TEX2DOCTARGET) $(DOC_EN_DIR)as.tex $(DOC_EN_DIR)as.doc
+	$(CURRDIR)$(TEX2DOCTARGET) $(TEX2DOC_FLAGS) $(DOC_EN_DIR)as.tex $(DOC_EN_DIR)as.doc
+	$(CURRDIR)$(TEX2DOCTARGET) $(TEX2DOC_FLAGS) $(DOC_EN_DIR)as.tex $(DOC_EN_DIR)as.doc
 
 $(DOC_EN_DIR)as.html: $(DOC_EN_DIR)as.tex $(INCFILES) $(TEX2HTMLTARGET)
 	$(CURRDIR)$(TEX2HTMLTARGET) $(DOC_EN_DIR)as.tex $(DOC_EN_DIR)as.html

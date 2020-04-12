@@ -18,6 +18,7 @@
 #include "endian.h"
 #include "bpemu.h"
 #include "nls.h"
+#include "chardefs.h"
 
 #include "nlmessages.h"
 
@@ -106,6 +107,11 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   LongInt DefPos = -1, MomPos, DefLength = 0, MomLength, z, StrStart, CtryCnt, Ctrys[100];
   Boolean fi, Gotcha;
 
+  const tNLSCharacterTab *CharacterTab;
+  char *pStr;
+  unsigned StrCap;
+  tNLSCharacter Ch;
+
   /* get reference for finding out which language set to use */
 
   CountryCode = NLS_GetCountryCode();
@@ -169,6 +175,15 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
 #endif
           Result = FSearch(Dest, sizeof(Dest), File, NULL, ptr);
           MsgFile = Result ? NULL : myopen(Dest, MsgId1, MsgId2);
+          if (!MsgFile)
+          {
+            String LibPath;
+
+            strmaxcpy(LibPath, ptr, sizeof(LibPath));
+            strreplace(LibPath, SPATHSEP "bin", SPATHSEP "lib", 0, sizeof(LibPath));
+            Result = FSearch(Dest, sizeof(Dest), File, NULL, LibPath);
+            MsgFile = Result ? NULL : myopen(Dest, MsgId1, MsgId2);
+          }
         }
       }
       if (!MsgFile)
@@ -251,6 +266,17 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   Catalog->MsgBlock = (char *) malloc(MomLength);
   if ((int)fread(Catalog->MsgBlock, 1, MomLength, MsgFile) != MomLength)
     error(ERdMsg);
+
+  /* character replacement according to runtime codepage */
+
+  CharacterTab = GetCharacterTab(NLS_GetCodepage());
+  for (z = 1; z < Catalog->MsgCount; z++)
+  {
+    pStr = Catalog->MsgBlock + Catalog->StrPosis[z];
+    StrCap = strlen(pStr);
+    for (Ch = (tNLSCharacter)0; Ch < eCH_cnt; Ch++)
+      strreplace(pStr, NLS_HtmlCharacterTab[Ch], (*CharacterTab)[Ch], 2, StrCap);
+  }
 
   fclose(MsgFile);
 }

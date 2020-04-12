@@ -12,6 +12,6 @@
 
 extern void MakeList(const char *pSrcLine);
 
-extern void asmlist_init();
+extern void asmlist_init(void);
 
 #endif /* _ASMLIST_H */

@@ -29,12 +29,3 @@ INCDIR = c:\as\include
 MANDIR = c:\as\man
 LIBDIR = c:\as\lib
 DOCDIR = c:\as\doc
-
-# -------------------------------------------------------------------------
-# character encoding to use (choose one of them)
-
-# CHARSET = CHARSET_ISO8859_1
-# CHARSET = CHARSET_ASCII7
-CHARSET = CHARSET_IBM437
-# CHARSET = CHARSET_IBM850
-

@@ -7,7 +7,7 @@ OBLANK=$(NULL) $(NULL)
 
 include makedefs.files
 
-ALLFLAGS = $(CFLAGS) -D$(CHARSET) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+ALLFLAGS = $(CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 #---------------------------------------------------------------------------
 # Primary Pargets
@@ -81,7 +81,9 @@ test: binaries
 install: all
 	.\install $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR) $(DOCDIR)
 
-clean: clean_doc_DE clean_doc_EN
+clean_doc: clean_doc_DE clean_doc_EN
+
+clean: clean_doc
 	-$(RM) $(ALLTARGETS)
 	-$(RM) $(TEX2DOCTARGET)
 	-$(RM) $(TEX2HTMLTARGET)

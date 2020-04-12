@@ -160,7 +160,12 @@ void ChkStack(void)
 
 static void SetSrcDir(const char *pSrcFile)
 {
-  const char *pSep = strchr(pSrcFile, PATHSEP);
+  const char *pSep;
+
+  pSep = strchr(pSrcFile, PATHSEP);
+  if (!pSep)
+    pSep = strchr(pSrcFile, '/');
+
   if (!pSep)
     *SrcDir = '\0';
   else

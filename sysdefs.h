@@ -1040,7 +1040,7 @@ typedef signed long long Integ64;
 typedef unsigned long long Card64;
 # define HAS64
 #endif
-#define NO_NLS
+#define W32_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/

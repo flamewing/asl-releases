@@ -71,10 +71,11 @@ is the file 'Makefile.def.tmpl'.  The settings to make include:
 - BINDIR, INCDIR, MANDIR, LIBDIR, DOCDIR: directiories where AS should be
   placed after compilation.
 
-- CHARSET: character encoding for non ASCII national special characters.
-  If your system is absolutely 8-bit-unclean, the ASCII7 setting is a good
-  idea.  Most modern Unix systems default to UTF-8, older to ISO8859-1, and
-  the IBM437 resp. IBM850 settings are only needed for DOS and OS/2 platforms.
+- TEX2DOC_FLAGS: in case you are cross-building, you may want to generate
+  the plaintext version of the manual in a character set appropriate for the
+  target system.  You may a '-codepage xxx' option in this variable to override
+  the character set detected on the host system.  xxx may be one of ascii,
+  iso8859-1, iso8859-15, koi8-r, 437, 850, 866, 1251, 1252, or utf-8.
 
 Step (3):
 

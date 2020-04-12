@@ -460,14 +460,11 @@ int main(int argc, char **argv)
   deco68_init();
   deco87c800_init();
 
-  ParamCount = argc - 1;
-  ParamStr = argv;
-
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
     char *ph1, *ph2;
 
-    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(), getmessage(Num_InfoMessHead2));
+    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]), getmessage(Num_InfoMessHead2));
     NxtLine();
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2; ph1 = ph2 + 1, ph2 = strchr(ph1, '\n'))
     {
@@ -480,7 +477,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  ProcessCMD(DASParams, DASParamCnt, ParUnprocessed, pEnvName, ParamError);
+  ProcessCMD(argc, argv, DASParams, DASParamCnt, ParUnprocessed, pEnvName, ParamError);
 
   if (!Disassemble)
   {

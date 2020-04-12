@@ -571,9 +571,9 @@ int main(int argc, char **argv)
   char *ph1, *ph2;
   String Ver;
 
-  ParamStr = argv; ParamCount = argc - 1;
-
-  nls_init(); NLS_Initialize();
+  nls_init();
+  if (!NLS_Initialize(&argc, argv))
+    exit(4);
 
   endian_init();
   strutil_init();
@@ -589,10 +589,10 @@ int main(int argc, char **argv)
 
   InitChunk(&UsedList);
 
-  if (ParamCount == 0)
+  if (argc <= 1)
   {
     errno = 0;
-    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(), getmessage(Num_InfoMessHead2));
+    printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]), getmessage(Num_InfoMessHead2));
     ChkIO(OutName);
     for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2; ph1 = ph2 + 1, ph2 = strchr(ph1, '\n'))
     {
@@ -615,7 +615,7 @@ int main(int argc, char **argv)
   EntryAdrPresent = False;
   AutoErase = False;
   StartHeader = 0;
-  ProcessCMD(P2BINParams, P2BINParamCnt, ParUnprocessed, "P2BINCMD", ParamError);
+  ProcessCMD(argc, argv, P2BINParams, P2BINParamCnt, ParUnprocessed, "P2BINCMD", ParamError);
 
   if (ProcessedEmpty(ParUnprocessed))
   {
@@ -625,16 +625,16 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  z = ParamCount;
+  z = argc - 1;
   while ((z > 0) && (!ParUnprocessed[z]))
     z--;
-  strmaxcpy(TargName, ParamStr[z], STRINGSIZE);
+  strmaxcpy(TargName, argv[z], STRINGSIZE);
   if (!RemoveOffset(TargName, &Dummy))
-    ParamError(False, ParamStr[z]);
+    ParamError(False, argv[z]);
   ParUnprocessed[z] = False;
   if (ProcessedEmpty(ParUnprocessed))
   {
-    strmaxcpy(SrcName, ParamStr[z], STRINGSIZE);
+    strmaxcpy(SrcName, argv[z], STRINGSIZE);
     DelSuffix(TargName);
   }
   AddSuffix(TargName, STRINGSIZE, BinSuffix);
@@ -649,9 +649,9 @@ int main(int argc, char **argv)
     if (ProcessedEmpty(ParUnprocessed))
       ProcessGroup(SrcName, MeasureFile);
     else
-      for (z = 1; z <= ParamCount; z++)
+      for (z = 1; z < argc; z++)
         if (ParUnprocessed[z])
-          ProcessGroup(ParamStr[z], MeasureFile);
+          ProcessGroup(argv[z], MeasureFile);
     if (StartAdr > StopAdr)
     {
       errno = 0;
@@ -668,9 +668,9 @@ int main(int argc, char **argv)
   if (ProcessedEmpty(ParUnprocessed))
     ProcessGroup(SrcName, ProcessFile);
   else
-    for (z = 1; z <= ParamCount; z++)
+    for (z = 1; z < argc; z++)
       if (ParUnprocessed[z])
-        ProcessGroup(ParamStr[z], ProcessFile);
+        ProcessGroup(argv[z], ProcessFile);
 
   CloseTarget();
 
@@ -679,9 +679,9 @@ int main(int argc, char **argv)
     if (ProcessedEmpty(ParUnprocessed))
       ProcessGroup(SrcName, EraseFile);
     else
-      for (z = 1; z <= ParamCount; z++)
+      for (z = 1; z < argc; z++)
         if (ParUnprocessed[z])
-          ProcessGroup(ParamStr[z], EraseFile);
+          ProcessGroup(argv[z], EraseFile);
   }
 
   return 0;

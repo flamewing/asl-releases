@@ -46,6 +46,10 @@ extern void strmaxprep(char *Dest, const char *Src, int MaxLen);
 extern void strins(char *Dest, const char *Src, int Pos);
 extern void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen); 
 
+extern unsigned as_strnlen(const char *pStr, unsigned MaxLen);
+
+extern int strreplace(char *pHaystack, const char *pFrom, const char *pTo, int ToMaxLen, unsigned HaystackSize);
+
 extern int strlencmp(const char *pStr1, unsigned Str1Len,
                      const char *pStr2, unsigned Str2Len);
 
