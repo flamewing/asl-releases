@@ -3,6 +3,7 @@
 \usepackage{german}
 \usepackage{makeidx}
 \usepackage{hyperref}
+\usepackage{longtable}
 \pagestyle{headings}
 \sloppy
 \textwidth 15cm
@@ -494,16 +495,15 @@ Verzeichnisse enthalten im einzelnen:
 \item{{\tt LIB}: vorgesehen f"ur Initialisierungsdateien.}
 \end{itemize}
 Eine Auflistung der Dateien, die in jeder Bin"ardistribution enthalten
-sind, findet sich in den Tabellen \ref{TabCommonPackageList1} bis
-\ref{TabCommonPackageList3}.  Falls eine der in diesen (oder den
-folgenden) Tabellen aufgef"uhrten Dateien fehlt, hat jemand (im
-Zweifelsfalle ich) beim Kopieren geschlafen...
+sind, findet sich in Tabelle \ref{TabCommonPackageList}.  Falls eine der
+in diesen (oder den folgenden) Tabellen aufgef"uhrten Dateien fehlt, hat
+jemand (im Zweifelsfalle ich) beim Kopieren geschlafen...
 
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
+\begin{center}\begin{longtable}{|l|l|}
 \hline
 Datei             & Funktion \\
 \hline
+\endhead
 \hline
 {\bf Verzeichnis BIN} & \\
 \hline
@@ -521,7 +521,6 @@ TOOLS.MSG         & gemeinsame Textresourcen zu den Tools \\
 CMDARG.MSG        & gemeinsame Textresourcen zu allen Programmen \\
 IOERRS.MSG        & \\
 \hline
-\hline
 {\bf Verzeichnis DOC} & \\
 \hline
 AS\_DE.DOC        & deutsche Dokumentation, ASCII-Format \\
@@ -530,7 +529,6 @@ AS\_DE.TEX        & deutsche Dokumentation, LaTeX-Format \\
 AS\_EN.DOC        & englische Dokumentation, ASCII-Format \\
 AS\_EN.HTML       & englische Dokumentation, HTML-Format \\
 AS\_EN.TEX        & englische Dokumentation, LaTeX-Format \\
-\hline
 \hline
 {\bf Verzeichnis INCLUDE} & \\
 \hline
@@ -549,20 +547,6 @@ REG683XX.INC      & Registeradressen 68332/68340/68360 \\
 REG7000.INC       & Registeradressen TMS70Cxx \\
 REG78310.INC      & Registeradressen \& Vektoren 78K3 \\
 REG78K0.INC       & Registeradressen 78K0 \\
-\hline
-\end{tabular}\end{center}
-\caption{Standardumfang einer Bin"ardistribution - Teil 1
-         \label{TabCommonPackageList1}}
-\end{table*}
-
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
-\hline
-Datei             & Funktion \\
-\hline
-\hline
-{\bf Verzeichnis INCLUDE} & \\
-\hline
 REG96.INC         & Registeradressen MCS-96 \\
 REGACE.INC        & Registeradressen ACE \\
 REGAVROLD.INC     & Register- \& Bitadressen AVR-Familie (veraltet)\\
@@ -599,20 +583,6 @@ STDDEF60.INC      & Befehlsmakros \& Registeradressen \\
                   & PowerPC \\
 STDDEF62.INC      & Registeradressen \& Makros ST6 (veraltet)\\
 STDDEF75.INC      & Registeradressen 75K0 \\
-\hline
-\end{tabular}\end{center}
-\caption{Standardumfang einer Bin"ardistribution - Teil 2
-         \label{TabCommonPackageList2}}
-\end{table*}
-
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
-\hline
-Datei             & Funktion \\
-\hline
-\hline
-{\bf Verzeichnis INCLUDE} & \\
-\hline
 STDDEF87.INC      & Register- \& Speicheradressen TLCS-870 \\
 STDDEF90.INC      & Register- \& Speicheradressen TLCS-90 \\
 STDDEF96.INC      & Register- \& Speicheradressen TLCS-900 \\
@@ -642,9 +612,7 @@ Z8\/*.INC         & Register- \& Bitadressen Z8-Familie \\
                   & (nicht direkt benutzen, REGZ8.INC \\
                   & inkludieren) \\
 \hline
-\hline
 {\bf Verzeichnis LIB} & \\
-\hline
 \hline
 {\bf Verzeichnis MAN} & \\
 \hline
@@ -654,10 +622,9 @@ PBIND.1           & Kurzanleitung zu PBIND \\
 P2HEX.1           & Kurzanleitung zu P2HEX \\
 P2BIN.1           & Kurzanleitung zu P2BIN \\
 \hline
-\end{tabular}\end{center}
-\caption{Standardumfang einer Bin"ardistribution - Teil 3
-         \label{TabCommonPackageList3}}
-\end{table*}
+\caption{Standardumfang einer Bin"ardistribution
+ \label{TabCommonPackageList}}
+\end{longtable}\end{center}
 
 Je nach Plattform kann eine Bin"ardistribution aber noch weitere Dateien
 enthalten, um einen Betrieb zu erm"oglichen, wie es z.B. bei DOS-Extendern
@@ -2949,7 +2916,7 @@ hinwegzuretten: Zu Beginn eines Durchlaufes werden alle Stacks geleert!
 
 \tty{ORG} erlaubt es, den assemblerinternen Adre"sz"ahler mit einem neuen
 Wert zu besetzen.  Der Wertebereich ist vom momentan gew"ahlten Segment
-und vom Prozessortyp abh"angig (Tabellen \ref{TabORG1} bis \ref{TabORG5}).
+und vom Prozessortyp abh"angig (Tabelle \ref{TabORG}).
 Die untere Grenze ist dabei immer 0; die obere Grenze der angegebene Wert
 minus eins.
 \par
@@ -2971,84 +2938,35 @@ aber die {\em Ausf"uhrungsadresse} des Codes und f"uhren als
 Argument von \tty{ORG} nicht zum gew"unschten Ergebnis.  In
 solchen F"allen ist die \tty{RORG}-Anweisung (\ref{SectRORG}) das
 Mittel der Wahl.
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\begin{longtable}{|l|c|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
+\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{I-}   & \tin{X-}   & \tin{Y-}   & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} & \tin{EE-} \\
+           &            &            & \tin{DATA} & \tin{DATA} & \tin{DATA} & \tin{DATA} &          &           & \tin{DATA} & \tin{DATA} \\
 \hline
+\endhead
 \hline
-\input{../doc_COM/taborg1.tex}
+\input{../doc_COM/taborg.tex}
 \hline
-\end{tabular}\end{center}
-\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 1\label{TabORG1}}
-\end{table*}
-\clearpage
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\multicolumn{11}{|l|}{$^{1}$ Initialwert 80h. } \\
+\multicolumn{11}{|l|}{  Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
+\multicolumn{11}{|l|}{  als Zielprozessor auf jeden Fall mit \tty{ORG} angepa"st werden!} \\
 \hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
+\multicolumn{11}{|l|}{$^{2}$ Da der Z180 weiterhin logisch nur 64K ansprechen kann, ist der} \\
+\multicolumn{11}{|l|}{ganze Adre"sraum nur mittels \tty{PHASE}-Anweisungen erreichbar!} \\
 \hline
+\multicolumn{11}{|l|}{$^{3}$ Initialwert 400h.} \\
 \hline
-\input{../doc_COM/taborg2.tex}
+\multicolumn{11}{|l|}{$^{4}$ Initialwert 800h bzw. 0C00h} \\
 \hline
-\multicolumn{10}{|l|}{$^{*}$ Initialwert 80h. } \\
-\multicolumn{10}{|l|}{  Da der 8051 kein RAM jenseits 80h hat, mu"s der Initialwert f"ur den 8051} \\
-\multicolumn{10}{|l|}{  als Zielprozessor auf jeden Fall mit \tty{ORG} angepa"st werden!} \\
+\multicolumn{11}{|l|}{$^{5}$ Bereich f"ur Programmcode auf 1 MByte begrenzt} \\
 \hline
-\multicolumn{10}{|l|}{$^{+}$ Da der Z180 weiterhin logisch nur 64K ansprechen kann, ist der} \\
-\multicolumn{10}{|l|}{ganze Adre"sraum nur mittels \tty{PHASE}-Anweisungen erreichbar!} \\
+\multicolumn{11}{|l|}{$^{6}$ Gr"o"se ist vom Zielprozessor abh"angig} \\
 \hline
-\multicolumn{10}{|l|}{$^{-}$ Initialwert 400h. } \\
+\multicolumn{11}{|l|}{$^{7}$ Gr"o"se und Verf"ugbarkeit sind vom Zielprozessor abh"angig} \\
 \hline
-\end{tabular}\end{center}
-\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 2\label{TabORG2}}
-\end{table*}
-\clearpage
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg3.tex}
-\hline
-\end{tabular}\end{center}
-\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 3\label{TabORG3}}
-\end{table*}
-\clearpage
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg4.tex}
-\hline
-\multicolumn{10}{|l|}{$^{*}$ Initialwert 800h bzw. 0C00h} \\
-\hline
-\end{tabular}\end{center}
-\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 4\label{TabORG4}}
-\end{table*}
-\clearpage
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-\tin{Ziel} &            &            &             &             &             & \tin{DATA} & \tin{IO} & \tin{REG} & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg5.tex}
-\hline
-\multicolumn{10}{|l|}{$^{*}$ Bereich f"ur Programmcode auf 1 MByte
-begrenzt} \\
-\hline
-\end{tabular}\end{center}
-\caption{Adre"sbereiche f"ur \tty{ORG} --- Teil 5\label{TabORG5}}
-\end{table*}
+\caption{Adre"sbereiche f"ur \tty{ORG}}
+\label{TabORG}
+\end{longtable}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4243,7 +4161,8 @@ Namen verwaltet:
       adressierbar ist;}
 \item{\tty{IO}: I/O-Adre"sbereich;}
 \item{\tty{REG}: Registerbank des ST9;}
-\item{\tty{ROMDATA}: Konstanten-ROM der NEC-Signalprozessoren.}
+\item{\tty{ROMDATA}: Konstanten-ROM der NEC-Signalprozessoren;}
+\item{\tty{EEDATA}: eingebautes EEPROM.}
 \end{itemize}
 Zu Adre"sbereich und Initialwerten der Segmente siehe Abschnitt \ref{SectORG}.
 (\tty{ORG}).  Je nach Prozessorfamilie sind auch nicht alle Segmenttypen
@@ -5061,13 +4980,13 @@ Attribute gibt es deswegen wie bei \tty{DC} auch hier nicht.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{DB,DW,DD,DQ \& DT}
-\ttindex{DB}\ttindex{DW}\ttindex{DD}\ttindex{DQ}\ttindex{DT}
+\subsection{DN,DB,DW,DD,DQ \& DT}
+\ttindex{DN}\ttindex{DB}\ttindex{DW}\ttindex{DD}\ttindex{DQ}\ttindex{DT}
 
 {\em\begin{tabbing}
 G"ultigkeit: \= Intel (au"ser 4004/4040), Zilog, Toshiba, NEC, TMS370,\\
              \> Siemens, AMD, M16(C), MELPS7700/65816, National, ST9,\\
-             \> TMS7000, TMS1000, $\mu$PD77230, Signetics,\\
+             \> Atmel, TMS7000, TMS1000, $\mu$PD77230, Signetics,\\
              \> Fairchild, Intersil,\\
              \> XS1
 \end{tabbing}}
@@ -5079,6 +4998,7 @@ etwas anders:
 Zum einen wird die Kennung der Operandengr"o"se in das Mnemonic
 verlegt:
 \begin{itemize}
+\item{\tty{DN}: 4-Bit-Integer}
 \item{\tty{DB}: Byte oder ASCII-String wie bei \tty{DC.B}}
 \item{\tty{DW}: 16-Bit-Integer}
 \item{\tty{DD}: 32-Bit-Integer oder single precision}
@@ -5125,6 +5045,16 @@ Alias f"ur \tty{DB} bzw. \tty{DW} dar, wobei die beiden Paare sich
 jedoch in der Byte-Order unterscheiden: Die Befehle, die von National
 zur Adre"sablage vorgesehen waren, benutzen Big-Endian, \tty{BYTE} bzw.
 \tty{WORD} jedoch Little-Endian.
+
+Wird \tty{DB} in einem Adre"sraum angewendet, der nicht byte-adressierbar
+ist (z.B. das \tty{CODE}-Segment des Atmel AVR), so werden immer zwei Bytes
+in ein 16-Bit-Wort gepackt, entsprechende der durch die Architektur gegebenen 
+Endinaness - das untere Byte wird bei Little-Endian also zuerst gef"ullt.  Ist
+die Gesamtmenge aller Bytes ungerade, so bleibt die andere Worth"alfte ungenutzt
+und ist quasi ''Padding''.  Sie wird auch nicht genutzt, falls im Quellcode
+eine weitere \tty{DB}-Anweisung unmittelbar folge sollte.  Sinngem"a"s gilt
+das gleiche f"ur \tty{DN}, nur werden hier zwei oder vier Nibbles in ein Byte
+oder 16-Bit-Wort gepackt.
 
 Der NEC 77230 nimmt mit seiner \tty{DW}-Anweisung eine Sonderstellung ein:
 Sie funktioniert eher wie \tty{DATA} bei seinen kleineren Br"udern,
@@ -10708,18 +10638,26 @@ der P-Datei abgelegt, man m"ochte ihn jedoch auf Adresse 1000h
 verschieben, so h"angt man an \tty{(\$1000)} an den Dateinamen (ohne
 Leerzeichen!) an.
 \par
-Da das TI-DSK-Format Daten und Code unterscheiden kann, l"a"st sich
-mit dem Schalter
+Sofern die P-Datei nicht nur Daten aus dem Code-Segment enth"alt, kann
+man mit dem Schalter
+\begin{verbatim}
+ -segment <name>
+\end{verbatim}
+ausw"ahlen, aus welchen Segment Daten extrahiert und ins HEX-Format
+gewandelt werden sollen.  Die als Argument anzugebenden Segmentnamen sind
+die gleichen wie f"ur den \tty{SEGMENT}-Befehl (\ref{SEGMENT}). Ein
+Sonderfall ist das TI-DSK-Format, das als einziges Format vermerken kann,
+ob Daten ins Code- oder Datensegment geh"oren.  In diesem Fall extrahiert
+P2HEX automatisch beide Segmente, solange kein Segment explizit angegeben
+ist.
+\par
+Analog zur \verb!-r! Option kann man mit der Option 
 \begin{verbatim}
  -d <Start>-<Ende>
 \end{verbatim}
-festlegen, welche Adre"sbereiche als Daten ausgegeben werden sollen.
-Dollarzeichen sind hier \bb{nicht} zugelassen.  Diese Option sollte
-nicht mehr in neuen Projekten verwendet werden, da P2HEX inzwischen
-direkt Daten aus dem Datensegment korrekt umsetzen kann.
-
-F"ur das DSK- sowie Intel- und Motorola-Format relevant ist dagegen
-die Option
+ein Filter f"ur das Datensegment angeben.
+\par
+F"ur das DSK-, Intel- und Motorola-Format relevant ist die Option
 \begin{verbatim}
  -e <Adresse> ,
 \end{verbatim}
@@ -11147,6 +11085,11 @@ Angaben:
                {Warnung}
                {Ein TRAP mit dieser Nummer benutzt den gleichen Maschinencode
                 wie ein von der CPU unterst"utzter Maschinenbefehl.}
+               {keines}
+\errentry{ 360}{Padding hinzugef"ugt}
+               {Warnung}
+               {Die Menge abgelegter Bytes ist ungerade; eine H"alfte des letzten
+                16-Bit-Wortes bleibt ungenutzt.}
                {keines}
 \errentry{1000}{Symbol doppelt definiert}
                {Fehler}

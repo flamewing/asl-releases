@@ -80,7 +80,7 @@ typedef enum
 } TColumn;
 
 #define MAXCOLS 30
-#define MAXROWS 200
+#define MAXROWS 300
 typedef char *TableLine[MAXCOLS];
 typedef struct
 {
@@ -1097,10 +1097,12 @@ static void DumpTable(void)
 
 static void GetTableName(char *Dest, int DestSize)
 {
+  int ThisTableNum = (CurrEnv == EnvTabular) ? TableNum + 1 : TableNum;
+
   if (InAppendix)
-    as_snprintf(Dest, DestSize, "%c.%d", Chapters[0] + 'A', TableNum);
+    as_snprintf(Dest, DestSize, "%c.%d", Chapters[0] + 'A', ThisTableNum);
   else
-    as_snprintf(Dest, DestSize, "%d.%d", Chapters[0], TableNum);
+    as_snprintf(Dest, DestSize, "%d.%d", Chapters[0], ThisTableNum);
 }
 
 static void GetSectionName(char *Dest, int DestSize)
@@ -1184,6 +1186,15 @@ static void TeXKillLine(Word Index)
 static void TeXDummy(Word Index)
 {
   UNUSED(Index);
+}
+
+static void TeXDummyEqual(Word Index)
+{
+  char Token[TOKLEN];
+  UNUSED(Index);
+
+  assert_token("=");
+  ReadToken(Token);
 }
 
 static void TeXDummyNoBrack(Word Index)
@@ -1340,6 +1351,8 @@ static EnvType GetEnvType(char *Name)
 {
   EnvType z;
 
+  if (!strcmp(Name, "longtable"))
+    return EnvTabular;
   for (z = EnvNone + 1; z < EnvCount; z++)
     if (!strcmp(Name, EnvNames[z]))
       return z;
@@ -1903,6 +1916,11 @@ static void TeXAddMarginPar(Word Index)
   SaveEnv(EnvMarginPar);
 }
 
+static void TeXEndHead(Word Index)
+{
+  UNUSED(Index);
+}
+
 static void TeXAddCaption(Word Index)
 {
   char tmp[100];
@@ -1910,14 +1928,14 @@ static void TeXAddCaption(Word Index)
   UNUSED(Index);
 
   assert_token("{");
-  if (CurrEnv != EnvTable)
+  if ((CurrEnv != EnvTable) && (CurrEnv != EnvTabular))
     error("caption outside of a table");
   FlushLine();
   fputs("<P><CENTER>", outfile);
+  GetTableName(tmp, sizeof(tmp));
   SaveEnv(EnvCaption);
   AddLine(TableName, "");
   cnt = strlen(TableName);
-  GetTableName(tmp, sizeof(tmp));
   strcat(tmp, ": ");
   AddLine(tmp, " ");
   cnt += 1 + strlen(tmp);
@@ -2191,7 +2209,7 @@ static void TeXWriteLabel(Word Index)
   assert_token("{");
   collect_token(Name, "}");
 
-  if (CurrEnv == EnvCaption)
+  if ((CurrEnv == EnvCaption) || (CurrEnv == EnvTabular))
     GetTableName(Value, sizeof(Value));
   else
   {
@@ -2924,6 +2942,7 @@ int main(int argc, char **argv)
   AddInstTable(TeXTable, "textwidth", 0, TeXDummyNoBrack);
   AddInstTable(TeXTable, "evensidemargin", 0, TeXDummyNoBrack);
   AddInstTable(TeXTable, "oddsidemargin", 0, TeXDummyNoBrack);
+  AddInstTable(TeXTable, "hfuzz", 0, TeXDummyEqual);
   AddInstTable(TeXTable, "newcommand", 0, TeXNewCommand);
   AddInstTable(TeXTable, "def", 0, TeXDef);
   AddInstTable(TeXTable, "font", 0, TeXFont);
@@ -2975,6 +2994,7 @@ int main(int argc, char **argv)
   AddInstTable(TeXTable, "leftrightarrow", 0, TeXAddLeftRightArrow);
   AddInstTable(TeXTable, "marginpar", 0, TeXAddMarginPar);
   AddInstTable(TeXTable, "caption", 0, TeXAddCaption);
+  AddInstTable(TeXTable, "endhead", 0, TeXEndHead);
   AddInstTable(TeXTable, "label", 0, TeXWriteLabel);
   AddInstTable(TeXTable, "ref", 0, TeXWriteRef);
   AddInstTable(TeXTable, "cite", 0, TeXWriteCitation);

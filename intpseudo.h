@@ -6,24 +6,14 @@
 /*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Haeufiger benutzte Intel-Pseudo-Befehle                                   */
+/* Commonly used 'Intel Style' Pseudo Instructions                           */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: intpseudo.h,v 1.2 2004/09/26 12:57:19 alfred Exp $                   */
-/*****************************************************************************
- * $Log: intpseudo.h,v $
- * Revision 1.2  2004/09/26 12:57:19  alfred
- * - remove trailing blanks
- *
- * Revision 1.1  2004/05/29 11:33:04  alfred
- * - relocated DecodeIntelPseudo() into own module
- *
- *****************************************************************************/
   
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
    
-extern Boolean DecodeIntelPseudo(Boolean Turn);
+extern Boolean DecodeIntelPseudo(Boolean BigEndian);
 
 #endif /* _INTPSEUDO_H */

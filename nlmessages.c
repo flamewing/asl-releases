@@ -175,14 +175,21 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
 #endif
           Result = FSearch(Dest, sizeof(Dest), File, NULL, ptr);
           MsgFile = Result ? NULL : myopen(Dest, MsgId1, MsgId2);
-          if (!MsgFile)
+          
+          /* absolutely last resort: if we were found via PATH (no slashes in argv[0]/Path), look up this
+             path and replace bin/ with lib/ for 'companion path': */
+      
+          if (!MsgFile && !strrchr(Path, PATHSEP) && !FSearch(Dest, sizeof(Dest), Path, NULL, ptr))
           {
-            String LibPath;
-
-            strmaxcpy(LibPath, ptr, sizeof(LibPath));
-            strreplace(LibPath, SPATHSEP "bin", SPATHSEP "lib", 0, sizeof(LibPath));
-            Result = FSearch(Dest, sizeof(Dest), File, NULL, LibPath);
-            MsgFile = Result ? NULL : myopen(Dest, MsgId1, MsgId2);
+            char *pSep2;
+            
+            strreplace(Dest, SPATHSEP "bin", SPATHSEP "lib", 0, sizeof(Dest));
+            pSep2 = strrchr(Dest, PATHSEP);
+            if (pSep2)
+              *pSep2 = '\0';
+            strmaxcat(Dest, SPATHSEP, sizeof(Dest));
+            strmaxcat(Dest, File, sizeof(Dest));
+            MsgFile = myopen(Dest, MsgId1, MsgId2);
           }
         }
       }

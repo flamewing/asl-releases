@@ -24,12 +24,6 @@
 #include "toolutils.h"
 #include "headids.h"
 
-static char *SegNames[PCMax + 1] =
-{
-  "NONE","CODE","DATA","IDATA","XDATA","YDATA",
-  "BITDATA","IO","REG","ROMDATA"
-};
-
 int main(int argc, char **argv)
 {
   FILE *ProgFile;
@@ -174,7 +168,7 @@ int main(int argc, char **argv)
         printf("%-13s ", FoundId->Name);
       ChkIO(OutName);
 
-      errno = 0; printf("%-5s   ", SegNames[Segment]); ChkIO(OutName);
+      errno = 0; printf("%-7s   ", SegNames[Segment]); ChkIO(OutName);
 
       if (!Read4(ProgFile, &StartAdr))
         ChkIO(ProgName);

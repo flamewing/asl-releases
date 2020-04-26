@@ -36,6 +36,7 @@ extern Word FileID;
 
 extern char *OutName;
 
+extern const char *SegNames[PCMax + 1];
 
 extern void WrCopyRight(const char *Msg);
 
@@ -47,7 +48,7 @@ extern void FormatError(const char *Name, const char *Detail);
 
 extern void ChkIO(const char *Name);
 
-extern Word Granularity(Byte Header);
+extern Word Granularity(Byte Header, Byte Segment);
 
 extern void ReadRecordHeader(Byte *Header, Byte *Target, Byte* Segment,
                              Byte *Gran, const char *Name, FILE *f);

@@ -240,6 +240,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgSrcLEThanDest; break;
     case ErrNum_TrapValidInstruction:
       msgno = Num_ErrMsgTrapValidInstruction; break;
+    case ErrNum_PaddingAdded:
+      msgno = Num_ErrMsgPaddingAdded; break;
     case ErrNum_DoubleDef:
       msgno = Num_ErrMsgDoubleDef; break;
     case ErrNum_SymbolUndef:

@@ -23,12 +23,12 @@ Message MessFileRequest
  "program file to list [.P] : "
 
 Message MessHeaderLine1
- "Codetyp     Segment  Startadresse   L&auml;nge (Byte)  Endadresse"
- "Code-Type   Segment  Start-Address  Length (Bytes) End-Address"
+ "Codetyp     Segment    Startadresse   L&auml;nge (Byte)  Endadresse"
+ "Code-Type   Segment    Start-Address  Length (Bytes) End-Address"
 
 Message MessHeaderLine2
- "------------------------------------------------------------"
  "--------------------------------------------------------------"
+ "----------------------------------------------------------------"
 
 Message MessGenerator
  "Erzeuger : "

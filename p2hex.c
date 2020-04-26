@@ -39,12 +39,11 @@ const char *FileName, LongWord Offset
 );
 
 static CMDProcessed ParUnprocessed;
-static int z;
 static FILE *TargFile;
 static String SrcName, TargName, CFormat;
+static Byte ForceSegment;
 
-static LongWord StartAdr, StopAdr, LineLen;
-static LongWord StartData, StopData, EntryAdr;
+static LongWord StartAdr[PCMax + 1], StopAdr[PCMax + 1], LineLen, EntryAdr;
 static LargeInt Relocate;
 static Boolean StartAuto, StopAuto, AutoErase, EntryAdrPresent;
 static Word Seg, Ofs;
@@ -54,7 +53,7 @@ static Byte MultiMode;   /* 0=8M, 1=16, 2=8L, 3=8H */
 static Byte MinMoto;
 static Boolean Rec5;
 static Boolean SepMoto;
-static LongWord AVRLen, ValidSegs;
+static LongWord AVRLen;
 
 static Boolean RelAdr;
 
@@ -75,6 +74,18 @@ static ChunkList UsedList;
 
 static String CTargName;
 static unsigned NumCBlocks;
+
+static void DefStartStopAdr(LongWord SegMask)
+{
+  Byte Seg;
+
+  for (Seg = 0; Seg <= PCMax; Seg++)
+    if (SegMask & (1 << Seg))
+    {
+      StartAdr[Seg] = 0;
+      StopAdr[Seg] = (Seg == SegData) ? 0x1fff : 0x7fff;
+    }
+}
 
 static void Filename2CName(char *pDest, const char *pSrc)
 {
@@ -170,6 +181,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
            ErgStop = 0xfffffffful,
            IntOffset = 0, MaxAdr;
   LongInt NextPos;
+  LongWord ValidSegs;
   Word ErgLen = 0, ChkSum = 0, RecCnt, Gran, HSeg;
   String CBlockName;
 
@@ -220,7 +232,15 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           ActFormat = FoundDscr->HexFormat;
       }
 
-      ValidSegs = (1 << SegCode);
+      if (ForceSegment != SegNone)
+        ValidSegs = (1 << ForceSegment);
+      else
+      {
+        ValidSegs = (1 << SegCode);
+        if (eHexFormatTiDSK == ActFormat)
+          ValidSegs |= (1 << SegData);
+      }
+
       switch (ActFormat)
       {
         case eHexFormatMotoS:
@@ -237,9 +257,6 @@ static void ProcessFile(const char *FileName, LongWord Offset)
         case eHexFormatMico8:
           MaxAdr = 0xfffffffful;
           break;
-        case eHexFormatTiDSK:
-          ValidSegs = (1 << SegCode) | (1 << SegData);
-          /* fall-through */
         default:
           MaxAdr = 0xffffu;
       }
@@ -253,13 +270,13 @@ static void ProcessFile(const char *FileName, LongWord Offset)
       if (NextPos >= FileSize(SrcFile) - 1)
         FormatError(FileName, getmessage(Num_FormatInvRecordLenMsg));
 
-      doit = (FilterOK(InpCPU)) && (ValidSegs & (1 << InpSegment));
+      doit = FilterOK(InpCPU) && (ValidSegs & (1 << InpSegment));
 
       if (doit)
       {
         InpStart += Offset;
-        ErgStart = max(StartAdr, InpStart);
-        ErgStop = min(StopAdr, InpStart + (InpLen/Gran) - 1);
+        ErgStart = max(StartAdr[InpSegment], InpStart);
+        ErgStop = min(StopAdr[InpSegment], InpStart + (InpLen/Gran) - 1);
         doit = (ErgStop >= ErgStart);
         if (doit)
         {
@@ -271,7 +288,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
         }
       }
 
-      if (ErgStop > MaxAdr)
+      if (doit && (ErgStop > MaxAdr))
       {
         errno = 0; printf(" %s\n", getmessage(Num_ErrMsgAdrOverflow)); ChkIO(OutName);
       }
@@ -292,7 +309,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
         /* relative Angaben ? */
 
         if (RelAdr)
-          ErgStart -= StartAdr;
+          ErgStart -= StartAdr[InpSegment];
 
         /* Auf Zieladressbereich verschieben */
 
@@ -518,7 +535,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               for (z = 0; z < (TransLen / 2); z++)
               {
                 errno = 0;
-                if (((ErgStart + z >= StartData) && (ErgStart + z <= StopData))
+                if (((ErgStart + z >= StartAdr[SegData]) && (ErgStart + z <= StopAdr[SegData]))
                  || (InpSegment == SegData))
                   fprintf(TargFile, "M%04X", LoWord(WBuffer[z]));
                 else
@@ -533,6 +550,11 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               {
                 fprintf(TargFile, "%04X", LoWord(WBuffer[0]));
                 SumLen += 2;
+              }
+              else if (TransLen >= 1)
+              {
+                fprintf(TargFile, "%04X", Lo(WBuffer[0]));
+                SumLen++;
               }
               break;
             case eHexFormatMico8:
@@ -705,10 +727,12 @@ static void ProcessGroup(const char *GroupName_O, ProcessProc Processor)
 static void MeasureFile(const char *FileName, LongWord Offset)
 {
   FILE *f;
-  Byte Header, CPU, Segment, Gran;
+  Byte Header, InpCPU, InpSegment, Gran;
   Word Length, TestID;
   LongWord Adr, EndAdr;
   LongInt NextPos;
+  LongWord ValidSegs;
+  Boolean doit;
 
   f = fopen(FileName, OPENRDMODE);
   if (!f)
@@ -721,7 +745,7 @@ static void MeasureFile(const char *FileName, LongWord Offset)
 
   do
   {
-    ReadRecordHeader(&Header, &CPU, &Segment, &Gran, FileName, f);
+    ReadRecordHeader(&Header, &InpCPU, &InpSegment, &Gran, FileName, f);
 
     if (Header == FileHeaderDataRec)
     {
@@ -733,16 +757,23 @@ static void MeasureFile(const char *FileName, LongWord Offset)
       if (NextPos > FileSize(f))
         FormatError(FileName, getmessage(Num_FormatInvRecordLenMsg));
 
-      if (FilterOK(Header))
+      if (ForceSegment != SegNone)
+        ValidSegs = (1 << ForceSegment);
+      else
+        ValidSegs = (1 << SegCode) | (1 << SegData);
+
+      doit = FilterOK(InpCPU) && (ValidSegs & (1 << InpSegment));
+
+      if (doit)
       {
         Adr += Offset;
         EndAdr = Adr + (Length/Gran) - 1;
         if (StartAuto)
-          if (StartAdr > Adr)
-            StartAdr = Adr;
+          if (StartAdr[InpSegment] > Adr)
+            StartAdr[InpSegment] = Adr;
         if (StopAuto)
-          if (EndAdr > StopAdr)
-            StopAdr = EndAdr;
+          if (EndAdr > StopAdr[InpSegment])
+            StopAdr[InpSegment] = EndAdr;
       }
 
       fseek(f, NextPos, SEEK_SET);
@@ -762,8 +793,7 @@ static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
 
   if (Negate)
   {
-    StartAdr = 0;
-    StopAdr = 0x7fff;
+    DefStartStopAdr(1 << SegCode);
     return CMDOK;
   }
   else
@@ -776,7 +806,7 @@ static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
     if (StartAuto)
       ok = True;
     else
-      StartAdr = ConstLongInt(Arg, &ok, 10);
+      StartAdr[SegCode] = ConstLongInt(Arg, &ok, 10);
     *p = Save;
     if (!ok)
       return CMDErr;
@@ -785,11 +815,11 @@ static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
     if (StopAuto)
       ok = True;
     else
-      StopAdr = ConstLongInt(p + 1, &ok, 10);
+      StopAdr[SegCode] = ConstLongInt(p + 1, &ok, 10);
     if (!ok)
       return CMDErr;
 
-    if ((!StartAuto) && (!StopAuto) && (StartAdr > StopAdr))
+    if (!StartAuto && (!StopAuto) && (StartAdr[SegCode] > StopAdr[SegCode]))
       return CMDErr;
 
     return CMDArg;
@@ -919,6 +949,24 @@ static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
   return CMDArg;
 }
 
+static CMDResult CMD_ForceSegment(Boolean Negate,  const char *Arg)
+{
+  int z;
+
+  for (z = 0; z <= PCMax; z++)
+   if (!as_strcasecmp(Arg, SegNames[z]))
+     break;
+  if (z > PCMax)
+    return CMDErr;
+
+  if (!Negate)
+    ForceSegment = z;
+  else if (ForceSegment == z)
+    ForceSegment = SegNone;
+
+  return CMDArg;
+}
+
 static CMDResult CMD_DataAdrRange(Boolean Negate,  const char *Arg)
 {
   char *p, Save;
@@ -929,8 +977,7 @@ static CMDResult CMD_DataAdrRange(Boolean Negate,  const char *Arg)
 
   if (Negate)
   {
-    StartData = 0;
-    StopData = 0x1fff;
+    DefStartStopAdr(1 << SegData);
     return CMDOK;
   }
   else
@@ -941,16 +988,16 @@ static CMDResult CMD_DataAdrRange(Boolean Negate,  const char *Arg)
 
     Save = (*p);
     *p = '\0';
-    StartData = ConstLongInt(Arg, &ok, 10);
+    StartAdr[SegData] = ConstLongInt(Arg, &ok, 10);
     *p = Save;
     if (!ok)
       return CMDErr;
 
-    StopData = ConstLongInt(p + 1, &ok, 10);
+    StopAdr[SegData] = ConstLongInt(p + 1, &ok, 10);
     if (!ok)
       return CMDErr;
 
-    if (StartData > StopData)
+    if (StartAdr[SegData] > StopAdr[SegData])
       return CMDErr;
 
     return CMDArg;
@@ -1107,6 +1154,7 @@ static CMDRec P2HEXParams[] =
   { "l", CMD_LineLen },
   { "k", CMD_AutoErase },
   { "M", CMD_MinMoto },
+  { "SEGMENT", CMD_ForceSegment },
   { "AVRLEN", CMD_AVRLen },
   { "CFORMAT", CMD_CFormat },
 };
@@ -1117,6 +1165,7 @@ int main(int argc, char **argv)
 {
   char *ph1, *ph2;
   String Ver;
+  int TargArgIdx;
 
   nls_init();
   if (!NLS_Initialize(&argc, argv))
@@ -1147,12 +1196,9 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  StartAdr = 0;
-  StopAdr = 0x7fff;
+  DefStartStopAdr(0xffff);
   StartAuto = True;
   StopAuto = True;
-  StartData = 0;
-  StopData = 0x1fff;
   EntryAdr = -1;
   EntryAdrPresent = False;
   AutoErase = False;
@@ -1166,6 +1212,7 @@ int main(int argc, char **argv)
   MinMoto = 1;
   *TargName = '\0';
   Relocate = 0;
+  ForceSegment = SegNone;
   strcpy(CFormat, DefaultCFormat);
   ProcessCMD(argc, argv, P2HEXParams, P2HEXParamCnt, ParUnprocessed, "P2HEXCMD", ParamError);
 
@@ -1175,16 +1222,16 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  z = argc - 1;
-  while ((z > 0) && (!ParUnprocessed[z]))
-    z--;
-  strmaxcpy(TargName, argv[z], STRINGSIZE);
+  TargArgIdx = argc - 1;
+  while ((TargArgIdx > 0) && !ParUnprocessed[TargArgIdx])
+    TargArgIdx--;
+  strmaxcpy(TargName, argv[TargArgIdx], STRINGSIZE);
   if (!RemoveOffset(TargName, &Dummy))
-    ParamError(False, argv[z]);
-  ParUnprocessed[z] = False;
+    ParamError(False, argv[TargArgIdx]);
+  ParUnprocessed[TargArgIdx] = False;
   if (ProcessedEmpty(ParUnprocessed))
   {
-    strmaxcpy(SrcName, argv[z], STRINGSIZE);
+    strmaxcpy(SrcName, argv[TargArgIdx], STRINGSIZE);
     DelSuffix(TargName);
   }
   AddSuffix(TargName, STRINGSIZE, HexSuffix);
@@ -1193,25 +1240,31 @@ int main(int argc, char **argv)
 
   if (StartAuto || StopAuto)
   {
+    int z;
+    Byte ChkSegment = ForceSegment ? ForceSegment : SegCode;
+
     if (StartAuto)
-      StartAdr = 0xfffffffful;
+      for (z = 0; z <= PCMax; z++)
+        StartAdr[z] = 0xfffffffful;
     if (StopAuto)
-      StopAdr = 0;
+      for (z = 0; z <= PCMax; z++)
+        StopAdr[z] = 0;
+
     if (ProcessedEmpty(ParUnprocessed))
       ProcessGroup(SrcName, MeasureFile);
     else
       for (z = 1; z < argc; z++)
         if (ParUnprocessed[z])
           ProcessGroup(argv[z], MeasureFile);
-    if (StartAdr > StopAdr)
+    if (StartAdr[ChkSegment] > StopAdr[ChkSegment])
     {
       errno = 0;
       printf("%s\n", getmessage(Num_ErrMsgAutoFailed));
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
-    printf("0x%08lX\n", LoDWord(StopAdr));
+    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr[ChkSegment]));
+    printf("0x%08lX\n", LoDWord(StopAdr[ChkSegment]));
   }
 
   OpenTarget();
@@ -1230,10 +1283,13 @@ int main(int argc, char **argv)
   if (ProcessedEmpty(ParUnprocessed))
     ProcessGroup(SrcName, ProcessFile);
   else
+  {
+    int z;
+
     for (z = 1; z < argc; z++)
       if (ParUnprocessed[z])
         ProcessGroup(argv[z], ProcessFile);
-
+  }
 
   if ((FormatOccured & eMotoOccured) && (!SepMoto))
   {
@@ -1399,9 +1455,13 @@ int main(int argc, char **argv)
   {
     if (ProcessedEmpty(ParUnprocessed)) ProcessGroup(SrcName, EraseFile);
     else
+    {
+      int z;
+
       for (z = 1; z < argc; z++)
         if (ParUnprocessed[z])
           ProcessGroup(argv[z], EraseFile);
+    }
   }
 
   return 0;

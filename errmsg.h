@@ -52,6 +52,7 @@ typedef enum
   ErrNum_Deprecated = 330,
   ErrNum_SrcLEThanDest = 340,
   ErrNum_TrapValidInstruction = 350,
+  ErrNum_PaddingAdded = 360,
   ErrNum_DoubleDef = 1000,
   ErrNum_SymbolUndef = 1010,
   ErrNum_InvSymName = 1020,

@@ -36,14 +36,12 @@ char *EnvName = "ASCMD";               /* Environment-Variable fuer Default-
 char *SegNames[PCMax + 2] =
 {
   "NOTHING", "CODE", "DATA", "IDATA", "XDATA", "YDATA",
-  "BITDATA", "IO", "REG", "ROMDATA", "STRUCT"
+  "BITDATA", "IO", "REG", "ROMDATA", "EEDATA", "STRUCT"
 };
 char SegShorts[PCMax + 2] =
 {
-  '-','C','D','I','X','Y','B','P','R','O','S'
+  '-','C','D','I','X','Y','B','P','R','O','E','S'
 };
-
-/** ValidSymChars:SET OF Char=['A'..'Z','a'..'z',#128..#165,'0'..'9','_','.']; **/
 
 StringPtr SourceFile;                    /* Hauptquelldatei */
 

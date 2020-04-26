@@ -45,6 +45,7 @@ Message InfoMessHelp
  "          -r <Start>-<Stop> : auszufilternder Adre&szlig;bereich\n" \
  "          -R <offset>       : Adressen um Offset verschieben\n" \
  "          ($ = erste bzw. letzte auftauchende Adresse)\n" \
+ "          -segment <Name>   :  Quellsegment w&auml;hlen\n" \
  "          -a                : Adressen relativ zum Start ausgeben\n" \
  "          -l <L&auml;nge>        : L&auml;nge Datenzeile/Bytes\n" \
  "          -i <0|1|2>        : Terminierer f&uuml;r Intel-Hexfiles\n" \
@@ -65,6 +66,7 @@ Message InfoMessHelp
  "         -r <start>-<stop> : address range to filter out\n" \
  "         -R <offset>       : relocate addresses by offset\n" \
  "         ($ = first resp. last occuring address)\n" \
+ "         -segment <name>   :  select source segment\n" \
  "         -a                : addresses in hex file relativ to start\n" \
  "         -l <length>       : set length of data line in bytes\n" \
  "         -i <0|1|2>        : terminating line for intel hex\n" \

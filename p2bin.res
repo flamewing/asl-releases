@@ -44,6 +44,7 @@ Message InfoMessHelp
  "Optionen: -f <Headerliste>  :  auszufilternde Records\n" \
  "          -r <Start>-<Stop> :  auszufilternder Adre&szlig;bereich\n" \
  "          ($ = erste bzw. letzte auftauchende Adresse)\n" \
+ "          -segment <Name>   :  Quellsegment w&auml;hlen\n" \
  "          -l <8-Bit-Zahl>   :  Inhalt unbenutzter Speicherzellen festlegen\n" \
  "          -s                :  Pr&uuml;fsumme in Datei ablegen\n" \
  "          -m <Modus>        :  EPROM-Modus (odd,even,byte0..byte3)\n" \
@@ -54,6 +55,7 @@ Message InfoMessHelp
  "options: -f <header list>  :  records to filter out\n" \
  "         -r <start>-<stop> :  address range to filter out\n" \
  "         ($ = first resp. last occuring address)\n" \
+ "         -segment <name>   :  select source segment\n" \
  "         -l <8-bit-number> :  set filler value for unused cells\n" \
  "         -s                :  put checksum into file\n" \
  "         -m <mode>         :  EPROM-mode (odd,even,byte0..byte3)\n" \

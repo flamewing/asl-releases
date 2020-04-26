@@ -44,7 +44,7 @@ static LongWord StartAdr, StopAdr, EntryAdr, RealFileLen;
 static LongWord MaxGran, Dummy;
 static Boolean StartAuto, StopAuto, AutoErase, EntryAdrPresent;
 
-static Byte FillVal;
+static Byte FillVal, ValidSegment;
 static Boolean DoCheckSum;
 
 static Byte SizeDiv;
@@ -230,7 +230,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
       if (NextPos >= FileSize(SrcFile) - 1)
         FormatError(FileName, getmessage(Num_FormatInvRecordLenMsg));
 
-      doit = (FilterOK(InpHeader) && (InpSegment == SegCode));
+      doit = (FilterOK(InpHeader) && (InpSegment == ValidSegment));
 
       if (doit)
       {
@@ -362,7 +362,7 @@ static void MeasureFile(const char *FileName, LongWord Offset)
       if (NextPos > FileSize(f))
         FormatError(FileName, getmessage(Num_FormatInvRecordLenMsg));
 
-      if (FilterOK(Header) && (Segment == SegCode))
+      if (FilterOK(Header) && (Segment == ValidSegment))
       {
         Adr += Offset;
         EndAdr = Adr + (Length/Gran)-1;
@@ -552,6 +552,24 @@ static CMDResult CMD_AutoErase(Boolean Negate, const char *Arg)
   return CMDOK;
 }
 
+static CMDResult CMD_ForceSegment(Boolean Negate,  const char *Arg)
+{
+  int z;
+
+  for (z = 0; z <= PCMax; z++)
+   if (!as_strcasecmp(Arg, SegNames[z]))
+     break;
+  if (z > PCMax)
+    return CMDErr;
+
+  if (!Negate)
+    ValidSegment = z;
+  else if (ValidSegment == z)
+    ValidSegment = SegCode;
+
+  return CMDArg;
+}
+
 #define P2BINParamCnt (sizeof(P2BINParams) / sizeof(*P2BINParams))
 static CMDRec P2BINParams[] =
 {
@@ -562,7 +580,8 @@ static CMDRec P2BINParams[] =
   { "l", CMD_FillVal },
   { "e", CMD_EntryAdr },
   { "S", CMD_StartHeader },
-  { "k", CMD_AutoErase }
+  { "k", CMD_AutoErase },
+  { "SEGMENT", CMD_ForceSegment },
 };
 
 int main(int argc, char **argv)	
@@ -615,6 +634,7 @@ int main(int argc, char **argv)
   EntryAdrPresent = False;
   AutoErase = False;
   StartHeader = 0;
+  ValidSegment = SegCode;
   ProcessCMD(argc, argv, P2BINParams, P2BINParamCnt, ParUnprocessed, "P2BINCMD", ParamError);
 
   if (ProcessedEmpty(ParUnprocessed))

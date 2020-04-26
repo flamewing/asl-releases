@@ -22,6 +22,7 @@
 #include "asmallg.h"
 #include "asmitree.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 
@@ -64,7 +65,7 @@ typedef struct
 typedef struct
 {
   const char *pName;
-  Word FlashEndD16, RAMSize, IOAreaSize;
+  Word FlashEndD16, RAMSize, EESize, IOAreaSize;
   Boolean RegistersMapped;
   Byte Core;
 } tCPUProps;
@@ -355,7 +356,9 @@ static void DecodeDATA_AVR(Word Index)
        }
      }
     if (!OK)
-       CodeLen = 0;
+      CodeLen = 0;
+    else if (AccFull)
+      WrError(ErrNum_PaddingAdded);
   }
 }
 
@@ -1027,11 +1030,10 @@ static void MakeCode_AVR(void)
 {
   CodeLen = 0; DontPrint = False;
 
-  /* zu ignorierendes */
-
   if (Memo("")) return;
 
-  /* all done via table :-) */
+  if (DecodeIntelPseudo(False))
+    return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
@@ -1063,6 +1065,8 @@ static Boolean ChkZeroArg(void)
 
 static void SwitchTo_AVR(void *pUser)
 {
+  pCurrCPUProps = (const tCPUProps*)pUser;
+
   TurnWords = False;
   ConstMode = ConstModeC;
   SetIsOccupiedFnc = ChkZeroArg;
@@ -1077,8 +1081,12 @@ static void SwitchTo_AVR(void *pUser)
   Grans[SegCode] = 2; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 32;
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;  SegLimits[SegIO] = 0x3f;
-
-  pCurrCPUProps = (const tCPUProps*)pUser;
+  if (pCurrCPUProps->EESize)
+  {
+    ValidSegs |= (1 << SegEEData);
+    SegLimits[SegEEData] = pCurrCPUProps->EESize;
+    Grans[SegEEData] = 1; ListGrans[SegEEData] = 1; SegInits[SegEEData] = 0;
+  }
 
   SegLimits[SegCode] = ((LongWord)pCurrCPUProps->FlashEndD16) << 4 | 0xf;
   SegLimits[SegData] = (pCurrCPUProps->RegistersMapped ? RegBankSize : 0)
@@ -1105,120 +1113,120 @@ static void SwitchTo_AVR(void *pUser)
 
 static const tCPUProps CPUProps[] =
 {
-  { "AT90S1200"      ,  0x01f, 0x0000, IOAreaStdSize , True , eCore90S1200   },
-  { "AT90S2313"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S2323"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S2333"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreClassic   }, /* == ATtiny22 */
-  { "AT90S2343"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S4414"      ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S4433"      ,  0x07f, 0x0080, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S4434"      ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S8515"      ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90C8534"      ,  0x0ff, 0x0100, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90S8535"      ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreClassic   },
-  { "AT90USB646"     ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "AT90USB647"     ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "AT90USB1286"    ,  0xfff, 0x2000, IOAreaExtSize , True , eCoreMega      },
-  { "AT90USB1287"    ,  0xfff, 0x2000, IOAreaExtSize , True , eCoreMega      },
+  { "AT90S1200"      ,  0x01f, 0x0000, 0x003f, IOAreaStdSize , True , eCore90S1200   },
+  { "AT90S2313"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S2323"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S2333"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreClassic   }, /* == ATtiny22 */
+  { "AT90S2343"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4414"      ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4433"      ,  0x07f, 0x0080, 0x00ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S4434"      ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S8515"      ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90C8534"      ,  0x0ff, 0x0100, 0x01ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90S8535"      ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreClassic   },
+  { "AT90USB646"     ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB647"     ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB1286"    ,  0xfff, 0x2000, 0x0fff, IOAreaExtSize , True , eCoreMega      },
+  { "AT90USB1287"    ,  0xfff, 0x2000, 0x0fff, IOAreaExtSize , True , eCoreMega      },
 
-  { "AT43USB355"     ,  0x2ff, 0x0400, 0x2000-RegBankSize, True , eCoreClassic   }, /* allow USB registers @ 0x1fxx */
+  { "AT43USB355"     ,  0x2ff, 0x0400, 0x0000, 0x2000-RegBankSize, True , eCoreClassic   }, /* allow USB registers @ 0x1fxx */
 
-  { "ATTINY4"        ,  0x00f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY5"        ,  0x00f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY9"        ,  0x01f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY10"       ,  0x01f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY11"       ,  0x01f, 0x0000, IOAreaStdSize , True , eCore90S1200   },
-  { "ATTINY12"       ,  0x01f, 0x0000, IOAreaStdSize , True , eCore90S1200   },
-  { "ATTINY13"       ,  0x01f, 0x0040, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY13A"      ,  0x01f, 0x0040, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY15"       ,  0x01f, 0x0000, IOAreaStdSize , True , eCore90S1200   },
-  { "ATTINY20"       ,  0x03f, 0x0080, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY24"       ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY24A"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY25"       ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY26"       ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY28"       ,  0x03f, 0x0000, IOAreaStdSize , True , eCore90S1200   },
-  { "ATTINY40"       ,  0x07f, 0x0100, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY44"       ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY44A"      ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY45"       ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY48"       ,  0x07f, 0x0100, IOAreaExtSize , True , eCoreTiny      },
-  { "ATTINY84"       ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY84A"      ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY85"       ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY87"       ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreTiny16K   },
-  { "ATTINY88"       ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
-  { "ATTINY102"      ,  0x01f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY104"      ,  0x01f, 0x0020, IOAreaStdSize , False, eCoreMinTiny   },
-  { "ATTINY167"      ,  0x1ff, 0x0200, IOAreaExtSize , True , eCoreTiny16K   },
-  { "ATTINY261"      ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY261A"     ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY43U"      ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY441"      ,  0x07f, 0x0100, IOAreaExtSize , True , eCoreTiny      },
-  { "ATTINY461"      ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY461A"     ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY828"      ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
-  { "ATTINY841"      ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreTiny      },
-  { "ATTINY861"      ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY861A"     ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY1634"     ,  0x1ff, 0x0400, IOAreaExtSize , True , eCoreTiny16K   },
-  { "ATTINY2313"     ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY2313A"    ,  0x03f, 0x0080, IOAreaStdSize , True , eCoreTiny      },
-  { "ATTINY4313"     ,  0x07f, 0x0100, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY4"        ,  0x00f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY5"        ,  0x00f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY9"        ,  0x01f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY10"       ,  0x01f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY11"       ,  0x01f, 0x0000, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY12"       ,  0x01f, 0x0000, 0x003f, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY13"       ,  0x01f, 0x0040, 0x003f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY13A"      ,  0x01f, 0x0040, 0x003f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY15"       ,  0x01f, 0x0000, 0x003f, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY20"       ,  0x03f, 0x0080, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY24"       ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY24A"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY25"       ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY26"       ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY28"       ,  0x03f, 0x0000, 0x0000, IOAreaStdSize , True , eCore90S1200   },
+  { "ATTINY40"       ,  0x07f, 0x0100, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY44"       ,  0x07f, 0x0100, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY44A"      ,  0x07f, 0x0100, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY45"       ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY48"       ,  0x07f, 0x0100, 0x003f, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY84"       ,  0x0ff, 0x0200, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY84A"      ,  0x0ff, 0x0200, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY85"       ,  0x0ff, 0x0200, 0x00ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY87"       ,  0x0ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY88"       ,  0x0ff, 0x0200, 0x003f, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY102"      ,  0x01f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY104"      ,  0x01f, 0x0020, 0x0000, IOAreaStdSize , False, eCoreMinTiny   },
+  { "ATTINY167"      ,  0x1ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY261"      ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY261A"     ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY43U"      ,  0x07f, 0x0100, 0x003f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY441"      ,  0x07f, 0x0100, 0x00ff, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY461"      ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY461A"     ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY828"      ,  0x0ff, 0x0200, 0x00ff, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY841"      ,  0x0ff, 0x0200, 0x00ff, IOAreaExtSize , True , eCoreTiny      },
+  { "ATTINY861"      ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY861A"     ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY1634"     ,  0x1ff, 0x0400, 0x00ff, IOAreaExtSize , True , eCoreTiny16K   },
+  { "ATTINY2313"     ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY2313A"    ,  0x03f, 0x0080, 0x007f, IOAreaStdSize , True , eCoreTiny      },
+  { "ATTINY4313"     ,  0x07f, 0x0100, 0x00ff, IOAreaStdSize , True , eCoreTiny      },
 
-  { "ATMEGA48"       ,  0x07f, 0x0200, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA48"       ,  0x07f, 0x0200, 0x00ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA8"        ,  0x0ff, 0x0400, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA8515"     ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA8535"     ,  0x0ff, 0x0200, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA88"       ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA8U2"      ,  0x0ff, 0x0200, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA8"        ,  0x0ff, 0x0400, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA8515"     ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA8535"     ,  0x0ff, 0x0200, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA88"       ,  0x0ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA8U2"      ,  0x0ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA16"       ,  0x1ff, 0x0400, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA161"      ,  0x1ff, 0x0400, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA162"      ,  0x1ff, 0x0400, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA163"      ,  0x1ff, 0x0400, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA164"      ,  0x1ff, 0x0400, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA165"      ,  0x1ff, 0x0200, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA168"      ,  0x1ff, 0x0400, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA169"      ,  0x1ff, 0x0400, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA16U2"     ,  0x1ff, 0x0200, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA16U4"     ,  0x1ff, 0x0500, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA16"       ,  0x1ff, 0x0400, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA161"      ,  0x1ff, 0x0400, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA162"      ,  0x1ff, 0x0400, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA163"      ,  0x1ff, 0x0400, 0x01ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA164"      ,  0x1ff, 0x0400, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA165"      ,  0x1ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA168"      ,  0x1ff, 0x0400, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA169"      ,  0x1ff, 0x0400, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA16U2"     ,  0x1ff, 0x0200, 0x01ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA16U4"     ,  0x1ff, 0x0500, 0x01ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA32"       ,  0x3ff, 0x0800, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA323"      ,  0x3ff, 0x0800, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA324"      ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA325"      ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA3250"     ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA328"      ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA329"      ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA3290"     ,  0x3ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA32U2"     ,  0x3ff, 0x0400, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA32U4"     ,  0x3ff, 0x0a00, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA32U6"     ,  0x3ff, 0x0a00, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32"       ,  0x3ff, 0x0800, 0x03ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA323"      ,  0x3ff, 0x0800, 0x03ff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA324"      ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA325"      ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA3250"     ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA328"      ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA329"      ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA3290"     ,  0x3ff, 0x0800, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U2"     ,  0x3ff, 0x0400, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U4"     ,  0x3ff, 0x0a00, 0x03ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA32U6"     ,  0x3ff, 0x0a00, 0x03ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA406"      ,  0x4ff, 0x0800, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA406"      ,  0x4ff, 0x0800, 0x01ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA64"       ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA640"      ,  0x7ff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA644"      ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA644RFR2"  ,  0x7ff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA645"      ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA6450"     ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA649"      ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA6490"     ,  0x7ff, 0x1000, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA64"       ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA640"      ,  0x7ff, 0x2000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA644"      ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA644RFR2"  ,  0x7ff, 0x2000, 0x07ff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA645"      ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA6450"     ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA649"      ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA6490"     ,  0x7ff, 0x1000, 0x07ff, IOAreaExtSize , True , eCoreMega      },
 
-  { "ATMEGA103"      ,  0xfff, 0x1000, IOAreaStdSize , True , eCoreMega      },
-  { "ATMEGA128"      ,  0xfff, 0x1000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA1280"     ,  0xfff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA1281"     ,  0xfff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA1284"     ,  0xfff, 0x4000, IOAreaExtSize , True , eCoreMega      },
-  { "ATMEGA1284RFR2" ,  0xfff, 0x4000, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA103"      ,  0xfff, 0x1000, 0x0fff, IOAreaStdSize , True , eCoreMega      },
+  { "ATMEGA128"      ,  0xfff, 0x1000, 0x0fff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA1280"     ,  0xfff, 0x2000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA1281"     ,  0xfff, 0x2000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA1284"     ,  0xfff, 0x4000, 0x0fff, IOAreaExtSize , True , eCoreMega      },
+  { "ATMEGA1284RFR2" ,  0xfff, 0x4000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
 
-  { "ATMEGA2560"     , 0x1fff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA2561"     , 0x1fff, 0x2000, IOAreaExt2Size, True , eCoreMega      },
-  { "ATMEGA2564RFR2" , 0x1fff, 0x8000, IOAreaExt2Size, True , eCoreMega      },
-  { NULL             ,    0x0, 0     , 0             , False, eCoreNone      },
+  { "ATMEGA2560"     , 0x1fff, 0x2000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA2561"     , 0x1fff, 0x2000, 0x0fff, IOAreaExt2Size, True , eCoreMega      },
+  { "ATMEGA2564RFR2" , 0x1fff, 0x8000, 0x1fff, IOAreaExt2Size, True , eCoreMega      },
+  { NULL             ,    0x0, 0     , 0     , 0             , False, eCoreNone      },
 };
 
 void codeavr_init(void)
@@ -1230,4 +1238,3 @@ void codeavr_init(void)
 
    AddInitPassProc(InitCode_AVR);
 }
-

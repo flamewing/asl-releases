@@ -183,6 +183,10 @@ Message ErrMsgTrapValidInstruction
  "TRAP-Nummer ist g&uuml;ltige Instruktion"
  "TRAP number represents valid instruction"
 
+Message ErrMsgPaddingAdded
+ "Padding hinzugef&uuml;gt"
+ "Padding added"
+
 ;*****
 
 Message ErrMsgDoubleDef

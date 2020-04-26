@@ -28,18 +28,21 @@
 #define FileHeaderRRelocRec 0x84   /* relokatibler Datenrecord mit Symbolen */
 #define FileHeaderRelocInfo 0x85   /* Relokationsinformationen */
 
-#define SegNone  0
-#define SegCode  1
-#define SegData  2
-#define SegIData 3
-#define SegXData 4
-#define SegYData 5
-#define SegBData 6
-#define SegIO    7
-#define SegReg   8
-#define SegRData 9
-
-#define PCMax SegRData
+enum
+{
+  SegNone  = 0,
+  SegCode  = 1,
+  SegData  = 2,
+  SegIData = 3,
+  SegXData = 4,
+  SegYData = 5,
+  SegBData = 6,
+  SegIO    = 7,
+  SegReg   = 8,
+  SegRData = 9,
+  SegEEData = 10,
+  PCMax    = SegEEData
+};
 
 /* Definition der im Code liegenden, zu patchenden Typen: 
 

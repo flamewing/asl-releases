@@ -50,6 +50,8 @@ void MakeList(const char *pSrcLine)
 
   if ((!ListToNull) && (ThisDoLst) && ((ListMask & 1) != 0) && (!IFListMask()))
   {
+    LargeWord ListPC;
+
     /* Zeilennummer / Programmzaehleradresse: */
 
     if (IncDepth == 0)
@@ -64,9 +66,9 @@ void MakeList(const char *pSrcLine)
       as_snprintf(h2, sizeof(h2), Integ32Format, CurrLine);
       as_snprcatf(h, sizeof(h), "%5s/", h2);
     }
+    ListPC = EProgCounter() - CodeLen;
     as_snprcatf(h, sizeof(h), "%8.*lllu %c ",
-                ListRadixBase, (LargeInt)(EProgCounter() - CodeLen),
-                Retracted? 'R' : ':');
+                ListRadixBase, ListPC, Retracted? 'R' : ':');
 
     /* Extrawurst in Listing ? */
 
@@ -117,10 +119,12 @@ void MakeList(const char *pSrcLine)
         
       do
       {
-        /* If not the first code line, prepend blanks to fill up space below line# and address: */
+        /* If not the first code line, prepend blanks to fill up space below line number: */
 
         if (!First)
-          as_snprintf(h, sizeof(h), "%*s", (ListMask & ListMask_LineNums) ? 20 : 14, "");
+          as_snprintf(h, sizeof(h), "%*s%8.*lllu %c ",
+                      (ListMask & ListMask_LineNums) ? 9 : 3, "",
+                      ListRadixBase, ListPC, Retracted? 'R' : ':');
 
         SumLen = 0;
         do
@@ -149,6 +153,7 @@ void MakeList(const char *pSrcLine)
 
           /* advance pointers & keep track of # of characters printed */
 
+          ListPC++;
           Index += CurrListGran;
           SumLen += SystemListLen + 1;
 

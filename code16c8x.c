@@ -414,6 +414,13 @@ static void SwitchTo_16c8x(void)
   SegLimits[SegCode] += AddCodeSpace;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 0;
   SegLimits[SegData] = 0x1ff;
+  Grans[SegEEData] = 1; ListGrans[SegEEData] = 1; SegInits[SegEEData] = 0;
+  if ((MomCPU == CPU16C877) || (MomCPU == CPU16C876))
+    SegLimits[SegEEData] = 0xff;
+  else if ((MomCPU == CPU16C874) || (MomCPU == CPU16C873))
+    SegLimits[SegEEData] = 0x7f;
+  else
+    SegLimits[SegEEData] = 0x3f;
   ChkPC = ChkPC_16c8x;
 
   MakeCode = MakeCode_16c8x;

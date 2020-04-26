@@ -25,6 +25,7 @@
 \documentclass[12pt,twoside]{report}
 \usepackage{makeidx}
 \usepackage{hyperref}
+\usepackage{longtable}
 \pagestyle{headings}
 \sloppy
 %%\textwidth 15cm
@@ -488,16 +489,16 @@ the following groups of files:
 \item{{\tt MAN}: quick references for the individual programs in Unix
       'man' format.}
 \end{itemize}
-A list of the files found in every binary distribution is given in tables
-\ref{TabCommonPackageList1} to \ref{TabCommonPackageList3}.  In case a
-file listed in one of these (or the following) tables is missing, someone
-took a nap during copying (probably me)...
+A list of the files found in every binary distribution is given in table
+\ref{TabCommonPackageList}.  In case a file listed in one of these (or the
+following) tables is missing, someone took a nap during copying (probably
+me)...
 
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
+\begin{center}\begin{longtable}{|l|l|}
 \hline
-File              & function \\
+File              & Function \\
 \hline
+\endhead
 \hline
 {\bf Directory BIN} & \\
 \hline
@@ -515,7 +516,6 @@ TOOLS.MSG         & common text resources for all tools \\
 CMDARG.MSG        & common text resources for all programs \\
 IOERRS.MSG        & \\
 \hline
-\hline
 {\bf Directory DOC} & \\
 \hline
 AS\_DE.DOC        & german documentation, ASCII format \\
@@ -524,7 +524,6 @@ AS\_DE.TEX        & german documentation, LaTeX format \\
 AS\_EN.DOC        & english documentation, ASCII format \\
 AS\_EN.HTML       & english documentation, HTML format \\
 AS\_EN.TEX        & english documentation, LaTeX format \\
-\hline
 \hline
 {\bf Directory INCLUDE} & \\
 \hline
@@ -537,19 +536,6 @@ H8\_3048.INC      & register addresses H8/3048 \\
 REG166.INC        & addresses and instruction macros 80C166/167 \\
 REG251.INC        & addresses and bits 80C251 \\
 REG29K.INC        & peripheral addresses AMD 2924x \\
-\hline
-\end{tabular}\end{center}
-\caption{Standard Contents of a Binary Distribution - Part 1
-         \label{TabCommonPackageList1}}
-\end{table*}
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
-\hline
-File              & Function \\
-\hline
-\hline
-{\bf Directory INCLUDE} & \\
-\hline
 REG53X.INC        & register addresses H8/53x \\
 REG6303.INC       & register addresses 6303 \\
 REG683XX.INC      & register addresses 68332/68340/68360 \\
@@ -582,19 +568,6 @@ STDDEF18.INC      & register addresses PIC16C8x \\
 STDDEF2X.INC      & register addresses TMS3202x \\
 STDDEF37.INC      & register and bit addresses TMS370xxx \\
 STDDEF3X.INC      & peripheral addresses TMS320C3x \\
-\hline
-\end{tabular}\end{center}
-\caption{Standard Contents of a Binary Distribution - Part 2
-         \label{TabCommonPackageList2}}
-\end{table*}
-\begin{table*}[htp]
-\begin{center}\begin{tabular}{|l|l|}
-\hline
-File              & Function \\
-\hline
-\hline
-{\bf Directory INCLUDE} & \\
-\hline
 STDDEF4X.INC      & peripheral addresses TMS320C4x \\
 STDDEF47.INC      & instruction macros TLCS-47 \\
 STDDEF51.INC      & definition of SFRs and bits for \\
@@ -627,13 +600,19 @@ REGZ8.INC         & register addresses Z8 family (new) \\
 Z8/\*.INC         & register and bit addresses Z8 family \\
                   & (do not include directly, use REGZ8.INC) \\
 \hline
-\hline
 {\bf Directory LIB} & \\
 \hline
-\end{tabular}\end{center}
-\caption{Standard Contents of a Binary Distribution - Part 3
-         \label{TabCommonPackageList3}}
-\end{table*}
+{\bf Directory MAN} & \\
+\hline
+ASL.1             & Short Reference for AS \\
+PLIST.1           & Short Reference for PLIST \\
+PBIND.1           & Short Reference for PBIND \\
+P2HEX.1           & Short Reference for P2HEX \\
+P2BIN.1           & Short Reference for P2BIN \\
+\hline
+\caption{Standard Contents of a Binary Distribution
+         \label{TabCommonPackageList}}
+\end{longtable}\end{center}
 
 
 Depending on the platform, a binary distribution however may contain more
@@ -2852,7 +2831,7 @@ pass: all stacks are cleared at the beginning of a pass!
 
 \tty{ORG} allows to load the internal address counter (of the assembler)
 with a new value. The value range depends on the currently selected
-segment and on the processor type (tables \ref{TabORG1} to \ref{TabORG5}).
+segment and on the processor type (table \ref{TabORG}).
 The lower bound is always zero, and the upper bound is the given value
 minus 1.
 \par
@@ -2860,84 +2839,43 @@ minus 1.
 has to keep in mind that the argument of \tty{ORG} always is the
 {\em load address} of the code.  Expressions using the \$ or \*
 symbol to refer to the current program counter however deliver
-the {\em execution address} of the code and do not yeld the
+the {\em execution address} of the code and do not yield the
 desired result when used as argument for \tty{ORG}.  The
 \tty{RORG} statement (\ref{SectRORG}) should be used in such cases.
+
+\hfuzz=25pt
 \small
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\begin{longtable}{|l|c|c|c|c|c|c|c|c|c|c|}
 \hline
-\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-             &            &            &             &             &             & \tin{DATA} &          &           & \tin{DATA} \\
+\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{I-}   & \tin{X-}   & \tin{Y-}   & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-}  & \tin{EE-}  \\
+             &            &            & \tin{DATA} & \tin{DATA} & \tin{DATA} & \tin{DATA} &          &           & \tin{DATA}  & \tin{DATA} \\
 \hline
+\endhead
 \hline
-\input{../doc_COM/taborg1.tex}
+\input{../doc_COM/taborg.tex}
 \hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 1\label{TabORG1}}
-\end{table*}
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+\multicolumn{11}{|l|}{$^{1}$ Initial value 80h.} \\
+\multicolumn{11}{|l|}{   As the 8051 does not have any RAM beyond 80h, this value has to be} \\
+\multicolumn{11}{|l|}{   adapted with ORG for the 8051 as target processor!}\\
 \hline
-\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-             &            &            &             &             &             & \tin{DATA} &          &           & \tin{DATA} \\
+\multicolumn{11}{|l|}{$^{2}$ As the Z180 still can address only 64K logically, the whole}\\
+\multicolumn{11}{|l|}{   address space can only be reached via \tty{PHASE} instructions!}\\
 \hline
+\multicolumn{11}{|l|}{$^{3}$ initial value 400h.}\\
 \hline
-\input{../doc_COM/taborg2.tex}
+\multicolumn{11}{|l|}{$^{4}$ initial value 800h resp. 0C00h} \\
 \hline
-\multicolumn{10}{|l|}{$^{*}$ Initial value 80h.} \\
-\multicolumn{10}{|l|}{   As the 8051 does not have any RAM beyond 80h, this value has to be} \\
-\multicolumn{10}{|l|}{   adapted with ORG for the 8051 as target processor!}\\
+\multicolumn{11}{|l|}{$^{5}$ area for program code is limited to 1 MByte} \\
 \hline
-\multicolumn{10}{|l|}{$^{+}$ As the Z180 still can address only 64K logically, the whole}\\
-\multicolumn{10}{|l|}{   address space can only be reached via \tty{PHASE} instructions!}\\
+\multicolumn{11}{|l|}{$^{6}$ size depends on target processor} \\
 \hline
-\multicolumn{10}{|l|}{$^{-}$ Initial value 400h.}\\
+\multicolumn{11}{|l|}{$^{7}$ size and availibility depend on target processor} \\
 \hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 2\label{TabORG2}}
-\end{table*}
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-             &            &            &             &             &             & \tin{DATA} &          &           & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg3.tex}
-\hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 3\label{TabORG3}}
-\end{table*}
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-             &            &            &             &             &             & \tin{DATA} &          &           & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg4.tex}
-\hline
-\multicolumn{10}{|l|}{$^{*}$ initial value 800h resp. 0C00h} \\
-\hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 4\label{TabORG4}}
-\end{table*}
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
-\hline
-\tin{Target} & \tin{CODE} & \tin{DATA} & \tin{IDATA} & \tin{XDATA} & \tin{YDATA} & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} \\
-             &            &            &             &             &             & \tin{DATA} &          &           & \tin{DATA} \\
-\hline
-\hline
-\input{../doc_COM/taborg5.tex}
-\hline
-\multicolumn{10}{|l|}{$^{*}$ area for program code is limited to 1 MByte} \\
-\hline
-\end{tabular}\end{center}
-\caption{Address Ranges for \tty{ORG} --- Part 5\label{TabORG5}}
-\end{table*}
+\caption{Address Ranges for \tty{ORG}}
+\label{TabORG}
+\end{longtable}
 \normalsize
+\hfuzz=0pt
 
 In case that different variations in a processor family have address
 spaces of different size, the maximum range is listed for each.
@@ -4111,7 +4049,8 @@ the following segments with the following names are supported:
       addressable;}
 \item{\tty{IO}: I/O-address range;}
 \item{\tty{REG}: register bank of the ST9;}
-\item{\tty{ROMDATA}: constant ROM of the NEC signal processors.}
+\item{\tty{ROMDATA}: constant ROM of the NEC signal processors;}
+\item{\tty{EEDATA}: built-in EEPROM.}
 \end{itemize}
 See also section \ref{SectORG} (\tty{ORG}) for detailed information about
 address ranges and initial values of the segments. Depending on the
@@ -4918,13 +4857,13 @@ attributes therefore do not exist just as in the case of \tty{DC}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{DB,DW,DD,DQ, and DT}
-\ttindex{DB}\ttindex{DW}\ttindex{DD}\ttindex{DQ}\ttindex{DT}
+\subsection{DN,DB,DW,DD,DQ, and DT}
+\ttindex{DN}\ttindex{DB}\ttindex{DW}\ttindex{DD}\ttindex{DQ}\ttindex{DT}
 
 {\em\begin{tabbing}
 valid for: \= Intel (except for 4004/4040), Zilog, Toshiba,\\
            \> NEC, TMS370, Siemens, AMD, MELPS7700/65816,\\
-           \> M16(C), National, ST9, TMS70Cxx, TMS1000,\\
+           \> M16(C), National, ST9, Atmel, TMS70Cxx, TMS1000,\\
            \> Signetics, $\mu$PD77230, Fairchild, Intersil,\\
            \> XS1
 \end{tabbing}}
@@ -4933,6 +4872,7 @@ These commands are - one could say - the Intel counterpart to \tty{DS} and
 \tty{DC}, and as expected, their logic is a little bit different: First,
 the specification of the operand length is moved into the mnemonic:
 \begin{itemize}
+\item{\tty{DN}: 4-bit integer}
 \item{\tty{DB}: byte or ASCII string similar to \tty{DC.B}}
 \item{\tty{DW}: 16-bit integer}
 \item{\tty{DD}: 32-bit integer or single precision}
@@ -4973,6 +4913,15 @@ Similarly, \tty{BYTE/ADDR} resp. \tty{WORD/ADDRW} in COP4/8 mode are an
 alias for \tty{DB} resp. \tty{DW}, with the pairs differing in byte order:
 instructions defined by National for address storage use big endian,
 \tty{BYTE} resp. \tty{WORD} in contrast use little endian.
+
+If \tty{DB} is used in an address space that is not byte addressable (like
+the Atmel AVR's \tty{CODE} segment), bytes are packed in pairs into 16 bit
+words, according to the endianess given by the architecture: for little
+endian, the LSB is filled first.  If the total number of bytes is odd, one
+half of the last word remains unused, just like the argument list had been
+padded.  It will also not be used if another \tty{DB} immediately follows
+in source code.  The analogous is true for \tty{DN}, just with the difference
+that two or four nibbles are packet into a byte or 16 bit word.
 
 The NEC 77230 is special with its \tty{DW} instruction: It more works like
 the \tty{DATA} statement of its smaller brothers, but apart from string
@@ -10482,22 +10431,31 @@ arbitrary position.  This offset is simply appended to a file's name,
 surrounded with parentheses.  For example, if the code in a file
 starts at address 0 and you want to move it to address 1000 hex in the
 hex file, append \tty{(\$1000)} to the file's name (without spaces!).
-
-As the TI DSK format has the ability to distinguish between data and
-code, there is a switch
+\par
+In case the source file(s) not only contain data for the code segment,
+the switch
+\begin{verbatim}
+ -segment <name>
+\end{verbatim}
+allows to select the segment data is extracted from and converted to
+HEX format.  The segment names are the same as for the \tty{SEGMENT}
+pseudo instruction (\ref{SEGMENT}).  The TI DSK is a special case
+since it has the ability to distinguish between data and code in one
+file.  If TI DSK is the output format, P2HEX will automatically
+extract data from both segments if no segment was specified explicitly.
+\par
+Similar to the \verb!-r! option, the argument
 \begin{verbatim}
  -d <start>-<end>
 \end{verbatim}
-to designate the address range that should be written as data instead
-of code.  For this option, single dollar signs are \bb{not} allowed!  This
-option should not be used in new projects any more, since P2HEX now can
-directly handle data in the DATA segment.
-
-While this switch is only relevant for the DSK format, the option
+allows to designate the address range that should be written as data
+instead of code.
+\par
+The option
 \begin{verbatim}
  -e <address>
 \end{verbatim}
-is also valid for the Intel and Motorola formats.  Its purpose is to
+is valid for the DSK, Intel, and Motorola formats.  Its purpose is to
 set the entry address that will be inserted into the hex file.  If
 such a command line parameter is missing, P2HEX will search a
 corresponding entry in the code file.  If even this fails, no entry
@@ -10914,7 +10872,12 @@ described by:
                {warning}
                {A TRAP with this number uses the same machine code as a 
                 machine instruction supported by the CPU.}
-               {keines}
+               {none}
+\errentry{ 360}{Padding added}
+               {warning}
+               {The amount of bytes placed in memory is odd; one half of the last
+                16 bit word remains unused.}
+               {none}
 \errentry{1000}{symbol double defined}
                {error}
                {A new value is assigned to a symbol, using a label or a

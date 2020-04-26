@@ -1090,22 +1090,18 @@ static void DecodeMVN_MVP(Word Code)
   if (ChkArgCnt(2, 2))
   {
     Boolean OK;
-    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+    LongInt Src = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
 
     if (OK)
     {
-      LongInt Mask = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
+      LongInt Dest = EvalStrIntExpression(&ArgStr[2], UInt24, &OK);
 
       if (OK)
       {
-        if (((Mask & 0xff000000) != 0) || ((AdrLong & 0xff000000) != 0)) WrError(ErrNum_OverRange);
-        else
-        {
-          BAsmCode[0] = Code;
-          BAsmCode[1] = AdrLong >> 16;
-          BAsmCode[2] = Mask >> 16;
-          CodeLen = 3;
-        }
+        BAsmCode[0] = Code;
+        BAsmCode[1] = Dest >> 16;
+        BAsmCode[2] = Src >> 16;
+        CodeLen = 3;
       }
     }
   }

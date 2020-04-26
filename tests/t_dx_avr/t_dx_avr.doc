@@ -1,0 +1,8 @@
++----------------------- Test Application DX_AVR ----------------------------+
+|                                                                            |
+|      This test plays a bit with the DB/DW/DD/DQ/DT pseudo instructions     |
+|      on Atmel AVR.  This is special since the AVR's CODe segment is        |
+|      organized in 16-bit words and is not byte-addressable.  Bytes are     |
+|      packed in pairs, and a half-filled word remains if the number is odd. |
+|                                                                            |
++----------------------------------------------------------------------------+

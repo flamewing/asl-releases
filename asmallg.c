@@ -994,19 +994,18 @@ static void CodeMACEXP(Word Index)
   }
 }
 
-static Boolean DecodeSegment(char *pArg, Integer StartSeg, Integer *pResult)
+static Boolean DecodeSegment(const tStrComp *pArg, Integer StartSeg, Integer *pResult)
 {
   Integer SegZ;
   Word Mask;
 
-  NLS_UpString(pArg);
   for (SegZ = StartSeg, Mask = 1 << StartSeg; SegZ <= PCMax; SegZ++, Mask <<= 1)
-    if ((ValidSegs & Mask) && !strcmp(pArg, SegNames[SegZ]))
+    if ((ValidSegs & Mask) && !as_strcasecmp(pArg->Str, SegNames[SegZ]))
     {
       *pResult = SegZ;
       return True;
     }
-  WrXError(ErrNum_UnknownSegment, pArg);
+  WrStrErrorPos(ErrNum_UnknownSegment, pArg);
   return False;
 }
 
@@ -1016,7 +1015,7 @@ static void CodeSEGMENT(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1)
-   && DecodeSegment(ArgStr[1].Str, SegCode, &NewSegment))
+   && DecodeSegment(&ArgStr[1], SegCode, &NewSegment))
     SetNSeg(NewSegment);
 }
 
@@ -1297,7 +1296,7 @@ static void CodeENUMCONF(Word Index)
     {
       Integer NewSegment;
 
-      if (DecodeSegment(ArgStr[2].Str, SegNone, &NewSegment))
+      if (DecodeSegment(&ArgStr[2], SegNone, &NewSegment))
         EnumSegment = NewSegment;
     }
   }
@@ -1854,6 +1853,7 @@ static void DecodeONOFF(Word Index)
   {
     NLS_UpString(ArgStr[1].Str);
     if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
+    else
     {
       Boolean IsON = !as_strcasecmp(ArgStr[1].Str, "ON");
       if ((!IsON) && (as_strcasecmp(ArgStr[1].Str, "OFF"))) WrStrErrorPos(ErrNum_OnlyOnOff, &ArgStr[1]);

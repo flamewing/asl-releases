@@ -37,6 +37,21 @@ char *OutName = "STDOUT";   /* Pseudoname Output */
 
 static TMsgCat MsgCat;
 
+const char *SegNames[PCMax + 1] =
+{
+  "NONE",
+  "CODE",
+  "DATA",
+  "IDATA",
+  "XDATA",
+  "YDATA",
+  "BITDATA",
+  "IO",
+  "REG",
+  "ROMDATA",
+  "EEDATA"
+};
+
 /****************************************************************************/
 
 void WrCopyRight(const char *Msg)
@@ -105,7 +120,7 @@ void ChkIO(const char *Name)
   exit(2);
 }
 
-Word Granularity(Byte Header)
+Word Granularity(Byte Header, Byte Segment)
 {
   switch (Header)
   {
@@ -113,6 +128,7 @@ Word Granularity(Byte Header)
     case 0x76:
     case 0x7d:
       return 4;
+    case 0x36: /* MN161x */
     case 0x70:
     case 0x71:
     case 0x72:
@@ -120,9 +136,10 @@ Word Granularity(Byte Header)
     case 0x75:
     case 0x77:
     case 0x12:
-    case 0x3b:
     case 0x6d:
       return 2;
+    case 0x3b: /* AVR */
+      return (Segment == SegCode) ? 2 : 1;
     default:
       return 1;
   }
@@ -162,7 +179,7 @@ void ReadRecordHeader(Byte *Header, Byte *CPU, Byte* Segment,
       *CPU = *Header;
       *Header = FileHeaderDataRec;
       *Segment = SegCode;
-      *Gran = Granularity(*CPU);
+      *Gran = Granularity(*CPU, *Segment);
     }
   }
 }
@@ -177,7 +194,7 @@ void WriteRecordHeader(Byte *Header, Byte *CPU, Byte *Segment,
   }
   else if ((*Header == FileHeaderDataRec) || (*Header == FileHeaderRDataRec))
   {
-    if ((*Segment != SegCode) || (*Gran != Granularity(*CPU)) || (*CPU >= 0x80))
+    if ((*Segment != SegCode) || (*Gran != Granularity(*CPU, *Segment)) || (*CPU >= 0x80))
     {
       if (fwrite(Header, 1, 1, f))
         ChkIO(Name);

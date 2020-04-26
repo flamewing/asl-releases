@@ -1,3 +1,12 @@
+2020-04-26 [1.42 Bld 164]
+
+- Bugfix      : correct encoding of 65816 MVP/MVN instructions
+- Addition    : Add DN instruction to dispose nibbles (because I can...)
+- Addition    : Support DB/DW/DD/DQ/DT instructions for Atmel AVR
+- Addition    : Add EEDATA segment for Atmel AVR and PIC16C8x
+- Addition    : Extend P2BIN & P2HEX to allow data conversion from
+                other segments than CODE
+
 2020-04-12 [1.42 Bld 163]
 
 - Change      : make codepage/character set handling more flexible

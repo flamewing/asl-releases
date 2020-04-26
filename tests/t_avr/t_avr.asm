@@ -236,27 +236,45 @@ next:
 	data	-32768
 	data	'a'
 	data	'ab'
+	expect	360
 	data	"a"
+	endexpect
 	data	"ab"
+	expect	360
 	data	"abc"
+	endexpect
 	data	"abcd"
 
 	packing	on
+	expect	360
 	data	1,2,3
+	endexpect
+	expect	360
 	data	0
+	endexpect
+	expect	360
 	data	255
+	endexpect
+	expect	360
 	data	-128
+	endexpect
 	expect	1320
 	data	65535
 	endexpect
 	expect	1315
 	data	-32768
 	endexpect
+	expect	360
 	data	'a'
+	endexpect
 	expect	1320
 	data	'ab'
 	endexpect
+	expect	360
 	data	"a"
+	endexpect
 	data	"ab"
+	expect	360
 	data	"abc"
+	endexpect
 	data	"abcd"
