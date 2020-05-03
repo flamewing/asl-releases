@@ -121,6 +121,7 @@ clean: clean_doc
 # Create Distributions
 
 distrib: unjunk
+	@if test "$(VERSION)" = ""; then echo "VERSION is not set - please specify VERSION=... as argument"; exit 1; fi; exit 0
 	mkdir ../asl-$(VERSION)
 	tar cf - $(DISTARCHFILES) | (cd ../asl-$(VERSION); tar xvf -)
 	cd ..; tar cvf asl-$(VERSION).tar asl-$(VERSION)

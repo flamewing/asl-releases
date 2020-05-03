@@ -117,7 +117,7 @@ extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
 extern Boolean IdentifySection(const struct sStrComp *pName, LongInt *Erg);
 
 
-extern Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc);
+extern Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const struct sStrComp *pSrc);
 
 extern void ChangeSymbol(struct sSymbolEntry *pEntry, LargeInt Value);
 
@@ -189,9 +189,9 @@ extern Boolean PopSymbol(const struct sStrComp *pSymName, const struct sStrComp 
 extern void ClearStacks(void);
  
 
-extern void EnterFunction(char *FName, char *FDefinition, Byte NewCnt);
+extern void EnterFunction(const struct sStrComp *pComp, char *FDefinition, Byte NewCnt);
 
-extern PFunction FindFunction(char *Name);
+extern PFunction FindFunction(const char *Name);
 
 extern void PrintFunctionList(void);
 
@@ -239,7 +239,7 @@ extern void PopLocHandle(void);
 extern void ClearLocStack(void);
 
 
-extern void AddRegDef(char *Orig, char *Repl);
+extern void AddRegDef(const struct sStrComp *pOrigComp, const struct sStrComp *pReplComp);
 
 extern Boolean FindRegDef(const char *Name, char **Erg);
 

@@ -110,7 +110,7 @@ static void DecodeReg(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1].Str);
+    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 static void DecodeNameReg(Word Index)
@@ -118,7 +118,7 @@ static void DecodeNameReg(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
-    AddRegDef(ArgStr[2].Str, ArgStr[1].Str);
+    AddRegDef(&ArgStr[2], &ArgStr[1]);
 }
 
 static void DecodeConstant(Word Index)

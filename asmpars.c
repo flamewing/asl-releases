@@ -696,7 +696,7 @@ Boolean IdentifySection(const tStrComp *pName, LongInt *Erg)
   }
 }
 
-static Boolean GetSymSection(char *Name, LongInt *Erg)
+static Boolean GetSymSection(char *Name, LongInt *Erg, const tStrComp *pUnexpComp)
 {
   String Part;
   tStrComp TmpComp;
@@ -714,7 +714,10 @@ static Boolean GetSymSection(char *Name, LongInt *Erg)
   Name[l - 1] = ']';
   if (Name + l - q <= 1)
   {
-    WrXError(ErrNum_InvSymName, Name);
+    if (pUnexpComp)
+      WrStrErrorPos(ErrNum_InvSymName, pUnexpComp);
+    else
+      WrXError(ErrNum_InvSymName, Name);
     return False;
   }
 
@@ -2242,7 +2245,7 @@ PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
   
   if (!ExpandStrSymbol(ExtName, sizeof(ExtName), pName))
     return NULL;
-  if (!GetSymSection(ExtName, pDestHandle))
+  if (!GetSymSection(ExtName, pDestHandle, pName))
     return NULL;
   (void)ChkTmp(ExtName, TRUE);
   if (!ChkSymbName(ExtName))
@@ -2524,7 +2527,8 @@ static PSymbolEntry FindNode(const char *Name_O, TempType SearchType)
   strmaxcpy(Name, Name_O, STRINGSIZE);
   ChkTmp3(Name, FALSE);
 
-  if (!GetSymSection(Name, &DestSection))
+  /* TODO: pass StrComp */
+  if (!GetSymSection(Name, &DestSection, NULL))
     return NULL;
 
   if (!CaseSensitive)
@@ -2642,7 +2646,7 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
     *pKlPos = Save;
   if (!NameOK)
   {
-    WrXError(ErrNum_InvSymName, ExpName);
+    WrStrErrorPos(ErrNum_InvSymName, pComp);
     pValue->Typ = TempNone;
     return;
   }
@@ -2859,18 +2863,29 @@ typedef struct
   int Width, cwidth;
   LongInt Sum, USum;
   String Zeilenrest;
+  int ZeilenrestLen,
+      ZeilenrestVisibleLen;
 } TListContext;
 
-static void PrintSymbolList_AddOut(char *s, char *Zeilenrest, int Width)
+static void PrintSymbolList_AddOut(char *s, TListContext *pContext)
 {
-  if ((int)(strlen(s) + strlen(Zeilenrest)) > Width)
+  int AddVisibleLen = visible_strlen(s),
+      AddLen = strlen(s);
+
+  if (AddVisibleLen + pContext->ZeilenrestVisibleLen > pContext->Width)
   {
-    Zeilenrest[strlen(Zeilenrest) - 1] = '\0';
-    WrLstLine(Zeilenrest);
-    strmaxcpy(Zeilenrest, s, STRINGSIZE);
+    pContext->Zeilenrest[pContext->ZeilenrestLen - 1] = '\0';
+    WrLstLine(pContext->Zeilenrest);
+    strmaxcpy(pContext->Zeilenrest, s, STRINGSIZE);
+    pContext->ZeilenrestLen = AddLen;
+    pContext->ZeilenrestVisibleLen = AddVisibleLen;
   }
   else
-    strmaxcat(Zeilenrest, s, STRINGSIZE);
+  {
+    strmaxcat(pContext->Zeilenrest, s, STRINGSIZE);
+    pContext->ZeilenrestLen += AddLen;
+    pContext->ZeilenrestVisibleLen += AddVisibleLen;
+  }
 }
 
 static void PrintSymbolList_PNode(PTree Tree, void *pData)
@@ -2887,23 +2902,13 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   else
     StrSym(&t, False, s1, sizeof(s1), ListRadixBase);
 
-  strmaxcpy(sh, Tree->Name, STRINGSIZE);
+  as_snprintf(sh, STRINGSIZE, "%c%s : ", Node->Used ? ' ' : '*', Tree->Name);
   if (Tree->Attribute != -1)
-  {
-    strmaxcat(sh, " [", STRINGSIZE);
-    strmaxcat(sh, GetSectionName(Tree->Attribute), STRINGSIZE);
-    strmaxcat(sh, "]", STRINGSIZE);
-  }
-  strmaxprep(sh, (Node->Used) ? " " : "*", STRINGSIZE);
-  l1 = (strlen(s1) + strlen(sh) + 7);
+    as_snprcatf(sh, STRINGSIZE, " [%s]", GetSectionName(Tree->Attribute));
+  l1 = (strlen(s1) + visible_strlen(sh) + 4);
   for (nBlanks = pContext->cwidth - 1 - l1; nBlanks < 0; nBlanks += pContext->cwidth);
-  strmaxprep(s1, Blanks(nBlanks), STRINGSIZE);
-  strmaxprep(s1, " : ", STRINGSIZE);
-  strmaxprep(s1, sh, STRINGSIZE);
-  strmaxcat(s1, " ", STRINGSIZE);
-  s1[l1 = strlen(s1)] = SegShorts[Node->SymType]; s1[l1 + 1] = '\0';
-  strmaxcat(s1, " | ", STRINGSIZE);
-  PrintSymbolList_AddOut(s1, pContext->Zeilenrest, pContext->Width);
+  as_snprcatf(sh, STRINGSIZE, "%s%s %c | ", Blanks(nBlanks), s1, SegShorts[Node->SymType]);
+  PrintSymbolList_AddOut(sh, pContext);
   pContext->Sum++;
   if (!Node->Used)
     pContext->USum++;
@@ -2921,6 +2926,8 @@ void PrintSymbolList(void)
   WrLstLine("");
 
   Context.Zeilenrest[0] = '\0';
+  Context.ZeilenrestLen =
+  Context.ZeilenrestVisibleLen = 0;
   Context.Sum = Context.USum = 0;
   ActPageWidth = (PageWidth == 0) ? 80 : PageWidth;
   Context.cwidth = ActPageWidth >> 1;
@@ -3239,40 +3246,43 @@ void ClearStacks(void)
 /*-------------------------------------------------------------------------*/
 /* Funktionsverwaltung */
 
-void EnterFunction(char *FName, char *FDefinition, Byte NewCnt)
+void EnterFunction(const tStrComp *pComp, char *FDefinition, Byte NewCnt)
 {
   PFunction Neu;
   String FName_N;
+  const char *pFName;
 
   if (!CaseSensitive)
   {
-    strmaxcpy(FName_N, FName, STRINGSIZE);
+    strmaxcpy(FName_N, pComp->Str, STRINGSIZE);
     NLS_UpString(FName_N);
-    FName = FName_N;
+    pFName = FName_N;
   }
+  else
+     pFName = pComp->Str;
 
-  if (!ChkSymbName(FName))
+  if (!ChkSymbName(pFName))
   {
-    WrXError(ErrNum_InvSymName, FName);
+    WrStrErrorPos(ErrNum_InvSymName, pComp);
     return;
   }
 
-  if (FindFunction(FName))
+  if (FindFunction(pFName))
   {
     if (PassNo == 1)
-      WrXError(ErrNum_DoubleDef, FName);
+      WrStrErrorPos(ErrNum_DoubleDef, pComp);
     return;
   }
 
   Neu = (PFunction) malloc(sizeof(TFunction));
   Neu->Next = FirstFunction;
   Neu->ArguCnt = NewCnt;
-  Neu->Name = as_strdup(FName);
+  Neu->Name = as_strdup(pFName);
   Neu->Definition = as_strdup(FDefinition);
   FirstFunction = Neu;
 }
 
-PFunction FindFunction(char *Name)
+PFunction FindFunction(const char *Name)
 {
   PFunction Lauf = FirstFunction;
   String Name_N;
@@ -3765,7 +3775,7 @@ void ClearLocStack()
 
 /*--------------------------------------------------------------------------*/
 
-static PRegDef LookupReg(char *Name, Boolean CreateNew)
+static PRegDef LookupReg(const char *Name, Boolean CreateNew)
 {
   PRegDef Run, Neu, Prev;
   int cmperg = 0;
@@ -3799,38 +3809,46 @@ static PRegDef LookupReg(char *Name, Boolean CreateNew)
     return Run;
 }
 
-void AddRegDef(char *Orig_N, char *Repl_N)
+void AddRegDef(const tStrComp *pOrigComp, const tStrComp *pReplComp)
 {
   PRegDef Node;
   PRegDefList Neu;
-  String Orig, Repl;
+  String Orig_N, Repl_N;
+  const char *pOrig, *pRepl;
 
-  strmaxcpy(Orig, Orig_N, STRINGSIZE);
-  strmaxcpy(Repl, Repl_N, STRINGSIZE);
   if (!CaseSensitive)
   {
-    NLS_UpString(Orig);
-    NLS_UpString(Repl);
+    strmaxcpy(Orig_N, pOrigComp->Str, STRINGSIZE);
+    strmaxcpy(Repl_N, pReplComp->Str, STRINGSIZE);
+    NLS_UpString(Orig_N);
+    NLS_UpString(Repl_N);
+    pOrig = Orig_N;
+    pRepl = Repl_N;
   }
-  if (!ChkSymbName(Orig))
+  else
   {
-    WrXError(ErrNum_InvSymName, Orig);
+    pOrig = pOrigComp->Str;
+    pRepl = pReplComp->Str;
+  }
+  if (!ChkSymbName(pOrig))
+  {
+    WrStrErrorPos(ErrNum_InvSymName, pOrigComp);
     return;
   }
-  if (!ChkSymbName(Repl))
+  if (!ChkSymbName(pRepl))
   {
-    WrXError(ErrNum_InvSymName, Repl);
+    WrStrErrorPos(ErrNum_InvSymName, pReplComp);
     return;
   }
-  Node = LookupReg(Orig, True);
+  Node = LookupReg(pOrig, True);
   if ((Node->Defs) && (Node->Defs->Section == MomSectionHandle))
-    WrXError(ErrNum_DoubleDef, Orig);
+    WrStrErrorPos(ErrNum_DoubleDef, pOrigComp);
   else
   {
     Neu = (PRegDefList) malloc(sizeof(TRegDefList));
     Neu->Next = Node->Defs;
     Neu->Section = MomSectionHandle;
-    Neu->Value = as_strdup(Repl);
+    Neu->Value = as_strdup(pRepl);
     Neu->Used = False;
     Node->Defs = Neu;
   }
@@ -3848,7 +3866,8 @@ Boolean FindRegDef(const char *Name_N, char **Erg)
 
   strmaxcpy(Name, Name_N, STRINGSIZE);
 
-  if (!GetSymSection(Name, &Sect))
+  /* TODO: get StrComp */
+  if (!GetSymSection(Name, &Sect, NULL))
     return False;
   if (!CaseSensitive)
     NLS_UpString(Name);

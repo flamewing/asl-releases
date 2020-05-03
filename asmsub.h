@@ -128,6 +128,7 @@ extern Boolean ChkSymbName(const char *pSym);
 
 extern Boolean ChkMacSymbName(const char *pSym);
 
+extern unsigned visible_strlen(const char *pSym);
 
 
 extern void AddIncludeList(char *NewPath);

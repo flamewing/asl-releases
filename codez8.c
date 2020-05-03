@@ -2161,7 +2161,7 @@ static void DecodeREG(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1].Str);
+    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 static void DecodeDEFBIT(Word Code)

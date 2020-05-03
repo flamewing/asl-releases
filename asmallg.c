@@ -846,7 +846,7 @@ static void CodeFUNCTION(Word Index)
       strmaxcpy(FName, ArgStr[ArgCnt].Str, STRINGSIZE);
       for (z = 1; z < ArgCnt; z++)
         CompressLine(ArgStr[z].Str, z, FName, STRINGSIZE, CaseSensitive);
-      EnterFunction(LabPart.Str, FName, ArgCnt - 1);
+      EnterFunction(&LabPart, FName, ArgCnt - 1);
     }
   }
 }

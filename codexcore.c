@@ -87,7 +87,7 @@ static void CodeREG(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str, ArgStr[1].Str);
+    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 static void Code_3r(Word Index)

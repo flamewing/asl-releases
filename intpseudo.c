@@ -1002,6 +1002,8 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
       }
       if (pSep)
         StrCompSplitRef(&RemArg, &ThisRemArg, &RemArg, pSep);
+      KillPrefBlanksStrCompRef(&RemArg);
+      KillPostBlanksStrComp(&RemArg);
       if (!DecodeIntelPseudo_LayoutMult(&RemArg, pCtx))
       {
         Result = False;

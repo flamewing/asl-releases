@@ -66,7 +66,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition April 2020}
+{\large Edition May 2020}
 \end{raggedright}
 
 \clearpage
@@ -2871,6 +2871,8 @@ desired result when used as argument for \tty{ORG}.  The
 \hline
 \multicolumn{11}{|l|}{$^{7}$ size and availibility depend on target processor} \\
 \hline
+\multicolumn{11}{|l|}{$^{8}$ only on variants supporting the \tty{MOVX} instruction} \\
+\hline
 \caption{Address Ranges for \tty{ORG}}
 \label{TabORG}
 \end{longtable}
@@ -3132,19 +3134,26 @@ possible due to mnemonic conflicts.
 \end{quote}
 %%-----------
 \begin{quote}
-w) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
+w) 8021, 8022, \\
+   8401, 8411, 8421, 8461, \\
+   8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
 \end{quote}
 For the ROM-less versions 8039 and 80C39, the commands which are
 using the BUS (port 0) are forbidden.  The 8021 and 8022 are special
 versions with a strongly shrinked instruction set, for which the 8022
-has two A/D- converters and the necessary control-commands.  It is
-possible to transfer the CMOS-versions with the \tty{IDL} resp.
+has two A/D- converters and the necessary control-commands.  The 
+instruction set of the MAB8401 to 8461 (designed by Philips) is
+somewhere in between the 8021/8022 and a ''complete'' MC-48 instruction
+set.  On the other hand, they provide serial ports and up to 8 KBytes
+of program memory.
+
+It is possible to transfer the CMOS-versions with the \tty{IDL} resp.
 \tty{HALT} command into a stop mode with lower current consumption.
 The 8041 and 8042 have some additional instructions for controlling the
 bus interface, but in turn a few other commands were omitted.
-The code address space of 8041, 8042, 8021, and 8022 is not externally
+The code address space of 8041, 8042, 84x1, 8021, and 8022 is not externally
 extendable, and so AS limits the code segment of these processors to
-one resp. two kilobytes.  The (SAB)80C382 is a variant especially
+the size of the internal ROM.  The (SAB)80C382 is a variant especially
 designed by Siemens for usage in telephones.  It also knows a
 \tty{HALT} instruction, plus ist supports indirect addressing for
 \tty{DJNZ} and \tty{DEC}.  In turn, several instructions of the

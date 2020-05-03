@@ -47,7 +47,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand April 2020}
+{\large Stand Mai 2020}
 \end{raggedright}
 
 \clearpage
@@ -2964,6 +2964,8 @@ Mittel der Wahl.
 \hline
 \multicolumn{11}{|l|}{$^{7}$ Gr"o"se und Verf"ugbarkeit sind vom Zielprozessor abh"angig} \\
 \hline
+\multicolumn{11}{|l|}{$^{8}$ Nur auf Varianten mit \tty{MOVX}-Anweisung} \\
+\hline
 \caption{Adre"sbereiche f"ur \tty{ORG}}
 \label{TabORG}
 \end{longtable}
@@ -3216,18 +3218,26 @@ diesen neuen Befehlssatz wieder.  Eine gleichzeitige Unterst"utzung beider
 Varianten war nicht m"oglich, da teilweise "Uberschneidungen vorliegen.
 %%-----------
 \begin{quote}
-w) 8021, 8022, 8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, 80C382
+w) 8021, 8022, \\
+   8401, 8411, 8421, 8461, \\
+   8039, (MSM)80C39, 8048, (MSM)80C48, 8041, 8042, \\
+   80C382
 \end{quote}
 Bei den ROM-losen Versionen 8039 und 80C39 sind die Befehle verboten,
 die den BUS (Port 0) ansprechen.  Der 8021 und 8022 sind Sonderversionen
 mit stark abgemagertem Befehlssatz, wof"ur der 8022 zwei A/D-Wandler
-und die dazugeh"origen Steuerbefehle enth"alt.  Die CMOS-Versionen lassen
+und die dazugeh"origen Steuerbefehle enth"alt.  MAB8401 bis 8461 sind von
+Philips entwickelte Derivate, die in ihrem Befehssatz irgendwo zwischen
+dem 8021/8022 und einem 'vollst"andigen'' 8048 stehen.  Daf"ur verf"ugen
+sie "uber serielle Ports und je nach Variante bis zu 8 KByte Programmspeicher.
+
+Die CMOS-Versionen lassen
 sich mit dem \tty{IDL}- bzw. \tty{HALT}-Befehl in einen Ruhezustand niedriger
 Stromaufnahme "uberf"uhren.  Der 8041 und 8042 haben einige Zusatzbefehle zur
 Steuerung der Busschnittstelle, daf"ur fehlen aber einige andere Befehle.
-Beim 8041, 8042, 8021 und 8022 ist der Programmadre"sraum nicht
+Beim 8041, 8042, 84x1, 8021 und 8022 ist der Programmadre"sraum nicht
 extern erweiterbar, weshalb AS das Codesegment bei diesen Prozessoren
-auf 1 bzw. 2 Kbyte begrenzt.  Der (SAB)80C382 ist eine von
+auf die Gr"o"se des internen ROM beschr"ankt.  Der (SAB)80C382 ist eine von
 Siemens speziell f"ur Telefone entwickelte Variante, die ebenfalls
 einen \tty{HALT}-Befehl kennt sowie \tty{DJNZ} und \tty{DEC} auch
 mit indirekter Adressierung erlaubt.  Im Gegenzug wurden einige

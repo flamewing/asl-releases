@@ -367,7 +367,7 @@ static void DecodeREG(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
-    AddRegDef(LabPart.Str,ArgStr[1].Str);
+    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 /* one register 0..31 */
