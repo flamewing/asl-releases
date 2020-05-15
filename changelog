@@ -1,3 +1,9 @@
+2020-05-15 [1.42 Bld 166]
+
+- Bugfix      : add HALT instruction for 8080/8085 in Z80 syntax mode
+- Addition    : implement 8085(UNDOC) instructions also in Z80 syntax
+- Addition    : provide exclusive Z80 syntax mode
+
 2020-05-03 [1.42 Bld 165]
 
 - Addition    : Add Philips (MAB)84X1

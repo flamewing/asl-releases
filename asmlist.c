@@ -28,10 +28,10 @@ static unsigned SystemListLen8, SystemListLen16, SystemListLen32;
 void MakeList(const char *pSrcLine)
 {
   String h, h2, Tmp;
-  Word EffLen;
+  Word EffLen, Gran = Granularity();
   Boolean ThisDoLst;
 
-  EffLen = CodeLen * Granularity();
+  EffLen = CodeLen * Gran;
 
 #if 0
   fprintf(stderr, "[%s] WasIF %u WasMACRO %u DoLst %u\n", OpPart.Str, WasIF, WasMACRO, DoLst);
@@ -114,7 +114,7 @@ void MakeList(const char *pSrcLine)
         }
       }
 
-      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+      if (TurnWords && (Gran != ActListGran) && (1 == ActListGran))
         DreheCodes();
         
       do
@@ -153,7 +153,7 @@ void MakeList(const char *pSrcLine)
 
           /* advance pointers & keep track of # of characters printed */
 
-          ListPC++;
+          ListPC += (Gran == CurrListGran) ? 1 : CurrListGran;
           Index += CurrListGran;
           SumLen += SystemListLen + 1;
 
@@ -176,7 +176,7 @@ void MakeList(const char *pSrcLine)
       }
       while ((Index < EffLen) && !DontPrint);
 
-      if (TurnWords && (Granularity() != ActListGran) && (1 == ActListGran))
+      if (TurnWords && (Gran != ActListGran) && (1 == ActListGran))
         DreheCodes();
     }
   }

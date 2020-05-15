@@ -4861,8 +4861,13 @@ Operanden \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD, LDAX, STAX} oder
 
 Weil einige Mnemonics in der 8080- und Z80-Syntax unterschiedliche
 Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
-Wo die Grenzen dieser Betriebsart liegen, kann man im Detail im
-Abschnitt \ref{8080Spec} nachlesen.
+Alternativ schaltet man mit einem \tty{EXCLUSIVE} als Argument die
+''8080-Syntax'' ganz ab.  Details zu dieser Betriebsart kann man 
+im Abschnitt \ref{8080Spec} nachlesen.
+
+Ein eingebautes Symbol mit gleichem Namen gestattet es, die aktuelle
+Betriebsart auszulesen.  Es gilt \tty{0=OFF}, \tty{1=ON} und
+\tty{2=EXCLUSIVE}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -8410,13 +8415,13 @@ treffen veraltete Adressierungsarten (indirekte Adressierung mit
 
 Wie schon weiter vorne erw"ahnt, ist es m"oglich, durch ein
 \begin{verbatim}
-       Z80SYNTAX ON
+       Z80SYNTAX <OFF|ON|EXCLUSIVE>
 \end{verbatim}
 f"ur die allermeisten 8080/8085-Befehle m"oglich, sie auch wahlweise
-im 'Z80-Stil' zu schreiben, d.h. mit weniger Mnemonics, daf"ur aber
-mit deutlich aussagekr"aftigeren Operanden.  F"ur die folgenden
-Befehle ist die Z80-Syntax nicht m"oglich, da sie mit existierenden
-8080-Mnemonics kollidieren:
+oder ausschlie"slich im 'Z80-Stil' zu schreiben, d.h. mit weniger
+Mnemonics, daf"ur aber mit deutlich aussagekr"aftigeren Operanden.
+F"ur die folgenden Befehle ist die Z80-Syntax im nicht-exklusiven Modus
+nicht m"oglich, da sie mit existierenden 8080-Mnemonics kollidieren:
 \begin{itemize}
 \item{\tty{CP} ist in der 'Intel-Syntax' der Befehl f"ur 'Call on
       Positive', in der Zilog-Syntax jedoch der Befehl f"ur
@@ -8438,6 +8443,9 @@ Befehle ist die Z80-Syntax nicht m"oglich, da sie mit existierenden
       absoluten Adresse haben m"ochte, mu"s weiterhin die
       Intel-Variante (\tty{JMP addr}) verwenden.}
 \end{itemize}
+Der 8085 unterst"utzt mit \tty{RIM} und \tty{SIM} zwei Befehle, die
+im Z80-Befehlssatz nicht existieren.  Diese k"onnen ''Z80-artig'' als
+\tty{LD A,IM} bzw. \tty{LD IM,A} geschrieben werden.
 
 %%---------------------------------------------------------------------------
 
@@ -8455,46 +8463,52 @@ benutzt diese Opcodes f"ur v"ollig andere Funktionen...
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{DSUB [reg]} \\
+Z80-Syntax        \> : \> \tty{SUB HL,reg} \\
 Funktion          \> : \> HL $\leftarrow$ HL - reg \\
 Flags             \> : \> CY, S, X5, AC, Z, V, P \\
-Argumente         \> : \> \tty{reg} = B f"ur BC (optional) \\
+Argumente         \> : \> \tty{reg} = B f"ur BC (optional f"ur nicht-Z80-Syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{ARHL} \\
+Z80-Syntax        \> : \> \tty{SRA HL} \\
 Funktion          \> : \> HL,CY $\leftarrow$ HL $>>$ 1 (arithmetisch) \\
 Flags             \> : \> CY \\
-Argumente         \> : \> keine \\
+Argumente         \> : \> keine bzw. fix f"ur Z80-Syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{RDEL} \\
+Z80-Syntax        \> : \> \tty{RLC DE} \\
 Funktion          \> : \> CY,DE $\leftarrow$ DE $<<$ 1 \\
 Flags             \> : \> CY, V \\
-Argumente         \> : \> keine \\
+Argumente         \> : \> keine bzw. fix f"ur Z80-Syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{LDHI d8} \\
+Z80-Syntax        \> : \> \tty{ADD DE,HL,d8} \\
 Funktion          \> : \> DE $\leftarrow$ HL + {\tt d8} \\
 Flags             \> : \> keine \\
-Argumente         \> : \> {\tt d8} = 8-Bit-Konstante \\
+Argumente         \> : \> {\tt d8} = 8-Bit-Konstante, Register fix f"ur Z80-Syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{LDSI d8} \\
+Z80-Syntax        \> : \> \tty{ADD DE,SP,8} \\
 Funktion          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
 Flags             \> : \> keine \\
-Argumente         \> : \> {\tt d8} = 8-Bit-Konstante \\
+Argumente         \> : \> {\tt d8} = 8-Bit-Konstante, Register fix f"ur Z80-Syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
-Anweisung         \> : \> \tty{RST flag} \\
+Anweisung         \> : \> \tty{RSTflag} \\
+Z80-Syntax        \> : \> \tty{RST flag} \\
 Funktion          \> : \> Restart zu 40h wenn {\tt flag}=1 \\
 Flags             \> : \> keine \\
 Argumente         \> : \> {\tt flag} = V f"ur Overflow-Bit \\
@@ -8503,22 +8517,25 @@ Argumente         \> : \> {\tt flag} = V f"ur Overflow-Bit \\
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{SHLX [reg]} \\
+Z80-Syntax        \> : \> \tty{LD (reg),HL} \\
 Funktion          \> : \> [reg] $\leftarrow$ HL \\
 Flags             \> : \> keine \\
-Argumente         \> : \> \tty{reg} = D f"ur DE (optional) \\
+Argumente         \> : \> \tty{reg} = D/DE f"ur DE (optional f"ur nicht-Z80-Syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{LHLX [reg]} \\
+Z80-Syntax        \> : \> \tty{LD HL,(reg)} \\
 Funktion          \> : \> HL $\leftarrow$[reg] \\
 Flags             \> : \> keine \\
-Argumente         \> : \> \tty{reg} = D f"ur DE (optional) \\
+Argumente         \> : \> \tty{reg} = D/DE f"ur DE (optional f"ur nicht-Z80-Syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{JNX5 adr} \\
+Z80-Syntax        \> : \> \tty{JP NX5, adr} \\
 Funktion          \> : \> springe zu {\tt adr} wenn X5=0 \\
 Flags             \> : \> keine \\
 Argumente         \> : \> {\tt adr} = absolute 16-Bit-Adresse \\
@@ -11495,6 +11512,12 @@ Angaben:
                 Prozessorfamilie beherrscht ihn aber noch nicht.}
                {Die Prozessorvarianten, die diesen
                 Adressierungsmodus unterst"utzen w"urden.}
+\errentry{1506}{nicht im Z80-Syntax Exklusiv-Modus erlaubt}
+               {Fehler}
+               {Dieser Befehl ist nicht (mehr) erlaubt, wenn nur
+                noch Z80-Syntax f"ur 8080/8085-Befehle erlaubt
+                wurde.}
+               {keines}
 \errentry{1510}{Ung"ultige Bitstelle}
                {Fehler}
                {Die angegebene Bitnummer ist nicht erlaubt

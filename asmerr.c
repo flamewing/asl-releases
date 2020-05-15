@@ -385,10 +385,16 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
     case ErrNum_InstructionNotSupported:
       as_snprintf(Buf, BufSize, getmessage(Num_ErrMsgInstructionNotOnThisCPUSupported), MomCPUIdent);
       break;
-    case ErrNum_FPUNotEnabled: msgno = Num_ErrMsgFPUNotEnabled; break;
-    case ErrNum_PMMUNotEnabled: msgno = Num_ErrMsgPMMUNotEnabled; break;
-    case ErrNum_FullPMMUNotEnabled: msgno = Num_ErrMsgFullPMMUNotEnabled; break;
-    case ErrNum_Z80SyntaxNotEnabled: msgno = Num_ErrMsgZ80SyntaxNotEnabled; break;
+    case ErrNum_FPUNotEnabled:
+      msgno = Num_ErrMsgFPUNotEnabled; break;
+    case ErrNum_PMMUNotEnabled:
+      msgno = Num_ErrMsgPMMUNotEnabled; break;
+    case ErrNum_FullPMMUNotEnabled:
+      msgno = Num_ErrMsgFullPMMUNotEnabled; break;
+    case ErrNum_Z80SyntaxNotEnabled:
+      msgno = Num_ErrMsgZ80SyntaxNotEnabled; break;
+    case ErrNum_Z80SyntaxExclusive:
+      msgno = Num_ErrMsgZ80SyntaxExclusive; break;
     case ErrNum_AddrModeNotSupported:
       as_snprintf(Buf, BufSize, getmessage(Num_ErrMsgAddrModeNotOnThisCPUSupported), MomCPUIdent);
       break;

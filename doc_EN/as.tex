@@ -4737,8 +4737,12 @@ LDAX, STAX} or \tty{SPHL}.
 
 Since some mnemonics have a different meaning in 8080 and Z80
 syntax, it is not possible to program in 'Z80 style' all the
-time.  The limits of this operation mode can be looked up in
-detail in section \ref{8080Spec}.
+time, unless the '8080 syntax' is turned off entirely by using
+ \tty{EXCLUSIVE} as argument.  The details of this operation mode
+can be looked up in section \ref{8080Spec}.
+
+A built-in symbol of same name allows to query the operation mode.
+The mapping is \tty{0=OFF}, \tty{1=ON}, and \tty{2=EXCLUSIVE}.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -8255,13 +8259,13 @@ addressing via 8 bit registers).
 
 As mentioned before, the statement
 \begin{verbatim}
-       Z80SYNTAX ON
+       Z80SYNTAX <ON|OFF|EXCLUSIVE>
 \end{verbatim}
-makes ii possible to write the vast majority of 8080/8085
-instructions in 'Z80 style', i.e. with less mnemonics but with
-operands that are easier to understand.  The Z80 syntax is not
-allowed for the following insstuctions, because they conflict
-with existing 8080 mnemonics:
+makes it possible to write the vast majority of 8080/8085
+instructions in 'Z80 s		tyle', i.e. with less mnemonics but with
+operands that are easier to understand.  In non-exclusive mode,
+the Z80 syntax is not allowed for the following instructions,
+because they conflict with existing 8080 mnemonics:
 \begin{itemize}
 \item{\tty{CP} in 'Intel syntax' means 'Call on Positive', in
       Zilog syntax however it means 'Compare'.  If you use
@@ -8282,6 +8286,9 @@ with existing 8080 mnemonics:
       an absolute address, you still have to use the Intel syntax
       ((\tty{JMP addr}).}
 \end{itemize}
+The 8085 supports the instructions \tty{RIM} and \tty{SIM} that are
+not part of the Z80 instruction set.  They may be written in 'Z80 style'
+as \tty{LD A,IM} resp. \tty{LD IM,A}.
 
 %%---------------------------------------------------------------------------
 
@@ -8299,46 +8306,52 @@ functions...
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{DSUB [reg]} \\
+Z80 Syntax        \> : \> \tty{SUB HL,reg} \\
 Function          \> : \> HL $\leftarrow$ HL - reg \\
 Flags             \> : \> CY, S, X5, AC, Z, V, P \\
-Arguments         \> : \> \tty{reg} = B for BC (optional) \\
+Arguments         \> : \> \tty{reg} = B for BC (optional for non-Z80 syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{ARHL} \\
+Z80 Syntax        \> : \> \tty{SRA HL} \\
 Function          \> : \> HL,CY $\leftarrow$ HL $>>$ 1 (arithmetisch) \\
 Flags             \> : \> CY \\
-Arguments         \> : \> none \\
+Arguments         \> : \> none resp. fixed for Z80 syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{RDEL} \\
+Z80 Syntax        \> : \> \tty{RLC DE} \\
 Function          \> : \> CY,DE $\leftarrow$ DE $<<$ 1 \\
 Flags             \> : \> CY, V \\
-Arguments         \> : \> none \\
+Arguments         \> : \> none resp. fixed for Z80 syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{LDHI d8} \\
+Z80 Syntax        \> : \> \tty{ADD DE,HL,d8} \\
 Function          \> : \> DE $\leftarrow$ HL + {\tt d8} \\
 Flags             \> : \> none \\
-Arguments         \> : \> {\tt d8} = 8-bit constant \\
+Arguments         \> : \> {\tt d8} = 8-bit constant, registers fixed for Z80 syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{LDSI d8} \\
+Z80 Syntax        \> : \> \tty{ADD DE,SP,8} \\
 Function          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
 Flags             \> : \> none \\
-Arguments         \> : \> {\tt d8} = 8-bit constant \\
+Arguments         \> : \> {\tt d8} = 8-bit constant, registers fixed for Z80 syntax \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
-Instruction       \> : \> \tty{RST flag} \\
+Instruction       \> : \> \tty{RSTflag} \\
+Z80 Syntax        \> : \> \tty{RST flag} \\
 Function          \> : \> restart to 40h if {\tt flag}=1 \\
 Flags             \> : \> none \\
 Arguments         \> : \> {\tt flag} = V for overflow bit \\
@@ -8347,22 +8360,25 @@ Arguments         \> : \> {\tt flag} = V for overflow bit \\
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{SHLX [reg]} \\
+Z80 Syntax        \> : \> \tty{LD (reg),HL} \\
 Function          \> : \> [reg] $\leftarrow$ HL \\
 Flags             \> : \> none \\
-Arguments         \> : \> \tty{reg} = D for DE (optional) \\
+Arguments         \> : \> \tty{reg} = D/DE for DE (optional for non-Z80 syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{LHLX [reg]} \\
+Z80 Syntax        \> : \> \tty{LD HL,(reg)} \\
 Function          \> : \> HL $\leftarrow$ [reg] \\
 Flags             \> : \> none \\
-Arguments         \> : \> \tty{reg} = D for DE (optional) \\
+Arguments         \> : \> \tty{reg} = D/DE for DE (optional for non-Z80 syntax) \\
 \end{tabbing}
 
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{JNX5 addr} \\
+Z80 Syntax        \> : \> \tty{JP NX5, addr} \\
 Function          \> : \> jump to {\tt addr} if X5=0 \\
 Flags             \> : \> none \\
 Arguments         \> : \> {\tt addr} = absolute 16-bit address \\
@@ -8371,12 +8387,13 @@ Arguments         \> : \> {\tt addr} = absolute 16-bit address \\
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{JX5 addr} \\
+Z80 Syntax        \> : \> \tty{JP X5,addr} \\
 Function          \> : \> jump to {\tt addr} if X5=1 \\
 Flags             \> : \> none \\
 Arguments         \> : \> {\tt addr} = absolute 16-bit address \\
 \end{tabbing}
 
-Mit X5 ist dabei das ansonsten unbenutzte Bit 5 im PSW-Register gemeint.
+X5 refers to the otherwise unused bit 5 in the processor status word (PSW).
 
 %%---------------------------------------------------------------------------
 
@@ -11235,7 +11252,7 @@ described by:
                {none}
 \errentry{1504}{Z80 syntax was not allowed}
                {error}
-               {This instrction is only allowed if Z80 syntax
+               {This instruction is only allowed if Z80 syntax
                 for 8080/8085 instructions has been enabled.}
                {none}
 \errentry{1505}{addressing mode not allowed on}
@@ -11244,6 +11261,11 @@ described by:
                 used with the selected member of the CPU family.}
                {The processor variants that would support this
                 addressing mode.}
+\errentry{1506}{not allowed in exclusive Z80 syntax mode}
+               {error}
+               {This instrction is no longer allowed if exclusive
+                Z80 syntax mode for 8080/8085 instructions has been set.}
+               {none}
 \errentry{1510}{invalid bit position}
                {error}
                {Either the number of bits specified is not allowed, or

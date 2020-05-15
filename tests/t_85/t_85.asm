@@ -147,7 +147,7 @@
 	ldhi	12h
 	ldsi	12h
 
-	rst	v
+	rstv
 
 	shlx
 

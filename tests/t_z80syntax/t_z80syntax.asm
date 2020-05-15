@@ -765,3 +765,48 @@
 
 	out	56h
 	out	(56h),a
+
+	hlt
+	halt
+
+	cpu	8085
+	z80syntax	on
+
+	rim
+	ld	a,im
+	
+	sim
+	ld	im,a
+
+	cpu	8085undoc
+	z80syntax	on
+
+	lhlx
+	ld	hl,(de)
+
+	shlx
+	ld	(de),hl
+
+	dsub
+	sub	hl,bc
+
+	arhl
+	sra	hl
+
+	rdel
+	rlc	de
+
+	jx5	1234h
+	jp	x5,1234h
+
+	jnx5	1234h
+	jp	nx5,1234h
+
+	rstv
+	rst	v
+
+	ldhi	12h
+	add	de,hl,12h
+
+	ldsi	12h
+	add	de,sp,12h

@@ -477,6 +477,10 @@ Message ErrMsgZ80SyntaxNotEnabled
  "Z80-Syntax nicht erlaubt"
  "Z80 syntax was not allowed"
 
+Message ErrMsgZ80SyntaxExclusive
+ "nicht im Z80-Syntax Exklusiv-Modus erlaubt"
+ "not allowed in exclusive Z80 syntax mode"
+
 Message ErrMsgInvBitPos
  "ung&uuml;ltige Bitstelle"
  "invalid bit position"
