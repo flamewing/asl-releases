@@ -36,6 +36,12 @@ typedef struct
   Word Code;
 } FixedOrder;
 
+typedef struct
+{
+  CPUVar MinCPU;
+  Word Code;
+} RelOrder;
+
 typedef struct 
 {
   Boolean MayImm;
@@ -66,6 +72,7 @@ enum
 #define Page4Prefix 0xcd
 
 #define FixedOrderCnt 45
+#define RelOrderCnt   19
 #define ALU16OrderCnt 13
 
 
@@ -76,13 +83,14 @@ static Byte AdrPart;           /* Adressierungsmodusbits im Opcode */
 static Byte AdrVals[4];        /* Adressargument */
 
 static FixedOrder *FixedOrders;
+static RelOrder   *RelOrders;
 static ALU16Order *ALU16Orders;
 
 static LongInt Reg_MMSIZ, Reg_MMWBR, Reg_MM1CR, Reg_MM2CR;
 static LongWord Win1VStart, Win1VEnd, Win1PStart, Win1PEnd,
                 Win2VStart, Win2VEnd, Win2PStart, Win2PEnd;
 
-static CPUVar CPU6800, CPU6301, CPU6811, CPU68HC11K4;
+static CPUVar CPU6800, CPU6801, CPU6301, CPU6811, CPU68HC11K4;
 
 /*---------------------------------------------------------------------------*/
 
@@ -404,12 +412,14 @@ static void DecodeFixed(Word Index)
   }
 }
 
-static void DecodeRel(Word Code)
+static void DecodeRel(Word Index)
 {
+  const RelOrder *pOrder = &RelOrders[Index];
   Integer AdrInt;
   Boolean OK;
 
-  if (ChkArgCnt(1, 1))
+  if (ChkArgCnt(1, 1)
+   && ChkMinCPU(pOrder->MinCPU))
   {
     AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK)
@@ -419,7 +429,7 @@ static void DecodeRel(Word Code)
       else
       {
         CodeLen = 2;
-        BAsmCode[0] = Code;
+        BAsmCode[0] = pOrder->Code;
         BAsmCode[1] = Lo(AdrInt);
       }
     }
@@ -504,7 +514,7 @@ static void DecodeJSR(Word Index)
 
   if (ChkArgCnt(1, 2))
   {
-    DecodeAdr(1, ArgCnt, MModExt | MModInd | ((MomCPU >= CPU6301) ? MModDir : 0));
+    DecodeAdr(1, ArgCnt, MModExt | MModInd | ((MomCPU >= CPU6801) ? MModDir : 0));
     if (AdrMode != ModImm)
     {
       CodeLen=PrefCnt + 1 + AdrCnt;
@@ -737,6 +747,15 @@ static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
+static void AddRel(char *NName, CPUVar NMin, Word NCode)
+{
+  if (InstrZ >= RelOrderCnt) exit(255);
+
+  RelOrders[InstrZ].MinCPU = NMin;
+  RelOrders[InstrZ].Code = NCode;
+  AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
+}
+
 static void AddALU8(char *NamePlain, char *NameA, char *NameB, Boolean MayImm, Byte NCode)
 {
   Word BaseCode = NCode | (MayImm ? 0x8000 : 0);
@@ -777,18 +796,18 @@ static void InitFields(void)
   AddInstTable(InstTable, "BTGL" , 0, DecodeBTxx);   
 
   FixedOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * FixedOrderCnt); InstrZ = 0;
-  AddFixed("ABA"  ,CPU6800, CPU68HC11K4, 0x001b); AddFixed("ABX"  ,CPU6301, CPU68HC11K4, 0x003a);
-  AddFixed("ABY"  ,CPU6811, CPU68HC11K4, 0x183a); AddFixed("ASLD" ,CPU6301, CPU68HC11K4, 0x0005);
+  AddFixed("ABA"  ,CPU6800, CPU68HC11K4, 0x001b); AddFixed("ABX"  ,CPU6801, CPU68HC11K4, 0x003a);
+  AddFixed("ABY"  ,CPU6811, CPU68HC11K4, 0x183a); AddFixed("ASLD" ,CPU6801, CPU68HC11K4, 0x0005);
   AddFixed("CBA"  ,CPU6800, CPU68HC11K4, 0x0011); AddFixed("CLC"  ,CPU6800, CPU68HC11K4, 0x000c);
   AddFixed("CLI"  ,CPU6800, CPU68HC11K4, 0x000e); AddFixed("CLV"  ,CPU6800, CPU68HC11K4, 0x000a);
   AddFixed("DAA"  ,CPU6800, CPU68HC11K4, 0x0019); AddFixed("DES"  ,CPU6800, CPU68HC11K4, 0x0034);
   AddFixed("DEX"  ,CPU6800, CPU68HC11K4, 0x0009); AddFixed("DEY"  ,CPU6811, CPU68HC11K4, 0x1809);
   AddFixed("FDIV" ,CPU6811, CPU68HC11K4, 0x0003); AddFixed("IDIV" ,CPU6811, CPU68HC11K4, 0x0002);
   AddFixed("INS"  ,CPU6800, CPU68HC11K4, 0x0031); AddFixed("INX"  ,CPU6800, CPU68HC11K4, 0x0008);
-  AddFixed("INY"  ,CPU6811, CPU68HC11K4, 0x1808); AddFixed("LSLD" ,CPU6301, CPU68HC11K4, 0x0005);
-  AddFixed("LSRD" ,CPU6301, CPU68HC11K4, 0x0004); AddFixed("MUL"  ,CPU6301, CPU68HC11K4, 0x003d);
-  AddFixed("NOP"  ,CPU6800, CPU68HC11K4, 0x0001); AddFixed("PSHX" ,CPU6301, CPU68HC11K4, 0x003c);
-  AddFixed("PSHY" ,CPU6811, CPU68HC11K4, 0x183c); AddFixed("PULX" ,CPU6301, CPU68HC11K4, 0x0038);
+  AddFixed("INY"  ,CPU6811, CPU68HC11K4, 0x1808); AddFixed("LSLD" ,CPU6801, CPU68HC11K4, 0x0005);
+  AddFixed("LSRD" ,CPU6801, CPU68HC11K4, 0x0004); AddFixed("MUL"  ,CPU6801, CPU68HC11K4, 0x003d);
+  AddFixed("NOP"  ,CPU6800, CPU68HC11K4, 0x0001); AddFixed("PSHX" ,CPU6801, CPU68HC11K4, 0x003c);
+  AddFixed("PSHY" ,CPU6811, CPU68HC11K4, 0x183c); AddFixed("PULX" ,CPU6801, CPU68HC11K4, 0x0038);
   AddFixed("PULY" ,CPU6811, CPU68HC11K4, 0x1838); AddFixed("RTI"  ,CPU6800, CPU68HC11K4, 0x003b);
   AddFixed("RTS"  ,CPU6800, CPU68HC11K4, 0x0039); AddFixed("SBA"  ,CPU6800, CPU68HC11K4, 0x0010);
   AddFixed("SEC"  ,CPU6800, CPU68HC11K4, 0x000d); AddFixed("SEI"  ,CPU6800, CPU68HC11K4, 0x000f);
@@ -802,25 +821,26 @@ static void InitFields(void)
   AddFixed("XGDX" ,CPU6301, CPU68HC11K4, (MomCPU == CPU6301) ? 0x0018 : 0x008f);
   AddFixed("XGDY" ,CPU6811, CPU68HC11K4, 0x188f);
 
-  AddInstTable(InstTable, "BCC", 0x24, DecodeRel);
-  AddInstTable(InstTable, "BCS", 0x25, DecodeRel);
-  AddInstTable(InstTable, "BEQ", 0x27, DecodeRel);
-  AddInstTable(InstTable, "BGE", 0x2c, DecodeRel);
-  AddInstTable(InstTable, "BGT", 0x2e, DecodeRel);
-  AddInstTable(InstTable, "BHI", 0x22, DecodeRel);
-  AddInstTable(InstTable, "BHS", 0x24, DecodeRel);
-  AddInstTable(InstTable, "BLE", 0x2f, DecodeRel);
-  AddInstTable(InstTable, "BLO", 0x25, DecodeRel);
-  AddInstTable(InstTable, "BLS", 0x23, DecodeRel);
-  AddInstTable(InstTable, "BLT", 0x2d, DecodeRel);
-  AddInstTable(InstTable, "BMI", 0x2b, DecodeRel);
-  AddInstTable(InstTable, "BNE", 0x26, DecodeRel);
-  AddInstTable(InstTable, "BPL", 0x2a, DecodeRel);
-  AddInstTable(InstTable, "BRA", 0x20, DecodeRel);
-  AddInstTable(InstTable, "BRN", 0x21, DecodeRel);
-  AddInstTable(InstTable, "BSR", 0x8d, DecodeRel);
-  AddInstTable(InstTable, "BVC", 0x28, DecodeRel);
-  AddInstTable(InstTable, "BVS", 0x29, DecodeRel);
+  RelOrders = (RelOrder *) malloc(sizeof(*RelOrders) * RelOrderCnt); InstrZ = 0;
+  AddRel("BCC", CPU6800, 0x24);
+  AddRel("BCS", CPU6800, 0x25);
+  AddRel("BEQ", CPU6800, 0x27);
+  AddRel("BGE", CPU6800, 0x2c);
+  AddRel("BGT", CPU6800, 0x2e);
+  AddRel("BHI", CPU6800, 0x22);
+  AddRel("BHS", CPU6800, 0x24);
+  AddRel("BLE", CPU6800, 0x2f);
+  AddRel("BLO", CPU6800, 0x25);
+  AddRel("BLS", CPU6800, 0x23);
+  AddRel("BLT", CPU6800, 0x2d);
+  AddRel("BMI", CPU6800, 0x2b);
+  AddRel("BNE", CPU6800, 0x26);
+  AddRel("BPL", CPU6800, 0x2a);
+  AddRel("BRA", CPU6800, 0x20);
+  AddRel("BRN", CPU6801, 0x21);
+  AddRel("BSR", CPU6800, 0x8d);
+  AddRel("BVC", CPU6800, 0x28);
+  AddRel("BVS", CPU6800, 0x29);
 
   AddALU8("ADC", "ADCA", "ADCB", True , 0x89);
   AddALU8("ADD", "ADDA", "ADDB", True , 0x8b);
@@ -835,19 +855,19 @@ static void InitFields(void)
   AddALU8("SUB", "SUBA", "SUBB", True , 0x80);
                          
   ALU16Orders = (ALU16Order *) malloc(sizeof(ALU16Order) * ALU16OrderCnt); InstrZ = 0;
-  AddALU16("ADDD", True , CPU6301, 0, 0xc3);
+  AddALU16("ADDD", True , CPU6801, 0, 0xc3);
   AddALU16("CPD" , True , CPU6811, 1, 0x83);
   AddALU16("CPX" , True , CPU6800, 2, 0x8c);
   AddALU16("CPY" , True , CPU6811, 3, 0x8c);
-  AddALU16("LDD" , True , CPU6301, 0, 0xcc);
+  AddALU16("LDD" , True , CPU6801, 0, 0xcc);
   AddALU16("LDS" , True , CPU6800, 0, 0x8e);
   AddALU16("LDX" , True , CPU6800, 2, 0xce);
   AddALU16("LDY" , True , CPU6811, 3, 0xce);
-  AddALU16("STD" , False, CPU6301, 0, 0xcd);
+  AddALU16("STD" , False, CPU6801, 0, 0xcd);
   AddALU16("STS" , False, CPU6800, 0, 0x8f);
   AddALU16("STX" , False, CPU6800, 2, 0xcf);
   AddALU16("STY" , False, CPU6811, 3, 0xcf);
-  AddALU16("SUBD", True , CPU6301, 0, 0x83);
+  AddALU16("SUBD", True , CPU6801, 0, 0x83);
 
   AddSing8("ASL", "ASLA", "ASLB", 0x48);
   AddSing8("ASR", "ASRA", "ASRB", 0x47);
@@ -882,6 +902,7 @@ static void DeinitFields(void)
 {
   DestroyInstTable(InstTable);
   free(FixedOrders);
+  free(RelOrders);
   free(ALU16Orders);
 }
 
@@ -976,6 +997,7 @@ static void SwitchTo_68(void)
 void code68_init(void)
 {
   CPU6800 = AddCPU("6800", SwitchTo_68);
+  CPU6801 = AddCPU("6801", SwitchTo_68);
   CPU6301 = AddCPU("6301", SwitchTo_68);
   CPU6811 = AddCPU("6811", SwitchTo_68);
   CPU68HC11K4 = AddCPU("68HC11K4", SwitchTo_68);

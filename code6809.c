@@ -1003,7 +1003,7 @@ static void DecodeTFR_TFM_EXG(Word Code)
     else if (Memo("TFM")) WrError(ErrNum_InvAddrMode);
     else if (!CodeCPUReg(ArgStr[1].Str, BAsmCode + 2)) WrError(ErrNum_InvRegName);
     else if (!CodeCPUReg(ArgStr[2].Str, BAsmCode + 1)) WrError(ErrNum_InvRegName);
-    else if ((BAsmCode[1] != 13) && (BAsmCode[2] != 13) /* Z-Register mit allen kompatibel */
+    else if ((BAsmCode[1] != 13) && (BAsmCode[2] != 13) /* Z Register compatible to all other registers */
           && (((BAsmCode[1] ^ BAsmCode[2]) & 0x08) != 0)) WrError(ErrNum_ConfOpSizes);
     else
     {
@@ -1017,9 +1017,9 @@ static void DecodeTFR_TFM_EXG(Word Code)
 static void DecodeALU2(Word Code)
 {
   if (!ChkArgCnt(2, 2));
-  else if (!CodeCPUReg(ArgStr[1].Str, BAsmCode + 3)) WrError(ErrNum_InvRegName);
-  else if (!CodeCPUReg(ArgStr[2].Str, BAsmCode + 2)) WrError(ErrNum_InvRegName);
-  else if ((BAsmCode[1] != 13) && (BAsmCode[2] != 13) /* Z-Register mit allen kompatibel */
+  else if (!CodeCPUReg(ArgStr[1].Str, &BAsmCode[3])) WrError(ErrNum_InvRegName);
+  else if (!CodeCPUReg(ArgStr[2].Str, &BAsmCode[2])) WrError(ErrNum_InvRegName);
+  else if ((BAsmCode[2] != 13) && (BAsmCode[3] != 13) /* Z Register compatible to all other registers */
         && (((BAsmCode[2] ^ BAsmCode[3]) & 0x08) != 0)) WrError(ErrNum_ConfOpSizes);
   else
   {

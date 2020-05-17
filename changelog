@@ -1,3 +1,8 @@
+2020-05-17 [1.42 Bld 167]
+
+- Bugfix      : do not allow BRN on 6800
+- Addition    : add 6801 as target
+
 2020-05-15 [1.42 Bld 166]
 
 - Bugfix      : add HALT instruction for 8080/8085 in Z80 syntax mode
