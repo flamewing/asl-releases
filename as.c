@@ -1930,7 +1930,7 @@ static void ExpandINCLUDE(Boolean SearchPath)
 
   StrCompMkTemp(&FNameArg, FNameArgStr);
   INCLUDE_SearchCore(&FNameArg, &ArgStr[1], SearchPath);
-  
+
   /* Tag erzeugen */
 
   Tag = GenerateProcessor();
@@ -1999,76 +1999,108 @@ static void GetNextLine(char *Line)
   MacLineSum++;
 }
 
+typedef struct
+{
+  char *pStr;
+  unsigned AllocLen;
+} tAllocStr;
+
+static void InitStr(tAllocStr *pStr)
+{
+  pStr->pStr = NULL;
+  pStr->AllocLen = 0;
+}
+
+static void ReallocStr(tAllocStr *pStr, unsigned NewAllocLen)
+{
+  if (NewAllocLen > pStr->AllocLen)
+  {
+    char *pNewStr;
+
+    /* round up, and implicitly avoid allocating 4/8 bytes (sizeof pointer)
+       so size check in as_vsnprcatf() does not generate false positive: */
+
+    NewAllocLen = (NewAllocLen + 15) &~15;
+    pNewStr = pStr->AllocLen
+            ? (char*)realloc(pStr->pStr, NewAllocLen)
+            : (char*)malloc(NewAllocLen);
+
+    if (pNewStr)
+    {
+      pStr->pStr = pNewStr;
+      pStr->pStr[pStr->AllocLen] = '\0';
+      pStr->AllocLen = NewAllocLen;
+    }
+  }
+}
+
 char *GetErrorPos(void)
 {
   String ActPos;
   PInputTag RunTag;
-  char *ErgPos = as_strdup(""), *tmppos;
-  int l;
+  tAllocStr Str;
+  int CurrStrLen, NewLen;
   Boolean Last;
+
+  InitStr(&Str);
+  CurrStrLen = 0;
 
   /* for GNU error message style: */
 
   if (GNUErrors)
   {
-    PInputTag InnerTag = NULL;
-    Boolean First = TRUE;
-    char *Msg;
+    PInputTag pInnerTag = NULL;
+    const char *pMsg;
 
     /* we only honor the include positions.  First, print the upper include layers... */
 
     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
       if (RunTag->GetPos == INCLUDE_GetPos)
       {
-        if (!InnerTag)
-          InnerTag = RunTag;
+        if (!pInnerTag)
+          pInnerTag = RunTag;
         else
         {
           Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
-          if (First)
+          if (!Str.AllocLen)
           {
-            Msg = getmessage(Num_GNUErrorMsg1);
-            l = strlen(Msg) + 1 + strlen(ActPos) + 1;
-            tmppos = (char *) malloc(l);
-            as_snprintf(tmppos, l, "%s %s", Msg, ActPos);
+            pMsg = getmessage(Num_GNUErrorMsg1);
+            NewLen = strlen(pMsg) + 1 + strlen(ActPos) + 1;
+            ReallocStr(&Str, NewLen);
+            as_snprintf(Str.pStr, Str.AllocLen, "%s %s", pMsg, ActPos);
+            CurrStrLen = NewLen;
           }
           else
           {
-            Msg = getmessage(Num_GNUErrorMsgN);
-            l = strlen(ErgPos) + 2 + strlen(Msg) + 1 + strlen(ActPos) + 1;
-            tmppos = (char *) malloc(l);
-            as_snprintf(tmppos, l, "%s,\n%s %s", ErgPos, Msg, ActPos);
+            pMsg = getmessage(Num_GNUErrorMsgN);
+            NewLen = CurrStrLen + 2 + strlen(pMsg) + 1 + strlen(ActPos) + 1;
+            ReallocStr(&Str, NewLen);
+            as_snprcatf(Str.pStr, Str.AllocLen, ",\n%s %s", pMsg, ActPos);
+            CurrStrLen = NewLen;
           }
-          First = False;
-          free(ErgPos);
-          ErgPos = tmppos;
         }
       }
 
     /* ...append something... */
 
-    if (*ErgPos)
+    if (CurrStrLen > 0)
     {
-      int l = strlen(ErgPos) + 3;
+      NewLen = CurrStrLen + 3;
 
-      tmppos = (char *) malloc(l);
-      as_snprintf(tmppos, l, "%s:\n", ErgPos);
-      free(ErgPos);
-      ErgPos = tmppos;
+      ReallocStr(&Str, NewLen);
+      as_snprcatf(Str.pStr, Str.AllocLen, ":\n");
+      CurrStrLen = NewLen;
     }
 
     /* ...then the innermost one */
 
-    if (InnerTag)
+    if (pInnerTag)
     {
-      int l;
-
-      InnerTag->GetPos(InnerTag, ActPos, sizeof(ActPos));
-      l = strlen(ErgPos) + strlen(ActPos) + 1;
-      tmppos = (char *) malloc(l);
-      as_snprintf(tmppos, l, "%s%s", ErgPos, ActPos);
-      free(ErgPos);
-      ErgPos = tmppos;
+      pInnerTag->GetPos(pInnerTag, ActPos, sizeof(ActPos));
+      NewLen = CurrStrLen + strlen(ActPos) + 1;
+      ReallocStr(&Str, NewLen);
+      as_snprcatf(Str.pStr, Str.AllocLen, "%s", ActPos);
+      CurrStrLen = NewLen;
     }
   }
 
@@ -2076,24 +2108,21 @@ char *GetErrorPos(void)
 
   else
   {
-    int TotLen = 0, ThisLen;
+    int ThisLen;
 
     for (RunTag = FirstInputTag; RunTag; RunTag = RunTag->Next)
     {
       Last = RunTag->GetPos(RunTag, ActPos, sizeof(ActPos));
       ThisLen = strlen(ActPos);
-      tmppos = (char *) malloc(TotLen + ThisLen + 1);
-      strcpy(tmppos, ActPos);
-      strcat(tmppos, ErgPos);
-      free(ErgPos);
-      ErgPos = tmppos;
-      TotLen += ThisLen;
+      ReallocStr(&Str, NewLen = CurrStrLen + ThisLen + 1);
+      strmaxprep(Str.pStr, ActPos, Str.AllocLen);
+      CurrStrLen = NewLen;
       if (Last)
         break;
     }
   }
 
-  return ErgPos;
+  return Str.pStr;
 }
 
 static Boolean InputEnd(void)
@@ -2478,7 +2507,7 @@ static void SplitLine(void)
       AttrSplit = (*pAttrPos);
       AttrPart.Pos.StartCol = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.Str);
       AttrPart.Pos.Len = strmemcpy(AttrPart.Str, STRINGSIZE, pAttrPos + 1, strlen(pAttrPos + 1));
-      
+
       *pAttrPos = '\0';
       if ((*OpPart.Str == '\0') && (*AttrPart.Str != '\0'))
       {

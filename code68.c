@@ -574,36 +574,35 @@ static void DecodeBxx(Word Index)
 {
   Byte Mask;
   Boolean OK;
-  int z;
+  int AddrStart, AddrEnd;
+  tStrComp *pMaskArg;
 
   if (MomCPU == CPU6301)
   {
-    StrCompCopy(&ArgStr[ArgCnt + 1], &ArgStr[1]);
-    for (z = 1; z <= ArgCnt - 1; z++)
-      StrCompCopy(&ArgStr[z], &ArgStr[z + 1]);
-    StrCompCopy(&ArgStr[ArgCnt], &ArgStr[ArgCnt + 1]);
+    pMaskArg = &ArgStr[1];
+    AddrStart = 2;
+    AddrEnd = ArgCnt;
   }
-  if ((ArgCnt >= 1) && (ArgCnt <= 2)) Try2Split(ArgCnt);
+  else
+  {
+    if ((ArgCnt >= 1) && (ArgCnt <= 2)) Try2Split(ArgCnt);
+    pMaskArg = &ArgStr[ArgCnt];
+    AddrStart = 1;
+    AddrEnd = ArgCnt - 1;
+  }
   if (ChkArgCnt(2, 3)
    && ChkMinCPU(CPU6301))
   {
-    Mask = EvalStrIntExpressionOffs(&ArgStr[ArgCnt], !!(*ArgStr[ArgCnt].Str == '#'), Int8, &OK);
-    if ((OK) && (MomCPU == CPU6301))
+    Mask = EvalStrIntExpressionOffs(pMaskArg, !!(*pMaskArg->Str == '#'),
+                                    (MomCPU == CPU6301) ? UInt3 : Int8, &OK);
+    if (OK && (MomCPU == CPU6301))
     {
-      if (Mask > 7)
-      {
-        WrError(ErrNum_OverRange);
-        OK = False;
-      }
-      else
-      {
-        Mask = 1 << Mask;
-        if (Index == 1) Mask = 0xff - Mask;
-      }
+      Mask = 1 << Mask;
+      if (Index == 1) Mask = 0xff - Mask;
     }
     if (OK)
     {
-      DecodeAdr(1, ArgCnt - 1, MModDir | MModInd);
+      DecodeAdr(AddrStart, AddrEnd, MModDir | MModInd);
       if (AdrMode != ModNone)
       {
         CodeLen = PrefCnt + 2 + AdrCnt;
@@ -634,24 +633,20 @@ static void DecodeBTxx(Word Index)
   Byte AdrByte;
 
   if (ChkArgCnt(2, 3)
-   && ChkMinCPU(CPU6301))
+   && ChkExactCPU(CPU6301))
   {
-    AdrByte = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
+    AdrByte = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), UInt3, &OK);
     if (OK)
     {
-      if (AdrByte > 7) WrError(ErrNum_OverRange);
-      else
+      DecodeAdr(2, ArgCnt, MModDir | MModInd);
+      if (AdrMode != ModNone)
       {
-        DecodeAdr(2, ArgCnt, MModDir | MModInd);
-        if (AdrMode != ModNone)
-        {
-          CodeLen = PrefCnt + 2 + AdrCnt;
-          BAsmCode[1 + PrefCnt] = 1 << AdrByte;
-          memcpy(BAsmCode + 2 + PrefCnt, AdrVals, AdrCnt);
-          BAsmCode[PrefCnt] = 0x65 + Index;
-          if (AdrMode == ModDir)
-            BAsmCode[PrefCnt] += 0x10;
-        }
+        CodeLen = PrefCnt + 2 + AdrCnt;
+        BAsmCode[1 + PrefCnt] = 1 << AdrByte;
+        memcpy(BAsmCode + 2 + PrefCnt, AdrVals, AdrCnt);
+        BAsmCode[PrefCnt] = 0x65 + Index;
+        if (AdrMode == ModDir)
+          BAsmCode[PrefCnt] += 0x10;
       }
     }
   }
