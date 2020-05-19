@@ -30,7 +30,7 @@ derived from imported vendor commits on `upstream`.
 Importing New ASL Releases
 --------------------------
 
-Copy the `repo/download.sh` script to a location outside of the
+Copy the `download.sh` script to a location outside of the
 repository in which you're going to do the import, change to the
 `upstream` branch, and then run `download.sh`. This will find all new
 [source releases][src] that have not yet been imported and allow you
