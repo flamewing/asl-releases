@@ -498,8 +498,8 @@ me)...
 \hline
 File              & Function \\
 \hline
-\endhead
 \hline
+\endhead
 {\bf Directory BIN} & \\
 \hline
 AS.EXE            & executable of assembler \\
@@ -1432,7 +1432,8 @@ The individual segment types have the assigned numbers listed in table
 \ref{TabSegNums}.  Register symbols which do not really fit into the order
 of normal symbols are explained in section \ref{SectRegSyms}.  The
 \tty{SYMTYPE} function delivers -1 as result when called with an undefined
-symbol as argument.
+symbol as argument.  However, if all you want to know is whether a symbol
+is defined or not, you may as well use the \tty{DEFINED} function.
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{|l|c|}
@@ -1449,7 +1450,8 @@ BITDATA & 6 \\
 IO & 7 \\
 REG & 8 \\
 ROMDATA & 9 \\
-$<$register symbol$>$ & 128 \\
+EEDATA & 10 \\
+$<$Register Symbol$>$ & 128 \\
 \hline
 \end{tabular}
 \end{center}
@@ -1607,11 +1609,9 @@ either integer, floating point, or string constants.
 \subsection{Integer Constants}
 \label{SectIntConsts}
 
-Integer constants describe non-fractional numbers.  They may either be
-written as a sequence of digits or as a sequence of characters enclosed in
-{\em single} quotation marks.  In case they are written as a sequence of
-digits, this may be done in different numbering systems (table
-\ref{TabSystems}).
+Integer constants describe non-fractional numbers.  They are witten as a
+sequence of digits.  This may be done in different numbering systems (see
+table \ref{TabSystems}).
 \par
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|c|c|c|}
@@ -1652,7 +1652,7 @@ hexadecimal constants in Intel mode:  If the leftmost digit is between A
 and F, the trailing H doesn't help anything, an additional 0 has to be
 prefixed (e.g. 0F0H instead of F0H).  The Motorola and C syntaxes whis
 both mark the numbering system at the front of a constant do not have this
-problem (\ii{hehehe..}).
+problem.
 
 Quite tricky is furthermore that the higher the default numbering system
 set via {\tt RADIX} becomes, the more letters used to denote numbering
@@ -1677,19 +1677,9 @@ following ways:
  o'2215053170'
  b'00010010001101000101011001111000'
 \end{verbatim}
-This syntax is noth the default for any processor architecture and only
+This syntax is not the default for any processor architecture and only
 available in \tty{RELAXED} mode.  Its main purpose is the easier porting
 of existing sources and is not recommended for new programs.
-
-Integer constants may also be written as ASCII values, like in
-the following examples:
-\begin{verbatim}
-'A'    ==$41
-'AB'   ==$4142
-'ABCD' ==$41424344
-\end{verbatim}
-It is important to write the characters in {\em single quotes}, to
-distinguish them from string constants (discussed somewhat later).
 
 \subsection{Floating Point Constants}
 
@@ -1707,11 +1697,10 @@ positions, e.g.  \tty{2.0} instead of \tty{2}.
 \subsection{String Constants}
 \label{SectStringConsts}
 
-String constants have to be included in {\em double quotation} marks (to
-distinguish them from the abovementioned ASCII-integers). In order to
-make it possible to write quotation marks and special characters without
-trouble in string constants, an ''escape mechanism'' has been implemented,
-which should sound familiar for C programmers:
+String constants have to be enclosed in single or double quotation marks.
+In order to make it possible to include quotation marks or special characters
+in string constants, an ''escape mechanism'' has been implemented, which
+should sound familiar for C programmers:
 
 The assembler understands a backslash (\verb!\!) with a following decimal
 number of three digits maximum in the string as a character with the
@@ -1769,10 +1758,54 @@ because it presumes that it is the start of a further character
 constant. An error message about a wrong parameter number is the result.
 A workaround would be to write e.g., \verb!\i! instead of \verb!\'!.
 
+\subsection{String to Integer Conversion and Character Constants}
+
+Earlier versions of AS strictly distinguished between character
+strings and so-called ''character constants'': At first glance, a
+character constant looks like a string, the characters are however
+enclosed in single instead of double quotation marks.  Such an object had
+the data type 'Integer', i.e. it represented a number with the value
+given by the (ASCII) code of the character, and it was something
+completely different:
+
+\begin{verbatim}
+   move.b   #65,d0
+   move.b   #'A',d0      ; equal to first instruction
+   move.b   #"A",d0      ; not allowed in older versions of AS!
+\end{verbatim}
+
+This strict differentiation {\em no longer exists}, so it is irrelevant
+whether single or double quotes are used.  If an integer value
+is expected as argument, and a string is used, the conversion via the
+character's (ASCII) value is done ''on the fly'' at this place. This
+means that in the example given, {\em all three lines} result in the
+same machine code.
+
+Such an implicit conversion to integer values also take place for strings
+consisting of multiple constancs, which are sometimes called ''multi
+character constants'':
+\begin{verbatim}
+'A'    ==$41
+'AB'   ==$4142
+'ABCD' ==$41424344
+\end{verbatim}
+Multi character constants are the only case where using single or double
+quotes still makes a difference.  Many targets define pseudo instructions
+to dispose constants in memory, and which accept different data types.
+In such a case, it is still necessary to use double quotes if a character
+string shall be placed in memory:
+\begin{verbatim}
+    dc.w    "ab"  ; disposes two words (0x0041,0x0042)
+    dc.w    'ab'  ; disposes one word (0x4142)
+\end{verbatim}
+Important: using the correct quotation is not necessary if the character
+string is longer than the used operand size, which is two characters or
+16 bits in this example.
+
 \subsection{Evaluation}
 
 The calculation of intermediary results within formula expressions is
-always done with the highest available resolution, i.e. 32 bits for
+always done with the highest available resolution, i.e. 32 or 64 bits for
 integer numbers, 80 bit for floating point numbers and 255 characters
 for strings.  An possible test of value range overflows is done only
 on the final result.
@@ -2850,8 +2883,8 @@ desired result when used as argument for \tty{ORG}.  The
 \tin{Target} & \tin{CODE} & \tin{DATA} & \tin{I-}   & \tin{X-}   & \tin{Y-}   & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-}  & \tin{EE-}  \\
              &            &            & \tin{DATA} & \tin{DATA} & \tin{DATA} & \tin{DATA} &          &           & \tin{DATA}  & \tin{DATA} \\
 \hline
-\endhead
 \hline
+\endhead
 \input{../doc_COM/taborg.tex}
 \hline
 \multicolumn{11}{|l|}{$^{1}$ Initial value 80h.} \\
@@ -8343,7 +8376,7 @@ Arguments         \> : \> {\tt d8} = 8-bit constant, registers fixed for Z80 syn
 \begin{tabbing}
 Arguments         \= : \= \kill \\
 Instruction       \> : \> \tty{LDSI d8} \\
-Z80 Syntax        \> : \> \tty{ADD DE,SP,8} \\
+Z80 Syntax        \> : \> \tty{ADD DE,SP,d8} \\
 Function          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
 Flags             \> : \> none \\
 Arguments         \> : \> {\tt d8} = 8-bit constant, registers fixed for Z80 syntax \\
@@ -11689,7 +11722,7 @@ described by:
                {none}
 \errentry{2180}{invalid bit field}
                {error}
-               {the bit field does not conform to the required syntax {\tt (start,count)} syntax.}
+               {the bit field is not in the required syntax {\tt (start,count)}.}
                {the argument in question}
 \errentry{10001}{error in opening file}
                {fatal}

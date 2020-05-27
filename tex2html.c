@@ -15,6 +15,10 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
+#include "texrefs.h"
+#include "texutil.h"
+#include "textoc.h"
+#include "texfonts.h"
 #include "strutil.h"
 
 #ifdef __MSDOS__
@@ -39,24 +43,10 @@ typedef enum
   EnvQuote, EnvTabbing, EnvBiblio, EnvMarginPar, EnvCaption, EnvHeading, EnvCount
 } EnvType;
 
-typedef enum
-{
-  FontStandard, FontEmphasized, FontBold, FontTeletype, FontItalic, FontSuper, FontCnt
-} TFontType;
-
 static char *FontNames[FontCnt] =
 {
   "", "EM", "B", "TT", "I", "SUP"
 };
-
-#define MFontEmphasized (1 << FontEmphasized)
-#define MFontBold (1 << FontBold)
-#define MFontTeletype (1 << FontTeletype)
-#define MFontItalic (1 << FontItalic)
-typedef enum
-{
-  FontTiny, FontSmall, FontNormalSize, FontLarge, FontHuge
-} TFontSize;
 
 typedef struct sEnvSave
 {
@@ -66,13 +56,6 @@ typedef struct sEnvSave
   int EnumCounter, FontNest;
   Boolean InListItem;
 } TEnvSave, *PEnvSave;
-
-typedef struct sFontSave
-{
-  struct sFontSave *Next;
-  int FontFlags;
-  TFontSize FontSize;
-} TFontSave, *PFontSave;
 
 typedef enum
 {
@@ -93,18 +76,6 @@ typedef struct
   Boolean MultiFlags[MAXROWS];
 } TTable;
 
-typedef struct sRefSave
-{
-  struct sRefSave *Next;
-  char *RefName, *Value;
-} TRefSave, *PRefSave;
-
-typedef struct sTocSave
-{
-  struct sTocSave *Next;
-  char *TocName;
-} TTocSave, *PTocSave;
-
 typedef struct sIndexSave
 {
   struct sIndexSave *Next;
@@ -121,16 +92,15 @@ static char *EnvNames[EnvCount] =
 
 static int IncludeNest;
 static FILE *infiles[50], *outfile;
-static char *infilename, *outfilename;
+static char *outfilename;
 static char TocName[200];
-static int CurrLine = 0, CurrColumn;
 
 #define CHAPMAX 6
 static int Chapters[CHAPMAX];
-static int TableNum, FontNest, ErrState, FracState, BibIndent, BibCounter;
+static int TableNum, ErrState, FracState, BibIndent, BibCounter;
 #define TABMAX 100
 static int TabStops[TABMAX], TabStopCnt, CurrTabStop;
-static Boolean InAppendix, InMathMode, DoRepass, InListItem;
+static Boolean InAppendix, InMathMode, InListItem;
 static TTable ThisTable;
 static int CurrRow, CurrCol;
 static char SrcDir[TOKLEN + 1];
@@ -139,15 +109,11 @@ static Boolean GermanMode;
 static int Structured;
 
 static EnvType CurrEnv;
-static int CurrFontFlags;
-static TFontSize CurrFontSize;
 static int CurrListDepth;
 static int EnumCounter;
 static int ActLeftMargin, LeftMargin, RightMargin;
+static int CurrPass;
 static PEnvSave EnvStack;
-static PFontSave FontStack;
-static PRefSave FirstRefSave, FirstCiteSave;
-static PTocSave FirstTocSave;
 static PIndexSave FirstIndex;
 
 static PInstTable TeXTable;
@@ -186,15 +152,10 @@ static void error(char *Msg)
 {
   int z;
 
-  fprintf(stderr, "%s:%d.%d: %s\n", infilename, CurrLine, CurrColumn, Msg);
+  fprintf(stderr, "%s:%d.%d: %s\n", pInFileName, CurrLine, CurrColumn, Msg);
   for (z = 0; z < IncludeNest; fclose(infiles[z++]));
   fclose(outfile);
   exit(2);
-}
-
-static void warning(char *Msg)
-{
-  fprintf(stderr, "%s:%d.%d: %s\n", infilename, CurrLine, CurrColumn, Msg);
 }
 
 static void SetLang(Boolean IsGerman)
@@ -223,151 +184,6 @@ static void SetLang(Boolean IsGerman)
     ErrorEntryNames[1] = "Reason";
     ErrorEntryNames[2] = "Argument";
   }
-}
-
-/*--------------------------------------------------------------------------*/
-
-static void AddLabel(char *Name, char *Value)
-{
-  PRefSave Run, Prev, Neu;
-  int cmp;
-  char err[200];
-
-  for (Run = FirstRefSave, Prev = NULL; Run; Prev = Run, Run = Run->Next)
-    if ((cmp = strcmp(Run->RefName, Name)) >= 0)
-      break;
-
-  if ((Run) && (cmp == 0))
-  {
-    if (strcmp(Run->Value, Value))
-    {
-      as_snprintf(err, sizeof(err), "value of label '%s' has changed", Name);
-      warning(err);
-      DoRepass = True;
-      free(Run->Value);
-      Run->Value = as_strdup(Value);
-    }
-  }
-  else
-  {
-    Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = as_strdup(Name);
-    Neu->Value = as_strdup(Value);
-    Neu->Next = Run;
-    if (!Prev)
-      FirstRefSave = Neu;
-    else
-      Prev->Next = Neu;
-  }
-}
-
-static void AddCite(char *Name, char *Value)
-{
-  PRefSave Run, Prev, Neu;
-  int cmp;
-  char err[200];
-
-  for (Run = FirstCiteSave, Prev = NULL; Run; Prev = Run, Run = Run->Next)
-    if ((cmp = strcmp(Run->RefName, Name)) >= 0)
-      break;
-
-  if ((Run) && (cmp == 0))
-  {
-    if (strcmp(Run->Value, Value))
-    {
-      as_snprintf(err, sizeof(err), "value of citation '%s' has changed", Name);
-      warning(err);
-      DoRepass = True;
-      free(Run->Value);
-      Run->Value = as_strdup(Value);
-    }
-  }
-  else
-  {
-    Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = as_strdup(Name);
-    Neu->Value = as_strdup(Value);
-    Neu->Next = Run;
-    if (!Prev)
-      FirstCiteSave = Neu;
-    else
-      Prev->Next = Neu;
-  }
-}
-
-static void GetLabel(char *Name, char *Dest)
-{
-  PRefSave Run;
-  char err[200];
-
-  for (Run = FirstRefSave; Run; Run = Run->Next)
-    if (!strcmp(Name, Run->RefName))
-      break;
-
-  if (!Run)
-  {
-    as_snprintf(err, sizeof(err), "undefined label '%s'", Name);
-    warning(err);
-    DoRepass = True;
-  }
-  strcpy(Dest, Run ? Run->Value : "???");
-}
-
-static void GetCite(char *Name, char *Dest)
-{
-  PRefSave Run;
-  char err[200];
-
-  for (Run = FirstCiteSave; Run; Run = Run->Next)
-    if (!strcmp(Name, Run->RefName))
-      break;
-
-  if (!Run)
-  {
-    as_snprintf(err, sizeof(err), "undefined citation '%s'", Name);
-    warning(err);
-    DoRepass = True;
-  }
-  strcpy(Dest, Run ? Run->Value : "???");
-}
-
-static void PrintLabels(char *Name)
-{
-  PRefSave Run;
-  FILE *file = fopen(Name, "a");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstRefSave; Run; Run = Run->Next)
-    fprintf(file, "Label %s %s\n", Run->RefName, Run->Value);
-  fclose(file);
-}
-
-static void PrintCites(char *Name)
-{
-  PRefSave Run;
-  FILE *file = fopen(Name, "a");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstCiteSave; Run; Run = Run->Next)
-    fprintf(file, "Citation %s %s\n", Run->RefName, Run->Value);
-  fclose(file);
-}
-
-static void PrintToc(char *Name)
-{
-  PTocSave Run;
-  FILE *file = fopen(Name, "w");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstTocSave; Run; Run = Run->Next)
-    fprintf(file, "%s\n\n", Run->TocName);
-  fclose(file);
 }
 
 /*------------------------------------------------------------------------------*/
@@ -438,7 +254,7 @@ static Boolean isalphanum(char inp)
 
 static char LastChar = '\0';
 static char SaveSep = '\0', SepString[TOKLEN] = "";
-static Boolean DidEOF = False;
+static Boolean DidEOF;
 static char BufferLine[TOKLEN] = "", *BufferPtr = BufferLine;
 typedef struct
 {
@@ -814,21 +630,9 @@ static void DoAddNormal(const char *Part, char *Sep)
 
 /*--------------------------------------------------------------------------*/
 
-static void SaveFont(void)
+void PrFontDiff(int OldFlags, int NewFlags)
 {
-  PFontSave NewSave;
-
-  NewSave = (PFontSave) malloc(sizeof(TFontSave));
-  NewSave->Next = FontStack;
-  NewSave->FontSize = CurrFontSize;
-  NewSave->FontFlags = CurrFontFlags;
-  FontStack = NewSave;
-  FontNest++;
-}
-
-static void PrFontDiff(int OldFlags, int NewFlags)
-{
-  TFontType z;
+  tFontType z;
   int Mask;
   char erg[10];
 
@@ -840,7 +644,7 @@ static void PrFontDiff(int OldFlags, int NewFlags)
    }
 }
 
-static void PrFontSize(TFontSize Type, Boolean On)
+void PrFontSize(tFontSize Type, Boolean On)
 {
   char erg[10];
 
@@ -867,24 +671,6 @@ static void PrFontSize(TFontSize Type, Boolean On)
   DoAddNormal(erg, "");
   if ((FontTiny == Type) || (FontHuge == Type))
     DoAddNormal(erg, "");
-}
-
-static void RestoreFont(void)
-{
-  PFontSave OldSave;
-
-  if (!FontStack)
-    return;
-
-  PrFontDiff(CurrFontFlags, FontStack->FontFlags);
-  PrFontSize(CurrFontSize, False);
-
-  OldSave = FontStack;
-  FontStack = FontStack->Next;
-  CurrFontSize = OldSave->FontSize;
-  CurrFontFlags = OldSave->FontFlags;
-  free(OldSave);
-  FontNest--;
 }
 
 static void SaveEnv(EnvType NewEnv)
@@ -1067,10 +853,7 @@ static void DumpTable(void)
           for (rowz3 = rowz; rowz3 <= rowz2; rowz3++)
           {
             if (ThisTable.Lines[rowz3][colptr])
-            {
               fputs(ThisTable.Lines[rowz3][colptr], outfile);
-              free(ThisTable.Lines[rowz3][colptr]);
-            }
             if (rowz3 != rowz2)
               fputs("<BR>\n", outfile);
           }
@@ -1085,6 +868,14 @@ static void DumpTable(void)
       /* end row */
 
       fprintf(outfile, "</TR>\n");
+
+      for (rowz3 = rowz; rowz3 <= rowz2; rowz3++)
+        for (colz = 0; colz < ThisTable.ColumnCount; colz++)
+          if (ThisTable.Lines[rowz3][colz])
+          {
+            free(ThisTable.Lines[rowz3][colz]);
+            ThisTable.Lines[rowz3][colz] = NULL;
+          }
 
       rowz = rowz2 + 1;
     }
@@ -1118,21 +909,6 @@ static void GetSectionName(char *Dest, int DestSize)
       as_snprcatf(Dest, DestSize, "%c.", Chapters[z] + 'A');
     else
       as_snprcatf(Dest, DestSize, "%d.", Chapters[z]);
-  }
-}
-
-static void AddToc(char *Line)
-{
-  PTocSave NewTocSave, RunToc;
-
-  NewTocSave = (PTocSave) malloc(sizeof(TTocSave));
-  NewTocSave->Next = NULL;
-  NewTocSave->TocName = as_strdup(Line);
-  if (FirstTocSave == NULL) FirstTocSave = NewTocSave;
-  else
-  {
-    for (RunToc = FirstTocSave; RunToc->Next; RunToc = RunToc->Next);
-    RunToc->Next = NewTocSave;
   }
 }
 
@@ -1341,7 +1117,7 @@ static void EndSectionHeading(void)
     fputs("</A>", outfile);
     GetSectionName(Line, sizeof(Line));
     as_snprcatf(Line, sizeof(Line), " %s", Title);
-    AddToc(Line);
+    AddToc(Line, 0);
   }
 
   fprintf(outfile, "</H%d>\n", Level + 1);
@@ -1426,7 +1202,7 @@ static void TeXBeginEnv(Word Index)
       ReadToken(Add);
       assert_token("}");
       ActLeftMargin = LeftMargin = 4 + (BibIndent = strlen(Add));
-      AddToc(BiblioName);
+      AddToc(BiblioName, 0);
       break;
     case EnvVerbatim:
       FlushLine();
@@ -1893,7 +1669,7 @@ static void TeXEnvNewFontType(Word Index)
 
 static void TeXNewFontSize(Word Index)
 {
-  PrFontSize(CurrFontSize = (TFontSize) Index, True);
+  PrFontSize(CurrFontSize = (tFontSize) Index, True);
 }
 
 static void TeXEnvNewFontSize(Word Index)
@@ -2016,6 +1792,18 @@ static void TeXIndex(Word Index)
     run->RefCnt++;
   as_snprintf(Erg, sizeof(Erg), "<A NAME=\"index_%s_%d\"></A>", Token, run->RefCnt);
   DoAddNormal(Erg, "");
+}
+
+static void FreeIndex(void)
+{
+  while (FirstIndex)
+  {
+    PIndexSave Old = FirstIndex;
+    FirstIndex = Old->Next;
+    if (Old->Name)
+      free(Old->Name);
+    free(Old);
+  }
 }
 
 static int GetDim(Double *Factors)
@@ -2269,7 +2057,7 @@ static void TeXContents(Word Index)
 
   if (!file)
   {
-    warning("contents file not found.");
+    Warning("contents file not found.");
     DoRepass = True;
     return;
   }
@@ -2336,7 +2124,7 @@ static void TeXPrintIndex(Word Index)
 
   FlushLine();
   fprintf(outfile, "<H1><A NAME=\"sect_index\">%s</A></H1>\n", IndexName);
-  AddToc(IndexName);
+  AddToc(IndexName, 0);
 
   fputs("<TABLE SUMMARY=\"Index\" BORDER=0 CELLPADDING=5>\n", outfile);
   rz = 0;
@@ -2813,18 +2601,21 @@ static void TeXDocumentStyle(Word Index)
     while (strcmp(Token, "]"));
     assert_token("{");
     ReadToken(Token);
-    if (!as_strcasecmp(Token,  "article"))
+    if (CurrPass <= 1)
     {
-      AddInstTable(TeXTable, "section", 0, TeXNewSection);
-      AddInstTable(TeXTable, "subsection", 1, TeXNewSection);
-      AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
-    }
-    else
-    {
-      AddInstTable(TeXTable, "chapter", 0, TeXNewSection);
-      AddInstTable(TeXTable, "section", 1, TeXNewSection);
-      AddInstTable(TeXTable, "subsection", 2, TeXNewSection);
-      AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      if (!as_strcasecmp(Token,  "article"))
+      {
+        AddInstTable(TeXTable, "section", 0, TeXNewSection);
+        AddInstTable(TeXTable, "subsection", 1, TeXNewSection);
+        AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      }
+      else
+      {
+        AddInstTable(TeXTable, "chapter", 0, TeXNewSection);
+        AddInstTable(TeXTable, "section", 1, TeXNewSection);
+        AddInstTable(TeXTable, "subsection", 2, TeXNewSection);
+        AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      }
     }
     assert_token("}");
   }
@@ -2868,8 +2659,9 @@ static void StartFile(char *Name)
   fputs("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n", outfile);
   fputs("<HTML>\n", outfile);
   fputs("<HEAD>\n", outfile);
-  fprintf(outfile, "<META NAME=\"Author\" CONTENT=\"automatically generated by tex2html from %s\">\n", infilename);
-  stat(Name, &st);
+  fprintf(outfile, "<META NAME=\"Author\" CONTENT=\"automatically generated by tex2html from %s\">\n", pInFileName);
+  if (stat(pInFileName, &st))
+    stat(Name, &st);
   strncpy(comp, ctime(&st.st_mtime), TOKLEN - 1);
   if ((*comp) && (comp[strlen(comp) - 1] == '\n'))
     comp[strlen(comp) - 1] = '\0';
@@ -2881,7 +2673,7 @@ static void StartFile(char *Name)
 int main(int argc, char **argv)
 {
   char Line[TOKLEN], Comp[TOKLEN], *p, AuxFile[200];
-  int z, ergc;
+  int z, ergc, NumPassesLeft;
 
   /* assume defaults for flags */
 
@@ -2908,18 +2700,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  /* set up inclusion stack */
+  /* save file names */
 
-  IncludeNest = 0;
-  *infiles = fopen(argv[1], "r");
-  if (!*infiles)
-  {
-    perror(argv[1]);
-    exit(3);
-  }
-  else
-    IncludeNest++;
-  SetSrcDir(argv[1]);
+  pInFileName = argv[1];
+  outfilename = argv[2];
 
   /* set up hash table */
 
@@ -3022,170 +2806,203 @@ int main(int argc, char **argv)
   AddInstTable(TeXTable, "elektorfalse", 0, TeXDummy);
   AddInstTable(TeXTable, "input", 0, TeXInclude);
 
-  /* preset state variables */
-
-  for (z = 0; z < CHAPMAX; Chapters[z++] = 0);
-  TableNum = 0;
-  FontNest = 0;
-  TabStopCnt = 0;
-  CurrTabStop = 0;
-  ErrState = FracState = -1;
-  InAppendix = False;
-  EnvStack = NULL;
-  CurrEnv = EnvNone;
-  CurrListDepth = 0;
-  ActLeftMargin = LeftMargin = 1;
-  RightMargin = 70;
-  EnumCounter = 0;
-  InListItem = False;
-  CurrFontFlags = 0;
-  CurrFontSize = FontNormalSize;
-  FontStack = NULL;
-  FirstRefSave = NULL;
-  FirstCiteSave = NULL;
-  FirstTocSave = NULL;
-  FirstIndex = NULL;
-  *SideMargin = '\0';
-  DoRepass = False;
-  BibIndent = BibCounter = 0;
-  GermanMode = True;
-  SetLang(False);
-
-  /* open help files */
-
-  strcpy(TocName, argv[1]);
-  p = strrchr(TocName, '.');
-  if (p)
-    *p = '\0';
-  strcat(TocName, ".htoc");
-
-  strcpy(AuxFile, argv[1]);
-  p = strrchr(AuxFile, '.');
-  if (p)
-    *p = '\0';
-  strcat(AuxFile, ".haux");
-  ReadAuxFile(AuxFile);
-
-  /* save file names */
-
-  infilename = argv[1];
-  outfilename = argv[2];
-  if (!strcmp(outfilename, "-"))
+  CurrPass = 0;
+  NumPassesLeft = 3;
+  do
   {
-    if (Structured)
+    CurrPass++;
+
+    /* set up inclusion stack */
+
+    DidEOF = False;
+    IncludeNest = 0;
+    *infiles = fopen(pInFileName, "r");
+    if (!*infiles)
     {
-      printf("%s: structured write must be to a directory\n", *argv);
-      exit(1);
+      perror(pInFileName);
+      exit(3);
     }
     else
-      outfile = stdout;
-  }
+      IncludeNest++;
+    SetSrcDir(pInFileName);
 
-  /* do we need to make a directory ? */
+    /* preset state variables */
 
-  else if (Structured)
-  {
-    as_snprintf(Line, sizeof(Line), "%s.dir", outfilename);
-#if (defined _WIN32) && (!defined __CYGWIN32__)
-    mkdir(Line);
-#elif (defined __MSDOS__)
-    mkdir(Line);
-#else
-    mkdir(Line, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-#endif
-    StartFile("intro.html");
-  }
+    for (z = 0; z < CHAPMAX; Chapters[z++] = 0);
+    TableNum = 0;
+    TabStopCnt = 0;
+    CurrTabStop = 0;
+    ErrState = FracState = -1;
+    InAppendix = False;
+    EnvStack = NULL;
+    CurrEnv = EnvNone;
+    CurrListDepth = 0;
+    ActLeftMargin = LeftMargin = 1;
+    RightMargin = 70;
+    EnumCounter = 0;
+    InListItem = False;
+    InitFont();
+    CurrLine = 0;
+    InitLabels();
+    InitCites();
+    InitToc();
+    FirstIndex = NULL;
+    *SideMargin = '\0';
+    DoRepass = False;
+    BibIndent = BibCounter = 0;
+    GermanMode = True;
+    SetLang(False);
 
-  /* otherwise open the single file */
+    /* open help files */
 
-  else
-   StartFile(argv[2]);
+    strmaxcpy(TocName, pInFileName, sizeof(TocName));
+    p = strrchr(TocName, '.');
+    if (p)
+      *p = '\0';
+    strcat(TocName, ".htoc");
 
-  /* start to parse */
+    strmaxcpy(AuxFile, pInFileName, sizeof(AuxFile));
+    p = strrchr(AuxFile, '.');
+    if (p)
+      *p = '\0';
+    strcat(AuxFile, ".haux");
+    ReadAuxFile(AuxFile);
 
-  while (1)
-  {
-    if (!ReadToken(Line))
-      break;
-    if (!strcmp(Line, "\\"))
+    if (!strcmp(outfilename, "-"))
     {
-      strcpy(BackSepString, SepString);
-      if (!ReadToken(Line))
-        error("unexpected end of file");
-      if (*SepString != '\0')
-        BackToken(Line);
-      else if (!LookupInstTable(TeXTable, Line))
-        if (!TeXNLSSpec(Line))
-        {
-          as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
-          warning(Comp);
-        }
+      if (Structured)
+      {
+        printf("%s: structured write must be to a directory\n", *argv);
+        exit(1);
+      }
+      else
+        outfile = stdout;
     }
-    else if (!strcmp(Line, "$"))
+
+    /* do we need to make a directory ? */
+
+    else if (Structured)
     {
-      InMathMode = !InMathMode;
-      if (InMathMode)
+      as_snprintf(Line, sizeof(Line), "%s.dir", outfilename);
+#if (defined _WIN32) && (!defined __CYGWIN32__)
+      mkdir(Line);
+#elif (defined __MSDOS__)
+      mkdir(Line);
+#else
+      mkdir(Line, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+#endif
+      StartFile("intro.html");
+    }
+
+    /* otherwise open the single file */
+
+    else
+      StartFile(outfilename);
+
+    /* start to parse */
+
+    while (1)
+    {
+      if (!ReadToken(Line))
+        break;
+      if (!strcmp(Line, "\\"))
       {
         strcpy(BackSepString, SepString);
-        ReadToken(Line);
-        strcpy(SepString, BackSepString);
-        BackToken(Line);
+        if (!ReadToken(Line))
+          error("unexpected end of file");
+        if (*SepString != '\0')
+          BackToken(Line);
+        else if (!LookupInstTable(TeXTable, Line))
+          if (!TeXNLSSpec(Line))
+          {
+            as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
+            Warning(Comp);
+          }
       }
-    }
-    else if (!strcmp(Line, "&"))
-      NextTableColumn();
-    else if ((!strcmp(Line, "^")) && (InMathMode))
-      TeXDoPot();
-    else if ((!strcmp(Line, "\"")) && (GermanMode))
-      TeXDoSpec();
-    else if (!strcmp(Line, "{"))
-      SaveFont();
-    else if (!strcmp(Line, "}"))
-    {
-      if (FontNest > 0)
-        RestoreFont();
-      else if (ErrState >= 0)
-        NextErrState();
-      else if (FracState >= 0)
-        NextFracState();
-      else switch (CurrEnv)
+      else if (!strcmp(Line, "$"))
       {
-        case EnvMarginPar:
-          RestoreEnv();
-          break;
-        case EnvCaption:
-          FlushLine();
-          fputs("</CENTER><P>\n", outfile);
-          RestoreEnv();
-          break;
-        case EnvHeading:
-          EndSectionHeading();
-          RestoreEnv();
-          break;
-        default:
-          RestoreFont();
+        InMathMode = !InMathMode;
+        if (InMathMode)
+        {
+          strcpy(BackSepString, SepString);
+          ReadToken(Line);
+          strcpy(SepString, BackSepString);
+          BackToken(Line);
+        }
       }
+      else if (!strcmp(Line, "&"))
+        NextTableColumn();
+      else if ((!strcmp(Line, "^")) && (InMathMode))
+        TeXDoPot();
+      else if ((!strcmp(Line, "\"")) && (GermanMode))
+        TeXDoSpec();
+      else if (!strcmp(Line, "{"))
+        SaveFont();
+      else if (!strcmp(Line, "}"))
+      {
+        if (FontNest > 0)
+          RestoreFont();
+        else if (ErrState >= 0)
+          NextErrState();
+        else if (FracState >= 0)
+          NextFracState();
+        else switch (CurrEnv)
+        {
+          case EnvMarginPar:
+            RestoreEnv();
+            break;
+          case EnvCaption:
+            FlushLine();
+            fputs("</CENTER><P>\n", outfile);
+            RestoreEnv();
+            break;
+          case EnvHeading:
+            EndSectionHeading();
+            RestoreEnv();
+            break;
+          default:
+            RestoreFont();
+        }
+      }
+      else
+        DoAddNormal(Line, SepString);
     }
-    else
-      DoAddNormal(Line, SepString);
+    FlushLine();
+
+    fputs("</HTML>\n", outfile);
+
+    for (z = 0; z < IncludeNest; fclose(infiles[z++]));
+    fclose(outfile);
+
+    unlink(AuxFile);
+    PrintLabels(AuxFile);
+    PrintCites(AuxFile);
+    PrintToc(TocName);
+
+    FreeLabels();
+    FreeCites();
+    FreeToc();
+    FreeIndex();
+    FreeFontStack();
+
+    NumPassesLeft--;
+    if (DoRepass)
+      fprintf(stderr, "additional pass recommended\n");
   }
-  FlushLine();
+  while (DoRepass && NumPassesLeft);
+
   DestroyInstTable(TeXTable);
 
-  fputs("</HTML>\n", outfile);
-
-  for (z = 0; z < IncludeNest; fclose(infiles[z++]));
-  fclose(outfile);
-
-  unlink(AuxFile);
-  PrintLabels(AuxFile);
-  PrintCites(AuxFile);
-  PrintToc(TocName);
-
   if (DoRepass)
-    fprintf(stderr, "additional pass recommended\n");
-
-  return 0;
+  {
+    fprintf(stderr, "additional passes needed but cowardly not done\n");
+    return 3;
+  }
+  else
+  {
+    fprintf(stderr, "%d pass(es) needed\n", CurrPass);
+    return 0;
+  }
 }
 
 #ifdef CKMALLOC

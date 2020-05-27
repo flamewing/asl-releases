@@ -503,8 +503,8 @@ jemand (im Zweifelsfalle ich) beim Kopieren geschlafen...
 \hline
 Datei             & Funktion \\
 \hline
-\endhead
 \hline
+\endhead
 {\bf Verzeichnis BIN} & \\
 \hline
 AS.EXE            & Programmdatei Assembler \\
@@ -781,7 +781,7 @@ Sie einer Environment-Variablen \tty{USEXMS} bzw. \tty{USEEMS} den Wert
 \begin{verbatim}
    SET USEXMS=n
 \end{verbatim}
-die Verwendung von extended memory verhindern.
+die Verwendung von Extended Memory verhindern.
 \par
 Da AS alle Ein-und Ausgaben "uber das Betriebssystem abwickelt (und daher
 unter DOS auch auf nicht ganz so kompatiblen PC's laufen sollte) und eine
@@ -1470,7 +1470,8 @@ Den einzelnen Segmenttypen sind die in Tabelle \ref{TabSegNums}
 aufgelisteten Nummern zugeordnet.  Die aus der Ordnung normaler Symbole
 etwas herausfallenden Registersymbole sind n"aher in Abschnitt
 \ref{SectRegSyms} erl"autert.  Mit einem undefinierten Symbol als Argument
-liefert die \tty{SYMTYPE}-Funktion -1 als Ergebnis.
+liefert die \tty{SYMTYPE}-Funktion -1 als Ergebnis.  Ob ein Symbol "uberhaupt
+definiert ist, l"a"st sich auch einfach mit der \tty{DEFINED}-Funktion abfragen.
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{|l|c|}
@@ -1487,6 +1488,7 @@ BITDATA & 6 \\
 IO & 7 \\
 REG & 8 \\
 ROMDATA & 9 \\
+EEDATA & 10 \\
 $<$Registersymbol$>$ & 128 \\
 \hline
 \end{tabular}
@@ -1653,11 +1655,10 @@ Stringkonstanten sein.
 \subsection{Integerkonstanten}
 \label{SectIntConsts}
 
-Integerkonstanten bezeichnen ganze Zahlen.  Sie d"urfen entweder als eine
-Folge von Ziffern oder als eine Reihe von in {\em einfachen} Hochkommas
-eingeschlossenen Zeichen geschrieben werden.  Werden sie als Ziffernfolgen
-geschrieben, so kann dies in verschiedenen Zahlensystemen erfolgen, deren
-Kennzeichnung von verwendeten Zielprozessor abh"angt (Tabelle
+Integerkonstanten bezeichnen ganze Zahlen.  Sie werden als eine
+Folge von Ziffern geschrieben.  Dies kann in verschiedenen
+Zahlensystemen erfolgen, deren Kennzeichnung von verwendeten
+Zielprozessor abh"angt (Tabelle
 \ref{TabSystems}).
 \par
 \begin{table*}[htbp]
@@ -1700,7 +1701,7 @@ von Hexadezimalkonstanten im Intel-Modus: Ist die vorderste Stelle
 zwischen A und F, so hilft das hintangestellte H "uberhaupt nichts, es
 mu"s noch eine Null davor (statt F0H also 0F0H).  Die Motorola-oder
 C-Syntax, die beide das Zahlensystem am Anfang einer Integerkonstante
-kennzeichnen, kennen dieses Problem nicht. (\ii{hihihi!}).
+kennzeichnen, kennen dieses Problem nicht.
 
 Reichlich heimt"uckisch ist auch, da"s bei immer h"oheren, mit {\tt RADIX}
 eingestellten Zahlensystemen, die bei Intel- und C-Syntax benutzten
@@ -1731,17 +1732,6 @@ im \tty{RELAXED}-Modus erreichbar.  Sie dient in erster Linie der
 einfacheren Portierung von Fremdquellen und wird nicht f"ur neu erstellte
 Programme empfohlen.
 
-Wie bereits angesprochen, k"onnen Integer-Konstanten auch als ASCII-Werte
-geschrieben werden, so entsprechen
-\begin{verbatim}
-'A'    == $41
-'AB'   == $4142
-'ABCD' == $41424344
-\end{verbatim}
-Wichtig ist, da"s hier die Zeichen in {\em einfachen Hochkommas}
-geschrieben werden, um sie von den weiter unten beschriebenen
-Stringkonstanten zu unterscheiden.
-
 \subsection{Gleitkommakonstanten}
 
 Gleitkommazahlen werden in der "ublichen halblogarithmischen
@@ -1759,11 +1749,11 @@ dies durch Dummy-Nachkommastellen erreichen, z.B. \tty{2.0} anstelle
 \subsection{Stringkonstanten}
 \label{SectStringConsts}
 
-Stringkonstanten m"ussen in {\em doppelte Hochkommas} (um sie von den oben
-beschrieben ASCII-Integers zu unterscheiden) eingeschlossen werden. Um nun
-aber auch G"ansef"u"schen und Sonderzeichen ohne Verrenkungen in
-String-Konstanten einbauen zu k"onnen, wurde ein ,,Escape-Mechanismus''
-eingebaut, der Programmierer(inne)n aus C bekannt vorkommen d"urfte:
+Stringkonstanten m"ussen in einfache oder doppelte Hochkommas
+eingeschlossen werden.  Um diese selber und andere Sonderzeichen ohne
+Verrenkungen in String-Konstanten einbauen zu k"onnen, wurde ein
+,,Escape-Mechanismus'' eingebaut, der C-Programmierer*innen bekannt
+vorkommen d"urfte:
 
 Schreibt man einen Backslash mit einer maximal dreiziffrigen Zahl im
 String, so versteht der Assembler dies als Zeichen mit dem entsprechenden
@@ -1822,11 +1812,56 @@ vermutet, da"s eine weitere Zeichenkonstante beginnt, und eine
 Fehlermeldung "uber eine falsche Parameterzahl ist die Folge.  Abhilfe
 w"are z.B., \verb!\h! anstelle \verb!\'! zu schreiben.
 
+\subsection{String- zu Integerwandlung und Zeichenkonstanten}
+
+Fr"uhere Versionen von AS verfolgten eine strikte Trennung von Strings
+und sogenannten ''Zeichenkonstanten'': Eine Zeichenkonstante sieht
+auf den ersten Blick aus wie ein String, nur sind die Zeichen in 
+einfache Hochkommans statt doppelte eingeschlossen.  Ein solches
+Objekt hatte den Datentyp 'Integer', war also eine Zahl, deren Wert
+durch den (ASCII-)Wert des jeweiligen Zeichens definiert war, und wurde
+strikt von einer String-Konstante unterschieden:
+
+\begin{verbatim}
+   move.b   #65,d0
+   move.b   #'A',d0      ; gleichwertig
+   move.b   #"A",d0      ; nicht erlaubt in aelteren Versionen!
+\end{verbatim}
+
+Diese Unterscheidung existiert {\em nicht mehr}, es ist also egal, ob
+man einfache oder doppelte Hochkommas verwendet.  Wird an einer Stelle eine
+Zahl als Argument erwartet, und ein String verwendet, so erfolgt die
+Umwandlung anhand der (ASCII-)Werte ''on-the-fly'' an dieser Stelle.  Im
+obigen Beispiel w"urden alle drei Anweisungen den gleichen Maschinencode
+erzeugen.
+
+Eine solche implizite Wandlung findet auch f"ur aus mehreren Zeichen
+bestehende Strings statt, die dann bisweilen als ''Mehrzeichenkonstanten''
+bezeichnet werden:
+\begin{verbatim}
+'A'    == $41
+"AB"   == $4142
+'ABCD' == $41424344
+\end{verbatim}
+Mehrzeichenkonstanten sind der einzige Fall, in denen die Verwendung von
+einfachen oder doppelten Hochkommas noch einen Unterschied macht.  F"ur
+viele Zielprozessoren sind Pseudobefehle zur Ablage von Konstanten definiert,
+die als Argument verschiedene Datentypen akzeptieren.  Will man wirklich
+eine Zeichenkette haben, so mu"s man in diesem Fall weiterhin doppelte
+Hochkommas verwenden:
+\begin{verbatim}
+    dc.w    "ab"  ; legt zwei Worte (0x0041,0x0042) ab
+    dc.w    'ab'  ; legt ein Wort (0x4142) ab
+\end{verbatim}
+Wichtig: dies ist nicht erforderlich, wenn die Zeichenkette l"anger als die
+verwendete Operandegr"o"se ist, in diesem Beispiel also l"anger als zwei
+Zeichen bzw. 16 Bit.
+
 \subsection{Evaluierung}
 
 Die Berechnung von im Formelausdruck entstehenden Zwischenergebnissen
-erfolgt immer mit der h"ochsten verf"ugbaren Wortbreite, d.h. 32 Bit f"ur
-Ganzzahlen, 80 Bit f"ur Gleitkommazahlen und 255 Zeichen f"ur Strings.
+erfolgt immer mit der h"ochsten verf"ugbaren Wortbreite, d.h. 32 oder 64 Bit
+f"ur Ganzzahlen, 80 Bit f"ur Gleitkommazahlen und 255 Zeichen f"ur Strings.
 Eine eventuelle Pr"ufung auf Wertebereichs"uberschreitung findet erst am
 Endergebnis statt.
 \par
@@ -2943,8 +2978,8 @@ Mittel der Wahl.
 \tin{Ziel} & \tin{CODE} & \tin{DATA} & \tin{I-}   & \tin{X-}   & \tin{Y-}   & \tin{BIT-} & \tin{IO} & \tin{REG} & \tin{ROM-} & \tin{EE-} \\
            &            &            & \tin{DATA} & \tin{DATA} & \tin{DATA} & \tin{DATA} &          &           & \tin{DATA} & \tin{DATA} \\
 \hline
-\endhead
 \hline
+\endhead
 \input{../doc_COM/taborg.tex}
 \hline
 \multicolumn{11}{|l|}{$^{1}$ Initialwert 80h. } \\
@@ -8435,7 +8470,7 @@ nicht m"oglich, da sie mit existierenden 8080-Mnemonics kollidieren:
       man den Vergleich haben, so kann man den Akkumulator als
       Zieloperanden explizit hinschreiben, also z.B. \tty{CP A,12h}
       anstatt \tty{CP 12h}.}
-\item{\tty{JP} ist in der Intel-Syntaxder Befehl f"ur 'Jump on
+\item{\tty{JP} ist in der Intel-Syntax der Befehl f"ur 'Jump on
       Positive', in der Zilog-Syntax jedoch der allgemeine
       Sprung-Befehl.  F"ur bedingte Spr"unge in Zilog-Syntax (\tty{JP
       cond,addr}) ist die Sache wegen der zwei Argumente eindeutig,
@@ -8500,7 +8535,7 @@ Argumente         \> : \> {\tt d8} = 8-Bit-Konstante, Register fix f"ur Z80-Synt
 \begin{tabbing}
 Argumente         \= : \= \kill \\
 Anweisung         \> : \> \tty{LDSI d8} \\
-Z80-Syntax        \> : \> \tty{ADD DE,SP,8} \\
+Z80-Syntax        \> : \> \tty{ADD DE,SP,d8} \\
 Funktion          \> : \> DE $\leftarrow$ SP + {\tt d8} \\
 Flags             \> : \> keine \\
 Argumente         \> : \> {\tt d8} = 8-Bit-Konstante, Register fix f"ur Z80-Syntax \\

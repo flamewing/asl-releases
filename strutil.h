@@ -56,7 +56,8 @@ extern int strlencmp(const char *pStr1, unsigned Str1Len,
 extern unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen);
 
 extern unsigned snstrlenprint(char *pDest, unsigned DestLen,
-                              const char *pStr, unsigned StrLen);
+                              const char *pStr, unsigned StrLen,
+                              char QuoteToEscape);
 
 extern void ReadLn(FILE *Datei, char *Zeile);
 

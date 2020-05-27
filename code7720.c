@@ -112,7 +112,7 @@ static void DecodeDATA_7720(Word Index)
 {
   LongInt MinV, MaxV;
   TempResult t;
-  int z, Max;
+  int z;
   Boolean OK;
   UNUSED(Index);
 
@@ -134,23 +134,16 @@ static void DecodeDATA_7720(Word Index)
 
       switch (t.Typ)
       {
-        case TempInt:
-          OK = ChkRange(t.Contents.Int, MinV, MaxV);
-          if (OK)
-          {
-            if (ActPC == SegCode)
-              DAsmCode[CodeLen++] = t.Contents.Int & MaxV;
-            else
-              WAsmCode[CodeLen++] = t.Contents.Int;
-          }
-          break;
         case TempString:
         {
-          unsigned z2;
+          unsigned z2, CharsPerWord, Pos;
           LongWord Trans;
-          int Pos;
 
-          Max = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2;
+          CharsPerWord = ((ActPC == SegCode) && (MomCPU >= CPU7725)) ? 3 : 2;
+
+          if (MultiCharToInt(&t, 3))
+            goto ToInt;
+
           Pos = 0;
           for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
           {
@@ -159,7 +152,7 @@ static void DecodeDATA_7720(Word Index)
               DAsmCode[CodeLen] = (Pos == 0) ? Trans : (DAsmCode[CodeLen] << 8) | Trans;
             else
               WAsmCode[CodeLen] = (Pos == 0) ? Trans : (WAsmCode[CodeLen] << 8) | Trans;
-            if (++Pos == Max)
+            if (++Pos == CharsPerWord)
             {
               Pos = 0;
               CodeLen++;
@@ -169,6 +162,17 @@ static void DecodeDATA_7720(Word Index)
             CodeLen++;
           break;
         }
+        case TempInt:
+        ToInt:
+          OK = ChkRange(t.Contents.Int, MinV, MaxV);
+          if (OK)
+          {
+            if (ActPC == SegCode)
+              DAsmCode[CodeLen++] = t.Contents.Int & MaxV;
+            else
+              WAsmCode[CodeLen++] = t.Contents.Int;
+          }
+          break;
         case TempFloat:
           WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
           /* fall-through */

@@ -416,6 +416,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   switch (t.Typ)
   {
     case TempInt:
+    ToInt:
       if (FirstPassUnknown) t.Contents.Int &= 0xff;
       if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8)) WrStrErrorPos(ErrNum_OverRange, pExpr);
       else
@@ -431,6 +432,9 @@ static Boolean LayoutByte(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempString:
     {
       unsigned z;
+
+      if (MultiCharToInt(&t, 4))
+        goto ToInt;
 
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
 
@@ -505,6 +509,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   switch (t.Typ)
   {
     case TempInt:
+    ToInt:
       if (FirstPassUnknown)
         t.Contents.Int &= 0xffff;
       if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int16)) WrStrErrorPos(ErrNum_OverRange, pExpr);
@@ -521,6 +526,9 @@ static Boolean LayoutWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempString:
     {
       unsigned z;
+
+      if (MultiCharToInt(&t, 4))
+        goto ToInt;
 
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
 
@@ -603,6 +611,7 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempNone:
       break;
     case TempInt:
+    ToInt:
       if (FirstPassUnknown)
         erg.Contents.Int &= 0xfffffffful;
       if (!SymbolQuestionable && !RangeCheck(erg.Contents.Int, Int32)) WrStrErrorPos(ErrNum_OverRange, pExpr);
@@ -627,6 +636,9 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempString:
     {
       unsigned z;
+
+      if (MultiCharToInt(&erg, 4))
+        goto ToInt;
 
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
 
@@ -739,6 +751,7 @@ static Boolean LayoutQuadWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempNone:
       break;
     case TempInt:
+    ToInt:
       if (!pCtx->Put64I(erg.Contents.Int, pCtx))
         return Result;
       Cnt = 8;
@@ -753,6 +766,9 @@ static Boolean LayoutQuadWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempString:
     {
       unsigned z;
+
+      if (MultiCharToInt(&erg, 8))
+        goto ToInt;
 
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
 
@@ -822,6 +838,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempNone:
       break;
     case TempInt:
+    ToInt:
       erg.Contents.Float = erg.Contents.Int;
       erg.Typ = TempFloat;
       /* fall-through */
@@ -834,6 +851,9 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     case TempString:
     {
       unsigned z;
+
+      if (MultiCharToInt(&erg, 4))
+        goto ToInt;
 
       TranslateString(erg.Contents.Ascii.Contents, erg.Contents.Ascii.Length);
 
@@ -939,7 +959,6 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
   {
     LongInt DupCnt;
     char *pSep, *pRun;
-    Word SumCnt, ECnt;
     String CopyStr;
     tStrComp Copy, DupArg, RemArg, ThisRemArg;
     tCurrCodeFill DUPStartFill, DUPEndFill;
@@ -979,7 +998,6 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
 
     StrCompIncRefLeft(&RemArg, 2);
     KillPrefBlanksStrCompRef(&RemArg);
-    SumCnt = 0;
     Len = strlen(RemArg.Str);
     if ((Len >= 2) && (*RemArg.Str == '(') && (RemArg.Str[Len - 1] == ')'))
     {
@@ -1009,7 +1027,6 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
         Result = False;
         goto func_exit;
       }
-      SumCnt += ECnt;
       if (pSep)
         RemArg = ThisRemArg;
     }

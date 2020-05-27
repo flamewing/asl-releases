@@ -1942,7 +1942,11 @@ static void DecodeMOVE(Word Index)
     else
     {
       DecodeAdr(&ArgStr[1], ((Variant == I_Variant) ? 0 : Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mpc | Mpcidx | Mabs) | Mimm);
-      if (AdrNum != 0)
+
+      /* Is An as source in byte mode allowed for ColdFire? No corresponding footnote in CFPRM... */
+
+      if ((AdrNum == 2) && (OpSize == eSymbolSize8Bit) && (pCurrCPUProps->Family != eColdfire)) WrError(ErrNum_InvOpSize);
+      else if (AdrNum != 0)
       {
         unsigned SrcAdrNum = AdrNum;
 
@@ -1956,7 +1960,8 @@ static void DecodeMOVE(Word Index)
           WAsmCode[0] = 0x2000;
         WAsmCode[0] |= AdrMode;
         DecodeAdr(&ArgStr[2], ((Variant == A_Variant) ? 0 : Mdata | Madri | Mpost | Mpre | Mdadri | Maix | Mabs) | Madr);
-        if (AdrMode != 0)
+        if ((AdrNum == 2) && (OpSize == eSymbolSize8Bit)) WrError(ErrNum_InvOpSize);
+        else if (AdrMode != 0)
         {
           Boolean CombinationOK;
 
@@ -2208,10 +2213,11 @@ static void DecodeADDSUBCMP(Word Index)
   {
     DestMask = Mdata | Madr | Madri | Mpost | Mpre | Mdadri | Maix | Mabs;
 
-    /* since CMP only reads operands, PC-relative addressing is also
-       allowed for the second operand */
+    /* Since CMP only reads operands, PC-relative addressing is also
+       allowed for the second operand on 68020++ */
 
-    if (mytoupper(*OpPart.Str) == 'C')
+    if ((mytoupper(*OpPart.Str) == 'C')
+     && (pCurrCPUProps->Family > e68KGen1b))
       DestMask |= Mpc | Mpcidx;
   }
 
@@ -2252,6 +2258,10 @@ static void DecodeADDSUBCMP(Word Index)
         case 1: /* ADD/SUB/CMP <ea>,Dn ? */
           WAsmCode[0] = 0x9000 | (OpSize << 6) | ((Reg = AdrMode) << 9) | (Op << 13);
           DecodeAdr(&ArgStr[1], SrcMask);
+
+          /* CMP.B An,Dn allowed for Coldfire? */
+
+          if ((AdrNum == 2) && (OpSize == eSymbolSize8Bit) && (pCurrCPUProps->Family != eColdfire)) WrError(ErrNum_InvOpSize);
           if (AdrNum != 0)
           {
             if ((AdrNum == 11) && (Variant == I_Variant))

@@ -138,6 +138,7 @@ static void DecodeBYT(Word Index)
         switch (t.Typ)
         {
           case TempInt:
+          ToInt:
             if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8))
             {
               WrStrErrorPos(ErrNum_OverRange, &Arg);
@@ -165,6 +166,9 @@ static void DecodeBYT(Word Index)
           case TempString:
           {
             int l;
+
+            if (MultiCharToInt(&t, 1))
+              goto ToInt;
 
             l = t.Contents.Ascii.Length;
             TranslateString(t.Contents.Ascii.Contents, l);
@@ -278,6 +282,7 @@ static void DecodeADR(Word Index)
         switch (Res.Typ)
         {
           case TempInt:
+          ToInt:
             if (FirstPassUnknown)
               Res.Contents.Int &= 0xffff;
             if (!SymbolQuestionable && !RangeCheck(Res.Contents.Int, Int16))
@@ -288,6 +293,8 @@ static void DecodeADR(Word Index)
             Cnt = 1;
             break;
           case TempString:
+            if (MultiCharToInt(&Res, 2))
+              goto ToInt;
             Cnt = Res.Contents.Ascii.Length;
             TranslateString(Res.Contents.Ascii.Contents, Res.Contents.Ascii.Length);
             break;
@@ -891,6 +898,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           switch (t.Typ)
           {
             case TempInt:
+            ToInt:
               if (!EnterInt)
               {
                 if (ConvertFloat && EnterFloat)
@@ -946,6 +954,8 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
               }
               break;
             case TempString:
+              if (MultiCharToInt(&t, (WSize < 8) ? WSize : 8))
+                goto ToInt;
               if (!EnterInt)
               {
                 if (ConvertFloat && EnterFloat)

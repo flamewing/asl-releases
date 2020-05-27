@@ -14,6 +14,7 @@
 #include "tempresult.h"
 
 #define OPERATOR_MAXCNT 30
+#define OPERATOR_MAXCOMB 5
 
 typedef struct
 {
@@ -21,10 +22,7 @@ typedef struct
   int IdLen;
   Boolean Dyadic;
   Byte Priority;
-  Boolean MayInt;
-  Boolean MayFloat;
-  Boolean MayString;
-  Boolean Present;
+  Byte TypeCombinations[OPERATOR_MAXCOMB];
   void (*pFunc)(TempResult *pErg, TempResult *pLVal, TempResult *pRVal);
 } Operator;
 

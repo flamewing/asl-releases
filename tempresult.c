@@ -11,6 +11,7 @@
 #include "stdinc.h"
 
 #include "strutil.h"
+#include "asmdef.h"
 #include "tempresult.h"
 
 /*!------------------------------------------------------------------------
@@ -58,10 +59,17 @@ int TempResultToPlainString(char *pDest, const TempResult *pResult, unsigned Des
       KillBlanks(pDest);
       break;
     case TempString:
-      *pDest = '"';
-      snstrlenprint(pDest + 1, DestSize - 1, pResult->Contents.Ascii.Contents, pResult->Contents.Ascii.Length);
-      strmaxcat(pDest, "\"", DestSize);
+    {
+      char TmpStr[2];
+
+      TmpStr[0] = *pDest = (pResult->Flags & eSymbolFlag_StringSingleQuoted) ? '\'' : '"';
+      TmpStr[1] = '\0';
+      snstrlenprint(pDest + 1, DestSize - 1,
+                    pResult->Contents.Ascii.Contents, pResult->Contents.Ascii.Length,
+                    TmpStr[0]);
+      strmaxcat(pDest, TmpStr, DestSize);
       break;
+    }
     default:
       return -1;
   }

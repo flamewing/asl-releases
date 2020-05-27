@@ -614,13 +614,23 @@ unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen)
 }
 
 unsigned snstrlenprint(char *pDest, unsigned DestLen,
-                       const char *pStr, unsigned StrLen)
+                       const char *pStr, unsigned StrLen,
+                       char QuoteToEscape)
 {
   unsigned Result = 0;
   const char *pRun, *pEnd;
 
   for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
-    if ((*pRun == '\\') || (*pRun == '"') || (!isprint(*pRun)))
+    if ((*pRun == '\\') || (*pRun == QuoteToEscape))
+    {
+      if (DestLen < 3)
+        break;
+      *pDest++ = '\\';
+      *pDest++ = *pRun;
+      DestLen -= 2;
+      Result += 2;
+    }
+    else if (!isprint(*pRun))
     {
       int cnt;
 

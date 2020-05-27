@@ -1040,6 +1040,7 @@ static void DecodeDC(Word Code)
        switch (t.Typ)
        {
          case TempInt:
+         ToInt:
            if (ChkRange(t.Contents.Int, -32768, 65535))
              AppendWord(t.Contents.Int);
            else
@@ -1050,6 +1051,9 @@ static void DecodeDC(Word Code)
          {
            Word Trans;
            int z2;
+
+           if (MultiCharToInt(&t, 2))
+             goto ToInt;
 
            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {

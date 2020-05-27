@@ -366,28 +366,110 @@ static Boolean ProcessBk(char **Start, char *Erg)
   }
 }
 
-static void ReplaceBkSlashes(char *s)
-{
-  char *pSrc, *pDest;
+/*!------------------------------------------------------------------------
+ * \fn     DynString2Int(const struct sDynString *pDynString)
+ * \brief  convert string to its "ASCII representation"
+ * \param  pDynString string containing characters
+ * \return -1 or converted int
+ * ------------------------------------------------------------------------ */
 
-  pSrc = pDest = s;
-  while (*pSrc)
+LargeInt DynString2Int(const struct sDynString *pDynString)
+{
+  if ((pDynString->Length > 0) && (pDynString->Length <= 4))
   {
-    if (*pSrc == '\\')
+    const char *pRun;
+    Byte Digit;
+    LargeInt Result;
+
+    Result = 0;
+    for (pRun = pDynString->Contents;
+         pRun < pDynString->Contents + pDynString->Length;
+         pRun++)
     {
-      pSrc++;
-      if (ProcessBk(&pSrc, pDest))
-        pDest++;
+      Digit = (usint) *pRun;
+      Result = (Result << 8) | CharTransTable[Digit & 0xff];
     }
-    else
-      *pDest++ = *pSrc++;
+    return Result;
   }
-  *pDest = '\0';
+  return -1;
+}
+
+Boolean Int2DynString(struct sDynString *pDynString, LargeInt Src)
+{
+  int Search;
+  Byte Digit;
+  char *pDest = &pDynString->Contents[sizeof(pDynString->Contents)];
+
+  pDynString->Length = 0;
+  while (Src)
+  {
+    Digit = Src & 0xff;
+    Src = (Src >> 8) & 0xfffffful;
+    for (Search = 0; Search < 256; Search++)
+      if (CharTransTable[Search] == Digit)
+      {
+        *(--pDest) = Search;
+        pDynString->Length++;
+        break;
+      }
+  }
+  memmove(pDynString->Contents, pDest, pDynString->Length);
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     TempResultToInt(TempResult *pResult)
+ * \brief  convert TempResult to integer
+ * \param  pResult tempresult to convert
+ * \return 0 or error code
+ * ------------------------------------------------------------------------ */
+
+int TempResultToInt(TempResult *pResult)
+{
+  switch (pResult->Typ)
+  {
+    case TempInt:
+      break;
+    case TempString:
+    {
+      LargeInt Result = DynString2Int(&pResult->Contents.Ascii);
+      if (Result >= 0)
+      {
+        pResult->Typ = TempInt;
+        pResult->Contents.Int = Result;
+        break;
+      }
+      /* else */
+    }
+    /* fall-through */
+    default:
+      pResult->Typ = TempNone;
+      return -1;
+  }
+  return 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     MultiCharToInt(TempResult *pResult, unsigned MaxLen)
+ * \brief  optionally convert multi-character constant to integer
+ * \param  pResult holding value
+ * \param  MaxLen maximum lenght of multi-character constant
+ * \return True if converted
+ * ------------------------------------------------------------------------ */
+
+Boolean MultiCharToInt(TempResult *pResult, unsigned MaxLen)
+{
+  if ((pResult->Contents.Ascii.Length <= MaxLen) && (pResult->Flags & eSymbolFlag_StringSingleQuoted))
+  {
+    TempResultToInt(pResult);
+    return True;
+  }
+  return False;
 }
 
 /*!------------------------------------------------------------------------
  * \fn     ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc)
- * \brief  expand symbol name from string xcomponent
+ * \brief  expand symbol name from string component
  * \param  pDest dest buffer
  * \param  DestSize size of dest buffer
  * \param  pSrc source component
@@ -760,9 +842,16 @@ static int DigitVal(char ch, int Base)
 
 static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 {
-  Byte Digit;
   LargeInt Wert;
   int l;
+  Boolean NegFlag = False;
+  TConstMode ActMode = ConstModeC;
+  unsigned BaseIdx;
+  int Digit;
+  int Base;
+  char ch;
+  Boolean Found;
+
 
   /* empty string is interpreted as 0 */
 
@@ -775,223 +864,182 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   *pResult = False;
   Wert = 0;
 
-  /* ASCII herausfiltern */
+  /* sign: */
 
-  if (*pExpr == '\'')
+  switch (*pExpr)
   {
-    const char *pRun;
-    String Copy;
-
-    /* consistency check: closing ' must be present precisely at end; skip escaped characters */
-
-    for (pRun = pExpr + 1; (*pRun) && (*pRun != '\''); pRun++)
-    {
-      if (*pRun == '\\')
-        pRun++;
-    }
-    if ((*pRun != '\'') || (pRun[1]))
-      return -1;
-
-    strmaxcpy(Copy, pExpr + 1, STRINGSIZE);
-    l = strlen(Copy);
-    Copy[l - 1] = '\0'; ReplaceBkSlashes(Copy);
-
-    for (pRun = Copy; *pRun; pRun++)
-    {
-      Digit = (usint) *pRun;
-      Wert = (Wert << 8) + CharTransTable[Digit & 0xff];
-    }
+    case '-':
+      NegFlag = True;
+      /* else fall-through */
+    case '+':
+      pExpr++;
+      break;
   }
+  l = strlen(pExpr);
 
-  /* Zahlenkonstante */
+  /* automatic syntax determination: */
 
-  else
+  if (RelaxedMode)
   {
-    Boolean NegFlag = False;
-    TConstMode ActMode = ConstModeC;
-    unsigned BaseIdx;
-    int Digit;
-    int Base;
-    char ch;
-    Boolean Found;
+    Found = False;
 
-    /* sign: */
-
-    switch (*pExpr)
+    if ((l >= 2) && (*pExpr == '0') && (mytoupper(pExpr[1]) == 'X'))
     {
-      case '-':
-        NegFlag = True;
-        /* fall-through */
-      case '+':
-        pExpr++;
-        break;
+      ActMode = ConstModeC;
+      Found = True;
     }
-    l = strlen(pExpr);
 
-    /* automatic syntax determination: */
-
-    if (RelaxedMode)
+    if ((!Found) && (l >= 2))
     {
-      Found = False;
+      for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
+        if (*pExpr == BaseIds[BaseIdx])
+        {
+          ActMode = ConstModeMoto;
+          Found = True;
+          break;
+        }
+    }
 
-      if ((l >= 2) && (*pExpr == '0') && (mytoupper(pExpr[1]) == 'X'))
+    if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
+    {
+      ch = mytoupper(pExpr[l - 1]);
+      if (DigitVal(ch, RadixBase) == -1)
       {
-        ActMode = ConstModeC;
-        Found = True;
-      }
-
-      if ((!Found) && (l >= 2))
-      {
-        for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
-          if (*pExpr == BaseIds[BaseIdx])
+        for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
+          if (ch == BaseLetters[BaseIdx])
           {
-            ActMode = ConstModeMoto;
+            ActMode = ConstModeIntel;
             Found = True;
             break;
           }
       }
-
-      if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
-      {
-        ch = mytoupper(pExpr[l - 1]);
-        if (DigitVal(ch, RadixBase) == -1)
-        {
-          for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
-            if (ch == BaseLetters[BaseIdx])
-            {
-              ActMode = ConstModeIntel;
-              Found = True;
-              break;
-            }
-        }
-      }
-
-      if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
-      {
-        switch (mytoupper(*pExpr))
-        {
-          case 'H':
-          case 'X':
-          case 'B':
-          case 'O':
-            ActMode = ConstModeWeird;
-            Found = True;
-            break;
-        }
-      }
-
-      if (!Found)
-        ActMode = ConstModeC;
     }
-    else /* !RelaxedMode */
-      ActMode = ConstMode;
 
-    /* Zahlensystem ermitteln/pruefen */
-
-    Base = RadixBase;
-    switch (ActMode)
+    if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
     {
-      case ConstModeIntel:
-        ch = mytoupper(pExpr[l - 1]);
-        if (DigitVal(ch, RadixBase) == -1)
-        {
-          for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
-            if (ch == BaseLetters[BaseIdx])
-            {
-              Base = BaseVals[BaseIdx];
-              l--;
-              break;
-            }
-        }
-        break;
-      case ConstModeMoto:
-        for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
-          if (*pExpr == BaseIds[BaseIdx])
+      switch (mytoupper(*pExpr))
+      {
+        case 'H':
+        case 'X':
+        case 'B':
+        case 'O':
+          ActMode = ConstModeWeird;
+          Found = True;
+          break;
+      }
+    }
+
+    if (!Found)
+      ActMode = ConstModeC;
+  }
+  else /* !RelaxedMode */
+    ActMode = ConstMode;
+
+  /* Zahlensystem ermitteln/pruefen */
+
+  Base = RadixBase;
+  switch (ActMode)
+  {
+    case ConstModeIntel:
+      ch = mytoupper(pExpr[l - 1]);
+      if (DigitVal(ch, RadixBase) == -1)
+      {
+        for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
+          if (ch == BaseLetters[BaseIdx])
           {
             Base = BaseVals[BaseIdx];
-            pExpr++; l--;
+            l--;
             break;
           }
-        break;
-      case ConstModeC:
-        if (!strcmp(pExpr, "0"))
+      }
+      break;
+    case ConstModeMoto:
+      for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
+        if (*pExpr == BaseIds[BaseIdx])
         {
-          *pResult = True;
-          return 0;
-        }
-        if (*pExpr != '0') Base = RadixBase;
-        else if (l < 2) return -1;
-        else
-        {
+          Base = BaseVals[BaseIdx];
           pExpr++; l--;
-          ch = mytoupper(*pExpr);
-          if ((RadixBase != 10) && (DigitVal(ch, RadixBase) != -1))
-            Base = RadixBase;
-          else
-            switch (mytoupper(*pExpr))
-            {
-              case 'X':
-                pExpr++;
-                l--;
-                Base = 16;
-                break;
-              case 'B':
-                pExpr++;
-                l--;
-                Base = 2;
-                break;
-              default:
-                Base = 8;
-            }
+          break;
         }
-        break;
-      case ConstModeWeird:
-        if (isdigit(*pExpr)) break;
-        if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
+      break;
+    case ConstModeC:
+      if (!strcmp(pExpr, "0"))
+      {
+        *pResult = True;
+        return 0;
+      }
+      if (*pExpr != '0') Base = RadixBase;
+      else if (l < 2) return -1;
+      else
+      {
+        pExpr++; l--;
+        ch = mytoupper(*pExpr);
+        if ((RadixBase != 10) && (DigitVal(ch, RadixBase) != -1))
+          Base = RadixBase;
+        else
+          switch (mytoupper(*pExpr))
+          {
+            case 'X':
+              pExpr++;
+              l--;
+              Base = 16;
+              break;
+            case 'B':
+              pExpr++;
+              l--;
+              Base = 2;
+              break;
+            default:
+              Base = 8;
+          }
+      }
+      break;
+    case ConstModeWeird:
+      if (isdigit(*pExpr)) break;
+      if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
+        return -1;
+      switch (mytoupper(*pExpr))
+      {
+        case 'X':
+        case 'H':
+          Base = 16;
+          break;
+        case 'B':
+          Base = 2;
+          break;
+        case 'O':
+          Base = 8;
+          break;
+        default:
           return -1;
-        switch (mytoupper(*pExpr))
-        {
-          case 'X':
-          case 'H':
-            Base = 16;
-            break;
-          case 'B':
-            Base = 2;
-            break;
-          case 'O':
-            Base = 8;
-            break;
-          default:
-            return -1;
-        }
-        pExpr += 2;
-        l -= 3;
-        break;
-    }
-
-    if (!*pExpr)
-      return -1;
-
-    if (ActMode == ConstModeIntel)
-    {
-      if ((*pExpr < '0') || (*pExpr > '9'))
-        return -1;
-    }
-
-    /* we may have decremented l, so do not run until string end */
-
-    while (l > 0)
-    {
-      Digit = DigitVal(mytoupper(*pExpr), Base);
-      if (Digit == -1)
-        return -1;
-      Wert = Wert * Base + Digit;
-      pExpr++; l--;
-    }
-
-    if (NegFlag)
-      Wert = -Wert;
+      }
+      pExpr += 2;
+      l -= 3;
+      break;
   }
+
+  if (!*pExpr)
+    return -1;
+
+  if (ActMode == ConstModeIntel)
+  {
+    if ((*pExpr < '0') || (*pExpr > '9'))
+      return -1;
+  }
+
+  /* we may have decremented l, so do not run until string end */
+
+  while (l > 0)
+  {
+    Digit = DigitVal(mytoupper(*pExpr), Base);
+    if (Digit == -1)
+      return -1;
+    Wert = Wert * Base + Digit;
+    pExpr++; l--;
+  }
+
+  if (NegFlag)
+    Wert = -Wert;
 
   /* post-processing, range check */
 
@@ -1063,15 +1111,30 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
 {
   String CopyStr;
   tStrComp Copy, Remainder;
-  char *pPos;
+  char *pPos, QuoteChar;
   int l, TLen;
 
   StrCompMkTemp(&Copy, CopyStr);
   *pResult = False;
 
   l = strlen(pExpr->Str);
-  if ((l < 2) || (*pExpr->Str != '"') || (pExpr->Str[l - 1] != '"'))
+  if (l < 2)
     return;
+  switch (*pExpr->Str)
+  {
+    case '"':
+    case '\'':
+      QuoteChar = *pExpr->Str;
+      if (pExpr->Str[l - 1] == QuoteChar)
+      {
+        if ('\'' == QuoteChar)
+          pDest->Flags |= eSymbolFlag_StringSingleQuoted;
+        break;
+      }
+      /* conditional fall-through */
+    default:
+      return;
+  }
 
   StrCompCopy(&Copy, pExpr);
   StrCompIncRefLeft(&Copy, 1);
@@ -1089,7 +1152,7 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
 
     /* " before \ -> not a simple string but something like "...." ... " */
 
-    if (strchr(Copy.Str, '"'))
+    if (strchr(Copy.Str, QuoteChar))
       return;
 
     /* copy part up to next '\' verbatim: */
@@ -1208,7 +1271,7 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
       {
         case (1 << TempString):
           return ErrNum_StringButInt;
-        /* int is convertible to float, so combinations are impossbile: */
+        /* int is convertible to float, so combinations are impossible: */
         case (1 << TempFloat):
         case (1 << TempFloat) | (1 << TempString):
         default:
@@ -1243,17 +1306,22 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
   }
 }
 
-static tErrorNum DeduceExpectTypeErrMsgOp(const Operator *pOp, TempType ActType)
+static Byte GetOpTypeMask(Byte TotMask, int OpIndex)
 {
-  unsigned Mask = 0;
+  return (TotMask >> (OpIndex * 4)) & 15;
+}
 
-  if (pOp->MayInt)
-    Mask |= 1 << TempInt;
-  if (pOp->MayFloat)
-    Mask |= 1 << TempFloat;
-  if (pOp->MayString)
-    Mask |= 1 << TempString;
-  return DeduceExpectTypeErrMsgMask(Mask, ActType);
+static Byte TryConvert(Byte TypeMask, TempType ActType, int OpIndex)
+{
+  if (TypeMask & ActType)
+    return 0 << (4 * OpIndex);
+  if ((TypeMask & TempFloat) && (ActType == TempInt))
+    return 1 << (4 * OpIndex);
+  if ((TypeMask & TempInt) && (ActType == TempString))
+    return 2 << (4 * OpIndex);
+  if ((TypeMask & TempFloat) && (ActType == TempString))
+    return (1|2) << (4 * OpIndex);
+  return 255;
 }
 
 void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
@@ -1436,7 +1504,8 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
   if (OpMax)
   {
-    int ThisArgCnt, CompLen;
+    int ThisArgCnt, CompLen, z, z2;
+    Byte ThisOpMatch, BestOpMatch, BestOpMatchIdx, SumCombinations, TypeMask;
 
     pOp = Operators + OpMax;
 
@@ -1493,65 +1562,55 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       LEAVE;
     }
 
-    /* both operands for a dyadic operator must have same type */
+    /* see whether data types match operator's restrictions: */
 
-    if (pOp->Dyadic && (InVals[0].Typ != InVals[1].Typ))
+    BestOpMatch = 255; BestOpMatchIdx = OPERATOR_MAXCOMB;
+    SumCombinations = 0;
+    for (z = 0; z < OPERATOR_MAXCOMB; z++)
     {
-      for (z1 = 0; z1 < 2; z1++)
-        switch (InVals[z1].Typ)
-        {
-          case TempString:
-            WrStrErrorPos(ErrNum_OpTypeMismatch, &CopyComp);
-            LEAVE;
-          case TempInt:
-            TempResultToFloat(&InVals[z1]);
-            break;
-          case TempFloat:
-            break;
-          default:
-            exit(255);
-        }
-    }
+      if (!pOp->TypeCombinations[z])
+        break;
+      SumCombinations |= pOp->TypeCombinations[z];
 
-    /* optionally convert int to float if operator only supports float */
-
-    switch (InVals[1].Typ)
-    {
-      case TempInt:
-        if (!pOp->MayInt)
-        {
-          if (!pOp->MayFloat)
-          {
-            WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
-            LEAVE;
-          }
-          else
-          {
-            TempResultToFloat(&InVals[1]);
-            if (pOp->Dyadic) TempResultToFloat(&InVals[0]);
-          }
-        }
-        break;
-      case TempFloat:
-        if (!pOp->MayFloat)
-        {
-          WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
-          LEAVE;
-        }
-        break;
-      case TempString:
-        if (!pOp->MayString)
-        {
-          WrStrErrorPos(DeduceExpectTypeErrMsgOp(pOp, InVals[1].Typ), &InArgs[1]);
-          LEAVE;
-        }
-        break;
-      default:
+      ThisOpMatch = 0;
+      for (z2 = pOp->Dyadic ? 0 : 1; z2 < 2; z2++)
+        ThisOpMatch |= TryConvert(GetOpTypeMask(pOp->TypeCombinations[z], z2), InVals[z2].Typ, z2);
+      if (ThisOpMatch < BestOpMatch)
+      {
+        BestOpMatch = ThisOpMatch;
+        BestOpMatchIdx = z;
+      }
+      if (!BestOpMatch)
         break;
     }
 
-    /* Operanden abarbeiten */
+    /* did not find a way to satisfy restrictions, even by conversions? */
 
+    if (BestOpMatch >= 255)
+    {
+      for (z2 = pOp->Dyadic ? 0 : 1; z2 < 2; z2++)
+      {
+        TypeMask = GetOpTypeMask(SumCombinations, z2);
+        if (!(TypeMask & InVals[z2].Typ))
+          WrStrErrorPos(DeduceExpectTypeErrMsgMask(TypeMask, InVals[z2].Typ), &InArgs[z2]);
+      }
+      LEAVE;
+    }
+
+    /* necessary conversions: */
+
+    for (z2 = pOp->Dyadic ? 0 : 1; z2 < 2; z2++)
+    {
+      TypeMask = (BestOpMatch >> (z2 * 4)) & 15;
+      if (TypeMask & 2)  /* String -> Int */
+        TempResultToInt(&InVals[z2]);
+      if (TypeMask & 1) /* Int -> Float */
+        TempResultToFloat(&InVals[z2]);
+    }
+
+    /* actual operation */
+
+    (void)BestOpMatchIdx;
     pOp->pFunc(pErg, &InVals[0], &InVals[1]);
     LEAVE;
   } /* if (OpMax) */
@@ -1641,6 +1700,16 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     {
       pErg->Typ = TempInt;
       pErg->Contents.Int = FindRegDef(FArg.Str, &DummyPtr) ? 0x80 : GetSymbolType(&FArg);
+      LEAVE;
+    }
+
+    else if (!strcmp(FName.Str, "DEFINED"))
+    {
+      pErg->Typ = TempInt;
+      if (FindRegDef(FArg.Str, &DummyPtr))
+        pErg->Contents.Int = 1;
+      else
+        pErg->Contents.Int = !!IsSymbolDefined(&FArg);
       LEAVE;
     }
 
@@ -2305,6 +2374,7 @@ void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayC
   pNeu->SymWert.Typ = TempInt;
   pNeu->SymWert.Contents.IWert = Wert;
   pNeu->SymType = Typ;
+  pNeu->Flags = eSymbolFlag_None;
   pNeu->SymSize = -1;
   pNeu->RefList = NULL;
   pNeu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
@@ -2343,6 +2413,7 @@ PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Bool
   pNeu->SymWert.Typ = TempInt;
   pNeu->SymWert.Contents.IWert = Wert;
   pNeu->SymType = Typ;
+  pNeu->Flags = eSymbolFlag_None;
   pNeu->SymSize = -1;
   pNeu->RefList = NULL;
   pNeu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
@@ -2380,6 +2451,7 @@ void EnterFloatSymbol(const tStrComp *pName, Double Wert, Boolean MayChange)
   pNeu->SymWert.Typ = TempFloat;
   pNeu->SymWert.Contents.FWert = Wert;
   pNeu->SymType = 0;
+  pNeu->Flags = eSymbolFlag_None;
   pNeu->SymSize = -1;
   pNeu->RefList = NULL;
   pNeu->Relocs = NULL;
@@ -2395,14 +2467,15 @@ void EnterFloatSymbol(const tStrComp *pName, Double Wert, Boolean MayChange)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EnterDynStringSymbol(const tStrComp *pName, const tDynString *pValue, Boolean MayChange)
+ * \fn     EnterDynStringSymbolWithFlags(const tStrComp *pName, const tDynString *pValue, Boolean MayChange, tSymbolFlags Flags)
  * \brief  enter string symbol
  * \param  pName unexpanded name
  * \param  pValue symbol value
  * \param  MayChange variable or constant?
+ * \param  Flags special symbol flags to store
  * ------------------------------------------------------------------------ */
 
-void EnterDynStringSymbol(const tStrComp *pName, const tDynString *pValue, Boolean MayChange)
+void EnterDynStringSymbolWithFlags(const tStrComp *pName, const tDynString *pValue, Boolean MayChange, tSymbolFlags Flags)
 {
   LongInt DestHandle;
   PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
@@ -2415,6 +2488,7 @@ void EnterDynStringSymbol(const tStrComp *pName, const tDynString *pValue, Boole
   pNeu->SymWert.Contents.String.Length = pValue->Length;
   pNeu->SymWert.Typ = TempString;
   pNeu->SymType = 0;
+  pNeu->Flags = Flags;
   pNeu->SymSize = -1;
   pNeu->RefList = NULL;
   pNeu->Relocs = NULL;
@@ -2839,23 +2913,24 @@ Integer GetSymbolType(const struct sStrComp *pName)
   return pEntry ? pEntry->SymType : -1;
 }
 
-static void ConvertSymbolVal(SymbolVal *Inp, TempResult *Outp)
+static void ConvertSymbolVal(const PSymbolEntry pInp, TempResult *Outp)
 {
-  switch (Outp->Typ = Inp->Typ)
+  switch (Outp->Typ = pInp->SymWert.Typ)
   {
     case TempInt:
-      Outp->Contents.Int = Inp->Contents.IWert;
+      Outp->Contents.Int = pInp->SymWert.Contents.IWert;
       break;
     case TempFloat:
-      Outp->Contents.Float = Inp->Contents.FWert;
+      Outp->Contents.Float = pInp->SymWert.Contents.FWert;
       break;
     case TempString:
       Outp->Contents.Ascii.Length = 0;
-      DynStringAppend(&Outp->Contents.Ascii, Inp->Contents.String.Contents, Inp->Contents.String.Length);
+      DynStringAppend(&Outp->Contents.Ascii, pInp->SymWert.Contents.String.Contents, pInp->SymWert.Contents.String.Length);
       break;
     default:
       break;
   }
+  Outp->Flags = pInp->Flags;
 }
 
 typedef struct
@@ -2896,7 +2971,7 @@ static void PrintSymbolList_PNode(PTree Tree, void *pData)
   int l1, nBlanks;
   TempResult t;
 
-  ConvertSymbolVal(&(Node->SymWert), &t);
+  ConvertSymbolVal(Node, &t);
   if ((t.Typ == TempInt) && DissectBit && (Node->SymType == SegBData))
     DissectBit(s1, sizeof(s1), t.Contents.Int);
   else
@@ -3006,7 +3081,7 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
   }
   else
   {
-    ConvertSymbolVal(&(Node->SymWert), &t);
+    ConvertSymbolVal(Node, &t);
     StrSym(&t, False, s, sizeof(s), 16);
     l1 = strlen(s);
     fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
@@ -3657,7 +3732,7 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
   if (!SymbolEntry->RefList)
     return;
 
-  ConvertSymbolVal(&(SymbolEntry->SymWert), &t);
+  ConvertSymbolVal(SymbolEntry, &t);
   StrSym(&t, False, ValStr, sizeof(ValStr), ListRadixBase);
   as_snprintf(LineStr, sizeof(LineStr), LongIntFormat, SymbolEntry->LineNum);
 

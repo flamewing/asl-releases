@@ -12,6 +12,7 @@
 
 #include "datatypes.h"
 #include "dynstring.h"
+#include "symflags.h"
 
 typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
 
@@ -20,7 +21,7 @@ struct sRelocEntry;
 struct sTempResult
 {
   TempType Typ;
-  LongWord Flags;
+  tSymbolFlags Flags;
   struct sRelocEntry *Relocs;
   union
   {

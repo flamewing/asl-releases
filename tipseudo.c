@@ -118,7 +118,7 @@ Boolean *, int *, LongInt
 #endif
 );
 
-static void pseudo_store(tcallback callback)
+static void pseudo_store(tcallback callback, Word MaxMultCharLen)
 {
   Boolean ok = True;
   int adr = 0;
@@ -141,9 +141,6 @@ static void pseudo_store(tcallback callback)
     EvalStrExpression(pArg, &t);
     switch (t.Typ)
     {
-      case TempInt:
-        callback(&ok, &adr, t.Contents.Int);
-        break;
       case TempFloat:
         WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
         return;
@@ -152,10 +149,17 @@ static void pseudo_store(tcallback callback)
         unsigned char *cp = (unsigned char *)t.Contents.Ascii.Contents,
                     *cend = cp + t.Contents.Ascii.Length;
 
+        if (MultiCharToInt(&t, MaxMultCharLen))
+          goto ToInt;
+
         while (cp < cend)
           callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff]);
         break;
       }
+      case TempInt:
+      ToInt:
+        callback(&ok, &adr, t.Contents.Int);
+        break;
       default:
         ok = False;
         break;
@@ -259,27 +263,27 @@ Boolean DecodeTIPseudo(void)
 
   if (Memo("STRING"))
   {
-    pseudo_store(wr_code_byte_hilo); 
+    pseudo_store(wr_code_byte_hilo, 1); 
     return True;
   }
   if (Memo("RSTRING"))
   {
-    pseudo_store(wr_code_byte_lohi); 
+    pseudo_store(wr_code_byte_lohi, 1); 
     return True;
   }
   if (Memo("BYTE"))
   {
-    pseudo_store(wr_code_byte); 
+    pseudo_store(wr_code_byte, 1); 
     return True;
   }
   if (Memo("WORD"))
   {
-    pseudo_store(wr_code_word); 
+    pseudo_store(wr_code_word, 2); 
     return True;
   }
   if (Memo("LONG"))
   {
-    pseudo_store(wr_code_long); 
+    pseudo_store(wr_code_long, 4); 
     return True;
   }
 
@@ -627,6 +631,7 @@ static void DecodeDATA34x(Word Code)
         switch (t.Typ)
         {
           case TempInt:
+          ToInt:
 #ifdef HAS64
             if (!RangeCheck(t.Contents.Int, Int32))
             {
@@ -644,6 +649,9 @@ static void DecodeDATA34x(Word Code)
           case TempString:
           {
             unsigned z2;
+
+            if (MultiCharToInt(&t, 4))
+              goto ToInt;
 
             for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
             {

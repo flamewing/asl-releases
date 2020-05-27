@@ -1,0 +1,6 @@
++----------------------- Test Application DEFINED ---------------------------+
+|                                                                            |
+|  A short test for the DEFINED() function, which mainly useful if IFDEF     |
+|  is not sufficient...                                                      |
+|                                                                            |
++----------------------------------------------------------------------------+

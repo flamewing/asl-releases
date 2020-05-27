@@ -309,6 +309,10 @@ TEX2DOC_OBJECTS = \
  $(OBJDIR)findhyphen$(HOST_OBJEXTENSION) \
  $(OBJDIR)h_asmitree$(HOST_OBJEXTENSION) \
  $(OBJDIR)h_strutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texrefs$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_textoc$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texfonts$(HOST_OBJEXTENSION) \
  $(OBJDIR)h_chardefs$(HOST_OBJEXTENSION) \
  $(OBJDIR)h_nls$(HOST_OBJEXTENSION) \
  $(OBJDIR)ushyph$(HOST_OBJEXTENSION) \
@@ -322,7 +326,11 @@ $(OBJDIR)tx2dobjs.dep: $(MKDEPENDTARGET)
 TEX2HTML_OBJECTS = \
  $(OBJDIR)tex2html$(HOST_OBJEXTENSION) \
  $(OBJDIR)h_asmitree$(HOST_OBJEXTENSION) \
- $(OBJDIR)h_strutil$(HOST_OBJEXTENSION)
+ $(OBJDIR)h_strutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texutil$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texrefs$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_textoc$(HOST_OBJEXTENSION) \
+ $(OBJDIR)h_texfonts$(HOST_OBJEXTENSION)
 
 $(OBJDIR)tx2hobjs.dep: $(MKDEPENDTARGET)
 	$(CURRDIR)$(MKDEPENDTARGET) -r -c $(HOST_OBJEXTENSION) -o $@ $(TEX2HTML_OBJECTS)
@@ -840,6 +848,18 @@ $(OBJDIR)h_endian$(HOST_OBJEXTENSION) : endian.c
 
 $(OBJDIR)h_strutil$(HOST_OBJEXTENSION) : strutil.c
 	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c strutil.c
+
+$(OBJDIR)h_texrefs$(HOST_OBJEXTENSION) : texrefs.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c texrefs.c
+
+$(OBJDIR)h_texutil$(HOST_OBJEXTENSION) : texutil.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c texutil.c
+
+$(OBJDIR)h_textoc$(HOST_OBJEXTENSION) : textoc.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c textoc.c
+
+$(OBJDIR)h_texfonts$(HOST_OBJEXTENSION) : texfonts.c
+	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c texfonts.c
 
 $(OBJDIR)h_chardefs$(HOST_OBJEXTENSION) : chardefs.c
 	$(CC) $(ALLFLAGS) -o$(OBLANK)$@ -c chardefs.c

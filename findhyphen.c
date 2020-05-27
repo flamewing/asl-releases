@@ -88,7 +88,7 @@ static int GetIndex(char ch)
     return 28;
   else if ((ch == *HYPHEN_CHR_ue) || (ch == *HYPHEN_CHR_UE))
     return 29;
-  else if ((ch == *HYPHEN_CHR_sz))
+  else if (ch == *HYPHEN_CHR_sz)
     return 30;
   else
   {
@@ -201,6 +201,7 @@ void DestroyTree(void)
     free(Old->word);
     if (Old->poscnt > 0)
       free(Old->posis);
+    free(Old);
   }
 }
 

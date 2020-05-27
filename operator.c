@@ -12,7 +12,9 @@
 
 #include "stdinc.h"
 #include "errmsg.h"
+#include "asmdef.h"
 #include "asmerr.h"
+#include "asmpars.h"
 #include "asmrelocs.h"
 #include "operator.h"
 
@@ -185,18 +187,53 @@ static void ModOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 
 static void AddOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
-  switch (pErg->Typ = pLVal->Typ)
+  pErg->Typ = TempNone;
+  switch (pLVal->Typ)
   {
     case TempInt:
-      pErg->Contents.Int = pLVal->Contents.Int + pRVal->Contents.Int;
-      pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
+      switch (pRVal->Typ)
+      {
+        case TempInt:
+          pErg->Typ = TempInt;
+          pErg->Contents.Int = pLVal->Contents.Int + pRVal->Contents.Int;
+          pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
+          break;
+        case TempString:
+        {
+          LargeInt RIntVal = DynString2Int(&pRVal->Contents.Ascii);
+
+          if ((RIntVal >= 0) && Int2DynString(&pErg->Contents.Ascii, RIntVal + pLVal->Contents.Int))
+            pErg->Typ = TempString;
+          break;
+        }
+        default:
+          break;
+      }
       break;
     case TempFloat:
-      pErg->Contents.Float = pLVal->Contents.Float + pRVal->Contents.Float;
+      pErg->Typ = TempFloat;
+      if (TempFloat == pRVal->Typ)
+        pErg->Contents.Float = pLVal->Contents.Float + pRVal->Contents.Float;
       break;
     case TempString:
-      DynString2DynString(&pErg->Contents.Ascii, &pLVal->Contents.Ascii);
-      DynStringAppendDynString(&pErg->Contents.Ascii, &pRVal->Contents.Ascii);
+      switch (pRVal->Typ)
+      {
+        case TempString:
+          DynString2DynString(&pErg->Contents.Ascii, &pLVal->Contents.Ascii);
+          DynStringAppendDynString(&pErg->Contents.Ascii, &pRVal->Contents.Ascii);
+          pErg->Typ = TempString;
+          break;
+        case TempInt:
+        {
+          LargeInt LIntVal = DynString2Int(&pLVal->Contents.Ascii);
+
+          if ((LIntVal >= 0) && Int2DynString(&pErg->Contents.Ascii, LIntVal + pRVal->Contents.Int))
+            pErg->Typ = TempString;
+          break;
+        }
+        default:
+          break;
+      }
       break;
     default:
       break;
@@ -358,38 +395,44 @@ static void UneqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
   }
 }
 
+#define Int2Int       (TempInt    | (TempInt << 4)   )
+#define Float2Float   (TempFloat  | (TempFloat << 4) )
+#define String2String (TempString | (TempString << 4))
+#define Int2String    (TempInt    | (TempString << 4))
+#define String2Int    (TempString | (TempInt << 4)   )
+
 const Operator Operators[] =
 {
-  {" " , 1 , False,  0, False, False, False, False, DummyOp},
-  {"~" , 1 , False,  1, True , False, False, False, OneComplOp},
-  {"<<", 2 , True ,  3, True , False, False, False, ShLeftOp},
-  {">>", 2 , True ,  3, True , False, False, False, ShRightOp},
-  {"><", 2 , True ,  4, True , False, False, False, BitMirrorOp},
-  {"&" , 1 , True ,  5, True , False, False, False, BinAndOp},
-  {"|" , 1 , True ,  6, True , False, False, False, BinOrOp},
-  {"!" , 1 , True ,  7, True , False, False, False, BinXorOp},
-  {"^" , 1 , True ,  8, True , True , False, False, PotOp},
-  {"*" , 1 , True , 11, True , True , False, False, MultOp},
-  {"/" , 1 , True , 11, True , True , False, False, DivOp},
-  {"#" , 1 , True , 11, True , False, False, False, ModOp},
-  {"+" , 1 , True , 13, True , True , True , False, AddOp},
-  {"-" , 1 , True , 13, True , True , False, False, SubOp},
-  {"~~", 2 , False,  2, True , False, False, False, LogNotOp},
-  {"&&", 2 , True , 15, True , False, False, False, LogAndOp},
-  {"||", 2 , True , 16, True , False, False, False, LogOrOp},
-  {"!!", 2 , True , 17, True , False, False, False, LogXorOp},
-  {"=" , 1 , True , 23, True , True , True , False, EqOp},
-  {"==", 2 , True , 23, True , True , True , False, EqOp},
-  {">" , 1 , True , 23, True , True , True , False, GtOp},
-  {"<" , 1 , True , 23, True , True , True , False, LtOp},
-  {"<=", 2 , True , 23, True , True , True , False, LeOp},
-  {">=", 2 , True , 23, True , True , True , False, GeOp},
-  {"<>", 2 , True , 23, True , True , True , False, UneqOp},
+  {" " , 1 , False,  0, { 0, 0, 0, 0, 0 }, DummyOp},
+  {"~" , 1 , False,  1, { TempInt << 4, 0, 0, 0, 0 }, OneComplOp},
+  {"<<", 2 , True ,  3, { Int2Int, 0, 0, 0, 0 }, ShLeftOp},
+  {">>", 2 , True ,  3, { Int2Int, 0, 0, 0, 0 }, ShRightOp},
+  {"><", 2 , True ,  4, { Int2Int, 0, 0, 0, 0 }, BitMirrorOp},
+  {"&" , 1 , True ,  5, { Int2Int, 0, 0, 0, 0 }, BinAndOp},
+  {"|" , 1 , True ,  6, { Int2Int, 0, 0, 0, 0 }, BinOrOp},
+  {"!" , 1 , True ,  7, { Int2Int, 0, 0, 0, 0 }, BinXorOp},
+  {"^" , 1 , True ,  8, { Int2Int, Float2Float, 0, 0, 0 }, PotOp},
+  {"*" , 1 , True , 11, { Int2Int, Float2Float, 0, 0, 0 }, MultOp},
+  {"/" , 1 , True , 11, { Int2Int, Float2Float, 0, 0, 0 }, DivOp},
+  {"#" , 1 , True , 11, { Int2Int, 0, 0, 0, 0 }, ModOp},
+  {"+" , 1 , True , 13, { Int2Int, Float2Float, String2String, Int2String, String2Int }, AddOp},
+  {"-" , 1 , True , 13, { Int2Int, Float2Float, 0, 0, 0 }, SubOp},
+  {"~~", 2 , False,  2, { TempInt << 4, 0, 0, 0, 0 }, LogNotOp},
+  {"&&", 2 , True , 15, { Int2Int, 0, 0, 0, 0 }, LogAndOp},
+  {"||", 2 , True , 16, { Int2Int, 0, 0, 0, 0 }, LogOrOp},
+  {"!!", 2 , True , 17, { Int2Int, 0, 0, 0, 0 }, LogXorOp},
+  {"=" , 1 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, EqOp},
+  {"==", 2 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, EqOp},
+  {">" , 1 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, GtOp},
+  {"<" , 1 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, LtOp},
+  {"<=", 2 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, LeOp},
+  {">=", 2 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, GeOp},
+  {"<>", 2 , True , 23, { Int2Int, Float2Float, String2String, 0, 0 }, UneqOp},
   /* termination marker */
-  {NULL, 0 , False,  0, False, False, False, False, NULL}
+  {NULL, 0 , False,  0, { 0, 0, 0, 0, 0 }, NULL}
 },
 /* minus may have one or two operands */
 MinusMonadicOperator =
 {
-  "-" ,1 , False, 13, True , True , False, False, SubOp
+  "-" ,1 , False, 13, { TempInt << 4, TempFloat << 4, 0, 0, 0 }, SubOp
 };

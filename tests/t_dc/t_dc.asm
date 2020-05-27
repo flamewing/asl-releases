@@ -20,15 +20,9 @@
 	dc.b	255
 	dc.b	-128
 	dc.b	'A'
-	expect	1320
-	dc.b	'AB'
-	endexpect
-	expect	1320
-	dc.b	'ABC'
-	endexpect
-	expect	1320
-	dc.b	'ABCD'
-	endexpect
+	dc.b	'AB'	; treated like "AB"
+	dc.b	'ABC'	; treated like "ABC"
+	dc.b	'ABCD'	; treated like "ABCD"
 	dc.b	"A"
 	dc.b	"AB"
 	dc.b	"ABC"
@@ -39,12 +33,8 @@
 	dc.w	-32768
 	dc.w	'A'
 	dc.w	'AB'
-	expect	1320
-	dc.w	'ABC'
-	endexpect
-	expect	1320
-	dc.w	'ABCD'
-	endexpect
+	dc.w	'ABC'	; treated like "ABC"
+	dc.w	'ABCD'	; treated like "ABCD"
 	dc.w	"A"
 	dc.w	"AB"
 	dc.w	"ABC"

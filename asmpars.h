@@ -11,7 +11,9 @@
 /*****************************************************************************/
 
 #include "symbolsize.h"
+#include "symflags.h"
 #include "tempresult.h"
+#include "lstmacroexp.h"
 
 typedef enum
 {
@@ -69,12 +71,6 @@ typedef enum
   FloatTypeCnt
 } FloatType;
 
-typedef enum
-{
-  eSymbolFlag_None = 0,
-  eSymbolFlag_NextLabelAfterBSR = 1 << 0
-} tSymbolFlags;
-
 typedef struct _TFunction
 {
   struct _TFunction *Next;
@@ -109,6 +105,16 @@ extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 extern IntType GetSmallestUIntType(LargeWord MaxValue);
 
 
+struct sDynString;
+extern LargeInt DynString2Int(const struct sDynString *pDynString);
+
+extern Boolean Int2DynString(struct sDynString *pDynString, LargeInt Src);
+
+extern int TempResultToInt(TempResult *pResult);
+
+extern Boolean MultiCharToInt(TempResult *pResult, unsigned MaxLen);
+
+
 extern Boolean RangeCheck(LargeInt Wert, IntType Typ);
 
 extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
@@ -123,7 +129,7 @@ extern void ChangeSymbol(struct sSymbolEntry *pEntry, LargeInt Value);
 
 extern struct sSymbolEntry *EnterIntSymbolWithFlags(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange, tSymbolFlags Flags);
 
-#define EnterIntSymbol(pName, Wert, Typ, MayChange) EnterIntSymbolWithFlags(pName, Wert, Typ, MayChange, 0)
+#define EnterIntSymbol(pName, Wert, Typ, MayChange) EnterIntSymbolWithFlags(pName, Wert, Typ, MayChange, eSymbolFlag_None)
 
 extern void EnterExtSymbol(const struct sStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayChange);
 
@@ -133,7 +139,9 @@ extern void EnterFloatSymbol(const struct sStrComp *pName, Double Wert, Boolean 
 
 extern void EnterStringSymbol(const struct sStrComp *pName, const char *pValue, Boolean MayChange);
 
-extern void EnterDynStringSymbol(const struct sStrComp *pName, const tDynString *pValue, Boolean MayChange);
+extern void EnterDynStringSymbolWithFlags(const struct sStrComp *pName, const tDynString *pValue, Boolean MayChange, tSymbolFlags Flags);
+
+#define EnterDynStringSymbol(pName, pValue, MayChange) EnterDynStringSymbolWithFlags(pName, pValue, MayChange, eSymbolFlag_None)
 
 extern void LookupSymbol(const struct sStrComp *pName, TempResult *pValue, Boolean WantRelocs, TempType ReqType);
 

@@ -1,3 +1,14 @@
+2020-05-27 [1.42 Bld 169]
+
+- Addition    : new built-in function DEFINED() to test whether
+                a symbol is defined
+- Change      : remove strict distinction between strings and
+                multi-character constants
+- Bugfix      : do not allow CMPI with PC-relative destination
+                up to 68010.
+- Bugfix      : 68K: forbid usage of An with byte size in a few
+                instructions
+
 2020-05-18 [1.42 Bld 168]
 
 - Bugfix      : avoid spurious occurences of 'pointer size passed to as_vsnprcatf' message

@@ -22,6 +22,10 @@
 #endif
 
 #include "chardefs.h"
+#include "texutil.h"
+#include "texrefs.h"
+#include "textoc.h"
+#include "texfonts.h"
 #include "nls.h"
 
 /*--------------------------------------------------------------------------*/
@@ -43,16 +47,6 @@ typedef enum
 
 typedef enum
 {
-  FontStandard, FontEmphasized, FontBold, FontTeletype, FontItalic
-} TFontType;
-
-typedef enum
-{
-  FontTiny, FontSmall, FontNormalSize, FontLarge, FontHuge
-} TFontSize;
-
-typedef enum
-{
   AlignNone, AlignCenter, AlignLeft, AlignRight
 } TAlignment;
 
@@ -64,13 +58,6 @@ typedef struct sEnvSave
   int EnumCounter, FontNest;
   TAlignment Alignment;
 } TEnvSave, *PEnvSave;
-
-typedef struct sFontSave
-{
-  struct sFontSave *Next;
-  TFontType FontType;
-  TFontSize FontSize;
-} TFontSave, *PFontSave;
 
 typedef enum
 {
@@ -91,18 +78,6 @@ typedef struct
   Boolean MultiFlags[MAXROWS];
 } TTable;
 
-typedef struct sRefSave
-{
-  struct sRefSave *Next;
-  char *RefName, *Value;
-} TRefSave, *PRefSave;
-
-typedef struct sTocSave
-{
-  struct sTocSave *Next;
-  char *TocName;
-} TTocSave, *PTocSave;
-
 static char *EnvNames[EnvCount] =
 {
   "___NONE___", "document", "itemize", "enumerate", "description", "table", "tabular",
@@ -112,32 +87,26 @@ static char *EnvNames[EnvCount] =
 
 static int IncludeNest;
 static FILE *infiles[50], *outfile;
-static char *infilename;
 static char TocName[200];
-static int CurrLine = 0, CurrColumn;
 static char SrcDir[TOKLEN + 1];
 
 #define CHAPMAX 6
 static int Chapters[CHAPMAX];
-static int TableNum, FontNest, ErrState, FracState, BibIndent, BibCounter;
+static int TableNum, ErrState, FracState, BibIndent, BibCounter;
 #define TABMAX 100
 static int TabStops[TABMAX], TabStopCnt, CurrTabStop;
-static Boolean InAppendix, InMathMode, DoRepass;
+static Boolean InAppendix, InMathMode;
 static TTable ThisTable;
 static int CurrRow, CurrCol;
 static Boolean GermanMode;
 
 static EnvType CurrEnv;
-static TFontType CurrFontType;
-static TFontSize CurrFontSize;
+static int CurrPass;
 static int CurrListDepth;
 static int EnumCounter;
 static int ActLeftMargin, LeftMargin, RightMargin;
 static TAlignment Alignment;
 static PEnvSave EnvStack;
-static PFontSave FontStack;
-static PRefSave FirstRefSave, FirstCiteSave;
-static PTocSave FirstTocSave;
 
 static PInstTable TeXTable;
 
@@ -178,15 +147,10 @@ static void error(char *Msg)
 {
   int z;
 
-  fprintf(stderr, "%s:%d.%d: %s\n", infilename, CurrLine, CurrColumn, Msg);
+  fprintf(stderr, "%s:%d.%d: %s\n", pInFileName, CurrLine, CurrColumn, Msg);
   for (z = 0; z < IncludeNest; fclose(infiles[z++]));
   fclose(outfile);
   exit(2);
-}
-
-static void warning(char *Msg)
-{
-  fprintf(stderr, "%s:%d.%d: %s\n", infilename, CurrLine, CurrColumn, Msg);
 }
 
 static void SetLang(Boolean IsGerman)
@@ -224,150 +188,6 @@ static void SetLang(Boolean IsGerman)
       AddException(*pp);
 #endif
   }
-}
-
-/*--------------------------------------------------------------------------*/
-
-static void AddLabel(char *Name, char *Value)
-{
-  PRefSave Run, Prev, Neu;
-  int cmp = -1;
-  char err[200];
-
-  for (Run = FirstRefSave, Prev = NULL; Run; Prev = Run, Run = Run->Next)
-    if ((cmp = strcmp(Run->RefName, Name)) >= 0)
-      break;
-
-  if ((Run) && (cmp == 0))
-  {
-    if (strcmp(Run->Value, Value))
-    {
-      as_snprintf(err, sizeof(err), "value of label '%s' has changed", Name);
-      warning(err);
-      DoRepass = True;
-      free(Run->Value);
-      Run->Value = as_strdup(Value);
-    }
-  }
-  else
-  {
-    Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = as_strdup(Name);
-    Neu->Value = as_strdup(Value);
-    Neu->Next = Run;
-    if (!Prev)
-      FirstRefSave = Neu;
-    else
-      Prev->Next = Neu;
-  }
-}
-
-static void AddCite(char *Name, char *Value)
-{
-  PRefSave Run, Prev, Neu;
-  int cmp = -1;
-  char err[200];
-
-  for (Run = FirstCiteSave, Prev = NULL; Run; Prev = Run, Run = Run->Next)
-    if ((cmp = strcmp(Run->RefName, Name)) >= 0)
-      break;
-
-  if ((Run) && (cmp == 0))
-  {
-    if (strcmp(Run->Value, Value))
-    {
-      as_snprintf(err, sizeof(err), "value of citation '%s' has changed", Name);
-      warning(err);
-      DoRepass = True;
-      free(Run->Value);
-      Run->Value = as_strdup(Value);
-    }
-  }
-  else
-  {
-    Neu = (PRefSave) malloc(sizeof(TRefSave));
-    Neu->RefName = as_strdup(Name);
-    Neu->Value = as_strdup(Value);
-    Neu->Next = Run;
-    if (!Prev)
-      FirstCiteSave = Neu;
-    else
-      Prev->Next = Neu;
-  }
-}
-
-static void GetLabel(char *Name, char *Dest)
-{
-  PRefSave Run;
-  char err[200];
-
-  for (Run = FirstRefSave; Run; Run = Run->Next)
-    if (!strcmp(Name, Run->RefName))
-      break;
-
-  if (!Run)
-  {
-    as_snprintf(err, sizeof(err), "undefined label '%s'", Name);
-    warning(err); DoRepass = True;
-  }
-  strcpy(Dest, (!Run) ? "???" : Run->Value);
-}
-
-static void GetCite(char *Name, char *Dest)
-{
-  PRefSave Run;
-  char err[200];
-
-  for (Run = FirstCiteSave; Run; Run = Run->Next)
-    if (!strcmp(Name, Run->RefName))
-      break;
-
-  if (!Run)
-  {
-    as_snprintf(err, sizeof(err), "undefined citation '%s'", Name);
-    warning(err);
-    DoRepass = True;
-  }
-  strcpy(Dest, (!Run) ? "???" : Run->Value);
-}
-
-static void PrintLabels(char *Name)
-{
-  PRefSave Run;
-  FILE *file = fopen(Name, "a");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstRefSave; Run; Run = Run->Next)
-    fprintf(file, "Label %s %s\n", Run->RefName, Run->Value);
-  fclose(file);
-}
-
-static void PrintCites(char *Name)
-{
-  PRefSave Run;
-  FILE *file = fopen(Name, "a");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstCiteSave; Run; Run = Run->Next)
-    fprintf(file, "Citation %s %s\n", Run->RefName, Run->Value);
-  fclose(file);
-}
-
-static void PrintToc(char *Name)
-{
-  PTocSave Run;
-  FILE *file = fopen(Name, "w");
-
-  if (!file)
-    perror(Name);
-
-  for (Run = FirstTocSave; Run; Run = Run->Next)
-    fprintf(file, "%s\n\n", Run->TocName);
-  fclose(file);
 }
 
 /*------------------------------------------------------------------------------*/
@@ -439,7 +259,7 @@ static Boolean isalphanum(char inp)
 
 static char LastChar = '\0';
 static char SaveSep = '\0', SepString[TOKLEN] = "";
-static Boolean DidEOF = False;
+static Boolean DidEOF;
 static char BufferLine[TOKLEN] = "", *BufferPtr = BufferLine;
 typedef struct
 {
@@ -886,29 +706,16 @@ static void ResetLine(void)
 
 /*--------------------------------------------------------------------------*/
 
-static void SaveFont(void)
+void PrFontDiff(int OldFlags, int NewFlags)
 {
-  PFontSave NewSave;
-
-  NewSave = (PFontSave) malloc(sizeof(TFontSave));
-  NewSave->Next = FontStack;
-  NewSave->FontSize = CurrFontSize;
-  NewSave->FontType = CurrFontType;
-  FontStack = NewSave; FontNest++;
+  (void)OldFlags;
+  (void)NewFlags;
 }
 
-static void RestoreFont(void)
+void PrFontSize(tFontSize Type, Boolean On)
 {
-  PFontSave OldSave;
-
-  if (!FontStack) return;
-
-  OldSave = FontStack;
-  FontStack = FontStack->Next;
-  CurrFontSize = OldSave->FontSize;
-  CurrFontType = OldSave->FontType;
-  free(OldSave);
-  FontNest--;
+  (void)Type;
+  (void)On;
 }
 
 static void SaveEnv(EnvType NewEnv)
@@ -1099,7 +906,14 @@ static void DumpTable(void)
       }
       if (ThisTable.ColTypes[ThisTable.ColumnCount - 1] == ColBar)
         l--;
-      DoPrnt(ThisTable.Lines[rowz][0], ThisTable.ColTypes[firsttext], l);
+      for (colz = 0; colz < ThisTable.ColumnCount; colz++)
+      {
+        if (!colz)
+          DoPrnt(ThisTable.Lines[rowz][colz], ThisTable.ColTypes[firsttext], l);
+        else if (ThisTable.Lines[rowz][colz])
+          free(ThisTable.Lines[rowz][colz]);
+        ThisTable.Lines[rowz][0] = NULL;
+      }
       if (ThisTable.ColTypes[ThisTable.ColumnCount - 1] == ColBar)
         outc('|');
     }
@@ -1120,6 +934,7 @@ static void DumpTable(void)
           else
           {
             DoPrnt(ThisTable.Lines[rowz][colptr], ThisTable.ColTypes[colz], ThisTable.ColLens[colz]);
+            ThisTable.Lines[rowz][colptr] = NULL;
             colptr++;
           }
     }
@@ -1335,7 +1150,6 @@ static void EndSectionHeading(void)
 {
   int Level = LastLevel, z;
   char Line[TOKLEN], Title[TOKLEN];
-  PTocSave NewTocSave, RunToc;
 
   strcpy(Title, OutLineBuffer);
   *OutLineBuffer = '\0';
@@ -1373,20 +1187,9 @@ static void EndSectionHeading(void)
 
   if (Level < 3)
   {
-    NewTocSave = (PTocSave) malloc(sizeof(TTocSave));
-    NewTocSave->Next = NULL;
     GetSectionName(Line, sizeof(Line));
     as_snprcatf(Line, sizeof(Line), " %s", Title);
-    NewTocSave->TocName = (char *) malloc(6 + Level + strlen(Line));
-    strcpy(NewTocSave->TocName, Blanks(5 + Level));
-    strcat(NewTocSave->TocName, Line);
-    if (!FirstTocSave)
-      FirstTocSave = NewTocSave;
-    else
-    {
-      for (RunToc = FirstTocSave; RunToc->Next; RunToc = RunToc->Next);
-      RunToc->Next = NewTocSave;
-    }
+    AddToc(Line, 5 + Level);
   }
 }
 
@@ -1849,7 +1652,7 @@ static void NextFracState(void)
 
 static void TeXNewFontType(Word Index)
 {
-  CurrFontType = (TFontType) Index;
+  CurrFontType = (tFontType) Index;
 }
 
 static void TeXEnvNewFontType(Word Index)
@@ -1857,7 +1660,7 @@ static void TeXEnvNewFontType(Word Index)
   char NToken[TOKLEN];
 
   SaveFont();
-  CurrFontType = (TFontType) Index;
+  CurrFontType = (tFontType) Index;
   assert_token("{");
   ReadToken(NToken);
   strcpy(SepString, BackSepString);
@@ -1866,7 +1669,7 @@ static void TeXEnvNewFontType(Word Index)
 
 static void TeXNewFontSize(Word Index)
 {
-  CurrFontSize = (TFontSize) Index;
+  CurrFontSize = (tFontSize) Index;
 }
 
 static void TeXEnvNewFontSize(Word Index)
@@ -1874,7 +1677,7 @@ static void TeXEnvNewFontSize(Word Index)
   char NToken[TOKLEN];
 
   SaveFont();
-  CurrFontSize = (TFontSize) Index;
+  CurrFontSize = (tFontSize) Index;
   assert_token("{");
   ReadToken(NToken);
   strcpy(SepString, BackSepString);
@@ -2208,7 +2011,7 @@ static void TeXContents(Word Index)
 
   if (!file)
   {
-    warning("contents file not found.");
+    Warning("contents file not found.");
     DoRepass = True;
     return;
   }
@@ -2678,18 +2481,21 @@ static void TeXDocumentStyle(Word Index)
     while (strcmp(Token, "]"));
     assert_token("{");
     ReadToken(Token);
-    if (!as_strcasecmp(Token,  "article"))
+    if (CurrPass <= 1)
     {
-      AddInstTable(TeXTable, "section", 0, TeXNewSection);
-      AddInstTable(TeXTable, "subsection", 1, TeXNewSection);
-      AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
-    }
-    else
-    {
-      AddInstTable(TeXTable, "chapter", 0, TeXNewSection);
-      AddInstTable(TeXTable, "section", 1, TeXNewSection);
-      AddInstTable(TeXTable, "subsection", 2, TeXNewSection);
-      AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      if (!as_strcasecmp(Token,  "article"))
+      {
+        AddInstTable(TeXTable, "section", 0, TeXNewSection);
+        AddInstTable(TeXTable, "subsection", 1, TeXNewSection);
+        AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      }
+      else
+      {
+        AddInstTable(TeXTable, "chapter", 0, TeXNewSection);
+        AddInstTable(TeXTable, "section", 1, TeXNewSection);
+        AddInstTable(TeXTable, "subsection", 2, TeXNewSection);
+        AddInstTable(TeXTable, "subsubsection", 3, TeXNewSection);
+      }
     }
     assert_token("}");
   }
@@ -2712,7 +2518,7 @@ static void TeXUsePackage(Word Index)
 int main(int argc, char **argv)
 {
   char Line[TOKLEN], Comp[TOKLEN], *p, AuxFile[200];
-  int z;
+  int z, NumPassesLeft;
 
   if (argc < 3)
   {
@@ -2727,30 +2533,6 @@ int main(int argc, char **argv)
   pCharacterTab = GetCharacterTab(Codepage);
 
   TeXTable = CreateInstTable(301);
-
-  IncludeNest = 0;
-  *infiles = fopen(argv[1], "r");
-  if (!*infiles)
-  {
-    perror(argv[1]);
-    exit(3);
-  }
-  else
-    IncludeNest++;
-  SetSrcDir(argv[1]);
-  infilename = argv[1];
-  if (!strcmp(argv[2], "-"))
-    outfile = stdout;
-  else
-  {
-    outfile = fopen(argv[2], "w");
-    if (!outfile)
-    {
-      perror(argv[2]);
-      exit(3);
-    }
-  }
-
   AddInstTable(TeXTable, "\\", 0, TeXFlushLine);
   AddInstTable(TeXTable, "par", 0, TeXNewParagraph);
   AddInstTable(TeXTable, "-", 0, TeXDummy);
@@ -2847,125 +2629,172 @@ int main(int argc, char **argv)
   AddInstTable(TeXTable, "elektorfalse", 0, TeXDummy);
   AddInstTable(TeXTable, "input", 0, TeXInclude);
 
-  for (z = 0; z < CHAPMAX; Chapters[z++] = 0);
-  TableNum = 0;
-  FontNest = 0;
-  TabStopCnt = 0;
-  CurrTabStop = 0;
-  ErrState = FracState = -1;
-  InAppendix = False;
-  EnvStack = NULL;
-  CurrEnv = EnvNone;
-  CurrListDepth = 0;
-  ActLeftMargin = LeftMargin = 1;
-  RightMargin = 70;
-  Alignment = AlignNone;
-  EnumCounter = 0;
-  CurrFontType = FontStandard;
-  CurrFontSize = FontNormalSize;
-  FontStack = NULL;
-  FirstRefSave = NULL;
-  FirstCiteSave = NULL;
-  FirstTocSave = NULL;
-  *SideMargin = '\0';
-  DoRepass = False;
-  BibIndent = BibCounter = 0;
-  GermanMode = True;
-  SetLang(False);
-
-  strcpy(TocName, argv[1]);
-  p = strrchr(TocName, '.');
-  if (p)
-    *p = '\0';
-  strcat(TocName, ".dtoc");
-
-  strcpy(AuxFile, argv[1]);
-  p = strrchr(AuxFile, '.');
-  if (p)
-    *p = '\0';
-  strcat(AuxFile, ".daux");
-  ReadAuxFile(AuxFile);
-
-  while (1)
+  CurrPass = 0;
+  NumPassesLeft = 3;
+  do
   {
-    if (!ReadToken(Line))
-      break;
-    if (!strcmp(Line, "\\"))
+    CurrPass++;
+
+    DidEOF = False;
+    IncludeNest = 0;
+    pInFileName = argv[1];
+    *infiles = fopen(pInFileName, "r");
+    if (!*infiles)
     {
-      strcpy(BackSepString, SepString);
-      if (!ReadToken(Line))
-        error("unexpected end of file");
-      if (*SepString != '\0')
-        BackToken(Line);
-      else if (!LookupInstTable(TeXTable, Line))
-        if (!TeXNLSSpec(Line))
-        {
-          as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
-          warning(Comp);
-        }
-    }
-    else if (!strcmp(Line, "$"))
-    {
-      InMathMode = !InMathMode;
-      if (InMathMode)
-      {
-        strcpy(BackSepString, SepString);
-        ReadToken(Line);
-        strcpy(SepString, BackSepString);
-        BackToken(Line);
-      }
-    }
-    else if (!strcmp(Line, "&"))
-      NextTableColumn();
-    else if ((!strcmp(Line, "^")) && (InMathMode))
-      TeXDoPot();
-    else if ((!strcmp(Line, "\"")) && (GermanMode))
-      TeXDoSpec();
-    else if (!strcmp(Line, "{"))
-      SaveFont();
-    else if (!strcmp(Line, "}"))
-    {
-      if (FontNest > 0)
-        RestoreFont();
-      else if (ErrState >= 0)
-        NextErrState();
-      else if (FracState >= 0)
-        NextFracState();
-      else switch (CurrEnv)
-      {
-        case EnvMarginPar:
-          RestoreEnv();
-          break;
-        case EnvCaption:
-          FlushLine();
-          RestoreEnv();
-          break;
-        case EnvHeading:
-          EndSectionHeading();
-          RestoreEnv();
-          break;
-        default:
-          RestoreFont();
-      }
+      perror(pInFileName);
+      exit(3);
     }
     else
-      DoAddNormal(Line, SepString);
+      IncludeNest++;
+    SetSrcDir(pInFileName);
+    if (!strcmp(argv[2], "-"))
+      outfile = stdout;
+    else
+    {
+      outfile = fopen(argv[2], "w");
+      if (!outfile)
+      {
+        perror(argv[2]);
+        exit(3);
+      }
+    }
+
+    for (z = 0; z < CHAPMAX; Chapters[z++] = 0);
+    TableNum = 0;
+    TabStopCnt = 0;
+    CurrTabStop = 0;
+    ErrState = FracState = -1;
+    InAppendix = False;
+    EnvStack = NULL;
+    CurrEnv = EnvNone;
+    CurrListDepth = 0;
+    ActLeftMargin = LeftMargin = 1;
+    RightMargin = 70;
+    Alignment = AlignNone;
+    EnumCounter = 0;
+    InitFont();
+    CurrLine = 0;
+    InitLabels();
+    InitCites();
+    InitToc();
+    *SideMargin = '\0';
+    DoRepass = False;
+    BibIndent = BibCounter = 0;
+    GermanMode = True;
+    SetLang(False);
+
+    strcpy(TocName, pInFileName);
+    p = strrchr(TocName, '.');
+    if (p)
+      *p = '\0';
+    strcat(TocName, ".dtoc");
+
+    strcpy(AuxFile, pInFileName);
+    p = strrchr(AuxFile, '.');
+    if (p)
+      *p = '\0';
+    strcat(AuxFile, ".daux");
+    ReadAuxFile(AuxFile);
+
+    while (1)
+    {
+      if (!ReadToken(Line))
+        break;
+      if (!strcmp(Line, "\\"))
+      {
+        strcpy(BackSepString, SepString);
+        if (!ReadToken(Line))
+          error("unexpected end of file");
+        if (*SepString != '\0')
+          BackToken(Line);
+        else if (!LookupInstTable(TeXTable, Line))
+          if (!TeXNLSSpec(Line))
+          {
+            as_snprintf(Comp, sizeof(Comp), "unknown TeX command %s", Line);
+            Warning(Comp);
+          }
+      }
+      else if (!strcmp(Line, "$"))
+      {
+        InMathMode = !InMathMode;
+        if (InMathMode)
+        {
+          strcpy(BackSepString, SepString);
+          ReadToken(Line);
+          strcpy(SepString, BackSepString);
+          BackToken(Line);
+        }
+      }
+      else if (!strcmp(Line, "&"))
+        NextTableColumn();
+      else if ((!strcmp(Line, "^")) && (InMathMode))
+        TeXDoPot();
+      else if ((!strcmp(Line, "\"")) && (GermanMode))
+        TeXDoSpec();
+      else if (!strcmp(Line, "{"))
+        SaveFont();
+      else if (!strcmp(Line, "}"))
+      {
+        if (FontNest > 0)
+          RestoreFont();
+        else if (ErrState >= 0)
+          NextErrState();
+        else if (FracState >= 0)
+          NextFracState();
+        else switch (CurrEnv)
+        {
+          case EnvMarginPar:
+            RestoreEnv();
+            break;
+          case EnvCaption:
+            FlushLine();
+            RestoreEnv();
+            break;
+          case EnvHeading:
+            EndSectionHeading();
+            RestoreEnv();
+            break;
+          default:
+            RestoreFont();
+        }
+      }
+      else
+        DoAddNormal(Line, SepString);
+    }
+    FlushLine();
+
+    for (z = 0; z < IncludeNest; fclose(infiles[z++]));
+    fclose(outfile);
+
+    unlink(AuxFile);
+    PrintLabels(AuxFile);
+    PrintCites(AuxFile);
+    PrintToc(TocName);
+
+    FreeLabels();
+    FreeCites();
+    DestroyTree();
+    FreeToc();
+    FreeFontStack();
+
+    NumPassesLeft--;
+    if (DoRepass)
+      fprintf(stderr, "additional pass needed\n");
   }
-  FlushLine();
+  while (DoRepass && NumPassesLeft);
+
   DestroyInstTable(TeXTable);
 
-  for (z = 0; z < IncludeNest; fclose(infiles[z++]));
-  fclose(outfile);
-
-  unlink(AuxFile);
-  PrintLabels(AuxFile);
-  PrintCites(AuxFile);
-  PrintToc(TocName);
-
   if (DoRepass)
-    fprintf(stderr, "additional pass recommended\n");
-
-  return 0;
+  {
+    fprintf(stderr, "additional passes needed but cowardly not done\n");
+    return 3;
+  }
+  else
+  {
+    fprintf(stderr, "%d pass(es) needed\n", CurrPass);
+    return 0;
+  }
 }
 
 #ifdef CKMALLOC

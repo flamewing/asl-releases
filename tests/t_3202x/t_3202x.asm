@@ -216,9 +216,7 @@ alladdr	macro	instr
 
 	data	'a'
 	data	'ab'
-	expect	1320
-	data	'abc'
-	endexpect
+	data	'abc'	; treated like "abc" due to length
 	data	0
 	data	65535
 	data	-32768
@@ -228,12 +226,8 @@ alladdr	macro	instr
 	data	"abcd"
 
 	byte	'a'
-	expect	1320
-	byte	'ab'
-	endexpect
-	expect	1320
-	byte	'abc'
-	endexpect
+	byte	'ab'	; treated like "ab" due to length
+	byte	'abc'	; treated like "abc" due to length
 	byte	0
 	byte	255
 	byte	-128
@@ -244,9 +238,7 @@ alladdr	macro	instr
 
 	word	'a'
 	word	'ab'
-	expect	1320
-	word	'abc'
-	endexpect
+	word	'abc'	; treated like "abc" due to length
 	word	0
 	word	65535
 	word	-32768
@@ -269,9 +261,7 @@ alladdr	macro	instr
 	long	"abcde"
 
 	string	'a'
-	expect	1320
 	string	'ab'
-	endexpect
 	string	0
 	string	255
 	string	-128
@@ -282,9 +272,7 @@ alladdr	macro	instr
 	string	"abcde"
 
 	rstring	'a'
-	expect	1320
 	rstring	'ab'
-	endexpect
 	rstring	0
 	rstring	255
 	rstring	-128

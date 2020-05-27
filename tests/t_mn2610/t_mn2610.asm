@@ -224,9 +224,7 @@
 	dc	-32768
 	dc	'A'
 	dc	'AB'
-	expect	1320
-	dc	'ABC'
-	endexpect
+	dc	'ABC'	; treated like "ABC" due to length > 16 bit
 	dc	"A"
 	dc	"AB"
 	dc	"ABC"

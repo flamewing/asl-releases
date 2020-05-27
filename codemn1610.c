@@ -1365,6 +1365,7 @@ static void DecodeDC(Word Index)
 				switch (t.Typ)
 				{
 				case TempInt:
+				ToInt:
 					if (ChkRange(t.Contents.Int, -32768, 65535))
 					{
 						WAsmCode[CodeLen++] = t.Contents.Int;
@@ -1376,6 +1377,8 @@ static void DecodeDC(Word Index)
 					OK = False;
 					break;
 				case TempString:
+					if (MultiCharToInt(&t, 2))
+						goto ToInt;
 					for (c = 0; c < (int)t.Contents.Ascii.Length; c++)
 					{
 						if ((b++) & 1)

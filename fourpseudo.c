@@ -56,6 +56,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
   int z;
   IntType ValIntType = (ActPC == SegData) ? DataIntType : CodeIntType;
   LargeWord ValMask = IntTypeDefs[ValIntType].Mask;
+  Word MaxMultCharLen = (Lo(IntTypeDefs[ValIntType].SignAndWidth) + 7) / 8;
   LargeWord UnknownMask = ValMask / 2;
 
   if (ChkArgCnt(1, ArgCntMax))
@@ -70,19 +71,6 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
 
       switch (t.Typ)
       {
-        case TempInt:
-          if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, ValIntType))
-          {
-            WrError(ErrNum_OverRange);
-            ValOK = False;
-          }
-          else if (ValMask <= 0xff)
-            BAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          else if (ValMask <= 0xfffful)
-            WAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          else
-            DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          break;
         case TempFloat:
           WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
           ValOK = False;
@@ -93,6 +81,9 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
           unsigned z2;
           int bpos;
           LongWord TransCh;
+
+          if (MultiCharToInt(&t, MaxMultCharLen))
+            goto ToInt;
 
           for (z2 = 0, cp = (unsigned char *)t.Contents.Ascii.Contents, bpos = 0;
                z2 < t.Contents.Ascii.Length;
@@ -158,6 +149,20 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
           }
           break;
         }
+        case TempInt:
+        ToInt:
+          if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, ValIntType))
+          {
+            WrError(ErrNum_OverRange);
+            ValOK = False;
+          }
+          else if (ValMask <= 0xff)
+            BAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+          else if (ValMask <= 0xfffful)
+            WAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+          else
+            DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+          break;
         default:
           ValOK = False;
       }

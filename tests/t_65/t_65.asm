@@ -287,9 +287,7 @@
 	byt	255
 	byt	-128
 	byt	'a'
-	expect	1320
-	byt	'ab'
-	endexpect
+	byt	'ab'	; treated as "ab" due to length
 	byt	"a"
 	byt	"ab"
 

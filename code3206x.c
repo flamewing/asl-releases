@@ -687,7 +687,23 @@ static Boolean DecodePseudo(void)
          EvalStrExpression(&ArgStr[z], &t);
          switch (t.Typ)
          {
+           case TempString:
+           {
+             unsigned z2;
+
+            if (MultiCharToInt(&t, 4))
+              goto ToInt;
+
+             for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
+             {
+               if ((z2 & 3) == 0) DAsmCode[cnt++] = 0;
+               DAsmCode[cnt - 1] +=
+                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff])) << (8 * (3 - (z2 & 3)));
+             }
+             break;
+           }
            case TempInt:
+           ToInt:
 #ifdef HAS64
              if (!RangeCheck(t.Contents.Int, Int32))
              {
@@ -710,18 +726,6 @@ static Boolean DecodePseudo(void)
                cnt++;
              }
              break;
-           case TempString:
-           {
-             unsigned z2;
-
-             for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
-             {
-               if ((z2 & 3) == 0) DAsmCode[cnt++] = 0;
-               DAsmCode[cnt - 1] +=
-                  (((LongWord)CharTransTable[((usint)t.Contents.Ascii.Contents[z2]) & 0xff])) << (8 * (3 - (z2 & 3)));
-             }
-             break;
-           }
            default:
              OK = False;
          }

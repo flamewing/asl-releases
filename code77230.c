@@ -606,7 +606,24 @@ static Boolean DecodePseudo(void)
         EvalStrExpression(&ArgStr[z], &t);
         switch(t.Typ)
         {
+          case TempString:
+            if (MultiCharToInt(&t, 4))
+              goto ToInt;
+
+            for (z = 0, cp = t.Contents.Ascii.Contents, cend = cp + t.Contents.Ascii.Length; cp < cend; cp++, z++)
+            {
+              DAsmCode[CodeLen] = (DAsmCode[CodeLen] << 8) + CharTransTable[((usint)*cp) & 0xff];
+              if ((z & 3) == 3)
+                CodeLen++;
+            }
+            if ((z & 3) != 0) 
+            {
+              DAsmCode[CodeLen] = (DAsmCode[CodeLen]) << ((4 - (z & 3)) << 3);
+              CodeLen++;
+            }
+            break;
           case TempInt:
+          ToInt:
             if (!RangeCheck(t.Contents.Int, Int32))
             {
               WrError(ErrNum_OverRange);
@@ -645,19 +662,6 @@ static Boolean DecodePseudo(void)
               if (sign == 1)
                 mant = ((mant ^ 0xffffff) + 1);
               DAsmCode[CodeLen++] = ((expo & 0xff) << 24) | (mant & 0xffffff);
-            }
-            break;
-          case TempString:
-            for (z = 0, cp = t.Contents.Ascii.Contents, cend = cp + t.Contents.Ascii.Length; cp < cend; cp++, z++)
-            {
-              DAsmCode[CodeLen] = (DAsmCode[CodeLen] << 8) + CharTransTable[((usint)*cp) & 0xff];
-              if ((z & 3) == 3)
-                CodeLen++;
-            }
-            if ((z & 3) != 0) 
-            {
-              DAsmCode[CodeLen] = (DAsmCode[CodeLen]) << ((4 - (z & 3)) << 3);
-              CodeLen++;
             }
             break;
           default:

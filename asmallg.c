@@ -277,7 +277,7 @@ static void CodeSETEQU(Word MayChange)
             EnterFloatSymbol(pName, t.Contents.Float, MayChange);
             break;
           case TempString:
-            EnterDynStringSymbol(pName, &t.Contents.Ascii, MayChange);
+            EnterDynStringSymbolWithFlags(pName, &t.Contents.Ascii, MayChange, t.Flags);
             break;
           default:
             break;
@@ -679,6 +679,8 @@ static void CodeCHARSET(Word Index)
   {
     FirstPassUnknown = False;
     EvalStrExpression(&ArgStr[1], &t);
+    if ((t.Typ == TempString) && (t.Flags & eSymbolFlag_StringSingleQuoted))
+      TempResultToInt(&t);
     switch (t.Typ)
     {
       case TempInt:
@@ -691,6 +693,8 @@ static void CodeCHARSET(Word Index)
             Start = t.Contents.Int;
             FirstPassUnknown = False;
             EvalStrExpression(&ArgStr[2], &t);
+            if ((t.Typ == TempString) && (t.Flags & eSymbolFlag_StringSingleQuoted))
+              TempResultToInt(&t);
             switch (t.Typ)
             {
               case TempInt: /* Übersetzungsbereich als Character-Angabe */

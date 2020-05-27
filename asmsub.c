@@ -575,7 +575,7 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned
       FloatString(Dest, DestLen, t->Contents.Float);
       break;
     case TempString:
-      snstrlenprint(Dest, DestLen, t->Contents.Ascii.Contents, t->Contents.Ascii.Length);
+      TempResultToPlainString(Dest, t, DestLen);
       break;
     default:
       strmaxcpy(Dest, "???", DestLen);

@@ -1009,7 +1009,6 @@ static Boolean DecodeMOVE(int Start)
 static Boolean DecodePseudo(void)
 {
   Boolean OK;
-  int BCount;
   Word AdrWord, z, z2;
 /*   Byte Segment;*/
   TempResult t;
@@ -1056,13 +1055,13 @@ static Boolean DecodePseudo(void)
         EvalStrExpression(&ArgStr[z], &t);
         switch (t.Typ)
         {
-          case TempInt:
-            if (FirstPassUnknown) t.Contents.Int &= 0xffffff;
-            if (!(OK = RangeCheck(t.Contents.Int, Int24))) WrError(ErrNum_OverRange);
-            else
-              DAsmCode[CodeLen++] = t.Contents.Int & 0xffffff;
-            break;
           case TempString:
+          {
+            int BCount;
+
+            if (MultiCharToInt(&t, 3))
+              goto ToInt;
+
             BCount = 2; DAsmCode[CodeLen] = 0;
             for (z2 = 0; z2 < t.Contents.Ascii.Length; z2++)
             {
@@ -1076,6 +1075,14 @@ static Boolean DecodePseudo(void)
               }
             }
             if (BCount != 2) CodeLen++;
+            break;
+          }
+          ToInt:
+          case TempInt:
+            if (FirstPassUnknown) t.Contents.Int &= 0xffffff;
+            if (!(OK = RangeCheck(t.Contents.Int, Int24))) WrError(ErrNum_OverRange);
+            else
+              DAsmCode[CodeLen++] = t.Contents.Int & 0xffffff;
             break;
           case TempFloat:
             WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);

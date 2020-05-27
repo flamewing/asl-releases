@@ -317,7 +317,7 @@ static void PlaceByte(Word Value, Boolean Pack)
 static void DecodeDATA_AVR(Word Index)
 {
   Integer Trans;
-  int z, z2;
+  int z;
   Boolean OK;
   TempResult t;
   LongInt MinV, MaxV;
@@ -337,16 +337,24 @@ static void DecodeDATA_AVR(Word Index)
        if ((FirstPassUnknown) && (t.Typ == TempInt)) t.Contents.Int &= MaxV;
        switch (t.Typ)
        {
-         case TempInt:
-           if (ChkRange(t.Contents.Int, MinV, MaxV))
-             PlaceByte(t.Contents.Int, Packing);
-           break;
          case TempString:
+         {
+           int z2;
+
+           if (MultiCharToInt(&t, 2))
+             goto ToInt;
+
            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {
              Trans = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
              PlaceByte(Trans, TRUE);
            }
+           break;
+         }
+         ToInt:
+         case TempInt:
+           if (ChkRange(t.Contents.Int, MinV, MaxV))
+             PlaceByte(t.Contents.Int, Packing);
            break;
          case TempFloat:
            WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
