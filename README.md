@@ -1,0 +1,56 @@
+The Macroassembler AS Releases
+==============================
+
+[The Macroassembler AS][asl], also known as "ASL," is a multi-platform
+cross-assembler. Build platforms include a variety of Unix systems
+(including Linux and MacOS X), Windows, OS/2 and DOS (both native and
+with an extender). Target platforms cover a huge variety of 8- and
+16-bit CPUs and microcontrollers.
+
+The `upstream` branch of this repository contains the source code for
+every publicly available [source release][src] of the C version. The
+tools to do this and this documentation are on the `master` branch.
+
+Pull requests (to improve the import system and its documentation) are
+accepted for the `master` branch. The `upstream` branch containing the
+vendor sources never contains patches, but there may be patch branches
+derived from imported vendor commits on `upstream`.
+
+### Branches in this Repo
+
+- `master`: The import script and its documentation.
+- `upstream`: Imported ASL source code for each release.
+- `dev/cjs/current`: A recent version tested to build on Linux and
+  assemble a small amount of 6502 and 6909 code. The build and test
+  framework is in cjs's [8bitdev] repo.
+- `dev/NAME/...`: Branches for development, testing, and patches for
+  particular versions of ASL.
+
+
+Importing New ASL Releases
+--------------------------
+
+Copy the `download.sh` script to a location outside of the
+repository in which you're going to do the import, change to the
+`upstream` branch, and then run `download.sh`. This will find all new
+[source releases][src] that have not yet been imported and allow you
+to import them one by one, generating a new commit for every new
+release.
+
+
+Authors and Maintainers
+-----------------------
+
+The original import code was written by [Kuba Ober][KubaO],
+<kuba@mareimbrium.org>. [Curt J. Sampson][0cjs] contributed this
+documentation and is currently doing regular imports of new ASL
+versions.
+
+
+
+<!-------------------------------------------------------------------->
+[asl]: http://john.ccac.rwth-aachen.de:8000/as/
+[src]: http://john.ccac.rwth-aachen.de:8000/ftp/as/source/c_version/
+[KubaO]: https://github.com/KubaO
+[0cjs]: https://github.com/0cjs
+[8bitdev]: https://github.com/0cjs/8bitdev
