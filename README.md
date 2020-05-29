@@ -41,6 +41,11 @@ release.
 Authors and Maintainers
 -----------------------
 
+The master site for this and related repos is the [Macroassembler-AS
+organization on GitHub][ghmas]. Issues and PRs for this repo should be
+filed in the [`Macroassembler-AS/asl-releases`][ghmasrel] project
+there.
+
 The original import code was written by [Kuba Ober][KubaO],
 <kuba@mareimbrium.org>. [Curt J. Sampson][0cjs] contributed this
 documentation and is currently doing regular imports of new ASL
@@ -51,6 +56,9 @@ versions.
 <!-------------------------------------------------------------------->
 [asl]: http://john.ccac.rwth-aachen.de:8000/as/
 [src]: http://john.ccac.rwth-aachen.de:8000/ftp/as/source/c_version/
+
+[ghmas]: https://github.com/Macroassembler-AS
+[ghmasrel]: https://github.com/Macroassembler-AS/asl-releases
 [KubaO]: https://github.com/KubaO
 [0cjs]: https://github.com/0cjs
 [8bitdev]: https://github.com/0cjs/8bitdev
