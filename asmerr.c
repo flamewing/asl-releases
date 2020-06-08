@@ -619,11 +619,14 @@ void WrErrorString(const char *pMessage, char *pAdd, Boolean Warning, Boolean Fa
 
   strcpy(ErrStr[ErrStrCount], pLeadIn);
   p = GetErrorPos();
-  l = strlen(p) - 1;
-  if ((l >= 0) && (p[l] == ' '))
-    p[l] = '\0';
-  strmaxcat(ErrStr[ErrStrCount], p, STRINGSIZE);
-  free(p);
+  if (p)
+  {
+    l = strlen(p) - 1;
+    if ((l >= 0) && (p[l] == ' '))
+      p[l] = '\0';
+    strmaxcat(ErrStr[ErrStrCount], p, STRINGSIZE);
+    free(p);
+  }
   if (pLineComp)
   {
     char Num[20];
