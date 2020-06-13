@@ -1003,9 +1003,11 @@ bzw. \ref{ChapShareOrder}.
       eines neuen Durchlaufs feststeht.  In welchen (seltenen) Situationen
       dieser Schalter notwendig ist, kann man in Abschnitt \ref{ForwRefs}
       nachlesen.}
-\item{\tty{cpu $<$Name:  $>$}: Hiermit kann man man den Zielprozessor
+\item{\tty{cpu $<$Name$>$}: Hiermit kann man man den Zielprozessor
       vorgeben, f"ur den AS Code erzeugen soll, wenn die Quelldatei keinen
-      {\tt CPU}-Befehl enth"alt und es sich nicht um 68008-Code handelt.}
+      {\tt CPU}-Befehl enth"alt und es sich nicht um 68008-Code handelt.
+      Falls das gew"ahlte Ziel CPU-Argumente unterst"utzt (siehe Abschnitt
+      \ref{SectCPU}), k"onnen diese auch hier angegeben werden.}
 \item{\tty{alias $<$neu$>$=$<$alt$>$}:\\
       definiert den Prozessortyp \tty{$<$neu$>$} als einen Alias f"ur den
       Typen \tty{$<$alt$>$}.  Zu den Sinn und Zweck von Aliassen siehe
@@ -3030,6 +3032,7 @@ sich indirekt darauf beziehen.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{CPU}
+\label{SectCPU}
 \ttindex{CPU}
 
 {\em G"ultigkeit: alle Prozessoren}
@@ -3927,6 +3930,16 @@ Prozessoren definieren.
 Default f"ur den Prozessortyp ist \tty{68008}, sofern dieser "uber die
 gleichnamige Kommandozeilenoption nicht ver"andert wurde.
 
+F"ur einige Ziele sind Optionen bzw. Varianten definiert, die so grundlegend
+sind, da"s sie direkt zusammen mit dem \tty{CPU}-Befehl gew"ahlt werden m"ussen.
+Solche Optionen h"angt man direkt an das Argument mit Doppelpunkten an, und sie
+haben die Form von Variablenzuweisungen:
+\begin{verbatim}
+  CPU <CPU-Name>:<var1>=<wert1>:<var2>=<wert2>:...
+\end{verbatim}
+Ob das jeweilige Ziel solche Optionen unterst"utzt, und wenn ja welche, wird im
+jeweils zugeh"origen Unterkapitel mit prozessorspezifischen Hinweisen beschrieben.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SUPMODE, FPU, PMMU}
@@ -3989,7 +4002,8 @@ diese Einstellung vor!  \tty{FULLPMMU} mu"s also auf jeden Fall nach dem
 \ttindex{PADDING}
 
 {\em G"ultigkeit: 680x0, 68xx, M*Core, XA, H8, SH7000, TMS9900,\\
-     MSP430(X), ST7/STM8}
+     MSP430(X), ST7/STM8, AVR (only if code segment granularity
+     is 8 bits)}
 
 Diverse Prozessorfamilien verlangen, da"s Objekte von mehr als einem
 Byte L"ange auf einer geraden Adresse liegen m"ussen.  Neben Datenobjekten
@@ -8804,6 +8818,27 @@ wenn die 'n"achstbesten' Befehle {\tt RJMP} und {\tt RCALL} doch nur 2
 KWorte weit springen kann.  Der Kunstgriff lautet 'Abschneiden der oberen
 Adre"sbits' und ist n"aher bei der {\tt WRAPMODE}-Anweisung beschrieben.
 
+F"ur alle AVR-CPUs ist das CPU-Argument {\tt CODESEGSIZE} definiert.
+Mit einem
+\begin{verbatim}
+   cpu atmega8:codesegsize=0
+\end{verbatim}
+weist man den Assembler an, das Code-Segment (also das interne Flash-ROM)
+nicht als in 16-Bit-Worten, sondern in 8-Bit-Bytes organisiert zu betrachten.
+Dies ist die Sichtweise, wie man sie beim {\tt LPM}-Befehl hat und wie sie
+einige andere (nicht-Atmel) Assembler grunds"atzlich verfolgen.  Sie hat den
+Vorteil, da"s man Adressen im {\tt CODE}-Segment f"ur Datenzugriffe nicht selber
+mit zwei multiplizieren mu"s, andererseits mu"s aber darauf geachtet werden,
+da"s Instruktionen niemals auf einer ungeraden Adresse liegen d"urfen - sie
+w"urden dann ja quasi halb auf einem und halb auf dem n"achsten 16-Bit-Wort
+im Flash-ROM liegen.  {\tt PADDING} ist deshalb im Default aktiviert, es bleibt
+aber m"oglich, mit {\tt DB} oder {\tt DATA} Byte-Felder zu definieren, ohne
+da"s zwischen den Anweisungen Padding-Bytes eingestreut werden.  Bei relativen
+oder absoluten Spr"ungen werden die Adressen im ''Byte-Modus'' automatisch
+durch zwei geteilt.  Default ist die vom Atmel-Assembler vorgegebene Organisation
+in unteilbare 16-Bit-Worte.  Diese kann auch explizit mit dem Argument
+\verb!codesegsize=1! gew"ahlt werden.
+
 %%---------------------------------------------------------------------------
 
 \section{Z80UNDOC}
@@ -10199,30 +10234,19 @@ die L"ange von Datenfeldern variabel ist und von {\tt Length} abh"angt.
 Ein Record mit einem Header-Byte von \verb!$81! ist ein Record, der Code
 oder Daten aus beliebigen Segmenten beinhalten kann.  Das erste
 Byte (Header) gibt an, f"ur welche Prozessorfamilie die folgenden
-Daten bzw. der folgende  Code bestimmt ist (siehe Tabellen \ref{TabHeader}
-und \ref{TabHeader2}).
+Daten bzw. der folgende  Code bestimmt ist (siehe Tabelle \ref{TabHeader}).
 
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|c|l||c|l|}
+\begin{center}\begin{longtable}{|c|l||c|l|}
 \hline
 Header & Familie & Header & Familie \\
 \hline
 \hline
+\endhead
 \input{../doc_COM/tabids.tex}
-\end{tabular}\end{center}
-\caption{Headerbytes f"ur die verschiedenen Prozessorfamilien\label{TabHeader}}
-\end{table*}
-
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|c|l||c|l|}
 \hline
-Header & Familie & Header & Familie \\
-\hline
-\hline
-\input{../doc_COM/tabids2.tex}
-\end{tabular}\end{center}
-\caption{Headerbytes f"ur die verschiedenen Prozessorfamilien\label{TabHeader2}}
-\end{table*}
+\caption{Headerbytes f"ur die verschiedenen Prozessorfamilien}
+\label{TabHeader}
+\end{longtable}\end{center}
 
 Das Segment-Feld gibt an, in welchen Adre"sraum des Prozessors der
 folgende Code geh"ort.  Dabei gilt die in Tabelle \ref{TabSegments}
@@ -12000,6 +12024,14 @@ Angaben:
 \errentry{2180}{ung"ultiges Bitfeld}
                {Fehler}
                {Das Bitfeld entspricht nicht der erwarteten {\tt (start,count)}-Syntax.}
+               {das fragliche Argument}
+\errentry{2190}{Argument-Wert fehlt}
+               {Fehler}
+               {Argumente m"ussen die Form 'variable=wert' haben.}
+               {das fragliche Argument}
+\errentry{2200}{unbekanntes Argument}
+               {Fehler}
+               {Dieses Variable wird von der gew"ahlten Zielplattform nicht unterst"utzt.}
                {das fragliche Argument}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}

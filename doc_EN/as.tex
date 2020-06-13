@@ -989,7 +989,9 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       the first pass.  Be prepared for a bunch of messages!!}
 \item{\tty{cpu $<$name$>$}: this switch allows to set the target processor
       AS shall generate code for, in case the source file does not contain
-      a {\tt CPU} instruction and is not 68008 code.}
+      a {\tt CPU} instruction and is not 68008 code.  If the selected target
+      supports CPU arguments (see section \ref{SectCPU}), they may be used
+      on the command line as well.}
 \item{\tty{alias $<$new$>$=$<$old$>$}:
       defines the processor type \tty{$<$new$>$} to be an alias for the
       type \tty{$<$old$>$}.  See section \ref{SectAlias} for the sense of
@@ -2945,6 +2947,7 @@ to indirectly via the \tty{RORG} statement.
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{CPU}
+\label{SectCPU}
 \ttindex{CPU}
 
 {\em valid for: all processors}
@@ -3827,6 +3830,16 @@ only segment all processors support.
 The default processor type is 68008, unless it has been changed via the
 command line option with same name.
 
+Some targets define options or variants that are so fundamental for
+operation, that they have to be selected with the \tty{CPU} instruction.
+Such options are appended to the argument, separated by double
+colons:
+\begin{verbatim}
+  CPU <CPU Name>:<var1>=<val1>:<var2>=<val2>:...
+\end{verbatim}
+See the respective section with processor-specific hints to check whether a
+certain target supports such options.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SUPMODE, FPU, PMMU}
@@ -3890,7 +3903,8 @@ instruction!
 \subsection{PADDING}
 \ttindex{PADDING}
 
-{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900, ST7/STM8}
+{\em valid for: 680x0, 68xx, M*Core, XA, H8, SH7000, MSP430(X), TMS9900,\\
+      ST7/STM8, AVR (only if code segment granularity is 8 bits)}
 
 Various processor families have a requirement that objects of more than
 one byte length must be located on a n even address.  Aside from data
@@ -8641,6 +8655,26 @@ branch up to 2 Kwords forward or backward.  The trick is named 'discarding
 the upper address bits' and described in detail with the {\tt WRAPMODE}
 statement.
 
+All AVR targets support the optional CPU argument {\tt CODESEGSIZE}.
+Like in this example,
+\begin{verbatim}
+   cpu atmega8:codesegsize=0
+\end{verbatim}
+it may be used to instruct the assembler to treat the code segment (i.e.
+the internal flash ROM) as being organized in bytes instead of 16 bit words.
+This is the view when the {\tt LPM} instruction is used, and which some other
+(non Atmel) assemblers use in general.  It has the advantage that addresses 
+in the {\tt CODE} segment need not be multiplied by two if used for data
+accesses.  On the other hand, care has to be taken that instructions do
+not start on an odd address - this would be the equivalent of an instruction
+occupying fractions of flash words.  The {\tt PADDING} option is therefore
+enabled by default, while it remains possible to define arrays of bytes via
+multiple uses of {\tt DB} or {\tt DATA} without the risk of padding bytes
+inserted in between.  Target addresses for relative and absolute branches 
+automatically get divided by two in this ''byte mode''.  The default is the
+organizazion in 16 bit word as used by the original Atmel assembler.  This
+may explicitly be selected by using the argument \verb!codesegsize=1!.
+
 %%---------------------------------------------------------------------------
 
 \section{Z80UNDOC}
@@ -9992,31 +10026,18 @@ fields is variable and depends on the value of the \tty{Length} entries.
 A record with a header byte of \$81 is a record that may contain code
 or data from arbitrary segments.  The first byte (\tty{Header}) describes
 the processor family the following code resp. data was generated for (see
-tables \ref{TabHeader} and \ref{TabHeader2}).
+table \ref{TabHeader}).
 
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|c|l||c|l|}
+\begin{center}\begin{longtable}{|c|l||c|l|}
 \hline
 Header  & Family & Header  & Family \\
 \hline
 \hline
+\endhead
 \input{../doc_COM/tabids.tex}
-\end{tabular}\end{center}
-\caption{Header Bytes for the Different Processor
-         Families\label{TabHeader}}
-\end{table*}
-
-\begin{table*}[htbp]
-\begin{center}\begin{tabular}{|c|l||c|l|}
-\hline
-Header  & Family & Header  & Family \\
-\hline
-\hline
-\input{../doc_COM/tabids2.tex}
-\end{tabular}\end{center}
-\caption{Header Bytes for the Different Processor
-         Families\label{TabHeader2}}
-\end{table*}
+\caption{Header Bytes for the Different Processor Families}
+\label{TabHeader}
+\end{longtable}\end{center}
 
 The \tty{Segment} field signifies the address space the following code
 belongs to.  The assignment defined in table \ref{TabSegments} applies.
@@ -11722,7 +11743,15 @@ described by:
                {none}
 \errentry{2180}{invalid bit field}
                {error}
-               {the bit field is not in the required syntax {\tt (start,count)}.}
+               {The bit field is not in the required syntax {\tt (start,count)}.}
+               {the argument in question}
+\errentry{2190}{argument value missing}
+               {error}
+               {Arguments must have the form 'variable=value'.}
+               {the argument in question}
+\errentry{2200}{unknown argument}
+               {error}
+               {This variable is not supported by the selected target platform.}
                {the argument in question}
 \errentry{10001}{error in opening file}
                {fatal}

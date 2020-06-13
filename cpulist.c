@@ -22,7 +22,7 @@ static int MaxNameLen = 0;
 /****************************************************************************/
 /* neuen Prozessor definieren */
 
-CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData, tCPUFreeUserDataProc Freeer)
+CPUVar AddCPUUserWithArgs(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserData, tCPUFreeUserDataProc Freeer, const tCPUArg *pArgs)
 {
   tpCPUDef Lauf, Neu;
   char *p;
@@ -30,6 +30,7 @@ CPUVar AddCPUUser(const char *NewName, tCPUSwitchUserProc Switcher, void *pUserD
 
   Neu = (tpCPUDef) malloc(sizeof(tCPUDef));
   Neu->Name = as_strdup(NewName);
+  Neu->pArgs = pArgs;
   /* kein UpString, weil noch nicht initialisiert ! */
   for (p = Neu->Name; *p != '\0'; p++)
     *p = mytoupper(*p);
@@ -71,12 +72,12 @@ static void FreeNoUserProc(void *pUserData)
   free(pUserData);
 }
 
-CPUVar AddCPU(const char *NewName, tCPUSwitchProc Switcher)
+CPUVar AddCPUWithArgs(const char *NewName, tCPUSwitchProc Switcher, const tCPUArg *pArgs)
 {
   tNoUserData *pData = (tNoUserData*)malloc(sizeof(*pData));
   
   pData->Switcher = Switcher;
-  return AddCPUUser(NewName, SwitchNoUserProc, pData, FreeNoUserProc);
+  return AddCPUUserWithArgs(NewName, SwitchNoUserProc, pData, FreeNoUserProc, pArgs);
 }
 
 Boolean AddCPUAlias(char *OrigName, char *AliasName)
@@ -97,6 +98,7 @@ Boolean AddCPUAlias(char *OrigName, char *AliasName)
     Neu->Orig = Lauf->Orig;
     Neu->SwitchProc = Lauf->SwitchProc;
     Neu->pUserData = Lauf->pUserData;
+    Neu->pArgs = Lauf->pArgs;
     while (Lauf->Next)
       Lauf = Lauf->Next;
     Lauf->Next = Neu;
@@ -194,8 +196,14 @@ const tCPUDef *LookupCPUDefByName(const char *pName)
   tpCPUDef pRun;
 
   for (pRun = FirstCPUDef; pRun; pRun = pRun->Next)
-    if (!strcmp(pRun->Name, pName))
+  {
+    int l = strlen(pRun->Name);
+
+    if (strncmp(pRun->Name, pName, l))
+      continue;
+    if ((pName[l] == '\0') || (pName[l] == ':'))
       break;
+  }
   return pRun;
 }
 

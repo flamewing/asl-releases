@@ -812,29 +812,6 @@ static Boolean GetSymSection(char *Name, LongInt *Erg, const tStrComp *pUnexpCom
 }
 
 /*****************************************************************************
- * Function:    DigitVal
- * Purpose:     return value of an integer digit
- * Result:      value or -1 for error
- *****************************************************************************/
-
-static int DigitVal(char ch, int Base)
-{
-  int erg;
-
-  if ((ch >= '0') && (ch <= '9'))
-    erg = ch - '0';
-  else if ((ch >= 'A') && (ch <= 'Z'))
-    erg = ch - 'A' + 10;
-  else
-    return - 1;
-
-  if (erg >= Base)
-    return -1;
-
-  return erg;
-}
-
-/*****************************************************************************
  * Function:    ConstIntVal
  * Purpose:     evaluate integer constant
  * Result:      integer value

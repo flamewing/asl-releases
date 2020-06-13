@@ -2777,11 +2777,14 @@ static void AssembleFile_InitPass(void)
   SetFlag(&DoPadding, DoPaddingName, True);
 
   if (*DefCPU == '\0')
-    SetCPU(0, True);
+    SetCPUByType(0, NULL);
   else
   {
-    if (!SetNCPU(DefCPU, True))
-      SetCPU(0, True);
+    tStrComp TmpComp;
+    
+    StrCompMkTemp(&TmpComp, DefCPU);
+    if (!SetCPUByName(&TmpComp))
+      SetCPUByType(0, NULL);
   }
 
   SetFlag(&SupAllowed, SupAllowedName, False);
@@ -2823,7 +2826,11 @@ static void AssembleFile_ExitPass(void)
   tSavePhase *pSavePhase;
   int z;
 
-  SwitchFrom();
+  if (SwitchFrom)
+  {
+    SwitchFrom();
+    SwitchFrom = NULL;
+  }
   ClearLocStack();
   ClearStacks();
   AsmErrPassExit();

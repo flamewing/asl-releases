@@ -132,7 +132,7 @@ Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE ist Prozessorbefeh
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */
 Boolean (*ChkPC)(LargeWord Addr);        /* ueberprueft Codelaengenueberschreitungen */
 Boolean (*IsDef)(void);	                 /* ist Label nicht als solches zu werten ? */
-void (*SwitchFrom)(void);                /* bevor von einer CPU weggeschaltet wird */
+void (*SwitchFrom)(void) = NULL;         /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char *Asc, TempResult *Erg); /* vordefinierte Symbole ? */
 #else
 void (*MakeCode)();
@@ -156,7 +156,8 @@ StringPtr MacroName, MacProName;
 tLstMacroExp DoLst, NextDoLst;          /* Listing an */
 StringPtr ShareName;                    /* Name des Sharefiles */
 
-CPUVar MomCPU,MomVirtCPU;               /* definierter/vorgegaukelter Prozessortyp */
+CPUVar MomCPU, MomVirtCPU;              /* definierter/vorgegaukelter Prozessortyp */
+StringPtr MomCPUArgs;                   /* Arguments for Current Processor Type */
 char DefCPU[20];                        /* per Kommandozeile vorgegebene CPU */
 char MomCPUIdent[20];                   /* dessen Name in ASCII */
 
@@ -360,6 +361,7 @@ void asmdef_init(void)
   PrtInitString = GetString();
   PrtExitString = GetString();
   PrtTitleString = GetString();
+  MomCPUArgs = GetString();
 
   SegInits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));
   SegLimits = (LargeWord*)malloc((PCMax + 1) * sizeof(LargeWord));

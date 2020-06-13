@@ -218,6 +218,8 @@ typedef enum
   ErrNum_MissingEXPECT = 2160,
   ErrNum_NoDefCkptReg = 2170,
   ErrNum_InvBitField = 2180,
+  ErrNum_ArgValueMissing = 2190,
+  ErrNum_UnknownArg = 2200,
   ErrNum_InternalError = 10000,
   ErrNum_OpeningFile = 10001,
   ErrNum_ListWrError = 10002,

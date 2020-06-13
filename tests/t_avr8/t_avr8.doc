@@ -1,0 +1,9 @@
++------------------------- Test Application AVR8 ----------------------------+
+|                                                                            |
+| This is a small test of the Atmel AVR target with the 8 bit code segment   |
+| option.  In this mode, the AVR's CODE segment (i.e. the internal flash) is |
+| treated as consisting of bytes instead of 16 bit words, which is the way it|
+| is seen as by the LPM instruction.  Some other toolchains (GNU) generally  |
+| do this and the 8 bit option may help porting such code to AS.             |
+|                                                                            |
++----------------------------------------------------------------------------+

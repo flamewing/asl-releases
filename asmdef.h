@@ -183,6 +183,7 @@ typedef struct _TSaveState
 {
   struct _TSaveState *Next;
   CPUVar SaveCPU;
+  char *pSaveCPUArgs;
   Integer SavePC;
   Byte SaveListOn;
   tLstMacroExp SaveLstMacroExp;
@@ -344,7 +345,8 @@ extern Boolean InMacroFlag;
 extern StringPtr LstName, MacroName, MacProName;
 extern tLstMacroExp DoLst, NextDoLst;
 extern StringPtr ShareName;
-extern CPUVar MomCPU,MomVirtCPU;
+extern CPUVar MomCPU, MomVirtCPU;
+extern StringPtr MomCPUArgs;
 extern char DefCPU[20];
 extern char MomCPUIdent[20];
 

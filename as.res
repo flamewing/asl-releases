@@ -829,6 +829,14 @@ Message ErrMsgInvBitField
  "ung&uuml;tiges Bitfeld"
  "invalid bit field"
 
+Message ErrMsgArgValueMissing
+ "Argument-Wert fehlt"
+ "argument value missing"
+
+Message ErrMsgUnknownArg
+ "unbekanntes Argument"
+ "unknown argument"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"

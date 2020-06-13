@@ -854,6 +854,41 @@ int ReadLnCont(FILE *Datei, char *Zeile, int MaxLen)
   return Count;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DigitVal(char ch, int Base)
+ * \brief  get value of hex digit
+ * \param  ch digit
+ * \param  Base Number System
+ * \return 0..Base-1 or -1 if no valid digit
+ * ------------------------------------------------------------------------ */
+
+int DigitVal(char ch, int Base)
+{
+  int Result;
+  
+  /* Ziffern 0..9 ergeben selbiges */
+
+  if ((ch >= '0') && (ch <= '9'))
+    Result = ch - '0';
+
+  /* Grossbuchstaben fuer Hexziffern */
+
+  else if ((ch >= 'A') && (ch <= 'Z'))
+    Result = ch - 'A' + 10;
+
+  /* Kleinbuchstaben nicht vergessen...! */
+
+  else if ((ch >= 'a') && (ch <= 'z'))
+    Result = ch - 'a' + 10;
+
+  /* alles andere ist Schrott */
+
+  else
+    Result = -1;
+    
+  return (Result >= Base) ? -1 : Result;
+}
+
 /*--------------------------------------------------------------------*/
 /* Zahlenkonstante umsetzen: $ hex, % binaer, @ oktal */
 /* inp: Eingabezeichenkette */
@@ -918,24 +953,8 @@ LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
   *pErr = False;
   for(; InpLen > 0; inp++, InpLen--)
   {
-    /* Ziffern 0..9 ergeben selbiges */
-
-    if ((*inp >= '0') && (*inp <= '9'))
-      val = (*inp) - '0';
-
-    /* Grossbuchstaben fuer Hexziffern */
-
-    else if ((*inp >= 'A') && (*inp <= 'F'))
-      val = (*inp) - 'A' + 10;
-
-    /* Kleinbuchstaben nicht vergessen...! */
-
-    else if ((*inp >= 'a') && (*inp <= 'f'))
-      val = (*inp) - 'a' + 10;
-
-    /* alles andere ist Schrott */
-
-    else
+    val = DigitVal(*inp, 16);
+    if (val < -0)
       break;
 
     /* entsprechend der Basis zulaessige Ziffer ? */

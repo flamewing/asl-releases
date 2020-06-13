@@ -12,17 +12,17 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern void SetCPU(CPUVar NewCPU, Boolean NotPrev);
+struct sStrComp;
 
-extern Boolean SetNCPU(const char *pName, Boolean NotPrev);
+extern void SetCPUByType(CPUVar NewCPU, const struct sStrComp *pCPUArgs);
+
+extern Boolean SetCPUByName(const struct sStrComp *pName);
 
 extern void AddONOFF(const char *InstName, Boolean *Flag, const char *FlagName, Boolean Persist);
 
 extern void ClearONOFF(void);
 
 extern Boolean CodeGlobalPseudo(void);
-
-struct sStrComp;
 
 extern void INCLUDE_SearchCore(struct sStrComp *pDest, const struct sStrComp *pArg, Boolean SearchPath);
 

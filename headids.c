@@ -52,6 +52,7 @@ static TFamilyDescr Descrs[] =
   { "2650"         , 0x0037, eHexFormatMotoS   },
   { "XA"           , 0x003c, eHexFormatIntel16 },
   { "AVR"          , 0x003b, eHexFormatAtmel   },
+  { "AVR(CSEG8)"   , 0x003d, eHexFormatAtmel   },
   { "29xxx"        , 0x0029, eHexFormatIntel32 },
   { "80C166/167"   , 0x004c, eHexFormatIntel16 },
   { "Zx80"         , 0x0051, eHexFormatIntel   },

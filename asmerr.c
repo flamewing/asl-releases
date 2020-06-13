@@ -572,6 +572,10 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgNoDefCkptReg; break;
     case ErrNum_InvBitField:
       msgno = Num_ErrMsgInvBitField; break;
+    case ErrNum_ArgValueMissing:
+      msgno = Num_ErrMsgArgValueMissing; break;
+    case ErrNum_UnknownArg:
+      msgno = Num_ErrMsgUnknownArg; break;
     case ErrNum_InternalError:
       msgno = Num_ErrMsgInternalError; break;
     case ErrNum_OpeningFile:

@@ -8,6 +8,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
+/*
+ * TODOs for byte-oriented code segment:
+ * - document CPU option
+ */
+
 #include "stdinc.h"
 
 #include <ctype.h>
@@ -21,6 +26,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
+#include "asmcode.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
@@ -73,7 +79,7 @@ typedef struct
 static FixedOrder *FixedOrders, *Reg1Orders, *Reg2Orders;
 
 static Boolean WrapFlag;
-static LongInt ORMask, SignMask;
+static LongInt ORMask, SignMask, CodeSegSize;
 static const tCPUProps *pCurrCPUProps;
 
 static IntType CodeAdrIntType,
@@ -122,7 +128,7 @@ static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
 }
 
 /*---------------------------------------------------------------------------*/
-/* argument decoders                                                         */
+/* Argument Decoders                                                         */
 
 static Boolean DecodeReg(char *Asc, Word *Erg)
 {
@@ -237,10 +243,58 @@ static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LongWord RegMask)
   return Result;
 }
 
-/*---------------------------------------------------------------------------*/
-/* individual decoders                                                       */
+/*!------------------------------------------------------------------------
+ * \fn     GetWordCodeAddress(tStrComp *pArg, Boolean *pOK)
+ * \brief  decode argument as code address and divide by two if in byte mode
+ * \param  pArg address argument
+ * \param  pOK returns OK/failure
+ * \return (word) address
+ * ------------------------------------------------------------------------ */
 
-/* pseudo instructions */
+static LongInt GetWordCodeAddress(tStrComp *pArg, Boolean *pOK)
+{
+  LongInt Result;
+
+  FirstPassUnknown = False;
+  Result = EvalStrIntExpression(pArg, CodeAdrIntType, pOK);
+  if (*pOK)
+  {
+    ChkSpace(SegCode);
+    if (!CodeSegSize)
+    {
+      if (FirstPassUnknown)
+        Result &= ~1ul;
+      if (Result & 1)
+      {
+        WrStrErrorPos(ErrNum_NotAligned, pArg);
+        *pOK = False;
+      }
+      else
+        Result >>= 1;
+    }
+  }
+  return Result;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     GetNextCodeAddress(void)
+ * \brief  retrieve (word) address of next instruction
+ * \return (word) address
+ * ------------------------------------------------------------------------ */
+
+static LongInt GetNextCodeAddress(void)
+{
+  LongInt Result = EProgCounter();
+
+  if (!CodeSegSize)
+    Result >>= 1;
+  return Result + 1;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Individual Decoders                                                       */
+
+/* Pseudo Instructions */
 
 static void DecodePORT(Word Index)
 {
@@ -257,17 +311,25 @@ static void DecodeSFR(Word Index)
   CodeEquate(SegData, Start, Start + pCurrCPUProps->IOAreaSize);
 }
 
-/* no argument */
+static void AppendCode(Word Code)
+{
+  if (CodeSegSize)
+    WAsmCode[CodeLen++] = Code;
+  else
+  {
+    BAsmCode[CodeLen++] = Lo(Code);
+    BAsmCode[CodeLen++] = Hi(Code);
+  }
+}
+
+/* No Argument */
 
 static void DecodeFixed(Word Index)
 {
   const FixedOrder *pOrder = FixedOrders + Index;
 
   if (ChkArgCnt(0, 0) && ChkCoreMask(pOrder->CoreMask))
-  {
-    WAsmCode[0] = pOrder->Code;
-    CodeLen = 1;
-  }
+    AppendCode(pOrder->Code);
 }
 
 static void DecodeRES(Word Index)
@@ -289,29 +351,44 @@ static void DecodeRES(Word Index)
   }
 }
 
-static Boolean AccFull;
+static Word WordAcc;
+static Boolean WordAccFull;
 
-static void PlaceByte(Word Value, Boolean Pack)
+static void PlaceValue(Word Value, Boolean IsByte)
 {
-  if (ActPC == SegCode)
+  if (ActPC != SegCode)
   {
-    if (Pack)
+    BAsmCode[CodeLen++] = Value;
+    WordAccFull = False;
+  }
+  else if (IsByte)
+  {
+    if (CodeSegSize)
     {
       Value &= 0xff;
-      if (AccFull)
-        WAsmCode[CodeLen - 1] |= (Value << 8);
+      if (WordAccFull)
+        AppendCode(WordAcc |= (Value << 8));
       else
-       WAsmCode[CodeLen++] = Value;
-      AccFull = !AccFull;
+        WordAcc = Value;
+      WordAccFull = !WordAccFull;
     }
     else
     {
-      WAsmCode[CodeLen++] = Value;
-      AccFull = FALSE;
+      BAsmCode[CodeLen++] = Value;
+      WordAccFull = False;
     }
   }
   else
-    BAsmCode[CodeLen++] = Value;
+  {
+    if (CodeSegSize)
+      AppendCode(Value);
+    else
+    {
+      BAsmCode[CodeLen++] = Lo(Value);
+      BAsmCode[CodeLen++] = Hi(Value);
+    }
+    WordAccFull = False;
+  }
 }
 
 static void DecodeDATA_AVR(Word Index)
@@ -326,7 +403,7 @@ static void DecodeDATA_AVR(Word Index)
 
   MaxV = ((ActPC == SegCode) && (!Packing)) ? 65535 : 255;
   MinV = (-((MaxV + 1) >> 1));
-  AccFull = FALSE;
+  WordAccFull = FALSE;
   if (ChkArgCnt(1, ArgCntMax))
   {
     OK = True;
@@ -347,14 +424,14 @@ static void DecodeDATA_AVR(Word Index)
            for (z2 = 0; z2 < (int)t.Contents.Ascii.Length; z2++)
            {
              Trans = CharTransTable[((usint) t.Contents.Ascii.Contents[z2]) & 0xff];
-             PlaceByte(Trans, TRUE);
+             PlaceValue(Trans, True);
            }
            break;
          }
          ToInt:
          case TempInt:
            if (ChkRange(t.Contents.Int, MinV, MaxV))
-             PlaceByte(t.Contents.Int, Packing);
+             PlaceValue(t.Contents.Int, Packing);
            break;
          case TempFloat:
            WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
@@ -365,8 +442,11 @@ static void DecodeDATA_AVR(Word Index)
      }
     if (!OK)
       CodeLen = 0;
-    else if (AccFull)
+    else if (WordAccFull)
+    {
       WrError(ErrNum_PaddingAdded);
+      AppendCode(WordAcc);
+    }
   }
 }
 
@@ -388,10 +468,7 @@ static void DecodeReg1(Word Index)
   if (ChkArgCnt(1, 1)
    && ChkCoreMask(pOrder->CoreMask)
    && DecodeArgReg(1, &Reg, AllRegMask))
-  {
-    WAsmCode[0] = pOrder->Code | (Reg << 4);
-    CodeLen = 1;
-  }
+    AppendCode(pOrder->Code | (Reg << 4));
 }
 
 /* two registers 0..31 */
@@ -405,10 +482,7 @@ static void DecodeReg2(Word Index)
    && ChkCoreMask(pOrder->CoreMask)
    && DecodeArgReg(1, &Reg1, AllRegMask)
    && DecodeArgReg(2, &Reg2, AllRegMask))
-  {
-    WAsmCode[0] = pOrder->Code | (Reg2 & 15) | (Reg1 << 4) | ((Reg2 & 16) << 5);
-    CodeLen = 1;
-  }
+    AppendCode(pOrder->Code | (Reg2 & 15) | (Reg1 << 4) | ((Reg2 & 16) << 5));
 }
 
 /* one register 0..31 with itself */
@@ -418,10 +492,7 @@ static void DecodeReg3(Word Code)
   Word Reg;
 
   if (ChkArgCnt(1, 1) && DecodeArgReg(1, &Reg, AllRegMask))
-  {
-    WAsmCode[0] = Code | (Reg & 15) | (Reg << 4) | ((Reg & 16) << 5);
-    CodeLen = 1;
-  }
+    AppendCode(Code | (Reg & 15) | (Reg << 4) | ((Reg & 16) << 5));
 }
 
 /* immediate with register */
@@ -435,10 +506,7 @@ static void DecodeImm(Word Code)
   {
     Const = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
-    {
-      WAsmCode[0] = Code | ((Const & 0xf0) << 4) | (Const & 0x0f) | ((Reg & 0x0f) << 4);
-      CodeLen = 1;
-    }
+      AppendCode(Code | ((Const & 0xf0) << 4) | (Const & 0x0f) | ((Reg & 0x0f) << 4));
   }
 }
 
@@ -453,10 +521,7 @@ static void DecodeADIW(Word Index)
   {
     Const = EvalStrIntExpression(&ArgStr[2], UInt6, &OK);
     if (OK)
-    {
-      WAsmCode[0] = 0x9600 | Index | ((Reg & 6) << 3) | (Const & 15) | ((Const & 0x30) << 2);
-      CodeLen = 1;
-    }
+      AppendCode(0x9600 | Index | ((Reg & 6) << 3) | (Const & 15) | ((Const & 0x30) << 2));
   }
 }
 
@@ -476,8 +541,7 @@ static void DecodeLDST(Word Index)
     else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) WrError(ErrNum_MustBeEven);
     else
     {
-      WAsmCode[0] = 0x8000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0x10) << 8);
-      CodeLen = 1;
+      AppendCode(0x8000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0x10) << 8));
       if (((Mem >= 0x1d) && (Mem <= 0x1e) && (Reg >= 26) && (Reg <= 27))  /* X+/-X with X */
        || ((Mem >= 0x19) && (Mem <= 0x1a) && (Reg >= 28) && (Reg <= 29))  /* Y+/-Y with Y */
        || ((Mem >= 0x11) && (Mem <= 0x12) && (Reg >= 30) && (Reg <= 31))) /* Z+/-Z with Z */
@@ -511,10 +575,7 @@ static void DecodeLDDSTD(Word Index)
       Disp = EvalStrIntExpression(&ArgStr[MemI], UInt6, &OK);
       *ArgStr[MemI].Str = RegChar;
       if (OK)
-      {
-        WAsmCode[0] = 0x8000 | Index | (Reg << 4) | (Disp & 7) | ((Disp & 0x18) << 7) | ((Disp & 0x20) << 8);
-        CodeLen = 1;
-      }
+        AppendCode(0x8000 | Index | (Reg << 4) | (Disp & 7) | ((Disp & 0x18) << 7) | ((Disp & 0x20) << 8));
     }
   }
 }
@@ -535,8 +596,7 @@ static void DecodeINOUT(Word Index)
       if (OK)
       {
         ChkSpace(SegIO);
-        WAsmCode[0] = 0xb000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0xf0) << 5);
-        CodeLen = 1;
+        AppendCode(0xb000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0xf0) << 5));
       }
     }
   }
@@ -555,12 +615,12 @@ static void DecodeLDSSTS(Word Index)
     MemI = 3 - RegI;
     if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
-      WAsmCode[1] = EvalStrIntExpression(&ArgStr[MemI], UInt16, &OK);
+      Word Address = EvalStrIntExpression(&ArgStr[MemI], UInt16, &OK);
       if (OK)
       {
         ChkSpace(SegData);
-        WAsmCode[0] = 0x9000 | Index | (Reg << 4);
-        CodeLen = 2;
+        AppendCode(0x9000 | Index | (Reg << 4));
+        AppendCode(Address);
       }
     }
   }
@@ -577,10 +637,7 @@ static void DecodeBCLRSET(Word Index)
   {
     Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
-    {
-      WAsmCode[0] = 0x9408 | (Bit << 4) | Index;
-      CodeLen = 1;
-    }
+      AppendCode(0x9408 | (Bit << 4) | Index);
   }
 }
 
@@ -594,10 +651,7 @@ static void DecodeBit(Word Code)
   {
     Bit = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
     if (OK)
-    {
-      WAsmCode[0] = Code | (Reg << 4) | Bit;
-      CodeLen = 1;
-    }
+      AppendCode(Code | (Reg << 4) | Bit);
   }
 }
 
@@ -612,10 +666,7 @@ static void DecodeCBR(Word Index)
   {
     Mask = EvalStrIntExpression(&ArgStr[2], Int8, &OK) ^ 0xff;
     if (OK)
-    {
-      WAsmCode[0] = 0x7000 | ((Mask & 0xf0) << 4) | (Mask & 0x0f) | ((Reg & 0x0f) << 4);
-      CodeLen = 1;
-    }
+      AppendCode(0x7000 | ((Mask & 0xf0) << 4) | (Mask & 0x0f) | ((Reg & 0x0f) << 4));
   }
 }
 
@@ -626,10 +677,7 @@ static void DecodeSER(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1) && DecodeArgReg(1, &Reg, UpperHalfRegMask))
-  {
-    WAsmCode[0] = 0xef0f | ((Reg & 0x0f) << 4);
-    CodeLen = 1;
-  }
+    AppendCode(0xef0f | ((Reg & 0x0f) << 4));
 }
 
 static void DecodePBit(Word Code)
@@ -643,10 +691,7 @@ static void DecodePBit(Word Code)
 
     if (BitSpec & BitFlag_Data) WrError(ErrNum_WrongSegment);
     if (ChkRange(Adr, 0, 31))
-    {
-      WAsmCode[0] = Code | Bit | (Adr << 3);
-      CodeLen = 1;
-    }
+      AppendCode(Code | Bit | (Adr << 3));
   }
 }
 
@@ -659,7 +704,7 @@ static void DecodeRel(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], CodeAdrIntType, &OK) - (EProgCounter() + 1);
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK) - GetNextCodeAddress();
     if (OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -667,8 +712,7 @@ static void DecodeRel(Word Code)
       else
       {
         ChkSpace(SegCode);
-        WAsmCode[0] = Code | ((AdrInt & 0x7f) << 3);
-        CodeLen = 1;
+        AppendCode(Code | ((AdrInt & 0x7f) << 3));
       }
     }
   }
@@ -685,7 +729,7 @@ static void DecodeBRBSBC(Word Index)
     Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
     if (OK)
     {
-      AdrInt = EvalStrIntExpression(&ArgStr[2], CodeAdrIntType, &OK) - (EProgCounter() + 1);
+      AdrInt = GetWordCodeAddress(&ArgStr[2], &OK) - GetNextCodeAddress();
       if (OK)
       {
         if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -693,8 +737,7 @@ static void DecodeBRBSBC(Word Index)
         else
         {
           ChkSpace(SegCode);
-          WAsmCode[0] = 0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit;
-          CodeLen = 1;
+          AppendCode(0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit);
         }
       }
     }
@@ -709,13 +752,12 @@ static void DecodeJMPCALL(Word Index)
   if (ChkArgCnt(1, 1)
    && ChkMinCore(eCoreTiny16K))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt22, &OK);
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK);
     if (OK)
     {
       ChkSpace(SegCode);
-      WAsmCode[0] = 0x940c | Index | ((AdrInt & 0x3e0000) >> 13) | ((AdrInt & 0x10000) >> 16);
-      WAsmCode[1] = AdrInt & 0xffff;
-      CodeLen = 2;
+      AppendCode(0x940c | Index | ((AdrInt & 0x3e0000) >> 13) | ((AdrInt & 0x10000) >> 16));
+      AppendCode(AdrInt & 0xffff);
     }
   }
 }
@@ -727,7 +769,7 @@ static void DecodeRJMPCALL(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt22, &OK) - (EProgCounter() + 1);
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK) - GetNextCodeAddress();
     if (OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
@@ -735,8 +777,7 @@ static void DecodeRJMPCALL(Word Index)
       else
       {
         ChkSpace(SegCode);
-        WAsmCode[0] = 0xc000 | Index | (AdrInt & 0xfff);
-        CodeLen = 1;
+        AppendCode(0xc000 | Index | (AdrInt & 0xfff));
       }
     }
   }
@@ -752,10 +793,7 @@ static void DecodeMULS(Word Index)
    && ChkMinCore(eCoreMega)
    && DecodeArgReg(1, &Reg1, UpperHalfRegMask)
    && DecodeArgReg(2, &Reg2, UpperHalfRegMask))
-  {
-    WAsmCode[0] = 0x0200 | ((Reg1 & 15) << 4) | (Reg2 & 15);
-    CodeLen = 1;
-  }
+    AppendCode(0x0200 | ((Reg1 & 15) << 4) | (Reg2 & 15));
 }
 
 static void DecodeMegaMUL(Word Index)
@@ -766,10 +804,7 @@ static void DecodeMegaMUL(Word Index)
    && ChkMinCore(eCoreMega)
    && DecodeArgReg(1, &Reg1, Reg16_23Mask)
    && DecodeArgReg(2, &Reg2, Reg16_23Mask))
-  {
-    WAsmCode[0] = Index | ((Reg1 & 7) << 4) | (Reg2 & 7);
-    CodeLen = 1;
-  }
+    AppendCode(Index | ((Reg1 & 7) << 4) | (Reg2 & 7));
 }
 
 static void DecodeMOVW(Word Index)
@@ -782,10 +817,7 @@ static void DecodeMOVW(Word Index)
    && ChkMinCore(eCoreTiny)
    && DecodeArgReg(1, &Reg1, EvenRegMask)
    && DecodeArgReg(2, &Reg2, EvenRegMask))
-  {
-    WAsmCode[0] = 0x0100 | ((Reg1 >> 1) << 4) | (Reg2 >> 1);
-    CodeLen = 1;
-  }
+    AppendCode(0x0100 | ((Reg1 >> 1) << 4) | (Reg2 >> 1));
 }
 
 static void DecodeLPM(Word Index)
@@ -797,10 +829,7 @@ static void DecodeLPM(Word Index)
   if (!ArgCnt)
   {
     if (ChkMinCore(eCoreClassic))
-    {
-      WAsmCode[0] = 0x95c8;
-      CodeLen = 1;
-    }
+      AppendCode(0x95c8);
   }
   else if (ArgCnt == 2)
   {
@@ -811,8 +840,7 @@ static void DecodeLPM(Word Index)
     else
     {
       if (((Reg == 30) || (Reg == 31)) && (Adr == 0x11)) WrError(ErrNum_Unpredictable);
-      WAsmCode[0] = 0x9004 | (Reg << 4) | (Adr & 1);
-      CodeLen = 1;
+      AppendCode(0x9004 | (Reg << 4) | (Adr & 1));
     }
   }
   else
@@ -827,10 +855,7 @@ static void DecodeELPM(Word Index)
 
   if (!ChkMinCore(eCoreMega));
   else if (!ArgCnt)
-  {
-    WAsmCode[0] = 0x95d8;
-    CodeLen = 1;
-  }
+    AppendCode(0x95d8);
   else if (!ChkArgCnt(2, 2));
   else if (!DecodeArgReg(1, &Reg, AllRegMask));
   else if (!DecodeMem(ArgStr[2].Str, &Adr)) WrError(ErrNum_InvAddrMode);
@@ -838,8 +863,7 @@ static void DecodeELPM(Word Index)
   else
   {
     if (((Reg == 30) || (Reg == 31)) && (Adr == 0x11)) WrError(ErrNum_Unpredictable);
-    WAsmCode[0] = 0x9006 | (Reg << 4) | (Adr & 1);
-    CodeLen = 1;
+    AppendCode(0x9006 | (Reg << 4) | (Adr & 1));
   }
 }
 
@@ -865,7 +889,7 @@ static void DecodeBIT(Word Code)
 }
 
 /*---------------------------------------------------------------------------*/
-/* dynamic code table handling                                               */
+/* Dynamic Code Table Handling                                               */
 
 static void AddFixed(char *NName, Word NMin, Word NCode)
 {
@@ -1007,7 +1031,6 @@ static void InitFields(void)
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
   AddInstTable(InstTable, "SFR" , 0, DecodeSFR);
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
-  AddInstTable(InstTable, "DATA", 0, DecodeDATA_AVR);
   AddInstTable(InstTable, "REG" , 0, DecodeREG);
   AddInstTable(InstTable, "BIT" , 0, DecodeBIT);
 
@@ -1040,8 +1063,30 @@ static void MakeCode_AVR(void)
 
   if (Memo("")) return;
 
+  /* instructions that do not require word alignment in byte mode */
+
+  if (Memo("DATA"))
+  {
+    DecodeDATA_AVR(0);
+    return;
+  }
+
   if (DecodeIntelPseudo(False))
     return;
+
+  /* All other instructions must be on an even address in byte mode.
+     In other words, they may not cross flash word boundaries: */
+
+  if (!CodeSegSize)
+  {
+    if (Odd(EProgCounter()))
+    {
+      if (DoPadding)
+        InsertPadding(1, False);
+      else
+        WrError(ErrNum_AddrNotAligned);
+    }
+  }
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
@@ -1080,13 +1125,13 @@ static void SwitchTo_AVR(void *pUser)
   SetIsOccupiedFnc = ChkZeroArg;
 
   PCSymbol = "*";
-  HeaderID = 0x3b;
+  HeaderID = CodeSegSize ? 0x3b : 0x3d;
   NOPCode = 0x0000;
   DivideChars = ",";
   HasAttrs = False;
 
   ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegIO);
-  Grans[SegCode] = 2; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
+  Grans[SegCode] = ListGrans[SegCode] = 1 << CodeSegSize; SegInits[SegCode] = 0;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegInits[SegData] = 32;
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;  SegLimits[SegIO] = 0x3f;
   if (pCurrCPUProps->EESize)
@@ -1097,6 +1142,11 @@ static void SwitchTo_AVR(void *pUser)
   }
 
   SegLimits[SegCode] = ((LongWord)pCurrCPUProps->FlashEndD16) << 4 | 0xf;
+  if (!CodeSegSize)
+  {
+    SegLimits[SegCode] = (SegLimits[SegCode] << 1) + 1;
+    AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
+  }
   SegLimits[SegData] = (pCurrCPUProps->RegistersMapped ? RegBankSize : 0)
                      + pCurrCPUProps->IOAreaSize
                      + pCurrCPUProps->RAMSize
@@ -1240,9 +1290,14 @@ static const tCPUProps CPUProps[] =
 void codeavr_init(void)
 {
   const tCPUProps *pProp;
+  static const tCPUArg AVRArgs[] =
+  {
+    { "CODESEGSIZE", 0, 1, 1, &CodeSegSize },
+    { NULL         , 0, 0, 0, NULL         }
+  };
 
   for (pProp = CPUProps; pProp->pName; pProp++)
-    (void)AddCPUUser(pProp->pName, SwitchTo_AVR, (void*)pProp, NULL);
+    (void)AddCPUUserWithArgs(pProp->pName, SwitchTo_AVR, (void*)pProp, NULL, AVRArgs);
 
    AddInitPassProc(InitCode_AVR);
 }

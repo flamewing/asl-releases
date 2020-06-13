@@ -30,6 +30,7 @@
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "nlmessages.h"
+#include "asmallg.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -46,29 +47,83 @@ static Boolean DefChkPC(LargeWord Addr)
     return (Addr <= SegLimits[ActPC]);
 }
 
-static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
+/*!------------------------------------------------------------------------
+ * \fn     ParseCPUArgs(tStrComp *pArgs, const tCPUArg *pCPUArgs)
+ * \brief  parse possible arguments of CPU
+ * \param  pArgs arguments set by user (may be NULL)
+ * \param  pCPUArgs arguments provided by target (may be NULL)
+ * ------------------------------------------------------------------------ */
+
+static void ParseCPUArgs(const tStrComp *pArgs, const tCPUArg *pCPUArgs)
+{
+  const tCPUArg *pCPUArg;
+  char *pNext, *pSep;
+  tStrComp Args, Remainder, NameComp, ValueComp;
+  LongInt VarValue;
+  Boolean OK;
+  String ArgStr;
+
+  /* always reset to defaults, also when no user arguments are given */
+
+  if (!pCPUArgs)
+    return;
+  for (pCPUArg = pCPUArgs; pCPUArg->pName; pCPUArg++)
+    *pCPUArg->pValue = pCPUArg->DefValue;
+
+  if (!pArgs)
+    return;
+  StrCompMkTemp(&Args, ArgStr);
+  StrCompCopy(&Args, pArgs);
+  do
+  {
+    pNext = strchr(Args.Str, ':');
+    if (pNext)
+      StrCompSplitRef(&Args, &Remainder, &Args, pNext);
+    pSep = strchr(Args.Str, '=');
+    if (!pSep) WrStrErrorPos(ErrNum_ArgValueMissing, &Args);
+    else
+    {
+      StrCompSplitRef(&NameComp, &ValueComp, &Args, pSep);
+      KillPrefBlanksStrCompRef(&NameComp); KillPostBlanksStrComp(&NameComp);
+      KillPrefBlanksStrCompRef(&ValueComp); KillPostBlanksStrComp(&ValueComp);
+    
+      VarValue = EvalStrIntExpression(&ValueComp, Int32, &OK);
+      if (OK)
+      {
+        for (pCPUArg = pCPUArgs; pCPUArg->pName; pCPUArg++)
+        if (!as_strcasecmp(NameComp.Str, pCPUArg->pName))
+          break;
+        if (!pCPUArg->pName) WrStrErrorPos(ErrNum_UnknownArg, &NameComp);
+        else if (ChkRange(VarValue, pCPUArg->Min, pCPUArg->Max))
+          *pCPUArg->pValue = VarValue;
+      }
+    }
+    if (pNext)
+      Args = Remainder;
+  }
+  while (pNext);
+}
+
+static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
 {
   LargeInt HCPU;
-  char *z, *dest;
-  Boolean ECPU;
-  char s[20];
+  int Digit, Base;
+  const char *pRun;
   tStrComp TmpComp;
 
   strmaxcpy(MomCPUIdent, pCPUDef->Name, sizeof(MomCPUIdent));
   MomCPU = pCPUDef->Orig;
   MomVirtCPU = pCPUDef->Number;
-  strmaxcpy(s, MomCPUIdent, sizeof(s));
-  for (z = dest = s; *z; z++)
-    if (isxdigit(*z))
-      *(dest++) = (*z);
-  *dest = '\0';
-  for (z = s; *z != '\0'; z++)
-    if (isdigit(*z))
-      break;
-  if (*z)
-    strmov(s, z);
-  strprep(s, "$");
-  HCPU = ConstLongInt(s, &ECPU, 10);
+  HCPU = 0;
+  Base = 10;
+  for (pRun = MomCPUIdent; *pRun; pRun++)
+  {
+    if (isdigit(*pRun))
+      Base = 16;
+    Digit = DigitVal(*pRun, Base);
+    if (Digit >= 0)
+      HCPU = (HCPU << 4) + Digit;
+  }
 
   StrCompMkTemp(&TmpComp, MomCPUName); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
   StrCompMkTemp(&TmpComp, MomCPUIdentName); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
@@ -80,31 +135,47 @@ static void SetCPUCore(const tCPUDef *pCPUDef, Boolean NotPrev)
   ASSUMERecCnt = 0;
   pASSUMERecs = NULL;
   pASSUMEOverride = NULL;
-  if (!NotPrev) SwitchFrom();
+  if (SwitchFrom)
+  {
+    SwitchFrom();
+    SwitchFrom = NULL;
+  }
+  strmaxcpy(MomCPUArgs, pCPUArgs ? pCPUArgs->Str : "", sizeof(MomCPUArgs));
+  ParseCPUArgs(pCPUArgs, pCPUDef->pArgs);
   pCPUDef->SwitchProc(pCPUDef->pUserData);
 
   DontPrint = True;
 }
 
-void SetCPU(CPUVar NewCPU, Boolean NotPrev)
+void SetCPUByType(CPUVar NewCPU, const tStrComp *pCPUArgs)
 {
   const tCPUDef *pCPUDef;
 
   pCPUDef = LookupCPUDefByVar(NewCPU);
   if (pCPUDef)
-    SetCPUCore(pCPUDef, NotPrev);
+    SetCPUCore(pCPUDef, pCPUArgs);
 }
 
-Boolean SetNCPU(const char *pName, Boolean NoPrev)
+Boolean SetCPUByName(const tStrComp *pName)
 {
   const tCPUDef *pCPUDef;
 
-  pCPUDef = LookupCPUDefByName(pName);
+  pCPUDef = LookupCPUDefByName(pName->Str);
   if (!pCPUDef)
     return False;
   else
   {
-    SetCPUCore(pCPUDef, NoPrev);
+    int l = strlen(pCPUDef->Name);
+
+    if (pName->Str[l] == ':')
+    {
+      tStrComp ArgComp;
+
+      StrCompRefRight(&ArgComp, pName, l + 1);
+      SetCPUCore(pCPUDef, &ArgComp);
+    }
+    else
+      SetCPUCore(pCPUDef, NULL);
     return True;
   }
 }
@@ -224,7 +295,7 @@ static void CodeCPU(Word Index)
   else
   {
     NLS_UpString(ArgStr[1].Str);
-    if (SetNCPU(ArgStr[1].Str, False))
+    if (SetCPUByName(&ArgStr[1]))
       SetNSeg(SegCode);
     else
       WrStrErrorPos(ErrNum_InvCPUType, &ArgStr[1]);
@@ -866,6 +937,7 @@ static void CodeSAVE(Word Index)
     Neu = (PSaveState) malloc(sizeof(TSaveState));
     Neu->Next = FirstSaveState;
     Neu->SaveCPU = MomCPU;
+    Neu->pSaveCPUArgs = as_strdup(MomCPUArgs);
     Neu->SavePC = ActPC;
     Neu->SaveListOn = ListOn;
     Neu->SaveLstMacroExp = GetLstMacroExp();
@@ -898,12 +970,16 @@ static void CodeRESTORE(Word Index)
       DontPrint = True;
     }
     if (Old->SaveCPU != MomCPU)
-      SetCPU(Old->SaveCPU, False);
+    {
+      StrCompMkTemp(&TmpComp, Old->pSaveCPUArgs);
+      SetCPUByType(Old->SaveCPU, &TmpComp);
+    }
     StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
     LstMacroExpModDefault = Old->SaveLstMacroExpModDefault;
     LstMacroExpModOverride = Old->SaveLstMacroExpModOverride;
     CurrTransTable = Old->SaveTransTable;
+    free(Old->pSaveCPUArgs);
     free(Old);
   }
 }
