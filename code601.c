@@ -380,7 +380,7 @@ static void DecodeCReg1(Word Index)
   if (!ChkArgCnt(1, 1));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondReg(&ArgStr[1], &Dest));
-  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
   else
   {
     CodeLen = 4;
@@ -448,9 +448,9 @@ static void DecodeCReg2(Word Index)
   if (!ChkArgCnt(2, 2));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU403) < 0);
   else if (!DecodeCondReg(&ArgStr[1], &Dest));
-  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
   else if (!DecodeCondReg(&ArgStr[2], &Src1));
-  else if ((Src1 & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[2]);
+  else if (Src1 & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[2]);
   else
   {
     CodeLen = 4;
@@ -938,7 +938,7 @@ static void DecodeMTFSFI(Word Code)
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeCondReg(&ArgStr[1], &Dest));
-  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
   else
   {
     Src1 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
@@ -1120,7 +1120,7 @@ static void DecodeCMP_CMPL(Word Code)
   else if (!DecodeGenReg(pArg4, &Src2));
   else if (!DecodeGenReg(pArg3, &Src1));
   else if (!DecodeCondReg(&ArgStr[1], &Dest));
-  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
   else
   {
     Src3 = EvalStrIntExpression(pArg2, UInt1, &OK);
@@ -1143,7 +1143,7 @@ static void DecodeFCMPO_FCMPU(Word Code)
   else if (!DecodeFPReg(&ArgStr[3], &Src2));
   else if (!DecodeFPReg(&ArgStr[2], &Src1));
   else if (!DecodeCondReg(&ArgStr[1], &Dest));
-  else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+  else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
   else
   {
     PutCode((T63 << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (LCode << 1));
@@ -1166,7 +1166,7 @@ static void DecodeCMPI_CMPLI(Word Code)
     {
       if (!DecodeGenReg(pArg3, &Src1));
       else if (!DecodeCondReg(&ArgStr[1], &Dest));
-      else if ((Dest & 3) != 0) WrStrErrorPos(ErrNum_MustBeEven, &ArgStr[1]);
+      else if (Dest & 3) WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
       else
       {
         Src3 = EvalStrIntExpression(pArg2, UInt1, &OK);

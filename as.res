@@ -329,9 +329,13 @@ Message ErrMsgInvAddrMode
  "unerlaubter Adressierungsmodus"
  "addressing mode not allowed here"
 
-Message ErrMsgMustBeEven
- "Nummer mu&szlig; ausgerichtet sein"
- "number must be aligned"
+Message ErrMsgAddrMustBeEven
+ "Addresse mu&szlig; gerade sein"
+ "address must be even"
+
+Message ErrMsgAddrMustBeAligned
+ "Addresse mu&szlig; ausgerichtet sein"
+ "address must be aligned"
 
 Message ErrMsgInvParAddrMode
  "Adressierungsmodus im Parallelbetrieb nicht erlaubt"
@@ -396,6 +400,10 @@ Message ErrMsgDoubleReg
 Message ErrMsgRegBankMismatch
  "Register-Bank-Diskrepanz"
  "register bank mismatch"
+
+Message ErrMsgUndefRegSize
+ "Registerl&auml;nge undefiniert"
+ "undefined register length"
 
 Message ErrMsgNoSaveFrame
  "RESTORE ohne SAVE"

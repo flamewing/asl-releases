@@ -262,6 +262,17 @@ prt	equ	r3
 	tcmb	@1234h(wr13),10
 	tsmb	@1234h(wr13),10
 
+	rtwp	0
+	rtwp	1
+	rtwp	2
+	expect	1985
+	rtwp	3
+	endexpect
+	rtwp	4
+	expect	1320
+	rtwp	5
+	endexpect
+
 	cpu	tms99110
 
 	; only on TI990 & TMS99110

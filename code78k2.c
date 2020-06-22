@@ -1212,7 +1212,7 @@ static void DecodeCALLT(Word Index)
         AdrWord = 0x40;
         if (ChkRange(AdrWord, 0x40, 0x7e))
         {
-          if (AdrWord & 1) WrError(ErrNum_MustBeEven);
+          if (AdrWord & 1) WrError(ErrNum_AddrMustBeEven);
           else
           {
             *pCode++ = 0xe0 | ((AdrWord - 0x40) >> 1);

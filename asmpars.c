@@ -3063,7 +3063,7 @@ static void PrintDebSymbols_PNode(PTree Tree, void *pData)
     l1 = strlen(s);
     fprintf(DebContext->f, "%s", s); ChkIO(ErrNum_FileWriteError);
   }
-  fprintf(DebContext->f, "%s %-3d %d\n", Blanks(25-l1), Node->SymSize, (int)Node->Used);
+  fprintf(DebContext->f, "%s %-3d %d %d\n", Blanks(25-l1), Node->SymSize, (int)Node->Used, (int)Node->Changeable);
   ChkIO(ErrNum_FileWriteError);
 }
 

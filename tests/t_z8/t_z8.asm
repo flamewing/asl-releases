@@ -1,4 +1,4 @@
-	cpu	z8601
+	cpu	z86c03
 
 myreg5	reg	r5
 

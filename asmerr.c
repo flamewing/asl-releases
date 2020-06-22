@@ -320,8 +320,10 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgNoShortAddr; break;
     case ErrNum_InvAddrMode:
       msgno = Num_ErrMsgInvAddrMode; break;
-    case ErrNum_MustBeEven:
-      msgno = Num_ErrMsgMustBeEven; break;
+    case ErrNum_AddrMustBeEven:
+      msgno = Num_ErrMsgAddrMustBeEven; break;
+    case ErrNum_AddrMustBeAligned:
+      msgno = Num_ErrMsgAddrMustBeAligned; break;
     case ErrNum_InvParAddrMode:
       msgno = Num_ErrMsgInvParAddrMode; break;
     case ErrNum_UndefCond:
@@ -354,6 +356,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgDoubleReg; break;
     case ErrNum_RegBankMismatch:
       msgno = Num_ErrMsgRegBankMismatch; break;
+    case ErrNum_UndefRegSize:
+      msgno = Num_ErrMsgUndefRegSize; break;
     case ErrNum_NoSaveFrame:
       msgno = Num_ErrMsgNoSaveFrame; break;
     case ErrNum_NoRestoreFrame:

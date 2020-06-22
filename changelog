@@ -1,3 +1,16 @@
+2020-06-22 [1.42 Bld 172]
+
+- Addition    : add column to MAP file declarig whether symbol is constant
+                or variable
+- Bugfix      : Z8: do not allow odd indirect register pairs
+- Bugfix      : differentiate CMOS/NMOS Z8 variants, remove Z8604 due to lack of documentation
+- Bugfix      : Super8: Allow arguments with bit 3 set for SRP0/SRP1
+- Bugfix      : Super8: correct CALL IA encoding
+- Bugfix      : Super8: Only allow even register addresses for MULT/DIV/LDW/DECW/INCW on Super8/Z8
+- Change      : Super8: rename devices to Z88C00 and Z88C01
+- Bugfix      : Z8/Super8: correct 8-bit-displacements to be signed
+- Addition    : allow argument 1/2/4 to RTWP on TMS99105/99110
+
 2020-06-13 [1.42 Bld 171]
 
 - Addition    : add option to operate AVR target with byte-structured

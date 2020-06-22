@@ -189,7 +189,7 @@ LABEL3:
 	LDX	34h,@56h	; 86 56 34
 	LDX	@12h,@.RR(09h)	; 87 E8 12 <-> 87 09 12 ?!
 	LDX	r4,21h(rr2)	; 88 42 21
-	LDX	92h(rr14),r0	; 89 E0 92
+	LDX	72h(rr14),r0	; 89 E0 72
 	LDX	345h,r6		; 94 63 45
 	LDX	347h,@r6	; 95 63 47
 	LDX	@rr10,r1	; 96 E1 EA

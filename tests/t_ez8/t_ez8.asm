@@ -63,12 +63,12 @@ test1:	jr	test1
 	djnz	r5,test1
 
 	call	test1
-	call	@ivari
+	call	@iwvari
 	call	@rr10
 
 	jp	test1
 	jp	c,test1
-	jp	@ivari
+	jp	@iwvari
 	jp	@rr6
 
 
@@ -179,7 +179,7 @@ test1:	jr	test1
 	ldx	34h,@56h
 	ldx	@12h,@.RR(9)
 	ldx	r4,21h(rr2)
-	ldx	92h(rr14),r0
+	ldx	72h(rr14),r0
 	ldx	345h,r6
 	ldx	347h,@r6
 	ldx	@rr10,r1
@@ -209,4 +209,4 @@ next:	ld	r0,@r2
 	org	0aah
 vari	db	?
 ivari	db	?
-
+iwvari	dw	?

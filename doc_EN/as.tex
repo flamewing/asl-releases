@@ -3336,9 +3336,9 @@ with the additional instructions can be found in the chapter
 with processor specific hints.
 %%-----------
 \begin{quote}
-ai) Z8601, Z8603, z86C03, z86E03, Z8604, Z86C06, Z86E06, \\
+ai) Z8601, Z8603, z86C03, z86E03, Z86C06, Z86E06, \\
     Z86C08, Z86C21, Z86E21, Z86C30, Z86C31, Z86C32 Z86C40 \\
-    $\rightarrow$ Z88C0000, Z88C0020 \\
+    $\rightarrow$ Z88C00, Z88C01 \\
     $\rightarrow$ eZ8, Z8F0113, Z8F011A, Z8F0123, Z8F012A, \\
     Z8F0130, Z8F0131, Z8F0213, Z8F021A, Z8F0223, Z8F022A, \\
     Z8F0230, Z8F0231, Z8F0411, Z8F0412, Z8F0413, Z8F041A, \\
@@ -10153,7 +10153,7 @@ Symbols in Segment <segment name>
 \end{verbatim}
 The symbols in a section are sorted according to the alphabetical
 order of their names, and one symbol entry consists of exactly one
-line.  Such a line consists of 5 fields witch are separated by at
+line.  Such a line consists of six fields witch are separated by at
 least a single space:
 
 The first field is the symbol's name, possibly extended by a section
@@ -10186,10 +10186,16 @@ correct length when they are referred symbolically.  In case AS does
 not have any information about the symbol size, this field simply
 contains the value -1.
 
-Finally,the fifth field states via the values 0 or 1 if the symbol
-has been used during assembly.  A program that reads the symbol table
-can use this field to skip unused symbols as they are probably unused
-during the following debugging/disassembly session.
+The fifth field states via the values 0 or 1 if the symbol has been
+used during assembly.  A program that reads the symbol table can use
+this field to skip unused symbols as they are probably unused during
+the following debugging/disassembly session.
+
+Finally, the sixth field states via the values 0 or 1 if the symbol
+is a constant (0) or variable(1).  Constant symbols are set once, e.g.
+via the \tty{EQU} statement or a label, while variables are allowed
+to change their value during the course of assembly.  The MAP file
+lists the final value.
 
 The third section in a debug file describes the program's sections in
 detail.  The need for such a detailed description arises from the
@@ -11133,11 +11139,17 @@ described by:
                {the addressing mode used, although usually possible,
                 cannot be used here.}
                {none}
-\errentry{1351}{number must be even}
+\errentry{1351}{address must be even}
                {error}
                {At this point, only even addresses are allowed, since the
-                low order bit is used for other purposes or it is reserved.}
-               {none}
+                low order bits are used for other purposes or are reserved.}
+               {the argument in question}
+\errentry{1352}{address must be aligned}
+               {error}
+               {At this point, only aligned (i.e. a mulitple of 2,4,8...) addresses
+                are allowed, since the low order bits are used for other purposes
+                or are reserved.}
+               {the argument in question}
 \errentry{1355}{addressing mode not allowed in parallel operation}
                {error}
                {The addressing mode(s) used are allowed in sequential,
@@ -11213,8 +11225,13 @@ described by:
                {none}
 \errentry{1447}{register bank mismatch}
                {error}
-               {An address expression uses resgisters from different banks.}
-               {the register in queszion}
+               {An address expression uses registers from different banks.}
+               {the register in question}
+\errentry{1448}{undefined register length}
+               {error}
+               {Registers of different size may be used at this place, and
+                 the register length cannot be deduced from the address alone.}
+               {the argument in question}
 \errentry{1450}{RESTORE without SAVE}
                {error}
                {A \tty{RESTORE} command was found, that cannot be coupled with a

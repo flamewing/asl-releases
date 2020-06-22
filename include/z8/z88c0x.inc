@@ -1,13 +1,13 @@
-		ifndef	__regz88c00xxinc
-__regz88c00xxinc	equ	1
+		ifndef	__regz88c0xinc
+__regz88c0xinc	equ	1
                 save
                 listing off   ; kein Listing ueber diesen File
 
 ;****************************************************************************
 ;*                                                                          *
-;*   AS 1.42 - File REGZ88C0XX.INC                                          *
+;*   AS 1.42 - File REGZ88C0X.INC                                           *
 ;*                                                                          *
-;*   Contains Bit & Register Definitions for Zilog Z88C0020                 *
+;*   Contains Bit & Register Definitions for Zilog Z88C0x                   *
 ;*                                                                          *
 ;****************************************************************************
 
@@ -257,4 +257,4 @@ H1C		sfr	0f5h		; Handshake Channel 1 Control (Bank 0)
 
 		restore
 
-		endif			; __regz88c00xxinc
+		endif			; __regz88c0xinc

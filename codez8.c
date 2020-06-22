@@ -50,10 +50,12 @@ typedef struct
 
 typedef enum
 {
-  eCoreZ8 = 1 << 0,
-  eCoreSuper8 = 1 << 1,
-  eCoreZ8Encore = 1 << 2,
-  eCoreAll = eCoreZ8 | eCoreSuper8 | eCoreZ8Encore
+  eCoreNone = 0,
+  eCoreZ8NMOS = 1 << 0,
+  eCoreZ8CMOS = 1 << 1,
+  eCoreSuper8 = 1 << 2,
+  eCoreZ8Encore = 1 << 3,
+  eCoreAll = eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore
 } tCoreFlags;
 
 typedef struct
@@ -81,41 +83,49 @@ typedef struct
 #define mIsSuper8() (pCurrCPUProps->CoreFlags & eCoreSuper8)
 #define mIsZ8Encore() (pCurrCPUProps->CoreFlags & eCoreZ8Encore)
 
+/* CAUTION: ModIReg and ModIRReg are mutually exclusive
+            ModReg  and ModRReg  are mutually exclusive */
+
 enum
 {
   ModNone = -1,
-  ModWReg = 0,
-  ModReg = 1,
-  ModIWReg = 2,
-  ModIReg = 3,
-  ModImm = 4,
-  ModRReg = 5,
-  ModIWRReg = 6,
-  ModInd = 7,
-  ModXReg = 8,
-  ModIndRR = 9,
-  ModIndRR16 = 10,
-  ModWeird = 11,
-  ModDA = 12
+  ModWReg = 0,      /* working register R0..R15, 'r' */
+  ModReg = 1,       /* general register 'R' */
+  ModRReg = 2,      /* general register pair 'RR' (must be even) */
+  ModIWReg = 3,     /* indirect working register @R0...@R15 'Ir' */
+  ModIReg = 4,      /* indirect general register 'IR' */
+  ModImm = 5,       /* immediate value 'IM' */
+  ModWRReg = 6,     /* working register pair 'rr' (must be even) */
+  ModIWRReg = 7,    /* indirect working register pair 'Irr' (must be even) */
+  ModIRReg = 8,     /* indirect general register pair 'IRR' (must be even) */
+  ModInd = 9,
+  ModXReg = 10,
+  ModIndRR = 11,
+  ModIndRR16 = 12,
+  ModWeird = 13,
+  ModDA = 14
 };
 
 #define MModWReg   (1 << ModWReg)
 #define MModReg    (1 << ModReg)
+#define MModRReg   (1 << ModRReg)
 #define MModIWReg  (1 << ModIWReg)
 #define MModIReg   (1 << ModIReg)
 #define MModImm    (1 << ModImm)
-#define MModRReg   (1 << ModRReg)
-#define MModIWRReg  (1 << ModIWRReg)
+#define MModWRReg  (1 << ModWRReg)
+#define MModIWRReg (1 << ModIWRReg)
+#define MModIRReg  (1 << ModIRReg)
 #define MModInd    (1 << ModInd)
 #define MModXReg   (1 << ModXReg)
 #define MModIndRR  (1 << ModIndRR)
 #define MModIndRR16  (1 << ModIndRR16)
-#define MModWeird (1 << ModWeird)
-#define MModDA (1 << ModDA)
+#define MModWeird  (1 << ModWeird)
+#define MModDA     (1 << ModDA)
 
 static ShortInt AdrType, OpSize;
 static Byte AdrVal;
-static Word AdrWVal, AdrIndex;
+static Word AdrWVal;
+static LongInt AdrIndex;
 
 static BaseOrder *FixedOrders;
 static BaseOrder *ALU2Orders;
@@ -161,14 +171,14 @@ static Boolean IsWReg(const char *Asc, Byte *Erg)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     IsRReg(const char *Asc, Byte *Erg)
+ * \fn     IsWRReg(const char *Asc, Byte *Erg)
  * \brief  Is expression a working register pair? (RRn, n=0..15)
  * \param  Asc expression
  * \param  Erg resulting value if it is
  * \return True if it is
  * ------------------------------------------------------------------------ */
 
-static Boolean IsRReg(const char *Asc, Byte *Erg)
+static Boolean IsWRReg(const char *Asc, Byte *Erg)
 {
    Boolean Err;
    char *pAlias;
@@ -256,6 +266,7 @@ static Boolean ChkAdr(Word Mask, const tStrComp *pArg)
  * \brief  check whether data address is accessible as work register
  * \param  Address data address in 8/12 bit data space
  * \param  pWorkReg resulting work register # if yes
+ * \param  FirstPassUnknown flag about questionable value
  * \return true if accessible as work register
  * ------------------------------------------------------------------------ */
 
@@ -320,11 +331,72 @@ static Boolean IsRegAddress(Word Address)
  * \return True if successfully decoded to an allowed mode
  * ------------------------------------------------------------------------ */
 
+int GetForceLen(const char *pArg)
+{
+  int Result = 0;
+
+  while ((Result < 2) && (pArg[Result] == '>'))
+    Result++;
+  return Result;
+}
+
+static ShortInt IsWRegWithRP(const tStrComp *pComp, Byte *pResult, Word Mask16Modes, Word Mask8Modes)
+{
+  Boolean OK;
+  Word Address;
+
+  if (IsWReg(pComp->Str, pResult))
+    return eSymbolSize8Bit;
+
+  if (IsWRReg(pComp->Str, pResult))
+  {
+    if (*pResult & 1)
+    {
+      WrStrErrorPos(ErrNum_AddrMustBeEven, pComp);
+      return eSymbolSizeUnknown;
+    }
+    return eSymbolSize16Bit;
+  }
+
+  /* It's neither Rn nor RRn.  Since an address by itself has no
+     operand size, only one mode may be allowed to keep things
+     unambiguous: */
+
+  if (Mask16Modes && Mask8Modes)
+  {
+    WrStrErrorPos(ErrNum_InvReg, pComp);
+    return eSymbolSizeUnknown;
+  }
+
+  FirstPassUnknown = False;
+  Address = EvalStrIntExpression(pComp, UInt8, &OK);
+  if (!OK)
+    return eSymbolSizeUnknown;
+  /* if (FirstPassUnknown) ... */
+
+  if (Mask16Modes && IsWRegAddress(Address, pResult))
+  {
+    if (FirstPassUnknown) *pResult &= ~1;
+    if (*pResult & 1)
+    {
+      WrStrErrorPos(ErrNum_AddrMustBeEven, pComp);
+      return eSymbolSizeUnknown;
+    }
+    return eSymbolSize16Bit;
+  }
+
+  if (Mask8Modes && IsWRegAddress(Address, pResult))
+    return eSymbolSize8Bit;    
+
+  WrStrErrorPos(ErrNum_InvReg, pComp);
+  return eSymbolSizeUnknown;
+}
+
 static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
 {
   Boolean OK;
   char  *p;
-  int z, ForceLen, l;
+  int ForceLen, l;
 
   if (!mIsSuper8() && !mIsZ8Encore())
     Mask &= ~MModIndRR;
@@ -362,10 +434,10 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
     return ChkAdr(Mask, pArg);
   }
 
-  if (IsRReg(pArg->Str, &AdrVal))
+  if (IsWRReg(pArg->Str, &AdrVal))
   {
-    if ((AdrVal & 1) == 1) WrError(ErrNum_MustBeEven);
-    else AdrType = ModRReg;
+    if (AdrVal & 1) WrStrErrorPos(ErrNum_AddrMustBeEven, pArg);
+    else AdrType = ModWRReg;
     return ChkAdr(Mask, pArg);
   }
 
@@ -401,17 +473,54 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
       }
     }
     else if (IsWReg(Comp.Str, &AdrVal)) AdrType = ModIWReg;
-    else if (IsRReg(Comp.Str, &AdrVal))
+    else if (IsWRReg(Comp.Str, &AdrVal))
     {
-      if (AdrVal & 1) WrError(ErrNum_MustBeEven);
+      if (AdrVal & 1) WrStrErrorPos(ErrNum_AddrMustBeEven, &Comp);
       else AdrType = ModIWRReg;
     }
     else
     {
-      AdrVal = EvalStrIntExpression(&Comp, Int8, &OK);
+      /* Trying to do a working register optimization at this place is
+         extremely tricky since an expression like @<address> has no
+         inherent operand size (8/16 bit).  So the optimization IRR->Irr
+         will only be allowed if IR is not allowed, or Irr is the only
+         mode allowed: */
+
+      Word ModeMask = Mask & (MModIRReg | MModIWRReg | MModIReg | MModIWReg);
+
+      if (ModeMask == (MModIWReg | MModIWRReg))
+      {
+        WrStrErrorPos(ErrNum_UndefRegSize, &Comp);
+        return False;
+      }
+
+      FirstPassUnknown = False;
+      AdrWVal = EvalStrIntExpressionOffs(&Comp, ForceLen = GetForceLen(pArg->Str), Int8, &OK);
       if (OK)
       {
-        AdrType = ModIReg; ChkSpace(SegData);
+        ChkSpace(SegData);
+        if (!(ModeMask & MModIReg) || (ModeMask == MModIWRReg))
+        {
+          if (FirstPassUnknown) AdrWVal &= ~1;
+          if (AdrWVal & 1) WrStrErrorPos(ErrNum_AddrMustBeEven, &Comp);
+          else if ((Mask & MModIWRReg) && (ForceLen <= 0) && IsWRegAddress(AdrWVal, &AdrVal))
+            AdrType = ModIWRReg;
+          else
+          {
+            AdrVal = AdrWVal;
+            AdrType = ModIRReg;
+          }
+        }
+        else
+        {
+          if ((Mask & MModIWReg) && (ForceLen <= 0) && IsWRegAddress(AdrWVal, &AdrVal))
+            AdrType = ModIWReg;
+          else
+          {
+            AdrVal = AdrWVal;
+            AdrType = ModIReg;
+          }
+        }
       }
     }
     return ChkAdr(Mask, pArg);
@@ -434,47 +543,44 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
     }
     StrCompSplitRef(&Left, &Right, &Right, p);
     
-    if (IsWReg(Right.Str, &AdrVal))
+    switch (IsWRegWithRP(&Right, &AdrVal, Mask & (MModIndRR | MModIndRR16), Mask & MModInd))
     {
-      AdrIndex = EvalStrIntExpression(&Left, Int8, &OK);
-      if (OK)
-      {
-        AdrType = ModInd; ChkSpace(SegData);
-      }
-      return ChkAdr(Mask, pArg);
-    }
-    else if (IsRReg(Right.Str, &AdrVal))
-    {
-      /* 16 bit index only allowed if index register is not zero */
-      AdrIndex = EvalStrIntExpression(&Left, ((Mask & MModIndRR16) && (AdrVal != 0)) ? Int16 : Int8, &OK);
-      if (OK)
-      {
-        if ((Mask & MModIndRR) && RangeCheck(AdrIndex, Int8))
-          AdrType = ModIndRR;
-        else
-          AdrType = ModIndRR16;
-        /* TODO: differentiate LDC/LDE */
-        ChkSpace(SegData);
-      }
-      return ChkAdr(Mask, pArg);
-    }
-    else
-    {
-      WrXError(ErrNum_InvReg, Right.Str);
-      return False;
+      case eSymbolSize8Bit:
+        /* We are operating on a single base register and therefore in a 8-bit address space.
+           So we may allow both a signed or unsigned displacements since addresses will wrap
+           around anyway: */
+
+        AdrIndex = EvalStrIntExpression(&Left, Int8, &OK);
+        if (OK)
+        {
+          AdrType = ModInd; ChkSpace(SegData);
+        }
+        return ChkAdr(Mask, pArg);
+
+      case eSymbolSize16Bit:
+        /* 16 bit index only allowed if index register is not zero */
+        AdrIndex = EvalStrIntExpression(&Left, ((Mask & MModIndRR16) && (AdrVal != 0)) ? Int16 : SInt8, &OK);
+        if (OK)
+        {
+          if ((Mask & MModIndRR) && RangeCheck(AdrIndex, SInt8))
+            AdrType = ModIndRR;
+          else
+            AdrType = ModIndRR16;
+          /* TODO: differentiate LDC/LDE */
+          ChkSpace(SegData);
+        }
+        return ChkAdr(Mask, pArg);
+
+      default:
+        return False;
     }
   }
 
-  /* einfache direkte Adresse ? */
+  /* simple direct address ? */
 
-  ForceLen = 0;
-  for (z = 0; z < 2; z++)
-    if (pArg->Str[ForceLen] == '>')
-      ForceLen++;
-    else
-      break;
   FirstPassUnknown = FALSE;
-  AdrWVal = EvalStrIntExpressionOffs(pArg, ForceLen, (Mask & MModDA) ? UInt16 : RegSpaceType, &OK);
+  AdrWVal = EvalStrIntExpressionOffs(pArg, ForceLen = GetForceLen(pArg->Str),
+                                      (Mask & MModDA) ? UInt16 : RegSpaceType, &OK);
   if (OK)
   {
     if (Mask & MModDA)
@@ -486,13 +592,25 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
     {
       if (FirstPassUnknown && (!(Mask & ModXReg)))
         AdrWVal = Lo(AdrWVal) | ((RPVal & 15) << 8);
-      if ((IsWRegAddress(AdrWVal, &AdrVal)) && (Mask & MModWReg) && (ForceLen <= 0))
+      if (IsWRegAddress(AdrWVal, &AdrVal) && (Mask & MModWReg) && (ForceLen <= 0))
       {
         AdrType = ModWReg;
       }
-      else if ((IsRegAddress(AdrWVal)) && (Mask & MModReg) && (ForceLen <= 1))
+      else if (IsRegAddress(AdrWVal) && (Mask & (MModReg | MModRReg)) && (ForceLen <= 1))
       {
-        AdrType = ModReg;
+        if (Mask & MModRReg)
+        {
+          if (FirstPassUnknown)
+            AdrWVal &= ~1;
+          if (AdrWVal & 1)
+          {
+            WrStrErrorPos(ErrNum_AddrMustBeEven, pArg);
+            return False;
+          }
+          AdrType = ModRReg;
+        }
+        else
+          AdrType = ModReg;
         AdrVal = Lo(AdrWVal);
       }
       else
@@ -903,15 +1021,16 @@ static void DecodeALU1(Word Index)
   {
     if (Hi(pOrder->Code))
       BAsmCode[l++] = Hi(pOrder->Code);
-    DecodeAdr(&ArgStr[1], ((pOrder->Is16) ? MModRReg : 0) | MModReg | MModIReg);
+    DecodeAdr(&ArgStr[1], (pOrder->Is16 ? (MModWRReg | MModRReg) : MModReg) | MModIReg);
     switch (AdrType)
     {
       case ModReg:
+      case ModRReg:
        BAsmCode[l++] = pOrder->Code;
        BAsmCode[l++] = AdrVal;
        CodeLen = l;
        break;
-      case ModRReg:
+      case ModWRReg:
        BAsmCode[l++] = pOrder->Code;
        BAsmCode[l++] = pCurrCPUProps->WorkOfs + AdrVal;
        CodeLen = l;
@@ -932,7 +1051,7 @@ static void DecodeLD(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
     DecodeAdr(&ArgStr[1], MModReg | MModWReg | MModIReg | MModIWReg | MModInd);
     switch (AdrType)
@@ -1099,7 +1218,7 @@ static void DecodeLDCE(Word Code)
   Byte Save, Super8Add = mIsSuper8() && !!(Code == 0x82);
 
   if (ChkArgCnt(2, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
     LongWord DestMask = MModWReg | MModIWRReg, SrcMask;
 
@@ -1205,7 +1324,7 @@ static void DecodeLDCEI(Word Index)
   Byte Save;
 
   if (ChkArgCnt(2, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreZ8Encore))
   {
     DecodeAdr(&ArgStr[1], MModIWReg | MModIWRReg);
     switch (AdrType)
@@ -1271,7 +1390,7 @@ static void DecodeINC(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
     DecodeAdr(&ArgStr[1], MModWReg | MModReg | MModIReg);
     switch (AdrType)
@@ -1303,7 +1422,7 @@ static void DecodeJR(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
     z = (ArgCnt == 1) ? TrueCond : DecodeCond(&ArgStr[1]);
     if (z < CondCnt)
@@ -1333,7 +1452,7 @@ static void DecodeDJNZ(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore)
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore)
    && DecodeAdr(&ArgStr[1], MModWReg))
   {
     AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK) - (EProgCounter() + 2);
@@ -1388,9 +1507,9 @@ static void DecodeCALL(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
-    DecodeAdr(&ArgStr[1], MModIWRReg | MModIReg | MModDA | (IsSuper8 ? MModImm : 0));
+    DecodeAdr(&ArgStr[1], MModIWRReg | MModIRReg | MModDA | (IsSuper8 ? MModImm : 0));
     switch (AdrType)
     {
       case ModIWRReg:
@@ -1398,7 +1517,7 @@ static void DecodeCALL(Word Index)
         BAsmCode[1] = pCurrCPUProps->WorkOfs + AdrVal;
         CodeLen = 2;
         break;
-      case ModIReg:
+      case ModIRReg:
         BAsmCode[0] = IsSuper8 ? 0xf4 : 0xd4;
         BAsmCode[1] = AdrVal;
         CodeLen = 2;
@@ -1411,7 +1530,7 @@ static void DecodeCALL(Word Index)
         break;
       case ModImm:
         BAsmCode[0] = 0xd4;
-        BAsmCode[1] = Hi(AdrVal);
+        BAsmCode[1] = AdrVal;
         CodeLen = 2;
         break;
     }
@@ -1425,12 +1544,12 @@ static void DecodeJP(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(1, 2)
-   && ChkCoreFlags(eCoreZ8 | eCoreSuper8 | eCoreZ8Encore))
+   && ChkCoreFlags(eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore))
   {
     z = (ArgCnt == 1) ? TrueCond : DecodeCond(&ArgStr[1]);                 
     if (z < CondCnt)
     {
-      DecodeAdr(&ArgStr[ArgCnt], MModIWRReg | MModIReg | MModDA);
+      DecodeAdr(&ArgStr[ArgCnt], MModIWRReg | MModIRReg | MModDA);
       switch (AdrType)
       {
         case ModIWRReg:
@@ -1442,7 +1561,7 @@ static void DecodeJP(Word Index)
             CodeLen = 2;
           }
           break;
-        case ModIReg:
+        case ModIRReg:
           if (z != TrueCond) WrError(ErrNum_InvAddrMode);
           else
           {
@@ -1467,13 +1586,17 @@ static void DecodeSRP(Word Code)
   Boolean Valid;
 
   if (ChkArgCnt(1, 1)
-   && ChkCoreFlags((Hi(Code) ? 0 : (eCoreZ8 | eCoreZ8Encore)) | eCoreSuper8)
+   && ChkCoreFlags((Hi(Code) ? 0 : (eCoreZ8NMOS | eCoreZ8CMOS | eCoreZ8Encore)) | eCoreSuper8)
    && DecodeAdr(&ArgStr[1], MModImm))
   {
     if (pCurrCPUProps->CoreFlags & eCoreZ8Encore || Memo("RDR"))
       Valid = True;
     else
-      Valid = (((AdrVal & 15) == 0) && ((AdrVal <= pCurrCPUProps->RAMEnd) || (AdrVal >= pCurrCPUProps->SFRStart)));
+    {
+      Byte MuteMask = Hi(Code) ? 7 : 15;
+
+      Valid = (((AdrVal & MuteMask) == 0) && ((AdrVal <= pCurrCPUProps->RAMEnd) || (AdrVal >= pCurrCPUProps->SFRStart)));
+    }
     if (!Valid) WrError(ErrNum_InvRegisterPointer);
     BAsmCode[0] = (pCurrCPUProps->CoreFlags & eCoreZ8Encore) ? 0x01 : Lo(Code);
     BAsmCode[1] = AdrVal | Hi(Code);
@@ -1556,10 +1679,10 @@ static void DecodeMULT(Word Index)
   if (ChkArgCnt(1, 1)
    && ChkCoreFlags(eCoreZ8Encore))
   {
-    DecodeAdr(&ArgStr[1], MModRReg | MModReg);
+    DecodeAdr(&ArgStr[1], MModWRReg | MModReg);
     switch (AdrType)
     {
-      case ModRReg:
+      case ModWRReg:
         BAsmCode[0] = 0xf4;
         BAsmCode[1] = AdrVal + pCurrCPUProps->WorkOfs;
         CodeLen = 2;
@@ -1577,9 +1700,9 @@ static void DecodeMULT_DIV(Word Code)
 {
   if (ChkArgCnt(2, 2)
    && ChkCoreFlags(eCoreSuper8)
-   && DecodeAdr(&ArgStr[1], MModRReg | MModReg))
+   && DecodeAdr(&ArgStr[1], MModWRReg | MModRReg))
   {
-    BAsmCode[2] = (AdrType == ModRReg) ? AdrVal + pCurrCPUProps->WorkOfs : AdrVal;
+    BAsmCode[2] = (AdrType == ModWRReg) ? AdrVal + pCurrCPUProps->WorkOfs : AdrVal;
     DecodeAdr(&ArgStr[2], MModWReg | MModReg | MModIReg | MModImm);
     switch (AdrType)
     {
@@ -1773,19 +1896,19 @@ static void DecodeLDW(Word Code)
   if (ChkArgCnt(2, 2)
    && ChkCoreFlags(eCoreSuper8))
   {
-    DecodeAdr(&ArgStr[1], MModReg | MModRReg);
+    DecodeAdr(&ArgStr[1], MModRReg | MModWRReg);
     if (AdrType != ModNone)
     {
-      Byte Dest = (AdrType == ModReg) ? AdrVal : AdrVal + pCurrCPUProps->WorkOfs;
+      Byte Dest = (AdrType == ModRReg) ? AdrVal : AdrVal + pCurrCPUProps->WorkOfs;
 
       OpSize = eSymbolSize16Bit;
-      DecodeAdr(&ArgStr[2], MModReg | MModRReg | MModIReg | MModImm);
+      DecodeAdr(&ArgStr[2], MModRReg | MModWRReg | MModIReg | MModImm);
       switch (AdrType)
       {
+        case ModWRReg:
         case ModRReg:
-        case ModReg:
           BAsmCode[0] = Code;
-          BAsmCode[1] = (AdrType == ModReg) ? AdrVal : AdrVal + pCurrCPUProps->WorkOfs;
+          BAsmCode[1] = (AdrType == ModRReg) ? AdrVal : AdrVal + pCurrCPUProps->WorkOfs;
           BAsmCode[2] = Dest;
           CodeLen = 3;
           break;
@@ -1837,7 +1960,7 @@ static void DecodeLEA(Word Index)
   if (ChkArgCnt(2, 2)
    && ChkCoreFlags(eCoreZ8Encore))
   {
-    DecodeAdr(&ArgStr[1], MModWReg | MModRReg);
+    DecodeAdr(&ArgStr[1], MModWReg | MModWRReg);
     switch (AdrType)
     {
       case ModWReg:
@@ -1850,7 +1973,7 @@ static void DecodeLEA(Word Index)
           CodeLen = 3;
         }
         break;
-      case ModRReg:
+      case ModWRReg:
         Save = AdrVal;
         if (DecodeAdr(&ArgStr[2], MModIndRR))
         {
@@ -2258,39 +2381,39 @@ static void InitFields(void)
 
   FixedOrders = (BaseOrder *) malloc(sizeof(*FixedOrders) * FixedOrderCnt);
   InstrZ = 0;
-  AddFixed("CCF"  , 0xef   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("DI"   , 0x8f   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("EI"   , 0x9f   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("HALT" , 0x7f   , eCoreZ8               | eCoreZ8Encore);
-  AddFixed("IRET" , 0xbf   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("NOP"  , NOPCode, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("RCF"  , 0xcf   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("RET"  , 0xaf   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("SCF"  , 0xdf   , eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddFixed("STOP" , 0x6f   , eCoreZ8               | eCoreZ8Encore);
-  AddFixed("ATM"  , 0x2f   , eCoreZ8               | eCoreZ8Encore);  
-  AddFixed("BRK"  , 0x00   ,                         eCoreZ8Encore);
-  AddFixed("WDH"  , 0x4f   , eCoreZ8                              );
-  AddFixed("WDT"  , 0x5f   , eCoreZ8               | eCoreZ8Encore);
-  AddFixed("ENTER", 0x1f   ,          eCoreSuper8                 );
-  AddFixed("EXIT" , 0x2f   ,          eCoreSuper8                 );
-  AddFixed("NEXT" , 0x0f   ,          eCoreSuper8                 );
-  AddFixed("SB0"  , 0x4f   ,          eCoreSuper8                 );
-  AddFixed("SB1"  , 0x5f   ,          eCoreSuper8                 );
-  AddFixed("WFI"  , 0x3f   ,          eCoreSuper8                 );
+  AddFixed("CCF"  , 0xef   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("DI"   , 0x8f   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("EI"   , 0x9f   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("HALT" , 0x7f   ,               eCoreZ8CMOS               | eCoreZ8Encore);
+  AddFixed("IRET" , 0xbf   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("NOP"  , NOPCode, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("RCF"  , 0xcf   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("RET"  , 0xaf   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("SCF"  , 0xdf   , eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddFixed("STOP" , 0x6f   ,               eCoreZ8CMOS               | eCoreZ8Encore);
+  AddFixed("ATM"  , 0x2f   , eCoreZ8NMOS | eCoreZ8CMOS               | eCoreZ8Encore);  
+  AddFixed("BRK"  , 0x00   ,                                           eCoreZ8Encore);
+  AddFixed("WDH"  , 0x4f   , eCoreZ8NMOS | eCoreZ8CMOS                              );
+  AddFixed("WDT"  , 0x5f   , eCoreZ8NMOS | eCoreZ8CMOS               | eCoreZ8Encore);
+  AddFixed("ENTER", 0x1f   ,                             eCoreSuper8                );
+  AddFixed("EXIT" , 0x2f   ,                             eCoreSuper8                );
+  AddFixed("NEXT" , 0x0f   ,                             eCoreSuper8                );
+  AddFixed("SB0"  , 0x4f   ,                             eCoreSuper8                );
+  AddFixed("SB1"  , 0x5f   ,                             eCoreSuper8                );
+  AddFixed("WFI"  , 0x3f   ,                             eCoreSuper8                );
 
   ALU2Orders = (BaseOrder *) malloc(sizeof(*FixedOrders) * ALU2OrderCnt);
   InstrZ = 0;
-  AddALU2("ADD" , 0x0000, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("ADC" , 0x0010, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("SUB" , 0x0020, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("SBC" , 0x0030, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("OR"  , 0x0040, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("AND" , 0x0050, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("TCM" , 0x0060, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("TM"  , 0x0070, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("CP"  , 0x00a0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
-  AddALU2("XOR" , 0x00b0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("ADD" , 0x0000, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("ADC" , 0x0010, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("SUB" , 0x0020, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("SBC" , 0x0030, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("OR"  , 0x0040, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("AND" , 0x0050, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("TCM" , 0x0060, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("TM"  , 0x0070, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("CP"  , 0x00a0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
+  AddALU2("XOR" , 0x00b0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
   AddALU2("CPC" , (EXTPREFIX << 8) | 0xa0, eCoreZ8Encore);
 
   ALUXOrders = (BaseOrder *) malloc(sizeof(*ALUXOrders) * ALUXOrderCnt);
@@ -2309,21 +2432,21 @@ static void InitFields(void)
 
   ALU1Orders = (ALU1Order *) malloc(sizeof(ALU1Order) * ALU1OrderCnt);
   InstrZ = 0;
-  AddALU1("DEC" , (pCurrCPUProps->CoreFlags & eCoreZ8Encore) ? 0x0030 : 0x0000, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("RLC" , 0x0010, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("DA"  , 0x0040, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("POP" , 0x0050, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("COM" , 0x0060, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("PUSH", 0x0070, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("DECW", 0x0080, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, True );
-  AddALU1("RL"  , 0x0090, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("INCW", 0x00a0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, True );
-  AddALU1("CLR" , 0x00b0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("RRC" , 0x00c0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("SRA" , 0x00d0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("RR"  , 0x00e0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("SWAP", 0x00f0, eCoreZ8 | eCoreSuper8 | eCoreZ8Encore, False);
-  AddALU1("SRL" , (EXTPREFIX << 8) | 0xc0, eCoreZ8 | eCoreZ8Encore, False);
+  AddALU1("DEC" , (pCurrCPUProps->CoreFlags & eCoreZ8Encore) ? 0x0030 : 0x0000, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("RLC" , 0x0010, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("DA"  , 0x0040, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("POP" , 0x0050, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("COM" , 0x0060, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("PUSH", 0x0070, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("DECW", 0x0080, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, True );
+  AddALU1("RL"  , 0x0090, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("INCW", 0x00a0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, True );
+  AddALU1("CLR" , 0x00b0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("RRC" , 0x00c0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("SRA" , 0x00d0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("RR"  , 0x00e0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("SWAP", 0x00f0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore, False);
+  AddALU1("SRL" , (EXTPREFIX << 8) | 0xc0, eCoreZ8NMOS | eCoreZ8CMOS | eCoreZ8Encore, False);
 
   Conditions=(Condition *) malloc(sizeof(Condition) * CondCnt); InstrZ = 0;
   AddCondition("F"  , 0); TrueCond = InstrZ; AddCondition("T"  , 8);
@@ -2534,22 +2657,22 @@ static void SwitchTo_Z8(void *pUser)
 
 static const tCPUProps CPUProps[] =
 {
-  { "Z8601"    , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z8603"    , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86C03"   , eCoreZ8       , 0xe0,  0x3f,  0xf0 },
-  { "Z86E03"   , eCoreZ8       , 0xe0,  0x3f,  0xf0 },
-  { "Z8604"    , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86C06"   , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86E06"   , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86C08"   , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86C30"   , eCoreZ8       , 0xe0,  0xef,  0xf0 },
-  { "Z86C21"   , eCoreZ8       , 0xe0,  0xef,  0xf0 },
-  { "Z86E21"   , eCoreZ8       , 0xe0,  0xef,  0xf0 },
-  { "Z86C31"   , eCoreZ8       , 0xe0,  0x7f,  0xf0 },
-  { "Z86C32"   , eCoreZ8       , 0xe0,  0xef,  0xf0 },
-  { "Z86C40"   , eCoreZ8       , 0xe0,  0xef,  0xf0 },
-  { "Z88C0000" , eCoreSuper8   , 0xc0,  0xbf,  0xe0 },
-  { "Z88C0020" , eCoreSuper8   , 0xc0,  0xbf,  0xe0 },
+  { "Z8601"    , eCoreZ8NMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z8603"    , eCoreZ8NMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z86C03"   , eCoreZ8CMOS   , 0xe0,  0x3f,  0xf0 },
+  { "Z86E03"   , eCoreZ8CMOS   , 0xe0,  0x3f,  0xf0 },
+/*{ "Z8604"    , eCoreZ8       , 0xe0,  0x7f,  0xf0 },*/
+  { "Z86C06"   , eCoreZ8CMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z86E06"   , eCoreZ8CMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z86C08"   , eCoreZ8CMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z86C30"   , eCoreZ8CMOS   , 0xe0,  0xef,  0xf0 },
+  { "Z86C21"   , eCoreZ8CMOS   , 0xe0,  0xef,  0xf0 },
+  { "Z86E21"   , eCoreZ8CMOS   , 0xe0,  0xef,  0xf0 },
+  { "Z86C31"   , eCoreZ8CMOS   , 0xe0,  0x7f,  0xf0 },
+  { "Z86C32"   , eCoreZ8CMOS   , 0xe0,  0xef,  0xf0 },
+  { "Z86C40"   , eCoreZ8CMOS   , 0xe0,  0xef,  0xf0 },
+  { "Z88C00"   , eCoreSuper8   , 0xc0,  0xbf,  0xe0 },
+  { "Z88C01"   , eCoreSuper8   , 0xc0,  0xbf,  0xe0 },
   { "eZ8"      , eCoreZ8Encore , 0xee0, 0xeff, 0xf00 },
   { "Z8F0113"  , eCoreZ8Encore , 0xee0,  0xff, 0xf00 },
   { "Z8F011A"  , eCoreZ8Encore , 0xee0,  0xff, 0xf00 },
@@ -2608,7 +2731,7 @@ static const tCPUProps CPUProps[] =
   { "Z8F6423"  , eCoreZ8Encore , 0xee0, 0xeff, 0xf00 },
   { "Z8F6481"  , eCoreZ8Encore , 0xee0, 0xeff, 0xf00 },
   { "Z8F6482"  , eCoreZ8Encore , 0xee0, 0xeff, 0xf00 },
-  { NULL       , eCoreZ8       , 0x00,  0x00, 0x000 }
+  { NULL       , eCoreNone     , 0x00,  0x00, 0x000 }
 };
 
 void codez8_init(void)

@@ -53,7 +53,7 @@ __haswdt	 equ	 0
 __hasspi	 equ	 1
 		 include "z8/z86cxx.inc"
 		 
-		case	"Z8604"
+		;case	"Z8604"
 		case	"Z86C06","Z86E06"
 RAMEND		 sfr	 7fh
 ROMEND		 label	 0fffh
@@ -114,14 +114,9 @@ __haswdt	 equ	 0
 __hasspi	 equ	 0
 		 include "z8/z86cxx.inc"
 		 
-		case	"Z88C0000"
+		case	"Z88C00","Z88C01"
 RAMEND		 sfr	 0bfh
-		 include "z8/z88c00xx.inc"
-		 
-		case	"Z88C0020"
-RAMEND		 sfr	 0bfh
-ROMEND		 label	 1fffh
-		 include "z8/z88c00xx.inc"
+		 include "z8/z88c0x.inc"
 		 
 		case	"Z8F0130"
 RAMEND		 sfr	 0ffh

@@ -97,6 +97,7 @@ Boolean AddCPUAlias(char *OrigName, char *AliasName)
     Neu->Number = CPUCnt++;
     Neu->Orig = Lauf->Orig;
     Neu->SwitchProc = Lauf->SwitchProc;
+    Neu->FreeProc = Lauf->FreeProc;
     Neu->pUserData = Lauf->pUserData;
     Neu->pArgs = Lauf->pArgs;
     while (Lauf->Next)

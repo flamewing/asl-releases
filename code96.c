@@ -200,7 +200,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
         {
           Reg = Lo(BReg);
           ChkSFR(Reg);
-          if (Reg & 1) WrError(ErrNum_MustBeEven);
+          if (Reg & 1) WrError(ErrNum_AddrMustBeEven);
           else if ((strlen(Left.Str) == 0) && !strcmp(Right.Str, "+"))
           {
             AdrType = ModMem;

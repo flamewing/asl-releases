@@ -538,7 +538,7 @@ static void DecodeLDST(Word Index)
     MemI = 3 - RegI;
     if (!DecodeArgReg(RegI, &Reg, AllRegMask));
     else if (!DecodeMem(ArgStr[MemI].Str, &Mem)) WrError(ErrNum_InvAddrMode);
-    else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) WrError(ErrNum_MustBeEven);
+    else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) WrError(ErrNum_AddrMustBeAligned);
     else
     {
       AppendCode(0x8000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0x10) << 8));

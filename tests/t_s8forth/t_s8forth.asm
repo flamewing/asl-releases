@@ -1,4 +1,4 @@
-	cpu	z88c0020
+	cpu	z88c00
 	page	0
 	include	"regz8.inc"
 
@@ -329,7 +329,7 @@
 
 	srp	#128		; 31 80
 	srp1	#128		; 31 81
-	srp0	#128		; 31 82
+	srp0	#128+8		; 31 8a
 
 	sub	r3,r5		; 22 35
 	sub	r3,@r5		; 23 35

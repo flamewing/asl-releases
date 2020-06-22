@@ -3422,9 +3422,9 @@ k"onnen.  Eine Liste mit den zus"atzlichen Befehlen findet sich im
 Kapitel mit den prozessorspezifischen Hinweisen.
 %%-----------
 \begin{quote}
-ai) Z8601, Z8603, Z86C03, Z86E03, Z8604, Z86C06, Z86E06, \\
+ai) Z8601, Z8603, Z86C03, Z86E03, Z86C06, Z86E06, \\
     Z86C08, Z86C21, Z86E21, Z86C30, Z86C31, Z86C32 Z86C40 \\
-    $\rightarrow$ Z88C0000, Z88C0020 \\
+    $\rightarrow$ Z88C00, Z88C01 \\
     $\rightarrow$ eZ8, Z8F0113, Z8F011A, Z8F0123, Z8F012A, \\
     Z8F0130, Z8F0131, Z8F0213, Z8F021A, Z8F0223, Z8F022A, \\
     Z8F0230, Z8F0231, Z8F0411, Z8F0412, Z8F0413, Z8F041A, \\
@@ -10362,7 +10362,7 @@ Symbols in Segment <Segmentname>   .
 \end{verbatim}
 Innerhalb eines Abschnittes sind die Symbole nach Namen sortiert, und
 ein Symboleintrag belegt genau eine Zeile.  Eine solche Zeile besteht
-wiederum aus 5 Feldern, die durch jeweils mindestens ein Leerzeichen
+wiederum aus sechs Feldern, die durch jeweils mindestens ein Leerzeichen
 getrennt sind:
 
 Das erste Feld ist der Name des Symbols selber, eventuell erweitert
@@ -10395,12 +10395,17 @@ symbolisch angesprochene Variablen direkt in der korrekten L"ange
 aufzulisten.  Hat AS keine Informationen "uber die Symbolgr"o"se, so
 steht in diesem Feld eine schlichte -1.
 
-Das f"unfte und letzte Feld gibt schlu"sendlich durch eine 0 oder 1 an,
-ob das Symbol w"ahrend der Assemblierung jemals referenziert wurde.
-Ein Programm, da"s die Symboltabelle liest, kann auf diese Weise z.B.
-nicht benutzte Symbole automatisch verwerfen, da sie beim folgenden
-Debugging oder der Disassemblierung mit hoher Wahrscheinlichkeit auch
-nicht ben"otigt werden.
+Das f"unfte und letzte Feld gibt an, ob das Symbol w"ahrend der
+Assemblierung jemals referenziert wurde. Ein Programm, da"s die
+Symboltabelle liest, kann auf diese Weise z.B. nicht benutzte Symbole
+automatisch verwerfen, da sie beim folgenden Debugging oder der
+Disassemblierung mit hoher Wahrscheinlichkeit auch nicht ben"otigt werden.
+
+das sechste und letzte Feld gibt schlu"sendlich durch eine 0 oder 1 an,
+ob es sich bei dem Symbol um eine Konstante (0) oder Variable (1) handelt.
+Konstanten bekommen einmalig einen Wert zugewiesen (z.B. "uber die
+\tty{EQU}-Anweisung oder ein Label), Variablen k"onnen ihren Wert beliebig
+oft "andern.  In der MAP-Datei wird der letztg"ultige Wert aufgef"uhrt.
 
 Der dritte Abschnitt in einer Debug-Datei beschreibt die im Programm
 benutzten Sektionen n"aher.  Eine solche Beschreibung ist erforderlich,
@@ -11371,12 +11376,19 @@ Angaben:
                {Der benutzte Adressierungsmodus existiert
                 generell zwar, ist an dieser Stelle aber nicht erlaubt.}
                {keines}
-\errentry{1351}{Nummer mu"s ausgerichtet sein}
+\errentry{1351}{Adresse mu"s gerade sein}
+               {Fehler}
+               {An dieser Stelle sind nur gerade Adressen erlaubt,
+                da das unterste Bit f"ur andere Zwecke verwendet wird
+                oder reserviert ist.}
+               {das fragliche Argument}
+\errentry{1352}{Adresse mu"s ausgerichtet sein}
                {Fehler}
                {An dieser Stelle sind nur ausgerichtete
-                (d.h z.B. gerade) Adressen erlaubt, da die untersten Bits f"ur
-                andere Zwecke verwendet werden oder reserviert sind.}
-               {keines}
+                (d.h glatt durch 2, 4, 8... teilbare) Adressen erlaubt,
+                da die untersten Bits f"ur andere Zwecke verwendet werden
+                oder reserviert sind.}
+               {das fragliche Argument}
 \errentry{1355}{Adressierungsmodus im Parallelbetrieb nicht erlaubt}
                {Fehler}
                {Die verwendeten Adressierungsmodi
@@ -11461,6 +11473,11 @@ Angaben:
                {In einem Adre"sausdruck werden Register aus unterschiedlichen
                 B"anken verwendet.}
                {das fragliche Register}
+\errentry{1448}{Registerl"ange undefiniert}
+               {Fehler}
+               {An dieser Stelle k"onnen Register verschiedener L"ange verwendet werden,
+                und die Registerl"ange ist nicht alleine aus der Adresse ableitbar.}
+               {das fragliche Argument}
 \errentry{1450}{RESTORE ohne SAVE}
                {Fehler}
                {Es wurde ein \tty{RESTORE}-Befehl gefunden, obwohl

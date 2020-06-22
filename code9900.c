@@ -823,6 +823,48 @@ static void DecodeFixed(Word Index)
   }
 }
 
+static void DecodeRTWP(Word Code)
+{
+  Word Variant;
+  Boolean OK;
+  Word MaxVariant = (((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99105)
+                  || ((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99110)) ? 4 : 0;
+
+  switch (ArgCnt)
+  {
+    case 0:
+      Variant = 0;
+      OK = True;
+      break;
+    case 1:
+      FirstPassUnknown = False;
+      Variant = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+      if (!OK)
+        return;
+      if (FirstPassUnknown)
+        Variant = 0;
+      else if (Variant > MaxVariant)
+      {
+        WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
+        return;
+      }
+      else if (Variant == 3)
+      {
+        WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
+        return;
+      }
+      break;
+    default:
+      (void)ChkArgCnt(0,1);
+      return;
+  }
+  if (OK)
+  {
+    WAsmCode[CodeLen >> 1] = Code + Variant;
+    CodeLen += 2;
+  }
+}
+
 static void DecodeBYTE(Word Code)
 {
   int z;
@@ -1219,7 +1261,7 @@ static void InitFields(void)
   AddBit("TSMB", 0x0c0b);
 
   FixedOrders = (tOrder*)malloc(sizeof(*FixedOrders) * FixedOrderCnt); InstrZ = 0;
-  AddFixed("RTWP", 0x0380, eCoreAll);
+  AddInstTable(InstTable, "RTWP", 0x0380, DecodeRTWP);
   AddFixed("IDLE", 0x0340, eCoreFlagSupMode | eCoreAll);
   AddFixed("RSET", 0x0360, eCoreFlagSupMode | (eCoreAll & ~eCore9940));
   AddFixed("CKOF", 0x03c0, eCoreFlagSupMode | (eCoreAll & ~eCore9940));
