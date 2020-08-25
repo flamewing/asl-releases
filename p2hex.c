@@ -27,7 +27,7 @@
 #include "toolutils.h"
 #include "headids.h"
 
-static char *HexSuffix = ".hex";
+static const char *HexSuffix = ".hex";
 #define MaxLineLen 254
 #define AVRLEN_DEFAULT 3
 #define DefaultCFormat "dSEl"
@@ -788,42 +788,14 @@ static void MeasureFile(const char *FileName, LongWord Offset)
 
 static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
 {
-  char *p, Save;
-  Boolean ok;
-
   if (Negate)
   {
     DefStartStopAdr(1 << SegCode);
     return CMDOK;
   }
   else
-  {
-    p = strchr(Arg, '-');
-    if (!p) return CMDErr;
-
-    Save = (*p); *p = '\0';
-    StartAuto = AddressWildcard(Arg);
-    if (StartAuto)
-      ok = True;
-    else
-      StartAdr[SegCode] = ConstLongInt(Arg, &ok, 10);
-    *p = Save;
-    if (!ok)
-      return CMDErr;
-
-    StopAuto = AddressWildcard(p + 1);
-    if (StopAuto)
-      ok = True;
-    else
-      StopAdr[SegCode] = ConstLongInt(p + 1, &ok, 10);
-    if (!ok)
-      return CMDErr;
-
-    if (!StartAuto && (!StopAuto) && (StartAdr[SegCode] > StopAdr[SegCode]))
-      return CMDErr;
-
-    return CMDArg;
-  }
+    return CMD_Range(&StartAdr[SegCode], &StopAdr[SegCode],
+                     &StartAuto, &StopAuto, Arg);
 }
 
 static CMDResult CMD_RelAdr(Boolean Negate, const char *Arg)
@@ -919,7 +891,7 @@ static CMDResult CMD_DestFormat(Boolean Negate, const char *pArg)
 {
 #define NameCnt (sizeof(Names) / sizeof(*Names))
 
-  static char *Names[] =
+  static const char *Names[] =
   {
     "DEFAULT", "MOTO", "INTEL", "INTEL16", "INTEL32", "MOS", "TEK", "DSK", "ATMEL", "MICO8", "C"
   };
@@ -969,9 +941,6 @@ static CMDResult CMD_ForceSegment(Boolean Negate,  const char *Arg)
 
 static CMDResult CMD_DataAdrRange(Boolean Negate,  const char *Arg)
 {
-  char *p, Save;
-  Boolean ok;
-
   fputs(getmessage(Num_WarnDOption), stderr);
   fflush(stdout);
 
@@ -982,25 +951,13 @@ static CMDResult CMD_DataAdrRange(Boolean Negate,  const char *Arg)
   }
   else
   {
-    p = strchr(Arg, '-');
-    if (!p)
-      return CMDErr;
+    Boolean StartDataAuto, StopDataAuto;
+    CMDResult Ret = CMD_Range(&StartAdr[SegData], &StopAdr[SegData],
+                              &StartDataAuto, &StopDataAuto, Arg);
 
-    Save = (*p);
-    *p = '\0';
-    StartAdr[SegData] = ConstLongInt(Arg, &ok, 10);
-    *p = Save;
-    if (!ok)
-      return CMDErr;
-
-    StopAdr[SegData] = ConstLongInt(p + 1, &ok, 10);
-    if (!ok)
-      return CMDErr;
-
-    if (StartAdr[SegData] > StopAdr[SegData])
-      return CMDErr;
-
-    return CMDArg;
+    if (StartDataAuto || StopDataAuto)
+      Ret = CMDErr;
+    return Ret;
   }
 }
 
@@ -1241,7 +1198,7 @@ int main(int argc, char **argv)
   if (StartAuto || StopAuto)
   {
     int z;
-    Byte ChkSegment = ForceSegment ? ForceSegment : SegCode;
+    Byte ChkSegment = ForceSegment ? ForceSegment : (Byte)SegCode;
 
     if (StartAuto)
       for (z = 0; z <= PCMax; z++)

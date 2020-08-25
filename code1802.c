@@ -107,11 +107,11 @@ static void DecodeRegNoZero(Word Index)
   {
     Boolean OK;
     Byte Reg;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = FALSE;
-    Reg = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
+    Reg = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt4, &OK, &Flags);
     if (!OK) CodeLen = 0;
-    else if ((!FirstPassUnknown) && (0 == Reg))
+    else if (!mFirstPassUnknown(Flags) && (0 == Reg))
     {
       WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
       CodeLen = 0;
@@ -148,22 +148,22 @@ static void DecodeRegImm16(Word Index)
 static void DecodeRegLBranch(Word Index)
 {
   const tOrder *pOrder = RegLBranchOrders + Index;
-  Boolean OK;
-  Word Addr;
 
   if (ChkArgCnt(2, 2)
    && PutCode(pOrder))
   {
-    BAsmCode[CodeLen - 1] |= EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-    if (!OK) CodeLen = 0;
+    tEvalResult EvalResult;
+
+    BAsmCode[CodeLen - 1] |= EvalStrIntExpressionWithResult(&ArgStr[1], UInt4, &EvalResult);
+    if (!EvalResult.OK) CodeLen = 0;
     else
     {
-      Addr = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
-      if (!OK)
+      Word Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult);
+      if (!EvalResult.OK)
         CodeLen = 0;
       else
       {
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         BAsmCode[CodeLen++] = Hi(Addr);
         BAsmCode[CodeLen++] = Lo(Addr);
       }
@@ -187,19 +187,18 @@ static void DecodeImm(Word Index)
 static void DecodeSBranch(Word Index)
 {
   const tOrder *pOrder = SBranchOrders + Index;
-  Word Addr;
-  Boolean OK;
 
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
-    FirstPassUnknown = False;
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (!OK || !ChkSamePage(EProgCounter() + 1, Addr, 8))
+    tEvalResult EvalResult;
+    Word Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+
+    if (!EvalResult.OK || !ChkSamePage(EProgCounter() + 1, Addr, 8, EvalResult.Flags))
       CodeLen = 0;
     else
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       BAsmCode[CodeLen++] = Lo(Addr);
     }
   }
@@ -208,16 +207,17 @@ static void DecodeSBranch(Word Index)
 static void DecodeLBranch(Word Index)
 {
   const tOrder *pOrder = LBranchOrders + Index;
-  Word Addr;
-  Boolean OK;
 
   if (ChkArgCnt(1, 1)
    && PutCode(pOrder))
   {
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (!OK) CodeLen = 0;
+    tEvalResult EvalResult;
+    Word Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+
+    if (!EvalResult.OK) CodeLen = 0;
+    else
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       BAsmCode[CodeLen++] = Hi(Addr);
       BAsmCode[CodeLen++] = Lo(Addr);
     }
@@ -231,11 +231,12 @@ static void DecodeIO(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+    tSymbolFlags Flags;
+
+    BAsmCode[0] = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt3, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown) BAsmCode[0] = 1;
+      if (mFirstPassUnknown(Flags)) BAsmCode[0] = 1;
       if (BAsmCode[0] == 0) WrError(ErrNum_UnderRange);
       else
       {

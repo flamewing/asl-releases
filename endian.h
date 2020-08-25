@@ -19,9 +19,9 @@
 
 extern Boolean BigEndian;
 
-extern char *Integ16Format, *Integ32Format, *Integ64Format;
-extern char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
-extern char *LargeIntFormat, *LargeHIntFormat;
+extern const char *Integ16Format, *Integ32Format, *Integ64Format;
+extern const char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
+extern const char *LargeIntFormat, *LargeHIntFormat;
 
 
 extern void WSwap(void *Field, int Cnt);

@@ -32,9 +32,9 @@
 #define ALUOrderCnt 10
 
 typedef struct
-        {
-          LongWord Code;
-        } FixedOrder;
+{
+  LongWord Code;
+} FixedOrder;
 
 static FixedOrder *RegOrders, *ALUOrders;
 
@@ -76,7 +76,7 @@ static Boolean IsIWReg(const char *Asc, LongWord *pErg)
 
 static Boolean IsCond(int OtherArgCnt, LongWord *pErg)
 {
-  static const char *Conds[4] = { "Z", "NZ", "C", "NC" };
+  static const char Conds[4][3] = { "Z", "NZ", "C", "NC" };
 
   if (ArgCnt <= OtherArgCnt)
   {
@@ -130,9 +130,8 @@ static void DecodeConstant(Word Index)
     TempResult t;
     Boolean OK;
 
-    FirstPassUnknown = FALSE;
-    t.Contents.Int = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
-    if ((OK) && (!FirstPassUnknown))
+    t.Contents.Int = EvalStrIntExpressionWithFlags(&ArgStr[2], Int32, &OK, &t.Flags);
+    if (OK && !mFirstPassUnknown(t.Flags))
     {
       t.Typ = TempInt;
       SetListLineVal(&t);
@@ -183,16 +182,17 @@ static void DecodeALU(Word Index)
 
 static void DecodeJmp(Word Index)
 {
-  LongWord Addr, Cond;
-  Boolean OK;
+  LongWord Cond;
 
   if (ChkArgCnt(1, 2)
    && IsCond(1, &Cond))
   {
-    Addr = EvalStrIntExpression(&ArgStr[ArgCnt], UInt10, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongWord Addr = EvalStrIntExpressionWithResult(&ArgStr[ArgCnt], UInt10, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       DAsmCode[0] = 0x30000 | Index | (Cond << 10) | (Addr & 0x3ff);
       CodeLen = 1;
     }
@@ -250,7 +250,6 @@ static void DecodeInt(Word Index)
 static void DecodeMem(Word Index)
 {
   LongWord Reg, Addr;
-  Boolean OK;
 
   if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
@@ -264,10 +263,12 @@ static void DecodeMem(Word Index)
     }
     else
     {
-      Addr = EvalStrIntExpression(&ArgStr[2], UInt6, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+
+      Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt6, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
         DAsmCode[0] |= Addr & 0x3f;
         CodeLen = 1;
       }
@@ -278,7 +279,6 @@ static void DecodeMem(Word Index)
 static void DecodeIO(Word Index)
 {
   LongWord Reg, Addr;
-  Boolean OK;
 
   if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
@@ -292,10 +292,12 @@ static void DecodeIO(Word Index)
     }
     else
     {
-      Addr = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+
+      Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt8, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         DAsmCode[0] |= Addr & 0xff;
         CodeLen = 1;
       }
@@ -318,7 +320,7 @@ static void DecodeNop(Word Index)
  * Instruction Table Handling
  *--------------------------------------------------------------------------*/
 
-static void AddReg(char *NName, LongWord NCode)
+static void AddReg(const char *NName, LongWord NCode)
 {
    if (InstrZ >= RegOrderCnt)
     exit(255);
@@ -327,7 +329,7 @@ static void AddReg(char *NName, LongWord NCode)
    AddInstTable(InstTable, NName, InstrZ++, DecodeOneReg);
 }
 
-static void AddALU(char *NName, LongWord NCode)
+static void AddALU(const char *NName, LongWord NCode)
 {
    if (InstrZ >= ALUOrderCnt)
     exit(255);

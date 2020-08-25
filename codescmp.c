@@ -57,6 +57,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Boolean MayInc, Byte PCDisp, Byte
   Word Target;
   Boolean OK;
   int l = strlen(pArg->Str);
+  tSymbolFlags Flags;
 
   if ((l >= 4) && (pArg->Str[l - 1] == ')') && (pArg->Str[l - 4] == '('))
   {
@@ -96,17 +97,16 @@ static Boolean DecodeAdr(const tStrComp *pArg, Boolean MayInc, Byte PCDisp, Byte
 
   /* no carry in PC from bit 11 to 12; additionally handle preincrement */
 
-  FirstPassUnknown = False;
-  Target = EvalStrIntExpression(pArg, UInt16, &OK);
+  Target = EvalStrIntExpressionWithFlags(pArg, UInt16, &OK, &Flags);
   if (OK)
   {
     Word PCVal = (EProgCounter() & 0xf000) + ((EProgCounter() + 1 + PCDisp) & 0xfff);
     Word Disp = (Target - PCVal) & 0xfff;
 
-    if (SymbolQuestionable)
+    if (mSymbolQuestionable(Flags))
       Target = PCVal;
 
-    if (!ChkSamePage(Target, PCVal, 12));
+    if (!ChkSamePage(Target, PCVal, 12, Flags));
     else if ((Disp > 0x7f) && (Disp < 0xf80)) WrError(ErrNum_JmpDistTooBig);
     else
     {
@@ -187,27 +187,27 @@ static void DecodeLD(Word Index)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddImm(char *NName, Byte NCode)
+static void AddImm(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm);
 }
 
-static void AddReg(char *NName, Byte NCode)
+static void AddReg(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRegOrder);
 }
 
-static void AddMem(char *NName, Byte NCode)
+static void AddMem(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeMem);
 }
 
-static void AddJmp(char *NName, Byte NCode)
+static void AddJmp(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }

@@ -125,17 +125,17 @@ static void DecodeRel(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
+    tEvalResult EvalResult;
+    Integer AdrInt = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult) - (EProgCounter() + 1);
 
-    if (OK)
+    if (EvalResult.OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -16) || (AdrInt > 15))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(EvalResult.Flags) && ((AdrInt < -16) || (AdrInt > 15))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 1;
         BAsmCode[0] = Code + (AdrInt & 0x1f);
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       }
     }
   }
@@ -145,15 +145,15 @@ static void DecodeJSR_JMP(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrInt = EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
+    tEvalResult EvalResult;
+    Word AdrInt = EvalStrIntExpressionWithResult(&ArgStr[1], UInt12, &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
       CodeLen = 2;
       BAsmCode[1] = Lo(AdrInt);
       BAsmCode[0] = Code + (Hi(AdrInt) & 15);
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -246,14 +246,14 @@ static void DecodeMVI(Word Code)
   else if (*ArgStr[2].Str != '#') WrError(ErrNum_InvAddrMode);
   else
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-    if (OK)
+    BAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[1], Int8, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegData);
-      BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[2], 1, Int8, &OK);
-      if (OK)
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
+      BAsmCode[2] = EvalStrIntExpressionOffsWithResult(&ArgStr[2], 1, Int8, &EvalResult);
+      if (EvalResult.OK)
       {
         BAsmCode[0] = 0xb0;
         CodeLen = 3;
@@ -298,16 +298,16 @@ static void DecodeBSET_BCLR(Word Code)
 {
   if (ChkArgCnt(2, 2))
   {
-    Boolean OK;
-    Byte Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Byte Bit = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+    if (EvalResult.OK)
     {
       BAsmCode[0] = Code + Bit;
-      BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-      if (OK)
+      BAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[2], Int8, &EvalResult);
+      if (EvalResult.OK)
       {
         CodeLen = 2;
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
       }
     }
   }
@@ -317,25 +317,25 @@ static void DecodeBRSET_BRCLR(Word Code)
 {
   if (ChkArgCnt(3, 3))
   {
-    Boolean OK;
-    Byte Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+    tEvalResult EvalResult;
+    Byte Bit = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
       BAsmCode[0] = Code + Bit;
-      BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-      if (OK)
+      BAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[2], Int8, &EvalResult);
+      if (EvalResult.OK)
       {
         Integer AdrInt;
 
-        ChkSpace(SegData);
-        AdrInt = EvalStrIntExpression(&ArgStr[3], Int16, &OK) - (EProgCounter() + 3);
-        if (OK)
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
+        AdrInt = EvalStrIntExpressionWithResult(&ArgStr[3], Int16, &EvalResult) - (EProgCounter() + 3);
+        if (EvalResult.OK)
         {
-          if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(EvalResult.Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
           else
           {
-            ChkSpace(SegCode);
+            ChkSpace(SegCode, EvalResult.AddrSpaceMask);
             BAsmCode[2] = AdrInt & 0xff;
             CodeLen = 3;
           }
@@ -354,19 +354,19 @@ static void DecodeSFR(Word Code)
 
 /*--------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, LongInt NCode)
+static void AddFixed(const char *NName, LongInt NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddRel(char *NName, LongInt NCode)   
+static void AddRel(const char *NName, LongInt NCode)   
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
 
-static void AddALU(char *NName, LongInt NCode)   
+static void AddALU(const char *NName, LongInt NCode)   
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU);
 }

@@ -6,12 +6,6 @@
 /*                                                                           */
 /* Verwaltung von Datei-Nummern                                              */
 /*                                                                           */
-/* Historie: 15. 5.1996 Grundsteinlegung                                     */
-/*           25. 7.1998 GetFileName jetzt mit int statt Byte                 */
-/*                      Verwaltung Adressbereiche                            */
-/*                      Caching FileCount                                    */
-/*           16. 8.1998 Ruecksetzen Adressbereiche                           */
-/*                                                                           */
 /*****************************************************************************/
 
 #include "stdinc.h"
@@ -106,12 +100,11 @@ Integer GetFileNum(char *Name)
   return FLauf ? Cnt : -1;
 }
 
-char *GetFileName(int Num)
+const char *GetFileName(int Num)
 {
   PToken Lauf = SearchToken(Num);
-  static char *Dummy = "";
 
-  return Lauf ? Lauf->Name : Dummy;
+  return Lauf ? Lauf->Name : "";
 }
 
 Integer GetFileCount(void)

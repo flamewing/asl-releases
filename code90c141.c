@@ -28,7 +28,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
 } Condition;
 
@@ -87,11 +87,11 @@ static void SetOpSize(ShortInt New)
 
 static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 {
-  static char *Reg8Names[]={ "B", "C", "D", "E", "H", "L", "A" };
+  static const char Reg8Names[][2] = { "B", "C", "D", "E", "H", "L", "A" };
   static const int Reg8Cnt = sizeof(Reg8Names) / sizeof(*Reg8Names);
-  static char *Reg16Names[]={"BC", "DE", "HL", "\0", "IX", "IY", "SP" };
+  static const char Reg16Names[][3] = { "BC", "DE", "HL", "\0", "IX", "IY", "SP" };
   static const int Reg16Cnt = sizeof(Reg16Names) / sizeof(*Reg16Names);
-  static char *IReg16Names[]={"IX","IY","SP"};
+  static const char IReg16Names[][3] =  {"IX", "IY", "SP" };
   static const int IReg16Cnt = sizeof(IReg16Names) / sizeof(*IReg16Names);
 
   int z;
@@ -193,12 +193,13 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 
       if (!fnd)
       {
-        FirstPassUnknown = False;
-        DispVal = EvalStrIntExpression(&Arg, Int32, &ok);
+        tSymbolFlags Flags;
+
+        DispVal = EvalStrIntExpressionWithFlags(&Arg, Int32, &ok, &Flags);
         if (ok)
         {
           DispAcc = NegFlag ? DispAcc - DispVal : DispAcc + DispVal;
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(Flags))
             Unknown = True;
         }
       }
@@ -305,7 +306,7 @@ chk:
   }
 }
 
-static Boolean ArgPair(char *Arg1, char *Arg2)
+static Boolean ArgPair(const char *Arg1, const char *Arg2)
 {
   return  (((!as_strcasecmp(ArgStr[1].Str, Arg1)) && (!as_strcasecmp(ArgStr[2].Str, Arg2)))
         || ((!as_strcasecmp(ArgStr[1].Str, Arg2)) && (!as_strcasecmp(ArgStr[2].Str, Arg1))));
@@ -1112,10 +1113,12 @@ static void DecodeJR(Word Code)
     else
     {
       Boolean OK;
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + 2);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags) - (EProgCounter() + 2);
+
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 2;
@@ -1216,10 +1219,12 @@ static void DecodeDJNZ(Word Code)
       else
       {
         Boolean OK;
-        Integer AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + 2);
+        tSymbolFlags Flags;
+        Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags) - (EProgCounter() + 2);
+
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             CodeLen = 2;
@@ -1254,7 +1259,7 @@ static void DecodeJRL_CALR(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddW(char *Name, Word Code, InstProc Proc)
+static void AddW(const char *Name, Word Code, InstProc Proc)
 {
   char Str[20];
 
@@ -1263,32 +1268,32 @@ static void AddW(char *Name, Word Code, InstProc Proc)
   AddInstTable(InstTable, Str, Code | 0x100, Proc);
 }
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddMove(char *NName, Byte NCode)
+static void AddMove(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeMove);
 }
 
-static void AddShift(char *NName, Word NCode, Boolean NMay)
+static void AddShift(const char *NName, Word NCode, Boolean NMay)
 {
   AddInstTable(InstTable, NName, NCode | (NMay ? 0x100 : 0), DecodeShift);
 }
 
-static void AddBit(char *NName, Byte NCode)
+static void AddBit(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddAcc(char *NName, Byte NCode)
+static void AddAcc(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
 }
 
-static void AddCondition(char *NName, Byte NCode)
+static void AddCondition(const char *NName, Byte NCode)
 {
   if (InstrZ >= ConditionCnt) exit(255);
   Conditions[InstrZ].Name = NName;

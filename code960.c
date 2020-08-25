@@ -85,7 +85,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongWord Code;
 } SpecReg;
 
@@ -146,7 +146,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord 
 {
   char *end;
   Double FVal;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   *Mode = ModNone;
   *Erg = 0;
@@ -171,12 +171,11 @@ static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord 
 
   if (Type != IntOp)
   {
-    FirstPassUnknown = False;
-    FVal = EvalStrFloatExpression(pArg, Float64, &OK);
-    if (OK)
+    FVal = EvalStrFloatExpressionWithResult(pArg, Float64, &EvalResult);
+    if (EvalResult.OK)
     {
-      if (FirstPassUnknown)
-        FVal=0.0;
+      if (mFirstPassUnknown(EvalResult.Flags))
+        FVal = 0.0;
       if (FVal == 0.0)
         *Erg = 16;
       else if (FVal == 1.0)
@@ -184,16 +183,16 @@ static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord 
       else
       {
         WrError(ErrNum_OverRange);
-        OK = False;
+        EvalResult.OK = False;
       }
-      if (OK)
+      if (EvalResult.OK)
         return ChkAdr(ModImm, Mask, Erg, Mode);
     }
   }
   else
   {
-    *Erg = EvalStrIntExpression(pArg, UInt5, &OK);
-    if (OK)
+    *Erg = EvalStrIntExpressionWithResult(pArg, UInt5, &EvalResult);
+    if (EvalResult.OK)
       return ChkAdr(ModImm, Mask, Erg, Mode);
   }
   return False;
@@ -208,7 +207,7 @@ static int AddrError(tErrorNum Num)
   return -1;
 }
 
-static int AddrPosError(int Num, const tStrComp *pArg)
+static int AddrPosError(tErrorNum Num, const tStrComp *pArg)
 {
   WrStrErrorPos(Num, pArg);
   return -1;
@@ -376,21 +375,22 @@ static void DecodeCobr(Word Index)
   LongWord S2Reg = 0, S2Mode = 0;
   LongInt AdrInt;
   Boolean OK;
+  tSymbolFlags Flags;
   unsigned NumArgs = 1 + 2 * Ord(Op->HasSrc);
 
   if (!ChkArgCnt(NumArgs, NumArgs));
   else if ((DecodeAdr(&ArgStr[1], MModReg | (Op->HasSrc ? MModImm : 0), IntOp, &S1Reg, &S1Mode))
         && ((!Op->HasSrc) || (DecodeAdr(&ArgStr[2], MModReg, IntOp, &S2Reg, &S2Mode))))
   {
-    FirstPassUnknown = False;
     OK = True;
-    AdrInt = (Op->HasSrc) ? EvalStrIntExpression(&ArgStr[3], UInt32, &OK) - EProgCounter() : 0;
-    if (FirstPassUnknown)
+    Flags = eSymbolFlag_None;
+    AdrInt = (Op->HasSrc) ? EvalStrIntExpressionWithFlags(&ArgStr[3], UInt32, &OK, &Flags) - EProgCounter() : 0;
+    if (mFirstPassUnknown(Flags))
       AdrInt &= (~3);
     if (OK)
     {
       if (AdrInt & 3) WrError(ErrNum_NotAligned);
-      else if ((!SymbolQuestionable) && ((AdrInt < -4096) || (AdrInt > 4090))) WrError(ErrNum_JmpDistTooBig);
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt < -4096) || (AdrInt > 4090))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = (Op->Code << 24)
@@ -408,17 +408,17 @@ static void DecodeCtrl(Word Index)
 {
   FixedOrder *Op = CtrlOrders + Index;
   LongInt AdrInt;
+  tSymbolFlags Flags;
   Boolean OK;
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt32, &OK) - EProgCounter();
-    if (FirstPassUnknown) AdrInt &= (~3);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags) - EProgCounter();
+    if (mFirstPassUnknown(Flags)) AdrInt &= (~3);
     if (OK)
     {
       if (AdrInt & 3) WrError(ErrNum_NotAligned);
-      else if ((!SymbolQuestionable) && ((AdrInt < -8388608) || (AdrInt > 8388604))) WrError(ErrNum_JmpDistTooBig);
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt < -8388608) || (AdrInt > 8388604))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = (Op->Code << 24) + (AdrInt & 0xfffffc);
@@ -471,15 +471,15 @@ static void DecodeSPACE(Word Code)
 {
   Boolean OK;
   LongWord Size;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((OK) && (!FirstPassUnknown))
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       DontPrint = True;
       if (!Size) WrError(ErrNum_NullResMem);
@@ -519,14 +519,14 @@ static void MakeCode_960(void)
 
 /*--------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, LongWord NCode)
+static void AddFixed(const char *NName, LongWord NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddReg(char *NName, LongWord NCode,
+static void AddReg(const char *NName, LongWord NCode,
                    OpType NSrc1, OpType NSrc2, OpType NDest,
                    Boolean NImm1, Boolean NImm2, Boolean NPriv)
 {
@@ -541,7 +541,7 @@ static void AddReg(char *NName, LongWord NCode,
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg);
 }
 
-static void AddCobr(char *NName, LongWord NCode, Boolean NHas)
+static void AddCobr(const char *NName, LongWord NCode, Boolean NHas)
 {
   if (InstrZ >= CobrOrderCnt) exit(255);
   CobrOrders[InstrZ].Code = NCode;
@@ -549,14 +549,14 @@ static void AddCobr(char *NName, LongWord NCode, Boolean NHas)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCobr);
 }
 
-static void AddCtrl(char *NName, LongWord NCode)
+static void AddCtrl(const char *NName, LongWord NCode)
 {
   if (InstrZ >= CtrlOrderCnt) exit(255);
   CtrlOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeCtrl);
 }
 
-static void AddMem(char *NName, LongWord NCode, OpType NType, int NPos)
+static void AddMem(const char *NName, LongWord NCode, OpType NType, int NPos)
 {
   if (InstrZ >= MemOrderCnt) exit(255);
   MemOrders[InstrZ].Code = NCode;
@@ -565,7 +565,7 @@ static void AddMem(char *NName, LongWord NCode, OpType NType, int NPos)
   AddInstTable(InstTable, NName, InstrZ++, DecodeMemO);
 }
 
-static void AddSpecReg(char *NName, LongWord NCode)
+static void AddSpecReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= SpecRegCnt) exit(255);
   SpecRegs[InstrZ].Code = NCode;

@@ -52,7 +52,7 @@ enum
 };
 
 static CPUVar CPUMN1610, CPUMN1613;
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 static LongInt BaseRegVals[4];
 
 #define ASSUMEMN1613Count 4
@@ -294,6 +294,7 @@ static Boolean DecodeMem(tStrComp *pArg, Word *pResult)
   Word R;
   Integer Disp;
   int l;
+  tSymbolFlags Flags;
 
   if (TotIndirect)
   {
@@ -390,8 +391,7 @@ plaindisp:
 
     /* evaluate expression */
 
-    FirstPassUnknown = SymbolQuestionable = False;
-    Addr = EvalStrIntExpressionOffs(&Arg, ArgOffset, (MomCPU == CPUMN1613) ? UInt18 : UInt16, &OK);
+    Addr = EvalStrIntExpressionOffsWithFlags(&Arg, ArgOffset, (MomCPU == CPUMN1613) ? UInt18 : UInt16, &OK, &Flags);
     if (!OK)
       return False;
 
@@ -411,7 +411,7 @@ plaindisp:
       {
         Word Offset = ChkPage(Addr, 0, NULL);
 
-        if (!FirstPassUnknown && !SymbolQuestionable && (Offset > 255))
+        if (!mFirstPassUnknownOrQuestionable(Flags) && (Offset > 255))
         {
           WrStrErrorPos(ErrNum_OverRange, pArg);
           return False;
@@ -427,7 +427,7 @@ plaindisp:
       {
         LongInt Disp = Addr - EProgCounter();
 
-        if (!FirstPassUnknown && !SymbolQuestionable && ((Disp > 127) || (Disp < -128)))
+        if (!mFirstPassUnknownOrQuestionable(Flags) && ((Disp > 127) || (Disp < -128)))
         {
           WrStrErrorPos(ErrNum_DistTooBig, pArg);
           return False;
@@ -524,13 +524,13 @@ static void DecodeRegImm(Word Code)
   if (ChkArgCnt(2, 2)
    && DecodeReg(&ArgStr[1], &Reg, 0x7f)) /* do not allow IC as register */
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    WAsmCode[0] = EvalStrIntExpression(&ArgStr[2], Int8, &OK) & 0xff;
-    if (OK)
+    WAsmCode[0] = EvalStrIntExpressionWithResult(&ArgStr[2], Int8, &EvalResult) & 0xff;
+    if (EvalResult.OK)
     {
       if (Code & 0x1000)
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       WAsmCode[0] |= Code | (Reg << 8);
       CodeLen = 1;
     }
@@ -1036,7 +1036,7 @@ static void DecodeDC(Word Code)
      if (OK)
      {
        EvalStrExpression(&ArgStr[z], &t);
-       if ((FirstPassUnknown) && (t.Typ == TempInt)) t.Contents.Int &= 0x7fff;
+       if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt)) t.Contents.Int &= 0x7fff;
        switch (t.Typ)
        {
          case TempInt:
@@ -1094,13 +1094,13 @@ static void DecodeDS(Word Index)
 {
   Boolean OK;
   Word Size;
+  tSymbolFlags Flags;
 
   UNUSED(Index);
 
-  FirstPassUnknown = False;
-  Size = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-  if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-  if ((OK) && (!FirstPassUnknown))
+  Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
+  if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+  if (OK && !mFirstPassUnknown(Flags))
   {
     DontPrint = True;
     if (!Size) WrError(ErrNum_NullResMem);
@@ -1278,11 +1278,14 @@ static void DeinitFields(void)
 /*--------------------------------------------------------------------------*/
 /* Interface to AS */
 
+static Boolean DecodeAttrPart_MN1610_Alt(void)
+{
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
+
 static void MakeCode_MN1610_Alt(void)
 {
-  OpSize = eSymbolSize16Bit;
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
+  OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSize16Bit;
 
   /* Ignore empty instruction */
 
@@ -1337,6 +1340,7 @@ static void SwitchTo_MN1610_Alt(void)
     SegLimits[SegIO] = 0xff; /* no RDR/WTR insn */
   }
 
+  DecodeAttrPart = DecodeAttrPart_MN1610_Alt;
   MakeCode = MakeCode_MN1610_Alt;
   IsDef = IsDef_MN1610_Alt;
   SwitchFrom = SwitchFrom_MN1610_Alt;

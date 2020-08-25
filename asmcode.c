@@ -259,7 +259,7 @@ void OpenFile(void)
 
   errno = 0;
   PrgFile = fopen(OutName, OPENWRMODE);
-  if (!PrgFile) ChkIO(10001);
+  if (!PrgFile) ChkIO(ErrNum_OpeningFile);
 
   errno = 0;
   h = FileMagic;

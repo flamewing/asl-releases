@@ -9,6 +9,8 @@
 /* Haeufiger benutzte Motorola-Pseudo-Befehle                                */
 /*                                                                           */
 /*****************************************************************************/
+
+#include "symbolsize.h"
   
 /*****************************************************************************
  * Global Functions
@@ -22,10 +24,10 @@ extern void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig);
 
 extern void AddMoto16PseudoONOFF(void);
 
-extern Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn);
+extern Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn);
 
-extern Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24);
+extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean Allow24);
 
-extern Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, ShortInt *pResult, Boolean Allow24);
+extern Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, tSymbolSize *pResult, Boolean Allow24);
 
 #endif /* _MOTPSEUDO_H */

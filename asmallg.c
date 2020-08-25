@@ -109,7 +109,10 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   LargeInt HCPU;
   int Digit, Base;
   const char *pRun;
+  
   tStrComp TmpComp;
+  String TmpCompStr;
+  StrCompMkTemp(&TmpComp, TmpCompStr);
 
   strmaxcpy(MomCPUIdent, pCPUDef->Name, sizeof(MomCPUIdent));
   MomCPU = pCPUDef->Orig;
@@ -125,11 +128,12 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
       HCPU = (HCPU << 4) + Digit;
   }
 
-  StrCompMkTemp(&TmpComp, MomCPUName); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
-  StrCompMkTemp(&TmpComp, MomCPUIdentName); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
+  strmaxcpy(TmpCompStr, MomCPUName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, HCPU, SegNone, True);
+  strmaxcpy(TmpCompStr, MomCPUIdentName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
   SetIsOccupiedFnc = NULL;
+  DecodeAttrPart = NULL;
   SwitchIsOccupied = PageIsOccupied = False;
   ChkPC = DefChkPC;
   ASSUMERecCnt = 0;
@@ -309,12 +313,10 @@ static void CodeSETEQU(Word MayChange)
   Integer DestSeg;
   int ValIndex = *LabPart.Str ? 1 : 2;
 
-  FirstPassUnknown = False;
-  if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
-  else if (ChkArgCnt(ValIndex, ValIndex + 1))
+  if (ChkArgCnt(ValIndex, ValIndex + 1))
   {
     EvalStrExpression(&ArgStr[ValIndex], &t);
-    if (!FirstPassUnknown)
+    if (!mFirstPassUnknown(t.Flags))
     {
       if (ArgCnt == ValIndex)
         DestSeg = SegNone;
@@ -343,6 +345,8 @@ static void CodeSETEQU(Word MayChange)
         {
           case TempInt:
             EnterIntSymbol(pName, t.Contents.Int, DestSeg, MayChange);
+            if (AttrPartOpSize != eSymbolSizeUnknown)
+              SetSymbolOrStructElemSize(pName, AttrPartOpSize);
             break;
           case TempFloat:
             EnterFloatSymbol(pName, t.Contents.Float, MayChange);
@@ -364,19 +368,19 @@ static void CodeORG(Word Index)
 {
   LargeWord HVal;
   Boolean ValOK;
+  tSymbolFlags Flags;
   UNUSED(Index);
 
-  FirstPassUnknown = False;
   if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(1, 1))
   {
 #ifndef HAS64
-    HVal = EvalStrIntExpression(&ArgStr[1], UInt32, &ValOK);
+    HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &ValOK, &Flags);
 #else
-    HVal = EvalStrIntExpression(&ArgStr[1], Int64, &ValOK);
+    HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int64, &ValOK, &Flags);
 #endif
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if (ValOK && !FirstPassUnknown && (PCs[ActPC] != HVal))
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags) && (PCs[ActPC] != HVal))
     {
       PCs[ActPC] = HVal;
       DontPrint = True;
@@ -388,19 +392,18 @@ static void CodeRORG(Word Index)
 {
   LargeInt HVal;
   Boolean ValOK;
+  tSymbolFlags Flags;
   UNUSED(Index);
-
-  FirstPassUnknown = False;
 
   if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(1, 1))
   {
 #ifndef HAS64
-    HVal = EvalStrIntExpression(&ArgStr[1], SInt32, &ValOK);
+    HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], SInt32, &ValOK, &Flags);
 #else
-    HVal = EvalStrIntExpression(&ArgStr[1], Int64, &ValOK);
+    HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int64, &ValOK, &Flags);
 #endif
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
     else if (ValOK)
     {
       PCs[ActPC] += HVal;
@@ -513,7 +516,6 @@ static void CodeEXPORT(Word Index)
 
   forallargs (pArg, True)
   {
-    FirstPassUnknown = True;
     LookupSymbol(pArg, &t, True, TempInt);
     if (TempNone == t.Typ)
       continue;
@@ -748,28 +750,26 @@ static void CodeCHARSET(Word Index)
   }
   else
   {
-    FirstPassUnknown = False;
     EvalStrExpression(&ArgStr[1], &t);
     if ((t.Typ == TempString) && (t.Flags & eSymbolFlag_StringSingleQuoted))
       TempResultToInt(&t);
     switch (t.Typ)
     {
       case TempInt:
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(t.Flags))
           t.Contents.Int &= 255;
         if (ChkRange(t.Contents.Int, 0, 255))
         {
           if (ChkArgCnt(2, 3))
           {
             Start = t.Contents.Int;
-            FirstPassUnknown = False;
             EvalStrExpression(&ArgStr[2], &t);
             if ((t.Typ == TempString) && (t.Flags & eSymbolFlag_StringSingleQuoted))
               TempResultToInt(&t);
             switch (t.Typ)
             {
               case TempInt: /* Übersetzungsbereich als Character-Angabe */
-                if (FirstPassUnknown)
+                if (mFirstPassUnknown(t.Flags))
                   t.Contents.Int &= 255;
                 if (ArgCnt == 2)
                 {
@@ -962,6 +962,8 @@ static void CodeRESTORE(Word Index)
   else
   {
     tStrComp TmpComp;
+    String TmpCompStr;
+    StrCompMkTemp(&TmpComp, TmpCompStr);
 
     Old = FirstSaveState; FirstSaveState = Old->Next;
     if (Old->SavePC != ActPC)
@@ -974,7 +976,7 @@ static void CodeRESTORE(Word Index)
       StrCompMkTemp(&TmpComp, Old->pSaveCPUArgs);
       SetCPUByType(Old->SaveCPU, &TmpComp);
     }
-    StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
+    strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
     LstMacroExpModDefault = Old->SaveLstMacroExpModDefault;
     LstMacroExpModOverride = Old->SaveLstMacroExpModOverride;
@@ -1104,13 +1106,13 @@ static void CodeLABEL(Word Index)
 {
   LongInt Erg;
   Boolean OK;
+  tSymbolFlags Flags;
   UNUSED(Index);
 
-  FirstPassUnknown = False;
   if (ChkArgCnt(1, 1))
   {
-    Erg = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-    if ((OK) && (!FirstPassUnknown))
+    Erg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, Erg, SegCode, False);
@@ -1149,7 +1151,6 @@ static void CodeREAD(Word Index)
       else
       {
         UpString(Exp.Str);
-        FirstPassUnknown = False;
         EvalStrExpression(&Exp, &Erg);
       }
       if (OK)
@@ -1157,7 +1158,7 @@ static void CodeREAD(Word Index)
         SetListLineVal(&Erg);
         SaveLocHandle = MomLocHandle;
         MomLocHandle = -1;
-        if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+        if (mFirstPassUnknown(Erg.Flags)) WrError(ErrNum_FirstPassCalc);
         else switch (Erg.Typ)
         {
           case TempInt:
@@ -1206,17 +1207,16 @@ static void CodeALIGN(Word Index)
     Word AlignValue;
     Byte AlignFill = 0;
     Boolean OK = True;
+    tSymbolFlags Flags = eSymbolFlag_None;
     LongInt NewPC;
 
-    FirstPassUnknown = False;
     if (2 == ArgCnt)
-      AlignFill = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-    FirstPassUnknown = False;
+      AlignFill = EvalStrIntExpressionWithFlags(&ArgStr[2], Int8, &OK, &Flags);
     if (OK)
       AlignValue = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else
       {
         NewPC = EProgCounter() + AlignValue - 1;
@@ -1243,9 +1243,10 @@ static void CodeASSUME(Word Index)
   int z1;
   unsigned z2;
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt HVal;
   tStrComp RegPart, ValPart;
-  char *pSep;
+  char *pSep, EmptyStr[] = "";
 
   UNUSED(Index);
 
@@ -1269,8 +1270,7 @@ static void CodeASSUME(Word Index)
       else
       {
         RegPart = ArgStr[z1];
-        ValPart.Str = "";
-        LineCompReset(&ValPart.Pos);
+        StrCompMkTemp(&ValPart, EmptyStr);
       }
       z2 = 0;
       NLS_UpString(RegPart.Str);
@@ -1288,11 +1288,10 @@ static void CodeASSUME(Word Index)
         }
         else
         {
-          FirstPassUnknown = False;
-          HVal = EvalStrIntExpression(&ValPart, Int32, &OK);
+          HVal = EvalStrIntExpressionWithFlags(&ValPart, Int32, &OK, &Flags);
           if (OK)
           {
-            if (FirstPassUnknown)
+            if (mFirstPassUnknown(Flags))
             {
               WrError(ErrNum_FirstPassCalc);
               OK = False;
@@ -1314,6 +1313,7 @@ static void CodeENUM(Word IsNext)
   int z;
   char *p = NULL;
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt  First = 0, Last = 0;
   tStrComp SymPart;
 
@@ -1327,11 +1327,10 @@ static void CodeENUM(Word IsNext)
       if (p)
       {
         StrCompSplitRef(&ArgStr[z], &SymPart, &ArgStr[z], p);
-        FirstPassUnknown = False;
-        EnumCurrentValue = EvalStrIntExpression(&SymPart, Int32, &OK);
+        EnumCurrentValue = EvalStrIntExpressionWithFlags(&SymPart, Int32, &OK, &Flags);
         if (!OK)
           return;
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
         {
           WrStrErrorPos(ErrNum_FirstPassCalc, &SymPart);
           return;
@@ -1384,19 +1383,19 @@ static void CodeENUMCONF(Word Index)
 
 static void CodeEND(Word Index)
 {
-  LongInt HVal;
-  Boolean OK;
   UNUSED(Index);
 
   if (ChkArgCnt(0, 1))
   {
     if (ArgCnt == 1)
     {
-      FirstPassUnknown = False;
-      HVal = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-      if ((OK) && (!FirstPassUnknown))
+      LongInt HVal;
+      tEvalResult EvalResult;
+
+      HVal = EvalStrIntExpressionWithResult(&ArgStr[1], Int32, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         StartAdr = HVal;
         StartAdrPresent = True;
       }
@@ -1432,8 +1431,11 @@ static void CodeLISTING(Word Index)
     else
     {
       tStrComp TmpComp;
+      String TmpCompStr;
 
-      StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = Value, 0, True);
+      StrCompMkTemp(&TmpComp, TmpCompStr);
+      strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr));
+      EnterIntSymbol(&TmpComp, ListOn = Value, 0, True);
     }
   }
 }
@@ -1475,6 +1477,7 @@ static void CodeBINCLUDE(Word Index)
   LongWord Ofs = 0, Curr, Rest, FSize;
   Word RLen;
   Boolean OK, SaveTurnWords;
+  tSymbolFlags Flags;
   LargeWord OldPC;
   UNUSED(Index);
 
@@ -1486,9 +1489,8 @@ static void CodeBINCLUDE(Word Index)
       OK = True;
     else
     {
-      FirstPassUnknown = False;
-      Ofs = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
-      if (FirstPassUnknown)
+      Ofs = EvalStrIntExpressionWithFlags(&ArgStr[2], Int32, &OK, &Flags);
+      if (mFirstPassUnknown(Flags))
       {
         WrError(ErrNum_FirstPassCalc);
         OK = False;
@@ -1499,8 +1501,8 @@ static void CodeBINCLUDE(Word Index)
           Len = -1;
         else
         {
-          Len = EvalStrIntExpression(&ArgStr[3], Int32, &OK);
-          if (FirstPassUnknown)
+          Len = EvalStrIntExpressionWithFlags(&ArgStr[3], Int32, &OK, &Flags);
+          if (mFirstPassUnknown(Flags))
           {
             WrError(ErrNum_FirstPassCalc);
             OK = False;
@@ -1841,15 +1843,15 @@ static void CodeNESTMAX(Word Index)
 {
   LongInt Temp;
   Boolean OK;
+  tSymbolFlags Flags;
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Temp = EvalStrIntExpression(&ArgStr[1], UInt32, &OK);
+    Temp = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else NestMax = Temp;
     }
   }
@@ -1971,7 +1973,7 @@ void ClearONOFF(void)
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   InstProc Proc;
   Word Index;
 } PseudoOrder;

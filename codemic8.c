@@ -167,14 +167,15 @@ static void DecodeShortBranch(Word Index)
   FixedOrder *pOrder = ShortBranchOrders + Index;
   LongInt Dest;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
   {   
-    Dest = EvalStrIntExpression(&ArgStr[1], CodeAddrInt, &OK);
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeAddrInt, &OK, &Flags);
     if (OK)
     {
       Dest -= EProgCounter();
-      if (((Dest < -512) || (Dest > 511)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Dest < -512) || (Dest > 511)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = pOrder->Code | (Dest & 0x3ff);
@@ -189,14 +190,15 @@ static void DecodeLongBranch(Word Index)
   FixedOrder *pOrder = LongBranchOrders + Index;
   LongInt Dest;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
   {
-    Dest = EvalStrIntExpression(&ArgStr[1], CodeAddrInt, &OK);
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeAddrInt, &OK, &Flags);
     if (OK)
     {
       Dest -= EProgCounter();
-      if (((Dest < -2048) || (Dest > 2047)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Dest < -2048) || (Dest > 2047)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = pOrder->Code | (Dest & 0xfff);
@@ -210,7 +212,6 @@ static void DecodeMem(Word Index)
 {
   MemOrder *pOrder = MemOrders + Index;
   LongWord DReg, Src;
-  Boolean OK;
 
   if (!ChkArgCnt(2, 2));
   else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
@@ -221,10 +222,12 @@ static void DecodeMem(Word Index)
   }
   else
   {
-    Src = EvalStrIntExpression(&ArgStr[2], DataAddrInt, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+
+    Src = EvalStrIntExpressionWithResult(&ArgStr[2], DataAddrInt, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(pOrder->Space);
+      ChkSpace(pOrder->Space, EvalResult.AddrSpaceMask);
       DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3);
       CodeLen = 1;
     }
@@ -263,7 +266,7 @@ static void DecodeReg(Word Index)
  * Instruction Table Handling
  *--------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, LongWord NCode)
+static void AddFixed(const char *NName, LongWord NCode)
 {
   if (InstrZ >= FixedOrderCnt)
     exit(255);
@@ -272,7 +275,7 @@ static void AddFixed(char *NName, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddALU(char *NName, char *NImmName, LongWord NCode)
+static void AddALU(const char *NName, const char *NImmName, LongWord NCode)
 {
   if (InstrZ >= ALUOrderCnt)
     exit(255);
@@ -285,7 +288,7 @@ static void AddALU(char *NName, char *NImmName, LongWord NCode)
   InstrZ++;
 }
 
-static void AddShortBranch(char *NName, LongWord NCode)
+static void AddShortBranch(const char *NName, LongWord NCode)
 {
   if (InstrZ >= ShortBranchOrderCnt)
     exit(255);
@@ -294,7 +297,7 @@ static void AddShortBranch(char *NName, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeShortBranch);
 }
 
-static void AddLongBranch(char *NName, LongWord NCode)
+static void AddLongBranch(const char *NName, LongWord NCode)
 {
   if (InstrZ >= LongBranchOrderCnt)
     exit(255);
@@ -303,7 +306,7 @@ static void AddLongBranch(char *NName, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeLongBranch);
 }
 
-static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
+static void AddMem(const char *NName, const char *NImmName, LongWord NCode, Byte NSpace)
 {
   if (InstrZ >= MemOrderCnt)
     exit(255);
@@ -315,7 +318,7 @@ static void AddMem(char *NName, char *NImmName, LongWord NCode, Byte NSpace)
   InstrZ++;
 }
 
-static void AddReg(char *NName, LongWord NCode)
+static void AddReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= RegOrderCnt)
     exit(255);

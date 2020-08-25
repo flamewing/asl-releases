@@ -52,12 +52,12 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Word Code;
 } CReg;
 
 static CPUVar CPUMCORE;
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 
 static FixedOrder *FixedOrders;
 static FixedOrder *OneRegOrders;
@@ -192,6 +192,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word *Erg)
   Word Base = 0xff, Tmp;
   LongInt DispAcc = 0, DMask = (1 << OpSize) - 1, DMax = 15 << OpSize;
   Boolean OK, FirstFlag = False;
+  tSymbolFlags Flags;
   char *Pos;
   tStrComp Arg, Remainder;
 
@@ -219,9 +220,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word *Erg)
     }
     else
     {
-      FirstPassUnknown = FALSE;
-      DispAcc += EvalStrIntExpression(&Arg, Int32, &OK);
-      if (FirstPassUnknown) FirstFlag = True;
+      DispAcc += EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
+      if (mFirstPassUnknown(Flags)) FirstFlag = True;
       if (!OK)
         return False;
     }
@@ -310,15 +310,15 @@ static void DecodeUImm5(Word Index)
   ImmOrder *Instr = UImm5Orders + Index;
   Word RegX, ImmV;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(2, 2) && DecodeArgReg(1, &RegX, AllRegMask))
   {
-    FirstPassUnknown = False;
-    ImmV = EvalStrIntExpression(&ArgStr[2], (Instr->Ofs > 0) ? UInt6 : UInt5, &OK);
+    ImmV = EvalStrIntExpressionWithFlags(&ArgStr[2], (Instr->Ofs > 0) ? UInt6 : UInt5, &OK, &Flags);
     if ((Instr->Min > 0) && (ImmV < Instr->Min))
     {
-      if (FirstPassUnknown) ImmV = Instr->Min;
+      if (mFirstPassUnknown(Flags)) ImmV = Instr->Min;
       else
       {
         WrError(ErrNum_UnderRange); OK = False;
@@ -326,7 +326,7 @@ static void DecodeUImm5(Word Index)
     }
     if ((Instr->Ofs > 0) && ((ImmV < Instr->Ofs) || (ImmV > 31 + Instr->Ofs)))
     {
-      if (FirstPassUnknown) ImmV = Instr->Ofs;
+      if (mFirstPassUnknown(Flags)) ImmV = Instr->Ofs;
       else
       {
         WrError((ImmV < Instr->Ofs) ? ErrNum_UnderRange : ErrNum_OverRange); 
@@ -346,15 +346,16 @@ static void DecodeLJmp(Word Index)
   FixedOrder *Instr = LJmpOrders + Index;
   LongInt Dest;
   Boolean OK;
+  tSymbolFlags Flags;
   
   if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(1, 1))
   {
-    Dest = EvalStrIntExpression(&ArgStr[1], UInt32, &OK) - (EProgCounter() + 2);
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dest & 1)) WrError(ErrNum_DistIsOdd);
-      else if ((!SymbolQuestionable) && ((Dest > 2046) || (Dest < -2048))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && (Dest & 1)) WrError(ErrNum_DistIsOdd);
+      else if (!mSymbolQuestionable(Flags) && ((Dest > 2046) || (Dest < -2048))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         if ((Instr->Priv) && (!SupAllowed)) WrError(ErrNum_PrivOrder);
@@ -369,6 +370,7 @@ static void DecodeSJmp(Word Index)
 {
   LongInt Dest;
   Boolean OK;
+  tSymbolFlags Flags;
   int l = 0;
   
   if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
@@ -377,15 +379,15 @@ static void DecodeSJmp(Word Index)
   else
   {
     ArgStr[1].Str[l] = '\0';
-    Dest = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt32, &OK);
+    Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt32, &OK, &Flags);
     if (OK)
     {
-      if ((!SymbolQuestionable) & (Dest & 3)) WrError(ErrNum_NotAligned);
+      if (!mSymbolQuestionable(Flags) && (Dest & 3)) WrError(ErrNum_NotAligned);
       else
       {
         Dest = (Dest - (EProgCounter() + 2)) >> 2;
         if ((EProgCounter() & 3) < 2) Dest++;
-        if ((!SymbolQuestionable) && ((Dest < 0) || (Dest > 255))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           WAsmCode[0] = 0x7000 + (Index << 8) + (Dest & 0xff);
@@ -421,14 +423,15 @@ static void DecodeBMASKI(Word Index)
 {
   Word RegX, ImmV;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(2, 2) && DecodeArgReg(1, &RegX, AllRegMask))
   {
-    FirstPassUnknown = False;
-    ImmV = EvalStrIntExpression(&ArgStr[2], UInt6, &OK);
-    if ((FirstPassUnknown) && ((ImmV < 1) || (ImmV > 32))) ImmV = 8;
+    ImmV = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt6, &OK, &Flags);
+    if (mFirstPassUnknown(Flags) && ((ImmV < 1) || (ImmV > 32))) ImmV = 8;
     if (OK)
     {
       if (ChkRange(ImmV, 1, 32))
@@ -453,7 +456,7 @@ static void DecodeLdSt(Word Index)
   else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
   else
   {
-    if (Lo(Index) != 0xff) OpSize = Lo(Index);
+    if (Lo(Index) != 0xff) OpSize = (tSymbolSize)Lo(Index);
     if (DecodeArgReg(1, &RegZ, AllRegMask) && DecodeAdr(&ArgStr[2], &RegX))
     {
       NSize = (OpSize == eSymbolSize32Bit) ? 0 : OpSize + 1;
@@ -496,16 +499,17 @@ static void DecodeLoopt(Word Index)
   Word RegY;
   LongInt Dest;
   Boolean OK;
+  tSymbolFlags Flags;
   UNUSED(Index);
 
   if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (ChkArgCnt(2, 2) && DecodeArgReg(1, &RegY, AllRegMask))
   {
-    Dest = EvalStrIntExpression(&ArgStr[2], UInt32, &OK) - (EProgCounter() + 2);
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt32, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dest &1 )) WrError(ErrNum_DistIsOdd);
-      else if ((!SymbolQuestionable) && ((Dest > -2) || (Dest <- 32))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && (Dest & 1)) WrError(ErrNum_DistIsOdd);
+      else if (!mSymbolQuestionable(Flags) && ((Dest > -2) || (Dest <- 32))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         WAsmCode[0] = 0x0400 + (RegY << 4) + ((Dest >> 1) & 15);
@@ -520,6 +524,7 @@ static void DecodeLrm(Word Index)
   LongInt Dest;
   Word RegZ;
   Boolean OK;
+  tSymbolFlags Flags;
   int l = 0;
   UNUSED(Index);
   
@@ -530,15 +535,15 @@ static void DecodeLrm(Word Index)
   else
   {
     ArgStr[2].Str[l] = '\0';
-    Dest = EvalStrIntExpressionOffs(&ArgStr[2], 1, UInt32, &OK);
+    Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], 1, UInt32, &OK, &Flags);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dest & 3)) WrError(ErrNum_NotAligned);
+      if (!mSymbolQuestionable(Flags) && (Dest & 3)) WrError(ErrNum_NotAligned);
       else
       {
         Dest = (Dest - (EProgCounter() + 2)) >> 2;
         if ((EProgCounter() & 3) < 2) Dest++;
-        if ((!SymbolQuestionable) && ((Dest < 0) || (Dest > 255))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           WAsmCode[0] = 0x7000 + (RegZ << 8) + (Dest & 0xff);
@@ -605,7 +610,7 @@ static void DecodeTrap(Word Index)
 /*--------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static void AddFixed(char *NName, Word NCode, Boolean NPriv)
+static void AddFixed(const char *NName, Word NCode, Boolean NPriv)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -613,7 +618,7 @@ static void AddFixed(char *NName, Word NCode, Boolean NPriv)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddOneReg(char *NName, Word NCode, Boolean NPriv)
+static void AddOneReg(const char *NName, Word NCode, Boolean NPriv)
 {
   if (InstrZ >= OneRegOrderCnt) exit(255);
   OneRegOrders[InstrZ].Code = NCode;
@@ -621,7 +626,7 @@ static void AddOneReg(char *NName, Word NCode, Boolean NPriv)
   AddInstTable(InstTable, NName, InstrZ++, DecodeOneReg);
 }
 
-static void AddTwoReg(char *NName, Word NCode, Boolean NPriv)
+static void AddTwoReg(const char *NName, Word NCode, Boolean NPriv)
 {
   if (InstrZ >= TwoRegOrderCnt) exit(255);
   TwoRegOrders[InstrZ].Code = NCode;
@@ -629,7 +634,7 @@ static void AddTwoReg(char *NName, Word NCode, Boolean NPriv)
   AddInstTable(InstTable, NName, InstrZ++, DecodeTwoReg);
 }
 
-static void AddUImm5(char *NName, Word NCode, Word NMin, Word NOfs)
+static void AddUImm5(const char *NName, Word NCode, Word NMin, Word NOfs)
 {
    if (InstrZ >= UImm5OrderCnt) exit(255);
    UImm5Orders[InstrZ].Code = NCode;
@@ -638,7 +643,7 @@ static void AddUImm5(char *NName, Word NCode, Word NMin, Word NOfs)
    AddInstTable(InstTable, NName, InstrZ++, DecodeUImm5);
 }
 
-static void AddLJmp(char *NName, Word NCode, Boolean NPriv)
+static void AddLJmp(const char *NName, Word NCode, Boolean NPriv)
 {
   if (InstrZ >= LJmpOrderCnt) exit(255);
   LJmpOrders[InstrZ].Code = NCode;
@@ -646,7 +651,7 @@ static void AddLJmp(char *NName, Word NCode, Boolean NPriv)
   AddInstTable(InstTable, NName, InstrZ++, DecodeLJmp);
 }
 
-static void AddCReg(char *NName, Word NCode)
+static void AddCReg(const char *NName, Word NCode)
 {
   if (InstrZ >= CRegCnt) exit(255);
   CRegs[InstrZ].Name = NName;
@@ -760,24 +765,27 @@ static void DeinitFields(void)
 /*--------------------------------------------------------------------------*/
 /* Callbacks */
 
-static void MakeCode_MCORE(void)
+static Boolean DecodeAttrPart_MCORE(void)
 {
-  CodeLen = 0;
-
-  OpSize = eSymbolSize32Bit;
-  DontPrint = False;
-
   /* operand size identifiers slightly differ from '68K Standard': */
 
   switch (mytoupper(*AttrPart.Str))
   {
-    case 'H': OpSize = eSymbolSize16Bit; break;
-    case 'W': OpSize = eSymbolSize32Bit; break;
-    case 'L': WrError(ErrNum_UndefAttr); return;
+    case 'H': AttrPartOpSize = eSymbolSize16Bit; break;
+    case 'W': AttrPartOpSize = eSymbolSize32Bit; break;
+    case 'L': WrStrErrorPos(ErrNum_UndefAttr, &AttrPart); return False;
     default:
-     if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-       return;
+      return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
   }
+  return True;
+}
+
+static void MakeCode_MCORE(void)
+{
+  CodeLen = 0;
+
+  OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSize32Bit;
+  DontPrint = False;
 
   /* Nullanweisung */
 
@@ -819,7 +827,9 @@ static void SwitchTo_MCORE(void)
    Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
    SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
-   MakeCode = MakeCode_MCORE; IsDef = IsDef_MCORE;
+   DecodeAttrPart = DecodeAttrPart_MCORE;
+   MakeCode = MakeCode_MCORE;
+   IsDef = IsDef_MCORE;
 
    SwitchFrom = SwitchFrom_MCORE; InitFields();
    AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);

@@ -80,7 +80,7 @@ static Boolean DecReg(const char *pAsc, Word *pErg, Boolean errMsg)
 static Boolean DecSkip(const char *pAsc, Word *pErg, Boolean errMsg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word skip;
 	} SkipTable[] = {
 		{ "SKP", 0x1 },
@@ -117,7 +117,7 @@ static Boolean DecSkip(const char *pAsc, Word *pErg, Boolean errMsg)
 static Boolean DecEM(const char *pAsc, Word *pErg, Boolean errMsg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word em;
 	} EMTable[] = {
 		{ "RE", 0x1 },
@@ -142,7 +142,7 @@ static Boolean DecEM(const char *pAsc, Word *pErg, Boolean errMsg)
 static Boolean DecBB(const char *pAsc, Word *pErg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word bb;
 	} BBTable[] = {
 		{ "CSBR", 0x0 },
@@ -245,7 +245,7 @@ static Boolean DecDReg(const char *pAsc, Boolean errMsg)
 static Boolean DecBR(const char *pAsc, Word *pErg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word bbb;
 	} BRTable[] = {
 		{ "CSBR", 0x0 },
@@ -275,7 +275,7 @@ static Boolean DecBR(const char *pAsc, Word *pErg)
 static Boolean DecSR(const char *pAsc, Word *pErg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word ppp;
 	} SRTable[] = {
 		{ "SBRB", 0x0 },
@@ -300,7 +300,7 @@ static Boolean DecSR(const char *pAsc, Word *pErg)
 static Boolean DecHR(const char *pAsc, Word *pErg)
 {
 	static struct {
-		char *str;
+		const char *str;
 		Word hhh;
 	} HRTable[] = {
 		{ "TCR",  0x0 },
@@ -415,11 +415,13 @@ static void DecodeAdr(Word Index)
 	{
 		if (IsIndirect(Left.Str))
 		{	/* (zadr)(X0) , (zadr)(X1) */
+			tEvalResult EvalResult;
+
 			l = strlen(Left.Str);
 			StrCompCopySub(&InnerZ, &Left, 1, l - 2);
-			disp = EvalStrIntExpression(&InnerZ, Int16, &OK);
-			if (!OK) return;
-			ChkSpace(SegCode);
+			disp = EvalStrIntExpressionWithResult(&InnerZ, Int16, &EvalResult);
+			if (!EvalResult.OK) return;
+			ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 			if (disp < 0 || disp > 0xff)
 			{
 				WrError(ErrNum_OverRange);
@@ -478,9 +480,11 @@ static void DecodeAdr(Word Index)
 	}
 	else
 	{	/* !index */
-		adr = EvalStrIntExpression(sc, UInt16, &OK);
-		if (!OK) return;
-		ChkSpace(SegCode);
+		tEvalResult EvalResult;
+
+		adr = EvalStrIntExpressionWithResult(sc, UInt16, &EvalResult);
+		if (!EvalResult.OK) return;
+		ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 		
 		if (adr < 0x100)
 		{
@@ -518,22 +522,23 @@ static void DecodeRegImm8(Word Index)
 {
 	Word reg;
 	Byte imm8;
-	Boolean OK;
 	
 	if (ChkArgCnt(2, 2))
 	{
 		if (DecReg(ArgStr[1].Str, &reg, True))
 		{
+			tEvalResult EvalResult;
+
 			if (reg == 7)
 			{
 				WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
 				return;				
 			}
 			
-			imm8 = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-			if (OK)
+			imm8 = EvalStrIntExpressionWithResult(&ArgStr[2], Int8, &EvalResult);
+			if (EvalResult.OK)
 			{
-				if (Index & 0x1000) ChkSpace(SegIO);	/* RD/WR */
+				if (Index & 0x1000) ChkSpace(SegIO, EvalResult.AddrSpaceMask);	/* RD/WR */
 
 				WAsmCode[0] = Index | ((Word)reg << 8) | imm8;
 				CodeLen = 1;
@@ -693,7 +698,7 @@ static void DecodeLD(Word Index)
 	Word reg;
 	Word br = 0x0;	/* CSBR when not specified */
 	Word exp;
-	Boolean OK;
+	tEvalResult EvalResult;
 	
 	if (!ChkMinCPU(CPUMN1613)) return;
 
@@ -711,9 +716,9 @@ static void DecodeLD(Word Index)
 		if (!DecBB(ArgStr[2].Str, &br)) return;
 	}
 
-	exp = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK);
-	if (!OK) return;
-	ChkSpace(SegCode);
+	exp = EvalStrIntExpressionWithResult(&ArgStr[ArgCnt], Int16, &EvalResult);
+	if (!EvalResult.OK) return;
+	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 	
 	WAsmCode[0] = Index | (br << 4) | reg;
 	WAsmCode[1] = exp;
@@ -1023,15 +1028,15 @@ static void DecodeFLT(Word Index)
 static void DecodeBD(Word Index)
 {
 	Word exp;
-	Boolean OK;
+	tEvalResult EvalResult;
 	
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(1,1)) return;
 
-	exp = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-	if (!OK) return;
-	ChkSpace(SegCode);
+	exp = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
+	if (!EvalResult.OK) return;
+	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
 	WAsmCode[0] = Index;
 	WAsmCode[1] = exp;
@@ -1043,7 +1048,7 @@ static void DecodeBL(Word Index)
 {
 	int l;
 	Word exp;
-	Boolean OK;
+	tEvalResult EvalResult;
 	
 	if (!ChkMinCPU(CPUMN1613)) return;
 
@@ -1058,9 +1063,9 @@ static void DecodeBL(Word Index)
 	}
 
 	StrCompCopySub(&Inner, &ArgStr[1], 1, l - 2);
-	exp = EvalStrIntExpression(&Inner, Int16, &OK);
-	if (!OK) return;
-	ChkSpace(SegCode);
+	exp = EvalStrIntExpressionWithResult(&Inner, Int16, &EvalResult);
+	if (!EvalResult.OK) return;
+	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
 	WAsmCode[0] = Index;
 	WAsmCode[1] = exp;
@@ -1088,7 +1093,7 @@ static void DecodeTSET(Word Index)
 {
 	Word reg;
 	Word exp;
-	Boolean OK;
+	tEvalResult EvalResult;
 	Word skip = 0;
 
 	if (!ChkMinCPU(CPUMN1613)) return;
@@ -1102,9 +1107,9 @@ static void DecodeTSET(Word Index)
 		return;
 	}
 
-	exp = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
-	if (!OK) return;
-	ChkSpace(SegCode);
+	exp = EvalStrIntExpressionWithResult(&ArgStr[2], Int16, &EvalResult);
+	if (!EvalResult.OK) return;
+	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
 	if (ArgCnt == 3)
 	{
@@ -1231,7 +1236,7 @@ static void DecodeLB(Word Index)
 {
 	Word reg;
 	Word exp;
-	Boolean OK;
+	tEvalResult EvalResult;
 
 	if (!ChkMinCPU(CPUMN1613)) return;
 
@@ -1251,9 +1256,9 @@ static void DecodeLB(Word Index)
 		}
 	}
 
-	exp = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
-	if (!OK) return;
-	ChkSpace(SegCode);
+	exp = EvalStrIntExpressionWithResult(&ArgStr[2], Int16, &EvalResult);
+	if (!EvalResult.OK) return;
+	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
 	WAsmCode[0] = Index | (reg << 4);
 	WAsmCode[1] = exp;
@@ -1361,7 +1366,7 @@ static void DecodeDC(Word Index)
 			if (OK)
 			{
 				EvalStrExpression(&ArgStr[z], &t);
-				if (FirstPassUnknown && t.Typ == TempInt) t.Contents.Int &= 65535;
+				if (mFirstPassUnknown(t.Flags) && t.Typ == TempInt) t.Contents.Int &= 65535;
 				switch (t.Typ)
 				{
 				case TempInt:
@@ -1404,15 +1409,15 @@ static void DecodeDS(Word Index)
 {
 	LongInt Size;
 	Boolean OK;
+	tSymbolFlags Flags;
 	
 	UNUSED(Index);
 
 	if (!ChkArgCnt(1, 1)) return;
 
-	FirstPassUnknown = False;
-	Size = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+	Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
 	if (!OK) return;
-	if (FirstPassUnknown)
+	if (mFirstPassUnknown(Flags))
 	{
 		WrStrErrorPos(ErrNum_FirstPassCalc, &ArgStr[1]);
 		return;
@@ -1427,144 +1432,144 @@ static void DecodeDS(Word Index)
 
 /* MN1610 */
 
-static void AddAdr(char *NName, Word NCode)
+static void AddAdr(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeAdr);
 }
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddRegImm8(char *NName, Word NCode)
+static void AddRegImm8(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeRegImm8);
 }
 
-static void AddReg(char *NName, Word NCode)
+static void AddReg(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeReg);
 }
 
-static void AddRegRegSkip(char *NName, Word NCode)
+static void AddRegRegSkip(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeRegRegSkip);
 }
 
-static void AddShift(char *NName, Word NCode)
+static void AddShift(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeShift);
 }
 	
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 	
-static void AddLevel(char *NName, Word NCode)
+static void AddLevel(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeLevel);
 }
 
 /* MN1613 */
 
-static void AddLD(char *NName, Word NCode)
+static void AddLD(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeLD);
 }
 
-static void AddLR(char *NName, Word NCode)
+static void AddLR(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeLR);
 }
 
-static void AddMVWR(char *NName, Word NCode)
+static void AddMVWR(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeMVWR);
 }
 
-static void AddMVWI(char *NName, Word NCode)
+static void AddMVWI(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeMVWI);
 }
 
-static void AddFixed1613(char *NName, Word NCode)
+static void AddFixed1613(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeFixed1613);
 }
 
-static void AddNEG(char *NName, Word NCode)
+static void AddNEG(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeNEG);
 }
 
-static void AddAD(char *NName, Word NCode)
+static void AddAD(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeAD);
 }
 
-static void AddM(char *NName, Word NCode)
+static void AddM(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeM);
 }
 
-static void AddDAA(char *NName, Word NCode)
+static void AddDAA(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeDAA);
 }
 
-static void AddFIX(char *NName, Word NCode)
+static void AddFIX(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeFIX);
 }
 
-static void AddFLT(char *NName, Word NCode)
+static void AddFLT(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeFLT);
 }
 
-static void AddBD(char *NName, Word NCode)
+static void AddBD(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBD);
 }
 
-static void AddBL(char *NName, Word NCode)
+static void AddBL(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBL);
 }
 
-static void AddBR(char *NName, Word NCode)
+static void AddBR(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBR);
 }
 
-static void AddTSET(char *NName, Word NCode)
+static void AddTSET(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeTSET);
 }
 
-static void AddSRBT(char *NName, Word NCode)
+static void AddSRBT(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeSRBT);
 }
 
-static void AddBLK(char *NName, Word NCode)
+static void AddBLK(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBLK);
 }
 
-static void AddRDR(char *NName, Word NCode)
+static void AddRDR(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeRDR);
 }
 
-static void AddLB(char *NName, Word NCode)
+static void AddLB(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeLB);
 }
 
-static void AddCPYB(char *NName, Word NCode)
+static void AddCPYB(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeCPYB);
 }

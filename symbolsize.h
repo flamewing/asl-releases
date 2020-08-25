@@ -25,6 +25,11 @@ typedef enum
   eSymbolSizeFloatDec96Bit = 9
 } tSymbolSize;
 
+#ifdef __cplusplus
+#include "cppops.h"
+DefCPPOps_Enum(tSymbolSize)
+#endif
+
 extern const char *GetSymbolSizeName(tSymbolSize Size);
 
 extern unsigned GetSymbolSizeBytes(tSymbolSize Size);

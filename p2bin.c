@@ -389,48 +389,20 @@ static void MeasureFile(const char *FileName, LongWord Offset)
 
 static CMDResult CMD_AdrRange(Boolean Negate, const char *Arg)
 {
-  char *p, Save;
-  Boolean err;
-
   if (Negate)
   {
     StartAdr = 0; StopAdr = 0x7fff;
     return CMDOK;
   }
   else
-  {
-    p = strchr(Arg, '-');
-    if (!p) return CMDErr;
-
-    Save = (*p); *p = '\0';
-    StartAuto = AddressWildcard(Arg);
-    if (StartAuto)
-      err = True;
-    else
-      StartAdr = ConstLongInt(Arg, &err, 10);
-    *p = Save;
-    if (!err)
-      return CMDErr;
-
-    StopAuto = AddressWildcard(p + 1);
-    if (StopAuto)
-      err = True;
-    else
-      StopAdr = ConstLongInt(p + 1, &err, 10);
-    if (!err)
-      return CMDErr;
-
-    if ((!StartAuto) && (!StopAuto) && (StartAdr > StopAdr))
-      return CMDErr;
-
-    return CMDArg;
-  }
+    return CMD_Range(&StartAdr, &StopAdr,
+                     &StartAuto, &StopAuto, Arg);
 }
 
 static CMDResult CMD_ByteMode(Boolean Negate, const char *pArg)
 {
 #define ByteModeCnt 9
-  static char *ByteModeStrings[ByteModeCnt] =
+  static const char *ByteModeStrings[ByteModeCnt] =
   {
     "ALL", "EVEN", "ODD", "BYTE0", "BYTE1", "BYTE2", "BYTE3", "WORD0", "WORD1"
   };

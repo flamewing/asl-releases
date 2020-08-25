@@ -29,19 +29,19 @@ typedef struct
   void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize);
 #if (defined OS2_NLS) || (defined DOS_NLS)
   DateFormat DateFmt;  /* Datumsreihenfolge */
-  char *DateSep;       /* Trennzeichen zwischen Datumskomponenten */
+  const char *DateSep; /* Trennzeichen zwischen Datumskomponenten */
   TimeFormat TimeFmt;  /* 12/24-Stundenanzeige */
-  char *TimeSep;       /* Trennzeichen zwischen Zeitkomponenten */
+  const char *TimeSep; /* Trennzeichen zwischen Zeitkomponenten */
 #elif defined LOCALE_NLS
   const char *DateFmtStr;
   const char *TimeFmtStr;
 #endif
-  char *Currency;      /* Waehrungsname */
+  const char *Currency;      /* Waehrungsname */
   CurrFormat CurrFmt;  /* Anzeigeformat Waehrung */
   Byte CurrDecimals;   /* Nachkommastellen Waehrungsbetraege */
-  char *ThouSep;       /* Trennzeichen fuer Tausenderbloecke */
-  char *DecSep;        /* Trennzeichen fuer Nachkommastellen */
-  char *DataSep;       /* ??? */
+  const char *ThouSep; /* Trennzeichen fuer Tausenderbloecke */
+  const char *DecSep;  /* Trennzeichen fuer Nachkommastellen */
+  const char *DataSep; /* ??? */
   Boolean Initialized;
 } NLS_CountryInfo;
 
@@ -851,11 +851,11 @@ void NLS_CurrencyString(double inp, char *erg, int DestSize)
       as_snprintf(erg, DestSize, "%s%s", s, NLSInfo.Currency);
       break;
     case CurrFormatPostBlank:
-      as_snprintf(erg, DestSize, "%s%s", s, NLSInfo.Currency);
+      as_snprintf(erg, DestSize, "%s %s", s, NLSInfo.Currency);
       break;
     default:
-      strmov(p, p + strlen(NLSInfo.DecSep));
-      strins(NLSInfo.Currency, s, p - s);
+      *p = '\0';
+      as_snprintf(erg, DestSize, "%s%s%s", s, NLSInfo.Currency, p + strlen(NLSInfo.DecSep));
   }
 }
 

@@ -40,7 +40,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
 } Condition; 
 
@@ -62,6 +62,10 @@ typedef enum
   ePrefixIW   /* one word more in argument */
 } tOpPrefix;
 
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(tOpPrefix)
+#endif
 
 #define ExtFlagName    "INEXTMODE"       /* Flag-Symbolnamen */
 #define LWordFlagName  "INLWORDMODE"
@@ -272,9 +276,9 @@ static Boolean InLongMode(void)
 /*--------------------------------------------------------------------------*/
 /* absolute Adresse */
 
-static LongWord EvalAbsAdrExpression(const tStrComp *pArg, Boolean *OK)
+static LongWord EvalAbsAdrExpression(const tStrComp *pArg, tEvalResult *pEvalResult)
 {
-  return EvalStrIntExpression(pArg, ExtFlag ? Int32 : UInt16, OK);
+  return EvalStrIntExpressionWithResult(pArg, ExtFlag ? Int32 : UInt16, pEvalResult);
 }
 
 /*==========================================================================*/
@@ -283,7 +287,7 @@ static LongWord EvalAbsAdrExpression(const tStrComp *pArg, Boolean *OK)
 static Boolean DecodeReg8(char *Asc, Byte *Erg)
 {
 #define Reg8Cnt 7
-  static char *Reg8Names[Reg8Cnt] = { "B", "C", "D", "E", "H", "L", "A" };
+  static const char Reg8Names[Reg8Cnt][2] = { "B", "C", "D", "E", "H", "L", "A" };
   int z;
 
   for (z = 0; z < Reg8Cnt; z++)
@@ -309,12 +313,13 @@ static Boolean IsSym(char ch)
 static void DecodeAdr(const tStrComp *pArg)
 {
 #define Reg16Cnt 6
-  static char *Reg16Names[Reg16Cnt] = {"BC","DE","HL","SP","IX","IY"};
+  static const char Reg16Names[Reg16Cnt][3] = { "BC", "DE", "HL", "SP", "IX", "IY" };
 
   int z, l;
   Integer AdrInt;
   LongInt AdrLong;
   Boolean OK;
+  tEvalResult EvalResult;
 
   AdrMode = ModNone;
   AdrCnt = 0;
@@ -455,10 +460,10 @@ static void DecodeAdr(const tStrComp *pArg)
 
   if (IsIndirect(pArg->Str))
   {
-    LongWord Addr = EvalAbsAdrExpression(pArg, &OK);
-    if (OK)
+    LongWord Addr = EvalAbsAdrExpression(pArg, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       AdrMode = ModAbs;
       AdrVals[0] = Addr & 0xff;
       AdrVals[1] = (Addr >> 8) & 0xff;
@@ -556,7 +561,7 @@ static void AppendAdrVals(void)
   AppendVals(AdrVals, AdrCnt);
 }
 
-static Boolean ParPair(char *Name1, char *Name2)
+static Boolean ParPair(const char *Name1, const char *Name2)
 {
   return (((!as_strcasecmp(ArgStr[1].Str, Name1)) && (!as_strcasecmp(ArgStr[2].Str, Name2))) ||
           ((!as_strcasecmp(ArgStr[1].Str, Name2)) && (!as_strcasecmp(ArgStr[2].Str, Name1))));
@@ -1225,9 +1230,11 @@ static void DecodeLD(Word IsLDW)
 
 static void DecodeALU8(Word Code)
 {
-  const tStrComp AccArg = { { 0, 1 } , "A" };
+  char AccStr[] = "A";
+  tStrComp AccArg;
   const tStrComp *pSrcArg, *pDestArg;
 
+  StrCompMkTemp(&AccArg, AccStr);
   switch (ArgCnt)
   {
     case 1:
@@ -1393,7 +1400,7 @@ static void DecodeADD(Word Index)
           switch (AdrMode)
           {
             case ModImm:
-              switch (ChkExactCPUList(0, CPUZ380, CPUR2000, CPUNone))
+              switch (ChkExactCPUList(ErrNum_InstructionNotSupported, CPUZ380, CPUR2000, CPUNone))
               {
                 case 0:
                   BAsmCode[0] = 0xed; BAsmCode[1] = 0x82;
@@ -1788,9 +1795,11 @@ static void DecodeMLT(Word Index)
 
 static void DecodeMULT_DIV(Word Code)
 {
-  const tStrComp HLComp = { { 0, 1 } , "HL" };
+  char HLStr[] = "HL";
+  tStrComp HLComp;
   const tStrComp *pSrcArg, *pDestArg;
 
+  StrCompMkTemp(&HLComp, HLStr);
   switch (ArgCnt)
   {
     case 1:
@@ -2233,12 +2242,12 @@ static void DecodeIN_OUT(Word IsOUT)
     else if (as_strcasecmp(pRegArg->Str, "A")) WrError(ErrNum_InvAddrMode);
     else
     {
-      Boolean OK;
+      tEvalResult EvalResult;
 
-      BAsmCode[1] = EvalStrIntExpression(pPortArg, UInt8, &OK);
-      if (OK)
+      BAsmCode[1] = EvalStrIntExpressionWithResult(pPortArg, UInt8, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         CodeLen = 2;
         BAsmCode[0] = IsOUT ? 0xd3 : 0xdb;
       }
@@ -2358,12 +2367,12 @@ static void DecodeINA_INAW_OUTA_OUTAW(Word Code)
      || ((OpSize == 1) && (as_strcasecmp(pRegArg->Str, "HL")))) WrError(ErrNum_InvAddrMode);
     else
     {
-      Boolean OK;
+      tEvalResult EvalResult;
 
-      AdrLong = EvalStrIntExpression(pPortArg, ExtFlag ? Int32 : UInt8, &OK);
-      if (OK)
+      AdrLong = EvalStrIntExpressionWithResult(pPortArg, ExtFlag ? Int32 : UInt8, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         if (AdrLong > 0xfffffful)
           ChangeDDPrefix(ePrefixIW);
         else if (AdrLong > 0xfffful)
@@ -2472,9 +2481,10 @@ static void DecodeJP(Word Code)
   if (OK)
   {
     LongWord AdrLong;
+    tEvalResult EvalResult;
 
-    AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
-    if (OK)
+    AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &EvalResult);
+    if (EvalResult.OK)
     {
       if (AdrLong <= 0xfffful)
       {
@@ -2534,9 +2544,10 @@ static void DecodeCALL(Word Code)
   if (OK)
   {
     LongWord AdrLong;
+    tEvalResult EvalResult;
 
-    AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
-    if (OK)
+    AdrLong = EvalAbsAdrExpression(&ArgStr[ArgCnt], &EvalResult);
+    if (EvalResult.OK)
     {
       if (AdrLong <= 0xfffful)
       {
@@ -2598,9 +2609,10 @@ static void DecodeJR(Word Code)
   if (OK)
   {
     LongInt AdrLInt;
+    tEvalResult EvalResult;
 
-    AdrLInt = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
-    if (OK)
+    AdrLInt = EvalAbsAdrExpression(&ArgStr[ArgCnt], &EvalResult);
+    if (EvalResult.OK)
     {
       AdrLInt -= EProgCounter() + 2;
       if ((AdrLInt <= 0x7fl) && (AdrLInt >= -0x80l))
@@ -2611,7 +2623,7 @@ static void DecodeJR(Word Code)
       }
       else
       {
-        if (MomCPU<CPUZ380) WrError(ErrNum_JmpDistTooBig);
+        if (MomCPU < CPUZ380) WrError(ErrNum_JmpDistTooBig);
         else
         {
           AdrLInt -= 2;
@@ -2673,9 +2685,10 @@ static void DecodeCALR(Word Code)
     if (ChkMinCPU(CPUZ380))
     {
       LongInt AdrLInt;
+      tEvalResult EvalResult;
 
-      AdrLInt = EvalAbsAdrExpression(&ArgStr[ArgCnt], &OK);
-      if (OK)
+      AdrLInt = EvalAbsAdrExpression(&ArgStr[ArgCnt], &EvalResult);
+      if (EvalResult.OK)
       {
         AdrLInt -= EProgCounter() + 3;
         if ((AdrLInt <= 0x7fl) && (AdrLInt >= -0x80l))
@@ -2722,11 +2735,11 @@ static void DecodeDJNZ(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     LongInt AdrLInt;
 
-    AdrLInt = EvalAbsAdrExpression(&ArgStr[1], &OK);
-    if (OK)
+    AdrLInt = EvalAbsAdrExpression(&ArgStr[1], &EvalResult);
+    if (EvalResult.OK)
     {
       AdrLInt -= EProgCounter() + 2;
       if ((AdrLInt <= 0x7fl) & (AdrLInt >= -0x80l))
@@ -2773,6 +2786,7 @@ static void DecodeRST(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
+    tSymbolFlags Flags;
     Byte AdrByte;
     int SaveRadixBase = RadixBase;
 
@@ -2782,11 +2796,10 @@ static void DecodeRST(Word Code)
     RadixBase = 16;
 #endif
 
-    FirstPassUnknown = False;
-    AdrByte = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
+    AdrByte = EvalStrIntExpressionWithFlags(&ArgStr[1], Int8, &OK, &Flags);
     RadixBase = SaveRadixBase;
 
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(Flags))
       AdrByte = AdrByte & 0x38;  
     if (OK)
     {
@@ -2991,7 +3004,7 @@ static void ModIntel(Word Code)
 /*==========================================================================*/
 /* Codetabellenerzeugung */
 
-static void AddFixed(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+static void AddFixed(const char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].MinCPU = NewMin;
@@ -3000,7 +3013,7 @@ static void AddFixed(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
   AddInstTable(InstTable, NewName, InstrZ++, DecodeFixed);
 }
 
-static void AddAcc(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+static void AddAcc(const char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
 {
   if (InstrZ >= AccOrderCnt) exit(255);
   AccOrders[InstrZ].MinCPU = NewMin;
@@ -3009,7 +3022,7 @@ static void AddAcc(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
   AddInstTable(InstTable, NewName, InstrZ++, DecodeAcc);
 }
 
-static void AddHL(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
+static void AddHL(const char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
 {
   if (InstrZ >= HLOrderCnt) exit(255);
   HLOrders[InstrZ].MinCPU = NewMin;
@@ -3018,25 +3031,25 @@ static void AddHL(char *NewName, CPUVar NewMin, Byte NewLen, Word NewCode)
   AddInstTable(InstTable, NewName, InstrZ++, DecodeHL);
 }
 
-static void AddALU(char *Name8, char *Name16, Byte Code)
+static void AddALU(const char *Name8, const char *Name16, Byte Code)
 {
   AddInstTable(InstTable, Name8 , Code, DecodeALU8);
   AddInstTable(InstTable, Name16, Code, DecodeALU16);
 }
 
-static void AddShift(char *Name8, char *Name16, Byte Code)
+static void AddShift(const char *Name8, const char *Name16, Byte Code)
 {
   AddInstTable(InstTable, Name8 , Code, DecodeShift8);
   if (Name16)
     AddInstTable(InstTable, Name16, Code, DecodeShift16);
 }
 
-static void AddBit(char *NName, Word Code)
+static void AddBit(const char *NName, Word Code)
 {
   AddInstTable(InstTable, NName, Code, DecodeBit);
 }
 
-static void AddCondition(char *NewName, Byte NewCode)
+static void AddCondition(const char *NewName, Byte NewCode)
 {
   if (InstrZ >= ConditionCnt) exit(255);
   Conditions[InstrZ].Name = NewName;

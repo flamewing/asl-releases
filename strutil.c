@@ -111,9 +111,11 @@ char *as_strdup(const char *s)
 /*---------------------------------------------------------------------------*/
 /* ...so is snprintf... */
 
+typedef enum { eNotSet, eSet, eFinished } tArgState;
+
 typedef struct
 {
-  enum { eNotSet, eSet, eFinished } ArgState[3];
+  tArgState ArgState[3];
   Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero;
   int Arg[3], CurrArg, IntSize;
 } tFormatContext;

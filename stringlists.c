@@ -94,30 +94,26 @@ void RemoveStringList(StringList *List, const char *OldStr)
   }
 }
 
-char *GetStringListFirst(StringList List, StringRecPtr *Lauf)
+const char *GetStringListFirst(StringList List, StringRecPtr *Lauf)
 {
-  static char *Dummy="", *tmp;
-
   *Lauf = List;
   if (!*Lauf)
-    return Dummy;
+    return "";
   else
   {
-    tmp = (*Lauf)->Content;
+    char *tmp = (*Lauf)->Content;
     *Lauf = (*Lauf)->Next;
     return tmp;
   }
 }
 
-char *GetStringListNext(StringRecPtr *Lauf)
+const char *GetStringListNext(StringRecPtr *Lauf)
 {
-  static char *Dummy = "", *tmp;
-
   if (!*Lauf)
-    return Dummy;
+    return "";
   else
   {
-    tmp = (*Lauf)->Content;
+    char *tmp = (*Lauf)->Content;
     *Lauf = (*Lauf)->Next;
     return tmp;
   }

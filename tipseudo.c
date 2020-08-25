@@ -114,7 +114,7 @@ static void pseudo_lqxx(Integer num)
 
 typedef void (*tcallback)(
 #ifdef __PROTOS__
-Boolean *, int *, LongInt
+Boolean *, int *, LongInt, tSymbolFlags
 #endif
 );
 
@@ -153,12 +153,12 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen)
           goto ToInt;
 
         while (cp < cend)
-          callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff]);
+          callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff], t.Flags);
         break;
       }
       case TempInt:
       ToInt:
-        callback(&ok, &adr, t.Contents.Int);
+        callback(&ok, &adr, t.Contents.Int, t.Flags);
         break;
       default:
         ok = False;
@@ -170,9 +170,9 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen)
     CodeLen = 0;
 }
 
-static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
+static void wr_code_byte(Boolean *ok, int *adr, LongInt val, tSymbolFlags Flags)
 {
-  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
+  if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -182,9 +182,9 @@ static void wr_code_byte(Boolean *ok, int *adr, LongInt val)
   CodeLen = *adr;
 }
 
-static void wr_code_word(Boolean *ok, int *adr, LongInt val)
+static void wr_code_word(Boolean *ok, int *adr, LongInt val, tSymbolFlags Flags)
 {
-  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int16))
+  if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int16))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -194,18 +194,19 @@ static void wr_code_word(Boolean *ok, int *adr, LongInt val)
   CodeLen = *adr;
 }
 
-static void wr_code_long(Boolean *ok, int *adr, LongInt val)
+static void wr_code_long(Boolean *ok, int *adr, LongInt val, tSymbolFlags Flags)
 {
   UNUSED(ok);
+  UNUSED(Flags);
 
   WAsmCode[(*adr)++] = val & 0xffff;
   WAsmCode[(*adr)++] = val >> 16;
   CodeLen = *adr;
 }
 
-static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
+static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val, tSymbolFlags Flags)
 {
-  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
+  if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -218,9 +219,9 @@ static void wr_code_byte_hilo(Boolean *ok, int *adr, LongInt val)
   CodeLen = ((*adr) + 1) / 2;
 }
 
-static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val)
+static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val, tSymbolFlags Flags)
 {
-  if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(val, Int8))
+  if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8))
   {
     WrError(ErrNum_OverRange);
     *ok = False;
@@ -674,16 +675,16 @@ static void DecodeDATA34x(Word Code)
 static void DecodeBSS(Word Code)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt Size;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((OK) && (!FirstPassUnknown))
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       DontPrint = True;
       if (!Size)

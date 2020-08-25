@@ -160,9 +160,9 @@ static void FillAdrPartsImm(tAdrParts *pAdrParts, LongWord Value, Boolean ForceL
     /* special treatment for -1 since it depends on the operand size: */
 
     if ((Value == 0xffffffff)
-     || ((OpSize == 0) && (Value == 0xff))
-     || ((OpSize == 1) && (Value == 0xffff))
-     || ((OpSize == 2) && (Value == 0xfffff)))
+     || ((OpSize == eOpSizeB) && (Value == 0xff))
+     || ((OpSize == eOpSizeW) && (Value == 0xffff))
+     || ((OpSize == eOpSizeA) && (Value == 0xfffff)))
     {
       pAdrParts->Cnt = 0;
       pAdrParts->Part = RegCG2;
@@ -412,11 +412,12 @@ static Word GetMult(const tStrComp *pArg, Boolean *pOK)
   }
   if (*pArg->Str == '#')
   {
-    FirstPassUnknown = False;
-    Result = EvalStrIntExpressionOffs(pArg, 1, UInt5, pOK);
+    tSymbolFlags Flags;
+
+    Result = EvalStrIntExpressionOffsWithFlags(pArg, 1, UInt5, pOK, &Flags);
     if (*pOK)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         Result = 1;
       if (!ChkRange(Result, 1, 16))
         *pOK = False;
@@ -812,7 +813,7 @@ static void DecodeMOVA(Word Code)
 
   UNUSED(Code);
 
-  OpSize = 2;
+  OpSize = eOpSizeA;
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
@@ -936,7 +937,7 @@ static void DecodeDECDA_INCDA(Word Code)
 
 static void DecodeADDA_SUBA_CMPA(Word Code)
 {
-  OpSize = 2;
+  OpSize = eOpSizeA;
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
@@ -973,13 +974,13 @@ static void DecodeRxM(Word Code)
   else
   {
     Word Mult;
+    tSymbolFlags Flags;
     Boolean OK;
 
-    FirstPassUnknown = False;
-    Mult = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt3, &OK);
+    Mult = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt3, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         Mult = 1;
       if (ChkRange(Mult, 1, 4))
       {
@@ -997,7 +998,7 @@ static void DecodeCALLA(Word Code)
 
   UNUSED(Code);
 
-  OpSize = 2;
+  OpSize = eOpSizeA;
   PCDist = 2;
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
@@ -1041,10 +1042,10 @@ static void DecodePUSHM_POPM(Word Code)
   {
     Boolean OK;
     Word Cnt;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Cnt = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt5, &OK);
-    if (FirstPassUnknown)
+    Cnt = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt5, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Cnt = 1;
     if (OK && ChkRange(Cnt, 1, 16))
     {
@@ -1060,16 +1061,17 @@ static void DecodePUSHM_POPM(Word Code)
 static void DecodeJmp(Word Code)
 {
   Integer AdrInt; 
+  tSymbolFlags Flags;
   Boolean OK;
 
   if (!ChkArgCnt(1, 1));
   else if (OpSize != eOpSizeDefault) WrError(ErrNum_InvOpSize);
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
       if (Odd(AdrInt)) WrError(ErrNum_DistIsOdd);
-      else if ((!SymbolQuestionable) && ((AdrInt<-1024) || (AdrInt>1022))) WrError(ErrNum_JmpDistTooBig);
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt < -1024) || (AdrInt > 1022))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         if (Odd(EProgCounter())) WrError(ErrNum_AddrNotAligned);
@@ -1094,12 +1096,11 @@ static void DecodeBYTE(Word Index)
     do
     {
       KillBlanks(ArgStr[z].Str);
-      FirstPassUnknown = False;
       EvalStrExpression(&ArgStr[z], &t);
       switch (t.Typ)
       {
         case TempInt:
-          if (FirstPassUnknown) t.Contents.Int &= 0xff;
+          if (mFirstPassUnknown(t.Flags)) t.Contents.Int &= 0xff;
           if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
           else if (SetMaxCodeLen(CodeLen + 1))
           {
@@ -1173,9 +1174,10 @@ static void DecodeBSS(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    HVal16 = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+    tSymbolFlags Flags;
+
+    HVal16 = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
       if (!HVal16) WrError(ErrNum_NullResMem);
@@ -1262,7 +1264,7 @@ static void DecodeRPT(Word Code)
 #define AddFixed(NName, NCode) \
         AddInstTable(InstTable, NName, NCode, DecodeFixed)
 
-static void AddTwoOp(char *NName, Word NCode)
+static void AddTwoOp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeTwoOp);
   if (MomCPU >= CPUMSP430X)
@@ -1274,17 +1276,17 @@ static void AddTwoOp(char *NName, Word NCode)
   }
 }
 
-static void AddEmulOneToTwo(char *NName, Word NCode)
+static void AddEmulOneToTwo(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeEmulOneToTwo);
 }
 
-static void AddEmulOneToTwoX(char *NName, Word NCode)
+static void AddEmulOneToTwoX(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeEmulOneToTwoX);
 }
 
-static void AddOneOp(char *NName, Boolean NMay, Boolean AllowX, Word NCode)
+static void AddOneOp(const char *NName, Boolean NMay, Boolean AllowX, Word NCode)
 {
   if (InstrZ >= OneOpCount) exit(255);
   OneOpOrders[InstrZ].MayByte = NMay;
@@ -1412,6 +1414,37 @@ static void DeinitFields(void)
 
 /*-------------------------------------------------------------------------*/
 
+static Boolean DecodeAttrPart_MSP(void)
+{
+  if (strlen(AttrPart.Str) > 1) 
+  {
+    WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+    return False;
+  }
+  switch (mytoupper(*AttrPart.Str))
+  {
+    case '\0':
+      break;
+    case 'B':
+      AttrPartOpSize = eSymbolSize8Bit;
+      break;
+    case 'W':
+      AttrPartOpSize = eSymbolSize16Bit;
+      break;
+    case 'A':
+      if (MomCPU >= CPUMSP430X)
+      {
+        AttrPartOpSize = eSymbolSize24Bit; /* TODO: should be 20 bits */
+        break;
+      }
+      /* else fall-through */
+    default:
+      WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+      return False;
+  }
+  return True;
+}
+
 static void MakeCode_MSP(void)
 {
   CodeLen = 0; DontPrint = False; PCDist = 0;
@@ -1422,26 +1455,20 @@ static void MakeCode_MSP(void)
 
   /* process attribute */
 
-  if (!*AttrPart.Str) OpSize = eOpSizeDefault;
-  else if (strlen(AttrPart.Str) > 1) WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
-  else switch (mytoupper(*AttrPart.Str))
+  switch (AttrPartOpSize)
   {
-    case 'B':
-      OpSize = eOpSizeB;
+    case eSymbolSize24Bit:
+      OpSize = eOpSizeA;
       break;
-    case 'W':
+    case eSymbolSize16Bit:
       OpSize = eOpSizeW;
       break;
-    case 'A':
-      if (MomCPU >= CPUMSP430X)
-      {
-        OpSize = eOpSizeA;
-        break;
-      }
-      /* else fall-through */
+    case eSymbolSize8Bit:
+      OpSize = eOpSizeB;
+      break;
     default:
-      WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
-      return;
+      OpSize = eOpSizeDefault;
+      break;
   }
 
   /* insns not requiring word alignment */
@@ -1499,7 +1526,9 @@ static void SwitchTo_MSP(void)
 
   AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
 
-  MakeCode = MakeCode_MSP; IsDef = IsDef_MSP;
+  DecodeAttrPart = DecodeAttrPart_MSP;
+  MakeCode = MakeCode_MSP;
+  IsDef = IsDef_MSP;
   SwitchFrom = SwitchFrom_MSP; InitFields();
 
   MultPrefix = 0x0000;

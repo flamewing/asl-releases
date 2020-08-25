@@ -58,7 +58,7 @@ static CPUVar CPU8080, CPU8085, CPU8085U;
 static tAdrMode AdrMode;
 static Byte AdrVals[2], OpSize;
 
-static char *Z80SyntaxName = "Z80SYNTAX";
+static char Z80SyntaxName[] = "Z80SYNTAX";
 static tSyntax CurrSyntax;
 
 /*---------------------------------------------------------------------------*/
@@ -67,7 +67,7 @@ static const Byte AccReg = 7;
 
 static Boolean DecodeReg8(const char *Asc, tSyntax Syntax, Byte *Erg)
 {
-  static const char *RegNames = "BCDEHLMA";
+  static const char RegNames[] = "BCDEHLMA";
   const char *p;
 
   if (strlen(Asc) != 1) return False;
@@ -92,7 +92,7 @@ static const Byte SPReg = 3;
 
 static Boolean DecodeReg16(char *pAsc, tSyntax Syntax, Byte *pResult)
 {
-  static const char *RegNames[8] = {"B", "D", "H", "SP", "BC", "DE", "HL", "SP"};
+  static const char RegNames[8][3] = { "B", "D", "H", "SP", "BC", "DE", "HL", "SP" };
 
   for (*pResult = (Syntax & eSyntax808x) ? 0 : 4;
        *pResult < ((Syntax & eSyntaxZ80) ? 8 : 4);
@@ -106,19 +106,19 @@ static Boolean DecodeReg16(char *pAsc, tSyntax Syntax, Byte *pResult)
   return ((*pResult) < 4);
 }
 
-static const char *pConditions[] =
+static const char Conditions[][4] =
 {
   "NZ", "Z", "NC", "C", "PO", "PE", "P", "M", "NX5", "X5"
 };
 
 static Boolean DecodeCondition(const char *pAsc, Byte *pResult, Boolean WithX5)
 {
-  int ConditionCnt = sizeof(pConditions) / sizeof(*pConditions);
+  int ConditionCnt = sizeof(Conditions) / sizeof(*Conditions);
   
   if (!WithX5 || (MomCPU!= CPU8085U))
     ConditionCnt -= 2;
   for (*pResult = 0; *pResult < ConditionCnt; (*pResult)++)
-    if (!as_strcasecmp(pAsc, pConditions[*pResult]))
+    if (!as_strcasecmp(pAsc, Conditions[*pResult]))
     {
       *pResult = (*pResult < 8) ? (*pResult << 3) : (0x1b + ((*pResult & 1) << 5));
       return True;
@@ -204,13 +204,13 @@ AdrFound:
 }
 
 /*!------------------------------------------------------------------------
- * \fn     Boolean ChkSyntax(Byte InstrSyntax)
+ * \fn     Boolean ChkSyntax(tSyntax InstrSyntax)
  * \brief  check whether instruction's syntax (808x/Z80) fits to selected one
  * \param  InstrSyntax instruction syntax
  * \return True if all fine
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkSyntax(Byte InstrSyntax)
+static Boolean ChkSyntax(tSyntax InstrSyntax)
 {
   if ((InstrSyntax == eSyntax808x) && (!(CurrSyntax & eSyntax808x)))
   {
@@ -233,7 +233,7 @@ static Boolean ChkSyntax(Byte InstrSyntax)
 static void DecodeFixed(Word Code)
 {
   if (ChkArgCnt(0, 0)
-   && ChkSyntax(Hi(Code)))
+   && ChkSyntax((tSyntax)Hi(Code)))
   {
     CodeLen = 1;
     BAsmCode[0] = Lo(Code);
@@ -244,20 +244,19 @@ static void DecodeFixed(Word Code)
 
 static void DecodeOp16(Word Code)
 {
-  Boolean OK;
-  Word AdrWord;
-
   if (ChkArgCnt(1, 1)
-   && ChkSyntax(Hi(Code)))
+   && ChkSyntax((tSyntax)Hi(Code)))
   {
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
+
+    if (EvalResult.OK)
     {
       CodeLen = 3;
       BAsmCode[0] = Lo(Code);
       BAsmCode[1] = Lo(AdrWord);
       BAsmCode[2] = Hi(AdrWord);
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -268,7 +267,7 @@ static void DecodeOp8(Word Code)
   Byte AdrByte;
 
   if (ChkArgCnt(1, 1)
-   && ChkSyntax(Hi(Code)))
+   && ChkSyntax((tSyntax)Hi(Code)))
   {
     AdrByte = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
@@ -285,8 +284,8 @@ static void DecodeALU(Word Code)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax(Hi(Code)));
-  else if (!DecodeReg8(ArgStr[1].Str, Hi(Code), &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+  else if (!ChkSyntax((tSyntax)Hi(Code)));
+  else if (!DecodeReg8(ArgStr[1].Str, (tSyntax)Hi(Code), &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -443,8 +442,10 @@ static void DecodeRST(Word Index)
   }
   else
   {
-    AdrByte = EvalStrIntExpression(&ArgStr[1], (CurrSyntax & eSyntaxZ80) ? UInt6 : UInt3, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    AdrByte = EvalStrIntExpressionWithFlags(&ArgStr[1], (CurrSyntax & eSyntaxZ80) ? UInt6 : UInt3, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       AdrByte = 0;
     if (OK)
     {
@@ -1224,7 +1225,7 @@ static void DecodeRET(Word Code)
 
 static void DecodeINOUT(Word Code)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
 
   if (!ChkArgCnt((CurrSyntax & eSyntax808x) ? 1 : 2, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
     return;
@@ -1240,10 +1241,10 @@ static void DecodeINOUT(Word Code)
     if (AdrMode == ModNone)
       return;
   }
-  BAsmCode[1] = EvalStrIntExpression(&ArgStr[((Code == 0xdb) && (ArgCnt == 2)) ? 2 : 1], UInt8, &OK);
-  if (OK)
+  BAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[((Code == 0xdb) && (ArgCnt == 2)) ? 2 : 1], UInt8, &EvalResult);
+  if (EvalResult.OK)
   {
-    ChkSpace(SegCode);
+    ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     BAsmCode[0] = Lo(Code);
     CodeLen = 2;
   }
@@ -1307,7 +1308,7 @@ static void DecodeZ80SYNTAX(Word Code)
     }
     else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
     {
-      CurrSyntax = eSyntax808x | eSyntaxZ80;
+      CurrSyntax = eSyntaxBoth;
       EnterIntSymbol(&TmpComp, 1, 0, True);
     }
     else if (!as_strcasecmp(ArgStr[1].Str, "EXCLUSIVE"))
@@ -1322,25 +1323,25 @@ static void DecodeZ80SYNTAX(Word Code)
 
 /*--------------------------------------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, CPUVar NMinCPU, Byte NCode, Word SyntaxMask)
+static void AddFixed(const char *NName, CPUVar NMinCPU, Byte NCode, Word SyntaxMask)
 {
   if (MomCPU >= NMinCPU)
     AddInstTable(InstTable, NName, (SyntaxMask << 8) | NCode, DecodeFixed);
 }
 
-static void AddOp16(char *NName, CPUVar NMinCPU, Byte NCode, Word SyntaxMask)
+static void AddOp16(const char *NName, CPUVar NMinCPU, Byte NCode, Word SyntaxMask)
 {
   if (MomCPU >= NMinCPU)
     AddInstTable(InstTable, NName, (SyntaxMask << 8) | NCode, DecodeOp16);
 }
 
-static void AddOp8(char *NName, CPUVar NMinCPU, Word NCode, Word SyntaxMask)
+static void AddOp8(const char *NName, CPUVar NMinCPU, Word NCode, Word SyntaxMask)
 {
   if (MomCPU >= NMinCPU)
     AddInstTable(InstTable, NName, (SyntaxMask << 8) | NCode, DecodeOp8);
 }                         
 
-static void AddALU(char *NName, Byte NCode, Word SyntaxMask)
+static void AddALU(const char *NName, Byte NCode, Word SyntaxMask)
 {
   AddInstTable(InstTable, NName, (SyntaxMask << 8) | NCode, DecodeALU);
 }           

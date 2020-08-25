@@ -90,11 +90,14 @@ enum
 #define XYOrderCnt 6
 
 #define PushRegCnt 10
-static char *PushRegNames[PushRegCnt] = 
+static const char PushRegNames[PushRegCnt][4] = 
 {
   "A", "B", "X", "Y", "DPR", "DT", "DBR", "PG", "PBR", "PS"
 };
-static Byte  PushRegCodes[PushRegCnt]={0  ,1  ,2  ,3  ,4    ,5   ,5    ,6   ,6    ,7   };
+static const Byte PushRegCodes[PushRegCnt] =
+{
+  0  ,1  ,2  ,3  ,4    ,5   ,5    ,6   ,6    ,7
+};
 
 #define PrefAccB 0x42
 
@@ -126,6 +129,7 @@ static ASSUMERec ASSUME7700s[] =
 static void CodeDisp(const tStrComp *pArg, LongInt Start, LongWord Mask)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt Adr;
   ShortInt DType;
   int ArgLen = strlen(pArg->Str);
@@ -152,7 +156,7 @@ static void CodeDisp(const tStrComp *pArg, LongInt Start, LongWord Mask)
   else
     DType = -1;
 
-  Adr = EvalStrIntExpressionOffs(pArg, Offset, UInt24, &OK);
+  Adr = EvalStrIntExpressionOffsWithFlags(pArg, Offset, UInt24, &OK, &Flags);
 
   if (!OK)
     return;
@@ -176,7 +180,7 @@ static void CodeDisp(const tStrComp *pArg, LongInt Start, LongWord Mask)
     switch (DType)
     {
       case 0:
-        if ((FirstPassUnknown) || (ChkRange(Adr, Reg_DPR, Reg_DPR + 0xff)))
+        if (mFirstPassUnknown(Flags) || (ChkRange(Adr, Reg_DPR, Reg_DPR + 0xff)))
         {
           AdrCnt = 1;
           AdrType = Start;
@@ -184,7 +188,7 @@ static void CodeDisp(const tStrComp *pArg, LongInt Start, LongWord Mask)
         }
         break;
       case 1:
-        if ((!FirstPassUnknown) && ((Adr >> 16) != BankReg)) WrError(ErrNum_OverRange);
+        if (!mFirstPassUnknown(Flags) && ((Adr >> 16) != BankReg)) WrError(ErrNum_OverRange);
         else
         {
           AdrCnt = 2;
@@ -452,10 +456,11 @@ static void DecodeRel(Word Index)
   const RelOrder *pOrder = RelOrders + Index;
   LongInt AdrLong;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), Int32, &OK);
+    AdrLong = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '#'), Int32, &OK, &Flags);
     if (OK)
     {
       OK = pOrder->Disp8 == -1;
@@ -464,7 +469,7 @@ static void DecodeRel(Word Index)
       else
       {
         AdrLong -= EProgCounter() + pOrder->Disp8;
-        if (((AdrLong > 127) || (AdrLong < -128)) && (!SymbolQuestionable) && (pOrder->Disp16 != -1))
+        if (((AdrLong > 127) || (AdrLong < -128)) && !mSymbolQuestionable(Flags) && (pOrder->Disp16 != -1))
         {
           OK = True;
           AdrLong -= pOrder->Disp16 - pOrder->Disp8;
@@ -472,7 +477,7 @@ static void DecodeRel(Word Index)
       }
       if (OK)            /* d16 */
       {
-        if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
+        if (((AdrLong < -32768) || (AdrLong > 32767)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_DistTooBig);
         else
         {
           CodeLen = 3;
@@ -483,7 +488,7 @@ static void DecodeRel(Word Index)
       }
       else               /* d8 */
       {
-        if (((AdrLong < -128) || (AdrLong > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+        if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 2;
@@ -707,13 +712,14 @@ static void DecodeBBC_BBS(Word Code)
       {
         LongInt AdrLong;
         Boolean OK;
+        tSymbolFlags Flags;
 
         memcpy(BAsmCode + CodeLen, AdrVals, AdrCnt);
         CodeLen += AdrCnt;
-        AdrLong = EvalStrIntExpression(&ArgStr[3], UInt24, &OK) - (EProgCounter() + CodeLen + 1);
+        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt24, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
         if (!OK)
           CodeLen = 0;
-        else if ((!SymbolQuestionable) && ((AdrLong < -128) || (AdrLong > 127)))
+        else if (!mSymbolQuestionable(Flags) && ((AdrLong < -128) || (AdrLong > 127)))
         {
           WrError(ErrNum_JmpDistTooBig);
           CodeLen = 0;
@@ -1182,15 +1188,16 @@ static void DecodePER(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK, Rel = !(*ArgStr[1].Str == '#');
+    tSymbolFlags Flags;
 
     BAsmCode[0] = 0x62;
     if (Rel)
     {
-      LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - (EProgCounter() + 3);
+      LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags) - (EProgCounter() + 3);
 
       if (OK)
       {
-        if (((AdrLong < -32768) || (AdrLong > 32767)) && !SymbolQuestionable) WrError(ErrNum_JmpDistTooBig);
+        if (((AdrLong < -32768) || (AdrLong > 32767)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 3;
@@ -1215,13 +1222,13 @@ static void DecodePER(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode, Byte NAllowed)
+static void AddFixed(const char *NName, Word NCode, Byte NAllowed)
 {
   if (CPUMatch(NAllowed))
     AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddRel(char *NName, Word NCode, ShortInt NDisp8, ShortInt NDisp16)
+static void AddRel(const char *NName, Word NCode, ShortInt NDisp8, ShortInt NDisp16)
 {
   if (InstrZ >= RelOrderCnt) exit(255);
   RelOrders[InstrZ].Code = NCode;
@@ -1230,7 +1237,7 @@ static void AddRel(char *NName, Word NCode, ShortInt NDisp8, ShortInt NDisp16)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddAcc(char *NName, Byte NCode)
+static void AddAcc(const char *NName, Byte NCode)
 {
   char Tmp[30];
 
@@ -1239,20 +1246,20 @@ static void AddAcc(char *NName, Byte NCode)
   AddInstTable(InstTable, Tmp, 0x0100 | NCode, DecodeAcc);
 }
 
-static void AddRMW(char *NName, Word NACode, Word NMCode)
+static void AddRMW(const char *NName, Word NACode, Word NMCode)
 {
   AddInstTable(InstTable, NName, NACode << 8 | NMCode, DecodeRMW);
 }
 
-static void AddImm8(char *NName, Word NCode, Byte NAllowed)
+static void AddImm8(const char *NName, Word NCode, Byte NAllowed)
 {
   if (CPUMatch(NAllowed))
     AddInstTable(InstTable, NName, NCode, DecodeImm8);
 }
 
-static void AddXY(char *NName, Byte NCodeImm, Byte NCodeAbs8, Byte NCodeAbs16,
-                          Byte NCodeIdxX8, Byte NCodeIdxX16, Byte NCodeIdxY8,
-                          Byte NCodeIdxY16)
+static void AddXY(const char *NName, Byte NCodeImm, Byte NCodeAbs8, Byte NCodeAbs16,
+                  Byte NCodeIdxX8, Byte NCodeIdxX16, Byte NCodeIdxY8,
+                  Byte NCodeIdxY16)
 {
   if (InstrZ >= XYOrderCnt) exit(255);
   XYOrders[InstrZ].CodeImm = NCodeImm;
@@ -1265,7 +1272,7 @@ static void AddXY(char *NName, Byte NCodeImm, Byte NCodeAbs8, Byte NCodeAbs16,
   AddInstTable(InstTable, NName, InstrZ++, DecodeXY);
 }
 
-static void AddMulDiv(char *NName, Word NCode, Byte NAllowed)
+static void AddMulDiv(const char *NName, Word NCode, Byte NAllowed)
 {
   if (CPUMatch(NAllowed))
   {

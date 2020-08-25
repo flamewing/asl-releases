@@ -7,7 +7,7 @@ OBLANK=$(NULL) $(NULL)
 
 include makedefs.files
 
-ALLFLAGS = $(CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+ALLFLAGS = $(TARG_CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 #---------------------------------------------------------------------------
 # Primary Pargets

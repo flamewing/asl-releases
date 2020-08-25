@@ -30,7 +30,7 @@ Boolean InEnv, char *Arg
 
 typedef struct
 {
-  char *Ident; 
+  const char *Ident; 
   CMDCallback Callback;
 } CMDRec;
          
@@ -44,7 +44,7 @@ extern Boolean ProcessedEmpty(CMDProcessed Processed);
 extern void ProcessCMD(int argc, char **argv,
                        const CMDRec *pCMDRecs, int CMDRecCnt,
                        CMDProcessed Unprocessed,
-                       char *EnvName, CMDErrCallback ErrProc);
+                       const char *EnvName, CMDErrCallback ErrProc);
 
 extern const char *GetEXEName(const char *argv0);
 

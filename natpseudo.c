@@ -31,6 +31,7 @@
 Boolean DecodeNatPseudo(Boolean *pBigFlag)
 {
   Boolean ValOK;
+  tSymbolFlags Flags;
   Word Size, Value;
 
   *pBigFlag = FALSE;
@@ -63,9 +64,8 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = False;
-      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &ValOK, &Flags);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
         DontPrint = True;
@@ -83,9 +83,8 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
   {
     if (ChkArgCnt(2, 2))
     {
-      FirstPassUnknown = False;
-      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &ValOK, &Flags);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
         if (SetMaxCodeLen(Size)) WrError(ErrNum_CodeOverflow);
@@ -107,9 +106,8 @@ Boolean DecodeNatPseudo(Boolean *pBigFlag)
   {
     if (ChkArgCnt(2, 2))
     {
-      FirstPassUnknown = False;
-      Size = EvalStrIntExpression(&ArgStr[1], UInt16, &ValOK);
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &ValOK, &Flags);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else if (ValOK)
       {
         if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);

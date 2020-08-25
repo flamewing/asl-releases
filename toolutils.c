@@ -33,7 +33,7 @@ static int FilterCnt;
 static Byte FilterBytes[100];
 
 Word FileID = 0x1489;       /* Dateiheader Eingabedateien */
-char *OutName = "STDOUT";   /* Pseudoname Output */
+const char *OutName = "STDOUT";   /* Pseudoname Output */
 
 static TMsgCat MsgCat;
 
@@ -73,7 +73,7 @@ void DelSuffix(char *Name)
     *Part = '\0';
 }
 
-void AddSuffix(char *pName, unsigned NameSize, char *Suff)
+void AddSuffix(char *pName, unsigned NameSize, const char *Suff)
 {
   char *p, *z, *Part;
 
@@ -393,6 +393,40 @@ CMDResult CMD_FilterList(Boolean Negate, const char *Arg)
   while (p != NULL);
 
   DoFilter = (FilterCnt != 0);
+
+  return CMDArg;
+}
+
+extern CMDResult CMD_Range(LongWord *pStartAddr, LongWord *pStopAddr,
+                           Boolean *pStartAuto, Boolean *pStopAuto,
+                           const char *Arg)
+{
+  const char *p;
+  String StartStr;
+  Boolean ok;
+
+  p = strchr(Arg, '-');
+  if (!p) return CMDErr;
+
+  strmemcpy(StartStr, sizeof(StartStr), Arg, p - Arg);
+  *pStartAuto = AddressWildcard(StartStr);
+  if (*pStartAuto)
+    ok = True;
+  else
+    *pStartAddr = ConstLongInt(Arg, &ok, 10);
+  if (!ok)
+    return CMDErr;
+
+  *pStopAuto = AddressWildcard(p + 1);
+  if (*pStopAuto)
+    ok = True;
+  else
+    *pStopAddr = ConstLongInt(p + 1, &ok, 10);
+  if (!ok)
+    return CMDErr;
+
+  if (!*pStartAuto && !*pStopAuto && (*pStartAddr > *pStopAddr))
+    return CMDErr;
 
   return CMDArg;
 }

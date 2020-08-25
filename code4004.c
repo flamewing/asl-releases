@@ -215,6 +215,7 @@ static void DecodeISZ(Word Index)
 {
   Word Adr;
   Boolean OK;
+  tSymbolFlags Flags;
   Byte Erg;
   UNUSED(Index);
 
@@ -222,9 +223,8 @@ static void DecodeISZ(Word Index)
   else if (!DecodeReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
-    FirstPassUnknown = False;
-    Adr = EvalStrIntExpression(&ArgStr[2], UInt12, &OK);
-    if (OK && ChkSamePage(EProgCounter() + 1, Adr, 8))
+    Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt12, &OK, &Flags);
+    if (OK && ChkSamePage(EProgCounter() + 1, Adr, 8, Flags))
     {
       BAsmCode[0] = 0x70 + Erg;
       BAsmCode[1] = Lo(Adr);
@@ -258,11 +258,12 @@ static void DecodeJCN(Word Index)
     if (OK)
     {
       Word AdrInt;
+      tSymbolFlags Flags;
 
-      AdrInt = EvalStrIntExpression(&ArgStr[2], UInt12, &OK);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt12, &OK, &Flags);
       if (OK)
       {
-        if ((!SymbolQuestionable) && (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && (Hi(EProgCounter() + 2) != Hi(AdrInt))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] |= 0x10;
@@ -310,28 +311,28 @@ static void DecodeREG(Word Code)
 /*---------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static void AddFixed(char *NName, Word NCode, CPUVar NMin)
+static void AddFixed(const char *NName, Word NCode, CPUVar NMin)
 {
   NCode |= ((Word)(NMin - CPU4004)) << 8;
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddOneReg(char *NName, Byte NCode)
+static void AddOneReg(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeOneReg);
 }
 
-static void AddOneRReg(char *NName, Byte NCode)
+static void AddOneRReg(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeOneRReg);
 }
 
-static void AddAccReg(char *NName, Byte NCode)
+static void AddAccReg(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAccReg);
 }
 
-static void AddImm4(char *NName, Byte NCode)
+static void AddImm4(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm4);
 }

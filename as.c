@@ -179,7 +179,7 @@ static Boolean INCLUDE_Processor(PInputTag PInp, char *Erg);
 
 static PInputTag GenerateProcessor(void)
 {
-  PInputTag PInp = malloc(sizeof(TInputTag));
+  PInputTag PInp = (PInputTag)malloc(sizeof(TInputTag));
 
   PInp->IsMacro = False;
   PInp->Next = NULL;
@@ -514,7 +514,7 @@ static Boolean ReadMacro_SearchArg(const char *pTest, const char *pComp, Boolean
     return False;
 }
 
-static Boolean ReadMacro_SearchSect(char *Test_O, char *Comp, Boolean *Erg, LongInt *Section)
+static Boolean ReadMacro_SearchSect(char *Test_O, const char *Comp, Boolean *Erg, LongInt *Section)
 {
   char *p;
   String Test, Sect;
@@ -1084,7 +1084,8 @@ static void IRP_Cleanup(PInputTag PInp)
 static Boolean IRP_GetPos(PInputTag PInp, char *dest, int DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
-  char *IRPType, *IRPVal, tmp[10];
+  const char *IRPType;
+  char *IRPVal, tmp[10];
 
   /* LineZ/ParZ already hopped to next line - step one back: */
 
@@ -1577,12 +1578,12 @@ static void ProcessREPTArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
   else
   {
     Boolean ValOK;
+    tSymbolFlags SymbolFlags;
 
-    FirstPassUnknown = False;
-    pContext->ReptCount = EvalStrIntExpression(pArg, Int32, &ValOK);
-    if (FirstPassUnknown)
+    pContext->ReptCount = EvalStrIntExpressionWithFlags(pArg, Int32, &ValOK, &SymbolFlags);
+    if (mFirstPassUnknown(SymbolFlags))
       WrStrErrorPos(ErrNum_FirstPassCalc, pArg);
-    if ((!ValOK) || (FirstPassUnknown))
+    if (!ValOK || mFirstPassUnknown(SymbolFlags))
       pContext->ErrFlag = True;
     pContext->ArgCnt++;
   }
@@ -1727,6 +1728,7 @@ static void WHILE_OutProcessor(void)
 {
   POutputTag Tmp;
   Boolean OK;
+  tSymbolFlags SymbolFlags;
   LongInt Erg;
 
   WasMACRO = True;
@@ -1753,12 +1755,14 @@ static void WHILE_OutProcessor(void)
     Tmp = FirstOutputTag;
     FirstOutputTag = FirstOutputTag->Next;
     Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
-    FirstPassUnknown = False;
-    Erg = EvalStrIntExpression(&Tmp->Tag->SpecName, Int32, &OK);
-    if (FirstPassUnknown)
+    Erg = EvalStrIntExpressionWithFlags(&Tmp->Tag->SpecName, Int32, &OK, &SymbolFlags);
+    if (mFirstPassUnknown(SymbolFlags))
+    {
       WrError(ErrNum_FirstPassCalc);
-    OK = (OK && (!FirstPassUnknown) && (Erg != 0));
-    if ((IfAsm) && (OK))
+      OK = False;
+    }
+    OK = (OK && (Erg != 0));
+    if (IfAsm && OK)
     {
       NextDoLst = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
       NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
@@ -1954,7 +1958,7 @@ static void ExpandINCLUDE(Boolean SearchPath)
 #endif
   Tag->Datei = fopen(FNameArg.Str, "r");
   if (!Tag->Datei) ChkStrIO(ErrNum_OpeningFile, &ArgStr[1]);
-  setvbuf(Tag->Datei, Tag->Buffer, _IOFBF, BufferArraySize);
+  setvbuf(Tag->Datei, (char*)Tag->Buffer, _IOFBF, BufferArraySize);
 
   /* neu besetzen */
 
@@ -2353,8 +2357,15 @@ static void Produce_Code(void)
         ExpandStruct(OneStruct);
         strmaxcpy(ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)", STRINGSIZE);
       }
-      else if (!CodeGlobalPseudo())
-        MakeCode();
+      else
+      {
+        AttrPartOpSize = eSymbolSizeUnknown;
+        if (DecodeAttrPart ? DecodeAttrPart() : True)
+        {
+          if (!CodeGlobalPseudo())
+          MakeCode();
+        }
+      }
       if (MacProOutput && ((*OpPart.Str != '\0') || (*LabPart.Str != '\0') || (*CommPart.Str != '\0')))
       {
         errno = 0;
@@ -2568,7 +2579,8 @@ static void ProcessFile(String FileName)
 {
   long NxtTime, ListTime;
   String Num;
-  char *Name, *Run;
+  const char *Name;
+  char *Run;
 
   dbgentry("ProcessFile");
 
@@ -2651,7 +2663,7 @@ static void ProcessFile(String FileName)
 
 /****************************************************************************/
 
-static char *TWrite_Plur(int n)
+static const char *TWrite_Plur(int n)
 {
   return (n != 1) ? getmessage(Num_ListPlurName) : "";
 }
@@ -2683,7 +2695,10 @@ static void AssembleFile_InitPass(void)
   static char DateS[31], TimeS[31];
   int z;
   String ArchVal;
+
+  String TmpCompStr;
   tStrComp TmpComp;
+  StrCompMkTemp(&TmpComp, TmpCompStr);
 
   dbgentry("AssembleFile_InitPass");
 
@@ -2745,19 +2760,19 @@ static void AssembleFile_InitPass(void)
   ResetSymbolDefines();
   ResetMacroDefines();
   ResetStructDefines();
-  StrCompMkTemp(&TmpComp, FlagTrueName); EnterIntSymbol(&TmpComp, 1, 0, True);
-  StrCompMkTemp(&TmpComp, FlagFalseName); EnterIntSymbol(&TmpComp, 0, 0, True);
-  StrCompMkTemp(&TmpComp, PiName); EnterFloatSymbol(&TmpComp, 4.0 * atan(1.0), True);
-  StrCompMkTemp(&TmpComp, VerName); EnterIntSymbol(&TmpComp, VerNo, 0, True);
+  strmaxcpy(TmpCompStr, FlagTrueName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, 1, 0, True);
+  strmaxcpy(TmpCompStr, FlagFalseName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, 0, 0, True);
+  strmaxcpy(TmpCompStr, PiName, sizeof(TmpCompStr)); EnterFloatSymbol(&TmpComp, 4.0 * atan(1.0), True);
+  strmaxcpy(TmpCompStr, VerName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, VerNo, 0, True);
   as_snprintf(ArchVal, sizeof(ArchVal), "%s-%s", ARCHPRNAME, ARCHSYSNAME);
-  StrCompMkTemp(&TmpComp, ArchName); EnterStringSymbol(&TmpComp, ArchVal, True);
-  StrCompMkTemp(&TmpComp, Has64Name);
+  strmaxcpy(TmpCompStr, ArchName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, ArchVal, True);
+  strmaxcpy(TmpCompStr, Has64Name, sizeof(TmpCompStr));
 #ifdef HAS64
   EnterIntSymbol(&TmpComp, 1, 0, True);
 #else
   EnterIntSymbol(&TmpComp, 0, 0, True);
 #endif
-  StrCompMkTemp(&TmpComp, CaseSensName); EnterIntSymbol(&TmpComp, Ord(CaseSensitive), 0, True);
+  strmaxcpy(TmpCompStr, CaseSensName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, Ord(CaseSensitive), 0, True);
   if (PassNo == 0)
   {
     NLS_CurrDateString(DateS, sizeof(DateS));
@@ -2765,12 +2780,12 @@ static void AssembleFile_InitPass(void)
   }
   if (!FindDefSymbol(DateName))
   {
-    StrCompMkTemp(&TmpComp, DateName);
+    strmaxcpy(TmpCompStr, DateName, sizeof(TmpCompStr));
     EnterStringSymbol(&TmpComp, DateS, True);
   }
   if (!FindDefSymbol(TimeName))
   {
-    StrCompMkTemp(&TmpComp, TimeName);
+    strmaxcpy(TmpCompStr, TimeName, sizeof(TmpCompStr));
     EnterStringSymbol(&TmpComp, TimeS, True);
   }
 
@@ -2780,10 +2795,10 @@ static void AssembleFile_InitPass(void)
     SetCPUByType(0, NULL);
   else
   {
-    tStrComp TmpComp;
+    tStrComp TmpComp2;
     
-    StrCompMkTemp(&TmpComp, DefCPU);
-    if (!SetCPUByName(&TmpComp))
+    StrCompMkTemp(&TmpComp2, DefCPU);
+    if (!SetCPUByName(&TmpComp2))
       SetCPUByType(0, NULL);
   }
 
@@ -2791,12 +2806,12 @@ static void AssembleFile_InitPass(void)
   SetFlag(&FPUAvail, FPUAvailName, False);
   SetFlag(&Maximum, MaximumName, False);
   SetFlag(&DoBranchExt, BranchExtName, False);
-  StrCompMkTemp(&TmpComp, ListOnName); EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
+  strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
   SetLstMacroExp(eLstMacroExpAll);
   InitLstMacroExpMod(&LstMacroExpModOverride);
   InitLstMacroExpMod(&LstMacroExpModDefault);
   SetFlag(&RelaxedMode, RelaxedName, False);
-  StrCompMkTemp(&TmpComp, NestMaxName); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
+  strmaxcpy(TmpCompStr, NestMaxName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
 
   /* initialize counter for temp symbols here after implicit symbols
@@ -3704,9 +3719,8 @@ static CMDResult CMD_DefSymbol(Boolean Negate, const char *Arg)
      AsmParsInit();
      if (Part[0] != '\0')
      {
-       FirstPassUnknown = False;
        EvalExpression(Part, &t);
-       if ((t.Typ == TempNone) || (FirstPassUnknown))
+       if ((t.Typ == TempNone) || mFirstPassUnknown(t.Flags))
          return CMDErr;
      }
      else
@@ -3824,7 +3838,7 @@ static Boolean CMD_CPUAlias_ChkCPUName(char *s)
 
 static CMDResult CMD_CPUAlias(Boolean Negate, const char *Arg)
 {
-  char *p;
+  const char *p;
   String s1, s2;
 
   if (Negate)
@@ -3838,12 +3852,10 @@ static CMDResult CMD_CPUAlias(Boolean Negate, const char *Arg)
       return CMDErr;
     else
     {
-      *p = '\0';
-      strmaxcpy(s1, Arg, STRINGSIZE);
+      strmemcpy(s1, STRINGSIZE, Arg, p - Arg);
       UpString(s1);
       strmaxcpy(s2, p + 1, STRINGSIZE);
       UpString(s2);
-      *p = '=';
       if (!(CMD_CPUAlias_ChkCPUName(s1) && CMD_CPUAlias_ChkCPUName(s2)))
         return CMDErr;
       else if (!AddCPUAlias(s2, s1))
@@ -4296,7 +4308,7 @@ int main(int argc, char **argv)
   else
   {
     StringRecPtr Lauf;
-    char *pFile;
+    const char *pFile;
 
     pFile = GetStringListFirst(FileArgList, &Lauf);
     while ((pFile) && (*pFile))

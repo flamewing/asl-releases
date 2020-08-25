@@ -34,6 +34,11 @@ typedef enum
   NoUnit, L1, L2, S1, S2, M1, M2, D1, D2, LastUnit, UnitCnt
 } TUnit;
 
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(TUnit)
+#endif
+
 typedef struct
 {
   LongInt OpCode;
@@ -73,12 +78,12 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongInt Code;
   Boolean Rd,Wr;
 } CtrlReg;
 
-static char *UnitNames[UnitCnt] =
+static const char UnitNames[UnitCnt][3] =
 {
   "  ", "L1", "L2", "S1", "S2", "M1", "M2", "D1", "D2", "  "
 };
@@ -347,7 +352,7 @@ static Boolean DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord Scale)
   LongWord BaseReg, IndReg;
   int l;
   char Counter;
-  char *p;
+  char *p, EmptyStr[] = "";
   Boolean OK;
   tStrComp Arg = *pArg, DispArg, RegArg;
 
@@ -382,8 +387,7 @@ static Boolean DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord Scale)
   else
   {
     RegArg = Arg;
-    DispArg.Str = "";
-    LineCompReset(&DispArg.Pos);
+    StrCompMkTemp(&DispArg, EmptyStr);
   }
 
   /* Registerfeld entschluesseln */
@@ -460,11 +464,12 @@ static Boolean DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord Scale)
 
   else
   {
-    FirstPassUnknown = False;
-    DispAcc = EvalStrIntExpression(&DispArg, UInt15, &OK);
+    tSymbolFlags Flags;
+
+    DispAcc = EvalStrIntExpressionWithFlags(&DispArg, UInt15, &OK, &Flags);
     if (!OK)
       return False;
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(Flags))
       DispAcc &= 7;
     if (Counter  ==  ')')
     {
@@ -582,7 +587,7 @@ static void SetCross(LongWord Reg)
   ThisCross = ((Reg >> 4) != UnitFlag);
 }
 
-static Boolean DecideUnit(LongWord Reg, char *Units)
+static Boolean DecideUnit(LongWord Reg, const char *Units)
 {
   Integer z;
   TUnit TestUnit;
@@ -740,10 +745,11 @@ static Boolean DecodePseudo(void)
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = False;
-      Size = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-      if ((OK) && (!FirstPassUnknown))
+      tSymbolFlags Flags;
+
+      Size = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+      if (OK && !mFirstPassUnknown(Flags))
       {
         DontPrint = True;
         if (!Size) WrError(ErrNum_NullResMem);
@@ -820,9 +826,10 @@ static void DecodeNOP(Word Index)
     }
     else
     {
-      FirstPassUnknown = False;
-      Count = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-      Count = FirstPassUnknown ? 0 : Count - 1;
+      tSymbolFlags Flags;
+
+      Count = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt4, &OK, &Flags);
+      Count = mFirstPassUnknown(Flags) ? 0 : Count - 1;
       OK = ChkRange(Count, 0, 8);
     }
     if (OK)
@@ -2483,17 +2490,19 @@ static void DecodeB(Word Code)
     {
       if (WithImm)
       {
+        tSymbolFlags Flags;
+
         if (ThisUnit == NoUnit)
           ThisUnit = (UnitUsed(S1)) ? S2 : S1;
         UnitFlag = Ord(ThisUnit == S2);
 
         /* branches relative to fetch packet */
 
-        Dist = EvalStrIntExpression(&ArgStr[1], Int32, &OK) - (PacketAddr & (~31));
+        Dist = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags) - (PacketAddr & (~31));
         if (OK)
         {
           if ((Dist & 3) != 0) WrError(ErrNum_NotAligned);
-          else if ((!SymbolQuestionable) && ((Dist > 0x3fffff) || (Dist < -0x400000))) WrError(ErrNum_JmpDistTooBig);
+          else if (!mSymbolQuestionable(Flags) && ((Dist > 0x3fffff) || (Dist < -0x400000))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             ThisInst = 0x10 + ((Dist & 0x007ffffc) << 5) + (UnitFlag << 1);
@@ -2765,14 +2774,14 @@ static void MakeCode_3206X(void)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddLinAdd(char *NName, LongInt NCode)
+static void AddLinAdd(const char *NName, LongInt NCode)
 {
   if (InstrZ >= LinAddCnt) exit(255);
   LinAddOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeLinAdd);
 }
 
-static void AddCmp(char *NName, LongInt NCode)
+static void AddCmp(const char *NName, LongInt NCode)
 {
   if (InstrZ >= CmpCnt) exit(255);
   CmpOrders[InstrZ].WithImm = NName[strlen(NName) - 1] != 'U';
@@ -2780,7 +2789,7 @@ static void AddCmp(char *NName, LongInt NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCmp);
 }
 
-static void AddMem(char *NName, LongInt NCode, LongInt NScale)
+static void AddMem(const char *NName, LongInt NCode, LongInt NScale)
 {
   if (InstrZ >= MemCnt) exit(255);
   MemOrders[InstrZ].Code = NCode;
@@ -2788,8 +2797,8 @@ static void AddMem(char *NName, LongInt NCode, LongInt NScale)
   AddInstTable(InstTable,NName, InstrZ++, DecodeMemO);
 }
 
-static void AddMul(char *NName, LongInt NCode,
-                           Boolean NDSign, Boolean NSSign1, Boolean NSSign2, Boolean NMay)
+static void AddMul(const char *NName, LongInt NCode,
+                   Boolean NDSign, Boolean NSSign1, Boolean NSSign2, Boolean NMay)
 {
   if (InstrZ >= MulCnt) exit(255);
   MulOrders[InstrZ].Code = NCode;
@@ -2800,8 +2809,8 @@ static void AddMul(char *NName, LongInt NCode,
   AddInstTable(InstTable, NName, InstrZ++, DecodeMul);
 }
 
-static void AddCtrl(char *NName, LongInt NCode,
-                            Boolean NWr, Boolean NRd)
+static void AddCtrl(const char *NName, LongInt NCode,
+                    Boolean NWr, Boolean NRd)
 {
   if (InstrZ >= CtrlCnt) exit(255);
   CtrlRegs[InstrZ].Name = NName;

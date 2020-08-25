@@ -314,13 +314,12 @@ static Boolean LayoutNibble(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   Boolean Result = False;
   TempResult t;
 
-  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &t);
   switch (t.Typ)
   {
     case TempInt:
-      if (FirstPassUnknown) t.Contents.Int &= 0xf;
-      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int4)) WrStrErrorPos(ErrNum_OverRange, pExpr);
+      if (mFirstPassUnknown(t.Flags)) t.Contents.Int &= 0xf;
+      if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int4)) WrStrErrorPos(ErrNum_OverRange, pExpr);
       else
       {
         if (!pCtx->Put4I(t.Contents.Int, pCtx))
@@ -411,14 +410,13 @@ static Boolean LayoutByte(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   Boolean Result = False;
   TempResult t;
 
-  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &t);
   switch (t.Typ)
   {
     case TempInt:
     ToInt:
-      if (FirstPassUnknown) t.Contents.Int &= 0xff;
-      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8)) WrStrErrorPos(ErrNum_OverRange, pExpr);
+      if (mFirstPassUnknown(t.Flags)) t.Contents.Int &= 0xff;
+      if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int8)) WrStrErrorPos(ErrNum_OverRange, pExpr);
       else
       {
         if (!pCtx->Put8I(t.Contents.Int, pCtx))
@@ -503,16 +501,14 @@ static Boolean LayoutWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   Boolean Result = False;
   TempResult t;
 
-  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &t);
   Result = True;
   switch (t.Typ)
   {
     case TempInt:
     ToInt:
-      if (FirstPassUnknown)
-        t.Contents.Int &= 0xffff;
-      if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, Int16)) WrStrErrorPos(ErrNum_OverRange, pExpr);
+      if (mFirstPassUnknown(t.Flags)) t.Contents.Int &= 0xffff;
+      if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int16)) WrStrErrorPos(ErrNum_OverRange, pExpr);
       else
       {
         if (!pCtx->Put16I(t.Contents.Int, pCtx))
@@ -603,7 +599,6 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
   Boolean Result = False;
   Word Cnt = 0;
 
-  FirstPassUnknown = False;
   EvalStrExpression(pExpr, &erg);
   Result = False;
   switch (erg.Typ)
@@ -612,9 +607,8 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
       break;
     case TempInt:
     ToInt:
-      if (FirstPassUnknown)
-        erg.Contents.Int &= 0xfffffffful;
-      if (!SymbolQuestionable && !RangeCheck(erg.Contents.Int, Int32)) WrStrErrorPos(ErrNum_OverRange, pExpr);
+      if (mFirstPassUnknown(erg.Flags)) erg.Contents.Int &= 0xfffffffful;
+      if (!mSymbolQuestionable(erg.Flags) && !RangeCheck(erg.Contents.Int, Int32)) WrStrErrorPos(ErrNum_OverRange, pExpr);
       else
       {
         if (!pCtx->Put32I(erg.Contents.Int, pCtx))
@@ -962,6 +956,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
     String CopyStr;
     tStrComp Copy, DupArg, RemArg, ThisRemArg;
     tCurrCodeFill DUPStartFill, DUPEndFill;
+    tSymbolFlags Flags;
 
     /* operate on copy */
 
@@ -971,10 +966,9 @@ static Boolean DecodeIntelPseudo_LayoutMult(const tStrComp *pArg, struct sLayout
 
     /* evaluate count */
 
-    FirstPassUnknown = False;
     StrCompSplitRef(&DupArg, &RemArg, &Copy, pSep);
-    DupCnt = EvalStrIntExpression(&DupArg, Int32, &OK);
-    if (FirstPassUnknown)
+    DupCnt = EvalStrIntExpressionWithFlags(&DupArg, Int32, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
     {
       WrStrErrorPos(ErrNum_FirstPassCalc, &DupArg); return False;
     }
@@ -1270,9 +1264,10 @@ Boolean DecodeIntelPseudo(Boolean BigEndian)
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = False;
-      HVal = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      tSymbolFlags Flags;
+
+      HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else if (OK)
       {
         DontPrint = True;

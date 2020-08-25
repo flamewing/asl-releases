@@ -11,6 +11,12 @@
 /* Historie: 15. 5.1996 Grundsteinlegung                                     */
 /*                                                                           */
 /*****************************************************************************/
+
+typedef enum
+{
+  IfState_IFIF, IfState_IFELSE,
+  IfState_CASESWITCH, IfState_CASECASE, IfState_CASEELSE
+} tIfState;
      
 typedef struct _TIfSave
 {
@@ -18,14 +24,10 @@ typedef struct _TIfSave
   Integer NestLevel;
   Boolean SaveIfAsm;
   TempResult SaveExpr;
-  enum
-  {
-    IfState_IFIF, IfState_IFELSE,
-    IfState_CASESWITCH, IfState_CASECASE, IfState_CASEELSE
-  } State;
+  tIfState State;
   Boolean CaseFound;
   LongInt StartLine;
-} TIfSave,*PIfSave;
+} TIfSave, *PIfSave;
 
 extern Boolean IfAsm;
 extern PIfSave FirstIfSave;

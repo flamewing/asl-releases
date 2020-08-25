@@ -27,7 +27,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   CPUVar MinCPU;
   Word Code;
 } FixedOrder;
@@ -50,16 +50,17 @@ typedef struct
 #define RelOrderCnt 36
 
 #define SegRegCnt 3
-static char *SegRegNames[SegRegCnt + 1] =
+static const char SegRegNames[SegRegCnt + 1][3] =
 {
   "ES", "CS", "SS", "DS"
 };
-static Byte SegRegPrefixes[SegRegCnt + 1] =
+static const Byte SegRegPrefixes[SegRegCnt + 1] =
 {
   0x26, 0x2e, 0x36, 0x3e
 };
 
-static const tStrComp ArgST = { { 0, 0 }, "ST" };
+static char ArgSTStr[] = "ST";
+static const tStrComp ArgST = { { 0, 0 }, ArgSTStr };
 
 #define TypeNone (-1)
 #define TypeReg8 0
@@ -74,6 +75,7 @@ static Byte AdrMode;
 static Byte AdrVals[6];
 static ShortInt OpSize;
 static Boolean UnknownFlag;
+static unsigned ImmAddrSpaceMask;
 
 static Boolean NoSegCheck;
 
@@ -203,11 +205,11 @@ static void ChkSpaces(ShortInt SegBuffer, Byte MomSegment)
 static void DecodeAdr(const tStrComp *pArg)
 {
   static const int RegCnt = 8;
-  static const char *Reg16Names[8] =
+  static const char Reg16Names[8][3] =
   {
     "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI"
   };
-  static const char *Reg8Names[8] =
+  static const char Reg8Names[8][3] =
   {
     "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH"
   };
@@ -222,7 +224,6 @@ static void DecodeAdr(const tStrComp *pArg)
   Byte SumBuf;
   LongInt DispAcc, DispSum;
   char *pIndirStart, *pIndirEnd, *pSep;
-  Boolean OK;
   ShortInt SegBuffer;
   Byte MomSegment;
   ShortInt FoundSize;
@@ -268,6 +269,7 @@ static void DecodeAdr(const tStrComp *pArg)
     if ((ArgLen > 4) && (!as_strncasecmp(pArg->Str, "ST(", 3)) && (pArg->Str[ArgLen - 1] == ')'))
     {
       tStrComp Num;
+      Boolean OK;
 
       StrCompRefRight(&Num, pArg, 3);
       StrCompShorten(&Num, 1);
@@ -350,17 +352,17 @@ static void DecodeAdr(const tStrComp *pArg)
     if (!pIndirStart || (pIndirStart != Arg.Str))
     {
       tStrComp Remainder;
+      tEvalResult EvalResult;
 
-      FirstPassUnknown = False;
       if (pIndirStart)
         StrCompSplitRef(&Arg, &Remainder, &Arg, pIndirStart);
-      DispAcc += EvalStrIntExpression(&Arg, Int16, &OK);
-      if (!OK)
+      DispAcc += EvalStrIntExpressionWithResult(&Arg, Int16, &EvalResult);
+      if (!EvalResult.OK)
          return;
-      UnknownFlag = UnknownFlag || FirstPassUnknown;
-      MomSegment |= TypeFlag;
-      if (FoundSize == -1)
-        FoundSize = SizeFlag;
+      UnknownFlag = UnknownFlag || mFirstPassUnknown(EvalResult.Flags);
+      MomSegment |= EvalResult.AddrSpaceMask;
+      if (FoundSize == eSymbolSizeUnknown)
+        FoundSize = EvalResult.DataSize;
       if (pIndirStart)
         Arg = Remainder;
       else
@@ -427,15 +429,16 @@ static void DecodeAdr(const tStrComp *pArg)
         }
         else
         {
-          FirstPassUnknown = False;
-          DispSum = EvalStrIntExpression(&IndirArg, Int16, &OK);
-          if (!OK)
+          tEvalResult EvalResult;
+
+          DispSum = EvalStrIntExpressionWithResult(&IndirArg, Int16, &EvalResult);
+          if (!EvalResult.OK)
             return;
-          UnknownFlag = UnknownFlag || FirstPassUnknown;
+          UnknownFlag = UnknownFlag || mFirstPassUnknown(EvalResult.Flags);
           DispAcc = OldNegFlag ? DispAcc - DispSum : DispAcc + DispSum;
-          MomSegment |= TypeFlag;
-          if (FoundSize == -1)
-            FoundSize = SizeFlag;
+          MomSegment |= EvalResult.AddrSpaceMask;
+          if (FoundSize == eSymbolSizeUnknown)
+            FoundSize = EvalResult.DataSize;
         }
         OldNegFlag = NegFlag;
         if (pSep)
@@ -462,6 +465,7 @@ static void DecodeAdr(const tStrComp *pArg)
 
     if (IsImm)
     {
+      ImmAddrSpaceMask = MomSegment;
       if (((UnknownFlag) && (OpSize == 0)) || (MinOneIs0()))
         DispAcc &= 0xff;
       switch (OpSize)
@@ -741,8 +745,6 @@ static void DecodeINT(Word Index)
 
 static void DecodeINOUT(Word Index)
 {
-  Boolean OK;
-
   if (ChkArgCnt(2, 2))
   {
     tStrComp *pPortArg = Index ? &ArgStr[1] : &ArgStr[2],
@@ -758,10 +760,12 @@ static void DecodeINOUT(Word Index)
           BAsmCode[CodeLen++] = 0xec | OpSize | Index;
         else
         {
-          BAsmCode[CodeLen + 1] = EvalStrIntExpression(pPortArg, UInt8, &OK);
-          if (OK)
+          tEvalResult EvalResult;
+
+          BAsmCode[CodeLen + 1] = EvalStrIntExpressionWithResult(pPortArg, UInt8, &EvalResult);
+          if (EvalResult.OK)
           {
-            ChkSpace(SegIO);
+            ChkSpace(SegIO, EvalResult.AddrSpaceMask);
             BAsmCode[CodeLen] = 0xe4 | OpSize | Index;
             CodeLen += 2;
           }
@@ -829,7 +833,7 @@ static void DecodeCALLJMP(Word Index)
           CodeLen = 2 + AdrCnt;
           break;
         case TypeImm:
-          ChkSpace(SegCode);
+          ChkSpace(SegCode, ImmAddrSpaceMask);
           AdrWord = (((Word) AdrVals[1]) << 8) | AdrVals[0];
           if ((AdrByte == 2) || ((AdrByte == 0) && (AbleToSign(AdrWord - EProgCounter() - 2))))
           {
@@ -845,7 +849,6 @@ static void DecodeCALLJMP(Word Index)
           else
           {
             AdrWord -= EProgCounter() + 3;
-            ChkSpace(SegCode);
             BAsmCode[0] = 0xe8 | Index;
             BAsmCode[1] = Lo(AdrWord);
             BAsmCode[2] = Hi(AdrWord);
@@ -1287,20 +1290,20 @@ static void DecodeALU2(Word Index)
 static void DecodeRel(Word Index)
 {
   const FixedOrder *pOrder = RelOrders + Index;
-  Word AdrWord;
-  Boolean OK;
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(pOrder->MinCPU))
   {
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       AdrWord -= EProgCounter() + 2;
       if (Hi(pOrder->Code) != 0)
         AdrWord--;
-      if ((AdrWord >= 0x80) && (AdrWord < 0xff80) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if ((AdrWord >= 0x80) && (AdrWord < 0xff80) && !mSymbolQuestionable(EvalResult.Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         PutCode(pOrder->Code);
@@ -2443,11 +2446,12 @@ static void DecodeBTCLR(Word Code)
       if (OK)
       {
         Word AdrWord;
+        tSymbolFlags Flags;
 
-        AdrWord = EvalStrIntExpression(&ArgStr[3], Int16, &OK) - (EProgCounter() + 5);
+        AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[3], Int16, &OK, & Flags) - (EProgCounter() + 5);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((AdrWord > 0x7f) && (AdrWord < 0xff80))) WrError(ErrNum_DistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((AdrWord > 0x7f) && (AdrWord < 0xff80))) WrError(ErrNum_DistTooBig);
           else
           {
             BAsmCode[CodeLen + 4] = Lo(AdrWord);
@@ -2493,7 +2497,7 @@ static void DecodeString(Word Index)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFPU(char *NName, Word NCode, InstProc NProc)
+static void AddFPU(const char *NName, Word NCode, InstProc NProc)
 {
   char Instr[30];
 
@@ -2502,7 +2506,7 @@ static void AddFPU(char *NName, Word NCode, InstProc NProc)
   AddInstTable(InstTable, Instr, NCode | NO_FWAIT_FLAG, NProc);
 }
 
-static void AddFixed(char *NName, CPUVar NMin, Word NCode)
+static void AddFixed(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -2510,22 +2514,22 @@ static void AddFixed(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddFPUFixed(char *NName, Word NCode)
+static void AddFPUFixed(const char *NName, Word NCode)
 {
   AddFPU(NName, NCode, DecodeFPUFixed);
 }
 
-static void AddFPUSt(char *NName, Word NCode)
+static void AddFPUSt(const char *NName, Word NCode)
 {
   AddFPU(NName, NCode, DecodeFPUSt);
 }
 
-static void AddFPU16(char *NName, Word NCode)
+static void AddFPU16(const char *NName, Word NCode)
 {
   AddFPU(NName, NCode, DecodeFPU16);
 }
 
-static void AddString(char *NName, CPUVar NMin, Word NCode)
+static void AddString(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= StringOrderCnt) exit(255); 
   StringOrders[InstrZ].Name = NName;
@@ -2534,7 +2538,7 @@ static void AddString(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeString);
 }
 
-static void AddRept(char *NName, CPUVar NMin, Word NCode)
+static void AddRept(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= ReptOrderCnt) exit(255);
   ReptOrders[InstrZ].Code = NCode;
@@ -2542,7 +2546,7 @@ static void AddRept(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRept);
 }
 
-static void AddRel(char *NName, CPUVar NMin, Word NCode)
+static void AddRel(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= RelOrderCnt) exit(255);
   RelOrders[InstrZ].MinCPU = NMin;
@@ -2550,7 +2554,7 @@ static void AddRel(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddModReg(char *NName, CPUVar NMin, Word NCode)
+static void AddModReg(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= ModRegOrderCnt) exit(255);
   ModRegOrders[InstrZ].MinCPU = NMin;
@@ -2558,7 +2562,7 @@ static void AddModReg(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeModReg);
 }
 
-static void AddShift(char *NName, CPUVar NMin, Word NCode)
+static void AddShift(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= ShiftOrderCnt) exit(255);
   ShiftOrders[InstrZ].MinCPU = NMin;
@@ -2566,7 +2570,7 @@ static void AddShift(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeShift);
 }
 
-static void AddReg16(char *NName, CPUVar NMin, Word NCode, Byte NAdd)
+static void AddReg16(const char *NName, CPUVar NMin, Word NCode, Byte NAdd)
 {
   if (InstrZ >= Reg16OrderCnt) exit(255);
   Reg16Orders[InstrZ].MinCPU = NMin;

@@ -34,7 +34,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongWord Code;
 } TReg;
 
@@ -127,9 +127,8 @@ static void DecodeDATA_7720(Word Index)
     z = 1;
     while ((OK) & (z <= ArgCnt))
     {
-      FirstPassUnknown = False;
       EvalStrExpression(&ArgStr[z], &t);
-      if ((FirstPassUnknown) && (t.Typ == TempInt))
+      if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt))
         t.Contents.Int &= MaxV;
 
       switch (t.Typ)
@@ -192,10 +191,11 @@ static void DecodeRES(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((OK) && (!FirstPassUnknown))
+    tSymbolFlags Flags;
+
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       DontPrint = True;
       if (!Size)
@@ -371,24 +371,24 @@ static void DecodeMOV(Word Index)
 /*---------------------------------------------------------------------------*/
 /* Tabellenverwaltung */
 
-static void AddJmp(char *NName, Word NCode)
+static void AddJmp(const char *NName, Word NCode)
 {
   if ((MomCPU < CPU7725) && (Odd(NCode)))
     return;
   AddInstTable(InstTable, NName, (MomCPU == CPU7725) ? NCode : NCode >> 1, DecodeJmp);
 }
 
-static void AddALU2(char *NName, Word NCode)
+static void AddALU2(const char *NName, Word NCode)
 {
   AddInstTable(OpTable, NName, NCode, DecodeALU2);
 }
 
-static void AddALU1(char *NName, Word NCode)
+static void AddALU1(const char *NName, Word NCode)
 {
   AddInstTable(OpTable, NName, NCode, DecodeALU1);
 }
 
-static void AddDestReg(char *NName, LongWord NCode)
+static void AddDestReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= DestRegCnt)
     exit(255);
@@ -396,7 +396,7 @@ static void AddDestReg(char *NName, LongWord NCode)
   DestRegs[InstrZ++].Code = NCode;
 }
 
-static void AddSrcReg(char *NName, LongWord NCode)
+static void AddSrcReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= SrcRegCnt)
     exit(255);
@@ -404,7 +404,7 @@ static void AddSrcReg(char *NName, LongWord NCode)
   SrcRegs[InstrZ++].Code = NCode;
 }
 
-static void AddALUSrcReg(char *NName, LongWord NCode)
+static void AddALUSrcReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= ALUSrcRegCnt)
     exit(255);

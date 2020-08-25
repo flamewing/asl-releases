@@ -123,7 +123,7 @@ static Boolean DecodeAdr(int StartIdx, int StopIdx)
     OK = False;
     if (!DecodeArgReg(StartIdx + 1, &AdrReg));
     else if (AdrReg == 0)
-      WrXErrorPos(1350, "!R0", &ArgStr[StartIdx + 1].Pos);
+      WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[StartIdx + 1].Pos);
     else
       OK = True;
     return OK;
@@ -282,12 +282,12 @@ static void DecodeIS(Word Code)
 {
   Word N, Ra;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Ra))
   {
-    FirstPassUnknown = False;
-    N = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
-    if (OK && FirstPassUnknown)
+    N = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt5, &OK, &Flags);
+    if (OK && mFirstPassUnknown(Flags))
       N = 1;
     if (OK && ChkRange(N, 1, 16))
       PutCode(Code | (Ra << 4) | (N - 1));
@@ -355,11 +355,12 @@ static void DecodeICR(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LargeInt Diff = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - EProgCounter();
+    tSymbolFlags Flags;
+    LargeInt Diff = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - EProgCounter();
 
     if (OK)
     {
-      if (!SymbolQuestionable && ((Diff < -128) || (Diff > 127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((Diff < -128) || (Diff > 127))) WrError(ErrNum_JmpDistTooBig);
       else
         PutCode(Code | (Diff & 0xff));
     }
@@ -384,10 +385,10 @@ static void DecodeIM1_16(Word Code)
   {
     Boolean OK;
     Word N;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    N = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (OK && FirstPassUnknown)   
+    N = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt5, &OK, &Flags);
+    if (OK && mFirstPassUnknown(Flags))
       N = 1;
 
     if (OK && ChkRange(N, 1, 16))
@@ -483,7 +484,7 @@ static void DecodeXIO(Word Code)
       Word Ri;
 
       if (!DecodeArgReg(3, &Ri));
-      else if (Ri == 0) WrXErrorPos(1350, "!R0", &ArgStr[3].Pos);
+      else if (Ri == 0) WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[3].Pos);
       else
       {
         PutCode(Code | (Ra << 4) | Ri);

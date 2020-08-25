@@ -11,11 +11,13 @@
 /*****************************************************************************/
 
 #include "cpulist.h"
+#include "symflags.h"
 #include "datatypes.h"
 
 typedef enum
 {
-  ErrNum_UselessDisp = 0,
+  ErrNum_None = 0,
+  ErrNum_UselessDisp = 5,
   ErrNum_ShortAddrPossible = 10,
   ErrNum_ShortJumpPossible = 20,
   ErrNum_NoShareFile = 30,
@@ -255,12 +257,12 @@ extern Boolean ChkRangeCPUExt(CPUVar MinCPU, CPUVar MaxCPU, tErrorNum ErrorNum);
 extern Boolean ChkExcludeCPUExt(CPUVar CheckCPU, tErrorNum ErrorNum);
 #define ChkExcludeCPU(CheckCPU) ChkExcludeCPUExt(CheckCPU, ErrNum_InstructionNotSupported)
 
-extern int ChkExactCPUList(tErrorNum ErrorNum, ...);
-extern int ChkExcludeCPUList(tErrorNum ErrorNum, ...);
+extern int ChkExactCPUList(int ErrorNum, ...);
+extern int ChkExcludeCPUList(int ErrorNum, ...);
 
 extern int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum);
 #define ChkExactCPUMask(CPUMask, FirstCPU) ChkExactCPUMaskExt(CPUMask, FirstCPU, ErrNum_InstructionNotSupported)
 
-extern Boolean ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits);
+extern Boolean ChkSamePage(LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits, tSymbolFlags DestFlags);
 
 #endif /* _ERRMSG_H */

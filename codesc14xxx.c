@@ -54,6 +54,7 @@ static void DecodeFixed(Word Index)
   FixedOrder *POp = FixedOrders + Index;
   Boolean OK;
   Byte Value;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt((POp->MinArg != POp->MaxArg) ? 1 : 0, (POp->MinArg != POp->MaxArg) ? 1 : 0)
    && (ChkExactCPUMask(POp->CPUMask, CPU14400) >= 0))
@@ -62,9 +63,8 @@ static void DecodeFixed(Word Index)
     if (ArgCnt == 0) Value = 0;
     else
     {
-      FirstPassUnknown = False;
-      Value = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-      if (FirstPassUnknown) Value = POp->MinArg;
+      Value = EvalStrIntExpressionWithFlags(&ArgStr[1], Int8, &OK, &Flags);
+      if (mFirstPassUnknown(Flags)) Value = POp->MinArg;
       if (OK) OK = ChkRange(Value, POp->MinArg, POp->MaxArg);
     }
     if (OK)
@@ -97,11 +97,12 @@ static void DecodeDS(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    cnt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
+    tSymbolFlags Flags;
+
+    cnt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else
       {
         if (!cnt) WrError(ErrNum_NullResMem);
@@ -122,11 +123,12 @@ static void DecodeDS16(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    cnt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
+    tSymbolFlags Flags;
+
+    cnt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
       else
       {
         if (!cnt) WrError(ErrNum_NullResMem);
@@ -152,12 +154,11 @@ static void DecodeDC(Word Code)
     z = 1; OK = TRUE; Toggle = FALSE;
     while ((OK) && (z <= ArgCnt))
     {
-      FirstPassUnknown = False;
       EvalStrExpression(&ArgStr[z], &t);
       switch (t.Typ)
       {
         case TempInt:
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(t.Flags))
             t.Contents.Int &= 127;
           if (ChkRange(t.Contents.Int, -128, 255))
             PutByte(t.Contents.Int);
@@ -203,7 +204,7 @@ static void DecodeDW(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NCode, Word NMask, Byte NMin, Byte NMax)
+static void AddFixed(const char *NName, Byte NCode, Word NMask, Byte NMin, Byte NMax)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].CPUMask = NMask;

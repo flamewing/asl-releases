@@ -209,6 +209,7 @@ static void TransferBackupAdrRelocs(LargeWord Offset)
 static void DecodeAdr(tStrComp *pArg, Word Mask)
 {
   Boolean OK, FirstFlag;
+  tEvalResult EvalResult;
   Byte HSize;
   Word H16;
   LongWord H32;
@@ -270,11 +271,10 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
         }
         break;
       case 2:
-        FirstPassUnknown = False;
-        H32 = EvalStrIntExpression(&Comp, Int32, &OK);
-        if (FirstPassUnknown)
+        H32 = EvalStrIntExpressionWithResult(&Comp, Int32, &EvalResult);
+        if (mFirstPassUnknown(EvalResult.Flags))
           H32 &= 0xffff;
-        if (OK)
+        if (EvalResult.OK)
         {
           AdrVals[1] = H32 & 0xff;
           AdrVals[0] = (H32 >> 8) & 0xff;
@@ -410,11 +410,10 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
         SegType = -2;
       else
       {
-        FirstPassUnknown = False;
-        SegType = EvalStrIntExpression(&SegComp, UInt8, &OK);
-        if (!OK)
+        SegType = EvalStrIntExpressionWithResult(&SegComp, UInt8, &EvalResult);
+        if (!EvalResult.OK)
           return;
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(EvalResult.Flags))
           FirstFlag = True;
       }
     }
@@ -423,27 +422,26 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
   else
     pAddrComp = pArg;
 
-  FirstPassUnknown = False;
   switch (SegType)
   {
     case -2:
-      H32 = EvalStrIntExpression(pAddrComp, UInt9, &OK);
-      ChkSpace(SegIO);
-      if (FirstPassUnknown)
+      H32 = EvalStrIntExpressionWithResult(pAddrComp, UInt9, &EvalResult);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
+      if (mFirstPassUnknown(EvalResult.Flags))
         H32 = (H32 & 0xff) | 0x80;
       break;
     case -1:
-      H32 = EvalStrIntExpression(pAddrComp, UInt24, &OK);
+      H32 = EvalStrIntExpressionWithResult(pAddrComp, UInt24, &EvalResult);
       break;
     default:
-      H32 = EvalStrIntExpression(pAddrComp, UInt16, &OK);
+      H32 = EvalStrIntExpressionWithResult(pAddrComp, UInt16, &EvalResult);
   }
-  if (FirstPassUnknown)
+  if (mFirstPassUnknown(EvalResult.Flags))
     FirstFlag = True;
-  if (!OK)
+  if (!EvalResult.OK)
     return;
 
-  if ((SegType == -2) || ((SegType == -1) && ((TypeFlag & (1 << SegIO)) != 0)))
+  if ((SegType == -2) || ((SegType == -1) && (EvalResult.AddrSpaceMask & (1 << SegIO))))
   {
     if (ChkRange(H32, 0x80, 0xff))
     {
@@ -464,7 +462,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     if (((H32 < 128) || ((H32 < 256) && (MomCPU < CPU80251))) && ((Mask & MModDir8) != 0))
     {
       if (MomCPU < CPU80251)
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
       SaveAdrRelocs(RelocTypeB8, 0);
       AdrMode = ModDir8;
       AdrVals[0] = H32 &0xff;
@@ -501,7 +499,7 @@ static void DissectBit_251(char *pDest, int DestSize, LargeWord Inp)
 
 static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   char *pPos, Save = '\0';
   tStrComp RegPart, BitPart;
 
@@ -512,10 +510,10 @@ static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
   {
     if (!pPos)
     {
-      *Erg = EvalStrIntExpression(pArg, UInt8, &OK);
-      if (OK)
+      *Erg = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegBData);
+        ChkSpace(SegBData, EvalResult.AddrSpaceMask);
         return ModBit51;
       }
       else
@@ -523,17 +521,16 @@ static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
     }
     else
     {
-      FirstPassUnknown = False;
-      *Erg = EvalStrIntExpression(&RegPart, UInt8, &OK);
-      if (FirstPassUnknown)
+      *Erg = EvalStrIntExpressionWithResult(&RegPart, UInt8, &EvalResult);
+      if (mFirstPassUnknown(EvalResult.Flags))
         *Erg = 0x20;
       *pPos = Save;
-      if (!OK) return ModNone;
+      if (!EvalResult.OK) return ModNone;
       else
       {
-        ChkSpace(SegData);
-        Save = EvalStrIntExpression(&BitPart, UInt3, &OK);
-        if (!OK) return ModNone;
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
+        Save = EvalStrIntExpressionWithResult(&BitPart, UInt3, &EvalResult);
+        if (!EvalResult.OK) return ModNone;
         else
         {
           if (*Erg > 0x7f)
@@ -559,14 +556,13 @@ static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
     {
       static const LongWord ValidBits = 0x070000fful;
 
-      FirstPassUnknown = False;
-      *Erg = EvalStrIntExpression(pArg, Int32, &OK);
-      if (FirstPassUnknown)
+      *Erg = EvalStrIntExpressionWithResult(pArg, Int32, &EvalResult);
+      if (mFirstPassUnknown(EvalResult.Flags))
         *Erg &= ValidBits;
       if (*Erg & ~ValidBits)
       {
         WrError(ErrNum_InvBitPos);
-        OK = False;
+        EvalResult.OK = False;
       }
     }
     else
@@ -574,15 +570,15 @@ static ShortInt DecodeBitAdr(tStrComp *pArg, LongInt *Erg, Boolean MayShorten)
       DecodeAdr(&RegPart, MModDir8);
       *pPos = Save;
       if (AdrMode == ModNone)
-        OK = False;
+        EvalResult.OK = False;
       else
       {
-        *Erg = EvalStrIntExpression(&BitPart, UInt3, &OK) << 24;
-        if (OK)
+        *Erg = EvalStrIntExpressionWithResult(&BitPart, UInt3, &EvalResult) << 24;
+        if (EvalResult.OK)
           (*Erg) += AdrVals[0];
       }
     }
-    if (!OK)
+    if (!EvalResult.OK)
       return ModNone;
     else if (MayShorten)
     {
@@ -1431,21 +1427,19 @@ static void DecodeXCHD(Word Index)
 
 static void DecodeABranch(Word Index)
 {
-  Boolean OK;
-  LongInt AdrLong;
-
   /* Index: AJMP = 0 ACALL = 1 */
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(&ArgStr[1], Int24, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[1], Int24, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       if (MomCPU == CPU80C390)
       {
-        if (ChkSamePage(EProgCounter() + 3, AdrLong, 19))
+        if (ChkSamePage(EProgCounter() + 3, AdrLong, 19, EvalResult.Flags))
         {
           PutCode(0x01 + (Index << 4) + (((AdrLong >> 16) & 7) << 5));
           BAsmCode[CodeLen++] = Hi(AdrLong);
@@ -1455,7 +1449,7 @@ static void DecodeABranch(Word Index)
       }
       else
       {
-        if (!ChkSamePage(EProgCounter(), AdrLong, 11));
+        if (!ChkSamePage(EProgCounter(), AdrLong, 11, EvalResult.Flags));
         else if (Chk504(EProgCounter())) WrError(ErrNum_NotOnThisAddress);
         else
         {
@@ -1470,9 +1464,6 @@ static void DecodeABranch(Word Index)
 
 static void DecodeLBranch(Word Index)
 {
-  LongInt AdrLong;
-  Boolean OK;
-
   /* Index: LJMP=0 LCALL=1 */
 
   if (!ChkArgCnt(1, 1));
@@ -1494,10 +1485,12 @@ static void DecodeLBranch(Word Index)
   }
   else
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], (MomCPU < CPU80C390) ? Int16 : Int24, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[1], (MomCPU < CPU80C390) ? Int16 : Int24, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       if (MomCPU == CPU80C390)
       {
         PutCode(0x02 + (Index << 4));
@@ -1508,10 +1501,9 @@ static void DecodeLBranch(Word Index)
       }
       else
       {
-        if ((MomCPU >= CPU80251) && !ChkSamePage(EProgCounter() + 3, AdrLong, 16));
+        if ((MomCPU >= CPU80251) && !ChkSamePage(EProgCounter() + 3, AdrLong, 16, EvalResult.Flags));
         else
         {
-          ChkSpace(SegCode);
           PutCode(0x02 + (Index << 4));
           BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
           BAsmCode[CodeLen++] = AdrLong & 0xff;
@@ -1524,9 +1516,6 @@ static void DecodeLBranch(Word Index)
 
 static void DecodeEBranch(Word Index)
 {
-  LongInt AdrLong;
-  Boolean OK;
-
   /* Index: AJMP=0 ACALL=1 */
 
   if (!ChkArgCnt(1, 1));
@@ -1548,10 +1537,12 @@ static void DecodeEBranch(Word Index)
   }
   else
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[1], UInt24, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       PutCode(0x18a + (Index << 4));
       BAsmCode[CodeLen++] = (AdrLong >> 16) & 0xff;
       BAsmCode[CodeLen++] = (AdrLong >>  8) & 0xff;
@@ -1619,53 +1610,55 @@ static void DecodeCALL(Word Index)
 {
   LongInt AdrLong;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
-    if (!ChkArgCnt(1, 1));
-    else if (*ArgStr[1].Str == '@')
+  if (!ChkArgCnt(1, 1));
+  else if (*ArgStr[1].Str == '@')
+  {
+    DecodeAdr(&ArgStr[1], MModIReg);
+    switch (AdrMode)
     {
-      DecodeAdr(&ArgStr[1], MModIReg);
-      switch (AdrMode)
+      case ModIReg:
+        PutCode(0x199);
+        BAsmCode[CodeLen++] = 0x04 + (AdrSize << 1) + (AdrPart << 4);
+        break;
+    }
+  }
+  else
+  {
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
+    if (OK)
+    {
+      if ((!Chk504(EProgCounter())) && ((AdrLong >> 11) == ((((long)EProgCounter()) + 2) >> 11)))
       {
-        case ModIReg:
-          PutCode(0x199);
-          BAsmCode[CodeLen++] = 0x04 + (AdrSize << 1) + (AdrPart << 4);
-          break;
+        PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
+        BAsmCode[CodeLen++] = Lo(AdrLong);
+      }
+      else if (MomCPU < CPU8051) WrError(ErrNum_TargOnDiffPage);
+      else if (ChkSamePage(AdrLong, EProgCounter() + 3, 16, Flags))
+      {
+        PutCode(0x12);
+        BAsmCode[CodeLen++] = Hi(AdrLong);
+        BAsmCode[CodeLen++] = Lo(AdrLong);
       }
     }
-    else
-    {
-      FirstPassUnknown = False;
-      AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
-      if (OK)
-      {
-        if ((!Chk504(EProgCounter())) && ((AdrLong >> 11) == ((((long)EProgCounter()) + 2) >> 11)))
-        {
-          PutCode(0x11 + ((Hi(AdrLong) & 7) << 5));
-          BAsmCode[CodeLen++] = Lo(AdrLong);
-        }
-        else if (MomCPU < CPU8051) WrError(ErrNum_TargOnDiffPage);
-        else if (ChkSamePage(AdrLong, EProgCounter() + 3, 16))
-        {
-          PutCode(0x12);
-          BAsmCode[CodeLen++] = Hi(AdrLong);
-          BAsmCode[CodeLen++] = Lo(AdrLong);
-        }
-      }
-    }
+  }
 }
 
 static void DecodeDJNZ(Word Index)
 {
   LongInt AdrLong;
-  Boolean OK, Questionable;
+  Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[2], UInt24, &OK);
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt24, &OK, &Flags);
     SubPCRefReloc();
-    Questionable = SymbolQuestionable;
     if (OK)
     {
       DecodeAdr(&ArgStr[1], MModReg | MModDir8);
@@ -1676,7 +1669,7 @@ static void DecodeDJNZ(Word Index)
           else
           {
             AdrLong -= EProgCounter() + 2 + Ord(NeedsPrefix(0xd8 + AdrPart));
-            if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+            if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
             else
             {
               PutCode(0xd8 + AdrPart);
@@ -1686,7 +1679,7 @@ static void DecodeDJNZ(Word Index)
           break;
         case ModDir8:
           AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(0xd5));
-          if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             PutCode(0xd5);
@@ -1703,15 +1696,15 @@ static void DecodeDJNZ(Word Index)
 static void DecodeCJNE(Word Index)
 {
   LongInt AdrLong;
-  Boolean OK, Questionable;
+  Boolean OK;
+  tSymbolFlags Flags;
   Byte HReg;
   UNUSED(Index);
 
   if (ChkArgCnt(3, 3))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[3], UInt24, &OK);
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt24, &OK, &Flags);
     SubPCRefReloc();
-    Questionable = SymbolQuestionable;
     if (OK)
     {
       DecodeAdr(&ArgStr[1], MModAcc | MModIReg8 | MModReg);
@@ -1723,7 +1716,7 @@ static void DecodeCJNE(Word Index)
           {
             case ModDir8:
               AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(0xb5));
-              if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+              if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
               else
               {
                 PutCode(0xb5);
@@ -1734,7 +1727,7 @@ static void DecodeCJNE(Word Index)
               break;
             case ModImm:
               AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(0xb5));
-              if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+              if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
               else
               {
                 PutCode(0xb4);
@@ -1755,7 +1748,7 @@ static void DecodeCJNE(Word Index)
             {
               case ModImm:
                 AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(0xb8 + HReg));
-                if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+                if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
                 else
                 {
                   PutCode(0xb8 + HReg);
@@ -1774,7 +1767,7 @@ static void DecodeCJNE(Word Index)
           {
             case ModImm:
               AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(0xb6 + HReg));
-              if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+              if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
               else
               {
                 PutCode(0xb6 + HReg);
@@ -2029,6 +2022,7 @@ static void DecodeINCDEC(Word Index)
   Byte HReg;
   int z;
   Boolean OK;
+  tSymbolFlags Flags;
 
   /* Index: INC=0 DEC=1 */
 
@@ -2037,15 +2031,15 @@ static void DecodeINCDEC(Word Index)
   else if ((ArgCnt == 2) && (*ArgStr[2].Str != '#')) WrError(ErrNum_InvAddrMode);
   else
   {
-    FirstPassUnknown = False;
     if (1 == ArgCnt)
     {
       HReg = 1;
       OK = True;
+      Flags = eSymbolFlag_None;
     }
     else
-      HReg = EvalStrIntExpressionOffs(&ArgStr[2], 1, UInt3, &OK);
-    if (FirstPassUnknown)
+      HReg = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], 1, UInt3, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       HReg = 1;
     if (OK)
     {
@@ -2214,21 +2208,21 @@ static void DecodeShift(Word Index)
 static void DecodeCond(Word Index)
 {
   FixedOrder *FixedZ = CondOrders + Index;
-  LongInt AdrLong;
-  Boolean OK;
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(FixedZ->MinCPU))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    tEvalResult EvalResult;
+    LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[1], UInt24, &EvalResult);
+
     SubPCRefReloc();
-    if (OK)
+    if (EvalResult.OK)
     {
       AdrLong -= EProgCounter() + 2 + Ord(NeedsPrefix(FixedZ->Code));
-      if (((AdrLong < -128) || (AdrLong > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(EvalResult.Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         PutCode(FixedZ->Code);
         BAsmCode[CodeLen++] = AdrLong & 0xff;
       }
@@ -2240,21 +2234,20 @@ static void DecodeBCond(Word Index)
 {
   FixedOrder *FixedZ = BCondOrders + Index;
   LongInt AdrLong, BitLong;
-  Boolean OK, Questionable;
+  tEvalResult EvalResult;
 
   if (ChkArgCnt(2, 2))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[2], UInt24, &OK);
+    AdrLong = EvalStrIntExpressionWithResult(&ArgStr[2], UInt24, &EvalResult);
     SubPCRefReloc();
-    Questionable = SymbolQuestionable;
-    if (OK)
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       switch (DecodeBitAdr(&ArgStr[1], &BitLong, True))
       {
         case ModBit51:
           AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(FixedZ->Code));
-          if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(EvalResult.Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             PutCode(FixedZ->Code);
@@ -2264,7 +2257,7 @@ static void DecodeBCond(Word Index)
           break;
         case ModBit251:
           AdrLong -= EProgCounter() + 4 + Ord(NeedsPrefix(0x1a9));
-          if (((AdrLong < -128) || (AdrLong > 127)) && (!Questionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(EvalResult.Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             PutCode(0x1a9);
@@ -2309,16 +2302,16 @@ static void DecodeSFR(Word Index)
 {
   Word AdrByte;
   Boolean OK;
+  tSymbolFlags Flags;
   int DSeg;
   UNUSED(Index);
 
-  FirstPassUnknown = False;
   if (!ChkArgCnt(1, 1));
   else if (Memo("SFRB") && !ChkMaxCPU(CPU80C390));
   else
   {
-    AdrByte = EvalStrIntExpression(&ArgStr[1], (MomCPU >= CPU80251) ? UInt9 : UInt8, &OK);
-    if ((OK) && (!FirstPassUnknown))
+    AdrByte = EvalStrIntExpressionWithFlags(&ArgStr[1], (MomCPU >= CPU80251) ? UInt9 : UInt8, &OK, &Flags);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       PushLocHandle(-1);
       DSeg = (MomCPU >= CPU80251) ? SegIO : SegData;
@@ -2407,7 +2400,7 @@ static void DecodeREG(Word Code)
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
-static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
+static void AddFixed(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -2415,7 +2408,7 @@ static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddAcc(char *NName, Word NCode, CPUVar NCPU)
+static void AddAcc(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= AccOrderCnt) exit(255);
   AccOrders[InstrZ].Code = NCode;
@@ -2423,7 +2416,7 @@ static void AddAcc(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeAcc);
 }
 
-static void AddCond(char *NName, Word NCode, CPUVar NCPU)
+static void AddCond(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= CondOrderCnt) exit(255);
   CondOrders[InstrZ].Code = NCode;
@@ -2431,7 +2424,7 @@ static void AddCond(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCond);
 }
 
-static void AddBCond(char *NName, Word NCode, CPUVar NCPU)
+static void AddBCond(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= BCondOrderCnt) exit(255);
   BCondOrders[InstrZ].Code = NCode;

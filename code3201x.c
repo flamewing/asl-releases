@@ -91,6 +91,8 @@ static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
   }
   else if (ChkArgCnt(1, Aux - 1))
   {
+    tEvalResult EvalResult;
+
     h = 0;
     if ((strlen(pArg->Str) > 3) && (!as_strncasecmp(pArg->Str, "DAT", 3)))
     {
@@ -99,13 +101,19 @@ static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
         if ((*p > '9') || (*p < '0'))
           AdrOK = False;
       if (AdrOK)
-        h = EvalStrIntExpressionOffs(pArg, 3, UInt8, &AdrOK);
+      {
+        h = EvalStrIntExpressionOffsWithResult(pArg, 3, UInt8, &EvalResult);
+        AdrOK = EvalResult.OK;
+      }
     }
     if (!AdrOK)
-      h = EvalStrIntExpression(pArg, Int8, &AdrOK);
+    {
+      h = EvalStrIntExpressionWithResult(pArg, Int8, &EvalResult);
+      AdrOK = EvalResult.OK;
+    }
     if (AdrOK)
     {
-      if ((Must1) && (h < 0x80) && (!FirstPassUnknown))
+      if (Must1 && (h < 0x80) && !mFirstPassUnknown(EvalResult.Flags))
       {
         WrError(ErrNum_UnderRange);
         AdrOK = False;
@@ -113,7 +121,7 @@ static void DecodeAdr(const tStrComp *pArg, int Aux, Boolean Must1)
       else
       {
         AdrMode = h & 0x7f;
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
       }
     }
   }
@@ -213,8 +221,10 @@ static void DecodeAdrShift(Word Index)
       }
       else
       {
-        AdrWord = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
-        if ((OK) && (FirstPassUnknown))
+        tSymbolFlags Flags;
+
+        AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[2], Int4, &OK, &Flags);
+        if (OK && mFirstPassUnknown(Flags))
           AdrWord = 0;
       }
       if (OK)
@@ -239,11 +249,11 @@ static void DecodeIN_OUT(Word Code)
     DecodeAdr(&ArgStr[1], 3, False);
     if (AdrOK)
     {
-      Boolean OK;
-      Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+      Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt3, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         CodeLen = 1;
         WAsmCode[0] = Code + AdrMode + (AdrWord << 8);
       }
@@ -260,10 +270,12 @@ static void DecodeImm(Word Index)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+
     if (OK)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         AdrLong &= pOrder->Mask;
       if (AdrLong < pOrder->Min) WrError(ErrNum_UnderRange);
       else if (AdrLong > pOrder->Max) WrError(ErrNum_OverRange);
@@ -348,22 +360,22 @@ static void DecodeDATA_3201x(Word Code)
 
 /*----------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddJmp(char *NName, Word NCode)
+static void AddJmp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }
 
-static void AddAdr(char *NName, Word NCode, Word NMust1)
+static void AddAdr(const char *NName, Word NCode, Word NMust1)
 {
   AddInstTable(InstTable, NName, NCode | NMust1, DecodeAdrInst);
 }
 
-static void AddAdrShift(char *NName, Word NCode, Word NAllow)
+static void AddAdrShift(const char *NName, Word NCode, Word NAllow)
 {
   if (InstrZ >= AdrShiftOrderCnt) exit(255);
   AdrShiftOrders[InstrZ].Code = NCode;
@@ -371,7 +383,7 @@ static void AddAdrShift(char *NName, Word NCode, Word NAllow)
   AddInstTable(InstTable, NName, InstrZ++, DecodeAdrShift);
 }
 
-static void AddImm(char *NName, Word NCode, Integer NMin, Integer NMax, Word NMask)
+static void AddImm(const char *NName, Word NCode, Integer NMin, Integer NMax, Word NMask)
 {
   if (InstrZ >= ImmOrderCnt) exit(255);
   ImmOrders[InstrZ].Code = NCode;

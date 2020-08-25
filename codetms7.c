@@ -207,7 +207,6 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     tStrComp Left, Right;
 
     StrCompSplitRef(&Left, &Right, &Expr, p);
-    FirstPassUnknown = False;
     HVal = EvalStrIntExpression(&Left, Int16, &OK);
     if (OK)
     {
@@ -411,10 +410,11 @@ static void DecodeALU2(Word Index)
     if ((CodeLen != 0) && (IsRela))
     {
       Boolean OK;
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[3], Int16, &OK) - (EProgCounter() + CodeLen + 1);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], Int16, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
 
       if (!OK) CodeLen = 0;
-      else if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128)))
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(ErrNum_JmpDistTooBig); CodeLen = 0;
       }
@@ -484,11 +484,12 @@ static void DecodeABReg(Word Index)
     if ((Memo("DJNZ")) && (CodeLen != 0))
     {
       Boolean OK;
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[2], UInt16, &OK) - (EProgCounter() + CodeLen + 1);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
 
       if (!OK)
         CodeLen = 0;
-      else if ((!SymbolQuestionable) & ((AdrInt > 127) || (AdrInt < -128)))
+      else if (!mSymbolQuestionable(Flags) & ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(ErrNum_JmpDistTooBig); CodeLen = 0;
       }
@@ -836,10 +837,10 @@ static void DecodeTRAP(Word Index)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (FirstPassUnknown)
+    BAsmCode[0] = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt5, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       BAsmCode[0] &= 15;
     if (OK)
     {
@@ -877,32 +878,32 @@ static void DecodeTST(Word Index)
 /*---------------------------------------------------------------------------*/
 /* dynamic instruction table handling */
 
-static void InitFixed(char *NName, Word NCode)
+static void InitFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void InitRel8(char *NName, Word NCode)
+static void InitRel8(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel8);
 }
 
-static void InitALU1(char *NName, Word NCode)
+static void InitALU1(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU1);
 }
 
-static void InitALU2(char *NName, Word NCode)
+static void InitALU2(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU2);
 }
 
-static void InitJmp(char *NName, Word NCode)
+static void InitJmp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }
 
-static void InitABReg(char *NName, Word NCode)
+static void InitABReg(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeABReg);
 }

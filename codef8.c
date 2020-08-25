@@ -40,12 +40,12 @@ static CPUVar CPU3870, CPU3872, CPU3873, CPU3874, CPU3875, CPU3876,
 static Boolean DecodeReg(const tStrComp *pArg, Byte *pResult)
 {
   /* KU/KL/QU/QL are addressed via dedicated LR instructions! */
-  static const char *pRegNames[] = { "J", "HU", "HL", "S", "I", "D", NULL };
+  static const char RegNames[][3] = { "J", "HU", "HL", "S", "I", "D", "" };
   int z;
   Boolean OK;
 
-  for (z = 0; pRegNames[z]; z++)
-    if (!as_strcasecmp(pRegNames[z], pArg->Str))
+  for (z = 0; *RegNames[z]; z++)
+    if (!as_strcasecmp(RegNames[z], pArg->Str))
     {
       *pResult = z + 9;
       return True;
@@ -97,13 +97,13 @@ static void DecodeImm8(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], IsIO ? UInt8 : Int8, &OK);
-    if (OK)
+    BAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[1], IsIO ? UInt8 : Int8, &EvalResult);
+    if (EvalResult.OK)
     {
       if (IsIO)
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       BAsmCode[0] = Lo(Code);
       CodeLen = 2;
     }
@@ -116,14 +116,14 @@ static void DecodeImm4(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    BAsmCode[0] = Lo(Code) | EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-    if (OK)
+    BAsmCode[0] = Lo(Code) | EvalStrIntExpressionWithResult(&ArgStr[1], UInt4, &EvalResult);
+    if (EvalResult.OK)
     {
       CodeLen = 1;
       if (IsIO)
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -146,18 +146,17 @@ static void DecodeImm16(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Arg;
+    tEvalResult EvalResult;
+    Word Arg = EvalStrIntExpressionWithResult(&ArgStr[1], IsCode ? UInt16 : Int16, &EvalResult);
 
-    Arg = EvalStrIntExpression(&ArgStr[1], IsCode ? UInt16 : Int16, &OK);
-    if (OK)
+    if (EvalResult.OK)
     {
       BAsmCode[0] = Code;
       BAsmCode[1] = Hi(Arg);
       BAsmCode[2] = Lo(Arg);
       CodeLen = 3;
       if (IsCode)
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -175,11 +174,12 @@ static void DecodeBranchCore(const tStrComp *pArg, Word Code)
 {
   Boolean OK;
   LongInt Dist;
+  tSymbolFlags Flags;
   
-  Dist = EvalStrIntExpression(pArg, UInt16, &OK) - (EProgCounter() + 1);
+  Dist = EvalStrIntExpressionWithFlags(pArg, UInt16, &OK, &Flags) - (EProgCounter() + 1);
   if (OK)
   {
-    if (!SymbolQuestionable && ((Dist < -128) || (Dist > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
+    if (!mSymbolQuestionable(Flags) && ((Dist < -128) || (Dist > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
     else
     {
       BAsmCode[0] = Code;
@@ -278,14 +278,14 @@ static void DecodeShift(Word Code)
   {
     Boolean OK;
     Byte Cnt;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Cnt = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+    Cnt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt3, &OK, &Flags);
     if (OK)
     {
       if (Cnt == 4)
         BAsmCode[CodeLen++] = Code + 2;
-      else if (FirstPassUnknown || (Cnt == 1))
+      else if (mFirstPassUnknown(Flags) || (Cnt == 1))
         BAsmCode[CodeLen++] = Code;
       else
         WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
@@ -302,47 +302,47 @@ static void DecodePORT(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddImm8(char *NName, Word NCode)
+static void AddImm8(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm8);
 }
 
-static void AddImm4(char *NName, Word NCode)
+static void AddImm4(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm4);
 }
 
-static void AddImm3(char *NName, Word NCode)
+static void AddImm3(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm3);
 }
 
-static void AddImm16(char *NName, Word NCode)
+static void AddImm16(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm16);
 }
 
-static void AddOneReg(char *NName, Word NCode)
+static void AddOneReg(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeOneReg);
 }
 
-static void AddBranch(char *NName, Word NCode)
+static void AddBranch(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBranch);
 }
 
-static void AddGenBranch(char *NName, Word NCode)
+static void AddGenBranch(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeGenBranch);
 }
 
-static void AddShift(char *NName, Word NCode)
+static void AddShift(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeShift);
 }

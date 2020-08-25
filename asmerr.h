@@ -17,7 +17,7 @@ extern Word ErrorCount, WarnCount;
 
 struct sLineComp;
 struct sStrComp;
-extern void WrErrorString(const char *Message, char *Add, Boolean Warning, Boolean Fatal,
+extern void WrErrorString(const char *Message, const char *Add, Boolean Warning, Boolean Fatal,
                           const char *pExtendError, const struct sLineComp *pLineComp);
 
 extern void WrError(tErrorNum Num);

@@ -18,7 +18,7 @@
 
 typedef struct
 {
-  char *Id;
+  const char *Id;
   int IdLen;
   Boolean Dyadic;
   Byte Priority;

@@ -48,8 +48,8 @@ Boolean ProcessedEmpty(CMDProcessed Processed)
 
 static void ProcessFile(char *Name_O, const CMDRec *pCMDRecs, int CMDRecCnt, CMDErrCallback ErrProc);
 
-static CMDResult ProcessParam(const CMDRec *pCMDRecs, int CMDRecCnt, char *O_Param,
-                              char *O_Next, Boolean AllowLink,
+static CMDResult ProcessParam(const CMDRec *pCMDRecs, int CMDRecCnt, const char *O_Param,
+                              const char *O_Next, Boolean AllowLink,
                               CMDErrCallback ErrProc)
 {
   int Start;
@@ -237,7 +237,7 @@ static void ProcessFile(char *Name_O, const CMDRec *pCMDRecs, int CMDRecCnt, CMD
 void ProcessCMD(int argc, char **argv,
                 const CMDRec *pCMDRecs, int CMDRecCnt,
                 CMDProcessed Unprocessed,
-                char *EnvName, CMDErrCallback ErrProc)
+                const char *EnvName, CMDErrCallback ErrProc)
 {
   int z;
   String EnvLine;
@@ -278,7 +278,7 @@ void ProcessCMD(int argc, char **argv,
 
 const char *GetEXEName(const char *argv0)
 {
-  char *pos;
+  const char *pos;
 
   pos = strrchr(argv0, '/');
   return (pos) ? pos + 1 : argv0;

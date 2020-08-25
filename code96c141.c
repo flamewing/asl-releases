@@ -36,7 +36,6 @@
 
 typedef struct 
 {
-  char *Name;
   Word Code;
   Byte CPUFlag;
   Boolean InSup;
@@ -44,7 +43,6 @@ typedef struct
 
 typedef struct 
 {
-  char *Name;
   Word Code;
   Boolean InSup;
   Byte MinMax,MaxMax;
@@ -53,14 +51,13 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
   Word Code;
   Byte OpMask;
 } RegOrder;
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
 } Condition;
 
@@ -121,18 +118,18 @@ static Boolean IsQuot(char Ch)
 static Byte CodeEReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
 {
 #define RegCnt 8
-  static char Reg8Names[RegCnt+1] = "AWCBEDLH";
-  static char *Reg16Names[RegCnt] =
+  static const char Reg8Names[RegCnt + 1] = "AWCBEDLH";
+  static const char Reg16Names[RegCnt][3] =
   {
     "WA" ,"BC" ,"DE" ,"HL" ,"IX" ,"IY" ,"IZ" ,"SP"
   };
-  static char *Reg32Names[RegCnt] =
+  static const char Reg32Names[RegCnt][4] =
   {
     "XWA","XBC","XDE","XHL","XIX","XIY","XIZ","XSP"
   };
 
   int z, l = strlen(Asc);
-  char *pos;
+  const char *pos;
   String HAsc, Asc_N;
   Byte Result;
 
@@ -434,7 +431,7 @@ static Boolean IsRegCurrent(Byte No, Byte Size, Byte *Erg)
   }
 }
 
-static const char *pSizes = "124";
+static const char Sizes[] = "124";
 
 static int GetPostInc(const char *pArg, int ArgLen, ShortInt *pOpSize)
 {
@@ -452,10 +449,10 @@ static int GetPostInc(const char *pArg, int ArgLen, ShortInt *pOpSize)
 
   if ((ArgLen > 4) && (pArg[ArgLen - 3] == '+') && strchr(":+", pArg[ArgLen - 2]))
   {
-    pPos = strchr(pSizes, pArg[ArgLen - 1]);
+    pPos = strchr(Sizes, pArg[ArgLen - 1]);
     if (pPos)
     {
-      *pOpSize = pPos - pSizes;
+      *pOpSize = pPos - Sizes;
       return 3;
     }
   }
@@ -470,10 +467,10 @@ static Boolean GetPreDec(const char *pArg, int ArgLen, ShortInt *pOpSize, int *p
 
   if ((ArgLen > 4) && (pArg[1] == '-') && (pArg[2] == '-'))
   {
-    pPos = strchr(pSizes, pArg[0]);
+    pPos = strchr(Sizes, pArg[0]);
     if (pPos)
     {
-      *pOpSize = pPos - pSizes;
+      *pOpSize = pPos - Sizes;
       *pCutoffLeft = 3;
       *pCutoffRight = 0;
       return True;
@@ -488,10 +485,10 @@ static Boolean GetPreDec(const char *pArg, int ArgLen, ShortInt *pOpSize, int *p
 
     if ((ArgLen > 4) && (pArg[ArgLen - 2] == ':'))
     {
-      pPos = strchr(pSizes, pArg[ArgLen - 1]);
+      pPos = strchr(Sizes, pArg[ArgLen - 1]);
       if (pPos)
       {
-        *pOpSize = pPos - pSizes;
+        *pOpSize = pPos - Sizes;
         *pCutoffRight = 2;
         return True;
       }
@@ -648,13 +645,13 @@ static void DecodeAdrMem(tStrComp *pArg)
       case 0:
       {
         tSymbolSize ThisSize;
+        tSymbolFlags Flags;
 
         if ((ThisSize = SplitSize(pArg)) != eSymbolSizeUnknown)
           if (ThisSize > DispSize)
             DispSize = ThisSize;
-        FirstPassUnknown = False;
-        DispPart = EvalStrIntExpression(pArg, Int32, &OK);
-        if (FirstPassUnknown) FirstFlag = True;
+        DispPart = EvalStrIntExpressionWithFlags(pArg, Int32, &OK, &Flags);
+        if (mFirstPassUnknown(Flags)) FirstFlag = True;
         if (!OK) return;
         if (NegFlag)
           DispAcc -= DispPart;
@@ -1111,6 +1108,7 @@ static void DecodeJR(Word Index)
   Boolean OK;
   int z;
   LongInt AdrLong;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 2))
   {
@@ -1118,20 +1116,20 @@ static void DecodeJR(Word Index)
     if (z >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK);
-      if (OK) 
+      AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags);
+      if (OK)
       {
         if (Index==1) 
         {
           AdrLong -= EProgCounter() + 3;
-          if (((AdrLong > 0x7fffl) || (AdrLong < -0x8000l)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
+          if (((AdrLong > 0x7fffl) || (AdrLong < -0x8000l)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_DistTooBig);
           else
           {
             CodeLen = 3;
             BAsmCode[0] = 0x70 + Conditions[z].Code;
             BAsmCode[1] = Lo(AdrLong);
             BAsmCode[2] = Hi(AdrLong);
-            if (!FirstPassUnknown) 
+            if (!mFirstPassUnknown(Flags))
             {
               AdrLong++;
               if ((AdrLong >= -128) && (AdrLong <= 127)) WrError(ErrNum_ShortJumpPossible);
@@ -1141,7 +1139,7 @@ static void DecodeJR(Word Index)
         else
         {
           AdrLong -= EProgCounter() + 2;
-          if (((AdrLong > 127) || (AdrLong < -128)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
+          if (((AdrLong > 127) || (AdrLong < -128)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_DistTooBig);
           else
           {
             CodeLen = 2;
@@ -1158,14 +1156,16 @@ static void DecodeCALR(Word Index)
 {
   LongInt AdrLong;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
   
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK) - (EProgCounter() + 3);
-    if (OK) 
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags) - (EProgCounter() + 3);
+    if (OK)
     {
-      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
+      if (((AdrLong < -32768) || (AdrLong > 32767)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_DistTooBig);
       else
       {
         CodeLen = 3;
@@ -1209,7 +1209,7 @@ static void DecodeRETD(Word Index)
   if (ChkArgCnt(1, 1))
   {
     AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK) 
+    if (OK)
     {
       CodeLen = 3;
       BAsmCode[0] = 0x0f;
@@ -1223,6 +1223,8 @@ static void DecodeDJNZ(Word Index)
 {
   LongInt AdrLong;
   Boolean OK; 
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(1, 2))
@@ -1240,10 +1242,10 @@ static void DecodeDJNZ(Word Index)
       if (OpSize == 2) WrError(ErrNum_InvOpSize);
       else
       {
-        AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK) - (EProgCounter() + 3 + Ord(AdrType == ModXReg));
-        if (OK) 
+        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags) - (EProgCounter() + 3 + Ord(AdrType == ModXReg));
+        if (OK)
         {
-          if (((AdrLong < -128) || (AdrLong > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrLong < -128) || (AdrLong > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else 
            switch (AdrType)
            {
@@ -1409,14 +1411,16 @@ static void DecodeLDAR(Word Index)
 {
   LongInt AdrLong;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[2], Int32, &OK) - (EProgCounter() + 4);
-    if (OK) 
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[2], Int32, &OK, &Flags) - (EProgCounter() + 4);
+    if (OK)
     {
-      if (((AdrLong < -32768) || (AdrLong > 32767)) && (!SymbolQuestionable)) WrError(ErrNum_DistTooBig);
+      if (((AdrLong < -32768) || (AdrLong > 32767)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_DistTooBig);
       else
       {
         DecodeAdr(&ArgStr[1], MModReg);
@@ -1507,7 +1511,7 @@ static void DecodeLDX(Word Index)
       else
       {
         BAsmCode[4] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-        if (OK) 
+        if (OK)
         {
           CodeLen = 6;
           BAsmCode[0] = 0xf7;
@@ -1530,7 +1534,7 @@ static void DecodeLINK(Word Index)
   if (ChkArgCnt(2, 2))
   {
     AdrWord = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
-    if (OK) 
+    if (OK)
     {
       DecodeAdr(&ArgStr[1], MModReg | MModXReg);
       if ((AdrType != ModNone) && (OpSize != 2)) WrError(ErrNum_InvOpSize);
@@ -1674,7 +1678,7 @@ static void DecodeLD(Word Code)
              else if (ShSrc && (!ShDest)) OK = False;
              else if (AdrMode == 0x40) OK = True;
              else OK = False;
-             if (OK)   /* dest=(dir8/16) */
+             if (OK)  /* dest=(dir8/16) */
              {
                CodeLen = 4 + AdrCnt;
                HReg = BAsmCode[0];
@@ -1759,7 +1763,7 @@ static void DecodeImm(Word Index)
     }
     else
       AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-    if (OK) 
+    if (OK)
     {
       if (((Maximum) && (AdrWord > ImmZ->MaxMax)) || ((!Maximum) && (AdrWord > ImmZ->MinMax))) WrError(ErrNum_OverRange);
       else if (Hi(ImmZ->Code) == 0) 
@@ -1994,6 +1998,7 @@ static void DecodePUSH_POP(Word Code)
 static void DecodeShift(Word Code)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   Byte HReg;
 
   SetInstrOpSize(Hi(Code));
@@ -2007,11 +2012,10 @@ static void DecodeShift(Word Code)
       HReg = 0xff;
     else
     {
-      FirstPassUnknown = False;
-      HReg = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-      if (OK) 
+      HReg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int8, &OK, &Flags);
+      if (OK)
       {
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           HReg &= 0x0f;
         else
         {
@@ -2025,7 +2029,7 @@ static void DecodeShift(Word Code)
         }
       }
     }
-    if (OK) 
+    if (OK)
     {
       DecodeAdr(&ArgStr[ArgCnt], MModReg | MModXReg | ((HReg == 0xff) ? 0 : MModMem));
       switch (AdrType)
@@ -2157,11 +2161,8 @@ static void DecodeBitCF(Word Code)
           OK = True;
         }
         else
-        {
-          FirstPassUnknown = False;
           BitPos = EvalStrIntExpression(&ArgStr[1], (OpSize == 0) ? UInt3 : Int4, &OK);
-        }
-        if (OK) 
+        if (OK)
          switch (AdrType)
          {
            case ModReg:
@@ -2248,22 +2249,23 @@ static void DecodeINC_DEC(Word Code)
 {
   Boolean OK;
   Byte Incr;
+  tSymbolFlags Flags;
 
   SetInstrOpSize(Hi(Code));
 
   if (ChkArgCnt(1, 2))
   {
-    FirstPassUnknown = False;
     if (ArgCnt == 1) 
     {
       Incr = 1;
       OK = True;
+      Flags = eSymbolFlag_None;
     }
     else
-      Incr = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
-    if (OK) 
+      Incr = EvalStrIntExpressionWithFlags(&ArgStr[1], Int4, &OK, &Flags);
+    if (OK)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         Incr &= 7;
       else if ((Incr < 1) || (Incr > 8)) 
       {
@@ -2271,7 +2273,7 @@ static void DecodeINC_DEC(Word Code)
         OK = False;
       }
     }
-    if (OK) 
+    if (OK)
     {
       Incr &= 7;    /* 8-->0 */
       DecodeAdr(&ArgStr[ArgCnt], MModReg | MModXReg | MModMem);
@@ -2336,7 +2338,7 @@ static void DecodeCPxx(Word Code)
       if (!OK)
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
     }
-    if (OK) 
+    if (OK)
     {
       CodeLen = 2;
       BAsmCode[0] = 0x80 + (OpSize << 4) + AdrMode;
@@ -2363,7 +2365,7 @@ static void DecodeLDxx(Word Code)
     }
     else
     {
-      char *CmpStr;
+      const char *CmpStr;
       int l1 = strlen(ArgStr[1].Str),
           l2 = strlen(ArgStr[2].Str);
 
@@ -2404,7 +2406,7 @@ static void DecodeMINC_MDEC(Word Code)
     Boolean OK;
 
     AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK) 
+    if (OK)
     {
       Byte Pwr;
       Byte ByteSizeLg2 = Code & 3, ByteSize = 1 << ByteSizeLg2;
@@ -2493,7 +2495,7 @@ static void DecodeSCC(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddSize(char *NName, Byte NCode, InstProc Proc, Word SizeMask)
+static void AddSize(const char *NName, Byte NCode, InstProc Proc, Word SizeMask)
 {
   int l;
   char SizeName[20];
@@ -2518,7 +2520,7 @@ static void AddSize(char *NName, Byte NCode, InstProc Proc, Word SizeMask)
   }
 }
 
-static void AddMod(char *NName, Byte NCode)
+static void AddMod(const char *NName, Byte NCode)
 {
   int l;
   char SizeName[20];
@@ -2531,30 +2533,27 @@ static void AddMod(char *NName, Byte NCode)
   AddInstTable(InstTable, SizeName, NCode | 2, DecodeMINC_MDEC);
 }
 
-static void AddFixed(char *NName, Word NCode, Byte NFlag, Boolean NSup)
+static void AddFixed(const char *NName, Word NCode, Byte NFlag, Boolean NSup)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
-  FixedOrders[InstrZ].Name = NName;
   FixedOrders[InstrZ].Code = NCode;
   FixedOrders[InstrZ].CPUFlag = NFlag;
   FixedOrders[InstrZ].InSup = NSup;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddReg(char *NName, Word NCode, Byte NMask)
+static void AddReg(const char *NName, Word NCode, Byte NMask)
 {
   if (InstrZ >= RegOrderCnt) exit(255);
-  RegOrders[InstrZ].Name = NName;
   RegOrders[InstrZ].Code = NCode;
   RegOrders[InstrZ].OpMask = NMask;
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg);
 }
 
-static void AddImm(char *NName, Word NCode, Boolean NInSup,
+static void AddImm(const char *NName, Word NCode, Boolean NInSup,
                    Byte NMinMax, Byte NMaxMax, ShortInt NDefault)
 {
   if (InstrZ >= ImmOrderCnt) exit(255);
-  ImmOrders[InstrZ].Name = NName;
   ImmOrders[InstrZ].Code = NCode;
   ImmOrders[InstrZ].InSup = NInSup;
   ImmOrders[InstrZ].MinMax = NMinMax;
@@ -2563,32 +2562,32 @@ static void AddImm(char *NName, Word NCode, Boolean NInSup,
   AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
 }
 
-static void AddALU2(char *NName, Byte NCode)
+static void AddALU2(const char *NName, Byte NCode)
 {
   AddSize(NName, NCode, DecodeALU2, 7);
 }
 
-static void AddShift(char *NName)
+static void AddShift(const char *NName)
 {
   AddSize(NName, InstrZ++, DecodeShift, 7);
 }
 
-static void AddMulDiv(char *NName)
+static void AddMulDiv(const char *NName)
 {
   AddInstTable(InstTable, NName, InstrZ++, DecodeMulDiv);
 }
 
-static void AddBitCF(char *NName, Byte NCode)
+static void AddBitCF(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBitCF);
 }
 
-static void AddBit(char *NName)
+static void AddBit(const char *NName)
 {
   AddInstTable(InstTable, NName, InstrZ++, DecodeBit);
 }
 
-static void AddCondition(char *NName, Byte NCode)
+static void AddCondition(const char *NName, Byte NCode)
 {
   if (InstrZ >= ConditionCnt) exit(255);
   Conditions[InstrZ].Name = NName;

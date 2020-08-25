@@ -394,14 +394,11 @@ static void CodeJC(Word Code)
   if (ChkArgCnt(1, 1)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
-    Boolean OK;
-    Word Address;
-
-    FirstPassUnknown = False;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (OK && ChkSamePage(EProgCounter() + 1, Address, 6))
+    tEvalResult EvalResult;
+    Word Address = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+    if (EvalResult.OK && ChkSamePage(EProgCounter() + 1, Address, 6, EvalResult.Flags))
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       BAsmCode[CodeLen++] = Lo(Code) | (Address & 0x3f);
     }
   }
@@ -412,14 +409,11 @@ static void CodeJMP(Word Code)
   if (ChkArgCnt(1, 1)
    && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0))
   {
-    Boolean OK;
-    Word Address;
-
-    FirstPassUnknown = False;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word Address= EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       BAsmCode[CodeLen++] = Lo(Code) | (Hi(Address) & 0x07);
       BAsmCode[CodeLen++] = Lo(Address);
     }

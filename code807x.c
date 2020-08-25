@@ -79,7 +79,7 @@ static Boolean SetOpSize(int NewSize)
 static Boolean GetReg16(char *Asc, Byte *AdrPart)
 {
   int z;
-  static char *Reg16Names[4] = { "PC", "SP", "P2", "P3" };
+  static const char Reg16Names[4][3] = { "PC", "SP", "P2", "P3" };
 
   for (z = 0; z < 4; z++)
     if (!as_strcasecmp(Asc, Reg16Names[z]))
@@ -179,9 +179,10 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta)
 
   if (Cnt == 1)
   {
-    FirstPassUnknown = False;
-    Addr = EvalStrIntExpression(&ArgStr[Index], UInt16, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[Index], UInt16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr &= 0xff;
     if (OK)
     {
@@ -207,15 +208,16 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta)
     else if ((Incr) && (AdrPart < 2)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index + 1]);
     else
     {
+      tSymbolFlags Flags;
+
       if (Incr)
         AdrPart |= 4;
-      FirstPassUnknown = False;
-      Addr = EvalStrIntExpressionOffs(&ArgStr[Index], Incr, Int16, &OK);
+      Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[Index], Incr, Int16, &OK, &Flags);
       if (OK)
       {
         if (!AdrPart)
           Addr -= (EProgCounter() + PCDelta);
-        if ((!FirstPassUnknown) && (!SymbolQuestionable) && ((Addr < - 128) || (Addr > 127))) WrError(ErrNum_OverRange);
+        if (!mFirstPassUnknownOrQuestionable(Flags) && ((Addr < - 128) || (Addr > 127))) WrError(ErrNum_OverRange);
         else
         {
           AdrMode = ModMem;
@@ -668,17 +670,17 @@ static void DecodeBranch(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddBranch(char *NName, Byte NCode)
+static void AddBranch(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBranch);
 }
 
-static void AddShift(char *NName, Byte NCode, Byte NCode16)
+static void AddShift(const char *NName, Byte NCode, Byte NCode16)
 {
   if (InstrZ >= ShiftOrderCnt)
     exit(0);

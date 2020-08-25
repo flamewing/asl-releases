@@ -103,6 +103,7 @@ typedef struct
   ShortInt AdrVal;
   int AdrCnt;
   Byte AdrVals[4];
+  tSymbolFlags AdrValSymFlags;
   Byte ForceRel;
   Boolean ForceAbs;
 } tEncodedAddress;
@@ -176,7 +177,7 @@ static ShortInt DecodeReg8(const char *pAsc)
     case 1:
     {
       static const char Reg8Names[9] = "XACBEDLH";
-      char *pPos = strchr(Reg8Names, mytoupper(*pAsc));
+      const char *pPos = strchr(Reg8Names, mytoupper(*pAsc));
 
       if (pPos)
       {
@@ -202,10 +203,10 @@ static ShortInt DecodeReg8(const char *pAsc)
 
     case 3:
     {
-      static const char *Reg8Names[] = { "VPL", "VPH", "UPL", "UPH", "R10", "R11", "R12", "R13", "R14", "R15", NULL };
+      static const char Reg8Names[][4] = { "VPL", "VPH", "UPL", "UPH", "R10", "R11", "R12", "R13", "R14", "R15", "" };
       int z;
 
-      for (z = 0; Reg8Names[z]; z++)
+      for (z = 0; *Reg8Names[z]; z++)
         if (!as_strcasecmp(pAsc, Reg8Names[z]))
         {
           /* map to 8..11 resp. 10..15 */
@@ -222,7 +223,7 @@ static ShortInt DecodeReg8(const char *pAsc)
 static ShortInt DecodeReg8_U16(const char *pAsc)
 {
   static const char Reg8Names[5] = "VUTW";
-  char *pPos;
+  const char *pPos;
 
   if (strlen(pAsc) != 1)
     return -1;
@@ -238,10 +239,10 @@ static ShortInt DecodeReg16(const char *pAsc)
   {
     case  2:
     {
-      static const char *Reg16Names[] = {"AX", "BC", "VP", "UP", "DE", "HL", NULL};
+      static const char Reg16Names[][3] = { "AX", "BC", "VP", "UP", "DE", "HL", "" };
       int z;
 
-      for (z = 0; Reg16Names[z]; z++)
+      for (z = 0; *Reg16Names[z]; z++)
         if (!as_strcasecmp(Reg16Names[z], pAsc))
         {
           Result = ((z >= 2) || Reg_RSS) ? z + 2 : z;
@@ -265,10 +266,10 @@ static ShortInt DecodeReg16(const char *pAsc)
 
 static ShortInt DecodeReg24(const char *pAsc)
 {
-  static const char *Reg24Names[] = { "VVP", "UUP", "TDE", "WHL", "RG4", "RG5", "RG6", "RG7", NULL };
+  static const char Reg24Names[][4] = { "VVP", "UUP", "TDE", "WHL", "RG4", "RG5", "RG6", "RG7", "" };
   int z;
 
-  for (z = 0; Reg24Names[z]; z++)
+  for (z = 0; *Reg24Names[z]; z++)
     if (!as_strcasecmp(Reg24Names[z], pAsc))
       return (z & 3);
 
@@ -478,8 +479,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
 
     if (pStart == Arg.Str)
     {
-      static char *Modes[] = { "TDE+", "WHL+", "TDE-", "WHL-", "TDE", "WHL", "VVP", "UUP",
-                               "RG6+", "RG7+", "RG6-", "RG7-", "RG6", "RG7", "RG4", "RG5" };
+      static const char Modes[][5] = { "TDE+", "WHL+", "TDE-", "WHL-", "TDE", "WHL", "VVP", "UUP",
+                                       "RG6+", "RG7+", "RG6-", "RG7-", "RG6", "RG7", "RG4", "RG5" };
       unsigned z;
       char *pSep, Save;
       tStrComp Base, Remainder;
@@ -536,12 +537,12 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
       if (0xff == pAddress->AdrVals[0])
       {
         unsigned Is24 = !!(*Arg.Str == '%');
+        tSymbolFlags Flags;
 
-        FirstPassUnknown = False;
-        Addr = EvalStrIntExpressionOffs(&Arg, Is24, UInt24, &OK);
+        Addr = EvalStrIntExpressionOffsWithFlags(&Arg, Is24, UInt24, &OK, &Flags);
         if (OK)
         {
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(Flags))
             Addr = 0xfe20 + (Reg_LOCATION << 16);
           if (ChkSAddr1(Addr, &pAddress->AdrVals[0]))
             pAddress->AdrMode = Is24 ? ModShortIndir1_24 : ModShortIndir1_16;
@@ -719,8 +720,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
       Offset++;
       pAddress->ForceAbs++;
     }
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpressionOffs(pArg, Offset, (AdrModeMask & MModAbs20) ? UInt20 : UInt24, &OK);
+  Addr = EvalStrIntExpressionOffsWithFlags(pArg, Offset, (AdrModeMask & MModAbs20) ? UInt20 : UInt24, &OK, &pAddress->AdrValSymFlags);
   if (!OK)
     return False;
 
@@ -748,7 +748,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
       pAddress->AdrVals[pAddress->AdrCnt++] = (Addr >> 16) & 0xff;
       break;
     case 1:
-      if (!Is16 && FirstPassUnknown)
+      if (!Is16 && mFirstPassUnknown(pAddress->AdrValSymFlags))
       {
         Addr &= 0xffff;
         Is16 = True;
@@ -778,7 +778,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, tAdrModeMask AdrModeMask, tEncode
         pAddress->AdrMode = ModSFR;
         pAddress->AdrVals[pAddress->AdrCnt++] = pAddress->AdrVals[2];
       }
-      else if (FirstPassUnknown)
+      else if (mFirstPassUnknown(pAddress->AdrValSymFlags))
       {
         if (AdrModeMask & MModShort1)
         {
@@ -1018,11 +1018,11 @@ static void AppendRel8(const tStrComp *pArg)
 {
   Boolean OK;
   LongInt Dist;
+  tSymbolFlags Flags;
 
-  FirstPassUnknown = False;
-  Dist = EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '$'), UInt20, &OK) - (EProgCounter() + CodeLen + 1);
+  Dist = EvalStrIntExpressionOffsWithFlags(pArg, !!(*pArg->Str == '$'), UInt20, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
   if (!OK) CodeLen = 0;
-  else if (!FirstPassUnknown && ((Dist < -0x80) || (Dist > 0x7f)))
+  else if (!mSymbolQuestionable(Flags) && ((Dist < -0x80) || (Dist > 0x7f)))
   {
     WrError(ErrNum_JmpDistTooBig);
     CodeLen = 0;
@@ -2928,7 +2928,6 @@ static void DecodeCALL_BR(Word IsCALL)
   }
   else
   {
-    FirstPassUnknown = False;
     DecodeAdr(&ArgStr[1], MModReg16 | MModReg24 | MModAbs16 | MModAbs20, &Addr);
     switch (Addr.AdrMode)
     {
@@ -2979,7 +2978,7 @@ static void DecodeCALL_BR(Word IsCALL)
         }
         else if (IsCALL || Addr.ForceAbs)
         {
-          if (!FirstPassUnknown && !Dist16OK) WrError(ErrNum_JmpDistTooBig);
+          if (!mFirstPassUnknown(Addr.AdrValSymFlags) && !Dist16OK) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[CodeLen++] = IsCALL ? 0x3f : 0x43;
@@ -2989,7 +2988,7 @@ static void DecodeCALL_BR(Word IsCALL)
         }
         else
         {
-          if (!FirstPassUnknown && !Dist8OK) WrError(ErrNum_JmpDistTooBig);
+          if (!mFirstPassUnknown(Addr.AdrValSymFlags) && !Dist8OK) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[CodeLen++] = 0x14;
@@ -3016,10 +3015,10 @@ static void DecodeCALLF(Word Code)
   {
     Boolean OK;
     Word Addr;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt12, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt12, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr |= 0x800;
     if (OK && ChkRange(Addr, 0x800, 0xfff))
     {
@@ -3039,10 +3038,10 @@ static void DecodeCALLT(Word Code)
   {
     Boolean OK;
     Word Addr;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt7, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '!'), UInt7, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr = (Addr | 0x40) & 0xfe;
     if (OK && (Addr & 1)) WrError(ErrNum_NotAligned);
     else if (OK && ChkRange(Addr, 0x40, 0xff))
@@ -3171,17 +3170,17 @@ static void DecodeLOCATION(Word Code)
 {
   Byte Val;
   Boolean OK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (!ChkArgCnt(1, 1))
     return;
 
-  FirstPassUnknown = False;
-  Val = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
+  Val = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt4, &OK, &Flags);
   if (!OK)
     return;
-  if (FirstPassUnknown)
+  if (mFirstPassUnknown(Flags))
     Val = 0;
   switch (Val)
   {

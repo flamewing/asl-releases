@@ -208,12 +208,12 @@ static void DumpDebugInfo_MAP(void)
 
 static void DumpDebugInfo_Atmel(void)
 {
-  static char *OBJString = "AVR Object File";
+  static const char *OBJString = "AVR Object File";
   PLineInfoList Run;
   LongInt FNamePos, RecPos;
   FILE *OBJFile;
   String OBJName;
-  char *FName;
+  const char *FName;
   Byte TByte, TNum, NameCnt;
   int z;
   LongInt LTurn;

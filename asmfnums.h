@@ -20,7 +20,7 @@ extern void AddFile(char *FName);
 
 extern Integer GetFileNum(char *Name);
 
-extern char *GetFileName(int Num);
+extern const char *GetFileName(int Num);
 
 extern Integer GetFileCount(void);
 

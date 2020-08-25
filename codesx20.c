@@ -36,20 +36,17 @@ static LongInt Reg_FSR, Reg_STATUS;
 
 /*---------------------------------------------------------------------------*/
 
-static Boolean DecodeRegLinear(const tStrComp *pArg, int Offset, Word *pResult)
+static Boolean DecodeRegLinear(const tStrComp *pArg, int Offset, Word *pResult, tEvalResult *pEvalResult)
 {
-  Boolean OK;
-  
-  FirstPassUnknown = False;
-  *pResult = EvalStrIntExpressionOffs(pArg, Offset, UInt8, &OK);
-  if (OK)
-    ChkSpace(SegData);
-  return OK;
+  *pResult = EvalStrIntExpressionOffsWithResult(pArg, Offset, UInt8, pEvalResult);
+  if (pEvalResult->OK)
+    ChkSpace(SegData, pEvalResult->AddrSpaceMask);
+  return pEvalResult->OK;
 }
 
-static Word Lin2PagedRegAddr(const tStrComp *pArg, Word LinAddr)
+static Word Lin2PagedRegAddr(const tStrComp *pArg, Word LinAddr, tSymbolFlags Flags)
 {
-  if (!FirstPassUnknown && (LinAddr & 0x10))
+  if (!mFirstPassUnknown(Flags) && (LinAddr & 0x10))
   {
     if ((Reg_FSR & 0xf0) != (LinAddr & 0xf0))
       WrStrErrorPos(ErrNum_InAccPage, pArg);
@@ -59,9 +56,11 @@ static Word Lin2PagedRegAddr(const tStrComp *pArg, Word LinAddr)
 
 static Boolean DecodeReg(const tStrComp *pArg, int Offset, Word *pResult)
 {
-  if (!DecodeRegLinear(pArg, Offset, pResult))
+  tEvalResult EvalResult;
+
+  if (!DecodeRegLinear(pArg, Offset, pResult, &EvalResult))
     return False;
-  *pResult = Lin2PagedRegAddr(pArg, *pResult);
+  *pResult = Lin2PagedRegAddr(pArg, *pResult, EvalResult.Flags);
   return True;
 }
 
@@ -123,19 +122,17 @@ static void DissectBit_SX20(char *pDest, int DestSize, LargeWord Inp)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitSymbol(const tStrComp *pArg, Word *pBitSymbol)
+static Boolean DecodeBitSymbol(const tStrComp *pArg, Word *pBitSymbol, tEvalResult *pEvalResult)
 {
   char *pSplit;
 
   pSplit = strchr(pArg->Str, '.');
   if (!pSplit)
   {
-    Boolean OK;
-
-    *pBitSymbol = EvalStrIntExpression(pArg, UInt11, &OK);
-    if (OK)
-      ChkSpace(SegBData);
-    return OK;
+    *pBitSymbol = EvalStrIntExpressionWithResult(pArg, UInt11, pEvalResult);
+    if (pEvalResult->OK)
+      ChkSpace(SegBData, pEvalResult->AddrSpaceMask);
+    return pEvalResult->OK;
   }
   else
   {
@@ -145,7 +142,7 @@ static Boolean DecodeBitSymbol(const tStrComp *pArg, Word *pBitSymbol)
 
     StrCompSplitRef(&RegArg, &BitArg, pArg, pSplit);
     BitPos = EvalStrIntExpression(&BitArg, UInt3, &BitOK);
-    RegOK = DecodeRegLinear(&RegArg, 0, &RegAddr);
+    RegOK = DecodeRegLinear(&RegArg, 0, &RegAddr, pEvalResult);
     *pBitSymbol = AssembleBitSymbol(RegAddr, BitPos);
     return BitOK && RegOK;
   }
@@ -154,11 +151,12 @@ static Boolean DecodeBitSymbol(const tStrComp *pArg, Word *pBitSymbol)
 static Boolean DecodeRegBitPacked(const tStrComp *pArg, Word *pPackedResult)
 {
   Word BitSymbol, RegAddr, BitPos;
+  tEvalResult EvalResult;
   
-  if (!DecodeBitSymbol(pArg, &BitSymbol))
+  if (!DecodeBitSymbol(pArg, &BitSymbol, &EvalResult))
     return False;
   SplitBitSymbol(BitSymbol, &RegAddr, &BitPos);
-  *pPackedResult = (BitPos << 5) | Lin2PagedRegAddr(pArg, RegAddr);
+  *pPackedResult = (BitPos << 5) | Lin2PagedRegAddr(pArg, RegAddr, EvalResult.Flags);
   return True;
 }
 
@@ -361,7 +359,8 @@ static void DecodeBit(Word Code)
 static void DecodeJMP_CALL(Word Code)
 {
   Word Addr;
-  Boolean OK, IsCall = (Code == 0x900);
+  Boolean IsCall = (Code == 0x900);
+  tEvalResult EvalResult;
 
   if (!ChkArgCnt(1, 1))
     return;
@@ -380,17 +379,16 @@ static void DecodeJMP_CALL(Word Code)
     }
   }
 
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpression(&ArgStr[1], UInt11, &OK);
-  if (!OK)
+  Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt11, &EvalResult);
+  if (!EvalResult.OK)
     return;
 
-  if (!FirstPassUnknown && IsCall && (Addr & 0x100)) WrStrErrorPos(ErrNum_NotFromThisAddress, &ArgStr[1]);
+  if (!mFirstPassUnknown(EvalResult.Flags) && IsCall && (Addr & 0x100)) WrStrErrorPos(ErrNum_NotFromThisAddress, &ArgStr[1]);
   else
   {
-    if (!FirstPassUnknown && ((Reg_STATUS & 0xe0) != ((Addr >> 4) & 0xe0))) WrStrErrorPos(ErrNum_InAccPage, &ArgStr[1]);
+    if (!mFirstPassUnknown(EvalResult.Flags) && ((Reg_STATUS & 0xe0) != ((Addr >> 4) & 0xe0))) WrStrErrorPos(ErrNum_InAccPage, &ArgStr[1]);
     WAsmCode[CodeLen++] = Code | (Addr & 0x1ff);
-    ChkSpace(SegCode);
+    ChkSpace(SegCode, EvalResult.AddrSpaceMask);
   }
 }
 
@@ -409,49 +407,49 @@ static void DecodeRETW(Word Code)
 
 static void DecodeBANK(Word Code)
 {
-  Boolean OK;
   Word Arg;
+  tEvalResult EvalResult;
 
   if (!ChkArgCnt(1, 1))
     return;
 
-  Arg = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
-  if (OK)
+  Arg = EvalStrIntExpressionWithResult(&ArgStr[1], UInt8, &EvalResult);
+  if (EvalResult.OK)
   {
     WAsmCode[CodeLen++] = Code | ((Arg >> 5) & 7);
-    ChkSpace(SegData);
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
   }
 }
 
 static void DecodePAGE(Word Code)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   Word Arg;
 
   if (!ChkArgCnt(1, 1))
     return;
 
-  Arg = EvalStrIntExpression(&ArgStr[1], UInt12, &OK);
-  if (OK)
+  Arg = EvalStrIntExpressionWithResult(&ArgStr[1], UInt12, &EvalResult);
+  if (EvalResult.OK)
   {
     WAsmCode[CodeLen++] = Code | ((Arg >> 9) & 7);
-    ChkSpace(SegCode);
+    ChkSpace(SegCode, EvalResult.AddrSpaceMask);
   }
 }
 
 static void DecodeMODE(Word Code)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   Word Arg;
 
   if (!ChkArgCnt(1, 1))
     return;
 
-  Arg = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
-  if (OK)
+  Arg = EvalStrIntExpressionWithResult(&ArgStr[1], Int4, &EvalResult);
+  if (EvalResult.OK)
   {
     WAsmCode[CodeLen++] = Code | Arg;
-    ChkSpace(SegCode);
+    ChkSpace(SegCode, EvalResult.AddrSpaceMask);
   }
 }
 
@@ -474,10 +472,11 @@ static void DecodeSFR(Word Code)
 static void DecodeBIT(Word Code)
 {
   Word BitSymbol;
+  tEvalResult EvalResult;
 
   UNUSED(Code);
   if (ChkArgCnt(1, 1)
-   && DecodeBitSymbol(&ArgStr[1], &BitSymbol))
+   && DecodeBitSymbol(&ArgStr[1], &BitSymbol, &EvalResult))
   {
     *ListLine = '=';
     DissectBit_SX20(ListLine + 1, STRINGSIZE - 3, BitSymbol);
@@ -499,15 +498,15 @@ static void DecodeZERO(Word Code)
 {
   Word Size;
   Boolean ValOK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown)) 
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags)) 
     {
       if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
       else

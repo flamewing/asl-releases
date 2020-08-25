@@ -31,12 +31,12 @@ typedef enum
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Word Id;
   tHexFormat HexFormat;
 } TFamilyDescr, *PFamilyDescr;
 
-extern PFamilyDescr FindFamilyByName(char *Name);
+extern PFamilyDescr FindFamilyByName(const char *Name);
 
 extern PFamilyDescr FindFamilyById(Word Id);
 

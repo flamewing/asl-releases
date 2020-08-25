@@ -73,11 +73,11 @@ static void SetOpSize(ShortInt NewSize)
 
 static void DecodeAdr(const tStrComp *pArg, Word Mask)
 {
-  static char *RegNames[ModIHL + 1] = {"A", "L", "H", "HL", "@HL"};
+  static const char RegNames[ModIHL + 1][4] = {"A", "L", "H", "HL", "@HL"};
 
   Byte z;
   Word AdrWord;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   AdrType = ModNone;
 
@@ -97,18 +97,18 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
         WrError(ErrNum_UndefOpSizes);
         break;
       case 2:
-        AdrVal = EvalStrIntExpressionOffs(pArg, 1, UInt2, &OK) & 3;
-        if (OK)
+        AdrVal = EvalStrIntExpressionOffsWithResult(pArg, 1, UInt2, &EvalResult) & 3;
+        if (EvalResult.OK)
           AdrType = ModImm;
         break;
       case 0:
-        AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int4, &OK) & 15;
-        if (OK)
+        AdrVal = EvalStrIntExpressionOffsWithResult(pArg, 1, Int4, &EvalResult) & 15;
+        if (EvalResult.OK)
           AdrType = ModImm;
         break;
       case 1:
-        AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
-        if (OK)
+        AdrVal = EvalStrIntExpressionOffsWithResult(pArg, 1, Int8, &EvalResult);
+        if (EvalResult.OK)
           AdrType = ModImm;
         break;
     }
@@ -117,31 +117,30 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   if (*pArg->Str == '%')
   {
-    AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int5, &OK);
-    if (OK)
+    AdrVal = EvalStrIntExpressionOffsWithResult(pArg, 1, Int5, &EvalResult);
+    if (EvalResult.OK)
     {
       AdrType = ModPort;
-      ChkSpace(SegIO);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     }
     goto chk;
   }
 
-  FirstPassUnknown = False;
-  AdrWord = EvalStrIntExpression(pArg, Int16, &OK);
-  if (OK)
+  AdrWord = EvalStrIntExpressionWithResult(pArg, Int16, &EvalResult);
+  if (EvalResult.OK)
   {
-    ChkSpace(SegData);
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
 
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(EvalResult.Flags))
       AdrWord &= SegLimits[SegData];
     else if (Hi(AdrWord) != DMBAssume)
       WrError(ErrNum_InAccPage);
 
     AdrVal = Lo(AdrWord);
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(EvalResult.Flags))
       AdrVal &= 15;
 
-    AdrType =  (((Mask & MModSAbs) != 0) && (AdrVal<16)) ? ModSAbs : ModAbs;
+    AdrType = (((Mask & MModSAbs) != 0) && (AdrVal < 16)) ? ModSAbs : ModAbs;
   }
 
 chk:
@@ -158,7 +157,7 @@ static void ChkCPU(Byte Mask)
     CodeLen = 0;
 }
 
-static Boolean DualOp(char *s1, char *s2)
+static Boolean DualOp(const char *s1, const char *s2)
 {
   return (((!as_strcasecmp(ArgStr[1].Str, s1)) && (!as_strcasecmp(ArgStr[2].Str, s2)))
        || ((!as_strcasecmp(ArgStr[2].Str, s1)) && (!as_strcasecmp(ArgStr[1].Str, s2))));
@@ -992,14 +991,12 @@ static void DecodeBSS(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord;
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK && ChkSamePage(AdrWord, EProgCounter() + 1, 6))
+    if (EvalResult.OK && ChkSamePage(AdrWord, EProgCounter() + 1, 6, EvalResult.Flags))
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 1;
       BAsmCode[0] = 0x80 + (AdrWord & 0x3f);
     }
@@ -1012,14 +1009,12 @@ static void DecodeBS(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord;
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK && ChkSamePage(AdrWord, EProgCounter() + 2, 12))
+    if (EvalResult.OK && ChkSamePage(AdrWord, EProgCounter() + 2, 12, EvalResult.Flags))
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 2;
       BAsmCode[0] = 0x60 + (Hi(AdrWord) & 15);
       BAsmCode[1] = Lo(AdrWord);
@@ -1033,15 +1028,15 @@ static void DecodeBSL(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
       if (AdrWord > SegLimits[SegCode]) WrError(ErrNum_OverRange);
       else
       {
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         CodeLen = 3;
         switch (AdrWord >> 12)
         {
@@ -1063,21 +1058,22 @@ static void DecodeB(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult),
+         Curr = EProgCounter();
 
-    if (OK)
+    if (EvalResult.OK)
     {
       if (AdrWord > SegLimits[SegCode]) WrError(ErrNum_OverRange);
       else
       {
-        ChkSpace(SegCode);
-        if ((AdrWord >> 6) == ((EProgCounter() + 1) >> 6))
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
+        if ((AdrWord >> 6) == ((Curr + 1) >> 6))
         {
           CodeLen = 1;
           BAsmCode[0] = 0x80 + (AdrWord & 0x3f);
         }
-        else if ((AdrWord >> 12) == ((EProgCounter() + 2) >> 12))
+        else if ((AdrWord >> 12) == ((Curr + 2) >> 12))
         {
           CodeLen = 2;
           BAsmCode[0] = 0x60 + (Hi(AdrWord) & 0x0f);
@@ -1109,14 +1105,14 @@ static void DecodeCALLS(Word Code)
   {
     Boolean OK;
     Word AdrWord;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
     if (OK)
     {
       if (AdrWord == 0x86)
         AdrWord = 0x06;
-      if (!FirstPassUnknown && ((AdrWord & 0xff87) != 6)) WrStrErrorPos(ErrNum_NotAligned, &ArgStr[1]);
+      if (!mFirstPassUnknown(Flags) && ((AdrWord & 0xff87) != 6)) WrStrErrorPos(ErrNum_NotAligned, &ArgStr[1]);
       else
       {
         CodeLen = 1;
@@ -1132,14 +1128,12 @@ static void DecodeCALL(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord;
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK && ChkSamePage(AdrWord, EProgCounter(), 11))
+    if (EvalResult.OK && ChkSamePage(AdrWord, EProgCounter(), 11, EvalResult.Flags))
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 2;
       BAsmCode[0] = 0x20 + (Hi(AdrWord) & 7);
       BAsmCode[1] = Lo(AdrWord);
@@ -1156,7 +1150,7 @@ static void DecodePORT(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }

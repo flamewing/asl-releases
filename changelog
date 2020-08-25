@@ -1,6 +1,11 @@
+2020-08-25 [1.42 Bld 173]
+
+- Change      : avoid error/warning number of zero
+- Addition    : allow operand size attributes for SET and EQU
+
 2020-06-22 [1.42 Bld 172]
 
-- Addition    : add column to MAP file declarig whether symbol is constant
+- Addition    : add column to MAP file declaring whether symbol is constant
                 or variable
 - Bugfix      : Z8: do not allow odd indirect register pairs
 - Bugfix      : differentiate CMOS/NMOS Z8 variants, remove Z8604 due to lack of documentation

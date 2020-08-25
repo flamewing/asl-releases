@@ -33,9 +33,9 @@ extern void AddStringListLast(StringList *List, const char *NewStr);
 
 extern void RemoveStringList(StringList *List, const char *OldStr);
 
-extern char *GetStringListFirst(StringList List, StringRecPtr *Lauf);
+extern const char *GetStringListFirst(StringList List, StringRecPtr *Lauf);
 
-extern char *GetStringListNext(StringRecPtr *Lauf);
+extern const char *GetStringListNext(StringRecPtr *Lauf);
 
 extern char *GetAndCutStringList(StringList *List);
 

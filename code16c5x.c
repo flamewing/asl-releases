@@ -55,15 +55,16 @@ static void DecodeLit(Word Code)
 static void DecodeAri(Word Code)
 {
   Word DefaultDir = (Code >> 15) & 1, AdrWord;
-  Boolean OK;
 
   Code &= 0x7fff;
   if (ChkArgCnt(1, 2))
   {
-    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+
+    AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt5, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
       WAsmCode[0] = Code + (AdrWord & 0x1f);
       if (ArgCnt == 1)
       {
@@ -79,8 +80,8 @@ static void DecodeAri(Word Code)
       }
       else
       {
-        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
-        if (OK)
+        AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt1, &EvalResult);
+        if (EvalResult.OK)
         {
           CodeLen = 1;
           WAsmCode[0] += AdrWord << 5;
@@ -94,16 +95,17 @@ static void DecodeBit(Word Code)
 {
   if (ChkArgCnt(2, 2))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt3, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-      if (OK)
+      WAsmCode[0] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt5, &EvalResult);
+      if (EvalResult.OK)
       {
         CodeLen = 1;
         WAsmCode[0] += Code + (AdrWord << 5);
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
       }
     }
   }
@@ -113,13 +115,14 @@ static void DecodeF(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt5, &EvalResult);
+
+    if (EvalResult.OK)
     {
       CodeLen = 1;
       WAsmCode[0] = Code + AdrWord;
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -130,14 +133,15 @@ static void DecodeTRIS(Word Code)
 
   if (ChkArgCnt(1, 1))
   {   
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+
+    if (EvalResult.OK)
      if (ChkRange(AdrWord, 5, 7))
      {
        CodeLen = 1;
        WAsmCode[0] = 0x000 + AdrWord;
-       ChkSpace(SegData);
+       ChkSpace(SegData, EvalResult.AddrSpaceMask);
      }
   }
 }
@@ -146,15 +150,16 @@ static void DecodeCALL_GOTO(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+
+    if (EvalResult.OK)
     {
       if (AdrWord > SegLimits[SegCode]) WrError(ErrNum_OverRange);
       else if ((Code & 0x100) && ((AdrWord & 0x100) != 0)) WrError(ErrNum_NotFromThisAddress);
       else
       {
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         if (((ProgCounter() ^ AdrWord) & 0x200) != 0)
           WAsmCode[CodeLen++] = 0x4a3 + ((AdrWord & 0x200) >> 1); /* BCF/BSF 3,5 */
         if (((ProgCounter() ^ AdrWord) & 0x400) != 0)
@@ -163,7 +168,6 @@ static void DecodeCALL_GOTO(Word Code)
       }
     }
   }
-  return;
 }
 
 static void DecodeSFR(Word Code)
@@ -184,15 +188,15 @@ static void DecodeZERO(Word Code)
 {
   Word Size;
   Boolean ValOK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown)) 
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags))
     {
       if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
       else
@@ -206,27 +210,27 @@ static void DecodeZERO(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddLit(char *NName, Word NCode)
+static void AddLit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeLit);
 }
 
-static void AddAri(char *NName, Word NCode, Word NDef)
+static void AddAri(const char *NName, Word NCode, Word NDef)
 {
   AddInstTable(InstTable, NName, NCode | (NDef << 15), DecodeAri);
 }
 
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddF(char *NName, Word NCode)
+static void AddF(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeF);
 }

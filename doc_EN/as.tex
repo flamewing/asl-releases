@@ -2365,6 +2365,11 @@ may be given as a second or thirsd parameter, allowing to assign the symbol to a
 specific address space.  AS does not check at this point if the used
 address space exists on the currently active target processor!
 
+In case the target architecture supports instruction attributes to define
+the operand size (e.g. on 680x0), those are also allowed for \tty{SET} and
+\tty{EQU}.  The operand size will be stored along with the symbol's value in
+the symbol table.  Its use is architecture-dependant.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SFR and SFRB}
@@ -10729,7 +10734,7 @@ described by:
            }
 
 \begin{description}
-\errentry{   0}{useless displacement}
+\errentry{   5}{useless displacement}
                {warning}
                {680x0, 6809 and COP8 CPUs: an address displacement of 0 was
                 given.  An address expression without displacement is

@@ -114,7 +114,7 @@ static BitOrder *FixedLongOrders;
 static OneOrder *OneOrders;
 static GE2Order *GE2Orders;
 static BitOrder *BitOrders;
-static char **Conditions;
+static const char **Conditions;
 
 /*------------------------------------------------------------------------*/
 
@@ -287,15 +287,17 @@ static PChainRec DecodeChain(tStrComp *pArg)
       if (Rec->RegCnt >= 5) SetError(ErrNum_InvAddrMode);
       else
       {
-        FirstPassUnknown = False;
+        tSymbolFlags Flags;
+
         if (pScaleSplit)
-          Scale = EvalStrIntExpression(&ScaleArg, UInt4, &OK);
+          Scale = EvalStrIntExpressionWithFlags(&ScaleArg, UInt4, &OK, &Flags);
         else
         {
           OK = True;
           Scale = 1;
+           Flags= eSymbolFlag_None;
         }
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           Scale = 1;
         if (!OK) ErrFlag = True;
         else if ((Scale != 1) && (Scale != 2) && (Scale != 4) && (Scale != 8)) SetError(ErrNum_InvAddrMode);
@@ -319,15 +321,17 @@ static PChainRec DecodeChain(tStrComp *pArg)
       if (Rec->RegCnt >= 5) SetError(ErrNum_InvAddrMode);
       else
       {
-        FirstPassUnknown = False;
+        tSymbolFlags Flags;
+
         if (pScaleSplit)
-          Scale = EvalStrIntExpression(&ScaleArg, UInt4, &OK);
+          Scale = EvalStrIntExpressionWithFlags(&ScaleArg, UInt4, &OK, &Flags);
         else
         {
           OK = True;
           Scale = 1;
+          Flags = eSymbolFlag_None;
         }
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           Scale = 1;
         if (!OK) ErrFlag = True;
         else if ((Scale != 1) && (Scale != 2) && (Scale != 4) && (Scale != 8)) SetError(ErrNum_InvAddrMode);
@@ -988,9 +992,9 @@ static Boolean DecodeStringCondition(const char *Asc, Word *pErg)
 
 /*------------------------------------------------------------------------*/
 
-static Boolean CheckFormat(char *FSet)
+static Boolean CheckFormat(const char *FSet)
 {
-  char *p;
+  const char *p;
 
   if (!strcmp(Format, " "))
     FormatCode = 0;
@@ -1109,7 +1113,7 @@ static void DecideBranch(LongInt Adr, Byte Index)
   }
 }
 
-static Boolean DecideBranchLength(LongInt *Addr, int Index)
+static Boolean DecideBranchLength(LongInt *Addr, tSymbolFlags Flags, int Index)
 {
   *Addr -= EProgCounter();
   if (OpSize[Index] == -1)
@@ -1121,7 +1125,7 @@ static Boolean DecideBranchLength(LongInt *Addr, int Index)
     else OpSize[Index]=2;
   }
 
-  if ((!SymbolQuestionable) &&
+  if (!mSymbolQuestionable(Flags) &&
       (((OpSize[Index] == 0) && ((*Addr < -128) || (*Addr > 127)))
     || ((OpSize[Index] == 1) && ((*Addr < -32768) || (*Addr > 32767)))))
   {
@@ -1209,9 +1213,10 @@ static void DecodeACB_SCB(Word IsSCB)
       else
       {
         Boolean OK;
+        tSymbolFlags Flags;
         LongInt AdrLong, HVal;
 
-        AdrLong = EvalStrIntExpression(&ArgStr[4], Int32, &OK);
+        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[4], Int32, &OK, &Flags);
         if (OK)
         {
           if (DecodeAdr(&ArgStr[1], 1, Mask_Source))
@@ -1243,7 +1248,7 @@ static void DecodeACB_SCB(Word IsSCB)
               switch (FormatCode)
               {
                 case 1:
-                  if (DecideBranchLength(&AdrLong, 4))  /* ??? */
+                  if (DecideBranchLength(&AdrLong, Flags, 4))  /* ??? */
                   {
                     WAsmCode[0] = 0xd000 + (OpSize[1] << 8) + AdrMode[1];
                     memcpy(WAsmCode + 1, AdrVals[1], AdrCnt1[1]);
@@ -1254,7 +1259,7 @@ static void DecodeACB_SCB(Word IsSCB)
                   }
                   break;
                 case 2:
-                  if (DecideBranchLength(&AdrLong, 4))  /* ??? */
+                  if (DecideBranchLength(&AdrLong, Flags, 4))  /* ??? */
                   {
                     if (AdrType[1] != ModImm) WrError(ErrNum_InvAddrMode);
                     else
@@ -1272,7 +1277,7 @@ static void DecodeACB_SCB(Word IsSCB)
                   }
                   break;
                 case 3:
-                  if (DecideBranchLength(&AdrLong, 4))  /* ??? */
+                  if (DecideBranchLength(&AdrLong, Flags, 4))  /* ??? */
                   {
                     if (AdrType[1] != ModImm) WrError(ErrNum_InvAddrMode);
                     else if (ImmVal(1) != 1) WrError(ErrNum_Only1);
@@ -1290,7 +1295,7 @@ static void DecodeACB_SCB(Word IsSCB)
                   }
                   break;
                 case 4:
-                  if (DecideBranchLength(&AdrLong, 4))  /* ??? */
+                  if (DecideBranchLength(&AdrLong, Flags, 4))  /* ??? */
                   {
                     if (AdrType[1] != ModImm) WrError(ErrNum_InvAddrMode);
                     else if (ImmVal(1) != 1) WrError(ErrNum_Only1);
@@ -2402,7 +2407,8 @@ static void DecodeBSR_BRA(Word IsBSR)
    && GetOpSize(&ArgStr[1], 1))
   {
     Boolean OK;
-    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
     if (OK)
     {
       DecideBranch(AdrLong, 1);
@@ -2413,7 +2419,7 @@ static void DecodeBSR_BRA(Word IsBSR)
           else
           {
             AdrLong -= EProgCounter();
-            if ((!SymbolQuestionable) && ((AdrLong < -256) || (AdrLong > 254))) WrError(ErrNum_JmpDistTooBig);
+            if (!mSymbolQuestionable(Flags) && ((AdrLong < -256) || (AdrLong > 254))) WrError(ErrNum_JmpDistTooBig);
             else if (Odd(AdrLong)) WrError(ErrNum_DistIsOdd);
             else
             {
@@ -2428,7 +2434,7 @@ static void DecodeBSR_BRA(Word IsBSR)
           switch (OpSize[1])
           {
             case 0:
-              if ((!SymbolQuestionable) && ((AdrLong < -128) || (AdrLong > 127))) WrError(ErrNum_JmpDistTooBig);
+              if (!mSymbolQuestionable(Flags) && ((AdrLong < -128) || (AdrLong > 127))) WrError(ErrNum_JmpDistTooBig);
               else
               {
                 CodeLen = 4;
@@ -2436,7 +2442,7 @@ static void DecodeBSR_BRA(Word IsBSR)
               }
               break;
             case 1:
-              if ((!SymbolQuestionable) && ((AdrLong < -32768) || (AdrLong > 32767))) WrError(ErrNum_JmpDistTooBig);
+              if (!mSymbolQuestionable(Flags) && ((AdrLong < -32768) || (AdrLong > 32767))) WrError(ErrNum_JmpDistTooBig);
               else
               {
                 CodeLen = 4;
@@ -2462,7 +2468,8 @@ static void DecodeBcc(Word Code)
    && GetOpSize(&ArgStr[1], 1))
   {
     Boolean OK;
-    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
     if (OK)
     {
       DecideBranch(AdrLong, 1);
@@ -2473,7 +2480,7 @@ static void DecodeBcc(Word Code)
           else
           {
             AdrLong -= EProgCounter();
-            if ((!SymbolQuestionable) && ((AdrLong < -256) || (AdrLong > 254))) WrError(ErrNum_JmpDistTooBig);
+            if (!mSymbolQuestionable(Flags) && ((AdrLong < -256) || (AdrLong > 254))) WrError(ErrNum_JmpDistTooBig);
             else if (Odd(AdrLong)) WrError(ErrNum_DistIsOdd);
             else
             {
@@ -2793,12 +2800,12 @@ static void DecodeJRNG(Word Code)
 
 /*------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddFixedLong(char *NName, Word NCode1, Word NCode2)
+static void AddFixedLong(const char *NName, Word NCode1, Word NCode2)
 {
   if (InstrZ >= FixedLongOrderCount) exit(255);
   FixedLongOrders[InstrZ].Code1 = NCode1;
@@ -2806,7 +2813,7 @@ static void AddFixedLong(char *NName, Word NCode1, Word NCode2)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixedLong);
 }
 
-static void AddOne(char *NName, Byte NOpMask, Word NMask, Word NCode)
+static void AddOne(const char *NName, Byte NOpMask, Word NMask, Word NCode)
 {
   if (InstrZ >= OneOrderCount) exit(255);
   OneOrders[InstrZ].Code = NCode;
@@ -2815,7 +2822,7 @@ static void AddOne(char *NName, Byte NOpMask, Word NMask, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeOne);
 }
 
-static void AddGE2(char *NName, Word NMask1, Word NMask2,
+static void AddGE2(const char *NName, Word NMask1, Word NMask2,
                    Byte NSMask1, Byte NSMask2, Word NCode,
                    Boolean NSigned)
 {
@@ -2829,7 +2836,7 @@ static void AddGE2(char *NName, Word NMask1, Word NMask2,
   AddInstTable(InstTable, NName, InstrZ++, DecodeGE2);
 }
 
-static void AddBit(char *NName, Boolean NMust, Word NCode1, Word NCode2)
+static void AddBit(const char *NName, Boolean NMust, Word NCode1, Word NCode2)
 {
   if (InstrZ >= BitOrderCount) exit(255);
   BitOrders[InstrZ].Code1 = NCode1;
@@ -2838,12 +2845,12 @@ static void AddBit(char *NName, Boolean NMust, Word NCode1, Word NCode2)
   AddInstTable(InstTable, NName, InstrZ++, DecodeBit);
 }
 
-static void AddGetPut(char *NName, Byte NSize, Word NCode, Boolean NTurn)
+static void AddGetPut(const char *NName, Byte NSize, Word NCode, Boolean NTurn)
 {
   AddInstTable(InstTable, NName, NCode | NSize | (NTurn << 7), DecodeGetPut);
 }
 
-static void Addcc(char *BName)
+static void Addcc(const char *BName)
 {
   Conditions[InstrZ] = BName + 1;
   AddInstTable(InstTable, BName, InstrZ << 10, DecodeBcc);
@@ -2964,7 +2971,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "DIV" , InstrZ++, DecodeMul);
   AddInstTable(InstTable, "DIVU", InstrZ++, DecodeMul);
 
-  InstrZ = 0; Conditions = (char**)malloc(ConditionCount * sizeof(char*));
+  InstrZ = 0; Conditions = (const char**)malloc(ConditionCount * sizeof(char*));
   Addcc("BXS");
   Addcc("BXC");
   Addcc("BEQ");
@@ -2999,20 +3006,9 @@ static void DeinitFields(void)
 
 /*------------------------------------------------------------------------*/
 
-static void MakeCode_M16(void)
+static Boolean DecodeAttrPart_M16(void)
 {
-  int z;
   char *p;
-
-  DOpSize = -1;
-  for (z = 1; z <= ArgCnt; OpSize[z++] = -1);
-
-  /* zu ignorierendes */
-
-  if (Memo(""))
-    return;
-
-  /* Formatangabe abspalten */
 
   switch (AttrSplit)
   {
@@ -3050,22 +3046,32 @@ static void MakeCode_M16(void)
   }
   NLS_UpString(Format);
 
-  /* Attribut abarbeiten */
-
-  if (*AttrPart.Str == '\0')
-    DOpSize = -1;
-  else
+  if (*AttrPart.Str)
     switch (mytoupper(*AttrPart.Str))
     {
       case 'B':
-        DOpSize = 0; break;
+        AttrPartOpSize = eSymbolSize8Bit; break;
       case 'H':
-        DOpSize = 1; break;
+        AttrPartOpSize = eSymbolSize16Bit; break;
       case 'W':
-        DOpSize = 2; break;
+        AttrPartOpSize = eSymbolSize32Bit; break;
       default:
-        WrError(ErrNum_UndefAttr); return;
+        WrStrErrorPos(ErrNum_UndefAttr, &AttrPart); return False;
     }
+  return True;
+}
+
+static void MakeCode_M16(void)
+{
+  int z;
+
+  DOpSize = AttrPartOpSize;
+  for (z = 1; z <= ArgCnt; OpSize[z++] = eSymbolSizeUnknown);
+
+  /* zu ignorierendes */
+
+  if (Memo(""))
+    return;
 
   /* Pseudoanweisungen */
 
@@ -3106,6 +3112,7 @@ static void SwitchTo_M16(void)
   SegInits[SegCode] = 0;
   SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
 
+  DecodeAttrPart = DecodeAttrPart_M16;
   MakeCode = MakeCode_M16;
   IsDef = IsDef_M16;
   SwitchFrom = SwitchFrom_M16;

@@ -10,10 +10,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *Version;
+extern const char *Version;
 extern LongInt VerNo;
 
-extern char *InfoMessCopyright;
+extern const char *InfoMessCopyright;
 
 extern LongInt Magic;
 

@@ -38,7 +38,7 @@ typedef struct
   Word Code;
   CPUVar MinCPU;
   Boolean MayImm, MayDir, MayExt;
-  ShortInt ThisOpSize;
+  tSymbolSize ThisOpSize;
 } GenOrder;
 
 typedef struct
@@ -96,7 +96,7 @@ enum
 #define JmpOrderCount 2
 #define RegCount 17
 
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 static ShortInt AdrMode;
 static ShortInt ExPos;
 static Byte AdrVals[4];
@@ -346,11 +346,11 @@ static void CutShort(char *Asc, Integer *ShortMode)
     *ShortMode = eShortModeAuto;
 }
 
-static Boolean DistFits(Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max)
+static Boolean DistFits(Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max, tSymbolFlags Flags)
 {
   if (Reg == eBaseRegPC)
     Dist -= Offs;
-  return (((Dist >= Min) && (Dist <= Max)) || ((Reg == eBaseRegPC) && SymbolQuestionable));
+  return (((Dist >= Min) && (Dist <= Max)) || ((Reg == eBaseRegPC) && mSymbolQuestionable(Flags)));
 }
 
 static void DecodeAdr(int Start, int Stop, Word Mask)
@@ -360,6 +360,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
   int l;
   char *p;
   Boolean OK;
+  tSymbolFlags Flags;
   Boolean DecFlag, AutoFlag, PostFlag;
 
   AdrMode = ModNone;
@@ -378,7 +379,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
         case eSymbolSizeUnknown:
           WrError(ErrNum_UndefOpSizes);
           break;
-        case 0:
+        case eSymbolSize8Bit:
           AdrVals[0] = EvalStrIntExpressionOffs(&ArgStr[Start], 1, Int8, &OK);
           if (OK)
           {
@@ -386,7 +387,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
             AdrMode = ModImm;
           }
           break;
-        case 1:
+        case eSymbolSize16Bit:
           AdrWord = EvalStrIntExpressionOffs(&ArgStr[Start], 1, Int16, &OK);
           if (OK)
           {
@@ -395,6 +396,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
             AdrCnt = 2;
             AdrMode = ModImm;
           }
+          break;
+        default:
           break;
       }
       goto chk;
@@ -438,9 +441,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
     /* dann absolut */
 
     CutShort(ArgStr[Start].Str, &ShortMode);
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[Start], AddrInt, &OK);
-    if (FirstPassUnknown)
+    AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[Start], AddrInt, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
     {
       if ((!(Mask & (MModExt | MModExtPg))) || (ShortMode == eShortModeYes))
         AdrWord = (Reg_Direct << 8) | Lo(AdrWord);
@@ -467,7 +469,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
           if ((HiWord(EProgCounter()) != HiWord(AdrWord))
            && ((AdrWord & 0xc000) == 0x8000)
            && ((EProgCounter() & 0xc000) == 0x8000)
-           && (!FirstPassUnknown))
+           && !mFirstPassUnknown(Flags))
             WrError(ErrNum_PageCrossing);
         }
         AdrCnt = 2;
@@ -506,9 +508,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
       else if (AdrVals[0] == eBaseRegPC) WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
       else
       {
-        FirstPassUnknown = False;
-        AdrWord = EvalStrIntExpression(&ArgStr[Start], SInt8, &OK);
-        if (FirstPassUnknown)
+        AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[Start], SInt8, &OK, &Flags);
+        if (mFirstPassUnknown(Flags))
           AdrWord = 1;
 
         /* no increment/decrement degenerates to register indirect with zero displacement! */
@@ -549,12 +550,12 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
       else
       {
         CutShort(ArgStr[Start].Str, &ShortMode);
-        AdrWord = EvalStrIntExpression(&ArgStr[Start], Int16, &OK);
+        AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[Start], Int16, &OK, &Flags);
         if (AdrVals[0] == eBaseRegPC)
           AdrWord -= EProgCounter() + ExPos;
         if (OK)
         {
-          if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeYes) && ((Mask & MModIdx) != 0) && (DistFits(AdrVals[0], AdrWord, 1, -16, 15)))
+          if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeYes) && ((Mask & MModIdx) != 0) && (DistFits(AdrVals[0], AdrWord, 1, -16, 15, Flags)))
           {
             if (AdrVals[0] == eBaseRegPC)
               AdrWord--;
@@ -562,7 +563,7 @@ static void DecodeAdr(int Start, int Stop, Word Mask)
             AdrCnt = 1;
             AdrMode = ModIdx;
           }
-          else if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeExtreme) && ((Mask & MModIdx1) != 0) && (DistFits(AdrVals[0], AdrWord, 2, -256, 255)))
+          else if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeExtreme) && ((Mask & MModIdx1) != 0) && (DistFits(AdrVals[0], AdrWord, 2, -256, 255, Flags)))
           {
             if (AdrVals[0] == eBaseRegPC)
               AdrWord -= 2;
@@ -713,15 +714,16 @@ static void DecodeBranch(Word Index)
   FixedOrder *pOrder = BranchOrders + Index;
   LongInt Address;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    Address = EvalStrIntExpression(&ArgStr[1], AddrInt, &OK) - EProgCounter() - 2;
+    Address = EvalStrIntExpressionWithFlags(&ArgStr[1], AddrInt, &OK, &Flags) - EProgCounter() - 2;
     if (OK)
     {
-      if (((Address < -128) || (Address > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Address < -128) || (Address > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = pOrder->Code;
@@ -798,6 +800,7 @@ static void DecodeLoop(Word Index)
   Byte HReg;
   LongInt Address;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
@@ -808,10 +811,10 @@ static void DecodeLoop(Word Index)
     if (!OK) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     else
     {
-      Address = EvalStrIntExpression(&ArgStr[2], AddrInt, &OK) - (EProgCounter() + 3);
+      Address = EvalStrIntExpressionWithFlags(&ArgStr[2], AddrInt, &OK, &Flags) - (EProgCounter() + 3);
       if (OK)
       {
-        if (((Address < -256) || (Address > 255)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+        if (((Address < -256) || (Address > 255)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] = 0x04;
@@ -941,7 +944,7 @@ static void DecodeMOV(Word Index)
       Arg2Start = 3;
     else
       Arg2Start = 2;
-    OpSize = Index;
+    OpSize = (tSymbolSize)Index;
     ExPos = 2;
     BAsmCode[0] = 0x18;
     BAsmCode[1] = (1 - Index) << 3;
@@ -1146,6 +1149,7 @@ static void DecodeBrBit(Word Index)
 {
   Byte HReg;
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt Address;
 
   if (ArgCnt == 1)
@@ -1166,7 +1170,7 @@ static void DecodeBrBit(Word Index)
     HReg = EvalStrIntExpressionOffs(&ArgStr[ArgCnt - 1], !!(*ArgStr[ArgCnt - 1].Str == '#'), UInt8, &OK);
     if (OK)
     {
-      Address = EvalStrIntExpression(&ArgStr[ArgCnt], AddrInt, &OK) - EProgCounter();
+      Address = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], AddrInt, &OK, &Flags) - EProgCounter();
       if (OK)
       {
         ExPos = 3; /* Opcode, Maske+Distanz */
@@ -1186,7 +1190,7 @@ static void DecodeBrBit(Word Index)
           }
           BAsmCode[1 + AdrCnt] = HReg;
           Address -= 3 + AdrCnt;
-          if (((Address < -128) || (Address > 127)) & (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((Address < -128) || (Address > 127)) & !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[2 + AdrCnt] = Lo(Address);
@@ -1201,6 +1205,7 @@ static void DecodeBrBit(Word Index)
 static void DecodeTRAP(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
 
   UNUSED(Index);
 
@@ -1208,8 +1213,8 @@ static void DecodeTRAP(Word Index)
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), UInt8, &OK);
-    if (FirstPassUnknown)
+    BAsmCode[1] = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '#'), UInt8, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       BAsmCode[1] = 0x30;
     if (OK)
     {
@@ -1270,14 +1275,14 @@ static void LookupReg(Word Index)
 {
   Reg *pReg = Regs + Index;
 
-  ActReg = (MomCPU >= pReg->MinCPU) ? pReg->Code : eNoReg;
+  ActReg = (MomCPU >= pReg->MinCPU) ? pReg->Code : (Byte)eNoReg;
   ActRegSize = pReg->OpSize;
 }
 
 /*---------------------------------------------------------------------------*/
 /* Dynamic Code Table Handling */
 
-static void AddFixed(char *NName, Word NCode, CPUVar NMin)
+static void AddFixed(const char *NName, Word NCode, CPUVar NMin)
 {
   if (InstrZ >= FixedOrderCount) { fprintf(stderr, "AddFixed"); exit(255); }
   FixedOrders[InstrZ].Code = NCode;
@@ -1285,7 +1290,7 @@ static void AddFixed(char *NName, Word NCode, CPUVar NMin)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddBranch(char *NName, Word NCode)
+static void AddBranch(const char *NName, Word NCode)
 {
   if (InstrZ >= BranchOrderCount) { fprintf(stderr, "AddBranch"); exit(255); }
   BranchOrders[InstrZ].Code = NCode;
@@ -1293,9 +1298,9 @@ static void AddBranch(char *NName, Word NCode)
   AddInstTable(InstTable, NName    , InstrZ++, DecodeLBranch);
 }
 
-static void AddGen(char *NName, Word NCode,
+static void AddGen(const char *NName, Word NCode,
                    Boolean NMayI, Boolean NMayD, Boolean NMayE,
-                   ShortInt NSize, CPUVar NMin)
+                   tSymbolSize NSize, CPUVar NMin)
 {
   if (InstrZ >= GenOrderCount) { fprintf(stderr, "AddGen"); exit(255); }
   GenOrders[InstrZ].Code = NCode;
@@ -1307,21 +1312,21 @@ static void AddGen(char *NName, Word NCode,
   AddInstTable(InstTable, NName, InstrZ++, DecodeGen);
 }
 
-static void AddLoop(char *NName, Word NCode)
+static void AddLoop(const char *NName, Word NCode)
 {
   if (InstrZ >= LoopOrderCount) { fprintf(stderr, "AddLoop"); exit(255); }
   LoopOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeLoop);
 }
 
-static void AddLEA(char *NName, Word NCode)
+static void AddLEA(const char *NName, Word NCode)
 {
   if (InstrZ >= LEAOrderCount) { fprintf(stderr, "AddLEA"); exit(255); }
   LEAOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeLEA);
 }
 
-static void AddJmp(char *NName, Word NCode, Boolean NDir)
+static void AddJmp(const char *NName, Word NCode, Boolean NDir)
 {
   if (InstrZ >= JmpOrderCount) { fprintf(stderr, "AddJmp"); exit(255); }
   JmpOrders[InstrZ].Code = NCode;
@@ -1329,7 +1334,7 @@ static void AddJmp(char *NName, Word NCode, Boolean NDir)
   AddInstTable(InstTable, NName, InstrZ++, DecodeJmp);
 }
 
-static void AddReg(char *NName, Word NCode, Word NSize, CPUVar NMin)
+static void AddReg(const char *NName, Word NCode, Word NSize, CPUVar NMin)
 {
   if (InstrZ >= RegCount) { fprintf(stderr, "AddReg"); exit(255); }
   Regs[InstrZ].Code = NCode;
@@ -1417,108 +1422,108 @@ static void InitFields(void)
 
   GenOrders = (GenOrder *) malloc(sizeof(GenOrder) * GenOrderCount);
   InstrZ = 0;
-  AddGen("ADCA" , 0x0089, True , True , True ,  0, CPU6812 );
-  AddGen("ADCB" , 0x00c9, True , True , True ,  0, CPU6812 );
-  AddGen("ADDA" , 0x008b, True , True , True ,  0, CPU6812 );
-  AddGen("ADDB" , 0x00cb, True , True , True ,  0, CPU6812 );
-  AddGen("ADDD" , 0x00c3, True , True , True ,  1, CPU6812 );
-  AddGen("ADDX" , 0x188b, True , True , True ,  1, CPU6812X);
-  AddGen("ADDY" , 0x18cb, True , True , True ,  1, CPU6812X);
-  AddGen("ADED" , 0x18c3, True , True , True ,  1, CPU6812X);
-  AddGen("ADEX" , 0x1889, True , True , True ,  1, CPU6812X);
-  AddGen("ADEY" , 0x18c9, True , True , True ,  1, CPU6812X);
-  AddGen("ANDA" , 0x0084, True , True , True ,  0, CPU6812 );
-  AddGen("ANDB" , 0x00c4, True , True , True ,  0, CPU6812 );
-  AddGen("ANDX" , 0x1884, True , True , True ,  1, CPU6812X);
-  AddGen("ANDY" , 0x18c4, True , True , True ,  1, CPU6812X);
-  AddGen("ASL"  , 0x0048, False, False, True , -1, CPU6812 );
-  AddGen("ASLW" , 0x1848, False, False, True , -1, CPU6812X);
-  AddGen("ASR"  , 0x0047, False, False, True , -1, CPU6812 );
-  AddGen("ASRW" , 0x1847, False, False, True , -1, CPU6812X);
-  AddGen("BITA" , 0x0085, True , True , True ,  0, CPU6812 );
-  AddGen("BITB" , 0x00c5, True , True , True ,  0, CPU6812 );
-  AddGen("BITX" , 0x1885, True , True , True ,  1, CPU6812X);
-  AddGen("BITY" , 0x18c5, True , True , True ,  1, CPU6812X);
-  AddGen("CLR"  , 0x0049, False, False, True , -1, CPU6812 );
-  AddGen("CLRW" , 0x1849, False, False, True , -1, CPU6812X);
-  AddGen("CMPA" , 0x0081, True , True , True ,  0, CPU6812 );
-  AddGen("CMPB" , 0x00c1, True , True , True ,  0, CPU6812 );
-  AddGen("COM"  , 0x0041, False, False, True , -1, CPU6812 );
-  AddGen("COMW" , 0x1841, False, False, True , -1, CPU6812X);
-  AddGen("CPED" , 0x188c, True , True , True ,  1, CPU6812X);
-  AddGen("CPES" , 0x188f, True , True , True ,  1, CPU6812X);
-  AddGen("CPEX" , 0x188e, True , True , True ,  1, CPU6812X);
-  AddGen("CPEY" , 0x188d, True , True , True ,  1, CPU6812X);
-  AddGen("CPD"  , 0x008c, True , True , True ,  1, CPU6812 );
-  AddGen("CPS"  , 0x008f, True , True , True ,  1, CPU6812 );
-  AddGen("CPX"  , 0x008e, True , True , True ,  1, CPU6812 );
-  AddGen("CPY"  , 0x008d, True , True , True ,  1, CPU6812 );
-  AddGen("DEC"  , 0x0043, False, False, True , -1, CPU6812 );
-  AddGen("DECW" , 0x1843, False, False, True , -1, CPU6812X);
-  AddGen("EMAXD", 0x18fa, False, False, False, -1, CPU6812 );
-  AddGen("EMAXM", 0x18fe, False, False, False, -1, CPU6812 );
-  AddGen("EMIND", 0x18fb, False, False, False, -1, CPU6812 );
-  AddGen("EMINM", 0x18ff, False, False, False, -1, CPU6812 );
-  AddGen("EORA" , 0x0088, True , True , True ,  0, CPU6812 );
-  AddGen("EORB" , 0x00c8, True , True , True ,  0, CPU6812 );
-  AddGen("EORX" , 0x1888, True , True , True ,  1, CPU6812X);
-  AddGen("EORY" , 0x18c8, True , True , True ,  1, CPU6812X);
-  AddGen("GLDAA", 0x1886, False, True , True , -1, CPU6812X);
-  AddGen("GLDAB", 0x18c6, False, True , True , -1, CPU6812X);
-  AddGen("GLDD" , 0x18cc, False, True , True , -1, CPU6812X);
-  AddGen("GLDS" , 0x18cf, False, True , True , -1, CPU6812X);
-  AddGen("GLDX" , 0x18ce, False, True , True , -1, CPU6812X);
-  AddGen("GLDY" , 0x18cd, False, True , True , -1, CPU6812X);
-  AddGen("GSTAA", 0x184a, False, True , True , -1, CPU6812X);
-  AddGen("GSTAB", 0x184b, False, True , True , -1, CPU6812X);
-  AddGen("GSTD" , 0x184c, False, True , True , -1, CPU6812X);
-  AddGen("GSTS" , 0x184f, False, True , True , -1, CPU6812X);
-  AddGen("GSTX" , 0x184e, False, True , True , -1, CPU6812X);
-  AddGen("GSTY" , 0x184d, False, True , True , -1, CPU6812X);
-  AddGen("INC"  , 0x0042, False, False, True , -1, CPU6812 );
-  AddGen("INCW" , 0x1842, False, False, True , -1, CPU6812X);
-  AddGen("LDAA" , 0x0086, True , True , True ,  0, CPU6812 );
-  AddGen("LDAB" , 0x00c6, True , True , True ,  0, CPU6812 );
-  AddGen("LDD"  , 0x00cc, True , True , True ,  1, CPU6812 );
-  AddGen("LDS"  , 0x00cf, True , True , True ,  1, CPU6812 );
-  AddGen("LDX"  , 0x00ce, True , True , True ,  1, CPU6812 );
-  AddGen("LDY"  , 0x00cd, True , True , True ,  1, CPU6812 );
-  AddGen("LSL"  , 0x0048, False, False, True , -1, CPU6812 );
-  AddGen("LSLW" , 0x1848, False, False, True , -1, CPU6812X); 
-  AddGen("LSR"  , 0x0044, False, False, True , -1, CPU6812 );
-  AddGen("LSRW" , 0x1844, False, False, True , -1, CPU6812X); 
-  AddGen("MAXA" , 0x18f8, False, False, False, -1, CPU6812 );
-  AddGen("MAXM" , 0x18fc, False, False, False, -1, CPU6812 );
-  AddGen("MINA" , 0x18f9, False, False, False, -1, CPU6812 );
-  AddGen("MINM" , 0x18fd, False, False, False, -1, CPU6812 );
-  AddGen("NEG"  , 0x0040, False, False, True , -1, CPU6812 );
-  AddGen("NEGW" , 0x1840, False, False, True , -1, CPU6812X);
-  AddGen("ORAA" , 0x008a, True , True , True ,  0, CPU6812 );
-  AddGen("ORAB" , 0x00ca, True , True , True ,  0, CPU6812 );
-  AddGen("ORX"  , 0x188a, True , True , True ,  1, CPU6812X);
-  AddGen("ORY"  , 0x18ca, True , True , True ,  1, CPU6812X);
-  AddGen("ROL"  , 0x0045, False, False, True , -1, CPU6812 );
-  AddGen("ROLW" , 0x1845, False, False, True , -1, CPU6812X); 
-  AddGen("ROR"  , 0x0046, False, False, True , -1, CPU6812 );
-  AddGen("RORW" , 0x1846, False, False, True , -1, CPU6812X); 
-  AddGen("SBCA" , 0x0082, True , True , True ,  0, CPU6812 );
-  AddGen("SBCB" , 0x00c2, True , True , True ,  0, CPU6812 );
-  AddGen("SBED" , 0x1883, True , True , True ,  1, CPU6812X);
-  AddGen("SBEX" , 0x1882, True , True , True ,  1, CPU6812X);
-  AddGen("SBEY" , 0x18c2, True , True , True ,  1, CPU6812X);
-  AddGen("STAA" , 0x004a, False, True , True ,  0, CPU6812 );
-  AddGen("STAB" , 0x004b, False, True , True ,  0, CPU6812 );
-  AddGen("STD"  , 0x004c, False, True , True , -1, CPU6812 );
-  AddGen("STS"  , 0x004f, False, True , True , -1, CPU6812 );
-  AddGen("STX"  , 0x004e, False, True , True , -1, CPU6812 );
-  AddGen("STY"  , 0x004d, False, True , True , -1, CPU6812 );
-  AddGen("SUBA" , 0x0080, True , True , True ,  0, CPU6812 );
-  AddGen("SUBB" , 0x00c0, True , True , True ,  0, CPU6812 );
-  AddGen("SUBX" , 0x1880, True , True , True ,  1, CPU6812X);
-  AddGen("SUBY" , 0x18c0, True , True , True ,  1, CPU6812X);
-  AddGen("SUBD" , 0x0083, True , True , True ,  1, CPU6812 );
-  AddGen("TST"  , 0x00c7, False, False, True , -1, CPU6812 );
-  AddGen("TSTW" , 0x18c7, False, False, True , -1, CPU6812X);
+  AddGen("ADCA" , 0x0089, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ADCB" , 0x00c9, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ADDA" , 0x008b, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ADDB" , 0x00cb, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ADDD" , 0x00c3, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("ADDX" , 0x188b, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ADDY" , 0x18cb, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ADED" , 0x18c3, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ADEX" , 0x1889, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ADEY" , 0x18c9, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ANDA" , 0x0084, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ANDB" , 0x00c4, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ANDX" , 0x1884, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ANDY" , 0x18c4, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ASL"  , 0x0048, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("ASLW" , 0x1848, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("ASR"  , 0x0047, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("ASRW" , 0x1847, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("BITA" , 0x0085, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("BITB" , 0x00c5, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("BITX" , 0x1885, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("BITY" , 0x18c5, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("CLR"  , 0x0049, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("CLRW" , 0x1849, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("CMPA" , 0x0081, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("CMPB" , 0x00c1, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("COM"  , 0x0041, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("COMW" , 0x1841, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("CPED" , 0x188c, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("CPES" , 0x188f, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("CPEX" , 0x188e, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("CPEY" , 0x188d, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("CPD"  , 0x008c, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("CPS"  , 0x008f, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("CPX"  , 0x008e, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("CPY"  , 0x008d, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("DEC"  , 0x0043, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("DECW" , 0x1843, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("EMAXD", 0x18fa, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("EMAXM", 0x18fe, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("EMIND", 0x18fb, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("EMINM", 0x18ff, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("EORA" , 0x0088, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("EORB" , 0x00c8, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("EORX" , 0x1888, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("EORY" , 0x18c8, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("GLDAA", 0x1886, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GLDAB", 0x18c6, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GLDD" , 0x18cc, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GLDS" , 0x18cf, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GLDX" , 0x18ce, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GLDY" , 0x18cd, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTAA", 0x184a, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTAB", 0x184b, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTD" , 0x184c, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTS" , 0x184f, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTX" , 0x184e, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("GSTY" , 0x184d, False, True , True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("INC"  , 0x0042, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("INCW" , 0x1842, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("LDAA" , 0x0086, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("LDAB" , 0x00c6, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("LDD"  , 0x00cc, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("LDS"  , 0x00cf, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("LDX"  , 0x00ce, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("LDY"  , 0x00cd, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("LSL"  , 0x0048, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("LSLW" , 0x1848, False, False, True , eSymbolSizeUnknown, CPU6812X); 
+  AddGen("LSR"  , 0x0044, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("LSRW" , 0x1844, False, False, True , eSymbolSizeUnknown, CPU6812X); 
+  AddGen("MAXA" , 0x18f8, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("MAXM" , 0x18fc, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("MINA" , 0x18f9, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("MINM" , 0x18fd, False, False, False, eSymbolSizeUnknown, CPU6812 );
+  AddGen("NEG"  , 0x0040, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("NEGW" , 0x1840, False, False, True , eSymbolSizeUnknown, CPU6812X);
+  AddGen("ORAA" , 0x008a, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ORAB" , 0x00ca, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("ORX"  , 0x188a, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ORY"  , 0x18ca, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("ROL"  , 0x0045, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("ROLW" , 0x1845, False, False, True , eSymbolSizeUnknown, CPU6812X); 
+  AddGen("ROR"  , 0x0046, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("RORW" , 0x1846, False, False, True , eSymbolSizeUnknown, CPU6812X); 
+  AddGen("SBCA" , 0x0082, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("SBCB" , 0x00c2, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("SBED" , 0x1883, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("SBEX" , 0x1882, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("SBEY" , 0x18c2, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("STAA" , 0x004a, False, True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("STAB" , 0x004b, False, True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("STD"  , 0x004c, False, True , True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("STS"  , 0x004f, False, True , True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("STX"  , 0x004e, False, True , True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("STY"  , 0x004d, False, True , True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("SUBA" , 0x0080, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("SUBB" , 0x00c0, True , True , True , eSymbolSize8Bit   , CPU6812 );
+  AddGen("SUBX" , 0x1880, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("SUBY" , 0x18c0, True , True , True , eSymbolSize16Bit  , CPU6812X);
+  AddGen("SUBD" , 0x0083, True , True , True , eSymbolSize16Bit  , CPU6812 );
+  AddGen("TST"  , 0x00c7, False, False, True , eSymbolSizeUnknown, CPU6812 );
+  AddGen("TSTW" , 0x18c7, False, False, True , eSymbolSizeUnknown, CPU6812X);
 
   LoopOrders = (FixedOrder *) malloc(sizeof(FixedOrder) * LoopOrderCount);
   InstrZ = 0;
@@ -1543,8 +1548,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "TFR"   , 0x00, DecodeTransfer);
   AddInstTable(InstTable, "EXG"   , 0x80, DecodeTransfer);
   AddInstTable(InstTable, "SEX"   , 0   , DecodeSEX);
-  AddInstTable(InstTable, "MOVB"  , 0   , DecodeMOV);
-  AddInstTable(InstTable, "MOVW"  , 1   , DecodeMOV);
+  AddInstTable(InstTable, "MOVB"  , eSymbolSize8Bit, DecodeMOV);
+  AddInstTable(InstTable, "MOVW"  , eSymbolSize16Bit, DecodeMOV);
   AddInstTable(InstTable, "ANDCC" , 0x00, DecodeLogic);
   AddInstTable(InstTable, "ORCC"  , 0x04, DecodeLogic);
   AddInstTable(InstTable, "BSET"  , 0x0c, DecodeBit);
@@ -1593,18 +1598,20 @@ static void DeinitFields(void)
 }
 
 /*--------------------------------------------------------------------------*/
-/* main functions */
+/* Main Functions */
+
+static Boolean DecodeAttrPart_6812(void)
+{
+  /* Operandengroesse festlegen */
+
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
 
 static void MakeCode_6812(void)
 {
   CodeLen = 0;
   DontPrint = False;
-  OpSize = eSymbolSizeUnknown;
-
-  /* Operandengroesse festlegen */
-
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
+  OpSize = AttrPartOpSize;
 
   /* zu ignorierendes */
 
@@ -1675,6 +1682,7 @@ static void SwitchTo_6812(void)
     AddrInt = UInt16;
   }
 
+  DecodeAttrPart = DecodeAttrPart_6812;
   MakeCode = MakeCode_6812;
   IsDef = IsDef_6812;
   SwitchFrom = SwitchFrom_6812;

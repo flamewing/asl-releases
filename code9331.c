@@ -67,7 +67,7 @@ static Boolean DecodeRegList(const char *pNames[], const char *pArg, LongWord *p
     if (!as_strcasecmp(pArg, pNames[*pResult]))
       return True;
 
-  WrXError(pNames == pFNames ? 1360 : 1445, pArg);
+  WrXError(pNames == pFNames ? ErrNum_UndefCond : ErrNum_InvReg, pArg);
   return False;
 }
 
@@ -383,10 +383,10 @@ static void DecodeMAIN(Word Code)
   {
     Boolean OK = True;
     Word Shift;
+    tSymbolFlags Flags = eSymbolFlag_None;
 
-    FirstPassUnknown = False;
-    Shift = *ArgStr[2].Str ? EvalStrIntExpression(&ArgStr[2], UInt3, &OK) : 0;
-    if (FirstPassUnknown)
+    Shift = *ArgStr[2].Str ? EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &OK, &Flags) : 0;
+    if (mFirstPassUnknown(Flags))
       Shift = 0;
 
     DAsmCode[0] = (LCode << 26)
@@ -488,10 +488,10 @@ static void DecodeBR(Word Code)
   {
     Boolean OK;
     LongWord Address;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Address = EvalStrIntExpression(&ArgStr[2], UInt9, &OK);
-    if (FirstPassUnknown)
+    Address = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt9, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Address &= 0xff;
     if (OK && ChkRange(Address, 0, SegLimits[SegCode]))
     {
@@ -521,10 +521,10 @@ static void DecodeJC(Word Code)
   {
     Boolean OK;
     LongWord Address;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Address = EvalStrIntExpression(&ArgStr[2], UInt9, &OK);
-    if (FirstPassUnknown)
+    Address = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt9, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Address &= 0xff;
     if (OK && ChkRange(Address, 0, SegLimits[SegCode]))
     {
@@ -561,10 +561,10 @@ static void DecodeRET(Word Code)
   {
     Boolean OK = True;
     Word Shift;
+    tSymbolFlags Flags = eSymbolFlag_None;
 
-    FirstPassUnknown = False;
-    Shift = *ArgStr[2].Str ? EvalStrIntExpression(&ArgStr[2], UInt3, &OK) : 0;
-    if (FirstPassUnknown)
+    Shift = *ArgStr[2].Str ? EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &OK, &Flags) : 0;
+    if (mFirstPassUnknown(Flags))
       Shift = 0;
 
     DAsmCode[0] = 0xc4000000ul

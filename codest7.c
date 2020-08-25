@@ -8,11 +8,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-/* TODO:
- *
- * - implement actual CPU types instead of generic ST7
- */
-
 #include "stdinc.h"
 
 #include <ctype.h>
@@ -255,6 +250,7 @@ static void DecideSize(LongWord Mask, const tStrComp *pArg, tAdrMode Mode8, tAdr
   IntType SizeType;
   LongWord Value;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if ((Mode8 != eModNone) && !ModeInMask(Mask, Mode8))
     Mode8 = eModNone;
@@ -307,7 +303,7 @@ static void DecideSize(LongWord Mask, const tStrComp *pArg, tAdrMode Mode8, tAdr
         SizeType = Int8;
       break;
   }
-  Value = EvalStrIntExpression(pArg, SizeType, &OK);
+  Value = EvalStrIntExpressionWithFlags(pArg, SizeType, &OK, &Flags);
 
   if (OK)
   {
@@ -325,7 +321,7 @@ static void DecideSize(LongWord Mask, const tStrComp *pArg, tAdrMode Mode8, tAdr
 
     /* this may only happen if SizeTypes was forced to 24 Bit because of code addessing: */
 
-    if ((Size == eSymbolSize24Bit) && (Mode24 == eModNone) && !SymbolQuestionable)
+    if ((Size == eSymbolSize24Bit) && (Mode24 == eModNone) && !mSymbolQuestionable(Flags))
     {
       WrStrErrorPos(ErrNum_TargOnDiffSection, pArg);
       return;
@@ -383,6 +379,7 @@ static Boolean DecideIndirectSize(LongWord Mask, const tStrComp *pArg,
               PtrSize = eSymbolSizeUnknown;
   IntType SizeType;
   Word Address;
+  tSymbolFlags Flags;
 
   if ((Mode8_8 != eModNone) && !ModeInMask(Mask, Mode8_8))
     Mode8_8 = eModNone;
@@ -442,9 +439,8 @@ static Boolean DecideIndirectSize(LongWord Mask, const tStrComp *pArg,
       break;
   }
 
-  FirstPassUnknown = False;
-  Address = EvalStrIntExpressionOffs(pArg, Offset, SizeType, &OK);
-  if (FirstPassUnknown && (Mode16_16 == eModNone) && (Mode16_24 == eModNone))
+  Address = EvalStrIntExpressionOffsWithFlags(pArg, Offset, SizeType, &OK, &Flags);
+  if (mFirstPassUnknown(Flags) && (Mode16_16 == eModNone) && (Mode16_24 == eModNone))
     Address &= 0xff;
 
   if (OK)
@@ -881,12 +877,12 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
 
   if (Start == Stop)
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    *pResult = EvalStrIntExpression(&ArgStr[Start], (pCurrCPUProps->Core == eCoreSTM8) ? UInt19 : UInt11, &OK);
-    if (OK)
-      ChkSpace(SegBData);
-    return OK;
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], (pCurrCPUProps->Core == eCoreSTM8) ? UInt19 : UInt11, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
   }
 
   /* register & bit position are given as separate arguments */
@@ -2033,6 +2029,7 @@ static void DecodeBTJF_BTJT(Word Code)
   {
     Integer AdrInt;
     Boolean OK;
+    tSymbolFlags Flags;
 
     if (pCurrCPUProps->Core == eCoreSTM8)
     {
@@ -2041,10 +2038,10 @@ static void DecodeBTJF_BTJT(Word Code)
     }
     BAsmCode[PrefixCnt] = Code + (BitPos << 1);
     memcpy(BAsmCode + 1 + PrefixCnt, AdrVals.Vals, AdrVals.Cnt);
-    AdrInt = EvalStrIntExpression(&ArgStr[3], pCurrCPUProps->AddrIntType, &OK) - (EProgCounter() + PrefixCnt + 1 + AdrVals.Cnt + 1);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], pCurrCPUProps->AddrIntType, &OK, &Flags) - (EProgCounter() + PrefixCnt + 1 + AdrVals.Cnt + 1);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
       else
       {
         BAsmCode[PrefixCnt + 1 + AdrVals.Cnt] = AdrInt & 0xff;
@@ -2130,13 +2127,14 @@ static void DecodeRel(Word Code)
   {
     Boolean OK;
     Integer AdrInt;
+    tSymbolFlags Flags;
 
     if (Hi(Code))
       BAsmCode[PrefixCnt++] = Hi(Code);
-    AdrInt = EvalStrIntExpression(&ArgStr[1], pCurrCPUProps->AddrIntType, &OK) - (EProgCounter() + 2 + PrefixCnt);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], pCurrCPUProps->AddrIntType, &OK, &Flags) - (EProgCounter() + 2 + PrefixCnt);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
       else
       {
         BAsmCode[PrefixCnt] = Lo(Code);
@@ -2220,22 +2218,22 @@ static void DecodeBIT(Word Code)
  * \brief  build up hash table of instructions
  * ------------------------------------------------------------------------ */
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddAri(char *NName, Word NCode, Boolean NMay)
+static void AddAri(const char *NName, Word NCode, Boolean NMay)
 {
   AddInstTable(InstTable, NName, NCode | (NMay << 8), DecodeAri);
 }
 
-static void AddAri16(char *NName, Word NCode)
+static void AddAri16(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAri16);
 }
 
-static void AddRMW(char *NName, Byte NCode)
+static void AddRMW(const char *NName, Byte NCode)
 {
   char WName[10];
 
@@ -2244,7 +2242,7 @@ static void AddRMW(char *NName, Byte NCode)
   AddInstTable(InstTable, WName, NCode | 0x100, DecodeRMW);
 }
 
-static void AddRel(char *NName, Word NCode)
+static void AddRel(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
@@ -2344,23 +2342,21 @@ static void DeinitFields(void)
  * \brief  entry point to decode machine instructions
  * ------------------------------------------------------------------------ */
 
+static Boolean DecodeAttrPart_ST7(void)
+{
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
+
 static void MakeCode_ST7(void)
 {
-  ShortInt TmpSize;
-  CodeLen = 0; DontPrint = False; OpSize = eSymbolSize8Bit; PrefixCnt = 0;
+  CodeLen = 0;
+  DontPrint = False;
+  OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSize8Bit;
+  PrefixCnt = 0;
 
   /* zu ignorierendes */
 
   if (Memo("")) return;
-
-  /* Attribut verarbeiten */
-
-  if (AttrPart.Pos.Len > 0)
-  {
-    if (!DecodeMoto16AttrSize(*AttrPart.Str, &TmpSize, False))
-      return;
-    OpSize = TmpSize;
-  }
 
   /* Pseudoanweisungen */
 
@@ -2411,6 +2407,7 @@ static void SwitchTo_ST7(void *pUser)
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = IntTypeDefs[pCurrCPUProps->AddrIntType].Max;
 
+  DecodeAttrPart = DecodeAttrPart_ST7;
   MakeCode = MakeCode_ST7;
   IsDef = IsDef_ST7;
   SwitchFrom = SwitchFrom_ST7;
@@ -2623,7 +2620,7 @@ static const tCPUProps CPUProps[] =
   { "STM8TL53C4"  ,  Int16, eCoreSTM8 },
   { "STM8TL53F4"  ,  Int16, eCoreSTM8 },
   { "STM8TL53G4"  ,  Int16, eCoreSTM8 },
-  { NULL          ,  UInt1, 0         },
+  { NULL          ,  UInt1, eCoreST7  },
 };
 
 void codest7_init(void)

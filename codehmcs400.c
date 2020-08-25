@@ -67,7 +67,7 @@ enum
 
 static void DecodeAdr(const tStrComp *pArg, Word Mask)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   int l;
 
   if (!as_strcasecmp(pArg->Str, "A"))
@@ -150,8 +150,8 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   if (0[pArg->Str] == '#')
   {
-    AdrVal = EvalStrIntExpressionOffs(pArg, 1, OpSizeType, &OK);
-    if (OK)
+    AdrVal = EvalStrIntExpressionOffsWithResult(pArg, 1, OpSizeType, &EvalResult);
+    if (EvalResult.OK)
     {
       AdrMode = ModImm;
       AdrVal &= IntTypeDefs[OpSizeType].Mask;
@@ -159,16 +159,15 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  FirstPassUnknown = False;
-  AdrVal = EvalStrIntExpression(pArg, DataIntType, &OK);
-  if (OK)
+  AdrVal = EvalStrIntExpressionWithResult(pArg, DataIntType, &EvalResult);
+  if (EvalResult.OK)
   {
-    if (!FirstPassUnknown && (AdrVal > SegLimits[SegData])) WrError(ErrNum_OverRange);
+    if (!mFirstPassUnknown(EvalResult.Flags) && (AdrVal > SegLimits[SegData])) WrError(ErrNum_OverRange);
     else   
     {
       AdrMode = ModDir;
       AdrVal &= IntTypeDefs[DataIntType].Mask;
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
     }
     goto AdrFound;
   }
@@ -837,14 +836,13 @@ static void CodeIO(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word DirVal;
 
-    FirstPassUnknown = False;
-    DirVal = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-    if (OK)
+    DirVal = EvalStrIntExpressionWithResult(&ArgStr[1], UInt4, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegIO);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       WAsmCode[CodeLen++] = Code | (DirVal & 15);
     }
   }
@@ -854,14 +852,13 @@ static void CodeLong(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word DirVal;
 
-    FirstPassUnknown = False;
-    DirVal = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (OK)
+    DirVal = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       WAsmCode[CodeLen++] = Code | ((DirVal >> 10) & 15);
       WAsmCode[CodeLen++] = DirVal & 0x3ff;
     }
@@ -872,14 +869,13 @@ static void CodeBR(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word DirVal;
 
-    FirstPassUnknown = False;
-    DirVal = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (OK && ChkSamePage(EProgCounter() + 1, DirVal, 8))
+    DirVal = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+    if (EvalResult.OK && ChkSamePage(EProgCounter() + 1, DirVal, 8, EvalResult.Flags))
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       WAsmCode[CodeLen++] = Code | (DirVal & 0xff);
     }
   }
@@ -889,14 +885,13 @@ static void CodeCAL(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word DirVal;
 
-    FirstPassUnknown = False;
-    DirVal = EvalStrIntExpression(&ArgStr[1], UInt6, &OK);
-    if (OK)
+    DirVal = EvalStrIntExpressionWithResult(&ArgStr[1], UInt6, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       WAsmCode[CodeLen++] = Code | (DirVal & 0x3f);
     }
   }

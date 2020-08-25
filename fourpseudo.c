@@ -34,12 +34,12 @@ void DecodeRES(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean ValOK;
+    tSymbolFlags Flags;
     Word Size;
 
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown))
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags))
     {
       DontPrint = True;
       if (!Size) WrError(ErrNum_NullResMem);
@@ -64,9 +64,8 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
     ValOK = True;
     for (z = 1; ValOK && (z <= ArgCnt); z++)
     {
-      FirstPassUnknown = False;
       EvalStrExpression(&ArgStr[z], &t);
-      if ((t.Typ == TempInt) && (FirstPassUnknown))
+      if ((t.Typ == TempInt) && mFirstPassUnknown(t.Flags))
         t.Contents.Int &= UnknownMask;
 
       switch (t.Typ)
@@ -151,7 +150,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType)
         }
         case TempInt:
         ToInt:
-          if (!SymbolQuestionable && !RangeCheck(t.Contents.Int, ValIntType))
+          if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, ValIntType))
           {
             WrError(ErrNum_OverRange);
             ValOK = False;

@@ -30,7 +30,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongWord Code;
   Word Mask;
 } TReg, *PReg;
@@ -149,7 +149,7 @@ static Boolean DecodeReg(char *Name, LongWord *Result)
   return False;
 }
 
-static Boolean Err(int Num, char *Msg)
+static Boolean Err(tErrorNum Num, const char *Msg)
 {
   WrXError(Num, Msg);
   return False;
@@ -176,7 +176,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
   if (as_strcasecmp(Tok.Str, "WHEN") == 0)
     *Dest |= 0x00010000;
   else if (as_strcasecmp(Tok.Str, "IF") != 0)
-    return Err(1135, Tok.Str);
+    return Err(ErrNum_OpTypeMismatch, Tok.Str);
 
   /* Negierung? */
 
@@ -194,40 +194,40 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
     if (!as_strcasecmp(Tok.Str, "ATN"))
     {
       if (PhaseATNUsed)
-        return Err(1350, "2 x ATN/Phase");
+        return Err(ErrNum_InvAddrMode, "2 x ATN/Phase");
       if (CarryUsed)
-        return Err(1350, "Carry + ATN/Phase");
+        return Err(ErrNum_InvAddrMode, "Carry + ATN/Phase");
       if ((*Dest & 0x00010000) != 0)
-        return Err(1350, "WHEN + ATN");
+        return Err(ErrNum_InvAddrMode, "WHEN + ATN");
       PhaseATNUsed = True;
       *Dest |= 0x00020000;
     }
     else if (DecodePhase(Tok.Str, &Tmp))
     {
       if (PhaseATNUsed)
-        return Err(1350, "2 x ATN/Phase");
+        return Err(ErrNum_InvAddrMode, "2 x ATN/Phase");
       if (CarryUsed)
-        return Err(1350, "Carry + ATN/Phase");
+        return Err(ErrNum_InvAddrMode, "Carry + ATN/Phase");
       PhaseATNUsed = True;
       *Dest |= 0x00020000 + (Tmp << 24);
     }
     else if (!as_strcasecmp(Tok.Str, "CARRY"))
     {
       if (CarryUsed)
-        return Err(1350, "2 x Carry");
+        return Err(ErrNum_InvAddrMode, "2 x Carry");
       if ((PhaseATNUsed) || (DataUsed))
-        return Err(1350, "Carry + ...");
+        return Err(ErrNum_InvAddrMode, "Carry + ...");
       CarryUsed = True;
       *Dest |= 0x00200000;
     }
     else if (!as_strcasecmp(Tok.Str, "MASK"))
     {
       if (CarryUsed)
-        return Err(1350, "Carry + Data");
+        return Err(ErrNum_InvAddrMode, "Carry + Data");
       if (MaskUsed)
-        return Err(1350, "2 x Mask");
+        return Err(ErrNum_InvAddrMode, "2 x Mask");
       if (!DataUsed)
-        return Err(1350, "Mask + !Data");
+        return Err(ErrNum_InvAddrMode, "Mask + !Data");
       GetToken(pSrc, &Tok);
       Tmp = EvalStrIntExpression(&Tok, UInt8, &OK);
       if (!OK)
@@ -238,9 +238,9 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
     else
     {
       if (CarryUsed)
-        return Err(1350, "Carry + Data");
+        return Err(ErrNum_InvAddrMode, "Carry + Data");
       if (DataUsed)
-        return Err(1350, "2 x Data");
+        return Err(ErrNum_InvAddrMode, "2 x Data");
       Tmp = EvalStrIntExpression(&Tok, UInt8, &OK);
       if (!OK)
         return False;
@@ -251,7 +251,7 @@ static Boolean DecodeCond(tStrComp *pSrc, LongWord *Dest)
     if (*Tok.Str != '\0') 
     {
       if (as_strcasecmp(Tok.Str, "AND"))
-        return Err(1350, Tok.Str);
+        return Err(ErrNum_InvAddrMode, Tok.Str);
       GetToken(pSrc, &Tok);
     }
   }
@@ -298,6 +298,7 @@ static void DecodeJmps(Word Index)
   LongInt Adr;
   int l;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ArgCnt == 0)
   {
@@ -341,11 +342,11 @@ static void DecodeJmps(Word Index)
         strmov(ArgStr[1].Str, ArgStr[1].Str + 4);
         ArgStr[1].Str[l - 5] = '\0';
       }
-      Adr = EvalStrIntExpression(&ArgStr[1], UInt32, &OK);
+      Adr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags);
       if ((OK) && (Buf != 0))
       {
         Adr -= EProgCounter() + 8;
-        if ((!SymbolQuestionable) && ((Adr > 0x7fffff) || (Adr < -0x800000)))
+        if (!mSymbolQuestionable(Flags) && ((Adr > 0x7fffff) || (Adr < -0x800000)))
         {
           WrError(ErrNum_JmpDistTooBig);
           OK = False;
@@ -372,7 +373,7 @@ static void DecodeCHMOV(Word Index)
   UNUSED(Index);
   StrCompMkTemp(&Token, TokenStr);  
 
-  if ((ChkExactCPUList(0, CPU53C825, CPU53C875, CPU53C895, CPUNone) >= 0)
+  if ((ChkExactCPUList(ErrNum_InstructionNotSupported, CPU53C825, CPU53C875, CPU53C895, CPUNone) >= 0)
    && ChkArgCnt(2, 3))
   {
     GetToken(&ArgStr[ArgCnt], &Token);
@@ -486,9 +487,10 @@ static void DecodeRegTrans(Word Index)
   else if (!DecodeReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
   else
   {
-    FirstPassUnknown = False;
-    Cnt = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    Cnt = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Cnt = 1;
     if ((OK) && (ChkRange(Cnt, 1, 4)))
     {
@@ -863,6 +865,7 @@ static void DecodeSELECT(Word MayATN)
 {
   Boolean OK;
   LongInt Dist;
+  tSymbolFlags Flags;
   int l;
 
   if (ChkArgCnt(2, 2))
@@ -900,10 +903,10 @@ static void DecodeSELECT(Word MayATN)
         {
           DAsmCode[0] |= 0x04000000;
           ArgStr[2].Str[l - 1] = '\0';
-          Dist = EvalStrIntExpressionOffs(&ArgStr[2], 4, UInt32, &OK) - (EProgCounter() + 8);
+          Dist = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], 4, UInt32, &OK, &Flags) - (EProgCounter() + 8);
           if (OK)
           {
-            if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
+            if (!mSymbolQuestionable(Flags) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
             else DAsmCode[1] = Dist & 0xffffff;
           }
         }
@@ -920,6 +923,7 @@ static void DecodeWAIT(Word Index)
   tStrComp Token;
   Boolean OK;
   LongInt Dist;
+  tSymbolFlags Flags;
 
   UNUSED(Index);
   StrCompMkTemp(&Token, TokenStr);
@@ -944,10 +948,10 @@ static void DecodeWAIT(Word Index)
       {
         StrCompShorten(&ArgStr[1], 1);
         DAsmCode[0] = 0x54000000;
-        Dist = EvalStrIntExpressionOffs(&ArgStr[1], 4, UInt32, &OK) - (EProgCounter() + 8);
+        Dist = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 4, UInt32, &OK, &Flags) - (EProgCounter() + 8);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
+          if (mSymbolQuestionable(Flags) && ((Dist > 0x7fffff) || (Dist < -0x800000))) WrError(ErrNum_JmpDistTooBig);
           else
             DAsmCode[1] = Dist & 0xffffff;
         }
@@ -969,7 +973,7 @@ static void DecodeWAIT(Word Index)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddReg(char *NName, LargeWord Adr, Word Mask)
+static void AddReg(const char *NName, LargeWord Adr, Word Mask)
 {
   if (InstrZ >= RegCnt) exit(255);
   Regs[InstrZ].Name = NName;

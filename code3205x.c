@@ -43,14 +43,14 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   CPUVar MinCPU;
   Word Mode;
 } tAdrMode;
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   CPUVar MinCPU;
   Word CodeAND;
   Word CodeOR;
@@ -62,7 +62,7 @@ typedef struct
 
 typedef struct
 {
-  char *name;
+  const char *name;
   CPUVar MinCPU;
   Word Code;
 } tBitTable;
@@ -112,6 +112,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
 {
   Word h;
   tAdrMode *pAdrMode = AdrModes;
+  tEvalResult EvalResult;
 
   /* Annahme: nicht gefunden */
 
@@ -131,28 +132,28 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
     if (aux <= ArgCnt)
     {
       (void)ChkArgCnt(MinArgCnt, aux - 1);
-      return FALSE;
+      return False;
     }
 
     /* Adresse berechnen */
 
-    h = EvalStrIntExpression(pArg, Int16, &AdrOK);
-    if (!AdrOK)
-      return FALSE;
+    h = EvalStrIntExpressionWithResult(pArg, Int16, &EvalResult);
+    if (!EvalResult.OK)
+      return False;
+    AdrOK = True;
 
     /* Adresslage pruefen */
 
-    if (Must1 && (h >= 0x80) && (!FirstPassUnknown))
+    if (Must1 && (h >= 0x80) && !mFirstPassUnknown(EvalResult.Flags))
     {
       WrError(ErrNum_UnderRange); 
-      AdrOK = False;
-      return FALSE;
+      return False;
     }
 
     /* nur untere 7 Bit gespeichert */
 
     AdrMode = h & 0x7f; 
-    ChkSpace(SegData);
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
   }
 
   /* ansonsten evtl. noch Adressregister dazu */
@@ -162,7 +163,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
     /* auf dieser CPU nicht erlaubter Modus ? */
 
     if (!ChkMinCPUExt(pAdrMode->MinCPU, ErrNum_AddrModeNotSupported))
-      return FALSE;
+      return False;
 
     AdrMode = pAdrMode->Mode;
     if (aux <= ArgCnt)
@@ -214,12 +215,12 @@ static Word DecodeCond(int argp)
 static Word DecodeShift(const tStrComp *pArg, Boolean *OK)
 {
   Word Shift;
+  tSymbolFlags Flags;
 
-  FirstPassUnknown = False;
-  Shift = EvalStrIntExpression(pArg, UInt5, OK);
+  Shift = EvalStrIntExpressionWithFlags(pArg, UInt5, OK, &Flags);
   if (*OK)
   {
-    if (FirstPassUnknown) Shift &= 15;
+    if (mFirstPassUnknown(Flags)) Shift &= 15;
     *OK = ChkRange(Shift, 0, 16);
   }
   return Shift;
@@ -564,15 +565,14 @@ static void DecodeCMPRSPM(Word Index)
 
 static void DecodeIO(Word Index)
 {
-  Boolean OK;
-
   if (ChkArgCnt(2, 3)
    && DecodeAdr(&ArgStr[1], 2, 3, False))
   {
-    WAsmCode[1] = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    WAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegIO);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       CodeLen = 2;
       WAsmCode[0] = Index | AdrMode;
     }
@@ -761,15 +761,14 @@ static void DecodeLSST(Word Index)
 
 static void DecodeMAC(Word Index)
 {
-  Boolean OK;
-
   if (ChkArgCnt(2, 3))
   {
-    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    ChkSpace(SegCode);
+    tEvalResult EvalResult;
+    WAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
 
-    if ((OK) && (DecodeAdr(&ArgStr[2], 2, 3, False)))
+    if (EvalResult.OK && DecodeAdr(&ArgStr[2], 2, 3, False))
     {
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 2;
       WAsmCode[0] = 0xa200 | (Index << 8) | AdrMode;
     }
@@ -780,14 +779,14 @@ static void DecodeMPY(Word Index)
 {
   LongInt Imm;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (*ArgStr[1].Str == '#')
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = FALSE;
-      Imm = EvalStrIntExpressionOffs(&ArgStr[1], 1, SInt16, &OK);
-      if (FirstPassUnknown)
+      Imm = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, SInt16, &OK, &Flags);
+      if (mFirstPassUnknown(Flags))
         Imm &= 0xfff;
       if (OK)
       {
@@ -926,14 +925,15 @@ static void DecodeBSAR(Word Index)
 {
   Word Shift;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(CPU32050))
   {
-    FirstPassUnknown = False;
-    Shift = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (FirstPassUnknown)
+    Shift = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt5, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Shift = 1;
     if (OK)
     {
@@ -1015,16 +1015,17 @@ static void DecodeXC(Word Index)
 {
   Word Mode; 
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
    && ChkMinCPU(CPU32050))
   {
-    FirstPassUnknown = False;
-    Mode = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
+    Mode = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
     if (OK)
     {
-      if ((Mode != 1) && (Mode != 2) && (!FirstPassUnknown)) WrError(ErrNum_UnderRange);
+      if ((Mode != 1) && (Mode != 2) && !mFirstPassUnknown(Flags)) WrError(ErrNum_UnderRange);
       else
       {
         CodeLen = 1;
@@ -1043,7 +1044,7 @@ static void DecodePORT(Word Code)
 
 /* ---------------------------------------------------------------------- */
 
-static void AddFixed(char *NName, CPUVar MinCPU, Word NCode)
+static void AddFixed(const char *NName, CPUVar MinCPU, Word NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].MinCPU = MinCPU;
@@ -1051,7 +1052,7 @@ static void AddFixed(char *NName, CPUVar MinCPU, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddAdr(char *NName, CPUVar MinCPU, Word NCode)
+static void AddAdr(const char *NName, CPUVar MinCPU, Word NCode)
 {
   if (InstrZ >= AdrOrderCnt) exit(255);
   AdrOrders[InstrZ].MinCPU = MinCPU;
@@ -1059,7 +1060,7 @@ static void AddAdr(char *NName, CPUVar MinCPU, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCmdAdr);
 }
 
-static void AddJmp(char *NName, CPUVar MinCPU, Word NCode, Boolean NCond)
+static void AddJmp(const char *NName, CPUVar MinCPU, Word NCode, Boolean NCond)
 {
   if (InstrZ >= JmpOrderCnt) exit(255);
   JmpOrders[InstrZ].MinCPU = MinCPU;
@@ -1068,7 +1069,7 @@ static void AddJmp(char *NName, CPUVar MinCPU, Word NCode, Boolean NCond)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCmdJmp);
 }
 
-static void AddPlu(char *NName, CPUVar MinCPU, Word NCode)
+static void AddPlu(const char *NName, CPUVar MinCPU, Word NCode)
 {
   if (InstrZ >= PluOrderCnt) exit(255);
   PluOrders[InstrZ].MinCPU = MinCPU;
@@ -1076,7 +1077,7 @@ static void AddPlu(char *NName, CPUVar MinCPU, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeCmdPlu);
 }
 
-static void AddAdrMode(char *NName, CPUVar MinCPU, Word NMode)
+static void AddAdrMode(const char *NName, CPUVar MinCPU, Word NMode)
 {
   if (InstrZ >= AdrModeCnt) exit(255);
   AdrModes[InstrZ].Name = NName;
@@ -1084,7 +1085,7 @@ static void AddAdrMode(char *NName, CPUVar MinCPU, Word NMode)
   AdrModes[InstrZ++].Mode = NMode;
 }
 
-static void AddCond(char *NName, CPUVar MinCPU, Word NCodeAND, Word NCodeOR, Byte NIsZL,
+static void AddCond(const char *NName, CPUVar MinCPU, Word NCodeAND, Word NCodeOR, Byte NIsZL,
                     Byte NIsC, Byte NIsV, Byte NIsTP)
 {
   if (InstrZ >= CondCnt) exit(255);
@@ -1098,7 +1099,7 @@ static void AddCond(char *NName, CPUVar MinCPU, Word NCodeAND, Word NCodeOR, Byt
   Conditions[InstrZ++].IsTP = NIsTP;
 }
 
-static void AddBit(char *NName, CPUVar MinCPU, Word NCode)
+static void AddBit(const char *NName, CPUVar MinCPU, Word NCode)
 {
   if (InstrZ >= BitCnt) exit(255);
   BitTable[InstrZ].name = NName;

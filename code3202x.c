@@ -50,7 +50,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Word Mode;
 } tAdrMode;
 
@@ -91,6 +91,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
   const tAdrMode *pAdrMode = AdrModes;
   Byte h;
   Boolean AdrOK = False;
+  tEvalResult EvalResult;
 
   while (pAdrMode->Name && as_strcasecmp(pAdrMode->Name, pArg->Str))
     pAdrMode++;
@@ -101,16 +102,16 @@ static Boolean DecodeAdr(const tStrComp *pArg, int MinArgCnt, int aux, Boolean M
       (void)ChkArgCnt(MinArgCnt, aux - 1);
       return False;
     }
-    h = EvalStrIntExpression(pArg, Int16, &AdrOK);
-    if (!AdrOK) 
+    h = EvalStrIntExpressionWithResult(pArg, Int16, &EvalResult);
+    if (!EvalResult.OK) 
       return False;
-    if (Must1 && (h >= 0x80) && (!FirstPassUnknown))
+    if (Must1 && (h >= 0x80) && !mFirstPassUnknown(EvalResult.Flags))
     {
       WrError(ErrNum_UnderRange); 
       return False;
     }
     AdrMode = h & 0x7f; 
-    ChkSpace(SegData);
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
     return True;
   }
   AdrMode = pAdrMode->Mode;
@@ -257,6 +258,7 @@ static void DecodeShiftAdr(Word Index)
   {
     Boolean OK;   
     Word AdrWord;
+    tSymbolFlags Flags;
 
     if (DecodeAdr(&ArgStr[1], 1, 3, False))
     {
@@ -264,11 +266,12 @@ static void DecodeShiftAdr(Word Index)
       {
         OK = True; 
         AdrWord = 0;
+        Flags = eSymbolFlag_None;
       }
       else
       {
-        AdrWord = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
-        if (OK && FirstPassUnknown) 
+        AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[2], Int4, &OK, &Flags);
+        if (OK && mFirstPassUnknown(Flags))
           AdrWord = 0;
       }
       if (OK) 
@@ -288,17 +291,16 @@ static void DecodeShiftAdr(Word Index)
 
 static void DecodeIN_OUT(Word Code)
 {
-  Boolean OK;
-  Word AdrWord;
-
   if (ChkArgCnt(2, 3))
   {
     if (DecodeAdr(&ArgStr[1], 2, 3, False))
     {
-      AdrWord = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+      Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], Int4, &EvalResult);
+
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         CodeLen = 1;
         WAsmCode[0] = Code | AdrMode | (AdrWord << 8);
       }
@@ -314,12 +316,12 @@ static void DecodeImm(Word Index)
 
   if (ChkArgCnt(1, (pOrder->Mask != 0xffff) ? 1 : 2))
   {
-    Boolean OK;
-    LongInt AdrLong = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
+    tEvalResult EvalResult;
+    LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[1], Int32, &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(EvalResult.Flags))
         AdrLong &= pOrder->Mask;
       if (pOrder->Mask == 0xffff)
       {
@@ -327,14 +329,14 @@ static void DecodeImm(Word Index)
         {
           Word AdrWord = 0;
 
-          OK = True;
+          EvalResult.OK = True;
           if (ArgCnt == 2)
           {
-            AdrWord = EvalStrIntExpression(&ArgStr[2], Int4, &OK);
-            if (OK && FirstPassUnknown) 
+            AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], Int4, &EvalResult);
+            if (EvalResult.OK && mFirstPassUnknown(EvalResult.Flags)) 
              AdrWord = 0;
           }
-          if (OK)
+          if (EvalResult.OK)
           {
             CodeLen = 2;
             WAsmCode[0] = pOrder->Code | (AdrWord << 8);
@@ -436,16 +438,16 @@ static void DecodeLDPK(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    WAsmCode[0] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
       if (WAsmCode[0] < 0x1ff)
         WAsmCode[0] |= 0xc800;
       else
       {
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
         WAsmCode[0] = ((WAsmCode[0] >> 7) & 0x1ff) | 0xc800;
       }
       CodeLen = 1;
@@ -480,17 +482,17 @@ static void DecodePORT(Word Code)
 
 /* ---------------------------------------------------------------------- */
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddJmp(char *NName, Word NCode)
+static void AddJmp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }
 
-static void AddAdr(char *NName, Word NCode, Boolean NMust1)
+static void AddAdr(const char *NName, Word NCode, Boolean NMust1)
 {
   if (InstrZ >= AdrOrderCnt) exit(255);
   AdrOrders[InstrZ].Code = NCode;
@@ -498,7 +500,7 @@ static void AddAdr(char *NName, Word NCode, Boolean NMust1)
   AddInstTable(InstTable, NName, InstrZ++, DecodeAdrInst);
 }
 
-static void Add2ndAdr(char *NName, Word NCode, Boolean NMust1)
+static void Add2ndAdr(const char *NName, Word NCode, Boolean NMust1)
 {
   if (InstrZ >= Adr2ndAdrOrderCnt) exit(255);
   Adr2ndAdrOrders[InstrZ].Code = NCode;
@@ -506,7 +508,7 @@ static void Add2ndAdr(char *NName, Word NCode, Boolean NMust1)
   AddInstTable(InstTable, NName, InstrZ++, Decode2ndAdr);
 }
 
-static void AddShiftAdr(char *NName, Word NCode, Word nallow)
+static void AddShiftAdr(const char *NName, Word NCode, Word nallow)
 {
   if (InstrZ >= AdrShiftOrderCnt) exit(255);
   AdrShiftOrders[InstrZ].Code = NCode;
@@ -514,7 +516,7 @@ static void AddShiftAdr(char *NName, Word NCode, Word nallow)
   AddInstTable(InstTable, NName, InstrZ++, DecodeShiftAdr);
 }
 
-static void AddImm(char *NName, Word NCode, Integer NMin, Integer NMax, Word NMask)
+static void AddImm(const char *NName, Word NCode, Integer NMin, Integer NMax, Word NMask)
 {
   if (InstrZ >= ImmOrderCnt) exit(255);
   ImmOrders[InstrZ].Code = NCode;
@@ -524,7 +526,7 @@ static void AddImm(char *NName, Word NCode, Integer NMin, Integer NMax, Word NMa
   AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
 }
 
-static void AddAdrMode(char *NName, Word NMode)
+static void AddAdrMode(const char *NName, Word NMode)
 {
   if (InstrZ >= AdrModeCnt) exit(255);
   AdrModes[InstrZ].Name = NName;

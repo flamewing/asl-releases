@@ -116,10 +116,10 @@ static void DecodeB(Word Code)
   {
     Word AdrWord;
     Boolean OK;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt13, &OK);
-    if (OK && ChkSamePage(EProgCounter(), AdrWord, 7))
+    AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt13, &OK, &Flags);
+    if (OK && ChkSamePage(EProgCounter(), AdrWord, 7, Flags))
     {
       CodeLen = 1;
       WAsmCode[0] = 0x180 + (AdrWord & 0x7f);
@@ -217,12 +217,12 @@ static void DecodeLXY(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddConst(char *NName, Word NCode, IntType NMax)
+static void AddConst(const char *NName, Word NCode, IntType NMax)
 {
   if (InstrZ >= ConstOrderCount) exit(255);
   ConstOrders[InstrZ].Code = NCode;

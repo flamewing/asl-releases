@@ -48,6 +48,11 @@ typedef enum
   IntTypeCnt
 } IntType;
 
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(IntType)
+#endif
+
 #ifdef HAS64
 #define LargeWordType UInt64
 #else
@@ -78,14 +83,19 @@ typedef struct _TFunction
   StringPtr Name, Definition;
 } TFunction, *PFunction;
 
+typedef struct sEvalResult
+{
+  Boolean OK;
+  tSymbolFlags Flags;
+  unsigned AddrSpaceMask; /* Welche Adressraeume genutzt ? */
+  tSymbolSize DataSize;
+} tEvalResult;
+
 struct sStrComp;
 struct sRelocEntry;
 struct sSymbolEntry;
 
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
-extern Boolean FirstPassUnknown;
-extern Boolean SymbolQuestionable;
-extern Boolean UsesForwards;
 extern LongInt MomLocHandle;
 extern LongInt TmpSymCounter,
                FwdSymCounter,
@@ -160,7 +170,10 @@ extern void ResetSymbolDefines(void);
 extern void PrintSymbolDepth(void);
 
 
-extern void SetSymbolOrStructElemSize(const struct sStrComp *pName, ShortInt Size);
+extern void EvalResultClear(tEvalResult *pResult);
+
+
+extern void SetSymbolOrStructElemSize(const struct sStrComp *pName, tSymbolSize Size);
 
 extern ShortInt GetSymbolSize(const struct sStrComp *pName);
 
@@ -176,14 +189,17 @@ extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
 extern void EvalStrExpression(const struct sStrComp *pExpr, TempResult *pErg);
 
+extern LargeInt EvalStrIntExpression(const struct sStrComp *pExpr, IntType Type, Boolean *pResult);
 extern LargeInt EvalStrIntExpressionWithFlags(const struct sStrComp *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
-#define EvalStrIntExpression(pExpr, Type, pResult) EvalStrIntExpressionWithFlags(pExpr, Type, pResult, NULL)
-
+extern LargeInt EvalStrIntExpressionWithResult(const struct sStrComp *pExpr, IntType Type, struct sEvalResult *pResult);
+extern LargeInt EvalStrIntExpressionOffs(const struct sStrComp *pExpr, int Offset, IntType Type, Boolean *pResult);
 extern LargeInt EvalStrIntExpressionOffsWithFlags(const struct sStrComp *pExpr, int Offset, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
-#define EvalStrIntExpressionOffs(pExpr, Offset, Type, pResult) EvalStrIntExpressionOffsWithFlags(pExpr, Offset, Type, pResult, NULL)
+extern LargeInt EvalStrIntExpressionOffsWithResult(const struct sStrComp *pExpr, int Offset, IntType Type, struct sEvalResult *pResult);
 
+extern Double EvalStrFloatExpressionWithResult(const struct sStrComp *pExpr, FloatType Typ, struct sEvalResult *pResult);
 extern Double EvalStrFloatExpression(const struct sStrComp *pExpr, FloatType Typ, Boolean *pResult);
 
+extern void EvalStrStringExpressionWithResult(const struct sStrComp *pExpr, struct sEvalResult *pResult, char *pEvalResult);
 extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResult, char *pEvalResult);
 
 
@@ -221,7 +237,7 @@ extern void ClearCrossList(void);
 
 extern LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent);
 
-extern char *GetSectionName(LongInt Handle);
+extern const char *GetSectionName(LongInt Handle);
 
 extern void SetMomSection(LongInt Handle);
 

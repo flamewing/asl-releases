@@ -64,8 +64,8 @@ static void ResetAdr(void)
 
 static void DecodeAdr(const tStrComp *pArg, Byte Mask)
 {
-  Boolean OK;
   Integer AdrInt;
+  tEvalResult EvalResult;
 
   ResetAdr();
 
@@ -89,20 +89,20 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask)
     goto chk;
   }
 
-  AdrInt = EvalStrIntExpression(pArg, UInt16, &OK);
-  if (OK)
+  AdrInt = EvalStrIntExpressionWithResult(pArg, UInt16, &EvalResult);
+  if (EvalResult.OK)
   {
-    if (TypeFlag & (1 << SegCode))
+    if (EvalResult.AddrSpaceMask & (1 << SegCode))
     {
       AdrType = ModDir;
       AdrVal = (AdrInt & 0x3f) + 0x40;
       AdrCnt=1;
-      if (!FirstPassUnknown)
+      if (!mFirstPassUnknown(EvalResult.Flags))
         if (WinAssume != (AdrInt >> 6)) WrError(ErrNum_InAccPage);
     }
     else
     {
-      if (FirstPassUnknown) AdrInt = Lo(AdrInt);
+      if (mFirstPassUnknown(EvalResult.Flags)) AdrInt = Lo(AdrInt);
       if (AdrInt > 0xff) WrError(ErrNum_OverRange);
       else
       {
@@ -211,12 +211,12 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
 
   if (Start == Stop)
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt11, &OK);
-    if (OK)
-      ChkSpace(SegBData);
-    return OK;
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt11, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
   }
 
   /* register & bit position are given as separate arguments */
@@ -399,10 +399,12 @@ static void DecodeRel(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 1);
+    tSymbolFlags Flags;
+    Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - (EProgCounter() + 1);
+
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -16) || (AdrInt > 15))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -16) || (AdrInt > 15))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 1;
@@ -418,9 +420,9 @@ static void DecodeJP_CALL(Word Code)
   {
     Boolean OK;
     Word AdrInt;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpression(&ArgStr[1], pCurrCPUProps->CodeAdrInt, &OK);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], pCurrCPUProps->CodeAdrInt, &OK, &Flags);
     if (OK)
     {
       Word DestPage = AdrInt >> 11;
@@ -428,7 +430,7 @@ static void DecodeJP_CALL(Word Code)
       /* CPU program space's page 1 (800h...0fffh) always accesses ROM space page 1.
          CPU program space's page 0 (000h...7ffh) accesses 2K ROM space pages as defined by PRPR. */
          
-      if (!FirstPassUnknown && (DestPage != 1))
+      if (!mFirstPassUnknown(Flags) && (DestPage != 1))
       {
         Word SrcPage = EProgCounter() >> 11;
 
@@ -582,14 +584,15 @@ static void DecodeJRR_JRS(Word Code)
     Byte BitPos;
     Boolean OK;
     Integer AdrInt;
+    tSymbolFlags Flags;
 
     DissectBitSymbol(PackedAddr, &RegAddr, &BitPos);
     BAsmCode[0] = (MirrBit(BitPos) << 5) | Code;
     BAsmCode[1] = RegAddr;
-    AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], UInt16, &OK) - (EProgCounter() + 3);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt16, &OK, &Flags) - (EProgCounter() + 3);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 3;
@@ -710,23 +713,23 @@ static void DecodeBIT(Word Code)
 /*---------------------------------------------------------------------------------*/
 /* code table handling */
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddRel(char *NName, Byte NCode)
+static void AddRel(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
 
-static void AddALU(char *NName, char *NNameImm, Byte NCode)
+static void AddALU(const char *NName, const char *NNameImm, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU);
   AddInstTable(InstTable, NNameImm, NCode, DecodeALUImm);
 }
 
-static void AddAcc(char *NName, Word NCode)
+static void AddAcc(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
 }
@@ -844,15 +847,15 @@ static void InternSymbol_ST6(char *pArg, TempResult *pErg)
 {
   int z;
 #define RegCnt 5
-  static const char *RegNames[RegCnt + 1] = {"A", "V", "W", "X", "Y"};
-  static Byte RegCodes[RegCnt + 1] = {0xff, 0x82, 0x83, 0x80, 0x81};
+  static const char RegNames[RegCnt + 1][2] = {"A", "V", "W", "X", "Y"};
+  static const Byte RegCodes[RegCnt + 1] = {0xff, 0x82, 0x83, 0x80, 0x81};
 
   for (z = 0; z < RegCnt; z++)
     if (!as_strcasecmp(pArg, RegNames[z]))
     {
       pErg->Typ = TempInt;
       pErg->Contents.Int = RegCodes[z];
-      TypeFlag |= (1 << SegData);
+      pErg->AddrSpaceMask |= (1 << SegData);
     }
 }
 
@@ -924,7 +927,7 @@ static const tCPUProps CPUProps[] =
   { "ST6265", UInt12 },
   { "ST6280", UInt13 },
   { "ST6285", UInt13 },
-  { NULL    , 0      },
+  { NULL    , (IntType)0 },
 };
 
 void codest6_init(void)

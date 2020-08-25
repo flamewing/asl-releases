@@ -13,6 +13,7 @@
 #include "datatypes.h"
 #include "dynstring.h"
 #include "symflags.h"
+#include "symbolsize.h"
 
 typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
 
@@ -22,6 +23,8 @@ struct sTempResult
 {
   TempType Typ;
   tSymbolFlags Flags;
+  unsigned AddrSpaceMask;
+  tSymbolSize DataSize;
   struct sRelocEntry *Relocs;
   union
   {

@@ -76,7 +76,7 @@ static CPUVar CPU90500;
 
 static MulDivOrder *MulDivOrders;
 
-static char *BankNames[4] =
+static const char BankNames[4][4] =
 {
   "PCB", "DTB", "ADB", "SPB"
 };
@@ -118,7 +118,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
   LongWord ImmVal;
   Boolean OK;
   unsigned Index;
-  static char *SpecNames[7] = {"DTB", "ADB", "SSB", "USB", "DPR", "\a", "PCB"};
+  static const char SpecNames[7][4] = {"DTB", "ADB", "SSB", "USB", "DPR", "\a", "PCB"};
 
   AdrMode = ModNone; AdrCnt = 0;
 
@@ -156,7 +156,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   if (Mask & MModSeg)
   {
-    for (Index = 0; Index < sizeof(BankNames) / sizeof(char *); Index++)
+    for (Index = 0; Index < sizeof(BankNames) / sizeof(BankNames[0]); Index++)
       if (!as_strcasecmp(pArg->Str, BankNames[Index]))
       {
         AdrMode = ModSeg;
@@ -167,7 +167,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   if (Mask & MModSpec)
   {
-    for (Index = 0; Index < sizeof(SpecNames) / sizeof(char *); Index++)
+    for (Index = 0; Index < sizeof(SpecNames) / sizeof(SpecNames[0]); Index++)
       if (as_strcasecmp(pArg->Str, SpecNames[Index]) == 0)
       {
         AdrMode = ModSpec;
@@ -346,6 +346,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
             }
             break;
           }                               /* run into disp part otherwise*/
+          /* else fall-through */
         case ' ':
         case '\t':
         case '-':
@@ -781,10 +782,12 @@ static void DecodeBBcc(Word Index)
       }
       if (HLen > 1)
       {
-        Addr = EvalStrIntExpression(&ArgStr[2], UInt24, &OK) - (EProgCounter() + HLen + 1);
+        tSymbolFlags Flags;
+
+        Addr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt24, &OK, &Flags) - (EProgCounter() + HLen + 1);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[HLen++] = Addr & 0xff;
@@ -803,10 +806,12 @@ static void DecodeBranch(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - (EProgCounter() + 2);
+    tSymbolFlags Flags;
+
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = Code;
@@ -939,12 +944,14 @@ static void DecodeCmpBranch(Word Index)
       }
       if ((OK) && (DecodeAdr(&ArgStr[2], MModImm)))
       {
+        tSymbolFlags Flags;
+
         memcpy(BAsmCode + HCnt, AdrVals, AdrCnt);
         HCnt += AdrCnt;
-        Addr = EvalStrIntExpression(&ArgStr[3], UInt24, &OK) - (EProgCounter() + HCnt + 1);
+        Addr = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt24, &OK, &Flags) - (EProgCounter() + HCnt + 1);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((Addr > 127) || (Addr < -128))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((Addr > 127) || (Addr < -128))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[HCnt++] = Addr & 0xff;
@@ -1036,10 +1043,12 @@ static void DecodeDBNZ(Word Index)
     SetOpSize(Index);
     if (DecodeAdr(&ArgStr[1], MModReg | MModMem))
     {
-      Addr = EvalStrIntExpression(&ArgStr[2], UInt16, &OK) - (EProgCounter() + 3 + AdrCnt);
+      tSymbolFlags Flags;
+
+      Addr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &OK, &Flags) - (EProgCounter() + 3 + AdrCnt);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((Addr < -128) || (Addr > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] = 0x74 + (Index << 1);
@@ -1145,10 +1154,12 @@ static void DecodeINT(Word Index)
   }
   else
   {
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt24, &OK);
+    tSymbolFlags Flags;
+
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((Addr & 0xff0000) != 0xff0000))
+      if (!mSymbolQuestionable(Flags) && ((Addr & 0xff0000) != 0xff0000))
         WrError(ErrNum_InAccPage);
       BAsmCode[0] = 0x69;
       BAsmCode[1] = Addr & 0xff;
@@ -1975,10 +1986,12 @@ static void DecodeSBBS(Word Index)
     if (AdrPart != ABSMODE) WrError(ErrNum_InvAddrMode);
     else
     {
-      Adr = EvalStrIntExpression(&ArgStr[2], UInt24, &OK) - (EProgCounter() + 5);
+      tSymbolFlags Flags;
+
+      Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt24, &OK, &Flags) - (EProgCounter() + 5);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((Adr < -128) || (Adr > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((Adr < -128) || (Adr > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] = 0x6c;
@@ -2074,54 +2087,54 @@ static void DecodeBank(Word Index)
 /*--------------------------------------------------------------------------*/
 /* Codetabellen */
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddALU8(char *NName, Byte NCode)
+static void AddALU8(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU8);
 }
 
-static void AddLog8(char *NName, Byte NCode)
+static void AddLog8(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeLog8);
 }
 
-static void AddAcc(char *NName, Byte NCode)
+static void AddAcc(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
 }
 
-static void AddShift(char *NName, Word NCode, Word NMay)
+static void AddShift(const char *NName, Word NCode, Word NMay)
 {
   AddInstTable(InstTable, NName, NCode | (NMay << 8), DecodeShift);
 }
 
-static void AddBranch(char *NName, Byte NCode)
+static void AddBranch(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBranch);
 }
 
-static void AddIncDec(char *NName, Byte NCode)
+static void AddIncDec(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeIncDec);
 }
 
-static void AddMulDiv(char *NName, Byte NCode, Word NAccCode)
+static void AddMulDiv(const char *NName, Byte NCode, Word NAccCode)
 {
   MulDivOrders[InstrZ].Code = NCode;
   MulDivOrders[InstrZ].AccCode = NAccCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeMulDiv);
 }
 
-static void AddSeg(char *NName, Byte NCode)
+static void AddSeg(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeSeg);
 }
 
-static void AddString(char *NName, Byte NCode)
+static void AddString(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeString);
 }

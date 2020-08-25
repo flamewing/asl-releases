@@ -36,14 +36,14 @@ static CPUVar CPU16C64, CPU16C84, CPU16C873, CPU16C874, CPU16C876, CPU16C877;
 /*--------------------------------------------------------------------------*/
 /* helper functions */
 
-static Word EvalFExpression(tStrComp *pArg, Boolean *pOK)
+static Word EvalFExpression(tStrComp *pArg, tEvalResult *pEvalResult)
 {
   LongInt h;
 
-  h = EvalStrIntExpression(pArg, UInt9, pOK);
-  if (*pOK)
+  h = EvalStrIntExpressionWithResult(pArg, UInt9, pEvalResult);
+  if (pEvalResult->OK)
   {
-    ChkSpace(SegData);
+    ChkSpace(SegData, pEvalResult->AddrSpaceMask);
     return (h & 0x7f);
   }
   else
@@ -79,15 +79,15 @@ static void DecodeLit(Word Code)
 static void DecodeAri(Word Code)
 {
   Word DefaultDir = (Code >> 8) & 0x80;
-  Boolean OK;
+  tEvalResult EvalResult;
   Word AdrWord;
 
   Code &= 0x7fff;
 
   if (ChkArgCnt(1, 2))
   {
-    AdrWord = EvalFExpression(&ArgStr[1], &OK);
-    if (OK)
+    AdrWord = EvalFExpression(&ArgStr[1], &EvalResult);
+    if (EvalResult.OK)
     {
       WAsmCode[0] = Code | AdrWord;
       if (1 == ArgCnt)
@@ -104,8 +104,8 @@ static void DecodeAri(Word Code)
       }
       else
       {
-        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
-        if (OK)
+        AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt1, &EvalResult);
+        if (EvalResult.OK)
         {
           WAsmCode[0] |= AdrWord << 7;
           CodeLen = 1;
@@ -117,16 +117,15 @@ static void DecodeAri(Word Code)
 
 static void DecodeBit(Word Code)
 {
-  Word AdrWord;
-  Boolean OK;
-
   if (ChkArgCnt(2, 2))
   {
-    AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt3, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      WAsmCode[0] = EvalFExpression(&ArgStr[1], &OK);
-      if (OK)
+      WAsmCode[0] = EvalFExpression(&ArgStr[1], &EvalResult);
+      if (EvalResult.OK)
       {
         WAsmCode[0] |= Code | (AdrWord << 7);
         CodeLen = 1;
@@ -137,13 +136,12 @@ static void DecodeBit(Word Code)
 
 static void DecodeF(Word Code)
 {
-  Word AdrWord;
-  Boolean OK;
-
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalFExpression(&ArgStr[1], &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalFExpression(&ArgStr[1], &EvalResult);
+
+    if (EvalResult.OK)
       WAsmCode[CodeLen++] = Code | AdrWord;
   }
 }
@@ -151,40 +149,39 @@ static void DecodeF(Word Code)
 static void DecodeTRIS(Word Index)
 {
   Word AdrWord;
-  Boolean OK;
+  tEvalResult EvalResult;
+
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    AdrWord=EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if (FirstPassUnknown)
+    AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+    if (mFirstPassUnknown(EvalResult.Flags))
       AdrWord = 5;
-    if (OK)
+    if (EvalResult.OK)
       if (ChkRange(AdrWord, 5, 6))
       {
         WAsmCode[CodeLen++] = 0x0060 | AdrWord;
-        ChkSpace(SegData); WrError(ErrNum_Obsolete);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
+        WrError(ErrNum_Obsolete);
       }
   }
 }
 
 static void DecodeJump(Word Index)
 {
-  Word AdrWord;
-  Boolean OK;
-
   if (ChkArgCnt(1, 1))
   {
-    AdrWord = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
+    if (EvalResult.OK)
     {
       if (AdrWord > (SegLimits[SegCode] - AddCodeSpace)) WrError(ErrNum_OverRange);
       else
       {
         Word XORVal, Mask, RegBit;
 
-        ChkSpace(SegCode);
+        ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
         XORVal = (ProgCounter() ^ AdrWord) & ~0x7ff;
 
@@ -222,15 +219,15 @@ static void DecodeZERO(Word Index)
 {
   Word Size, Shift = (ActPC == SegCode) ? 1 : 0;
   Boolean ValOK;
+  tSymbolFlags Flags;
 
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown))
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags))
     {
       if (SetMaxCodeLen(Size << Shift)) WrError(ErrNum_CodeOverflow);
       else
@@ -264,27 +261,27 @@ static void DecodeBANKSEL(Word Index)
 /*--------------------------------------------------------------------------*/
 /* dynamic code table handling */
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddLit(char *NName, Word NCode)
+static void AddLit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeLit);
 }
 
-static void AddAri(char *NName, Word NCode, Word NDir)
+static void AddAri(const char *NName, Word NCode, Word NDir)
 {
   AddInstTable(InstTable, NName, NCode | (NDir << 15), DecodeAri);
 }
 
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddF(char *NName, Word NCode)
+static void AddF(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeF);
 }

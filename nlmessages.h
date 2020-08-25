@@ -27,5 +27,5 @@ extern void opencatalog(PMsgCat Catalog, const char *File, const char *Path, Lon
 
 extern char *getmessage(int Num);
 
-extern void nlmessages_init(char *File, char *Path, LongInt File_MsgId1, LongInt File_MsgId2);
+extern void nlmessages_init(const char *File, char *Path, LongInt File_MsgId1, LongInt File_MsgId2);
 #endif /* _NLMESSAGES_H */

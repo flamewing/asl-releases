@@ -28,7 +28,7 @@
 #define FileHeaderRRelocRec 0x84   /* relokatibler Datenrecord mit Symbolen */
 #define FileHeaderRelocInfo 0x85   /* Relokationsinformationen */
 
-enum
+typedef enum
 {
   SegNone  = 0,
   SegCode  = 1,
@@ -42,7 +42,7 @@ enum
   SegRData = 9,
   SegEEData = 10,
   PCMax    = SegEEData
-};
+} tAddrSpace;
 
 /* Definition der im Code liegenden, zu patchenden Typen: 
 

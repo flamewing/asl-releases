@@ -62,7 +62,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Word Class, Code, Mask;
 } Condition;
 
@@ -93,7 +93,7 @@ static Word LastOpCode;
 /*-------------------------------------------------------------------------*/
 /* Address Decoder */
 
-static char ShortConds[4][4] =
+static const char ShortConds[4][4] =
 {
   "EQ", "LT", "GT", "NEQ"
 };
@@ -106,7 +106,7 @@ static Boolean IsAcc(char *Asc)
 static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 {
 #define IndirCnt 16
-  static char *Patterns[IndirCnt] = /* leading asterisk is omitted since constant */
+  static const char Patterns[IndirCnt][9] = /* leading asterisk is omitted since constant */
   {
     "ARx",      "ARx-",     "ARx+",      "+ARx",
     "ARx-0B",   "ARx-0",    "ARx+0",     "ARx+0B",
@@ -158,7 +158,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
     for (z = 0; z < IndirCnt; z++)
     {
-      char *pPattern = Patterns[z], *pComp = pArg->Str + 1;
+      const char *pPattern = Patterns[z];
+      char *pComp = pArg->Str + 1;
 
       /* pattern comparison */
 
@@ -245,19 +246,20 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   if (Mask & MModMem)
   {
-    FirstPassUnknown = FALSE;
-    *AdrVals = EvalStrIntExpression(pArg, UInt16, &OK);
+    tSymbolFlags Flags;
+
+    *AdrVals = EvalStrIntExpressionWithFlags(pArg, UInt16, &OK, &Flags);
     if (OK)
     {
       if (Reg_CPL) /* short address rel. to SP? */
       {
         *AdrVals -= Reg_SP;
-        if ((!FirstPassUnknown) && (*AdrVals > 127))
+        if (!mFirstPassUnknown(Flags) && (*AdrVals > 127))
           WrError(ErrNum_InAccPage);
       }
       else         /* on DP page ? */
       {
-        if ((!FirstPassUnknown) && ((*AdrVals >> 7) != (Reg_DP)))
+        if (!mFirstPassUnknown(Flags) && ((*AdrVals >> 7) != (Reg_DP)))
           WrError(ErrNum_InAccPage);
       }
       AdrVals[0] &= 127;
@@ -527,10 +529,12 @@ static void DecodeADDSUB(Word Index)
 
         else
         {
-          Shift = EvalStrIntExpression(&ArgStr[2], SInt6, &OK);
+          tSymbolFlags Flags;
+
+          Shift = EvalStrIntExpressionWithFlags(&ArgStr[2], SInt6, &OK, &Flags);
           if (!OK)
             break;
-          if ((FirstPassUnknown) && (Shift > 16))
+          if (mFirstPassUnknown(Flags) && (Shift > 16))
             Shift &= 15;
           if (!ChkRange(Shift, -16 ,16))
             break;
@@ -654,11 +658,12 @@ static void DecodeADDSUB(Word Index)
 
           else
           {
-            FirstPassUnknown = False;
-            Shift = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
+            tSymbolFlags Flags;
+
+            Shift = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt5, &OK, &Flags);
             if (!OK)
               break;
-            if ((FirstPassUnknown) && (Shift > 16))
+            if (mFirstPassUnknown(Flags) && (Shift > 16))
               Shift &= 15;
             if (!ChkRange(Shift, 0 ,16))
               break;
@@ -984,8 +989,6 @@ static void DecodeMAC(Word Index)
 
 static void DecodeMACDP(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(3, 3));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (DecodeAdr(&ArgStr[3], MModAcc))
@@ -993,13 +996,15 @@ static void DecodeMACDP(Word Index)
     *WAsmCode = Index | (0[AdrVals] << 8);
     if (DecodeAdr(&ArgStr[1], MModMem))
     {
+      tEvalResult EvalResult;
+
       *WAsmCode |= *AdrVals;
       if (AdrCnt)
         WAsmCode[1] = AdrVals[1];
-      WAsmCode[1 + AdrCnt] = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
-      if (OK)
+      WAsmCode[1 + AdrCnt] = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(Index & 0x200 ? SegData : SegCode);
+        ChkSpace(Index & 0x200 ? SegData : SegCode, EvalResult.AddrSpaceMask);
         CodeLen = 2 + AdrCnt;
       }
     }
@@ -1008,8 +1013,6 @@ static void DecodeMACDP(Word Index)
 
 static void DecodeFIRS(Word Index)
 {
-  Boolean OK;
-
   (void)Index;
  
   if (!ChkArgCnt(3, 3));
@@ -1021,11 +1024,13 @@ static void DecodeFIRS(Word Index)
       if (DecodeAdr(&ArgStr[2], MModMem))
         if (MakeXY(AdrVals, TRUE))
         {
+          tEvalResult EvalResult;
+
           0[WAsmCode] |= *AdrVals;
-          WAsmCode[1] = EvalStrIntExpression(&ArgStr[3], UInt16, &OK);
-          if (OK)
+          WAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[3], UInt16, &EvalResult);
+          if (EvalResult.OK)
           {
-            ChkSpace(SegCode);
+            ChkSpace(SegCode, EvalResult.AddrSpaceMask);
             CodeLen = 2;
           }
         }
@@ -1389,9 +1394,10 @@ static void DecodeLog(Word Index)
             {
               if (((ArgCnt == 3) && (!IsAcc(ArgStr[2].Str))) || (ArgCnt == 4))
               {
-                FirstPassUnknown = False;
-                Shift = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
-                if (FirstPassUnknown)
+                tSymbolFlags Flags;
+
+                Shift = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt5, &OK, &Flags);
+                if (mFirstPassUnknown(Flags))
                   Shift &= 15;
                 OK = ChkRange(Shift, 0, 16);
               }
@@ -1471,17 +1477,17 @@ static void DecodeCMPR(Word Index)
 
 static void DecodePMAD(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (LastRep) WrError(ErrNum_NotRepeatable);
   else
   {
-    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+
+    WAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       0[WAsmCode] = Index;
       CodeLen = 2;
     }
@@ -1490,19 +1496,19 @@ static void DecodePMAD(Word Index)
 
 static void DecodeBANZ(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (LastRep) WrError(ErrNum_NotRepeatable);
   else if (DecodeAdr(&ArgStr[2], MModMem))
   {
+    tEvalResult EvalResult;
+
     if (CodeLen)
       WAsmCode[1] = 1[AdrVals];
-    WAsmCode[1 + CodeLen] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    WAsmCode[1 + CodeLen] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       0[WAsmCode] = Index | (*AdrVals);
       CodeLen = 2 + AdrCnt;
     }
@@ -1511,8 +1517,8 @@ static void DecodeBANZ(Word Index)
 
 static void DecodePMADCond(Word Index)
 {
-  Boolean OK;
   int index;
+  Boolean OK;
 
   if (!ChkArgCnt(2, ArgCntMax));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
@@ -1521,10 +1527,12 @@ static void DecodePMADCond(Word Index)
     WrStrErrorPos(OK ? ErrNum_UndefCond : ErrNum_IncompCond, &ArgStr[index]);
   else
   {
-    WAsmCode[1] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+
+    WAsmCode[1] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       0[WAsmCode] |= Index;
       CodeLen = 2;
     }
@@ -1533,18 +1541,16 @@ static void DecodePMADCond(Word Index)
 
 static void DecodeFPMAD(Word Index)
 {
-  Boolean OK;
-  LongWord Addr;
-
   if (!ChkArgCnt(1, 1));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (LastRep) WrError(ErrNum_NotRepeatable);
   else
   {
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt23, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongWord Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt23, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       0[WAsmCode] = Index | (Addr >> 16);
       1[WAsmCode] = Addr & 0xffff;
       CodeLen = 2;
@@ -1652,9 +1658,10 @@ static void DecodeIDLE(Word Index)
   else if (LastRep) WrError(ErrNum_NotRepeatable);
   else
   {
-    FirstPassUnknown = False;
-    *WAsmCode = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    *WAsmCode = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       *WAsmCode = 1;
     if ((OK) && (ChkRange(*WAsmCode, 1, 3)))
     {
@@ -1706,9 +1713,10 @@ static void DecodeXC(Word Index)
     WrStrErrorPos(OK ? ErrNum_UndefCond : ErrNum_IncompCond, &ArgStr[errindex]);
   else
   {
-    FirstPassUnknown = False;
-    errindex = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    errindex = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       errindex = 1;
     if ((OK) && (ChkRange(errindex, 1, 2)))
     {
@@ -1848,9 +1856,10 @@ static void DecodeLD(Word Index)
       }
       else
       {
-        FirstPassUnknown = 0;
-        Shift = EvalStrIntExpression(&ArgStr[2], SInt6, &OK);
-        if (FirstPassUnknown)
+        tSymbolFlags Flags;
+
+        Shift = EvalStrIntExpressionWithFlags(&ArgStr[2], SInt6, &OK, &Flags);
+        if (mFirstPassUnknown(Flags))
           Shift = 0;
         if (OK)
           OK = ChkRange(Shift, -16, 16);
@@ -2221,19 +2230,19 @@ static void DecodeStoreCC(Word Index)
 
 static void DecodeMVDabs(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (DecodeAdr(&ArgStr[1], MModMem))
   {
+    tEvalResult EvalResult;
+
     *WAsmCode = Index | *AdrVals;
     if (AdrCnt)
       1[WAsmCode] = 1[AdrVals];
-    WAsmCode[1 + AdrCnt] = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
-    if (OK)
+    WAsmCode[1 + AdrCnt] = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace((Index == 0x7100) ? SegData : SegCode);
+      ChkSpace((Index == 0x7100) ? SegData : SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 2 + AdrCnt;
     }
   }
@@ -2241,19 +2250,19 @@ static void DecodeMVDabs(Word Index)
 
 static void DecodeMVabsD(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else if (DecodeAdr(&ArgStr[2], MModMem))
   {
+    tEvalResult EvalResult;
+
     *WAsmCode = Index | *AdrVals;
     if (AdrCnt)
       1[WAsmCode] = 1[AdrVals];
-    WAsmCode[1 + AdrCnt] = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK)
+    WAsmCode[1 + AdrCnt] = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace((Index == 0x7000) ? SegData : SegCode);
+      ChkSpace((Index == 0x7000) ? SegData : SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 2 + AdrCnt;
     }
   }
@@ -2261,8 +2270,6 @@ static void DecodeMVabsD(Word Index)
 
 static void DecodeMVdmadmmr(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else
@@ -2273,11 +2280,13 @@ static void DecodeMVdmadmmr(Word Index)
     ForcePageZero = True;
     if (DecodeAdr(pArg2, MModMem))
     {
+      tEvalResult EvalResult;
+
       *WAsmCode = Index | *AdrVals;
-      WAsmCode[1] = EvalStrIntExpression(pArg1, UInt16, &OK);
-      if (OK)
+      WAsmCode[1] = EvalStrIntExpressionWithResult(pArg1, UInt16, &EvalResult);
+      if (EvalResult.OK)
       { 
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
         CodeLen = 2;
       }
     }
@@ -2286,20 +2295,19 @@ static void DecodeMVdmadmmr(Word Index)
 
 static Boolean GetReg(const tStrComp *pArg, Word *Res)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
 
-  FirstPassUnknown = False;
-  *Res = EvalStrIntExpression(pArg, UInt8, &OK);
-  if (OK)
+  *Res = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
+  if (EvalResult.OK)
   {
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(EvalResult.Flags))
       *Res = 0x10;
-    ChkSpace(SegData);
-    OK = ChkRange(*Res, 0x10, 0x1f);
-    if (OK)
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
+    EvalResult.OK = ChkRange(*Res, 0x10, 0x1f);
+    if (EvalResult.OK)
       *Res -= 0x10;
   }
-  return OK;
+  return EvalResult.OK;
 }
 
 static void DecodeMVMM(Word Index)
@@ -2318,8 +2326,6 @@ static void DecodeMVMM(Word Index)
 
 static void DecodePort(Word Index)
 {
-  Boolean OK;
-
   if (!ChkArgCnt(2, 2));
   else if (ThisPar) WrError(ErrNum_ParNotPossible);
   else
@@ -2329,13 +2335,15 @@ static void DecodePort(Word Index)
 
     if (DecodeAdr(pArg2, MModMem))
     {
+      tEvalResult EvalResult;
+
       *WAsmCode = Index | *AdrVals;
       if (AdrCnt)
         1[WAsmCode] = 1[AdrVals];
-      WAsmCode[1 + AdrCnt] = EvalStrIntExpression(pArg1, UInt16, &OK);
-      if (OK)
+      WAsmCode[1 + AdrCnt] = EvalStrIntExpressionWithResult(pArg1, UInt16, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         CodeLen = 2 + AdrCnt;
       }
     }
@@ -2349,7 +2357,7 @@ static Boolean DecodePseudo(void)
 {
   if (Memo("PORT"))
   {
-    CodeEquate(SegIO,0,65535);
+    CodeEquate(SegIO, 0, 65535);
     return True;
   }
 
@@ -2359,7 +2367,7 @@ static Boolean DecodePseudo(void)
 /*-------------------------------------------------------------------------*/
 /* Code Table Handling */
 
-static void AddFixed(char *Name, Word Code, Boolean IsRepeatable)
+static void AddFixed(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= FixedOrderCnt)
     exit(0);
@@ -2369,7 +2377,7 @@ static void AddFixed(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeFixed);
 }
 
-static void AddAcc(char *Name, Word Code, Boolean IsRepeatable)
+static void AddAcc(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= AccOrderCnt)
     exit(0);
@@ -2379,7 +2387,7 @@ static void AddAcc(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeAcc);
 }
 
-static void AddAcc2(char *Name, Word Code, Boolean IsRepeatable)
+static void AddAcc2(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= Acc2OrderCnt)
     exit(0);
@@ -2389,7 +2397,7 @@ static void AddAcc2(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeAcc2);
 }
 
-static void AddMem(char *Name, Word Code, Boolean IsRepeatable)
+static void AddMem(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= MemOrderCnt)
     exit(0);
@@ -2399,7 +2407,7 @@ static void AddMem(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeMem);
 }
 
-static void AddXY(char *Name, Word Code, Boolean IsRepeatable)
+static void AddXY(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= XYOrderCnt)
     exit(0);
@@ -2409,7 +2417,7 @@ static void AddXY(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeXY);
 }
 
-static void AddMemAcc(char *Name, Word Code, Boolean IsRepeatable)
+static void AddMemAcc(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= MemAccOrderCnt)
     exit(0);
@@ -2419,7 +2427,7 @@ static void AddMemAcc(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeMemAcc);
 }
 
-static void AddMemConst(char *Name, Word Code, Boolean IsRepeatable, Boolean Swap, IntType ConstType)
+static void AddMemConst(const char *Name, Word Code, Boolean IsRepeatable, Boolean Swap, IntType ConstType)
 {
   if (InstrZ >= MemConstOrderCnt)
     exit(0);
@@ -2431,7 +2439,7 @@ static void AddMemConst(char *Name, Word Code, Boolean IsRepeatable, Boolean Swa
   AddInstTable(InstTable, Name, InstrZ++, DecodeMemConst);
 }
 
-static void AddMac(char *Name, Word Code, Boolean IsRepeatable)
+static void AddMac(const char *Name, Word Code, Boolean IsRepeatable)
 {
   if (InstrZ >= MacOrderCnt)
     exit(0);
@@ -2441,7 +2449,7 @@ static void AddMac(char *Name, Word Code, Boolean IsRepeatable)
   AddInstTable(InstTable, Name, InstrZ++, DecodeMac);
 }
 
-static void AddCondition(char *NName, Word NClass, Word NCode, Word NMask)
+static void AddCondition(const char *NName, Word NClass, Word NCode, Word NMask)
 {
   if (InstrZ >= ConditionCnt)
     exit(0);

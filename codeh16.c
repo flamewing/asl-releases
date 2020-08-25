@@ -76,6 +76,11 @@ typedef enum
   eFormatF  /* no source-side format; used for MOV->MOVF conversion */
 } tFormat;
 
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(tFormat)
+#endif
+
 typedef struct
 {
   tAdrMode Mode;
@@ -91,9 +96,9 @@ typedef struct
 #define PREFIX_CRn 0x70
 #define PREFIX_PRn 0x74
 
-#define eSymbolSize5Bit -2  /* for shift cnt/bit pos arg */
-#define eSymbolSize4Bit -3  /* for bit pos arg */
-#define eSymbolSize3Bit -4  /* for bit pos arg */
+#define eSymbolSize5Bit ((tSymbolSize)-2)  /* for shift cnt/bit pos arg */
+#define eSymbolSize4Bit ((tSymbolSize)-3)  /* for bit pos arg */
+#define eSymbolSize3Bit ((tSymbolSize)-4)  /* for bit pos arg */
 
 typedef struct
 {
@@ -155,12 +160,12 @@ static Boolean ChkOpSize(tSymbolSize DefaultSize, Word Mask)
 
 static tFormat DecodeFormat(unsigned FormatMask)
 {
-  static const char *pFormats[] = { "G", "Q", "R", "RQ", NULL };
+  static const char Formats[][3] = { "G", "Q", "R", "RQ", "" };
   tFormat Result;
 
   FormatMask >>= 1;
-  for (Result = 0; pFormats[Result]; Result++, FormatMask >>= 1)
-    if ((FormatMask & 1) && !as_strcasecmp(FormatPart.Str, pFormats[Result]))
+  for (Result = (tFormat)0; *Formats[Result]; Result++, FormatMask >>= 1)
+    if ((FormatMask & 1) && !as_strcasecmp(FormatPart.Str, Formats[Result]))
       return Result + 1;
   return eFormatNone;
 }
@@ -299,7 +304,7 @@ static void ResetAdrComps(tAdrComps *pComps)
 
 static Boolean SplitOpSize(tStrComp *pArg, tSymbolSize *pSize)
 {
-  static const char *Suffixes[] = { ".B", ":8", ".W", ":16", ".L", ":32" };
+  static const char Suffixes[][4] = { ".B", ":8", ".W", ":16", ".L", ":32" };
   int l = strlen(pArg->Str), l2;
   unsigned z;
 
@@ -309,7 +314,7 @@ static Boolean SplitOpSize(tStrComp *pArg, tSymbolSize *pSize)
     if ((l > l2) && !as_strcasecmp(pArg->Str + l - l2, Suffixes[z]))
     {
       StrCompShorten(pArg, l2);
-      *pSize = z / 2;
+      *pSize = (tSymbolSize)(z / 2);
       return True;
     }
   }
@@ -324,7 +329,7 @@ static Boolean SplitOpSize(tStrComp *pArg, tSymbolSize *pSize)
  * \return True if a suffix was split off
  * ------------------------------------------------------------------------ */
 
-static const char *ScaleSuffixes[] = { "*1", "*2", "*4", "*8" };
+static const char ScaleSuffixes[][3] = { "*1", "*2", "*4", "*8" };
 
 static char SplitScale(tStrComp *pArg, Byte *pScale)
 {
@@ -503,7 +508,7 @@ static Boolean CheckSup(const tStrComp *pArg)
 
 typedef struct
 {
-  char *pName;
+  const char *pName;
   Byte Code;
   tSymbolSize Size;
 } tCReg;
@@ -697,15 +702,16 @@ static Boolean ChkSizePCRelDisplacement(LongInt *pAbsAddr, tSymbolSize SymbolSiz
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkSizePCRelBranch(const tStrComp *pArg, LongInt *pAbsAddr, tSymbolSize SymbolSize, LongInt DispAddr)
+ * \fn     ChkSizePCRelBranch(const tStrComp *pArg, LongInt *pAbsAddr, tSymbolSize SymbolSize, tSymbolFlags Flags, LongInt DispAddr)
  * \brief  same as ChkSizePCRel(), but use error messages appropriate for branches
  * \param  pAbsAddr (in) destination address of branch  (out) resulting displacement
  * \param  SymbolSize proposed displacement size
+ * \param  Flags symbol flags returned along with pAbsAddr
  * \param  DispAddr address of PC-relative displacement in code
  * \return True if displacement can be represented with this size and was computed
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkSizePCRelBranch(const tStrComp *pArg, LongInt *pAbsAddr, tSymbolSize SymbolSize, LongInt DispAddr)
+static Boolean ChkSizePCRelBranch(const tStrComp *pArg, LongInt *pAbsAddr, tSymbolSize SymbolSize, tSymbolFlags Flags, LongInt DispAddr)
 {
   Boolean OK;
 
@@ -713,11 +719,11 @@ static Boolean ChkSizePCRelBranch(const tStrComp *pArg, LongInt *pAbsAddr, tSymb
   {
     case eSymbolSize8Bit:
       *pAbsAddr -= DispAddr + 1;
-      OK = SymbolQuestionable || RangeCheck(*pAbsAddr, SInt8);
+      OK = mSymbolQuestionable(Flags) || RangeCheck(*pAbsAddr, SInt8);
       break;
     case eSymbolSize16Bit:
       *pAbsAddr -= DispAddr + 2;
-      OK = SymbolQuestionable || RangeCheck(*pAbsAddr, SInt16);
+      OK = mSymbolQuestionable(Flags) || RangeCheck(*pAbsAddr, SInt16);
       break;
     case eSymbolSize32Bit:
       *pAbsAddr -= DispAddr + 4;
@@ -1454,7 +1460,8 @@ static LongWord AssembleBitSymbol(Byte BitPos, tSymbolSize OpSize, LongWord Addr
 
 static Boolean DissectBitSymbol(LongWord BitSymbol, LongWord *pAddress, Byte *pBitPos, tSymbolSize *pOpSize)
 {
-  switch ((*pOpSize = (BitSymbol >> 30) & 3))
+  *pOpSize = (tSymbolSize)((BitSymbol >> 30) & 3);
+  switch (*pOpSize)
   {
     case eSymbolSize8Bit:
       *pAddress = (BitSymbol >> 3) & 0xfffffful;
@@ -1506,7 +1513,7 @@ static void DissectBit_H16(char *pDest, int DestSize, LargeWord Inp)
 
 static void ExpandH16Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  tSymbolSize OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
+  tSymbolSize OpSize = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
 
   if (!ChkRange(Address, 0, 0xfffffful)
@@ -1566,12 +1573,12 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop, tSymbolSize 
 
   if (Start == Stop)
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt32, &OK);
-    if (OK)
-      ChkSpace(SegBData);
-    return OK;
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt32, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
   }
 
   /* Register & bit position are given as separate arguments:
@@ -1689,7 +1696,7 @@ static Boolean PCDistOK(tAdrVals *pAdrVals, int Delta)
   /* extract displacement size Sd */
 
   DispSizeCode = (pAdrVals->Vals[1] >> 4) & 3;
-  DispSize = DispSizeCode - 1;
+  DispSize = (tSymbolSize)(DispSizeCode - 1);
 
   /* compute new displacement after correction */
 
@@ -1725,7 +1732,7 @@ static Boolean NegSigned8ValOK(tAdrVals *pAdrVals)
   DispSizeCode = pAdrVals->Vals[0] & 3;
   if (!DispSizeCode)
     return False;
-  DispSize = DispSizeCode - 1;
+  DispSize = (tSymbolSize)(DispSizeCode - 1);
 
   /* extract immediate value */
 
@@ -2028,19 +2035,19 @@ static void DecodeBranch(Word Code)
 {
   LongInt Addr;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (!ChkEmptyFormat()
    || !ChkArgCnt(1, 1))
     return;
 
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '@'), UInt24, &OK);
+  Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '@'), UInt24, &OK, &Flags);
   if (!OK)
     return;
 
   if (OpSize == eSymbolSizeUnknown)
     OpSize = DeduceSizePCRel(Addr, EProgCounter() + 1);
-  if (!ChkSizePCRelBranch(&ArgStr[1], &Addr, OpSize, EProgCounter() + 1))
+  if (!ChkSizePCRelBranch(&ArgStr[1], &Addr, OpSize, Flags, EProgCounter() + 1))
     return;
 
   BAsmCode[CodeLen++] = Code | OpSize;
@@ -2057,6 +2064,7 @@ static void DecodeBranchGen(Word Code)
 {
   LongInt Addr;
   Boolean OK;
+  tSymbolFlags Flags;
   tFormat Format;
 
   if (!ChkArgCnt(1, 1))
@@ -2085,14 +2093,13 @@ static void DecodeBranchGen(Word Code)
     }
   }
 
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '@'), UInt24, &OK);
+  Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '@'), UInt24, &OK, &Flags);
   if (!OK)
     return;
 
   if (OpSize == eSymbolSizeUnknown)
     OpSize = DeduceSizePCRel(Addr, EProgCounter() + 2);
-  if (!ChkSizePCRelBranch(&ArgStr[1], &Addr, OpSize, EProgCounter() + 2))
+  if (!ChkSizePCRelBranch(&ArgStr[1], &Addr, OpSize, Flags, EProgCounter() + 2))
     return;
 
   BAsmCode[CodeLen++] = 0xa4 | OpSize;
@@ -2203,6 +2210,7 @@ static void DecodeSCB(Word Code)
 {
   LongInt Addr;
   Boolean OK;
+  tSymbolFlags Flags;
   Byte Reg, Prefix;
 
   if (!ChkEmptyFormat()
@@ -2211,14 +2219,13 @@ static void DecodeSCB(Word Code)
 
   if (!DecodeReg(ArgStr[1].Str, &Reg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
 
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpressionOffs(&ArgStr[2], !!(*ArgStr[1].Str == '@'), UInt24, &OK);
+  Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], !!(*ArgStr[1].Str == '@'), UInt24, &OK, &Flags);
   if (!OK)
     return;
 
   if (OpSize == eSymbolSizeUnknown)
     OpSize = DeduceSizePCRel(Addr, EProgCounter() + 2);
-  if (!ChkSizePCRelBranch(&ArgStr[2], &Addr, OpSize, EProgCounter() + 2))
+  if (!ChkSizePCRelBranch(&ArgStr[2], &Addr, OpSize, Flags, EProgCounter() + 2))
     return;
 
   BAsmCode[CodeLen++] = 0xb4 | OpSize;
@@ -2982,17 +2989,11 @@ static void DeinitFields(void)
  * \brief  general entry point to parse machine instructions
  * ------------------------------------------------------------------------ */
 
-static void MakeCode_H16(void)
+static Boolean DecodeAttrPart_H16(void)
 {
   tStrComp SizePart;
-  ShortInt DOpSize;
-  char *p, EmptyStr[] = "";
-
-  CodeLen = 0; DontPrint = False;
-
-  /* zu ignorierendes */
-
-  if (Memo("")) return;
+  char *p;
+  static char EmptyStr[] = "";
 
   /* split off format and operand size */
 
@@ -3024,15 +3025,25 @@ static void MakeCode_H16(void)
       break;
   }
 
-  /* Attribut abarbeiten */
+  /* process operand size part of attribute */
 
-  if (!*SizePart.Str)
-    OpSize = eSymbolSizeUnknown;
-  else if (!DecodeMoto16AttrSizeStr(&SizePart, &DOpSize, False))
-    return;
-  else
-    OpSize = DOpSize;
+  if (*SizePart.Str)
+  {
+    if (!DecodeMoto16AttrSizeStr(&SizePart, &AttrPartOpSize, False))
+      return False;
+  }
+  return True;
+}
 
+static void MakeCode_H16(void)
+{
+  CodeLen = 0; DontPrint = False;
+
+  /* zu ignorierendes */
+
+  if (Memo("")) return;
+
+  OpSize = AttrPartOpSize;
   if (DecodeMoto16Pseudo(OpSize, True))
     return;
 
@@ -3085,6 +3096,7 @@ static void SwitchTo_H16(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xffffff;
 
+  DecodeAttrPart = DecodeAttrPart_H16;
   MakeCode = MakeCode_H16;
   IsDef = IsDef_H16;
   SwitchFrom = SwitchFrom_H16;

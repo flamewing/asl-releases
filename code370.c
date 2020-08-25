@@ -176,10 +176,10 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
     else
     {
       tStrComp Left, Right;
+      tSymbolFlags Flags;
 
       StrCompSplitRef(&Left, &Right, &Arg, p);
-      FirstPassUnknown = False;
-      HVal = EvalStrIntExpression(&Left, Int16, &OK);
+      HVal = EvalStrIntExpressionWithFlags(&Left, Int16, &OK, &Flags);
       if (OK)
       {
         *p = '(';
@@ -192,7 +192,7 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
         }
         else
         {
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(Flags))
             HVal &= 127;
           if (ChkRange(HVal, -128, 127))
           {
@@ -256,11 +256,11 @@ static void DecodeAdrRel(const tStrComp *pArg, Word Mask, Boolean AddrRel)
   else
   {
     tStrComp Left, Right;
+    tSymbolFlags Flags;
 
     StrCompSplitRef(&Left, &Right, pArg, p);
-    FirstPassUnknown = False;
-    HVal = EvalStrIntExpression(&Left, Int16, &OK);
-    if (FirstPassUnknown)
+    HVal = EvalStrIntExpressionWithFlags(&Left, Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       HVal &= 0x7f;
     if (OK)
     {
@@ -381,11 +381,12 @@ static Boolean DecodeBitExpr(int Start, int Stop, LongWord *pResult)
     }
     else
     {
-      FirstPassUnknown = False;
-      Addr = EvalStrIntExpression(&ArgStr[Stop], UInt16, &OK);
+      tSymbolFlags Flags;
+
+      Addr = EvalStrIntExpressionWithFlags(&ArgStr[Stop], UInt16, &OK, &Flags);
       if (!OK)
         return OK;
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         Addr &= 0xff;
       if (Addr & 0xef00) /* 00h...0ffh, 1000h...10ffh allowed */
       {
@@ -665,11 +666,12 @@ static void DecodeRel8(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 2);
+    tSymbolFlags Flags;
+    Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags) - (EProgCounter() + 2);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 2;
@@ -924,11 +926,12 @@ static void DecodeALU2(Word Code)
     if ((CodeLen != 0) && (Rela))
     {
       Boolean OK;
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[3], UInt16, &OK) - (EProgCounter() + CodeLen + 1);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt16, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
 
       if (!OK)
         CodeLen = 0;
-      else if ((!SymbolQuestionable) && ((AdrInt > 127) || (AdrInt < -128)))
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(ErrNum_JmpDistTooBig);
         CodeLen = 0;
@@ -1014,11 +1017,12 @@ static void DecodeABReg(Word Code)
     if ((IsDJNZ) && (CodeLen != 0))
     {
       Boolean OK;
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK) - (EProgCounter() + CodeLen + 1);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], Int16, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
 
       if (!OK)
         CodeLen = 0;
-      else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(ErrNum_JmpDistTooBig);
         CodeLen = 0;
@@ -1062,11 +1066,12 @@ static void DecodeBit(Word Code)
     }
     if ((CodeLen != 0) && Rela)
     {
-      Integer AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + CodeLen + 1);
+      tSymbolFlags Flags;
+      Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags) - (EProgCounter() + CodeLen + 1);
 
       if (!OK)
         CodeLen = 0;
-      else if ((!FirstPassUnknown) && ((AdrInt > 127) || (AdrInt < -128)))
+      else if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128)))
       {
         WrError(ErrNum_JmpDistTooBig);
         CodeLen = 0;
@@ -1175,37 +1180,37 @@ static void DecodeTST(Word Code)
 
 /****************************************************************************/
 
-static void InitFixed(char *NName, Word NCode)
+static void InitFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void InitRel8(char *NName, Word NCode)
+static void InitRel8(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel8);
 }
 
-static void InitALU1(char *NName, Word NCode)
+static void InitALU1(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU1);
 }
 
-static void InitALU2(char *NName, Word NCode)
+static void InitALU2(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU2);
 }
 
-static void InitJmp(char *NName, Word NCode)
+static void InitJmp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }
 
-static void InitABReg(char *NName, Word NCode)
+static void InitABReg(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeABReg);
 }
 
-static void InitBit(char *NName, Word NCode)
+static void InitBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }

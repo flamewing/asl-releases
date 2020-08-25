@@ -132,6 +132,7 @@ static IntType CodeIntType, DataIntType;
 static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
 {
   Boolean OK;
+  tSymbolFlags Flags;
 
   AdrMode = ModNone;
 
@@ -152,11 +153,10 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
     goto AdrFound;
   }
 
-  FirstPassUnknown = False;
-  AdrVal = EvalStrIntExpression(pArg, DataIntType, &OK);
+  AdrVal = EvalStrIntExpressionWithFlags(pArg, DataIntType, &OK, &Flags);
   if (OK)
   {
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(Flags))
       AdrVal &= 15;
 
     if (AdrVal < 16)
@@ -387,11 +387,12 @@ static void DecodeJMP(Word Code)
   else
   {
     Boolean OK;
+    tSymbolFlags Flags;
 
-    WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
+    WAsmCode[0] = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeIntType, &OK, &Flags);
     if (OK)
     {
-      if (FirstPassUnknown && (WAsmCode[0] >= SegLimits[SegCode]))
+      if (mFirstPassUnknown(Flags) && (WAsmCode[0] >= SegLimits[SegCode]))
         WAsmCode[0] = SegLimits[SegCode];
       if (ChkRange(WAsmCode[0], 0, SegLimits[SegCode]))
       {
@@ -448,11 +449,12 @@ static void DecodeRel(Word Index)
    && (ChkExactCPUMask(pOrder->MinusCPUMask | pOrder->PlusCPUMask, CPU5054) >= 0))
   {
     Boolean OK;
-    Integer Distance = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK) - (EProgCounter() + 1);
+    tSymbolFlags Flags;
+    Integer Distance = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeIntType, &OK, &Flags) - (EProgCounter() + 1);
     Integer MinDist = AllowMinus ? -32 : 0,
             MaxDist = AllowPlus ? 31 : -1;
 
-    if (((Distance < MinDist) || (Distance > MaxDist)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+    if (((Distance < MinDist) || (Distance > MaxDist)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
     else
     {
       if (Distance >= 0)

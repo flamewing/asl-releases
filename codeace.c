@@ -464,14 +464,16 @@ static void DecodeJP(Word Index)
 {
   LongInt Dist;
   Boolean OK;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    Dist = EvalStrIntExpression(&ArgStr[1], UInt12, &OK) - (EProgCounter() + 1);
+    Dist = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt12, &OK, &Flags) - (EProgCounter() + 1);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((Dist > 31) || (Dist < -31))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((Dist > 31) || (Dist < -31))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = (Dist >= 0) ? 0xe0 + Dist : 0xc0 - Dist;
@@ -612,12 +614,12 @@ static void DecodeSFR(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddAri(char *NName, Byte NImm, Byte NDir, Byte NInd, Byte NDisp)
+static void AddAri(const char *NName, Byte NImm, Byte NDir, Byte NInd, Byte NDisp)
 {
   if (InstrZ >= AriOrderCnt) exit(255);
   AriOrders[InstrZ].ImmCode = NImm;
@@ -627,7 +629,7 @@ static void AddAri(char *NName, Byte NImm, Byte NDir, Byte NInd, Byte NDisp)
   AddInstTable(InstTable, NName, InstrZ++, DecodeAri);
 }
 
-static void AddSing(char *NName, Byte NAcc, Byte NX, Byte NDir)
+static void AddSing(const char *NName, Byte NAcc, Byte NX, Byte NDir)
 {
   if (InstrZ >= SingOrderCnt) exit(255);
   SingOrders[InstrZ].AccCode = NAcc;
@@ -636,7 +638,7 @@ static void AddSing(char *NName, Byte NAcc, Byte NX, Byte NDir)
   AddInstTable(InstTable, NName, InstrZ++, DecodeSing);
 }
 
-static void AddBit(char *NName, Byte NAcc, Byte NIndX, Byte NDir)
+static void AddBit(const char *NName, Byte NAcc, Byte NIndX, Byte NDir)
 {
   if (InstrZ >= BitOrderCnt) exit(255);
   BitOrders[InstrZ].AccCode = NAcc;

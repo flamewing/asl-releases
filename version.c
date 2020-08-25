@@ -11,18 +11,18 @@
 #include "stdinc.h"
 #include <string.h>
 
-char *Version = "1.42 Beta [Bld 172]";
-char *DebVersion = "1.42bld172-1";
+const char *Version = "1.42 Beta [Bld 173]";
+const char *DebVersion = "1.42bld173-1";
 LongInt VerNo = 0x142f;
 
-char *InfoMessCopyright = "(C) 1992,2020 Alfred Arnold";
+const char *InfoMessCopyright = "(C) 1992,2020 Alfred Arnold";
 
 LongInt Magic = 0x12372c46;
 
 void version_init(void)
 {
   unsigned int z;
-  char *CMess = InfoMessCopyright;
+  const char *CMess = InfoMessCopyright;
   LongWord XORVal;
 
   for (z = 0; z < strlen(CMess); z++)

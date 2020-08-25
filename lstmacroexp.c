@@ -31,9 +31,11 @@ static tLstMacroExp LstMacroExp;
 void SetLstMacroExp(tLstMacroExp NewLstMacroExp)
 {
   tStrComp TmpComp;
+  String TmpCompStr;
+  StrCompMkTemp(&TmpComp, TmpCompStr);
 
   LstMacroExp = NewLstMacroExp;
-  StrCompMkTemp(&TmpComp, LstMacroExpName); EnterIntSymbol(&TmpComp, NewLstMacroExp, 0, True);
+  strmaxcpy(TmpCompStr, LstMacroExpName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NewLstMacroExp, 0, True);
   if (LstMacroExp == eLstMacroExpAll)
     strcpy(ListLine, "ALL");
   else if (LstMacroExp == eLstMacroExpNone)
@@ -190,9 +192,9 @@ tLstMacroExp ApplyLstMacroExpMod(tLstMacroExp Src, const tLstMacroExpMod *pLstMa
   for (z = 0; z < pLstMacroExpMod->Count; z++)
   {
     if (pLstMacroExpMod->Modifiers[z] & MODIFIER_CLR)
-      Src &= ~pLstMacroExpMod->Modifiers[z] & eLstMacroExpAll;
+      Src &= ~((tLstMacroExp)pLstMacroExpMod->Modifiers[z] & eLstMacroExpAll);
     else
-      Src |= pLstMacroExpMod->Modifiers[z];
+      Src |= (tLstMacroExp)pLstMacroExpMod->Modifiers[z];
   }
   return Src;
 }

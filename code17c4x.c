@@ -62,11 +62,12 @@ static void DecodeAri(Word Code)
   Code &= 0x7fff;
   if (ChkArgCnt(1, 2))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int8, &EvalResult);
+
+    if (EvalResult.OK)
     {
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
       WAsmCode[0] = Code + (AdrWord & 0xff);
       if (ArgCnt == 1)
       {
@@ -82,8 +83,8 @@ static void DecodeAri(Word Code)
       }
       else
       {
-        AdrWord = EvalStrIntExpression(&ArgStr[2], UInt1, &OK);
-        if (OK)
+        AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt1, &EvalResult);
+        if (EvalResult.OK)
         {
           CodeLen = 1;
           WAsmCode[0] += (AdrWord << 8);
@@ -97,16 +98,16 @@ static void DecodeBit(Word Code)
 {
   if (ChkArgCnt(2, 2))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[2], UInt3, &EvalResult);
+    if (EvalResult.OK)
     {
-      WAsmCode[0] = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-       if (OK)
+      WAsmCode[0] = EvalStrIntExpressionWithResult(&ArgStr[1], Int8, &EvalResult);
+       if (EvalResult.OK)
        {
          CodeLen = 1;
          WAsmCode[0] += Code + (AdrWord << 8);
-         ChkSpace(SegData);
+         ChkSpace(SegData, EvalResult.AddrSpaceMask);
        }
     }
   }
@@ -116,13 +117,13 @@ static void DecodeF(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word AdrWord = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int8, &EvalResult);
+    if (EvalResult.OK)
     {
       CodeLen = 1;
       WAsmCode[0] = Code + AdrWord;
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -199,10 +200,10 @@ static void DecodeCALL_GOTO(Word Code)
   {
     Boolean OK;
     Word AdrWord;
+    tSymbolFlags Flags;    
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (OK && ChkSamePage(ProgCounter(), AdrWord, 13))
+    AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
+    if (OK && ChkSamePage(ProgCounter(), AdrWord, 13, Flags))
     {
       WAsmCode[0] = Code + (AdrWord & 0x1fff);
       CodeLen = 1;
@@ -247,15 +248,15 @@ static void DecodeZERO(Word Code)
 {
   Word Size;
   Boolean ValOK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    Size = EvalStrIntExpression(&ArgStr[1], Int16, &ValOK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-    if ((ValOK) && (!FirstPassUnknown))
+    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    if (ValOK && !mFirstPassUnknown(Flags))
     {
       if (SetMaxCodeLen(Size << 1)) WrError(ErrNum_CodeOverflow);
       else
@@ -269,27 +270,27 @@ static void DecodeZERO(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddLitt(char *NName, Word NCode)
+static void AddLitt(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeLitt);
 }
 
-static void AddAri(char *NName, Word NDef, Word NCode)
+static void AddAri(const char *NName, Word NDef, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode | (NDef << 15), DecodeAri);
 }
 
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddF(char *NName, Word NCode)
+static void AddF(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeF);
 }

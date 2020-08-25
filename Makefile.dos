@@ -4,7 +4,7 @@ CURRDIR=.\\
 RM=del
 OBLANK=
 
-ALLFLAGS = $(CFLAGS) -DINCDIR="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
+ALLFLAGS = $(TARG_CFLAGS) -DINCDIR="$(INCDIR)" -DLIBDIR="$(LIBDIR)"
 
 !include makedefs.files
 

@@ -89,11 +89,11 @@ static Byte StackRegMasks[StackRegCnt] =
   0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x08, 0x40, 0x06
 };
 
-static char *FlagChars = "CVZNIHFE";
+static const char FlagChars[] = "CVZNIHFE";
 
 static ShortInt AdrMode;
 static Byte AdrVals[5];
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 static Boolean ExtFlag;
 static LongInt DPRValue;
 
@@ -217,6 +217,9 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx, unsigned OpcodeLen)
         AdrVals[0] = EvalStrIntExpressionOffs(pStartArg, 1, Int8, &OK);
         if (OK)
           AdrCnt = 1;
+        break;
+      default:
+        OK = False;
         break;
     }
     if (OK)
@@ -406,8 +409,10 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx, unsigned OpcodeLen)
     Offset = ChkZero(pStartArg->Str, &ZeroMode);
     if (ZeroMode > 1)
     {
-      AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int8, &OK);
-      if ((FirstPassUnknown) && (ZeroMode == 3))
+      tSymbolFlags Flags;
+
+      AdrInt = EvalStrIntExpressionOffsWithFlags(pStartArg, Offset, Int8, &OK, &Flags);
+      if (mFirstPassUnknown(Flags) && (ZeroMode == 3))
         AdrInt &= 0x0f;
     }
     else
@@ -548,10 +553,11 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx, unsigned OpcodeLen)
 
   if (AdrArgCnt == 1)
   {
+    tSymbolFlags Flags;
+
     Offset = ChkZero(pStartArg->Str, &ZeroMode);
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
-    if ((FirstPassUnknown) && (ZeroMode == 2))
+    AdrInt = EvalStrIntExpressionOffsWithFlags(pStartArg, Offset, Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags) && (ZeroMode == 2))
       AdrInt = (AdrInt & 0xff) | (DPRValue << 8);
 
     if (OK)
@@ -598,11 +604,11 @@ static void DecodeAdr(int ArgStartIdx, int ArgEndIdx, unsigned OpcodeLen)
 static Boolean CodeCPUReg(char *Asc, Byte *Erg)
 {
 #define RegCnt (sizeof(RegNames) / sizeof(*RegNames))
-  static char *RegNames[] =
+  static const char RegNames[][4] =
   {
     "D", "X", "Y", "U", "S", "SP", "PC", "W", "V", "A", "B", "CCR", "DPR", "CC", "DP", "Z", "E", "F"
   };
-  static Byte RegVals[RegCnt] =
+  static const Byte RegVals[RegCnt] =
   {
     0  , 1  , 2  , 3  , 4  , 4   , 5   , 6  , 7  , 8  , 9  , 10   , 11   , 10  , 11  , 13 , 14 , 15
    };
@@ -702,11 +708,11 @@ static void DecodeSWI(Word Code)
   else if (ChkArgCnt(1, 1))
   {
     Boolean OK;
+    tSymbolFlags Flags;
     Byte Num;
 
-    FirstPassUnknown = False;
-    Num = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
-    if (OK && FirstPassUnknown && (Num < 2))
+    Num = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
+    if (OK && mFirstPassUnknown(Flags) && (Num < 2))
       Num = 2;
     if (OK && ChkRange(Num, 2, 3))
     {
@@ -727,12 +733,13 @@ static void DecodeRel(Word Index)
   if (ChkArgCnt(1, 1))
   {
     Boolean ExtFlag = (LongFlag) && (Hi(pOrder->Code16) != 0), OK;
-    Integer AdrInt = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
+    tSymbolFlags Flags;
+    Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
 
     if (OK)
     {
       AdrInt -= EProgCounter() + 2 + Ord(LongFlag) + Ord(ExtFlag);
-      if ((!SymbolQuestionable) && (!LongFlag) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && !LongFlag && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 1 + Ord(ExtFlag);
@@ -773,7 +780,7 @@ static void DecodeALU(Word Index)
   if (ChkArgCnt(1, 2)
    && ChkMinCPU(pOrder->MinCPU))
   {
-    OpSize = pOrder->Op16;
+    OpSize = pOrder->Op16 ? eSymbolSize16Bit : eSymbolSize8Bit;
     DecodeAdr(1, ArgCnt, 1 + !!Hi(pOrder->Code));
     if (AdrMode != ModNone)
     {
@@ -855,7 +862,7 @@ static void DecodeFlag(Word Index)
 {
   const FlagOrder *pOrder = FlagOrders + Index;
   Boolean OK;
-  char *p;
+  const char *p;
   int z2, z3;
 
   if (ChkArgCnt(1, ArgCntMax))
@@ -1142,7 +1149,7 @@ static void DecodeBITMD_LDMD(Word Code)
 /*-------------------------------------------------------------------------*/
 /* Erzeugung/Aufloesung Codetabellen */
 
-static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
+static void AddFixed(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -1150,7 +1157,7 @@ static void AddFixed(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddRel(char *NName, Word NCode8, Word NCode16)
+static void AddRel(const char *NName, Word NCode8, Word NCode16)
 {
   char LongName[30];
 
@@ -1163,7 +1170,7 @@ static void AddRel(char *NName, Word NCode8, Word NCode16)
   InstrZ++;
 }
 
-static void AddALU(char *NName, Word NCode, Byte NSize, Boolean NImm, CPUVar NCPU)
+static void AddALU(const char *NName, Word NCode, Byte NSize, Boolean NImm, CPUVar NCPU)
 {
   if (InstrZ >= ALUOrderCnt) exit(255);
   ALUOrders[InstrZ].Code = NCode;
@@ -1173,7 +1180,7 @@ static void AddALU(char *NName, Word NCode, Byte NSize, Boolean NImm, CPUVar NCP
   AddInstTable(InstTable, NName, InstrZ++, DecodeALU);
 }
 
-static void AddALU2(char *NName)
+static void AddALU2(const char *NName)
 {
   char RName[30];
 
@@ -1183,7 +1190,7 @@ static void AddALU2(char *NName)
   InstrZ++;
 }
 
-static void AddRMW(char *NName, Word NCode, CPUVar NCPU)
+static void AddRMW(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= RMWOrderCnt) exit(255);
   RMWOrders[InstrZ].Code = NCode;
@@ -1191,7 +1198,7 @@ static void AddRMW(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRMW);
 }
 
-static void AddFlag(char *NName, Word NCode, Boolean NInv, CPUVar NCPU)
+static void AddFlag(const char *NName, Word NCode, Boolean NInv, CPUVar NCPU)
 {
   if (InstrZ >= FlagOrderCnt) exit(255);
   FlagOrders[InstrZ].Code = NCode;
@@ -1200,7 +1207,7 @@ static void AddFlag(char *NName, Word NCode, Boolean NInv, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFlag);
 }
 
-static void AddLEA(char *NName, Word NCode, CPUVar NCPU)
+static void AddLEA(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= LEAOrderCnt) exit(255);
   LEAOrders[InstrZ].Code = NCode;
@@ -1208,7 +1215,7 @@ static void AddLEA(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeLEA);
 }
 
-static void AddImm(char *NName, Word NCode, CPUVar NCPU)
+static void AddImm(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= ImmOrderCnt) exit(255);
   ImmOrders[InstrZ].Code = NCode;
@@ -1216,7 +1223,7 @@ static void AddImm(char *NName, Word NCode, CPUVar NCPU)
   AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
 }
 
-static void AddStack(char *NName, Word NCode, CPUVar NCPU)
+static void AddStack(const char *NName, Word NCode, CPUVar NCPU)
 {
   if (InstrZ >= StackOrderCnt) exit(255);
   StackOrders[InstrZ].Code = NCode;
@@ -1436,17 +1443,19 @@ static void DeinitFields(void)
 
 /*-------------------------------------------------------------------------*/
 
+static Boolean DecodeAttrPart_6809(void)
+{
+  /* deduce operand size No size is zero-length string -> '\0' */
+
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
+
 static void MakeCode_6809(void)
 {
   CodeLen = 0;
   DontPrint = False;
-  OpSize = eSymbolSize8Bit;
+  OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSize8Bit;
   ExtFlag = False;
-
-  /* deduce operand size No size is zero-length string -> '\0' */
-
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
 
   /* zu ignorierendes */
 
@@ -1502,6 +1511,7 @@ static void SwitchTo_6809(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xffff;
 
+  DecodeAttrPart = DecodeAttrPart_6809;
   MakeCode = MakeCode_6809;
   IsDef = IsDef_6809;
 

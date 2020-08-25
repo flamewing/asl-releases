@@ -33,7 +33,7 @@
 
 typedef struct
 {
-  ShortInt Size;
+  tSymbolSize Size;
   Word Code, ExtCode;
   Byte AdrMask, ExtShift;
 } GenOrder;
@@ -69,7 +69,7 @@ enum
 #define MModDisp20 MModDisp16
 #define MModAbs20 MModAbs
 
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 static ShortInt AdrMode;
 static Byte AdrPart;
 static Byte AdrVals[4];
@@ -78,7 +78,7 @@ static LongInt Reg_EK;
 
 static GenOrder *GenOrders;
 static EmuOrder *EmuOrders;
-static char **Regs;
+static const char **Regs;
 
 static CPUVar CPU6816;
 
@@ -186,6 +186,8 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask)
           AdrCnt = 4;
           AdrMode = ModImm;
         }
+        break;
+      default:
         break;
     }
     goto chk;
@@ -317,15 +319,16 @@ static void DecodeEmu(Word Index)
 static void DecodeRel(Word Code)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrLong;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(ErrNum_NotAligned);
     else if (Code & 0x8000)
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = 0x37;
@@ -337,7 +340,7 @@ static void DecodeRel(Word Code)
     }
     else
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = 0xb0 + Lo(Code);
@@ -351,13 +354,14 @@ static void DecodeRel(Word Code)
 static void DecodeLRel(Word Code)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrLong;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(ErrNum_NotAligned);
-    else if ((!SymbolQuestionable) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
+    else if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
     else
     {
       BAsmCode[0] = Hi(Code);
@@ -697,6 +701,7 @@ static void DecodeBit16(Word Index)
 static void DecodeBrBit(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrLong;
 
   if (ChkArgCnt(3, 4))
@@ -705,10 +710,9 @@ static void DecodeBrBit(Word Index)
     if (AdrMode == ModImm)
     {
       BAsmCode[1] = AdrVals[0];
-      AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], UInt20, &OK) - EProgCounter() - 6;
+      AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt20, &OK, &Flags) - EProgCounter() - 6;
       if (OK)
       {
-        OK = SymbolQuestionable;
         DecodeAdr(1, ArgCnt - 2, False, MModDisp8 | MModDisp16 | MModAbs);
         switch (AdrMode)
         {
@@ -720,7 +724,7 @@ static void DecodeBrBit(Word Index)
               BAsmCode[3] = AdrLong & 0xff;
               CodeLen = 4;
             }
-            else if ((!OK) && ((AdrLong <- 0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
+            else if (!mSymbolQuestionable(Flags) && ((AdrLong <- 0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
             else
             {
               BAsmCode[0] = 0x0a + AdrPart + Index;
@@ -732,7 +736,7 @@ static void DecodeBrBit(Word Index)
             }
             break;
           case ModDisp16:
-            if ((!OK) && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
+            if (!mSymbolQuestionable(Flags) && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
             else
             {
               BAsmCode[0] = 0x0a + AdrPart + Index;
@@ -743,7 +747,7 @@ static void DecodeBrBit(Word Index)
             }
             break;
           case ModAbs:
-            if ((!OK) && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
+            if (!mSymbolQuestionable(Flags) && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) WrError(ErrNum_JmpDistTooBig);
             else
             {
               BAsmCode[0] = 0x3a | Index;
@@ -785,15 +789,16 @@ static void DecodeJmpJsr(Word Index)
 static void DecodeBsr(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrLong;
 
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    AdrLong = EvalStrIntExpression(&ArgStr[1], UInt24, &OK) - EProgCounter() - 6;
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags) - EProgCounter() - 6;
     if (AdrLong & 1) WrError(ErrNum_NotAligned);
-    else if ((!SymbolQuestionable) & ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) WrError(ErrNum_JmpDistTooBig);
+    else if (!mSymbolQuestionable(Flags) & ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) WrError(ErrNum_JmpDistTooBig);
     else
     {
       BAsmCode[0] = 0x36;
@@ -805,22 +810,22 @@ static void DecodeBsr(Word Index)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddRel(char *NName, Word NCode)
+static void AddRel(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
 
-static void AddLRel(char *NName, Word NCode)
+static void AddLRel(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeLRel);
 }
 
-static void AddGen(char *NName, ShortInt NSize, Word NCode, Word NExtCode, Byte NShift, Byte NMask)
+static void AddGen(const char *NName, tSymbolSize NSize, Word NCode, Word NExtCode, Byte NShift, Byte NMask)
 {
   if (InstrZ >= GenOrderCnt) exit(255);
   GenOrders[InstrZ].Code = NCode;
@@ -831,22 +836,22 @@ static void AddGen(char *NName, ShortInt NSize, Word NCode, Word NExtCode, Byte 
   AddInstTable(InstTable, NName, InstrZ++, DecodeGen);
 }
 
-static void AddAux(char *NName, Word NCode)
+static void AddAux(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAux);
 }
 
-static void AddImm(char *NName, Word NCode)
+static void AddImm(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm);
 }
 
-static void AddExt(char *NName, Word NCode)
+static void AddExt(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeExt);
 }
 
-static void AddEmu(char *NName, Word NCode1, Word NCode2)
+static void AddEmu(const char *NName, Word NCode1, Word NCode2)
 {
   if (InstrZ >= EmuOrderCnt) exit(255);
   EmuOrders[InstrZ].Code1 = NCode1;
@@ -945,72 +950,72 @@ static void InitFields(void)
   AddLRel("LBEV", 0x3791); AddLRel("LBMV", 0x3790); AddLRel("LBSR", 0x27f9);
 
   GenOrders = (GenOrder *) malloc(sizeof(GenOrder) * GenOrderCnt); InstrZ = 0;
-  AddGen("ADCA", 0, 0x43, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADCB", 0, 0xc3, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADCD", 1, 0x83, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADCE", 1, 0x03, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("ADDA", 0, 0x41, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADDB", 0, 0xc1, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADDD", 1, 0x81,   0xfc, 0x20, MModDisp8 | MModImm | MModImmExt | MModDisp16 | MModAbs | MModDispE);
-  AddGen("ADDE", 1, 0x01,   0x7c, 0x20,             MModImm | MModImmExt | MModDisp16 | MModAbs            );
-  AddGen("ANDA", 0, 0x46, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ANDB", 0, 0xc6, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ANDD", 1, 0x86, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ANDE", 1, 0x06, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("ASL" , 0, 0x04, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("ASLW", 0, 0x04, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("LSL" , 0, 0x04, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("LSLW", 0, 0x04, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("ASR" , 0, 0x0d, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("ASRW", 0, 0x0d, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("BITA", 0, 0x49, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("BITB", 0, 0xc9, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("CLR" , 0, 0x05, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("CLRW", 0, 0x05, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("CMPA", 0, 0x48, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("CMPB", 0, 0xc8, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("COM" , 0, 0x00, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("COMW", 0, 0x00, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("CPD" , 1, 0x88, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("CPE" , 1, 0x08, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("DEC" , 0, 0x01, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("DECW", 0, 0x01, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("EORA", 0, 0x44, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("EORB", 0, 0xc4, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("EORD", 1, 0x84, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("EORE", 1, 0x04, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("INC" , 0, 0x03, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("INCW", 0, 0x03, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("LDAA", 0, 0x45, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("LDAB", 0, 0xc5, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("LDD" , 1, 0x85, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("LDE" , 1, 0x05, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("LSR" , 0, 0x0f, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("LSRW", 0, 0x0f, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("NEG" , 0, 0x02, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("NEGW", 0, 0x02, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("ORAA", 0, 0x47, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ORAB", 0, 0xc7, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ORD" , 1, 0x87, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("ORE" , 1, 0x07, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("ROL" , 0, 0x0c, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("ROLW", 0, 0x0c, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("ROR" , 0, 0x0e, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("RORW", 0, 0x0e, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
-  AddGen("SBCA", 0, 0x42, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SBCB", 0, 0xc2, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SBCD", 1, 0x82, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SBCE", 1, 0x02, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("STAA", 0, 0x4a, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
-  AddGen("STAB", 0, 0xca, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
-  AddGen("STD" , 1, 0x8a, 0xffff, 0x20, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
-  AddGen("STE" , 1, 0x0a, 0xffff, 0x20,                                    MModDisp16 | MModAbs            );
-  AddGen("SUBA", 0, 0x40, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SUBB", 0, 0xc0, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SUBD", 1, 0x80, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
-  AddGen("SUBE", 1, 0x00, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
-  AddGen("TST" , 0, 0x06, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
-  AddGen("TSTW", 0, 0x06, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("ADCA", eSymbolSize8Bit , 0x43, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADCB", eSymbolSize8Bit , 0xc3, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADCD", eSymbolSize16Bit, 0x83, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADCE", eSymbolSize16Bit, 0x03, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("ADDA", eSymbolSize8Bit , 0x41, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADDB", eSymbolSize8Bit , 0xc1, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADDD", eSymbolSize16Bit, 0x81,   0xfc, 0x20, MModDisp8 | MModImm | MModImmExt | MModDisp16 | MModAbs | MModDispE);
+  AddGen("ADDE", eSymbolSize16Bit, 0x01,   0x7c, 0x20,             MModImm | MModImmExt | MModDisp16 | MModAbs            );
+  AddGen("ANDA", eSymbolSize8Bit , 0x46, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ANDB", eSymbolSize8Bit , 0xc6, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ANDD", eSymbolSize16Bit, 0x86, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ANDE", eSymbolSize16Bit, 0x06, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("ASL" , eSymbolSize8Bit , 0x04, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("ASLW", eSymbolSize8Bit , 0x04, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("LSL" , eSymbolSize8Bit , 0x04, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("LSLW", eSymbolSize8Bit , 0x04, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("ASR" , eSymbolSize8Bit , 0x0d, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("ASRW", eSymbolSize8Bit , 0x0d, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("BITA", eSymbolSize8Bit , 0x49, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("BITB", eSymbolSize8Bit , 0xc9, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("CLR" , eSymbolSize8Bit , 0x05, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("CLRW", eSymbolSize8Bit , 0x05, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("CMPA", eSymbolSize8Bit , 0x48, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("CMPB", eSymbolSize8Bit , 0xc8, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("COM" , eSymbolSize8Bit , 0x00, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("COMW", eSymbolSize8Bit , 0x00, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("CPD" , eSymbolSize16Bit, 0x88, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("CPE" , eSymbolSize16Bit, 0x08, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("DEC" , eSymbolSize8Bit , 0x01, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("DECW", eSymbolSize8Bit , 0x01, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("EORA", eSymbolSize8Bit , 0x44, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("EORB", eSymbolSize8Bit , 0xc4, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("EORD", eSymbolSize16Bit, 0x84, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("EORE", eSymbolSize16Bit, 0x04, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("INC" , eSymbolSize8Bit , 0x03, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("INCW", eSymbolSize8Bit , 0x03, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("LDAA", eSymbolSize8Bit , 0x45, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("LDAB", eSymbolSize8Bit , 0xc5, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("LDD" , eSymbolSize16Bit, 0x85, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("LDE" , eSymbolSize16Bit, 0x05, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("LSR" , eSymbolSize8Bit , 0x0f, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("LSRW", eSymbolSize8Bit , 0x0f, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("NEG" , eSymbolSize8Bit , 0x02, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("NEGW", eSymbolSize8Bit , 0x02, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("ORAA", eSymbolSize8Bit , 0x47, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ORAB", eSymbolSize8Bit , 0xc7, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ORD" , eSymbolSize16Bit, 0x87, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("ORE" , eSymbolSize16Bit, 0x07, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("ROL" , eSymbolSize8Bit , 0x0c, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("ROLW", eSymbolSize8Bit , 0x0c, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("ROR" , eSymbolSize8Bit , 0x0e, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("RORW", eSymbolSize8Bit , 0x0e, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
+  AddGen("SBCA", eSymbolSize8Bit , 0x42, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SBCB", eSymbolSize8Bit , 0xc2, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SBCD", eSymbolSize16Bit, 0x82, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SBCE", eSymbolSize16Bit, 0x02, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("STAA", eSymbolSize8Bit , 0x4a, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
+  AddGen("STAB", eSymbolSize8Bit , 0xca, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
+  AddGen("STD" , eSymbolSize16Bit, 0x8a, 0xffff, 0x20, MModDisp8 |                        MModDisp16 | MModAbs | MModDispE);
+  AddGen("STE" , eSymbolSize16Bit, 0x0a, 0xffff, 0x20,                                    MModDisp16 | MModAbs            );
+  AddGen("SUBA", eSymbolSize8Bit , 0x40, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SUBB", eSymbolSize8Bit , 0xc0, 0xffff, 0x00, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SUBD", eSymbolSize16Bit, 0x80, 0xffff, 0x20, MModDisp8 | MModImm |              MModDisp16 | MModAbs | MModDispE);
+  AddGen("SUBE", eSymbolSize16Bit, 0x00, 0xffff, 0x20,             MModImm |              MModDisp16 | MModAbs            );
+  AddGen("TST" , eSymbolSize8Bit , 0x06, 0xffff, 0x00, MModDisp8 |                        MModDisp16 | MModAbs            );
+  AddGen("TSTW", eSymbolSize8Bit , 0x06, 0xffff, 0x10,                                    MModDisp16 | MModAbs            );
 
   AddAux("CPS", 0x4f); AddAux("CPX", 0x4c); AddAux("CPY", 0x4d); AddAux("CPZ", 0x4e);
   AddAux("LDS", 0xcf); AddAux("LDX", 0xcc); AddAux("LDY", 0xcd); AddAux("LDZ", 0xce);
@@ -1049,7 +1054,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "JSR", 1, DecodeJmpJsr);
   AddInstTable(InstTable, "BSR", 0, DecodeBsr);
 
-  Regs = (char **) malloc(sizeof(char *) * RegCnt);
+  Regs = (const char **) malloc(sizeof(char *) * RegCnt);
   Regs[0] = "D"; Regs[1] = "E"; Regs[2] = "X"; Regs[3] = "Y";
   Regs[4] = "Z"; Regs[5] = "K"; Regs[6] = "CCR";
 }
@@ -1064,18 +1069,21 @@ static void DeinitFields(void)
 
 /*-------------------------------------------------------------------------*/
 
+static Boolean DecodeAttrPart_6816(void)
+{
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
+
 static void MakeCode_6816(void)
 {
   CodeLen = 0;
   DontPrint = False;
   AdrCnt = 0;
-  OpSize = eSymbolSizeUnknown;
 
   /* Operandengroesse festlegen. ACHTUNG! Das gilt nur fuer die folgenden
      Pseudobefehle! Die Maschinenbefehle ueberschreiben diesen Wert! */
 
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
+  OpSize = AttrPartOpSize;
 
   /* zu ignorierendes */
 
@@ -1130,6 +1138,7 @@ static void SwitchTo_6816(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xfffffl;
 
+  DecodeAttrPart = DecodeAttrPart_6816;
   MakeCode = MakeCode_6816;
   IsDef = IsDef_6816;
   SwitchFrom = SwitchFrom_6816;

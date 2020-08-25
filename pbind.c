@@ -27,7 +27,7 @@
 
 #define BufferSize 8192
 
-static char *Creator = "BIND/C 1.42";
+static const char *Creator = "BIND/C 1.42";
 
 static CMDProcessed ParUnprocessed;
 

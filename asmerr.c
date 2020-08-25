@@ -601,7 +601,7 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     WrErrorString(const char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
+ * \fn     WrErrorString(const char *pMessage, const char *pAdd, Boolean Warning, Boolean Fatal,
                          const char *pExtendError, const struct sLineComp *pLineComp)
  * \brief  write error message, combined with string component of current src line 
  * \param  pMessage textual error message
@@ -611,7 +611,7 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
  * \param  pLineComp associated string component
  * ------------------------------------------------------------------------ */
 
-void WrErrorString(const char *pMessage, char *pAdd, Boolean Warning, Boolean Fatal,
+void WrErrorString(const char *pMessage, const char *pAdd, Boolean Warning, Boolean Fatal,
                    const char *pExtendError, const struct sLineComp *pLineComp)
 {
   String ErrStr[4];
@@ -840,7 +840,7 @@ void CodeEXPECT(Word Code)
     
     for (z = 1; z <= ArgCnt; z++)
     {
-      Num = EvalStrIntExpression(&ArgStr[z], UInt16, &OK);
+      Num = (tErrorNum)EvalStrIntExpression(&ArgStr[z], UInt16, &OK);
       if (OK)
       {
         tExpectError *pNew = (tExpectError*)calloc(1, sizeof(*pNew));

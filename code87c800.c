@@ -29,7 +29,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
 } CondRec;
 
@@ -55,7 +55,7 @@ enum
 #define WAReg 0
 
 #define Reg8Cnt 8
-static char *Reg8Names = "AWCBEDLH";
+static const char Reg8Names[] = "AWCBEDLH";
 
 static CPUVar CPU87C00, CPU87C20, CPU87C40, CPU87C70;
 static ShortInt OpSize;
@@ -69,12 +69,12 @@ static CondRec *Conditions;
 
 static void DecodeAdr(const tStrComp *pArg, Byte Erl)
 {
-  static char *Reg16Names[] =
+  static const char Reg16Names[][3] =
   {
     "WA", "BC", "DE", "HL"
   };
   static const int Reg16Cnt = sizeof(Reg16Names) / sizeof(*Reg16Names);
-  static char *AdrRegs[] =
+  static const char AdrRegs[][3] =
   {
     "HL", "DE", "C", "PC", "A"
   };
@@ -149,9 +149,10 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
           break;
       if (z >= AdrRegCnt)
       {
-        FirstPassUnknown = False;
-        DispPart = EvalStrIntExpression(&Arg, Int32, &OK);
-        FirstFlag |= FirstPassUnknown;
+        tSymbolFlags Flags;
+
+        DispPart = EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
+        FirstFlag |= mFirstPassUnknown(Flags);
         DispAcc = NegFlag ? DispAcc - DispPart :  DispAcc + DispPart;
       }
       else if ((NegFlag) || (RegFlag & (1 << z)))
@@ -1275,15 +1276,16 @@ static void DecodeJRS(Word Code)
   {
     Integer AdrInt, Condition;
     Boolean OK;
+    tSymbolFlags Flags;
 
     Condition = DecodeCondition(ArgStr[1].Str, ConditionCnt - 2);
     if (Condition >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK) - (EProgCounter() + 2);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], Int16, &OK, &Flags) - (EProgCounter() + 2);
       if (OK)
       {
-        if (((AdrInt < -16) || (AdrInt > 15)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+        if (((AdrInt < -16) || (AdrInt > 15)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 1;
@@ -1302,15 +1304,16 @@ static void DecodeJR(Word Code)
   {
     Integer Condition, AdrInt;
     Boolean OK;
+    tSymbolFlags Flags;
 
     Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1].Str, 0);
     if (Condition >= ConditionCnt) WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
     else
     {
-      AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], Int16, &OK) - (EProgCounter() + 2);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags) - (EProgCounter() + 2);
       if (OK)
       {
-        if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+        if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 2;
@@ -1408,19 +1411,19 @@ static void DecodeCALLP(Word Code)
 
 /*--------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddCond(char *NName, Byte NCode)
+static void AddCond(const char *NName, Byte NCode)
 {
   if (InstrZ >= ConditionCnt) exit(255);
   Conditions[InstrZ].Name = NName;
   Conditions[InstrZ++].Code = NCode;
 }
 
-static void AddReg(char *NName, Word NCode)
+static void AddReg(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeReg);
 }

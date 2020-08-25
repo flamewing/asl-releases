@@ -21,6 +21,11 @@ typedef enum
   eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro
 } tLstMacroExp;
 
+#ifdef __cplusplus
+#include "cppops.h"
+DefCPPOps_Mask(tLstMacroExp)
+#endif
+
 #define LSTMACROEXPMOD_MAX 8
 
 typedef struct

@@ -79,12 +79,13 @@ static Boolean DecodeSign(tStrComp *pArg, Word *pResult, Boolean Signed)
 {
   LongInt Val;
   Boolean OK;
+  tSymbolFlags Flags;
 
-  Val = EvalStrIntExpression(pArg, SInt16, &OK);
+  Val = EvalStrIntExpressionWithFlags(pArg, SInt16, &OK, &Flags);
   if (!OK)
     return False;
 
-  if (FirstPassUnknown)
+  if (mFirstPassUnknown(Flags))
     Val = 0;
 
   if (!ChkRange(Val, Signed ? -1023 : 0, 1023))

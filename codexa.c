@@ -47,9 +47,9 @@
 
 #define RETICode 0xd690
 
-#define eSymbolSize5Bit -4
-#define eSymbolSizeSigned4Bit -3
-#define eSymbolSize4Bit -2
+#define eSymbolSize5Bit ((tSymbolSize)-4)
+#define eSymbolSizeSigned4Bit ((tSymbolSize)-3)
+#define eSymbolSize4Bit ((tSymbolSize)-2)
 
 typedef struct
 {   
@@ -59,7 +59,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte SizeMask;
   Byte Code;
   Byte Inversion;
@@ -76,7 +76,7 @@ static LongInt Reg_DS;
 static ShortInt AdrMode;
 static Byte AdrPart,MemPart;
 static Byte AdrVals[4];
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 
 #define ASSUMEXACount 1
 static ASSUMERec ASSUMEXAs[ASSUMEXACount] =
@@ -87,7 +87,7 @@ static ASSUMERec ASSUMEXAs[ASSUMEXACount] =
 /*-------------------------------------------------------------------------*/
 /* Hilfsroutinen */
 
-static void SetOpSize(ShortInt NSize)
+static void SetOpSize(tSymbolSize NSize)
 {
   if (OpSize == eSymbolSizeUnknown) OpSize = NSize;
   else if (OpSize != NSize)
@@ -96,13 +96,13 @@ static void SetOpSize(ShortInt NSize)
   }
 }
 
-static Boolean DecodeReg(char *Asc, ShortInt *NSize, Byte *Erg)
+static Boolean DecodeReg(char *Asc, tSymbolSize *NSize, Byte *Erg)
 {
   int len = strlen(Asc);
 
   if (!as_strcasecmp(Asc, "SP"))
   {
-    *Erg = 7; *NSize = 1; return True;
+    *Erg = 7; *NSize = eSymbolSize16Bit; return True;
   }
   else if ((len >= 2) && (mytoupper(*Asc) == 'R') && (Asc[1] >= '0') && (Asc[1] <= '7'))
   {
@@ -115,22 +115,22 @@ static Boolean DecodeReg(char *Asc, ShortInt *NSize, Byte *Erg)
         {
           WrError(ErrNum_InvRegPair); (*Erg)--;
         }
-        *NSize = 2;
+        *NSize = eSymbolSize32Bit;
         return True;
       }
       else
       {
-        *NSize = 1;
+        *NSize = eSymbolSize16Bit;
         return True;
       }
     }
     else if ((len == 3) && (mytoupper(Asc[2]) == 'L'))
     {
-      *Erg = (Asc[1] - '0') << 1; *NSize = 0; return True;
+      *Erg = (Asc[1] - '0') << 1; *NSize = eSymbolSize8Bit; return True;
     }
     else if ((len == 3) && (mytoupper(Asc[2]) == 'H'))
     {
-      *Erg = ((Asc[1] - '0') << 1) + 1; *NSize = 0; return True;
+      *Erg = ((Asc[1] - '0') << 1) + 1; *NSize = eSymbolSize8Bit; return True;
     }
     else return False;
   }
@@ -153,14 +153,14 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
 {
   unsigned ArgLen;
   Byte Reg;
-  ShortInt NSize;
+  tSymbolSize NSize;
 
   ArgLen = strlen(pArg->Str);
   if (pArg->Str[ArgLen - 1] == '+')
   {
     pArg->Str[--ArgLen] = '\0'; pArg->Pos.Len--;
     if (!DecodeReg(pArg->Str, &NSize, &AdrPart)) WrStrErrorPos(ErrNum_InvReg, pArg);
-    else if (NSize != 1) WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+    else if (NSize != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvAddrMode, pArg);
     else
     {
       AdrMode = ModMem; MemPart = 3;
@@ -188,7 +188,7 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
 
       if (DecodeReg(ThisComp.Str, &NSize, &Reg))
       {
-        if ((NSize != 1) || (AdrPart != 0xff) || (NegFlag))
+        if ((NSize != eSymbolSize16Bit) || (AdrPart != 0xff) || (NegFlag))
         {
           WrStrErrorPos(ErrNum_InvAddrMode, &ThisComp); ErrFlag = True;
         }
@@ -198,13 +198,13 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
       else
       {
         LongInt DispPart;
+        tSymbolFlags Flags;
 
-        FirstPassUnknown = False;
-        DispPart = EvalStrIntExpression(&ThisComp, Int32, &ErrFlag);
+        DispPart = EvalStrIntExpressionWithFlags(&ThisComp, Int32, &ErrFlag, &Flags);
         ErrFlag = !ErrFlag;
         if (!ErrFlag)
         {
-          FirstFlag = FirstFlag || FirstPassUnknown;
+          FirstFlag = FirstFlag || mFirstPassUnknown(Flags);
           DispAcc += NegFlag ? -DispPart : DispPart;
         }
       }
@@ -239,9 +239,9 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
 
 static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
 {
-  ShortInt NSize;
+  tSymbolSize NSize;
   LongInt AdrLong;
-  Boolean OK;
+  tEvalResult EvalResult;
   Word AdrInt;
   int ArgLen;
 
@@ -268,9 +268,10 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
   if (*pArg->Str == '#')
   {
     tStrComp ImmComp;
+    Boolean OK;
 
     StrCompRefRight(&ImmComp, pArg, 1);
-    switch (OpSize)
+    switch ((int)OpSize)
     {
       case eSymbolSize5Bit:
         AdrVals[0] = EvalStrIntExpression(&ImmComp, UInt5, &OK);
@@ -325,6 +326,8 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
           AdrMode = ModImm;
         }
         break;
+      default:
+        break;
     }
     return ChkAdr(Mask, pArg);
   }
@@ -342,11 +345,10 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
     return DecodeAdrIndirect(&IndirComp, Mask);
   }
 
-  FirstPassUnknown = False;
-  AdrLong = EvalStrIntExpression(pArg, UInt24, &OK);
-  if (OK)
+  AdrLong = EvalStrIntExpressionWithResult(pArg, UInt24, &EvalResult);
+  if (EvalResult.OK)
   {
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(EvalResult.Flags))
     {
       if (!(Mask & MModAbs)) AdrLong &= 0x3ff;
     }
@@ -354,7 +356,7 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
     else if ((AdrLong & 0xffff) <= 0x3ff)
     {
       if ((AdrLong >> 16) != Reg_DS) WrError(ErrNum_InAccPage);
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
       AdrMode = ModMem; MemPart = 6;
       AdrPart = Hi(AdrLong);
       AdrVals[0] = Lo(AdrLong);
@@ -363,7 +365,7 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
     else if (AdrLong > 0x7ff) WrError(ErrNum_AdrOverflow);
     else
     {
-      ChkSpace(SegIO);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       AdrMode = ModMem; MemPart = 6;
       AdrPart = Hi(AdrLong);
       AdrVals[0] = Lo(AdrLong);
@@ -378,35 +380,34 @@ static Boolean DecodeBitAddr(tStrComp *pArg, LongInt *Erg)
 {
   char *p;
   Byte BPos, Reg;
-  ShortInt Size, Res;
+  ShortInt Res;
+  tSymbolSize Size;
   LongInt AdrLong;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   p = RQuotPos(pArg->Str, '.'); Res = 0;
   if (!p)
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(pArg, UInt24, &OK);
-    if (FirstPassUnknown) AdrLong &= 0x3ff;
+    AdrLong = EvalStrIntExpressionWithResult(pArg, UInt24, &EvalResult);
+    if (mFirstPassUnknown(EvalResult.Flags)) AdrLong &= 0x3ff;
     *Erg = AdrLong; Res = 1;
   }
   else
   {
     int l = p - pArg->Str;
 
-    FirstPassUnknown = False;
-    BPos = EvalStrIntExpressionOffs(pArg, l + 1, UInt4, &OK);
-    if (FirstPassUnknown) BPos &= 7;
+    BPos = EvalStrIntExpressionOffsWithResult(pArg, l + 1, UInt4, &EvalResult);
+    if (mFirstPassUnknown(EvalResult.Flags)) BPos &= 7;
 
     *p = '\0'; pArg->Pos.Len -= l + 1;
-    if (OK)
+    if (EvalResult.OK)
     {
       if (DecodeReg(pArg->Str, &Size, &Reg))
       {
-        if ((Size == 0) && (BPos > 7)) WrError(ErrNum_OverRange);
+        if ((Size == eSymbolSize8Bit) && (BPos > 7)) WrError(ErrNum_OverRange);
         else
         {
-          if (Size == 0) *Erg = (Reg << 3) + BPos;
+          if (Size == eSymbolSize8Bit) *Erg = (Reg << 3) + BPos;
           else *Erg = (Reg << 4) + BPos;
           Res = 1;
         }
@@ -414,12 +415,11 @@ static Boolean DecodeBitAddr(tStrComp *pArg, LongInt *Erg)
       else if (BPos > 7) WrError(ErrNum_OverRange);
       else
       {
-        FirstPassUnknown = False;
-        AdrLong = EvalStrIntExpression(pArg, UInt24, &OK);
-        if ((TypeFlag & (1 << SegIO)) != 0)
+        AdrLong = EvalStrIntExpressionWithResult(pArg, UInt24, &EvalResult);
+        if (EvalResult.AddrSpaceMask & (1 << SegIO))
         {
-          ChkSpace(SegIO);
-          if (FirstPassUnknown) AdrLong = (AdrLong & 0x3f) | 0x400;
+          ChkSpace(SegIO, EvalResult.AddrSpaceMask);
+          if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x3f) | 0x400;
           if (ChkRange(AdrLong, 0x400, 0x43f))
           {
             *Erg = 0x200 + ((AdrLong & 0x3f) << 3) + BPos;
@@ -430,8 +430,8 @@ static Boolean DecodeBitAddr(tStrComp *pArg, LongInt *Erg)
         }
         else
         {
-          ChkSpace(SegData);
-          if (FirstPassUnknown) AdrLong = (AdrLong & 0x00ff003f) | 0x20;
+          ChkSpace(SegData, EvalResult.AddrSpaceMask);
+          if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x00ff003f) | 0x20;
           if (ChkRange(AdrLong & 0xff, 0x20, 0x3f))
           {
             *Erg = 0x100 + ((AdrLong & 0x1f) << 3) + BPos + (AdrLong & 0xff0000);
@@ -458,28 +458,27 @@ static LongWord MkEven24(LongWord Inp)
   return Inp & 0xfffffeul;
 }
 
-static LongWord GetBranchDest(const tStrComp *pComp, Boolean *pOK)
+static LongWord GetBranchDest(const tStrComp *pComp, tEvalResult *pEvalResult)
 {
   LongWord Result;
 
-  FirstPassUnknown = False;
-  Result = EvalStrIntExpression(pComp, UInt24, pOK);
-  if (*pOK)
+  Result = EvalStrIntExpressionWithResult(pComp, UInt24, pEvalResult);
+  if (pEvalResult->OK)
   {
-    if (FirstPassUnknown) Result = MkEven24(Result);
-    ChkSpace(SegCode);
+    if (mFirstPassUnknown(pEvalResult->Flags)) Result = MkEven24(Result);
+    ChkSpace(SegCode, pEvalResult->AddrSpaceMask);
     if (Result & 1)
     {
       WrStrErrorPos(ErrNum_NotAligned, pComp);
-      *pOK = False;
+      pEvalResult->OK = False;
     }
   }
   return Result;
 }
 
-static Boolean ChkShortEvenDist(LongInt *pDist)
+static Boolean ChkShortEvenDist(LongInt *pDist, tSymbolFlags Flags)
 {
-  if (!SymbolQuestionable && ((*pDist > 254) || (*pDist < -256)))
+  if (!mSymbolQuestionable(Flags) && ((*pDist > 254) || (*pDist < -256)))
     return False;
   else
   {
@@ -488,9 +487,9 @@ static Boolean ChkShortEvenDist(LongInt *pDist)
   }
 }
 
-static Boolean ChkLongEvenDist(LongInt *pDist, const tStrComp *pComp)
+static Boolean ChkLongEvenDist(LongInt *pDist, const tStrComp *pComp, tSymbolFlags Flags)
 {
-  if (!SymbolQuestionable && ((*pDist > 65534) || (*pDist < -65536)))
+  if (!mSymbolQuestionable(Flags) && ((*pDist > 65534) || (*pDist < -65536)))
   {
     WrStrErrorPos(ErrNum_JmpDistTooBig, pComp);
     return False;
@@ -741,7 +740,7 @@ static void DecodeShift(Word Index)
         if (*ArgStr[2].Str == '#')
           OpSize = (HMem == 2) ? eSymbolSize5Bit : eSymbolSize4Bit;
         else
-          OpSize = 0;
+          OpSize = eSymbolSize8Bit;
         DecodeAdr(&ArgStr[2], MModReg | ((Index == 3) ? 0 : MModImm));
         switch (AdrMode)
         {
@@ -805,19 +804,19 @@ static void DecodeRotate(Word Code)
 static void DecodeRel(Word Index)
 {
   InvOrder *Op = RelOrders + Index;
-  Boolean OK;
   LongWord Dest;
   LongInt Dist;
+  tEvalResult EvalResult;
 
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    Dest = GetBranchDest(&ArgStr[1], &OK);
-    if (OK)
+    Dest = GetBranchDest(&ArgStr[1], &EvalResult);
+    if (EvalResult.OK)
     {
       Dist = Dest - MkEven24(EProgCounter() + CodeLen + 2);
-      if (ChkShortEvenDist(&Dist))
+      if (ChkShortEvenDist(&Dist, EvalResult.Flags))
       {
         BAsmCode[CodeLen++] = Op->Code;
         BAsmCode[CodeLen++] = Dist & 0xff;
@@ -826,7 +825,7 @@ static void DecodeRel(Word Index)
       else if (Op->Inversion == 255)  /* BR */
       {
         Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
-        if (ChkLongEvenDist(&Dist, &ArgStr[1]))
+        if (ChkLongEvenDist(&Dist, &ArgStr[1], EvalResult.Flags))
         {
           Dist >>= 1;
           BAsmCode[CodeLen++] = 0xd5;
@@ -837,7 +836,7 @@ static void DecodeRel(Word Index)
       else
       {
         Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5);
-        if (ChkLongEvenDist(&Dist, &ArgStr[1]))
+        if (ChkLongEvenDist(&Dist, &ArgStr[1], EvalResult.Flags))
         {
           BAsmCode[CodeLen++] = RelOrders[Op->Inversion].Code;
           BAsmCode[CodeLen++] = 2;
@@ -855,18 +854,18 @@ static void DecodeJBit(Word Index)
 {
   LongInt BitAdr, Dist, odd;
   LongWord Dest;
-  Boolean OK;
+  tEvalResult EvalResult;
   InvOrder *Op = JBitOrders + Index;
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else if (DecodeBitAddr(&ArgStr[1], &BitAdr))
   {
-    Dest = GetBranchDest(&ArgStr[2], &OK);
-    if (OK)
+    Dest = GetBranchDest(&ArgStr[2], &EvalResult);
+    if (EvalResult.OK)
     {
       Dist = Dest - MkEven24(EProgCounter() + CodeLen + 4);
-      if (ChkShortEvenDist(&Dist))
+      if (ChkShortEvenDist(&Dist, EvalResult.Flags))
       {
         BAsmCode[CodeLen++] = 0x97;
         BAsmCode[CodeLen++] = Op->Code + Hi(BitAdr);
@@ -878,7 +877,7 @@ static void DecodeJBit(Word Index)
       {
         odd = EProgCounter() & 1;
         Dist = Dest - MkEven24(EProgCounter() + CodeLen + 9 + odd);
-        if (ChkLongEvenDist(&Dist, &ArgStr[2]))
+        if (ChkLongEvenDist(&Dist, &ArgStr[2], EvalResult.Flags))
         {
           BAsmCode[CodeLen++] = 0x97;
           BAsmCode[CodeLen++] = Op->Code + Hi(BitAdr);
@@ -896,7 +895,7 @@ static void DecodeJBit(Word Index)
       else
       {
         Dist = Dest - MkEven24(EProgCounter() + CodeLen + 7);
-        if (ChkLongEvenDist(&Dist, &ArgStr[2]))
+        if (ChkLongEvenDist(&Dist, &ArgStr[2], EvalResult.Flags))
         {
           BAsmCode[CodeLen++] = 0x97;
           BAsmCode[CodeLen++] = JBitOrders[Op->Inversion].Code + Hi(BitAdr);
@@ -1236,17 +1235,18 @@ static void DecodeXCH(Word Index)
 
 static void DecodeADDSMOVS(Word Index)
 {
-  Byte HReg, HMem;
+  Byte HReg;
+  tSymbolSize HSize;
 
   if (ChkArgCnt(2, 2))
   {
-    HMem = OpSize;
+    HSize = OpSize;
     OpSize = eSymbolSizeSigned4Bit;
     DecodeAdr(&ArgStr[2], MModImm);
     switch (AdrMode)
     {
       case ModImm:
-        HReg = AdrVals[0]; OpSize = HMem;
+        HReg = AdrVals[0]; OpSize = HSize;
         DecodeAdr(&ArgStr[1], MModMem);
         switch (AdrMode)
         {
@@ -1520,13 +1520,14 @@ static void DecodeCALL(Word Index)
   }
   else
   {
-    Boolean OK;
-    LongWord Dest = GetBranchDest(&ArgStr[1], &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongWord Dest = GetBranchDest(&ArgStr[1], &EvalResult);
+
+    if (EvalResult.OK)
     {
       LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
 
-      if (ChkLongEvenDist(&Dist, &ArgStr[1]))
+      if (ChkLongEvenDist(&Dist, &ArgStr[1], EvalResult.Flags))
       {
         BAsmCode[CodeLen++] = 0xc5;
         BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
@@ -1582,14 +1583,14 @@ static void DecodeJMP(Word Index)
   }
   else
   {
-    Boolean OK;
-    LongWord Dest = GetBranchDest(&ArgStr[1], &OK);
+    tEvalResult EvalResult;
+    LongWord Dest = GetBranchDest(&ArgStr[1], &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
       LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen + 3);
 
-      if (ChkLongEvenDist(&Dist, &ArgStr[1]))
+      if (ChkLongEvenDist(&Dist, &ArgStr[1], EvalResult.Flags))
       {
         BAsmCode[CodeLen++] = 0xd5;
         BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
@@ -1606,12 +1607,12 @@ static void DecodeCJNE(Word Index)
 
   if (ChkArgCnt(3, 3))
   {
-    Boolean OK;
-    LongWord Dest = GetBranchDest(&ArgStr[3], &OK);
+    tEvalResult EvalResult;
+    LongWord Dest = GetBranchDest(&ArgStr[3], &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
-      OK = False; HReg = 0;
+      EvalResult.OK = False; HReg = 0;
       DecodeAdr(&ArgStr[1], MModMem);
       if (AdrMode == ModMem)
       {
@@ -1632,7 +1633,7 @@ static void DecodeCJNE(Word Index)
                     BAsmCode[CodeLen + 1] = (HReg << 4) + AdrPart;
                     BAsmCode[CodeLen + 2] = AdrVals[0];
                     HReg=CodeLen + 3;
-                    CodeLen += 4; OK = True;
+                    CodeLen += 4; EvalResult.OK = True;
                   }
                   break;
                 case ModImm:
@@ -1640,7 +1641,7 @@ static void DecodeCJNE(Word Index)
                   BAsmCode[CodeLen + 1] = HReg << 4;
                   HReg=CodeLen + 2;
                   memcpy(BAsmCode + CodeLen + 3, AdrVals, AdrCnt);
-                  CodeLen += 3 + AdrCnt; OK = True;
+                  CodeLen += 3 + AdrCnt; EvalResult.OK = True;
                   break;
               }
             }
@@ -1656,7 +1657,7 @@ static void DecodeCJNE(Word Index)
                 BAsmCode[CodeLen + 1] = (HReg << 4)+8;
                 HReg = CodeLen + 2;
                 memcpy(BAsmCode + CodeLen + 3, AdrVals, AdrCnt);
-                CodeLen += 3 + AdrCnt; OK = True;
+                CodeLen += 3 + AdrCnt; EvalResult.OK = True;
               }
             }
             break;
@@ -1664,15 +1665,15 @@ static void DecodeCJNE(Word Index)
             WrError(ErrNum_InvAddrMode);
         }
       }
-      if (OK)
+      if (EvalResult.OK)
       {
         LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen);
 
-        OK = False;
-        if (ChkShortEvenDist(&Dist))
+        EvalResult.OK = False;
+        if (ChkShortEvenDist(&Dist, EvalResult.Flags))
         {
           BAsmCode[HReg] = Dist & 0xff;
-          OK = True;
+          EvalResult.OK = True;
         }
         else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
         else
@@ -1680,7 +1681,7 @@ static void DecodeCJNE(Word Index)
           LongWord odd = (EProgCounter() + CodeLen) & 1;
 
           Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5 + odd);
-          if (ChkLongEvenDist(&Dist, &ArgStr[3]))
+          if (ChkLongEvenDist(&Dist, &ArgStr[3], EvalResult.Flags))
           {
             BAsmCode[HReg] = 1 + odd;
             BAsmCode[CodeLen++] = 0xfe;
@@ -1690,11 +1691,11 @@ static void DecodeCJNE(Word Index)
             BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
             BAsmCode[CodeLen++] = Dist        & 0xff;
             BAsmCode[CodeLen++] = 0;
-            OK = True;
+            EvalResult.OK = True;
           }
         }
       }
-      if (!OK)
+      if (!EvalResult.OK)
         CodeLen = 0;
     }
   }
@@ -1707,14 +1708,14 @@ static void DecodeDJNZ(Word Index)
 
   if (ChkArgCnt(2, 2))
   {
-    Boolean OK;
-    LongInt Dest = GetBranchDest(&ArgStr[2], &OK);
+    tEvalResult EvalResult;
+    LongInt Dest = GetBranchDest(&ArgStr[2], &EvalResult);
 
-    if (OK)
+    if (EvalResult.OK)
     {
       HReg = 0;
       DecodeAdr(&ArgStr[1], MModMem);
-      OK = False; DecodeAdr(&ArgStr[1], MModMem);
+      EvalResult.OK = False; DecodeAdr(&ArgStr[1], MModMem);
       if (AdrMode == ModMem)
         switch (MemPart)
         {
@@ -1725,7 +1726,7 @@ static void DecodeDJNZ(Word Index)
               BAsmCode[CodeLen] = 0x87 + (OpSize << 3);
               BAsmCode[CodeLen + 1] = (AdrPart << 4) + 0x08;
               HReg=CodeLen + 2;
-              CodeLen += 3; OK = True;
+              CodeLen += 3; EvalResult.OK = True;
             }
             break;
           case 6:
@@ -1737,21 +1738,21 @@ static void DecodeDJNZ(Word Index)
               BAsmCode[CodeLen+1] = 0x08 + AdrPart;
               BAsmCode[CodeLen+2] = AdrVals[0];
               HReg=CodeLen + 3;
-              CodeLen += 4; OK = True;
+              CodeLen += 4; EvalResult.OK = True;
             }
             break;
           default:
             WrError(ErrNum_InvAddrMode);
         }
-      if (OK)
+      if (EvalResult.OK)
       {
         LongInt Dist = Dest - MkEven24(EProgCounter() + CodeLen);
 
-        OK = False;
-        if (ChkShortEvenDist(&Dist))
+        EvalResult.OK = False;
+        if (ChkShortEvenDist(&Dist, EvalResult.Flags))
         {
           BAsmCode[HReg] = Dist & 0xff;
-          OK = True;
+          EvalResult.OK = True;
         }
         else if (!DoBranchExt) WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
         else
@@ -1759,7 +1760,7 @@ static void DecodeDJNZ(Word Index)
           LongWord odd = (EProgCounter() + CodeLen) & 1;
 
           Dist = Dest - MkEven24(EProgCounter() + CodeLen + 5 + odd);
-          if (ChkLongEvenDist(&Dist, &ArgStr[2]))
+          if (ChkLongEvenDist(&Dist, &ArgStr[2], EvalResult.Flags))
           {
             BAsmCode[HReg] = 1 + odd;
             BAsmCode[CodeLen++] = 0xfe;
@@ -1769,11 +1770,11 @@ static void DecodeDJNZ(Word Index)
             BAsmCode[CodeLen++] = (Dist >> 8) & 0xff;
             BAsmCode[CodeLen++] = Dist        & 0xff;
             BAsmCode[CodeLen++] = 0;
-            OK = True;
+            EvalResult.OK = True;
           }
         }
       }
-      if (!OK)
+      if (!EvalResult.OK)
         CodeLen = 0;
     }
   }
@@ -1781,15 +1782,13 @@ static void DecodeDJNZ(Word Index)
 
 static void DecodeFCALLJMP(Word Index)
 {
-  LongInt AdrLong;
-  Boolean OK;
-
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
   else
   {
-    AdrLong = GetBranchDest(&ArgStr[1], &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    LongInt AdrLong = GetBranchDest(&ArgStr[1], &EvalResult);
+    if (EvalResult.OK)
     {
       BAsmCode[CodeLen++] = 0xc4 | (Index << 4);
       BAsmCode[CodeLen++] = (AdrLong >> 8) & 0xff;
@@ -1820,6 +1819,19 @@ static void ForceAlign(void)
   }
 }
 
+static Boolean DecodeAttrPart_XA(void)
+{
+  if (*AttrPart.Str)
+    switch (mytoupper(*AttrPart.Str))
+    {
+      case 'B': AttrPartOpSize = eSymbolSize8Bit; break;
+      case 'W': AttrPartOpSize = eSymbolSize16Bit; break;
+      case 'D': AttrPartOpSize = eSymbolSize32Bit; break;
+      default : WrStrErrorPos(ErrNum_UndefAttr, &AttrPart); return False;
+    }
+  return True;
+}
+
 static void MakeCode_XA(void)
 {
   CodeLen = 0; DontPrint = False; OpSize = eSymbolSizeUnknown;
@@ -1827,13 +1839,7 @@ static void MakeCode_XA(void)
    /* Operandengroesse */
 
   if (*AttrPart.Str)
-    switch (mytoupper(*AttrPart.Str))
-    {
-      case 'B': SetOpSize(eSymbolSize8Bit); break;
-      case 'W': SetOpSize(eSymbolSize16Bit); break;
-      case 'D': SetOpSize(eSymbolSize32Bit); break;
-      default : WrError(ErrNum_UndefAttr); return;
-    }
+    SetOpSize(AttrPartOpSize);
 
   /* Labels muessen auf geraden Adressen liegen */
 
@@ -1845,7 +1851,7 @@ static void MakeCode_XA(void)
       EnterIntSymbol(&LabPart, EProgCounter() + CodeLen, ActPC, False);
   }
 
-  if (DecodeMoto16Pseudo(OpSize,False)) return;
+  if (DecodeMoto16Pseudo(OpSize, False)) return;
   if (DecodeIntelPseudo(False)) return;
 
   /* zu ignorierendes */
@@ -1861,12 +1867,12 @@ static void MakeCode_XA(void)
 /*-------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddJBit(char *NName, Word NCode)
+static void AddJBit(const char *NName, Word NCode)
 {
   if (InstrZ >= JBitOrderCnt) exit(255);
   JBitOrders[InstrZ].Name = NName;
@@ -1875,12 +1881,12 @@ static void AddJBit(char *NName, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeJBit);
 }
 
-static void AddStack(char *NName, Word NCode)
+static void AddStack(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeStack);
 }
 
-static void AddReg(char *NName, Byte NMask, Byte NCode)
+static void AddReg(const char *NName, Byte NMask, Byte NCode)
 {
   if (InstrZ >= RegOrderCnt) exit(255);
   RegOrders[InstrZ].Code = NCode;
@@ -1888,12 +1894,12 @@ static void AddReg(char *NName, Byte NMask, Byte NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRegO);
 }
 
-static void AddRotate(char *NName, Word NCode)
+static void AddRotate(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRotate);
 }
 
-static void AddRel(char *NName, Word NCode)
+static void AddRel(const char *NName, Word NCode)
 {
   if (InstrZ >= RelOrderCount) exit(255);
   RelOrders[InstrZ].Name = NName;
@@ -1902,7 +1908,7 @@ static void AddRel(char *NName, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void SetInv(char *Name1, char *Name2, InvOrder *Orders)
+static void SetInv(const char *Name1, const char *Name2, InvOrder *Orders)
 {
   InvOrder *Order1, *Order2;
 
@@ -2051,7 +2057,10 @@ static void SwitchTo_XA(void)
   Grans[SegData ] = 1; ListGrans[SegData ] = 1; SegInits[SegData ] = 0;
   Grans[SegIO   ] = 1; ListGrans[SegIO   ] = 1; SegInits[SegIO   ] = 0x400;
 
-  MakeCode = MakeCode_XA; ChkPC = ChkPC_XA; IsDef = IsDef_XA;
+  DecodeAttrPart = DecodeAttrPart_XA;
+  MakeCode = MakeCode_XA;
+  ChkPC = ChkPC_XA;
+  IsDef = IsDef_XA;
   SwitchFrom = SwitchFrom_XA; InitFields();
   AddONOFF("SUPMODE",   &SupAllowed,  SupAllowedName, False);
   AddONOFF("BRANCHEXT", &DoBranchExt, BranchExtName , False);

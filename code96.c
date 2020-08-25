@@ -137,6 +137,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
   LongWord AdrWord;
   Word BReg;
   Boolean OK;
+  tSymbolFlags Flags;
   char *p, *p2;
   int ArgLen;
   Byte Reg;
@@ -189,9 +190,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
     else
     {
       StrCompSplitRef(&Mid, &Right, &Mid, p2);
-      FirstPassUnknown = False;
-      BReg = EvalStrIntExpression(&Mid, Int16, &OK);
-      if (FirstPassUnknown)
+      BReg = EvalStrIntExpressionWithFlags(&Mid, Int16, &OK, &Flags);
+      if (mFirstPassUnknown(Flags))
         BReg = 0;
       if (OK)
       {
@@ -221,7 +221,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
             tForceSize ForceSize = eForceNone;
             int Offset = SplitForceSize(Left.Str, &ForceSize);
 
-            AdrInt = EvalStrIntExpressionOffs(&Left, Offset, AddrWide ? Int24 : Int16, &OK);
+            AdrInt = EvalStrIntExpressionOffsWithFlags(&Left, Offset, AddrWide ? Int24 : Int16, &OK, &Flags);
             if (OK)
             {
               if ((AdrInt == 0) && !ForceSize)
@@ -249,8 +249,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
                   ForceSize = IsShort ? eForceShort : eForceLong;
                 if (ForceSize == eForceShort)
                 {
-                  if ((AdrInt > 127) && !SymbolQuestionable) WrStrErrorPos(ErrNum_OverRange, &Left);
-                  else if ((AdrInt < -128) && !SymbolQuestionable) WrStrErrorPos(ErrNum_UnderRange, &Left);
+                  if ((AdrInt > 127) && !mSymbolQuestionable(Flags)) WrStrErrorPos(ErrNum_OverRange, &Left);
+                  else if ((AdrInt < -128) && !mSymbolQuestionable(Flags)) WrStrErrorPos(ErrNum_UnderRange, &Left);
                   else
                   {
                     AdrType = ModMem;
@@ -281,9 +281,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, Boolean AddrWide)
     tForceSize ForceSize = eForceNone;
     int Offset = SplitForceSize(pArg->Str, &ForceSize);
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpressionOffs(pArg, Offset, MemInt, &OK);
-    if (FirstPassUnknown)
+    AdrWord = EvalStrIntExpressionOffsWithFlags(pArg, Offset, MemInt, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       AdrWord &= (0xffffffff - OMask);
     if (OK)
     {
@@ -880,11 +879,12 @@ static void DecodeRel(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LongInt AdrInt = EvalStrIntExpression(&ArgStr[1], MemInt, &OK) - (EProgCounter() + 2);
+    tSymbolFlags Flags;
+    LongInt AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], MemInt, &OK, &Flags) - (EProgCounter() + 2);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 2;
@@ -900,7 +900,8 @@ static void DecodeSCALL_LCALL_CALL(Word Code)
   if (ChkArgCnt(1, 1))
   {
     Boolean OK;
-    LongWord AdrWord = EvalStrIntExpression(&ArgStr[1], MemInt, &OK);
+    tSymbolFlags Flags;
+    LongWord AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], MemInt, &OK, &Flags);
 
     if (OK)
     {
@@ -909,7 +910,7 @@ static void DecodeSCALL_LCALL_CALL(Word Code)
 
       if (IsShort)
       {
-        if ((!SymbolQuestionable) && (!IsShortBranch(AdrInt))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && (!IsShortBranch(AdrInt))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 2;
@@ -924,7 +925,7 @@ static void DecodeSCALL_LCALL_CALL(Word Code)
         AdrInt--;
         BAsmCode[1] = Lo(AdrInt);
         BAsmCode[2] = Hi(AdrInt);
-        if ((!SymbolQuestionable) && (IsShortBranch(AdrInt)))
+        if (!mSymbolQuestionable(Flags) && IsShortBranch(AdrInt))
           WrError(ErrNum_ShortJumpPossible);
       }
     }
@@ -952,7 +953,9 @@ static void DecodeBR_LJMP_SJMP(Word Code)
   else
   {
     Boolean OK;
-    LongWord AdrWord = EvalStrIntExpression(&ArgStr[1], MemInt, &OK);
+    tSymbolFlags Flags;
+    LongWord AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], MemInt, &OK, &Flags);
+
     if (OK)
     {
       LongInt AdrInt = AdrWord - (EProgCounter() + 2);
@@ -960,7 +963,7 @@ static void DecodeBR_LJMP_SJMP(Word Code)
 
       if (IsShort)
       {
-        if ((!SymbolQuestionable) && (!IsShortBranch(AdrInt))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && !IsShortBranch(AdrInt)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 2;
@@ -975,7 +978,7 @@ static void DecodeBR_LJMP_SJMP(Word Code)
         AdrInt--;
         BAsmCode[1] = Lo(AdrInt);
         BAsmCode[2] = Hi(AdrInt);
-        if ((!SymbolQuestionable) && (IsShortBranch(AdrInt)))
+        if (!mSymbolQuestionable(Flags) && IsShortBranch(AdrInt))
           WrError(ErrNum_ShortJumpPossible);
       }
     }
@@ -1021,14 +1024,15 @@ static void DecodeDJNZ_DJNZW(Word Size)
     if (AdrType != ModNone)
     {
       Boolean OK;
+      tSymbolFlags Flags;
       LongInt AdrInt;
 
       BAsmCode[0] = 0xe0 + OpSize;
       BAsmCode[1] = AdrVals[0];
-      AdrInt = EvalStrIntExpression(&ArgStr[2], MemInt, &OK) - (EProgCounter() + 3);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], MemInt, &OK, &Flags) - (EProgCounter() + 3);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 3;
@@ -1054,12 +1058,13 @@ static void DecodeJBC_JBS(Word Code)
       if (AdrType != ModNone)
       {
         LongInt AdrInt;
+        tSymbolFlags Flags;
 
         BAsmCode[1] = AdrVals[0];
-        AdrInt = EvalStrIntExpression(&ArgStr[3], MemInt, &OK) - (EProgCounter() + 3);
+        AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], MemInt, &OK, &Flags) - (EProgCounter() + 3);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((AdrInt<-128) || (AdrInt>127))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((AdrInt<-128) || (AdrInt>127))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             CodeLen = 3;
@@ -1130,7 +1135,7 @@ static void DecodeEJMP_EBR(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddSize(char *NName, Word NCode, InstProc Proc, Word SizeMask)
+static void AddSize(const char *NName, Word NCode, InstProc Proc, Word SizeMask)
 {
   int l;
   char SizeName[20];
@@ -1149,38 +1154,38 @@ static void AddSize(char *NName, Word NCode, InstProc Proc, Word SizeMask)
   }
 }
 
-static void AddFixed(char *NName, Byte NCode, CPUVar NMin, CPUVar NMax)
+static void AddFixed(const char *NName, Byte NCode, CPUVar NMin, CPUVar NMax)
 {
   if ((MomCPU >= NMin) && (MomCPU <= NMax))
     AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddALU3(char *NName, Word NCode)
+static void AddALU3(const char *NName, Word NCode)
 {
   AddSize(NName, NCode, DecodeALU3, 3);
 }
 
-static void AddALU2(char *NName, Word NCode)
+static void AddALU2(const char *NName, Word NCode)
 {
   AddSize(NName, NCode, DecodeALU2, 3);
 }
 
-static void AddALU1(char *NName, Word NCode)
+static void AddALU1(const char *NName, Word NCode)
 {
   AddSize(NName, NCode, DecodeALU1, 3);
 }
 
-static void AddRel(char *NName, Byte NCode)
+static void AddRel(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
 
-static void AddMac(char *NName, Word NCode, Boolean NRel)
+static void AddMac(const char *NName, Word NCode, Boolean NRel)
 {
   AddInstTable(InstTable, NName, NCode | (NRel ? 0x100 : 0), DecodeMac);
 }
 
-static void AddRpt(char *NName, Byte NCode)
+static void AddRpt(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRpt);
 }

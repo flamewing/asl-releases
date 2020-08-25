@@ -2432,6 +2432,12 @@ um das Symbol einem bestimmten Adre"sraum zuordnen.  AS ber"ucksichtigt
 dabei nicht, ob der benutzte Adre"sraum bei dem aktuell gesetzten
 Zielprozessor auch vorhanden ist!
 
+Falls die gew"ahlte Zielarchitektur ein Attribut an den Befehlen zur Angabe
+der Operandengr"o"se unterst"utzt (z.B. 680x0), so ist dieses ebenfalls
+bei \tty{SET} und \tty{EQU} erlaubt.  Das definierte Symbol wird dann mit
+dieser Operandengr"o"se in der Symboltabelle abgelegt.  Deren Verwendung
+bei Benutzung des Symbols ist architekturab"angig.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SFR und SFRB}
@@ -10931,7 +10937,7 @@ Angaben:
            }
 
 \begin{description}
-\errentry{   0}{Displacement=0, "uberfl"ussig}
+\errentry{   5}{Displacement=0, "uberfl"ussig}
                {Warnung}
                {bei 680x0-,6809- und COP8-Prozessoren: Das Displacement
                 in einem Adre"sausdruck hat den Wert 0 ergeben.  Es wird

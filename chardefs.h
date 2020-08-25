@@ -72,6 +72,11 @@ typedef enum
   eCH_cnt
 } tNLSCharacter;
 
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(tNLSCharacter)
+#endif
+
 typedef char tNLSCharacterTab[eCH_cnt][2];
 
 typedef enum
@@ -88,6 +93,11 @@ typedef enum
   eCodepageUTF8,
   eCodepageCnt
 } tCodepage;
+
+#ifdef __cplusplus
+# include "cppops.h"
+DefCPPOps_Enum(tCodepage)
+#endif
 
 extern const tNLSCharacterTab *GetCharacterTab(tCodepage Codepage);
 

@@ -79,7 +79,7 @@ static tGenOrderInfo PrevGenInfo;
 
 static FixedOrder *FixedOrders;
 static GenOrder *GenOrders;
-static char **ParOrders;
+static const char **ParOrders;
 static SingOrder *SingOrders;
 
 static LongInt DPValue;
@@ -513,9 +513,9 @@ static void JudgePar(const GenOrder *Prim, int Sec, Byte *ErgMode, Byte *ErgCode
   *ErgCode = (*ErgMode == 2) ? Prim->PCodes[Sec] : Prim->P3Codes[Sec];
 }
 
-static LongWord EvalAdrExpression(const tStrComp *pArg, Boolean *OK)
+static LongWord EvalAdrExpression(const tStrComp *pArg, Boolean *OK, tSymbolFlags *pFlags)
 {
-  return EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '@'), UInt24, OK);
+  return EvalStrIntExpressionOffsWithFlags(pArg, !!(*pArg->Str == '@'), UInt24, OK, pFlags);
 }
 
 static void SwapMode(ShortInt *M1, ShortInt *M2)
@@ -1125,7 +1125,8 @@ static void DecodeLDP(Word Code)
   else
   {
     Boolean OK;
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags);
 
     if (OK)
     {
@@ -1242,7 +1243,8 @@ static void DecodeRPTB_C3x(Word Code)
   else
   {
     Boolean OK;
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags);
 
     if (OK)
     {
@@ -1269,11 +1271,12 @@ static void DecodeRPTB_C4x(Word Code)
   else
   {
     Boolean OK;
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK) - (EProgCounter() + 1);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags) - (EProgCounter() + 1);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fffffl) || (AdrLong < -0x800000l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffffl) || (AdrLong < -0x800000l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = 0x64000000 + AdrLong;
@@ -1300,7 +1303,8 @@ static void DecodeBR_BRD_CALL_C3x(Word Code)
   else
   {
     Boolean OK;   
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags);
 
     if (OK)
     {
@@ -1320,11 +1324,12 @@ static void DecodeBR_BRD_CALL_LAJ_C4x(Word Code)
   else
   {
     Boolean OK;   
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK) - (EProgCounter() + Dist);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags) - (EProgCounter() + Dist);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fffffl) || (AdrLong < -0x800000l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffffl) || (AdrLong < -0x800000l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = (((LongWord)InstrCode) << 24) + (AdrLong & 0xffffff);
@@ -1353,11 +1358,12 @@ static void DecodeBcc(Word Code)
   else
   {
     Boolean OK;
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK) - (EProgCounter() + Disp);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags) - (EProgCounter() + Disp);
 
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = 0x6a000000 + (CondCode << 16) + DFlag + (AdrLong & 0xffff);
@@ -1382,10 +1388,12 @@ static void DecodeCALLcc(Word Code)
   else
   {
     Boolean OK;
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK)-(EProgCounter() + 1);
+    tSymbolFlags Flags;
+    LongInt AdrLong = EvalAdrExpression(&ArgStr[1], &OK, &Flags) - (EProgCounter() + 1);
+
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         DAsmCode[0] = 0x72000000 + (((LongWord)Code) << 16) + (AdrLong & 0xffff);
@@ -1421,11 +1429,13 @@ static void DecodeDBcc(Word Code)
     }
     else
     {
-    Boolean OK;   
-    LongInt AdrLong = EvalAdrExpression(&ArgStr[2], &OK) - (EProgCounter() + Disp);
+      Boolean OK;   
+      tSymbolFlags Flags;
+      LongInt AdrLong = EvalAdrExpression(&ArgStr[2], &OK, &Flags) - (EProgCounter() + Disp);
+
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           DAsmCode[0] = 0x6e000000
@@ -1479,7 +1489,7 @@ static void DecodeTRAPcc(Word Code)
 /*-------------------------------------------------------------------------*/
 /* Befehlstabellenverwaltung */
 
-static void AddCondition(char *NName, Byte NCode)
+static void AddCondition(const char *NName, Byte NCode)
 {
   char InstName[30];
 
@@ -1521,14 +1531,14 @@ static void AddCondition(char *NName, Byte NCode)
   AddInstTable(InstTable, InstName, 0x80 | NCode, DecodeTRAPcc);
 }
 
-static void AddFixed(char *NName, LongWord NCode)
+static void AddFixed(const char *NName, LongWord NCode)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddSing(char *NName, LongWord NCode, Byte NMask)
+static void AddSing(const char *NName, LongWord NCode, Byte NMask)
 {
   if (InstrZ >= SingOrderCount) exit(255);
   SingOrders[InstrZ].Code = NCode;
@@ -1536,7 +1546,7 @@ static void AddSing(char *NName, LongWord NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeSing);
 }
 
-static void AddGen(char *NName, CPUVar NMin, Boolean NMay1, Boolean NMay3,
+static void AddGen(const char *NName, CPUVar NMin, Boolean NMay1, Boolean NMay3,
                    Word NCode, Word NCode3,
                    Boolean NOnly, Boolean NSwap, Boolean NImm, Boolean NComm,
                    Byte NMask1, Byte NMask3,
@@ -1635,7 +1645,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "LDPK", 0x003e, DecodeLDPK);
   AddInstTable(InstTable, "STIK", 0x002a, DecodeSTIK);
 
-  ParOrders = (char **) malloc(sizeof(char *) * ParOrderCount); InstrZ = 0;
+  ParOrders = (const char **) malloc(sizeof(char *) * ParOrderCount); InstrZ = 0;
   ParOrders[InstrZ++] = "LDF";   ParOrders[InstrZ++] = "LDI";
   ParOrders[InstrZ++] = "STF";   ParOrders[InstrZ++] = "STI";
   ParOrders[InstrZ++] = "ADDF3"; ParOrders[InstrZ++] = "SUBF3";

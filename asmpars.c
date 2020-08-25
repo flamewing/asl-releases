@@ -99,12 +99,6 @@ typedef struct
   LongInt Counter;
 } TTmpSymLog;
 
-Boolean FirstPassUnknown;      /* Hinweisflag: evtl. im ersten Pass unbe-
-                                  kanntes Symbol, Ausdruck nicht ausgewertet */
-Boolean SymbolQuestionable;    /* Hinweisflag:  Dadurch, dass Phasenfehler
-                                  aufgetreten sind, ist dieser Symbolwert evtl.
-                                  nicht mehr aktuell                         */
-Boolean UsesForwards;          /* Hinweisflag: benutzt Vorwaertsdefinitionen */
 LongInt MomLocHandle;          /* Merker, den lokale Symbole erhalten        */
 LongInt TmpSymCounter,         /* counters for local symbols                 */
         FwdSymCounter,
@@ -132,7 +126,7 @@ typedef struct sSymbolEntry
 {
   TTree Tree;
   Byte SymType;
-  ShortInt SymSize;
+  tSymbolSize SymSize;
   Boolean Defined, Used, Changeable;
   SymbolVal SymWert;
   PCrossRef RefList;
@@ -490,7 +484,7 @@ Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc)
       unsigned ls = pStart - SrcComp.Str, ld = strlen(pDest);
       String Expr, Result;
       tStrComp ExprComp;
-      Boolean OK;
+      tEvalResult EvalResult;
       const char *pStop;
 
       if (ld + ls + 1 > DestSize)
@@ -506,11 +500,10 @@ Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc)
       }
       StrCompMkTemp(&ExprComp, Expr);
       StrCompCopySub(&ExprComp, &SrcComp, pStart + 1 - SrcComp.Str, pStop - pStart - 1);
-      FirstPassUnknown = False;
-      EvalStrStringExpression(&ExprComp, &OK, Result);
-      if (!OK)
+      EvalStrStringExpressionWithResult(&ExprComp, &EvalResult, Result);
+      if (!EvalResult.OK)
         return False;
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(EvalResult.Flags))
       {
         WrStrErrorPos(ErrNum_FirstPassCalc, &ExprComp);
         return False;
@@ -1163,7 +1156,6 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
 
       /* evaluate expression */
 
-      FirstPassUnknown = False;
       EvalStrExpression(&Copy, &t);
       if (t.Relocs)
       {
@@ -1195,6 +1187,7 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
           return;
       }
       DynStringAppend(&pDest->Contents.Ascii, pStr, TLen);
+      pDest->Flags |= t.Flags & eSymbolFlags_Promotable;
 
       /* advance source pointer to behind '}' */
 
@@ -1230,6 +1223,19 @@ static PSymbolEntry FindNode(
 const char *Name, TempType SearchType
 #endif
 );
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalResultClear(tEvalResult *pResult)
+ * \brief  reset all elements of EvalResult
+ * ------------------------------------------------------------------------ */
+
+void EvalResultClear(tEvalResult *pResult)
+{
+  pResult->OK = False;
+  pResult->Flags = eSymbolFlag_None;
+  pResult->AddrSpaceMask = 0;
+  pResult->DataSize = eSymbolSizeUnknown;
+}
 
 /*****************************************************************************
  * Function:    EvalStrExpression
@@ -1321,6 +1327,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   char *KlPos, *zp, *DummyPtr, *pOpPos;
   const tFunction *pFunction;
   PRelocEntry TReloc;
+  tSymbolFlags PromotedFlags;
+  unsigned PromotedAddrSpaceMask;
+  tSymbolSize PromotedDataSize;
 
   ChkStack();
 
@@ -1336,7 +1345,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
 
   pErg->Typ = TempNone;
   pErg->Relocs = NULL;
-  pErg->Flags = 0;
+  pErg->Flags = eSymbolFlag_None;
+  pErg->AddrSpaceMask = 0;
+  pErg->DataSize = eSymbolSizeUnknown;
 
   StrCompCopy(&CopyComp, pExpr);
   KillPrefBlanksStrComp(&CopyComp);
@@ -1625,6 +1636,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       String CompArgStr;
       tStrComp CompArg;
 
+      PromotedFlags = eSymbolFlag_None;
+      PromotedAddrSpaceMask = 0;
+      PromotedDataSize = eSymbolSizeUnknown;
       StrCompMkTemp(&CompArg, CompArgStr);
       strmaxcpy(CompArg.Str, ValFunc->Definition, STRINGSIZE);
       for (z1 = 1; z1 <= ValFunc->ArguCnt; z1++)
@@ -1646,6 +1660,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
           FreeRelocs(&InVals[0].Relocs);
           return;
         }
+        PromotedFlags |= InVals[0].Flags & eSymbolFlags_Promotable;
+        PromotedAddrSpaceMask |= InVals[0].AddrSpaceMask;
+        if (PromotedDataSize == eSymbolSizeUnknown) PromotedDataSize = InVals[0].DataSize;
 
         if (KlPos)
           FArg = Remainder;
@@ -1664,6 +1681,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         LEAVE;
       }
       EvalStrExpression(&CompArg, pErg);
+      pErg->Flags |= PromotedFlags;
+      pErg->AddrSpaceMask |= PromotedAddrSpaceMask;
+      if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = PromotedDataSize;
       LEAVE;
     }
 
@@ -1708,6 +1728,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     /* Unterausdruck auswerten (interne Funktionen maxmimal mit drei Argumenten) */
 
     cnt = 0;
+    PromotedFlags = eSymbolFlag_None;
+    PromotedAddrSpaceMask = 0;
+    PromotedDataSize = eSymbolSizeUnknown;
     do
     {
       zp = QuotPos(FArg.Str, ',');
@@ -1735,6 +1758,9 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       }
       if (zp)
         FArg = Remainder;
+      PromotedFlags |= InVals[cnt].Flags & eSymbolFlags_Promotable;
+      PromotedAddrSpaceMask |= InVals[cnt].AddrSpaceMask;
+      if (PromotedDataSize == eSymbolSizeUnknown) PromotedDataSize = InVals[0].DataSize;
       cnt++;
     }
     while (zp);
@@ -1768,6 +1794,10 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
       }
     }
     pFunction->pFunc(pErg, InVals, cnt);
+    pErg->Flags |= PromotedFlags;
+    pErg->AddrSpaceMask |= PromotedAddrSpaceMask;
+    if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = PromotedDataSize;
+
     LEAVE;
   }
 
@@ -1836,19 +1866,12 @@ void EvalExpression(const char *pExpr, TempResult *pErg)
   EvalStrExpression(&Expr, pErg);
 }
 
-LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
+LargeInt EvalStrIntExpressionWithResult(const tStrComp *pComp, IntType Type, tEvalResult *pResult)
 {
   TempResult t;
   LargeInt Result;
 
-  *pResult = False;
-  TypeFlag = 0;
-  SizeFlag = -1;
-  UsesForwards = False;
-  SymbolQuestionable = False;
-  FirstPassUnknown = False;
-  if (pFlags)
-    *pFlags = 0;
+  EvalResultClear(pResult);
 
   EvalStrExpression(pComp, &t);
   SetRelocs(t.Relocs);
@@ -1856,8 +1879,9 @@ LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Bool
   {
     case TempInt:
       Result = t.Contents.Int;
-      if (pFlags)
-        *pFlags = t.Flags;
+      pResult->Flags = t.Flags;
+      pResult->AddrSpaceMask = t.AddrSpaceMask;
+      pResult->DataSize = t.DataSize;
       break;
     case TempString:
     {
@@ -1876,18 +1900,21 @@ LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Bool
           Digit = (usint) *pRun;
           Result = (Result << 8) | CharTransTable[Digit & 0xff];
         }
+        pResult->Flags = t.Flags;
+        pResult->AddrSpaceMask = t.AddrSpaceMask;
+        pResult->DataSize = t.DataSize;
         break;
       }
     }
     /* else fall-through */
     default:
       if (t.Typ != TempNone)
-        WrStrErrorPos(DeduceExpectTypeErrMsgMask((1 << TempInt) | (1 << TempString), t.Typ), pComp);
+        WrStrErrorPos(DeduceExpectTypeErrMsgMask(TempInt | TempString, t.Typ), pComp);
       FreeRelocs(&LastRelocs);
       return -1;
   }
 
-  if (FirstPassUnknown)
+  if (mFirstPassUnknown(t.Flags))
     Result &= IntTypeDefs[(int)Type].Mask;
 
   if (!RangeCheck(Result, Type))
@@ -1901,39 +1928,75 @@ LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Bool
     else
     {
       WrStrErrorPos(ErrNum_WOverRange, pComp);
-      *pResult = True;
+      pResult->OK = True;
       return Result & IntTypeDefs[(int)Type].Mask;
     }
   }
   else
   {
-    *pResult = True;
+    pResult->OK = True;
     return Result;
   }
 }
 
-LargeInt EvalStrIntExpressionOffsWithFlags(const tStrComp *pExpr, int Offset, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
+LargeInt EvalStrIntExpressionWithFlags(const tStrComp *pComp, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
+{
+  tEvalResult EvalResult;
+  LargeInt Result = EvalStrIntExpressionWithResult(pComp, Type, &EvalResult);
+
+  *pResult = EvalResult.OK;
+  if (pFlags)
+    *pFlags = EvalResult.Flags;
+  return Result;
+}
+
+LargeInt EvalStrIntExpression(const tStrComp *pComp, IntType Type, Boolean *pResult)
+{
+  tEvalResult EvalResult;
+  LargeInt Result = EvalStrIntExpressionWithResult(pComp, Type, &EvalResult);
+
+  *pResult = EvalResult.OK;
+  return Result;
+}
+
+LargeInt EvalStrIntExpressionOffsWithResult(const tStrComp *pExpr, int Offset, IntType Type, tEvalResult *pResult)
 {
   if (Offset)
   {
     tStrComp Comp;
 
     StrCompRefRight(&Comp, pExpr, Offset);
-    return EvalStrIntExpressionWithFlags(&Comp, Type, pResult, pFlags);
+    return EvalStrIntExpressionWithResult(&Comp, Type, pResult);
   }
   else
-    return EvalStrIntExpressionWithFlags(pExpr, Type, pResult, pFlags);
+    return EvalStrIntExpressionWithResult(pExpr, Type, pResult);
 }
 
-Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pResult)
+LargeInt EvalStrIntExpressionOffsWithFlags(const tStrComp *pComp, int Offset, IntType Type, Boolean *pResult, tSymbolFlags *pFlags)
+{
+  tEvalResult EvalResult;
+  LargeInt Result = EvalStrIntExpressionOffsWithResult(pComp, Offset, Type, &EvalResult);
+
+  *pResult = EvalResult.OK;
+  if (pFlags)
+    *pFlags = EvalResult.Flags;
+  return Result;
+}
+
+LargeInt EvalStrIntExpressionOffs(const tStrComp *pComp, int Offset, IntType Type, Boolean *pResult)
+{
+  tEvalResult EvalResult;
+  LargeInt Result = EvalStrIntExpressionOffsWithResult(pComp, Offset, Type, &EvalResult);
+
+  *pResult = EvalResult.OK;
+  return Result;
+}
+
+Double EvalStrFloatExpressionWithResult(const tStrComp *pExpr, FloatType Type, tEvalResult *pResult)
 {
   TempResult t;
 
-  *pResult = False;
-  TypeFlag = 0; SizeFlag = -1;
-  UsesForwards = False;
-  SymbolQuestionable = False;
-  FirstPassUnknown = False;
+  EvalResultClear(pResult);
 
   EvalStrExpression(pExpr, &t);
   switch (t.Typ)
@@ -1942,6 +2005,9 @@ Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pR
       return -1;
     case TempInt:
       t.Contents.Float = t.Contents.Int;
+      pResult->Flags = t.Flags;
+      pResult->AddrSpaceMask = t.AddrSpaceMask;
+      pResult->DataSize = t.DataSize;
       break;
     case TempString:
     {
@@ -1958,20 +2024,25 @@ Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pR
     return -1;
   }
 
-  *pResult = True;
+  pResult->OK = True;
   return t.Contents.Float;
 }
 
-void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEvalResult)
+Double EvalStrFloatExpression(const tStrComp *pExpr, FloatType Type, Boolean *pResult)
+{
+  Double Ret;
+  tEvalResult Result;
+
+  Ret = EvalStrFloatExpressionWithResult(pExpr, Type, &Result);
+  *pResult = Result.OK;
+  return Ret;
+}
+
+void EvalStrStringExpressionWithResult(const tStrComp *pExpr, tEvalResult *pResult, char *pEvalResult)
 {
   TempResult t;
 
-  *pResult = False;
-  TypeFlag = 0;
-  SizeFlag = -1;
-  UsesForwards = False;
-  SymbolQuestionable = False;
-  FirstPassUnknown = False;
+  EvalResultClear(pResult);
 
   EvalStrExpression(pExpr, &t);
   if (t.Typ != TempString)
@@ -1979,22 +2050,35 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
     *pEvalResult = '\0';
     if (t.Typ != TempNone)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(t.Flags))
       {
         *pEvalResult = '\0';
-        *pResult = True;
+        pResult->Flags = t.Flags;
+        pResult->AddrSpaceMask = t.AddrSpaceMask;
+        pResult->DataSize = t.DataSize;
+        pResult->OK = True;
       }
       else
-        WrStrErrorPos(DeduceExpectTypeErrMsgMask(1 << TempString, t.Typ), pExpr);
+        WrStrErrorPos(DeduceExpectTypeErrMsgMask(TempString, t.Typ), pExpr);
     }
   }
   else
   {
     DynString2CString(pEvalResult, &t.Contents.Ascii, STRINGSIZE);
-    *pResult = True;
+    pResult->Flags = t.Flags;
+    pResult->AddrSpaceMask = t.AddrSpaceMask;
+    pResult->DataSize = t.DataSize;
+    pResult->OK = True;
   }
 }
 
+void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEvalResult)
+{
+  tEvalResult Result;
+
+  EvalStrStringExpressionWithResult(pExpr, &Result, pEvalResult);
+  *pResult = Result.OK;
+}
 
 /*!------------------------------------------------------------------------
  * \fn     GetIntelSuffix(unsigned Radix)
@@ -2102,7 +2186,7 @@ static Boolean SymbolAdder(PTree *PDest, PTree Neu, void *pData)
       as_snprcatf(serr, STRINGSIZE, ",%s %s:%ld",
                   getmessage(Num_PrevDefMsg),
                   GetFileName((*Node)->FileNum), (long)((*Node)->LineNum));
-    WrXError((*Node)->Changeable ? 2035 : 2030, serr);
+    WrXError((*Node)->Changeable ? ErrNum_VariableRedefinedAsConstant : ErrNum_ConstantRedefinedAsVariable, serr);
     FreeSymbolEntry(&NewEntry, TRUE);
     return False;
   }
@@ -2316,7 +2400,7 @@ PSymbolEntry EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, Byte 
   pNeu->SymWert.Contents.IWert = Wert;
   pNeu->SymType = Typ;
   pNeu->Flags = Flags;
-  pNeu->SymSize = -1;
+  pNeu->SymSize = eSymbolSizeUnknown;
   pNeu->RefList = NULL;
   pNeu->Relocs = NULL;
 
@@ -2352,7 +2436,7 @@ void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Boolean MayC
   pNeu->SymWert.Contents.IWert = Wert;
   pNeu->SymType = Typ;
   pNeu->Flags = eSymbolFlag_None;
-  pNeu->SymSize = -1;
+  pNeu->SymSize = eSymbolSizeUnknown;
   pNeu->RefList = NULL;
   pNeu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
   pNeu->Relocs->Next = NULL;
@@ -2391,7 +2475,7 @@ PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Bool
   pNeu->SymWert.Contents.IWert = Wert;
   pNeu->SymType = Typ;
   pNeu->Flags = eSymbolFlag_None;
-  pNeu->SymSize = -1;
+  pNeu->SymSize = eSymbolSizeUnknown;
   pNeu->RefList = NULL;
   pNeu->Relocs = (PRelocEntry) malloc(sizeof(TRelocEntry));
   pNeu->Relocs->Next = NULL;
@@ -2429,7 +2513,7 @@ void EnterFloatSymbol(const tStrComp *pName, Double Wert, Boolean MayChange)
   pNeu->SymWert.Contents.FWert = Wert;
   pNeu->SymType = 0;
   pNeu->Flags = eSymbolFlag_None;
-  pNeu->SymSize = -1;
+  pNeu->SymSize = eSymbolSizeUnknown;
   pNeu->RefList = NULL;
   pNeu->Relocs = NULL;
 
@@ -2466,7 +2550,7 @@ void EnterDynStringSymbolWithFlags(const tStrComp *pName, const tDynString *pVal
   pNeu->SymWert.Typ = TempString;
   pNeu->SymType = 0;
   pNeu->Flags = Flags;
-  pNeu->SymSize = -1;
+  pNeu->SymSize = eSymbolSizeUnknown;
   pNeu->RefList = NULL;
   pNeu->Relocs = NULL;
 
@@ -2729,14 +2813,14 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
       pValue->Flags = pEntry->Flags;
     }
     if (pEntry->SymType != 0)
-      TypeFlag |= (1 << pEntry->SymType);
-    if ((pEntry->SymSize != -1) && (SizeFlag == -1))
-      SizeFlag = pEntry->SymSize;
+      pValue->AddrSpaceMask |= 1 << pEntry->SymType;
+    if ((pEntry->SymSize != eSymbolSizeUnknown) && (pValue->DataSize == eSymbolSizeUnknown))
+      pValue->DataSize = pEntry->SymSize;
     if (!pEntry->Defined)
     {
       if (Repass)
-        SymbolQuestionable = True;
-      UsesForwards = True;
+        pValue->Flags |= eSymbolFlag_Questionable;
+      pValue->Flags |= eSymbolFlag_UsesForwards;
     }
     pEntry->Used = True;
   }
@@ -2750,20 +2834,20 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
     Repass = True;
     if ((MsgIfRepass) && (PassNo >= PassNoForMessage))
       WrStrErrorPos(ErrNum_RepassUnknown, pComp);
-    FirstPassUnknown = True;
+    pValue->Flags |= eSymbolFlag_FirstPassUnknown;
   }
   else
     WrStrErrorPos(ErrNum_SymbolUndef, pComp);
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SetSymbolOrStructElemSize(const struct sStrComp *pName, ShortInt Size)
+ * \fn     SetSymbolOrStructElemSize(const struct sStrComp *pName, tSymbolSize Size)
  * \brief  set (integer) data size associated with a symbol
  * \param  pName unexpanded name of symbol
  * \param  Size operand size to set
  * ------------------------------------------------------------------------ */
 
-void SetSymbolOrStructElemSize(const struct sStrComp *pName, ShortInt Size)
+void SetSymbolOrStructElemSize(const struct sStrComp *pName, tSymbolSize Size)
 {
   if (pInnermostNamedStruct)
     SetStructElemSize(pInnermostNamedStruct->StructRec, pName->Str, Size);
@@ -3561,10 +3645,10 @@ LongInt GetSectionHandle(char *SName_O, Boolean AddEmpt, LongInt Parent)
   return z;
 }
 
-char *GetSectionName(LongInt Handle)
+const char *GetSectionName(LongInt Handle)
 {
   PCToken Lauf = FirstSection;
-  static char *Dummy = "";
+  static const char *Dummy = "";
 
   if (Handle == -1)
     return Dummy;

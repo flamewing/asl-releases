@@ -94,15 +94,11 @@ static void DecodeJmp(Word Code)
 {
   if (ChkArgCnt(1, 1))
   {   
-    Boolean OK;
-    Word Addr;
-
-    FirstPassUnknown = FALSE;
-    Addr = EvalStrIntExpression(&ArgStr[1], CodeAdrIntType, &OK);
-    if (!OK);
-    else
+    tEvalResult EvalResult;
+    Word Addr = EvalStrIntExpressionWithResult(&ArgStr[1], CodeAdrIntType, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       CodeLen = 1;
       BAsmCode[0] = (Code & 0xc0) | (Addr & 0x3f);
     }
@@ -115,13 +111,11 @@ static void DecodeJmpL(Word Code)
 
   if (ChkArgCnt(1, 1))
   {   
-    Boolean OK;
-    Word Addr;
-
-    Addr = EvalStrIntExpression(&ArgStr[1], CodeAdrIntType, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word Addr = EvalStrIntExpressionWithResult(&ArgStr[1], CodeAdrIntType, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
       BAsmCode[0] = 0x10 | ((Addr >> 6) & 15); /* LDP... */
       BAsmCode[1] = (Code & 0xc0) | (Addr & 0x3f); 
       CodeLen = 2;

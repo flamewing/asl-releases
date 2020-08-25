@@ -44,7 +44,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongWord Code;
 } SPReg;
 
@@ -219,13 +219,13 @@ static void DecodeVec(Word Index)
 {
   const StdOrder *pOrder = VecOrders + Index;
   Boolean OK;
+  tSymbolFlags Flags;
   LongWord Dest, Src1, Src2, Src3;
 
   if (ChkArgCnt(3, 3))
   {
-    FirstPassUnknown = False;
-    Dest = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
-    if (FirstPassUnknown) Dest = 64;
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt8, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) Dest = 64;
     if (OK)
     {
       if (DecodeArgReg(2, &Src1))
@@ -320,6 +320,7 @@ static void DecodeJmp(Word Index)
   LongWord Dest, Src1, AdrLong;
   LongInt AdrInt;
   Boolean OK;
+  tSymbolFlags Flags;
   unsigned NumArgs = 1 + Ord(pOrder->HasReg);
 
   if (ChkArgCnt(NumArgs, NumArgs)
@@ -349,7 +350,7 @@ static void DecodeJmp(Word Index)
       OK = DecodeReg(ArgStr[1].Str, &Dest);
     if (OK)
     {
-      AdrLong = EvalStrIntExpression(&ArgStr[ArgCnt], Int32, &OK); 
+      AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags);
       AdrInt = AdrLong - EProgCounter();
       if (OK)
       {
@@ -362,7 +363,7 @@ static void DecodeJmp(Word Index)
                       + ((AdrLong & 0x3fc00) << 6)
                       + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
         }
-        else if ((!SymbolQuestionable) && (AdrLong > 0x3fffff)) WrError(ErrNum_JmpDistTooBig);
+        else if (!mSymbolQuestionable(Flags) && (AdrLong > 0x3fffff)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           CodeLen = 4;
@@ -400,14 +401,14 @@ static void DecodeEMULATE(Word Code)
 {
   LongWord Dest, Src1, Src2;
   Boolean OK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(3, 3))
   {
-    FirstPassUnknown = False;
-    Dest = EvalStrIntExpression(&ArgStr[1], UInt8, &OK);
-    if (FirstPassUnknown) Dest = 64;
+    Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt8, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) Dest = 64;
     if (OK)
     {
       if (DecodeArgReg(2, &Src1)
@@ -511,12 +512,12 @@ static void DecodeCONSTH_CONSTN(Word IsHi)
 {
   Boolean OK;
   LongWord AdrLong, Dest;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Dest))
   {
-    FirstPassUnknown = False;
-    AdrLong = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
-    if (FirstPassUnknown)
+    AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[2], Int32, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       AdrLong &= 0xffff;
     if ((!IsHi) && ((AdrLong >> 16) == 0xffff))
       AdrLong &= 0xffff;
@@ -703,7 +704,7 @@ static void DecodeEMULATED(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddStd(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
+static void AddStd(const char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 {
   if (InstrZ >= StdOrderCount) exit(255);
   StdOrders[InstrZ].Code = NCode;
@@ -712,7 +713,7 @@ static void AddStd(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeStd);
 }
 
-static void AddNoImm(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
+static void AddNoImm(const char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 {
   if (InstrZ >= NoImmOrderCount) exit(255);
   NoImmOrders[InstrZ].Code = NCode;
@@ -721,7 +722,7 @@ static void AddNoImm(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeNoImm);
 }
 
-static void AddVec(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
+static void AddVec(const char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 {
   if (InstrZ >= VecOrderCount) exit(255);
   VecOrders[InstrZ].Code = NCode;
@@ -730,7 +731,7 @@ static void AddVec(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeVec);
 }
 
-static void AddJmp(char *NName, CPUVar NMin, Boolean NHas, Boolean NInd, LongWord NCode)
+static void AddJmp(const char *NName, CPUVar NMin, Boolean NHas, Boolean NInd, LongWord NCode)
 {
   char IName[30];
 
@@ -745,7 +746,7 @@ static void AddJmp(char *NName, CPUVar NMin, Boolean NHas, Boolean NInd, LongWor
   InstrZ++;
 }
 
-static void AddFixed(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
+static void AddFixed(const char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -754,7 +755,7 @@ static void AddFixed(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddMem(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
+static void AddMem(const char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 {
   if (InstrZ >= MemOrderCount) exit(255);
   MemOrders[InstrZ].Code = NCode;
@@ -763,7 +764,7 @@ static void AddMem(char *NName, CPUVar NMin, Boolean NSup, LongWord NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeMem);
 }
 
-static void AddSP(char *NName, LongWord NCode)
+static void AddSP(const char *NName, LongWord NCode)
 {
   if (InstrZ >= SPRegCount) exit(255);
   SPRegs[InstrZ].Name = NName;

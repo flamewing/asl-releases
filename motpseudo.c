@@ -41,10 +41,12 @@ static Boolean M16Turn = False;
  * Local Functions
  *****************************************************************************/
 
-static Boolean CutRep(tStrComp *pDest, const tStrComp *pSrc, LongInt *pErg)
+static Boolean CutRep(tStrComp *pDest, const tStrComp *pSrc, LongInt *pErg, tSymbolFlags *pFlags)
 {
   tStrComp Src = *pSrc;
 
+  if (pFlags)
+    *pFlags = eSymbolFlag_None;
   KillPrefBlanksStrCompRef(&Src);
   if (*Src.Str != '[')
   {
@@ -68,7 +70,7 @@ static Boolean CutRep(tStrComp *pDest, const tStrComp *pSrc, LongInt *pErg)
     {
       StrCompSplitRef(&RepArg, pDest, &Src, pEnd);
       StrCompIncRefLeft(&RepArg, 1);
-      *pErg = EvalStrIntExpression(&RepArg, Int32, &OK);
+      *pErg = EvalStrIntExpressionWithFlags(&RepArg, Int32, &OK, pFlags);
       return OK;
     }
   }
@@ -105,7 +107,7 @@ static void DecodeBYT(Word Index)
         break;
       }
 
-      OK = CutRep(&Arg, pArg, &Rep);
+      OK = CutRep(&Arg, pArg, &Rep, NULL);
       if (!OK)
         break;
 
@@ -133,13 +135,12 @@ static void DecodeBYT(Word Index)
 
         SpaceFlag = 0;
 
-        FirstPassUnknown = False;
         EvalStrExpression(&Arg, &t);
         switch (t.Typ)
         {
           case TempInt:
           ToInt:
-            if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(t.Contents.Int, Int8))
+            if (!mFirstPassUnknownOrQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int8))
             {
               WrStrErrorPos(ErrNum_OverRange, &Arg);
               OK = False;
@@ -248,7 +249,7 @@ static void DecodeADR(Word Index)
         break;
       }
 
-      OK = CutRep(&Arg, pArg, &Rep);
+      OK = CutRep(&Arg, pArg, &Rep, NULL);
       if (!OK)
         break;
 
@@ -276,16 +277,15 @@ static void DecodeADR(Word Index)
         LongInt z2, Cnt;
 
         SpaceFlag = 0;
-        FirstPassUnknown = False;
         EvalStrExpression(&Arg, &Res);
 
         switch (Res.Typ)
         {
           case TempInt:
           ToInt:
-            if (FirstPassUnknown)
+            if (mFirstPassUnknown(Res.Flags))
               Res.Contents.Int &= 0xffff;
-            if (!SymbolQuestionable && !RangeCheck(Res.Contents.Int, Int16))
+            if (!mSymbolQuestionable(Res.Flags) && !RangeCheck(Res.Contents.Int, Int16))
             {
               WrError(ErrNum_OverRange);
               Res.Typ = TempNone;
@@ -373,7 +373,7 @@ static void DecodeFCC(Word Index)
         break;
       }
 
-      OK = CutRep(&Arg, pArg, &Rep);
+      OK = CutRep(&Arg, pArg, &Rep, NULL);
       if (!OK)
         break;
 
@@ -405,15 +405,16 @@ static void DecodeFCC(Word Index)
 
 static void DecodeDFS(Word Index)
 {
-  Word HVal16;
-  Boolean OK;
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    HVal16 = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown)
+    Word HVal16;
+    Boolean OK;
+    tSymbolFlags Flags;
+
+    HVal16 = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
@@ -734,7 +735,7 @@ void AddMoto16PseudoONOFF(void)
   AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
 }
 
-Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
+Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
 {
   tStrComp *pArg, Arg;
   void (*EnterInt)(LargeWord) = NULL;
@@ -750,13 +751,14 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   LongInt NewPC, HVal;
   TempResult t;
   Boolean OK, ValOK;
+  tSymbolFlags Flags;
   ShortInt SpaceFlag;
   Boolean PadBeforeStart;
 
   UNUSED(Turn);
 
   if (OpSize < 0)
-    OpSize = 1;
+    OpSize = eSymbolSize16Bit;
 
   PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
   switch (OpSize)
@@ -847,11 +849,10 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
           break;
         }
 
-        FirstPassUnknown = False;
-        OK = CutRep(&Arg, pArg, &Rep);
+        OK = CutRep(&Arg, pArg, &Rep, &Flags);
         if (!OK)
           break;
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
         {
           OK = FALSE;
           WrError(ErrNum_FirstPassCalc);
@@ -892,7 +893,6 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
             PadBeforeStart = False;
           }
 
-          FirstPassUnknown = False;
           EvalStrExpression(&Arg, &t);
 
           switch (t.Typ)
@@ -913,7 +913,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
                   OK = False;
                 }
               }
-              else if (!FirstPassUnknown && !SymbolQuestionable && !RangeCheck(t.Contents.Int, IntTypeEnum))
+              else if (!mFirstPassUnknownOrQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, IntTypeEnum))
               {
                 WrError(ErrNum_OverRange);
                 OK = False;
@@ -1020,11 +1020,10 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = False;
-      HVal = EvalStrIntExpression(&ArgStr[1], Int32, &ValOK);
-      if (FirstPassUnknown)
+      HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags);
+      if (mFirstPassUnknown(Flags))
         WrError(ErrNum_FirstPassCalc);
-      if ((ValOK) && (!FirstPassUnknown))
+      if (ValOK && !mFirstPassUnknown(Flags))
       {
         Boolean OddSize = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
 
@@ -1064,7 +1063,7 @@ Boolean DecodeMoto16Pseudo(ShortInt OpSize, Boolean Turn)
   return False;
 }
 
-static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, tSymbolSize *pResult, Boolean Allow24)
 {
   switch (mytoupper(SizeSpec))
   {
@@ -1084,7 +1083,7 @@ static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, ShortInt *pResult, Boolea
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+ * \fn     DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean Allow24)
  * \brief  decode Motorola-style operand size character
  * \param  SizeSpec size specifier character
  * \param  pResult returns result size
@@ -1092,7 +1091,7 @@ static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, ShortInt *pResult, Boolea
  * \return True if decoded
  * ------------------------------------------------------------------------ */
 
-Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
+Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean Allow24)
 {
   if (!DecodeMoto16AttrSizeCore(SizeSpec, pResult, Allow24))
   {
@@ -1102,7 +1101,7 @@ Boolean DecodeMoto16AttrSize(char SizeSpec, ShortInt *pResult, Boolean Allow24)
   return True;
 }
 
-Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, ShortInt *pResult, Boolean Allow24)
+Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, tSymbolSize *pResult, Boolean Allow24)
 {
   if ((strlen(pSizeSpec->Str) > 1)
    || !DecodeMoto16AttrSizeCore(*pSizeSpec->Str, pResult, Allow24))

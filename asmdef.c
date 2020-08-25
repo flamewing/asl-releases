@@ -30,10 +30,10 @@ char LogSuffix[] = ".log";             /* Fehlerdatei */
 char MapSuffix[] = ".map";             /* Debug-Info/Map-Format */
 char OBJSuffix[] = ".obj";
 
-char *EnvName = "ASCMD";               /* Environment-Variable fuer Default-
+const char *EnvName = "ASCMD";         /* Environment-Variable fuer Default-
                                           Parameter */
 
-char *SegNames[PCMax + 2] =
+const char *SegNames[PCMax + 2] =
 {
   "NOTHING", "CODE", "DATA", "IDATA", "XDATA", "YDATA",
   "BITDATA", "IO", "REG", "ROMDATA", "EEDATA", "STRUCT"
@@ -70,9 +70,6 @@ unsigned ASSUMERecCnt;
 const ASSUMERec *pASSUMERecs;
 void (*pASSUMEOverride)(void);
 
-Word TypeFlag;	                         /* Welche Adressraeume genutzt ? */
-ShortInt SizeFlag;		         /* Welche Operandengroessen definiert ? */
-
 Integer PassNo;                          /* Durchlaufsnummer */
 Integer JmpErrors;                       /* Anzahl fraglicher Sprungfehler */
 Boolean ThrowErrors;                     /* Fehler verwerfen bei Repass ? */
@@ -100,9 +97,9 @@ Boolean MacProOutput;                    /* Makroprozessorausgabe schreiben */
 Boolean MacroOutput;                     /* gelesene Makros schreiben */
 Boolean QuietMode;                       /* keine Meldungen */
 Boolean HardRanges;                      /* Bereichsfehler echte Fehler ? */
-char *DivideChars;                       /* Trennzeichen fuer Parameter. Inhalt Read Only! */
+const char *DivideChars;                 /* Trennzeichen fuer Parameter. Inhalt Read Only! */
 Boolean HasAttrs;                        /* Opcode hat Attribut */
-char *AttrChars;                         /* Zeichen, mit denen Attribut abgetrennt wird */
+const char *AttrChars;                   /* Zeichen, mit denen Attribut abgetrennt wird */
 Boolean MsgIfRepass;                     /* Meldungen, falls neuer Pass erforderlich */
 Integer PassNoForMessage;                /* falls ja: ab welchem Pass ? */
 Boolean CaseSensitive;                   /* Gross/Kleinschreibung unterscheiden ? */
@@ -123,18 +120,20 @@ LongInt NOPCode;                         /* Maschinenbefehl NOP zum Stopfen */
 Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
                                          /* FALSE = Intel-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
-char *PCSymbol;	                         /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
+const char *PCSymbol;	                 /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
 TConstMode ConstMode;
 Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
 Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE ist Prozessorbefehl */
         PageIsOccupied;
 #ifdef __PROTOS__
+Boolean (*DecodeAttrPart)(void);         /* dissect attribute of instruction */
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */
 Boolean (*ChkPC)(LargeWord Addr);        /* ueberprueft Codelaengenueberschreitungen */
 Boolean (*IsDef)(void);	                 /* ist Label nicht als solches zu werten ? */
 void (*SwitchFrom)(void) = NULL;         /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char *Asc, TempResult *Erg); /* vordefinierte Symbole ? */
 #else
+Boolean (*DecodeAttrPart)();
 void (*MakeCode)();
 Boolean (*ChkPC)();
 Boolean (*IsDef)();
@@ -200,6 +199,7 @@ LongInt MomSectionHandle;               /* mom. Namensraum */
 PSaveSection SectionStack;              /* gespeicherte Sektionshandles */
 tSavePhase *pPhaseStacks[PCMax];	/* saves nested PHASE values */
 
+tSymbolSize AttrPartOpSize;             /* instruction operand size deduced from insn attribute */
 LongWord MaxCodeLen = 0;                /* max. length of generated code */
 LongInt CodeLen;                        /* Laenge des erzeugten Befehls */
 LongWord *DAsmCode;                     /* Zwischenspeicher erzeugter Code */
@@ -231,7 +231,7 @@ void AsmDefInit(void)
 {
   LongInt z;
 
-  DoLst = True;
+  DoLst = eLstMacroExpAll;
   PassNo = 1;
   MaxSymPass = 1;
 
@@ -270,7 +270,7 @@ void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec)
 
 static char *GetString(void)
 {
-  return malloc(STRINGSIZE * sizeof(char));
+  return (char*)malloc(STRINGSIZE * sizeof(char));
 }
 
 int SetMaxCodeLen(LongWord NewMaxCodeLen)
@@ -306,7 +306,7 @@ void IncArgCnt(void)
     unsigned NewSize = sizeof(*ArgStr) * (ArgCnt + 1); /* one more, [0] is unused */
     int z;
 
-    ArgStr = ArgStr ? realloc(ArgStr, NewSize) : malloc(NewSize);
+    ArgStr = ArgStr ? (tStrComp*)realloc(ArgStr, NewSize) : (tStrComp*)malloc(NewSize);
     for (z = AllocArgCnt; z <= ArgCnt; z++)
       StrCompAlloc(&ArgStr[z]);
     AllocArgCnt = ArgCnt + 1;

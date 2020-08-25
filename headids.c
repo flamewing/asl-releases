@@ -121,7 +121,7 @@ static TFamilyDescr Descrs[] =
 
 /*---------------------------------------------------------------------------*/
 
-PFamilyDescr FindFamilyByName(char *Name)
+PFamilyDescr FindFamilyByName(const char *Name)
 {
   PFamilyDescr pRun;
 

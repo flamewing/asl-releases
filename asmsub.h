@@ -54,11 +54,11 @@ static inline Boolean Memo(const char *s)
 #endif
 
 
-extern void AddSuffix(char *s, char *Suff);
+extern void AddSuffix(char *s, const char *Suff);
 
 extern void KillSuffix(char *s);
 
-extern char *NamePart(char *Name);
+extern const char *NamePart(const char *Name);
 
 extern char *PathPart(char *Name);
 
@@ -92,7 +92,7 @@ extern Word Granularity(void);
 
 extern Word ListGran(void);
 
-extern void ChkSpace(Byte Space);
+extern void ChkSpace(Byte AddrSpace, unsigned AddrSpaceMask);
 
 
 extern void PrintUseList(void);
@@ -119,7 +119,7 @@ extern LongWord StackRes(void);
 #endif
 
 
-extern void AddCopyright(char *NewLine);
+extern void AddCopyright(const char *NewLine);
 
 extern void WriteCopyrights(TSwitchProc NxtProc);
 

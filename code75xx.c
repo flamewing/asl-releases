@@ -51,15 +51,14 @@ static void DecodeImm4(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Value;
+    tEvalResult EvalResult;
+    Word Value = EvalStrIntExpressionWithResult(&ArgStr[1], Int4, &EvalResult);
 
-    Value = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
-    if (OK)
+    if (EvalResult.OK)
     {
       PutCode(Index | (Value & 15));
       if (Memo("OP"))
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -110,15 +109,13 @@ static void DecodeImm3(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Value;
-
-    Value = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word Value = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+    if (EvalResult.OK)
     {
       PutCode(Index | (Value & 7));
       if (Memo("OP"))
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -144,15 +141,13 @@ static void DecodeDataMem(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Value;
- 
-    Value = EvalStrIntExpression(&ArgStr[1], DataIntType, &OK);
-    if (OK)
+    tEvalResult EvalResult;
+    Word Value = EvalStrIntExpressionWithResult(&ArgStr[1], DataIntType, &EvalResult);
+    if (EvalResult.OK)
     {
       PutCode(Index);
       BAsmCode[CodeLen++] = Value & SegLimits[SegData];
-      ChkSpace(SegData);
+      ChkSpace(SegData, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -161,7 +156,7 @@ static void DecodeAbs(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word Address;
     IntType Type = CodeIntType;
     Word SegLimit = SegLimits[SegCode];
@@ -174,11 +169,11 @@ static void DecodeAbs(Word Index)
       SegLimit = 0x1fff;
     }
 
-    Address = EvalStrIntExpression(&ArgStr[1], Type, &OK);
-    if (OK)
+    Address = EvalStrIntExpressionWithResult(&ArgStr[1], Type, &EvalResult);
+    if (EvalResult.OK)
     {
       PutCode(Index | (Address & SegLimit));
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -187,15 +182,13 @@ static void DecodeJCP(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Address;
+    tEvalResult EvalResult;
+    Word Address = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
 
-    FirstPassUnknown = FALSE;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (OK && ChkSamePage(Address, EProgCounter() + 1, 6))
+    if (EvalResult.OK && ChkSamePage(Address, EProgCounter() + 1, 6, EvalResult.Flags))
     {
       PutCode(Index | (Address & 0x3f));
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -204,19 +197,17 @@ static void DecodeCAL(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Address;
- 
-    FirstPassUnknown = FALSE;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (FirstPassUnknown)
+    tEvalResult EvalResult;
+    Word Address = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+
+    if (mFirstPassUnknown(EvalResult.Flags))
       Address = (Address & 0x1c7) | 0x100;
-    if (OK)
+    if (EvalResult.OK)
     {
       if ((Address & 0x338) != 0x100) WrError(ErrNum_OverRange);
       else
         PutCode(Index | ((Address & 0x0c0) >> 3) | (Address & 7));
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -225,19 +216,17 @@ static void DecodeLHLT(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Address;
- 
-    FirstPassUnknown = FALSE;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (FirstPassUnknown)
+    tEvalResult EvalResult;
+    Word Address = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+
+    if (mFirstPassUnknown(EvalResult.Flags))
       Address = (Address & 0x00cf) | 0x00c0;
-    if (OK)
+    if (EvalResult.OK)
     {
       if ((Address < 0xc0) || (Address > 0xcf)) WrError(ErrNum_OverRange);
       else
         PutCode(Index | (Address & 0xf));
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -246,19 +235,17 @@ static void DecodeCALT(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
-    Word Address;
- 
-    FirstPassUnknown = FALSE;
-    Address = EvalStrIntExpression(&ArgStr[1], CodeIntType, &OK);
-    if (FirstPassUnknown)
+    tEvalResult EvalResult;
+    Word Address = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
+
+    if (mFirstPassUnknown(EvalResult.Flags))
       Address = (Address & 0x00ff) | 0x00c0;
-    if (OK)
+    if (EvalResult.OK)
     {
       if ((Address < 0xd0) || (Address > 0xff)) WrError(ErrNum_OverRange);
       else
         PutCode(Index | (Address & 0x3f));
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -267,15 +254,15 @@ static void DecodeLogPort(Word Index)
 {
   if (ChkArgCnt(2, 2))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word Port, Mask;
 
-    Port = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-    if (OK)
+    Port = EvalStrIntExpressionWithResult(&ArgStr[1], UInt4, &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegIO);
-      Mask = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
-      if (OK)
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
+      Mask = EvalStrIntExpressionWithResult(&ArgStr[2], UInt4, &EvalResult);
+      if (EvalResult.OK)
         PutCode(Index | ((Mask & 15) << 4) | (Port & 15));
     }
   }
@@ -284,47 +271,47 @@ static void DecodeLogPort(Word Index)
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
-static void AddFixed(char *NewName, Word NewCode)
+static void AddFixed(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeFixed);
 }
 
-static void AddImm4(char *NewName, Word NewCode)
+static void AddImm4(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm4);
 }
 
-static void AddImm2(char *NewName, Word NewCode)
+static void AddImm2(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm2);
 }
 
-static void AddImm5(char *NewName, Word NewCode)
+static void AddImm5(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm5);
 }
 
-static void AddImm8(char *NewName, Word NewCode)
+static void AddImm8(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm8);
 }
 
-static void AddImm3(char *NewName, Word NewCode)
+static void AddImm3(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeImm3);
 }
 
-static void AddPR(char *NewName, Word NewCode)
+static void AddPR(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodePR);
 }
 
-static void AddDataMem(char *NewName, Word NewCode)
+static void AddDataMem(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeDataMem);
 }
 
-static void AddAbs(char *NewName, Word NewCode)
+static void AddAbs(const char *NewName, Word NewCode)
 {
   AddInstTable(InstTable, NewName, NewCode, DecodeAbs);
 }

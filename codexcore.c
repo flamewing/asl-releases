@@ -117,9 +117,10 @@ static void Code_2rus(Word Index)
    && ParseArgReg(1, &Op1)
    && ParseArgReg(2, &Op2))
   {
-    FirstPassUnknown = FALSE;
-    Op3 = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    Op3 = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt4, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Op3 &= 7;
     if (OK)
     {
@@ -184,9 +185,10 @@ static void Code_l2rus(Word Index)
    && ParseArgReg(1, &Op1)
    && ParseArgReg(2, &Op2))
   {
-    FirstPassUnknown = FALSE;
-    Op3 = EvalStrIntExpression(&ArgStr[3], UInt4, &OK);
-    if (FirstPassUnknown)
+    tSymbolFlags Flags;
+
+    Op3 = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt4, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Op3 &= 7;
     if (OK)
     {
@@ -310,10 +312,10 @@ static void Code_rus(Word Index)
   {
     unsigned Op2;
     Boolean OK;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = FALSE;
-    Op2 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
-    if (FirstPassUnknown)
+    Op2 = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt4, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Op2 &= 7;
     if (OK)
     {
@@ -418,12 +420,12 @@ static void Code_branch_core(Word Code, int DistArgIndex)
 {
   LongInt Delta;
   Boolean OK;
+  tSymbolFlags Flags;
 
   /* assume short branch for distance computation */
 
-  FirstPassUnknown = FALSE;
-  Delta = EvalStrIntExpression(&ArgStr[DistArgIndex], UInt32, &OK) - (EProgCounter() + 2);
-  if (FirstPassUnknown)
+  Delta = EvalStrIntExpressionWithFlags(&ArgStr[DistArgIndex], UInt32, &OK, &Flags) - (EProgCounter() + 2);
+  if (mFirstPassUnknown(Flags))
     Delta &= 0x1fffe;
 
   /* distance must be even */
@@ -538,7 +540,7 @@ static void Code_lr2r(Word Index)
 /*--------------------------------------------------------------------------*/
 /* Dynamic Code Table Handling */  
 
-static void Add_lr2r(char *NName, Word NCode1, Word NCode2)
+static void Add_lr2r(const char *NName, Word NCode1, Word NCode2)
 {
   if (InstrZ >= (int)(sizeof(lr2r_Orders) / sizeof(*lr2r_Orders)))
     exit(255);

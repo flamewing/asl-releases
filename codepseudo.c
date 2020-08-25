@@ -77,14 +77,14 @@ Boolean IsIndirect(const char *Asc)
 void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   TempResult t;
   LargeInt Erg;
 
-  FirstPassUnknown = False;
   if (ChkArgCnt(1, 1))
   {
-    Erg = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
-    if ((OK) && (!FirstPassUnknown))
+    Erg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+    if (OK && !mFirstPassUnknown(Flags))
     {
       if (Min > Erg) WrError(ErrNum_UnderRange);
       else if (Erg > Max) WrError(ErrNum_OverRange);
@@ -94,7 +94,7 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
         EnterIntSymbol(&LabPart, Erg, DestSeg, False);
         PopLocHandle();
         if (MakeUseList)
-         if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(ErrNum_Overlap);
+          if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(ErrNum_Overlap);
         t.Typ = TempInt; t.Contents.Int = Erg; SetListLineVal(&t);
       }
     }

@@ -134,14 +134,14 @@ void AddStructElem(PStructRec pStructRec, PStructElem pElement)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Size)
+ * \fn     SetStructElemSize(PStructRec pStructRec, const char *pElemName, tSymbolSize Size)
  * \brief  set the operand size of a structure's element
  * \param  pStructRec structure the element is contained in
  * \param  pElemName element's name
  * \param  Sizeoperand size to set
  * ------------------------------------------------------------------------ */
 
-void SetStructElemSize(PStructRec pStructRec, const char *pElemName, ShortInt Size)
+void SetStructElemSize(PStructRec pStructRec, const char *pElemName, tSymbolSize Size)
 {
   PStructElem pRun;
   int Match;

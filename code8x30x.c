@@ -153,15 +153,14 @@ static char *HasDisp(char *Asc)
   return z;
 }
 
-static Boolean GetLen(const tStrComp *pArg, Word *Erg)
+static Boolean GetLen(const tStrComp *pArg, Word *Erg, tSymbolFlags *pFlags)
 {
   Boolean OK;
 
-  FirstPassUnknown = False;
-  *Erg = EvalStrIntExpression(pArg, UInt4, &OK);
+  *Erg = EvalStrIntExpressionWithFlags(pArg, UInt4, &OK, pFlags);
   if (!OK)
     return False;
-  if (FirstPassUnknown)
+  if (mFirstPassUnknown(*pFlags))
     *Erg = 8;
   if (!ChkRange(*Erg, 1, 8))
     return False;
@@ -229,6 +228,7 @@ static void DecodeXMIT(Word Code)
   Word SrcReg, Rot;
   ShortInt SrcLen;
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt Adr;
 
   UNUSED(Code);
@@ -252,10 +252,10 @@ static void DecodeXMIT(Word Code)
     {
       if (ArgCnt == 2)
       {
-        Rot = 0xffff; OK = True;
+        Rot = 0xffff; OK = True; Flags = eSymbolFlag_None;
       }
       else
-        OK = GetLen(&ArgStr[3], &Rot);
+        OK = GetLen(&ArgStr[3], &Rot, &Flags);
       if (OK)
       {
         if (Rot == 0xffff)
@@ -322,7 +322,9 @@ static void DecodeAri(Word Code)
       }
       else                     /* 3 Operanden --> Quelle ist I/O */
       {
-        if (GetLen(&ArgStr[2], &Rot))
+        tSymbolFlags Flags;
+
+        if (GetLen(&ArgStr[2], &Rot, &Flags))
          if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen))
          {
            if (SrcReg < 16) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
@@ -343,10 +345,12 @@ static void DecodeAri(Word Code)
       }
       else                     /* 3 Argumente: Laenge=Laenge Ziel+Angabe */
       {
-        OK = GetLen(&ArgStr[2], &Rot);
+        tSymbolFlags Flags;
+
+        OK = GetLen(&ArgStr[2], &Rot, &Flags);
         if (OK)
         {
-          if (FirstPassUnknown) Rot = DestLen;
+          if (mFirstPassUnknown(Flags)) Rot = DestLen;
           if (DestLen == -1) DestLen = Rot;
           OK = Rot == DestLen;
           if (!OK) WrError(ErrNum_ConfOpSizes);
@@ -403,11 +407,13 @@ static void DecodeXEC(Word Code)
         }
         else
         {
+          tSymbolFlags Flags;
+
           if (ArgCnt == 1)
           {
-            Rot = 0xffff; OK = True;
+            Rot = 0xffff; OK = True; Flags = eSymbolFlag_None;
           }
-          else OK = GetLen(&ArgStr[2], &Rot);
+          else OK = GetLen(&ArgStr[2], &Rot, &Flags);
           if (OK)
           {
             if (Rot == 0xffff)
@@ -452,6 +458,7 @@ static void DecodeNZT(Word Code)
   Word SrcReg, Adr, Rot;
   ShortInt SrcLen;
   Boolean OK;
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
@@ -462,9 +469,8 @@ static void DecodeNZT(Word Code)
     {
       if (ChkArgCnt(2, 2))
       {
-        FirstPassUnknown = False;
-        Adr = EvalStrIntExpression(&ArgStr[2], UInt13, &OK);
-        if (OK && ChkSamePage(Adr, EProgCounter(), 8))
+        Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt13, &OK, &Flags);
+        if (OK && ChkSamePage(Adr, EProgCounter(), 8, Flags))
         {
           WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Adr & 0xff);
           CodeLen = 1;
@@ -475,9 +481,9 @@ static void DecodeNZT(Word Code)
     {
       if (ArgCnt == 2)
       {
-        Rot = 0xffff; OK = True;
+        Rot = 0xffff; OK = True; Flags = eSymbolFlag_None;
       }
-      else OK = GetLen(&ArgStr[2], &Rot);
+      else OK = GetLen(&ArgStr[2], &Rot, &Flags);
       if (OK)
       {
         if (Rot == 0xffff)
@@ -485,9 +491,8 @@ static void DecodeNZT(Word Code)
         if ((SrcLen != -1) && (Rot != SrcLen)) WrError(ErrNum_ConfOpSizes);
         else
         {
-          FirstPassUnknown = False;
-          Adr = EvalStrIntExpression(&ArgStr[ArgCnt], UInt13, &OK);
-          if (OK && ChkSamePage(Adr, EProgCounter(), 5))
+          Adr = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt13, &OK, &Flags);
+          if (OK && ChkSamePage(Adr, EProgCounter(), 5, Flags))
           {
             WAsmCode[0] = 0xa000 | (SrcReg << 8) | (Rot << 5) | (Adr & 0x1f);
             CodeLen = 1;
@@ -505,6 +510,7 @@ static void DecodeLIV_RIV(Word Code)
   LongInt Adr, Ofs;
   Word Len;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(3, 3))
   {
@@ -513,7 +519,7 @@ static void DecodeLIV_RIV(Word Code)
     {
       Ofs = EvalStrIntExpression(&ArgStr[2], UInt3, &OK);
       if (OK)
-       if (GetLen(&ArgStr[3], &Len))
+       if (GetLen(&ArgStr[3], &Len, &Flags))
        {
          PushLocHandle(-1);
          EnterIntSymbol(&LabPart, Code | (Adr << 16) | (Ofs << 8) | (Len & 7), SegNone, False);
@@ -525,7 +531,7 @@ static void DecodeLIV_RIV(Word Code)
 
 /*-------------------------------------------------------------------------*/
 
-static void AddAri(char *NName, Word NCode)
+static void AddAri(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAri);
 }

@@ -177,6 +177,7 @@ static void DecodeRegRel(Word Index)
   Byte Reg;
   Boolean IndFlag, OK;
   int Dist;
+  tSymbolFlags Flags;
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
@@ -184,10 +185,10 @@ static void DecodeRegRel(Word Index)
   {
     BAsmCode[0] = Index | Reg;
     IndFlag = *ArgStr[2].Str == '*';
-    Dist = EvalStrIntExpressionOffs(&ArgStr[2], IndFlag, UInt13, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], IndFlag, UInt13, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if (((Dist < - 64) || (Dist > 63)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Dist < - 64) || (Dist > 63)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[1] = Dist & 0x7f;
@@ -227,6 +228,7 @@ static void DecodeCondRel(Word Index)
 {
   Byte Cond;
   Boolean IndFlag, OK;
+  tSymbolFlags Flags;
   int Dist;
 
   if (!ChkArgCnt(2, 2));
@@ -235,10 +237,10 @@ static void DecodeCondRel(Word Index)
   {
     BAsmCode[0] = Index | Cond;
     IndFlag = *ArgStr[2].Str == '*';
-    Dist = EvalStrIntExpressionOffs(&ArgStr[2], IndFlag, UInt13, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], IndFlag, UInt13, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if (((Dist < - 64) || (Dist > 63)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Dist < - 64) || (Dist > 63)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[1] = Dist & 0x7f;
@@ -333,62 +335,62 @@ static void DecodeZero(Word Index)
 /*--------------------------------------------------------------------------*/
 /* Code Table Handling */
 
-static void AddFixed(char *pName, Word Code)
+static void AddFixed(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeFixed);
 }
 
-static void AddOneReg(char *pName, Word Code)
+static void AddOneReg(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeOneReg);
 }
 
-static void AddImm(char *pName, Word Code)
+static void AddImm(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeImm);
 }
 
-static void AddRegImm(char *pName, Word Code)
+static void AddRegImm(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeRegImm);
 }
 
-static void AddRegAbs(char *pName, Word Code)
+static void AddRegAbs(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeRegAbs);
 }
 
-static void AddRegRel(char *pName, Word Code)
+static void AddRegRel(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeRegRel);
 }
 
-static void AddCondAbs(char *pName, Word Code)
+static void AddCondAbs(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeCondAbs);
 }
 
-static void AddCondRel(char *pName, Word Code)
+static void AddCondRel(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeCondRel);
 }
 
-static void AddRegAbs2(char *pName, Word Code)
+static void AddRegAbs2(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeRegAbs2);
 }
    
-static void AddBrAbs(char *pName, Word Code)
+static void AddBrAbs(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeBrAbs);
 }  
 
-static void AddCond(char *pName, Word Code)
+static void AddCond(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeCond);
 }
 
-static void AddZero(char *pName, Word Code)
+static void AddZero(const char *pName, Word Code)
 {
   AddInstTable(InstTable, pName, Code, DecodeZero);
 }

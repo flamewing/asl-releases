@@ -31,14 +31,14 @@ static Boolean ActiveIF;
 static LongInt GetIfVal(const tStrComp *pCond)
 {
   Boolean IfOK;
+  tSymbolFlags Flags;
   LongInt Tmp;
 
-  FirstPassUnknown = False;
-  Tmp = EvalStrIntExpression(pCond, Int32, &IfOK);
-  if ((FirstPassUnknown) || (!IfOK))
+  Tmp = EvalStrIntExpressionWithFlags(pCond, Int32, &IfOK, &Flags);
+  if (mFirstPassUnknown(Flags) || !IfOK)
   {
     Tmp = 1;
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
   }
 
   return Tmp;
@@ -242,13 +242,12 @@ static void CodeENDIF(void)
 
 static void EvalIfExpression(const tStrComp *pCond, TempResult *erg)
 {
-  FirstPassUnknown = False;
   EvalStrExpression(pCond, erg);
-  if ((erg->Typ == TempNone) || (FirstPassUnknown))
+  if ((erg->Typ == TempNone) || mFirstPassUnknown(erg->Flags))
   {
     erg->Typ = TempInt;
     erg->Contents.Int = 1;
-    if (FirstPassUnknown)
+    if (mFirstPassUnknown(erg->Flags))
       WrError(ErrNum_FirstPassCalc);
   }
 }

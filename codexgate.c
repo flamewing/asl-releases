@@ -81,15 +81,15 @@ static void DecodeBranch(Word Index)
 {
   LongInt Dist;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
   {   
-    FirstPassUnknown = False;
-    Dist = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dist & 1)) WrError(ErrNum_NotAligned);
-      else if ((!SymbolQuestionable) && ((Dist < -512) || (Dist > 510))) WrError(ErrNum_NotAligned);
+      if (!mSymbolQuestionable(Flags) && (Dist & 1)) WrError(ErrNum_NotAligned);
+      else if (!mSymbolQuestionable(Flags) && ((Dist < -512) || (Dist > 510))) WrError(ErrNum_NotAligned);
       else
       {
         WAsmCode[0] = Index | ((Dist >> 1) & 0x01ff);
@@ -103,17 +103,17 @@ static void DecodeBRA(Word Index)
 {
   LongInt Dist;
   Boolean OK;  
+  tSymbolFlags Flags;
 
   UNUSED(Index);
 
   if (ChkArgCnt(1, 1))
   {   
-    FirstPassUnknown = False;
-    Dist = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    Dist = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && (Dist & 1)) WrError(ErrNum_NotAligned);
-      else if ((!SymbolQuestionable) && ((Dist < -1024) || (Dist > 1022))) WrError(ErrNum_NotAligned);
+      if (!mSymbolQuestionable(Flags) && (Dist & 1)) WrError(ErrNum_NotAligned);
+      else if (!mSymbolQuestionable(Flags) && ((Dist < -1024) || (Dist > 1022))) WrError(ErrNum_NotAligned);
       else
       {   
         WAsmCode[0] = 0x3c00 | ((Dist >> 1) & 0x03ff);

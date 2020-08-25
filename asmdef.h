@@ -128,7 +128,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define NestMaxName      "NESTMAX"    /* max. nesting level of a macro */
 #define DottedStructsName "DOTTEDSTRUCTS" /* struct elements by default with . */
 
-extern char *EnvName;
+extern const char *EnvName;
 
 /* This results from the tokenized representation of macro arguments
    in macro bodys: (31*16) - 4 for special arguments: */
@@ -139,7 +139,7 @@ extern char *EnvName;
 
 #define StructSeg (PCMax + 1)
 
-extern char *SegNames[PCMax + 2];
+extern const char *SegNames[PCMax + 2];
 extern char SegShorts[PCMax + 2];
 
 #define AscOfs '0'
@@ -224,7 +224,7 @@ typedef struct _TDefinement
 
 typedef struct _ASSUMERec
 {
-  char *Name;
+  const char *Name;
   LongInt *Dest;
   LongInt Min,Max;
   LongInt NothingVal;
@@ -258,9 +258,6 @@ extern unsigned ASSUMERecCnt;
 extern const ASSUMERec *pASSUMERecs;
 extern void (*pASSUMEOverride)(void);
 
-extern Word TypeFlag;
-extern ShortInt SizeFlag;
-
 extern Integer PassNo;
 extern Integer JmpErrors;
 extern Boolean ThrowErrors;
@@ -287,6 +284,7 @@ extern LongInt MomSectionHandle;
 extern PSaveSection SectionStack;
 extern tSavePhase *pPhaseStacks[PCMax];
 
+extern tSymbolSize AttrPartOpSize;
 extern LongInt CodeLen;
 extern Byte *BAsmCode;
 extern Word *WAsmCode;
@@ -301,9 +299,9 @@ extern Boolean MacProOutput;
 extern Boolean MacroOutput;
 extern Boolean QuietMode;
 extern Boolean HardRanges;
-extern char *DivideChars;
+extern const char *DivideChars;
 extern Boolean HasAttrs;
-extern char *AttrChars;
+extern const char *AttrChars;
 extern Boolean MsgIfRepass;
 extern Integer PassNoForMessage;
 extern Boolean CaseSensitive;
@@ -323,10 +321,11 @@ extern LongInt MacLineSum;
 extern LongInt NOPCode;
 extern Boolean TurnWords;
 extern Byte HeaderID;
-extern char *PCSymbol;
+extern const char *PCSymbol;
 extern TConstMode ConstMode;
 extern Boolean (*SetIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied;
+extern Boolean (*DecodeAttrPart)(void);
 extern void (*MakeCode)(void);
 extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);

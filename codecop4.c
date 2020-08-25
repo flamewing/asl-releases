@@ -134,10 +134,10 @@ static void DecodeAISC(Word Index)
   {
     Byte Val;
     Boolean OK;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    Val = EvalStrIntExpression(&ArgStr[1], Int4, &OK);
-    if (FirstPassUnknown)
+    Val = EvalStrIntExpressionWithFlags(&ArgStr[1], Int4, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Val = 1;
     if (OK)
     {
@@ -192,16 +192,15 @@ static void DecodeXAD(Word Index)
   {   
     Byte Reg1, Reg2;
     Boolean OK;
+    tSymbolFlags Flags;
  
-    FirstPassUnknown = False;
-    Reg1 = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
-    if ((FirstPassUnknown) && (MomCPU < CPUCOP420))
+    Reg1 = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
+    if (mFirstPassUnknown(Flags) && (MomCPU < CPUCOP420))
       Reg1 = 3;
     if (OK)
     {
-      FirstPassUnknown = False;
-      Reg2 = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
-      if ((FirstPassUnknown) && (MomCPU < CPUCOP420))
+      Reg2 = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt4, &OK, &Flags);
+      if (mFirstPassUnknown(Flags) && (MomCPU < CPUCOP420))
         Reg2 = 15;
       if (OK)
       {
@@ -228,9 +227,10 @@ static void DecodeLBI(Word Index)
     Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
     if (OK)
     {
-      FirstPassUnknown = False;
-      Val = EvalStrIntExpression(&ArgStr[2], UInt4, &OK);
-      if (FirstPassUnknown)
+      tSymbolFlags Flags;
+
+      Val = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt4, &OK, &Flags);
+      if (mFirstPassUnknown(Flags))
         Val = 0;
       if (OK)
       {
@@ -283,10 +283,10 @@ static void DecodeJSRP(Word Index)
   {
     Word Addr;
     Boolean OK;
+    tSymbolFlags Flags;
  
-    FirstPassUnknown = FALSE;
-    Addr = EvalStrIntExpression(&ArgStr[1], AdrInt, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrInt, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr = 2 << 6;
     if (OK)
     {
@@ -306,10 +306,10 @@ static void DecodeJP(Word Index)
   {
     Word Addr, CurrPC;
     Boolean OK;
+    tSymbolFlags Flags;
  
-    FirstPassUnknown = FALSE;
-    Addr = EvalStrIntExpression(&ArgStr[1], AdrInt, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrInt, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr = EProgCounter() & (~0x1f);
     if (OK)
     {
@@ -326,7 +326,7 @@ static void DecodeJP(Word Index)
         if ((CurrPC & 0x3f) == 0x3f)
         {
           PossPage++;
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(Flags))
             Addr += 0x40;
         }
 
@@ -342,7 +342,7 @@ static void DecodeJP(Word Index)
 /*---------------------------------------------------------------------------*/
 /* Code Table Handling */
 
-static void AddFixed(char *NName, Word NCode, Word NMask)
+static void AddFixed(const char *NName, Word NCode, Word NMask)
 {
   if (InstrZ >= FixedOrderCnt)
     exit(0);
@@ -354,7 +354,7 @@ static void AddFixed(char *NName, Word NCode, Word NMask)
   }
 }
 
-static void AddImm(char *NName, Word NCode, Word NMask)
+static void AddImm(const char *NName, Word NCode, Word NMask)
 {
   if (InstrZ >= ImmOrderCnt)
     exit(0);

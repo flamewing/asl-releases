@@ -8,11 +8,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-/*
- * TODOs for byte-oriented code segment:
- * - document CPU option
- */
-
 #include "stdinc.h"
 
 #include <ctype.h>
@@ -85,7 +80,7 @@ static const tCPUProps *pCurrCPUProps;
 static IntType CodeAdrIntType,
                DataAdrIntType;
 
-static const char *WrapFlagName = "WRAPMODE";
+static const char WrapFlagName[] = "WRAPMODE";
 
 /*---------------------------------------------------------------------------*/
 
@@ -167,32 +162,31 @@ static Boolean DecodeMem(char * Asc, Word *Erg)
 
 static Boolean DecodeBitArg2(const tStrComp *pRegArg, const tStrComp *pBitArg, LongWord *pResult)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   LongWord Addr;
 
-  *pResult = EvalStrIntExpression(pBitArg, UInt3, &OK);
-  if (!OK)
+  *pResult = EvalStrIntExpressionWithResult(pBitArg, UInt3, &EvalResult);
+  if (!EvalResult.OK)
     return False;
 
-  FirstPassUnknown = False;
-  Addr = EvalStrIntExpression(pRegArg, DataAdrIntType, &OK);
-  if (!OK)
+  Addr = EvalStrIntExpressionWithResult(pRegArg, DataAdrIntType, &EvalResult);
+  if (!EvalResult.OK)
     return False;
 
-  if (TypeFlag & (1 << SegIO))
+  if (EvalResult.AddrSpaceMask & (1 << SegIO))
   {
-    if (!FirstPassUnknown && !ChkRange(Addr, 0, IOAreaStdSize - 1))
+    if (!mFirstPassUnknown(EvalResult.Flags) && !ChkRange(Addr, 0, IOAreaStdSize - 1))
       return False;
     *pResult |= BitFlag_IO | (Addr & 0x3f) << 3;
     return True;
   }
   else
   {
-    ChkSpace(SegData);
+    ChkSpace(SegData, EvalResult.AddrSpaceMask);
 
-    if (!FirstPassUnknown && !ChkRange(Addr, 0, SegLimits[SegData]))
+    if (!mFirstPassUnknown(EvalResult.Flags) && !ChkRange(Addr, 0, SegLimits[SegData]))
       return False;
-    *pResult |= ((TypeFlag & (1 << SegData)) ? BitFlag_Data : 0) | (Addr & 0x1ff) << 3;
+    *pResult |= ((EvalResult.AddrSpaceMask & (1 << SegData)) ? BitFlag_Data : 0) | (Addr & 0x1ff) << 3;
     return True;
   }
 }
@@ -202,7 +196,7 @@ static Boolean DecodeBitArg(int Start, int Stop, LongWord *pResult)
   if (Start == Stop)
   {
     char *pPos = QuotPos(ArgStr[Start].Str, '.');
-    Boolean OK;
+    tEvalResult EvalResult;
 
     if (pPos)
     {
@@ -211,10 +205,10 @@ static Boolean DecodeBitArg(int Start, int Stop, LongWord *pResult)
       StrCompSplitRef(&RegArg, &BitArg, &ArgStr[Start], pPos);
       return DecodeBitArg2(&RegArg, &BitArg, pResult);
     }
-    *pResult = EvalStrIntExpression(&ArgStr[Start], UInt16, &OK);
-    if (OK)
-      ChkSpace(SegBData);
-    return OK;
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt16, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
   }
   else if (Stop == Start + 1)
     return DecodeBitArg2(&ArgStr[Start], &ArgStr[Stop], pResult);
@@ -244,30 +238,29 @@ static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LongWord RegMask)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     GetWordCodeAddress(tStrComp *pArg, Boolean *pOK)
+ * \fn     GetWordCodeAddress(tStrComp *pArg, tEvalResult *EvalResult)
  * \brief  decode argument as code address and divide by two if in byte mode
  * \param  pArg address argument
- * \param  pOK returns OK/failure
+ * \param  pEvalResult returns OK/failure
  * \return (word) address
  * ------------------------------------------------------------------------ */
 
-static LongInt GetWordCodeAddress(tStrComp *pArg, Boolean *pOK)
+static LongInt GetWordCodeAddress(tStrComp *pArg, tEvalResult *pEvalResult)
 {
   LongInt Result;
 
-  FirstPassUnknown = False;
-  Result = EvalStrIntExpression(pArg, CodeAdrIntType, pOK);
-  if (*pOK)
+  Result = EvalStrIntExpressionWithResult(pArg, CodeAdrIntType, pEvalResult);
+  if (pEvalResult->OK)
   {
-    ChkSpace(SegCode);
+    ChkSpace(SegCode, pEvalResult->AddrSpaceMask);
     if (!CodeSegSize)
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(pEvalResult->Flags))
         Result &= ~1ul;
       if (Result & 1)
       {
         WrStrErrorPos(ErrNum_NotAligned, pArg);
-        *pOK = False;
+        pEvalResult->OK = False;
       }
       else
         Result >>= 1;
@@ -336,13 +329,13 @@ static void DecodeRES(Word Index)
 {
   Boolean OK;
   Integer Size;
+  tSymbolFlags Flags;
 
   UNUSED(Index);
 
-  FirstPassUnknown = False;
-  Size = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-  if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
-  if ((OK) && (!FirstPassUnknown))
+  Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+  if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+  if (OK && !mFirstPassUnknown(Flags))
   {
     DontPrint = True;
     if (!Size) WrError(ErrNum_NullResMem);
@@ -411,7 +404,7 @@ static void DecodeDATA_AVR(Word Index)
      if (OK)
      {
        EvalStrExpression(&ArgStr[z], &t);
-       if ((FirstPassUnknown) && (t.Typ == TempInt)) t.Contents.Int &= MaxV;
+       if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt)) t.Contents.Int &= MaxV;
        switch (t.Typ)
        {
          case TempString:
@@ -584,7 +577,6 @@ static void DecodeINOUT(Word Index)
 {
   int RegI, MemI;
   Word Reg, Mem;
-  Boolean OK;
 
   if (ChkArgCnt(2, 2))
   {
@@ -592,10 +584,12 @@ static void DecodeINOUT(Word Index)
     MemI = 3 - RegI;
     if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
-      Mem = EvalStrIntExpression(&ArgStr[MemI], UInt6, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+
+      Mem = EvalStrIntExpressionWithResult(&ArgStr[MemI], UInt6, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
         AppendCode(0xb000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0xf0) << 5));
       }
     }
@@ -606,7 +600,6 @@ static void DecodeLDSSTS(Word Index)
 {
   int RegI, MemI;
   Word Reg;
-  Boolean OK;
 
   if (ChkArgCnt(2, 2)
    && ChkCoreMask(MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny)))
@@ -615,10 +608,11 @@ static void DecodeLDSSTS(Word Index)
     MemI = 3 - RegI;
     if (DecodeArgReg(RegI, &Reg, AllRegMask))
     {
-      Word Address = EvalStrIntExpression(&ArgStr[MemI], UInt16, &OK);
-      if (OK)
+      tEvalResult EvalResult;
+      Word Address = EvalStrIntExpressionWithResult(&ArgStr[MemI], UInt16, &EvalResult);
+      if (EvalResult.OK)
       {
-        ChkSpace(SegData);
+        ChkSpace(SegData, EvalResult.AddrSpaceMask);
         AppendCode(0x9000 | Index | (Reg << 4));
         AppendCode(Address);
       }
@@ -700,20 +694,17 @@ static void DecodePBit(Word Code)
 static void DecodeRel(Word Code)
 {
   LongInt AdrInt;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK) - GetNextCodeAddress();
-    if (OK)
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &EvalResult) - GetNextCodeAddress();
+    if (EvalResult.OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
-      if ((!SymbolQuestionable) && ((AdrInt < -64) || (AdrInt > 63))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(EvalResult.Flags) && ((AdrInt < -64) || (AdrInt > 63))) WrError(ErrNum_JmpDistTooBig);
       else
-      {
-        ChkSpace(SegCode);
         AppendCode(Code | ((AdrInt & 0x7f) << 3));
-      }
     }
   }
 }
@@ -722,23 +713,20 @@ static void DecodeBRBSBC(Word Index)
 {
   Word Bit;
   LongInt AdrInt;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   if (ChkArgCnt(2, 2))
   {
-    Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-    if (OK)
+    Bit = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+    if (EvalResult.OK)
     {
-      AdrInt = GetWordCodeAddress(&ArgStr[2], &OK) - GetNextCodeAddress();
-      if (OK)
+      AdrInt = GetWordCodeAddress(&ArgStr[2], &EvalResult) - GetNextCodeAddress();
+      if (EvalResult.OK)
       {
         if (WrapFlag) AdrInt = CutAdr(AdrInt);
-        if ((!SymbolQuestionable) && ((AdrInt < -64) || (AdrInt > 63))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(EvalResult.Flags) && ((AdrInt < -64) || (AdrInt > 63))) WrError(ErrNum_JmpDistTooBig);
         else
-        {
-          ChkSpace(SegCode);
           AppendCode(0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit);
-        }
       }
     }
   }
@@ -747,15 +735,14 @@ static void DecodeBRBSBC(Word Index)
 static void DecodeJMPCALL(Word Index)
 {
   LongInt AdrInt;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   if (ChkArgCnt(1, 1)
    && ChkMinCore(eCoreTiny16K))
   {
-    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK);
-    if (OK)
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &EvalResult);
+    if (EvalResult.OK)
     {
-      ChkSpace(SegCode);
       AppendCode(0x940c | Index | ((AdrInt & 0x3e0000) >> 13) | ((AdrInt & 0x10000) >> 16));
       AppendCode(AdrInt & 0xffff);
     }
@@ -765,20 +752,17 @@ static void DecodeJMPCALL(Word Index)
 static void DecodeRJMPCALL(Word Index)
 {
   LongInt AdrInt;
-  Boolean OK;
+  tEvalResult EvalResult;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = GetWordCodeAddress(&ArgStr[1], &OK) - GetNextCodeAddress();
-    if (OK)
+    AdrInt = GetWordCodeAddress(&ArgStr[1], &EvalResult) - GetNextCodeAddress();
+    if (EvalResult.OK)
     {
       if (WrapFlag) AdrInt = CutAdr(AdrInt);
-      if ((!SymbolQuestionable) && ((AdrInt < -2048) || (AdrInt > 2047))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(EvalResult.Flags) && ((AdrInt < -2048) || (AdrInt > 2047))) WrError(ErrNum_JmpDistTooBig);
       else
-      {
-        ChkSpace(SegCode);
         AppendCode(0xc000 | Index | (AdrInt & 0xfff));
-      }
     }
   }
 }
@@ -891,7 +875,7 @@ static void DecodeBIT(Word Code)
 /*---------------------------------------------------------------------------*/
 /* Dynamic Code Table Handling                                               */
 
-static void AddFixed(char *NName, Word NMin, Word NCode)
+static void AddFixed(const char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].Code = NCode;
@@ -899,7 +883,7 @@ static void AddFixed(char *NName, Word NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddReg1(char *NName, Word NMin, Word NCode)
+static void AddReg1(const char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= Reg1OrderCnt) exit(255);
   Reg1Orders[InstrZ].Code = NCode;
@@ -907,7 +891,7 @@ static void AddReg1(char *NName, Word NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg1);
 }
 
-static void AddReg2(char *NName, Word NMin, Word NCode)
+static void AddReg2(const char *NName, Word NMin, Word NCode)
 {
   if (InstrZ >= Reg2OrderCnt) exit(255);
   Reg2Orders[InstrZ].Code = NCode;
@@ -915,27 +899,27 @@ static void AddReg2(char *NName, Word NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
 }
 
-static void AddReg3(char *NName, Word NCode)
+static void AddReg3(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeReg3);
 }
 
-static void AddImm(char *NName, Word NCode)
+static void AddImm(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm);
 }
 
-static void AddRel(char *NName, Word NCode)
+static void AddRel(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }
 
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddPBit(char *NName, Word NCode)
+static void AddPBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodePBit);
 }

@@ -278,13 +278,14 @@ static void DecodeRel(Word Code)
 {
   Integer Adr;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
   {
-    Adr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+    Adr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if (((Adr < -128) || (Adr > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Adr < -128) || (Adr > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = Code; 
@@ -784,15 +785,16 @@ static void DecodeBitBr(Word Index)
   Byte Bit, BAdr;
   Boolean OK;
   Integer Adr;
+  tSymbolFlags Flags;
 
   if (!ChkArgCnt(2, 2));
   else if (!DecodeBitAdr(&ArgStr[1], &BAdr, &Bit)) WrError(ErrNum_InvAddrMode);
   else
   {
-    Adr = EvalStrIntExpression(&ArgStr[2], UInt16, &OK) - (EProgCounter() + 3);
+    Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &OK, &Flags) - (EProgCounter() + 3);
     if (OK)
     {
-      if (((Adr < -128) || (Adr > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((Adr < -128) || (Adr > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         BAsmCode[0] = 0xb0 + (Index << 3) + Bit;
@@ -865,22 +867,22 @@ static void DecodeStack(Word Index)
 /*--------------------------------------------------------------------------*/
 /* Codetabellen */
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddALU(char *NName, Byte NCode)
+static void AddALU(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU);
 }
 
-static void AddAcc(char *NName, Byte NCode)
+static void AddAcc(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAcc);
 }
 
-static void AddRel(char *NName, Byte NCode)
+static void AddRel(const char *NName, Byte NCode)
 {  
   AddInstTable(InstTable, NName, NCode, DecodeRel);
 }

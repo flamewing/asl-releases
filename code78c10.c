@@ -29,7 +29,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
 } SReg;
 
@@ -58,8 +58,8 @@ static ASSUMERec ASSUME78C10s[] =
 
 static Boolean Decode_r(char *Asc, ShortInt *Erg)
 {
-  static char *Names = "VABCDEHL";
-  char *p;
+  static const char Names[] = "VABCDEHL";
+  const char *p;
 
   if (strlen(Asc) != 1) return False;
   p = strchr(Names, mytoupper(*Asc));
@@ -265,7 +265,7 @@ static Boolean Decode_rpa3(const tStrComp *pArg, ShortInt *Erg, ShortInt *Disp)
 static Boolean Decode_f(char *Asc, ShortInt *Erg)
 {
 #define FlagCnt 3
-  static char *Flags[FlagCnt] = {"CY", "HC", "Z"};
+  static const char Flags[FlagCnt][3] = {"CY", "HC", "Z"};
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
    if (!as_strcasecmp(Flags[*Erg], Asc)) break;
@@ -327,12 +327,12 @@ static Boolean Decode_irf(char *Asc, ShortInt *Erg)
 {
 #undef FlagCnt
 #define FlagCnt 18
-  static char *FlagNames[FlagCnt] = 
-            {"NMI" , "FT0" , "FT1" , "F1"  , "F2"  , "FE0" , 
+  static const char FlagNames[FlagCnt][5] = 
+           { "NMI" , "FT0" , "FT1" , "F1"  , "F2"  , "FE0" , 
              "FE1" , "FEIN", "FAD" , "FSR" , "FST" , "ER"  , 
              "OV"  , "AN4" , "AN5" , "AN6" , "AN7" , "SB"   };
-  static ShortInt FlagCodes[FlagCnt] = 
-            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20};
+  static const ShortInt FlagCodes[FlagCnt] = 
+            { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20 };
 
   for (*Erg = 0; *Erg < FlagCnt; (*Erg)++)
    if (!as_strcasecmp(FlagNames[*Erg], Asc)) break;
@@ -345,11 +345,11 @@ static Boolean Decode_wa(const tStrComp *pArg, Byte *Erg)
 {
   Word Adr;
   Boolean OK;
+  tSymbolFlags Flags;
 
-  FirstPassUnknown = False;
-  Adr = EvalStrIntExpression(pArg, Int16, &OK);
+  Adr = EvalStrIntExpressionWithFlags(pArg, Int16, &OK, &Flags);
   if (!OK) return False;
-  if ((FirstPassUnknown) && (Hi(Adr) != WorkArea)) WrError(ErrNum_InAccPage);
+  if (!mFirstPassUnknown(Flags) && (Hi(Adr) != WorkArea)) WrError(ErrNum_InAccPage);
   *Erg = Lo(Adr);
   return True;
 }
@@ -837,11 +837,12 @@ static void DecodeJ_JR_JRE(Word Type)
 {
   Boolean OK;
   Integer AdrInt;
+  tSymbolFlags Flags;
 
   if (!ChkArgCnt(1, 1))
     return;
 
-  AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK) - (EProgCounter() + 1);
+  AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags) - (EProgCounter() + 1);
   if (!OK)
     return;
 
@@ -851,7 +852,7 @@ static void DecodeJ_JR_JRE(Word Type)
   switch (Type)
   {
     case 1: /* JR */
-      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt6)) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && !RangeCheck(AdrInt, SInt6)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 1;
@@ -860,7 +861,7 @@ static void DecodeJ_JR_JRE(Word Type)
       break;
     case 2:
       AdrInt--; /* JRE is 2 bytes long */
-      if (!SymbolQuestionable && !RangeCheck(AdrInt, SInt9)) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && !RangeCheck(AdrInt, SInt9)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 2;
@@ -879,12 +880,12 @@ static void DecodeCALF(Word Code)
   {
     Boolean OK;
     Integer AdrInt;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
     if (OK)
     {
-      if ((!FirstPassUnknown) && ((AdrInt >> 11) != 1)) WrError(ErrNum_NotFromThisAddress);
+      if (!mFirstPassUnknown(Flags) && ((AdrInt >> 11) != 1)) WrError(ErrNum_NotFromThisAddress);
       else
       {
         CodeLen = 2;
@@ -903,12 +904,12 @@ static void DecodeCALT(Word Code)
   {
     Boolean OK;
     Integer AdrInt;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
     if (OK)
     {
-      if ((!FirstPassUnknown) && ((AdrInt & 0xffc1) != 0x80)) WrError(ErrNum_NotFromThisAddress);
+      if (!mFirstPassUnknown(Flags) && ((AdrInt & 0xffc1) != 0x80)) WrError(ErrNum_NotFromThisAddress);
       else
       {
         CodeLen = 1;
@@ -966,21 +967,21 @@ static void DecodeSKIT_SKNIT(Word Code)
 
 /*--------------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   if ((!strcmp(NName, "STOP")) && (MomCPU == CPU7810));
   else
     AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddSReg(char *NName, Word NCode)
+static void AddSReg(const char *NName, Word NCode)
 {
   if (InstrZ >= SRegCnt) exit(255);
   SRegs[InstrZ].Name = NName;
   SRegs[InstrZ++].Code = NCode;
 }
 
-static void AddALU(Byte NCode, char *NNameI, char *NNameReg, char *NNameEA)
+static void AddALU(Byte NCode, const char *NNameI, const char *NNameReg, const char *NNameEA)
 {
   char Name[20];
 
@@ -995,22 +996,22 @@ static void AddALU(Byte NCode, char *NNameI, char *NNameReg, char *NNameEA)
   AddInstTable(InstTable, Name, NCode, DecodeALUImmW);
 }
 
-static void AddAbs(char *NName, Word NCode)
+static void AddAbs(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeAbs);
 }
 
-static void AddReg2(char *NName, Word NCode)
+static void AddReg2(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeReg2);
 }
 
-static void AddWork(char *NName, Word NCode)
+static void AddWork(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeWork);
 }
 
-static void AddEA(char *NName, Word NCode)
+static void AddEA(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeEA);
 }

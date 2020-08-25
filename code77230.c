@@ -50,7 +50,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   LongWord Code;
 } Register;
 
@@ -406,14 +406,15 @@ static void DecodeBASE(Word Index)
 static void DecodeRPC(Word Index)
 {
   LongWord Value;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (!SplitArgs(1))
     return;
 
-  FirstPassUnknown = False;
-  Value = EvalStrIntExpression(&ArgStr[1], UInt4, &Error);
-  if (FirstPassUnknown)
+  Value = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt4, &Error, &Flags);
+  if (mFirstPassUnknown(Flags))
     Value &= 7;
   Error = (Value > 9) ? True : !Error;
   if (!Error)
@@ -539,13 +540,13 @@ static void DecodeFD(Word Index)
 static void DecodeSHV(Word Index)
 {
   LongWord Value;
+  tSymbolFlags Flags;
 
   if (!SplitArgs(1))
     return;
 
-  FirstPassUnknown = False;
-  Value = EvalStrIntExpression(&ArgStr[1], UInt6, &Error);
-  if (FirstPassUnknown)
+  Value = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt6, &Error, &Flags);
+  if (mFirstPassUnknown(Flags))
     Value &= 31;
   Error = (Value > 46) ? True : !Error;
   if (!Error)
@@ -570,17 +571,18 @@ static void DecodeRPS(Word Index)
 static void DecodeNAL(Word Index)
 {
   LongWord Value;
+  tSymbolFlags Flags;
+
   UNUSED(Index);
 
   if (!SplitArgs(1))
     return;
 
-  FirstPassUnknown = False;
-  Value = EvalStrIntExpression(&ArgStr[1], UInt13, &Error);
+  Value = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt13, &Error, &Flags);
   Error = !Error;
   if (!Error)
   {
-    if (ChkSamePage(Value, EProgCounter(), 9))
+    if (ChkSamePage(Value, EProgCounter(), 9, Flags))
       AddComp(InstrNAL, Value & 0x1ff);
   }
   DiscardArgs();  
@@ -602,7 +604,6 @@ static Boolean DecodePseudo(void)
       z = 1; OK = True;
       while ((OK) && (z <= ArgCnt))
       {
-        FirstPassUnknown = FALSE;
         EvalStrExpression(&ArgStr[z], &t);
         switch(t.Typ)
         {
@@ -679,9 +680,10 @@ static Boolean DecodePseudo(void)
   {
     if (ChkArgCnt(1, 1))
     {
-      FirstPassUnknown = False;
-      Size = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-      if (FirstPassUnknown)
+      tSymbolFlags Flags;
+
+      Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+      if (mFirstPassUnknown(Flags))
       {
         WrError(ErrNum_FirstPassCalc);
         OK = False;
@@ -704,42 +706,42 @@ static Boolean DecodePseudo(void)
 /*---------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static void AddJmp(char *NName, LongWord NCode)
+static void AddJmp(const char *NName, LongWord NCode)
 {
   if (InstrZ >= JmpOrderCnt) exit(255);
   JmpOrders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeJmp);
 }
 
-static void AddALU1(char *NName, LongWord NCode)
+static void AddALU1(const char *NName, LongWord NCode)
 {
   if (InstrZ >= ALU1OrderCnt) exit(255);
   ALU1Orders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeALU1);
 }
 
-static void AddALU2(char *NName, LongWord NCode)
+static void AddALU2(const char *NName, LongWord NCode)
 {
   if (InstrZ >= ALU2OrderCnt) exit(255);
   ALU2Orders[InstrZ].Code = NCode;
   AddInstTable(InstTable, NName, InstrZ++, DecodeALU2);
 }
 
-static void AddSrcReg(char *NName, LongWord NCode)
+static void AddSrcReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= SrcRegCnt) exit(255);
   SrcRegs[InstrZ].Name = NName;
   SrcRegs[InstrZ++].Code = NCode;
 }
 
-static void AddALUSrcReg(char *NName, LongWord NCode)
+static void AddALUSrcReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= ALUSrcRegCnt) exit(255);
   ALUSrcRegs[InstrZ].Name = NName;
   ALUSrcRegs[InstrZ++].Code = NCode;
 }
 
-static void AddDestReg(char *NName, LongWord NCode)
+static void AddDestReg(const char *NName, LongWord NCode)
 {
   if (InstrZ >= DestRegCnt) exit(255);
   DestRegs[InstrZ].Name = NName;

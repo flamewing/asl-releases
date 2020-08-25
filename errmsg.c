@@ -309,14 +309,14 @@ extern Boolean ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkExcludeCPUList(tErrorNum ErrorNum, ...)
+ * \fn     ChkExcludeCPUList(int ErrorNum, ...)
  * \brief  check whether currently selected CPU is one of the given ones and issue error if it is
  * \param  ErrorNum error to issue if not OK (0 = default message)
  * \param  ... List of CPUs terminated by CPUNone
  * \return Index (-1...-n) of matching CPU or 0 if current CPU does not match any
  * ------------------------------------------------------------------------ */
 
-int ChkExcludeCPUList(tErrorNum ErrorNum, ...)
+int ChkExcludeCPUList(int ErrorNum, ...)
 {
   va_list ap;
   int Index = -1, FoundIndex = 0;
@@ -375,21 +375,21 @@ int ChkExcludeCPUList(tErrorNum ErrorNum, ...)
     va_end(ap);
     IterateCPUList(IterateExclude, &Context);
     IterateExclude(NULL, &Context);
-    WrXError(GetDefaultCPUErrorNum(ErrorNum), Context.Str);
+    WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Context.Str);
   }
 
   return FoundIndex;
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkExactCPUList(tErrorNum ErrorNum)
+ * \fn     ChkExactCPUList(int ErrorNum)
  * \brief  check whether currently selected CPU is one of the given ones and issue error if not
  * \param  ErrorNum error to issue if not OK (0 = default message)
  * \param  ... List of CPUs terminated by CPUNone
  * \return Index (0...) of matching CPU or -1 if current CPU does not match
  * ------------------------------------------------------------------------ */
 
-extern int ChkExactCPUList(tErrorNum ErrorNum, ...)
+extern int ChkExactCPUList(int ErrorNum, ...)
 {
   va_list ap;
   String Str;
@@ -431,7 +431,7 @@ extern int ChkExactCPUList(tErrorNum ErrorNum, ...)
   }
   va_end(ap);
   strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
-  WrXError(GetDefaultCPUErrorNum(ErrorNum), Str);
+  WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Str);
   return -1;
 }
 
@@ -480,17 +480,17 @@ int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
 /*!------------------------------------------------------------------------
  * \fn     ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits)
  * \brief  check whether two addresses are of same page
- * \param  Addr1, Addr2 addresses to check
+ * \param  CurrAddr, DestAddr addresses to check
  * \param  PageBits page size in bits
+ * \param  DestFlags symbol flags of DestAddr
  * \return TRUE if OK
  * ------------------------------------------------------------------------ */
 
-Boolean ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits)
+Boolean ChkSamePage(LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits, tSymbolFlags DestFlags)
 {
   LargeWord Mask = ~((1ul << PageBits) - 1);
-  Boolean Result = ((Addr1 & Mask) == (Addr2 & Mask))
-                 || FirstPassUnknown
-                 || SymbolQuestionable;
+  Boolean Result = ((CurrAddr & Mask) == (DestAddr & Mask))
+                || mFirstPassUnknownOrQuestionable(DestFlags);
   if (!Result)
     WrError(ErrNum_TargOnDiffPage);
   return Result;

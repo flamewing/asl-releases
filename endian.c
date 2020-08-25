@@ -18,9 +18,9 @@
 
 Boolean BigEndian;
 
-char *Integ16Format, *Integ32Format, *Integ64Format;
-char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
-char *LargeIntFormat, *LargeHIntFormat;
+const char *Integ16Format, *Integ32Format, *Integ64Format;
+const char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
+const char *LargeIntFormat, *LargeHIntFormat;
 
 /*****************************************************************************/
 
@@ -375,7 +375,7 @@ void MWrite8B(Byte *Buffer, QuadWord Value)
 #endif
 
 
-static void CheckSingle(int Is, int Should, char *Name)
+static void CheckSingle(int Is, int Should, const char *Name)
 {
   if (Is != Should)
   {
@@ -412,7 +412,7 @@ static void CheckDataTypes(void)
 }
 
 
-static char *AssignSingle(int size)
+static const char *AssignSingle(int size)
 {
   if (size == sizeof(short))
     return "%d";
@@ -433,7 +433,7 @@ static char *AssignSingle(int size)
   }
 }
 
-static char *AssignHSingle(int size)
+static const char *AssignHSingle(int size)
 {
   if (size == sizeof(short))
     return "%x";

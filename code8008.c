@@ -30,14 +30,14 @@
 
 static CPUVar CPU8008, CPU8008New;
 
-static char *RegNames = "ABCDEHLM";
+static const char RegNames[] = "ABCDEHLM";
 
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
 static Boolean DecodeReg(char *Asc, Byte *pErg)
 {
-  char *p;
+  const char *p;
 
   if (strlen(Asc) != 1) return False;
  
@@ -77,17 +77,17 @@ static void DecodeJmp(Word Index)
 {
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
     Word AdrWord;
 
-    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt14, &OK);
-    if (OK)
+    AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt14, &EvalResult);
+    if (EvalResult.OK)
     {
       BAsmCode[0] = Index;
       BAsmCode[1] = Lo(AdrWord);
       BAsmCode[2] = Hi(AdrWord) & 0x3f;
       CodeLen = 3;
-      ChkSpace(SegCode);
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -98,14 +98,12 @@ static void DecodeRST(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
     Word AdrWord;
-    UNUSED(Index);
+    tEvalResult EvalResult;
 
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpression(&ArgStr[1], UInt14, &OK);
-    if (FirstPassUnknown) AdrWord &= 0x38;
-    if (OK)
+    AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], UInt14, &EvalResult);
+    if (mFirstPassUnknown(EvalResult.Flags)) AdrWord &= 0x38;
+    if (EvalResult.OK)
     {
       if (ChkRange(AdrWord, 0, 0x38))
       {
@@ -113,14 +111,14 @@ static void DecodeRST(Word Index)
         {
           BAsmCode[0] = 0x05 | (AdrWord << 3);
           CodeLen = 1;
-          ChkSpace(SegCode);
+          ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         }
         else if ((AdrWord & 7) != 0) WrError(ErrNum_NotAligned);
         else
         {
           BAsmCode[0] = AdrWord + 0x05;
           CodeLen = 1;
-          ChkSpace(SegCode);
+          ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         }
       }
     }
@@ -133,13 +131,13 @@ static void DecodeINP(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    BAsmCode[0] = 0x41 | (EvalStrIntExpression(&ArgStr[1], UInt3, &OK) << 1);
-    if (OK)
+    BAsmCode[0] = 0x41 | (EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult) << 1);
+    if (EvalResult.OK)
     {
       CodeLen = 1;
-      ChkSpace(SegIO);
+      ChkSpace(SegIO, EvalResult.AddrSpaceMask);
     }
   }
 }
@@ -151,20 +149,19 @@ static void DecodeOUT(Word Index)
   if (ChkArgCnt(1, 1))
   {
     Byte Addr;
-    Boolean OK;
+    tEvalResult EvalResult;
 
-    FirstPassUnknown = FALSE;
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt5, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt5, &EvalResult);
+    if (mFirstPassUnknown(EvalResult.Flags))
       Addr |= 0x08;
-    if (OK)
+    if (EvalResult.OK)
     {
       if (Addr < 8) WrError(ErrNum_UnderRange);
       else
       {
         BAsmCode[0] = 0x41 | (Addr << 1);
         CodeLen = 1;
-        ChkSpace(SegIO);
+        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
       }
     }
   }
@@ -252,14 +249,14 @@ static void DecodeSingleReg(Word Index)
 /*---------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
-static char *FlagNames = "CZSP";
+static const char FlagNames[] = "CZSP";
 
-static void AddFixed(char *NName, Byte NCode)
+static void AddFixed(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddFixeds(char *NName, Byte NCode, int Shift, Byte RegMask)
+static void AddFixeds(const char *NName, Byte NCode, int Shift, Byte RegMask)
 {
   char Memo[10], *p;
   int Reg;
@@ -273,12 +270,12 @@ static void AddFixeds(char *NName, Byte NCode, int Shift, Byte RegMask)
     }
 }
 
-static void AddImm(char *NName, Byte NCode)
+static void AddImm(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeImm);
 }
 
-static void AddImms(char *NName, Byte NCode, int Pos)
+static void AddImms(const char *NName, Byte NCode, int Pos)
 {
   char Memo[10], *p;
   int z;
@@ -291,12 +288,12 @@ static void AddImms(char *NName, Byte NCode, int Pos)
   }
 }
 
-static void AddJmp(char *NName, Byte NCode)
+static void AddJmp(const char *NName, Byte NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeJmp);
 }
 
-static void AddJmps(char *NName, Byte NCode, int Pos)
+static void AddJmps(const char *NName, Byte NCode, int Pos)
 {
   char Memo[10], *p;
   int z;

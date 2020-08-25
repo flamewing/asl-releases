@@ -31,7 +31,7 @@
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Word Code;
 } Condition;
 
@@ -92,7 +92,7 @@ static Boolean IsWReg(const char *Asc, Word *Erg)
 
 static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
 {
-  Boolean OK;
+  tEvalResult EvalResult;
   char *p;
   int ArgLen;
 
@@ -102,8 +102,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
 
   if (*pArg->Str == '#')
   {
-    AdrMode = EvalStrIntExpressionOffs(pArg, 1, UInt8, &OK);
-    if (OK)
+    AdrMode = EvalStrIntExpressionOffsWithResult(pArg, 1, UInt8, &EvalResult);
+    if (EvalResult.OK)
       AdrType = ModImm;
     goto chk;
   }
@@ -134,11 +134,11 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
       if (!IsWReg(RegComp.Str, &AdrMode)) WrStrErrorPos(ErrNum_InvReg, &RegComp);
       else
       {
-        AdrIndex = EvalStrIntExpression(&DispComp, UInt8, &OK);
-        if (OK)
+        AdrIndex = EvalStrIntExpressionWithResult(&DispComp, UInt8, &EvalResult);
+        if (EvalResult.OK)
         {
           AdrType = ModInd;
-          ChkSpace(SegData);
+          ChkSpace(SegData, EvalResult.AddrSpaceMask);
         }
         goto chk;
       }
@@ -147,12 +147,12 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
 
   /* einfache direkte Adresse ? */
 
-  AdrMode = EvalStrIntExpression(pArg, UInt8, &OK);
-  if (OK)
+  AdrMode = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
+  if (EvalResult.OK)
   {
     AdrType = ModAbs;
     if (Segment != SegNone)
-      ChkSpace(Segment);
+      ChkSpace(Segment, EvalResult.AddrSpaceMask);
     goto chk;
   }
 
@@ -427,9 +427,8 @@ static void DecodeCONSTANT(Word Code)
     TempResult t;
     Boolean OK;
 
-    FirstPassUnknown = FALSE;
-    t.Contents.Int = EvalStrIntExpression(&ArgStr[2], Int32, &OK);
-    if ((OK) && (!FirstPassUnknown))
+    t.Contents.Int = EvalStrIntExpressionWithFlags(&ArgStr[2], Int32, &OK, &t.Flags);
+    if (OK && !mFirstPassUnknown(t.Flags))
     {
       t.Typ = TempInt;
       SetListLineVal(&t);
@@ -443,27 +442,27 @@ static void DecodeCONSTANT(Word Code)
 /*--------------------------------------------------------------------------*/
 /* code table handling */
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddALU2(char *NName, Word NCode)
+static void AddALU2(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU2);
 }
 
-static void AddALU1(char *NName, Word NCode)
+static void AddALU1(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeALU1);
 }
 
-static void AddIOop(Char *NName, Word NCode)
+static void AddIOop(const Char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeIOop);
 }
 
-static void AddCondition(char *NName, Word NCode)
+static void AddCondition(const char *NName, Word NCode)
 {
   if (InstrZ >= CondCnt) exit(255);
   Conditions[InstrZ].Name = NName;

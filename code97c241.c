@@ -36,7 +36,7 @@ typedef struct
 
 typedef struct
 {
-  char *Name;
+  const char *Name;
   Byte Code;
   Byte Mask;     /* B7: DD in A-Format gedreht */
   enum { Equal, FirstCounts, SecondCounts, Op2Half } SizeType;
@@ -64,7 +64,7 @@ static char Format;
 static Boolean MinOneIs0;
 
 static RMWOrder *RMWOrders;
-static char **Conditions;
+static const char **Conditions;
 
 /*--------------------------------------------------------------------------*/
 
@@ -377,12 +377,12 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
       else
       {
         LongInt DispPart;
+        tSymbolFlags Flags;
 
-        FirstPassUnknown = False;
-        DispPart = EvalStrIntExpressionOffs(&Arg, CheckForcePrefix(Arg.Str, &ForcePrefix), Int32, &OK);
+        DispPart = EvalStrIntExpressionOffsWithFlags(&Arg, CheckForcePrefix(Arg.Str, &ForcePrefix), Int32, &OK, &Flags);
         if (!OK)
           return;
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           DispPart = 1;
         DispAcc = MinFlag ? DispAcc - DispPart : DispAcc + DispPart;
       }
@@ -1361,6 +1361,7 @@ static void DecodeBField(Word Code)
 {
   Byte Reg, Num1, Num2;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(4, 4))
   {
@@ -1372,10 +1373,10 @@ static void DecodeBField(Word Code)
     else
     {
       Reg &= 0x3f;
-      Num2 = EvalStrIntExpression(&ArgStr[4], Int5, &OK);
+      Num2 = EvalStrIntExpressionWithFlags(&ArgStr[4], Int5, &OK, &Flags);
       if (OK)
       {
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           Num2 &= 15;
         Num2--;
         if (Num2 > 15) WrError(ErrNum_OverRange);
@@ -2003,7 +2004,6 @@ static void DecodeJRBC_JRBS(Word Code)
       Boolean AdrLongPrefix = False;
       LongInt AdrLong;
 
-      FirstPassUnknown = False;
       AdrLong = EvalStrIntExpressionOffs(&ArgStr[2], CheckForcePrefix(ArgStr[2].Str, &AdrLongPrefix), Int24, &OK);
       if (OK)
       {
@@ -2106,10 +2106,10 @@ static void DecodeLINK_RETD(Word Code)
   {
     LongInt AdrInt;
     Boolean OK, ForcePrefix = False;
+    tSymbolFlags Flags;
 
-    FirstPassUnknown = False;
-    AdrInt = EvalStrIntExpressionOffs(&ArgStr[1], CheckForcePrefix(ArgStr[1].Str, &ForcePrefix), Int32, &OK);
-    if (FirstPassUnknown)
+    AdrInt = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], CheckForcePrefix(ArgStr[1].Str, &ForcePrefix), Int32, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       AdrInt &= 0x1fe;
     if (ChkRange(AdrInt, -0x80000, 0x7ffff))
     {
@@ -2172,12 +2172,12 @@ static void DecodeLDA(Word Code)
 
 /*--------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NCode)
+static void AddFixed(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeFixed);
 }
 
-static void AddRMW(char *NName, Byte NCode, Byte NMask)
+static void AddRMW(const char *NName, Byte NCode, Byte NMask)
 {
   if (InstrZ >= RMWOrderCount) exit(255);
   RMWOrders[InstrZ].Mask = NMask;
@@ -2185,22 +2185,22 @@ static void AddRMW(char *NName, Byte NCode, Byte NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRMW);
 }
 
-static void AddGAEq(char *NName, Word NCode)
+static void AddGAEq(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeGAEq);
 }
 
-static void AddGAHalf(char *NName, Word NCode)
+static void AddGAHalf(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeGAHalf);
 }
 
-static void AddGAFirst(char *NName, Word NCode)
+static void AddGAFirst(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeGAFirst);
 }
 
-static void AddGASecond(char *NName, Word NCode)
+static void AddGASecond(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeGASecond);
 }                               
@@ -2332,7 +2332,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "CPSN", 1, DecodeString); 
   AddInstTable(InstTable, "LDS" , 3, DecodeString);
 
-  Conditions = (char **) malloc(sizeof(char *)*ConditionCount); InstrZ = 0;
+  Conditions = (const char **) malloc(sizeof(char *)*ConditionCount); InstrZ = 0;
   Conditions[InstrZ++] = "C";   Conditions[InstrZ++] = "NC";
   Conditions[InstrZ++] = "Z";   Conditions[InstrZ++] = "NZ";
   Conditions[InstrZ++] = "OV";  Conditions[InstrZ++] = "NOV";
@@ -2353,24 +2353,9 @@ static void DeinitFields(void)
   free(Conditions);
 }
 
-static void MakeCode_97C241(void)
+static Boolean DecodeAttrPart_97C241(void)
 {
   char *p;
-
-  CodeLen = 0;
-  DontPrint = False;
-  PrefUsed[0] = False;
-  PrefUsed[1] = False;
-  AdrInc = 0;
-  MinOneIs0 = False;
-  LowLim4 = -8; LowLim8 = -128;
-
-  /* zu ignorierendes */
-
-  if (Memo(""))
-    return;
-
-  /* Formatangabe abspalten */
 
   switch (AttrSplit)
   {
@@ -2402,26 +2387,41 @@ static void MakeCode_97C241(void)
   }
   Format = mytoupper(Format);
 
-  /* Attribut abarbeiten */
+  if (*AttrPart.Str)
+    switch (mytoupper(*AttrPart.Str))
+    {
+      case 'B':
+        AttrPartOpSize = eSymbolSize8Bit;
+        break;
+      case 'W':
+        AttrPartOpSize = eSymbolSize16Bit;
+        break;
+      case 'D':
+        AttrPartOpSize = eSymbolSize32Bit;
+        break;
+      default:
+       WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+       return False;
+    }
+  return True;
+}
 
-  if (!*AttrPart.Str)
-    OpSize = -1;
-  else
-   switch (mytoupper(*AttrPart.Str))
-   {
-     case 'B':
-       OpSize = 0;
-       break;
-     case 'W':
-       OpSize = 1;
-       break;
-     case 'D':
-       OpSize = 2;
-       break;
-     default:
-      WrError(ErrNum_UndefAttr);
-      return;
-   }
+static void MakeCode_97C241(void)
+{
+  CodeLen = 0;
+  DontPrint = False;
+  PrefUsed[0] = False;
+  PrefUsed[1] = False;
+  AdrInc = 0;
+  MinOneIs0 = False;
+  LowLim4 = -8; LowLim8 = -128;
+
+  /* zu ignorierendes */
+
+  if (Memo(""))
+    return;
+
+  OpSize = AttrPartOpSize;
 
   /* Pseudoanweisungen */
 
@@ -2466,6 +2466,7 @@ static void SwitchTo_97C241(void)
   SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xffffffl;
 
+  DecodeAttrPart = DecodeAttrPart_97C241;
   MakeCode = MakeCode_97C241;
   IsDef = IsDef_97C241;
   SwitchFrom = SwitchFrom_97C241;

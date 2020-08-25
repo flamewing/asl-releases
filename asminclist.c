@@ -23,14 +23,14 @@
 #include "asminclist.h"
 
 
-typedef void **PFileArray;
 typedef struct sFileNode
 {
   Integer Name;
   Integer Len;
   struct sFileNode *Parent;
-  PFileArray Subs;
+  struct sFileNode **Subs;
 } TFileNode, *PFileNode;
+typedef struct sFileNode **PFileArray;
 
 static PFileNode Root,Curr;
 
@@ -54,7 +54,7 @@ void PushInclude(char *S)
       Curr->Subs = (PFileArray) malloc(sizeof(void *));
     else
       Curr->Subs = (PFileArray) realloc(Curr->Subs, sizeof(void *) * (Curr->Len + 1));
-    Curr->Subs[Curr->Len++] = (void *)Neu;
+    Curr->Subs[Curr->Len++] = Neu;
     Curr = Neu;
   }
 }

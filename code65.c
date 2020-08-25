@@ -157,11 +157,11 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
   {
     Word Page;
     LongWord AbsAddress;
+    tSymbolFlags Flags;
 
     /* get the absolute address */
 
-    FirstPassUnknown = False;
-    AbsAddress = EvalStrIntExpression(pArg, UInt21, pOK);
+    AbsAddress = EvalStrIntExpressionWithFlags(pArg, UInt21, pOK, &Flags);
     if (!*pOK)
       return 0;
 
@@ -182,7 +182,7 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
 
     if ((Type != UInt16) && (Type != Int16) && Hi(AbsAddress))
     {
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(Flags))
         AbsAddress &= 0xff;
       else
       {
@@ -198,11 +198,11 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
   else if (MomCPU == CPU65CE02)
   {
     Word Address;
+    tSymbolFlags Flags;
 
     /* alwys get a full 16 bit address */
 
-    FirstPassUnknown = False;
-    Address = EvalStrIntExpression(pArg, UInt16, pOK);
+    Address = EvalStrIntExpressionWithFlags(pArg, UInt16, pOK, &Flags);
     if (!*pOK)
       return 0;
 
@@ -210,7 +210,7 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
 
     if ((Type != UInt16) && (Type != Int16))
     {
-      if ((Hi(Address) != RegB) && !FirstPassUnknown)
+      if ((Hi(Address) != RegB) && !mFirstPassUnknown(Flags))
       {
         pOK = False;
         WrError(ErrNum_OverRange);
@@ -278,10 +278,12 @@ static void DecodeAdr(tAdrResult *pResult, const NormOrder *pOrder)
 
     else if (*ArgStr[1].Str == '\\')
     {
-      AdrWord = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt16, &ValOK);
+      tSymbolFlags Flags;
+
+      AdrWord = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt16, &ValOK, &Flags);
       if (ValOK)
       {
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           AdrWord = (SpecPage << 8) | Lo(AdrWord);
         if (Hi(AdrWord) != SpecPage) WrError(ErrNum_UnderRange);
         else
@@ -579,6 +581,7 @@ static void DecodeSEB_CLB(Word Code)
 static void DecodeBBC_BBS(Word Code)
 {
   Boolean ValOK;
+  tSymbolFlags Flags;
   int b;
 
   if (ChkArgCnt(3, 3)
@@ -598,11 +601,11 @@ static void DecodeBBC_BBS(Word Code)
       }
       if (ValOK)
       {
-        Integer AdrInt = EvalStrIntExpression(&ArgStr[3], Int16, &ValOK) - (EProgCounter() + 2 + Ord(b) + Ord(CLI_SEI_Flag));
+        Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], Int16, &ValOK, &Flags) - (EProgCounter() + 2 + Ord(b) + Ord(CLI_SEI_Flag));
 
         if (ValOK)
         {
-          if (((AdrInt > 127) || (AdrInt < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrInt > 127) || (AdrInt < -128)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             CodeLen = 2 + Ord(b);
@@ -634,12 +637,13 @@ static void DecodeBBR_BBS(Word Code)
       if (ValOK)
       {
         Integer AdrInt;
+        tSymbolFlags Flags;
 
         BAsmCode[0] = Code;
-        AdrInt = EvalStrIntExpression(&ArgStr[2], UInt16, &ValOK) - (EProgCounter() + 3);
+        AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &ValOK, &Flags) - (EProgCounter() + 3);
         if (ValOK)
         {
-          if (((AdrInt > 127) || (AdrInt < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((AdrInt > 127) || (AdrInt < -128)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             CodeLen = 3;
@@ -713,11 +717,12 @@ static void DecodeBAR_BAS(Word Code)
       BAsmCode[3] = EvalStrIntExpressionOffs(&ArgStr[2], ImmStart(ArgStr[2].Str), UInt8, &OK);
       if (OK)
       {
-        Integer Dist = EvalStrIntExpression(&ArgStr[3], UInt16, &OK) - (EProgCounter() + 5);
+        tSymbolFlags Flags;
+        Integer Dist = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt16, &OK, &Flags) - (EProgCounter() + 5);
 
         if (OK)
         {
-          if (((Dist > 127) || (Dist < -128)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+          if (((Dist > 127) || (Dist < -128)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
           else
           {
             BAsmCode[0] = Code;
@@ -787,11 +792,11 @@ static void DecodeJSB(Word Code)
    && ChkExactCPU(CPU65C19))
   {
     Boolean OK;
+    tSymbolFlags Flags;
     Word Addr;
 
-    FirstPassUnknown = False;
-    Addr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
-    if (FirstPassUnknown)
+    Addr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       Addr = 0xffe0;
     if (OK)
     {
@@ -895,11 +900,12 @@ static void DecodeCond(Word Index)
   {
     Integer AdrInt;
     Boolean ValOK;
+    tSymbolFlags Flags;
     const Boolean MayShort = !!pOrder->CodeShort,
                   MayLong = !!pOrder->CodeLong && (MomCPU == CPU65CE02);
     Byte ForceSize;
 
-    AdrInt = EvalStrIntExpressionOffs(&ArgStr[1], ChkZero(&ArgStr[1], &ForceSize), UInt16, &ValOK);
+    AdrInt = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], ChkZero(&ArgStr[1], &ForceSize), UInt16, &ValOK, &Flags);
     if (!ValOK)
       return;
     if (!ForceSize)
@@ -917,7 +923,7 @@ static void DecodeCond(Word Index)
     {
       case 2:
         if (!MayShort) WrError(ErrNum_InvAddrMode);
-        else if (((AdrInt > 127) || (AdrInt < -128)) && !SymbolQuestionable) WrError(ErrNum_JmpDistTooBig);
+        else if (((AdrInt > 127) || (AdrInt < -128)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] = pOrder->CodeShort;
@@ -964,7 +970,7 @@ static void DecodeTransfer(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, Word NFlag, Byte NCode)
+static void AddFixed(const char *NName, Word NFlag, Byte NCode)
 {
   if (InstrZ >= FixedOrderCount) exit(255);
   FixedOrders[InstrZ].CPUFlag = NFlag;
@@ -972,7 +978,7 @@ static void AddFixed(char *NName, Word NFlag, Byte NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddNorm(char *NName, LongWord ZACode, LongWord ACode, LongWord ZIXCode,
+static void AddNorm(const char *NName, LongWord ZACode, LongWord ACode, LongWord ZIXCode,
                     LongWord IXCode, LongWord ZIYCode, LongWord IYCode, LongWord IndIXCode,
                     LongWord IndOXCode, LongWord IndOYCode, LongWord IndOZCode, LongWord Ind16Code, LongWord ImmCode, LongWord AccCode,
                     LongWord NoneCode, LongWord Ind8Code, LongWord IndSPYCode, LongWord SpecCode)
@@ -998,7 +1004,7 @@ static void AddNorm(char *NName, LongWord ZACode, LongWord ACode, LongWord ZIXCo
   AddInstTable(InstTable, NName, InstrZ++, strcmp(NName, "TST") ? DecodeNorm : DecodeTST);
 }
 
-static void AddCond(char *NName, Word NFlag, Byte NCodeShort, Byte NCodeLong)
+static void AddCond(const char *NName, Word NFlag, Byte NCodeShort, Byte NCodeLong)
 {
   if (InstrZ >= CondOrderCount) exit(255);
   CondOrders[InstrZ].CPUFlag = NFlag;

@@ -7,7 +7,7 @@ OBLANK=$(NULL) $(NULL)
 
 DATE=`date +"%d%m%Y"`
 
-ALLFLAGS = $(CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
+ALLFLAGS = $(TARG_CFLAGS) -DINCDIR=\"$(INCDIR)\" -DLIBDIR=\"$(LIBDIR)\"
 
 include makedefs.files
 

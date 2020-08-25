@@ -76,7 +76,7 @@ enum
 #define ALU16OrderCnt 13
 
 
-static ShortInt OpSize;
+static tSymbolSize OpSize;
 static Byte PrefCnt;           /* Anzahl Befehlspraefixe */
 static ShortInt AdrMode;       /* Ergebnisadressmodus */
 static Byte AdrPart;           /* Adressierungsmodusbits im Opcode */
@@ -198,6 +198,7 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
 {
   tStrComp *pStartArg = &ArgStr[StartInd];
   Boolean OK, ErrOcc;
+  tSymbolFlags Flags;
   LongWord AdrWord;
   Byte Bit8;
 
@@ -274,20 +275,19 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
         Bit8 = 1;
         Offset++;
       }
-      FirstPassUnknown = False;
       if (MomCPU == CPU68HC11K4)
       {
-        AdrWord = EvalStrIntExpressionOffs(pStartArg, Offset, UInt21, &OK);
+        AdrWord = EvalStrIntExpressionOffsWithFlags(pStartArg, Offset, UInt21, &OK, &Flags);
         if (OK)
           TranslateAddress(&AdrWord);
       }
       else
-        AdrWord = EvalStrIntExpressionOffs(pStartArg, Offset, UInt16, &OK);
+        AdrWord = EvalStrIntExpressionOffsWithFlags(pStartArg, Offset, UInt16, &OK, &Flags);
       if (OK)
       {
         if ((MModDir & Erl) && (Bit8 != 1) && ((Bit8 == 2) || (!(MModExt & Erl)) || (Hi(AdrWord) == 0)))
         {
-          if ((Hi(AdrWord) != 0) && (!FirstPassUnknown))
+          if ((Hi(AdrWord) != 0) && !mFirstPassUnknown(Flags))
           {
             WrError(ErrNum_NoShortAddr);
             ErrOcc = True;
@@ -417,15 +417,16 @@ static void DecodeRel(Word Index)
   const RelOrder *pOrder = &RelOrders[Index];
   Integer AdrInt;
   Boolean OK;
+  tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(pOrder->MinCPU))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
     if (OK)
     {
       AdrInt -= EProgCounter() + 2;
-      if (((AdrInt < -128) || (AdrInt > 127)) && (!SymbolQuestionable)) WrError(ErrNum_JmpDistTooBig);
+      if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 2;
@@ -732,7 +733,7 @@ static void DecodePRWINS(Word Code)
 
 /*---------------------------------------------------------------------------*/
 
-static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
+static void AddFixed(const char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
 
@@ -742,7 +743,7 @@ static void AddFixed(char *NName, CPUVar NMin, CPUVar NMax, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddRel(char *NName, CPUVar NMin, Word NCode)
+static void AddRel(const char *NName, CPUVar NMin, Word NCode)
 {
   if (InstrZ >= RelOrderCnt) exit(255);
 
@@ -751,7 +752,7 @@ static void AddRel(char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddALU8(char *NamePlain, char *NameA, char *NameB, Boolean MayImm, Byte NCode)
+static void AddALU8(const char *NamePlain, const char *NameA, const char *NameB, Boolean MayImm, Byte NCode)
 {
   Word BaseCode = NCode | (MayImm ? 0x8000 : 0);
 
@@ -760,7 +761,7 @@ static void AddALU8(char *NamePlain, char *NameA, char *NameB, Boolean MayImm, B
   AddInstTable(InstTable, NameB, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
 }
 
-static void AddALU16(char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte NCode)
+static void AddALU16(const char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte NCode)
 {
   if (InstrZ >= ALU16OrderCnt) exit(255);
 
@@ -771,7 +772,7 @@ static void AddALU16(char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte N
   AddInstTable(InstTable, NName, InstrZ++, DecodeALU16);
 }
 
-static void AddSing8(char *NamePlain, char *NameA, char *NameB, Byte NCode)
+static void AddSing8(const char *NamePlain, const char *NameA, const char *NameB, Byte NCode)
 {
   AddInstTable(InstTable, NamePlain, NCode, DecodeSing8);
   AddInstTable(InstTable, NameA, NCode | 0, DecodeSing8_Acc);
@@ -901,18 +902,21 @@ static void DeinitFields(void)
   free(ALU16Orders);
 }
 
+static Boolean DecodeAttrPart_68(void)
+{
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
+
 static void MakeCode_68(void)
 {
   CodeLen = 0;
   DontPrint = False;
   PrefCnt = 0;
   AdrCnt = 0;
-  OpSize = eSymbolSize8Bit;
 
   /* Operandengroesse festlegen */
 
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
+  OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSize8Bit;
 
   /* zu ignorierendes */
 
@@ -974,6 +978,7 @@ static void SwitchTo_68(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegInits[SegCode] = 0;
   SegLimits[SegCode] = (MomCPU == CPU68HC11K4) ? 0x10ffffl : 0xffff;
 
+  DecodeAttrPart = DecodeAttrPart_68;
   MakeCode = MakeCode_68;
   IsDef = IsDef_68;
   SwitchFrom = SwitchFrom_68;

@@ -24,11 +24,11 @@
 
 /*****************************************************************************/
 
-static char *IdentString = "AS Message Catalog - not readable\n\032\004";
+static const char *IdentString = "AS Message Catalog - not readable\n\032\004";
 
-static char *EOpenMsg = "cannot open msg file %s";
-static char *ERdMsg = "cannot read from msg file";
-static char *EIndMsg = "string table index error";
+static const char *EOpenMsg = "cannot open msg file %s";
+static const char *ERdMsg = "cannot read from msg file";
+static const char *EIndMsg = "string table index error";
 
 static TMsgCat DefaultCatalog =
 {
@@ -37,7 +37,7 @@ static TMsgCat DefaultCatalog =
 
 /*****************************************************************************/
 
-static void error(char *Msg)
+static void error(const char *Msg)
 {
   fprintf(stderr, "message catalog handling: %s - program terminated\n", Msg);
   exit(255);
@@ -103,7 +103,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   char str[2048], *ptr;
   const char *pSep;
   Word CountryCode;
-  char *lcstring;
+  const char *lcstring;
   LongInt DefPos = -1, MomPos, DefLength = 0, MomLength, z, StrStart, CtryCnt, Ctrys[100];
   Boolean fi, Gotcha;
 
@@ -288,7 +288,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   fclose(MsgFile);
 }
 
-void nlmessages_init(char *File, char *ProgPath, LongInt MsgId1, LongInt MsgId2)
+void nlmessages_init(const char *File, char *ProgPath, LongInt MsgId1, LongInt MsgId2)
 {
   opencatalog(&DefaultCatalog, File, ProgPath, MsgId1, MsgId2);
 }

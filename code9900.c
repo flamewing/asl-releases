@@ -8,14 +8,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-/*
- * TODO:
- *
- * - add remaining TI990/xx machines
- * - regard machines with more than 64K of memory
- *
- */
-
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
@@ -161,13 +153,14 @@ static Boolean DecodeAdr(const tStrComp *pArg)
     p = HasDisp(IArg.Str);
     if (!p)
     {
-      FirstPassUnknown = False;
-      AdrVal = EvalStrIntExpression(&IArg, UInt16, &OK);
+      tSymbolFlags Flags;
+
+      AdrVal = EvalStrIntExpressionWithFlags(&IArg, UInt16, &OK, &Flags);
       if (OK)
       {
         AdrPart = 0x20;
         AdrCnt = 1;
-        if ((!FirstPassUnknown) && (IsWord) && (Odd(AdrVal)))
+        if (!mFirstPassUnknown(Flags) && IsWord && Odd(AdrVal))
           WrError(ErrNum_AddrNotAligned);
         return True;
       }
@@ -248,14 +241,15 @@ static Boolean EvalDist(const tStrComp *pArg, Word *pResult, Word InstrLen)
 {
   Boolean OK;
   Integer AdrInt;
+  tSymbolFlags Flags;
 
-  AdrInt = EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '@'), UInt16, &OK) - (EProgCounter() + InstrLen);
-  if (OK && !SymbolQuestionable && Odd(AdrInt))
+  AdrInt = EvalStrIntExpressionOffsWithFlags(pArg, !!(*pArg->Str == '@'), UInt16, &OK, &Flags) - (EProgCounter() + InstrLen);
+  if (OK && !mSymbolQuestionable(Flags) && Odd(AdrInt))
   {
     WrStrErrorPos(ErrNum_DistIsOdd, pArg);
     OK = False;
   }
-  if (OK && !SymbolQuestionable && ((AdrInt < -256) || (AdrInt > 254)))
+  if (OK && !mSymbolQuestionable(Flags) && ((AdrInt < -256) || (AdrInt > 254)))
   {
     WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
     OK = False;
@@ -603,12 +597,12 @@ static void DecodeLDCR_STCR(Word Code)
   {
     Word HPart;
     Boolean OK;
+    tSymbolFlags Flags;
 
     WAsmCode[0] = Code + AdrPart;
     WAsmCode[1] = AdrVal;
-    FirstPassUnknown = False;
-    HPart = EvalStrIntExpression(&ArgStr[2], UInt5, &OK);
-    if (FirstPassUnknown)
+    HPart = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt5, &OK, &Flags);
+    if (mFirstPassUnknown(Flags))
       HPart = 1;
     if (OK)
     {
@@ -826,22 +820,21 @@ static void DecodeFixed(Word Index)
 static void DecodeRTWP(Word Code)
 {
   Word Variant;
-  Boolean OK;
   Word MaxVariant = (((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99105)
                   || ((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99110)) ? 4 : 0;
+  tEvalResult EvalResult;
 
   switch (ArgCnt)
   {
     case 0:
       Variant = 0;
-      OK = True;
+      EvalResult.OK = True;
       break;
     case 1:
-      FirstPassUnknown = False;
-      Variant = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
-      if (!OK)
+      Variant = EvalStrIntExpressionWithResult(&ArgStr[1], UInt3, &EvalResult);
+      if (!EvalResult.OK)
         return;
-      if (FirstPassUnknown)
+      if (mFirstPassUnknown(EvalResult.Flags))
         Variant = 0;
       else if (Variant > MaxVariant)
       {
@@ -858,7 +851,7 @@ static void DecodeRTWP(Word Code)
       (void)ChkArgCnt(0,1);
       return;
   }
-  if (OK)
+  if (EvalResult.OK)
   {
     WAsmCode[CodeLen >> 1] = Code + Variant;
     CodeLen += 2;
@@ -879,12 +872,11 @@ static void DecodeBYTE(Word Code)
     do
     {
       KillBlanks(ArgStr[z].Str);
-      FirstPassUnknown = False;
       EvalStrExpression(&ArgStr[z], &t);
       switch (t.Typ)
       {
         case TempInt:
-          if (FirstPassUnknown)
+          if (mFirstPassUnknown(t.Flags))
             t.Contents.Int &= 0xff;
           if (!RangeCheck(t.Contents.Int, Int8)) WrError(ErrNum_OverRange);
           else if (SetMaxCodeLen(CodeLen + 1))
@@ -982,14 +974,14 @@ static void DecodeBSS(Word Code)
 {
   Boolean OK;
   Word HVal16;  
+  tSymbolFlags Flags;
 
   UNUSED(Code);
 
   if (ChkArgCnt(1, 1))
   {
-    FirstPassUnknown = False;
-    HVal16 = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-    if (FirstPassUnknown) WrError(ErrNum_FirstPassCalc);
+    HVal16 = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
     else if (OK)
     {
       if (!HVal16) WrError(ErrNum_NullResMem);
@@ -1020,18 +1012,18 @@ static void DecodeCKPT(Word Code)
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
-static void AddTwo(char *NName16, char *NName8, Word NCode)
+static void AddTwo(const char *NName16, const char *NName8, Word NCode)
 {
   AddInstTable(InstTable, NName16, (NCode << 13)         , DecodeTwo);
   AddInstTable(InstTable, NName8,  (NCode << 13) + 0x1000, DecodeTwo);
 }
 
-static void AddOne(char *NName, Word NCode)
+static void AddOne(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeOne);
 }
 
-static void AddSing(char *NName, Word NCode, Byte Flags)
+static void AddSing(const char *NName, Word NCode, Byte Flags)
 {
   if (InstrZ >= SingOrderCnt)
     exit(42);
@@ -1040,27 +1032,27 @@ static void AddSing(char *NName, Word NCode, Byte Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeSing);
 }
 
-static void AddSBit(char *NName, Word NCode)
+static void AddSBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode << 8, DecodeSBit);
 }
 
-static void AddBit(char *NName, Word NCode)
+static void AddBit(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
 
-static void AddJmp(char *NName, Word NCode)
+static void AddJmp(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode << 8, DecodeJmp);
 }
 
-static void AddShift(char *NName, Word NCode)
+static void AddShift(const char *NName, Word NCode)
 {
   AddInstTable(InstTable, NName, NCode, DecodeShift);
 }
 
-static void AddImm(char *NName, Word NCode, Word Flags)
+static void AddImm(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= ImmOrderCnt)
     exit(42);
@@ -1069,7 +1061,7 @@ static void AddImm(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeImm);
 }
 
-static void AddReg(char *NName, Word NCode, Word Flags)
+static void AddReg(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= RegOrderCnt)
     exit(42);
@@ -1078,7 +1070,7 @@ static void AddReg(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRegOrder);
 }
 
-static void AddFixed(char *NName, Word NCode, Word Flags)
+static void AddFixed(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= FixedOrderCnt)
     exit(42);
@@ -1087,7 +1079,7 @@ static void AddFixed(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddType11(char *NName, Word NCode, Word Flags)
+static void AddType11(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type11OrderCnt)
     exit(42);
@@ -1096,7 +1088,7 @@ static void AddType11(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType11);
 }
 
-static void AddType11a(char *NName, Word NCode, Word Flags)
+static void AddType11a(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type11aOrderCnt)
     exit(42);
@@ -1105,7 +1097,7 @@ static void AddType11a(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType11a);
 }
 
-static void AddType12(char *NName, Word NCode, Word Flags)
+static void AddType12(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type12OrderCnt)
     exit(42);
@@ -1114,7 +1106,7 @@ static void AddType12(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType12);
 }
 
-static void AddType15(char *NName, Word NCode, Word Flags)
+static void AddType15(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type15OrderCnt)
     exit(42);
@@ -1123,7 +1115,7 @@ static void AddType15(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType15);
 }
 
-static void AddType16(char *NName, Word NCode, Word Flags)
+static void AddType16(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type16OrderCnt)
     exit(42);
@@ -1132,7 +1124,7 @@ static void AddType16(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType16);
 }
 
-static void AddType17(char *NName, Word NCode, Word Flags)
+static void AddType17(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type17OrderCnt)
     exit(42);
@@ -1141,7 +1133,7 @@ static void AddType17(char *NName, Word NCode, Word Flags)
   AddInstTable(InstTable, NName, InstrZ++, DecodeType17);
 }
 
-static void AddType20(char *NName, Word NCode, Word Flags)
+static void AddType20(const char *NName, Word NCode, Word Flags)
 {
   if (InstrZ >= Type20OrderCnt)
     exit(42);

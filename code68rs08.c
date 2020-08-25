@@ -75,7 +75,8 @@ enum
 #define MModIX (1 << ModIX)
 #define MModX (1 << ModX)
 
-static ShortInt AdrMode, OpSize;
+static ShortInt AdrMode;
+static tSymbolSize OpSize;
 static Byte AdrVals[2];
 
 static IntType AdrIntType;
@@ -113,6 +114,7 @@ static unsigned ChkZero(char *s, Byte *pErg)
 static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   Word AdrWord;
   Byte ZeroMode;
   unsigned Offset;
@@ -165,14 +167,13 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask)
     /* absolut */
 
     Offset = ChkZero(ArgStr[Start].Str, &ZeroMode);
-    FirstPassUnknown = False;
-    AdrWord = EvalStrIntExpressionOffs(&ArgStr[Start], Offset, (ZeroMode == 2) ? UInt8 : AdrIntType, &OK);
+    AdrWord = EvalStrIntExpressionOffsWithFlags(&ArgStr[Start], Offset, (ZeroMode == 2) ? UInt8 : AdrIntType, &OK, &Flags);
 
     if (OK)
     {
       if (((Mask & MModExt) == 0) || (ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrWord) == 0)))
       {
-        if (FirstPassUnknown)
+        if (mFirstPassUnknown(Flags))
           AdrWord &= 0xff;
         if (Hi(AdrWord) != 0) WrError(ErrNum_NoShortAddr);
         else
@@ -314,15 +315,16 @@ static void DecodeRel(Word Index)
 {
   BaseOrder *pOrder = RelOrders + Index;
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrInt;
 
   if (ChkArgCnt(1, 1)
    && ChkMinCPU(pOrder->MinCPU))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], AdrIntType, &OK) - (EProgCounter() + 2);
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrIntType, &OK, &Flags) - (EProgCounter() + 2);
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt>127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt>127))) WrError(ErrNum_JmpDistTooBig);
       else
       {
         CodeLen = 2;
@@ -341,6 +343,7 @@ static void DecodeRel(Word Index)
 static void DecodeCBEQx(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrInt;
 
   UNUSED(Index);
@@ -352,10 +355,10 @@ static void DecodeCBEQx(Word Index)
     if (AdrMode == ModImm)
     {
       BAsmCode[1] = AdrVals[0];
-      AdrInt = EvalStrIntExpression(&ArgStr[2], AdrIntType, &OK) - (EProgCounter() + 3);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], AdrIntType, &OK, &Flags) - (EProgCounter() + 3);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[0] = 0x41;
@@ -370,6 +373,7 @@ static void DecodeCBEQx(Word Index)
 static void DecodeCBEQ(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrInt;
 
   UNUSED(Index);
@@ -389,10 +393,10 @@ static void DecodeCBEQ(Word Index)
     if (AdrMode != ModNone)
     {
       BAsmCode[0] = 0x31;
-      AdrInt = EvalStrIntExpression(&ArgStr[2], AdrIntType, &OK) - (EProgCounter() + 3);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], AdrIntType, &OK, &Flags) - (EProgCounter() + 3);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[2] = AdrInt & 0xff;
@@ -407,10 +411,10 @@ static void DecodeCBEQ(Word Index)
     else
     {
       BAsmCode[0] = 0x31; BAsmCode[1] = 0x0e;
-      AdrInt = EvalStrIntExpression(&ArgStr[3], AdrIntType, &OK) - (EProgCounter() + 3);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], AdrIntType, &OK, &Flags) - (EProgCounter() + 3);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[2] = AdrInt & 0xff;
@@ -426,14 +430,15 @@ static void DecodeCBEQ(Word Index)
 static void DecodeDBNZx(Word Index)
 {
   Boolean OK;
+  tSymbolFlags Flags;
   LongInt AdrInt;
 
   if (ChkArgCnt(1, 1))
   {
-    AdrInt = EvalStrIntExpression(&ArgStr[1], AdrIntType, &OK) - (EProgCounter() + ((Index == 0) ? 3 : 2));
+    AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrIntType, &OK, &Flags) - (EProgCounter() + ((Index == 0) ? 3 : 2));
     if (OK)
     {
-      if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+      if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
       else if (Index == 0)
       {
         BAsmCode[0] = 0x3b;
@@ -454,6 +459,7 @@ static void DecodeDBNZx(Word Index)
 static void DecodeDBNZ(Word Index)
 {
   Boolean OK;   
+  tSymbolFlags Flags;
   LongInt AdrInt;
   Byte Disp = 0;
 
@@ -477,10 +483,10 @@ static void DecodeDBNZ(Word Index)
     }
     if (AdrMode != ModNone)
     {
-      AdrInt = EvalStrIntExpression(&ArgStr[ArgCnt], AdrIntType, &OK) - (EProgCounter() + Disp);
+      AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], AdrIntType, &OK, &Flags) - (EProgCounter() + Disp);
       if (OK)
       {
-        if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+        if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
         else
         {
           BAsmCode[Disp - 1] = AdrInt & 0xff;
@@ -683,6 +689,7 @@ static void DecodeBx(Word Index)
 static void DecodeBRx(Word Index)
 {
   Boolean OK = True;
+  tSymbolFlags Flags;
   LongInt AdrInt;
 
   if (ChkArgCnt(3, 3))
@@ -699,10 +706,10 @@ static void DecodeBRx(Word Index)
       BAsmCode[0] = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
       if (OK)
       {
-        AdrInt = EvalStrIntExpression(&ArgStr[3], AdrIntType, &OK) - (EProgCounter() + 3);
+        AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], AdrIntType, &OK, &Flags) - (EProgCounter() + 3);
         if (OK)
         {
-          if ((!SymbolQuestionable) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
+          if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) WrError(ErrNum_JmpDistTooBig);
           else
           {
             CodeLen = 3;
@@ -718,7 +725,7 @@ static void DecodeBRx(Word Index)
 /*--------------------------------------------------------------------------*/
 /* dynamic code table handling */
 
-static void AddFixed(char *NName, CPUVar NMin, Byte NCode)
+static void AddFixed(const char *NName, CPUVar NMin, Byte NCode)
 {
   if (InstrZ >= FixedOrderCnt) exit(255);
   FixedOrders[InstrZ].MinCPU = NMin;
@@ -726,7 +733,7 @@ static void AddFixed(char *NName, CPUVar NMin, Byte NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
-static void AddRel(char *NName, CPUVar NMin, Byte NCode)
+static void AddRel(const char *NName, CPUVar NMin, Byte NCode)
 {
   if (InstrZ >= RelOrderCnt) exit(255);
   RelOrders[InstrZ].MinCPU = NMin;
@@ -734,7 +741,7 @@ static void AddRel(char *NName, CPUVar NMin, Byte NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddALU(char *NName, CPUVar NMin, Byte NCode, Word NMask)
+static void AddALU(const char *NName, CPUVar NMin, Byte NCode, Word NMask)
 {
   if (InstrZ >= ALUOrderCnt) exit(255);
   ALUOrders[InstrZ].MinCPU = NMin;
@@ -743,7 +750,7 @@ static void AddALU(char *NName, CPUVar NMin, Byte NCode, Word NMask)
   AddInstTable(InstTable, NName, InstrZ++, DecodeALU);
 }
 
-static void AddRMW(char *NName, CPUVar NMin, Byte NCode, Byte DCode, Word NMask)
+static void AddRMW(const char *NName, CPUVar NMin, Byte NCode, Byte DCode, Word NMask)
 {
   if (InstrZ >= RMWOrderCnt) exit(255);
   RMWOrders[InstrZ].MinCPU = NMin;
@@ -832,19 +839,21 @@ static void DeinitFields(void)
 }
 
 /*--------------------------------------------------------------------------*/
-/* main functions */
+/* Main Functions */
+
+static Boolean DecodeAttrPart_68rs08(void)
+{
+  /* Deduce operand size.  No size is zero-length string -> '\0' */
+
+  return DecodeMoto16AttrSize(*AttrPart.Str, &AttrPartOpSize, False);
+}
 
 static void MakeCode_68rs08(void)
 {
   int l;
   char ch;
 
-  CodeLen = 0; DontPrint = False; OpSize = eSymbolSizeUnknown;
-
-  /* deduce operand size No size is zero-length string -> '\0' */
-
-  if (!DecodeMoto16AttrSize(*AttrPart.Str, &OpSize, False))
-    return;
+  CodeLen = 0; DontPrint = False; OpSize = AttrPartOpSize;
 
   /* zu ignorierendes */
 
@@ -905,6 +914,7 @@ static void SwitchTo_68rs08(void)
   SegLimits[SegCode] = 0x3fff;
   AdrIntType = UInt14;
 
+  DecodeAttrPart = DecodeAttrPart_68rs08;
   MakeCode = MakeCode_68rs08;
   IsDef = IsDef_68rs08;
   SwitchFrom = SwitchFrom_68rs08;

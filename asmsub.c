@@ -65,7 +65,7 @@ void AsmSubPassInit(void)
 /****************************************************************************/
 /* Copyrightlistenverwaltung */
 
-void AddCopyright(char *NewLine)
+void AddCopyright(const char *NewLine)
 {
   AddStringListLast(&CopyrightList, NewLine);
 }
@@ -297,7 +297,7 @@ ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2
 /****************************************************************************/
 /* an einen Dateinamen eine Endung anhaengen */
 
-void AddSuffix(char *s, char *Suff)
+void AddSuffix(char *s, const char *Suff)
 {
   char *p, *z, *Part;
 
@@ -355,9 +355,9 @@ char *PathPart(char *Name)
 /*--------------------------------------------------------------------------*/
 /* Namensanteil von einem Dateinamen abspalten */
 
-char *NamePart(char *Name)
+const char *NamePart(const char *Name)
 {
-  char *p = strrchr(Name, PATHSEP);
+  const char *p = strrchr(Name, PATHSEP);
 
 #ifdef DRSEP
   if (!p)
@@ -940,11 +940,11 @@ Word ListGran(void)
 /*--------------------------------------------------------------------------*/
 /* pruefen, ob alle Symbole einer Formel im korrekten Adressraum lagen */
 
-void ChkSpace(Byte Space)
+void ChkSpace(Byte AddrSpace, unsigned AddrSpaceMask)
 {
-  Byte Mask = 0xff - (1 << Space);
+  AddrSpaceMask &= ~(1 << AddrSpace);
 
-  if ((TypeFlag&Mask) != 0) WrError(ErrNum_WrongSegment);
+  if (AddrSpaceMask) WrError(ErrNum_WrongSegment);
 }
 
 /****************************************************************************/
@@ -1302,7 +1302,7 @@ void ClearUp(void)
 
 void AddInitPassProc(SimpProc NewProc)
 {
-  tProcStore *pNewStore = calloc(1, sizeof(*pNewStore));
+  tProcStore *pNewStore = (tProcStore*)calloc(1, sizeof(*pNewStore));
 
   pNewStore->pNext = pInitPassProcStore;
   pNewStore->Proc = NewProc;
@@ -1311,7 +1311,7 @@ void AddInitPassProc(SimpProc NewProc)
 
 void AddClearUpProc(SimpProc NewProc)
 {
-  tProcStore *pNewStore = calloc(1, sizeof(*pNewStore));
+  tProcStore *pNewStore = (tProcStore*)calloc(1, sizeof(*pNewStore));
 
   pNewStore->pNext = pClearUpProcStore;
   pNewStore->Proc = NewProc;

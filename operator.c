@@ -18,6 +18,31 @@
 #include "asmrelocs.h"
 #include "operator.h"
 
+#define PromoteLValFlags() \
+        do \
+        { \
+          if (pErg->Typ != TempNone) \
+          { \
+            pErg->Flags |= (pLVal->Flags & eSymbolFlags_Promotable); \
+            pErg->AddrSpaceMask |= pLVal->AddrSpaceMask; \
+            if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = pLVal->DataSize; \
+          } \
+        } \
+        while (0)
+
+#define PromoteLRValFlags() \
+        do \
+        { \
+          if (pErg->Typ != TempNone) \
+          { \
+            pErg->Flags |= ((pLVal->Flags | pRVal->Flags) & eSymbolFlags_Promotable); \
+            pErg->AddrSpaceMask |= pLVal->AddrSpaceMask | pRVal->AddrSpaceMask; \
+            if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = pLVal->DataSize; \
+            if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = pRVal->DataSize; \
+          } \
+        } \
+        while (0)
+
 static void DummyOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   UNUSED(pLVal);
@@ -30,18 +55,21 @@ static void OneComplOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
   UNUSED(pLVal);
   pErg->Typ = TempInt;
   pErg->Contents.Int = ~(pRVal->Contents.Int);
+  PromoteLValFlags();
 }
 
 static void ShLeftOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = pLVal->Contents.Int << pRVal->Contents.Int;
+  PromoteLRValFlags();
 }
 
 static void ShRightOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = pLVal->Contents.Int >> pRVal->Contents.Int;
+  PromoteLRValFlags();
 }
 
 static void BitMirrorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -60,24 +88,28 @@ static void BitMirrorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
         pErg->Contents.Int |= (1 << z);
     }
   }
+  PromoteLRValFlags();
 }
 
 static void BinAndOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = pLVal->Contents.Int & pRVal->Contents.Int;
+  PromoteLRValFlags();
 }
 
 static void BinOrOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = pLVal->Contents.Int | pRVal->Contents.Int;
+  PromoteLRValFlags();
 }
 
 static void BinXorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = pLVal->Contents.Int ^ pRVal->Contents.Int;
+  PromoteLRValFlags();
 }
 
 static void PotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -134,6 +166,7 @@ static void PotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void MultOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -149,6 +182,7 @@ static void MultOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void DivOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -173,6 +207,7 @@ static void DivOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void ModOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -183,6 +218,7 @@ static void ModOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     pErg->Typ = TempInt;
     pErg->Contents.Int = pLVal->Contents.Int % pRVal->Contents.Int;
   }
+  PromoteLRValFlags();
 }
 
 static void AddOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -238,6 +274,7 @@ static void AddOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void SubOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -254,6 +291,7 @@ static void SubOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void LogNotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -261,24 +299,28 @@ static void LogNotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
   UNUSED(pLVal);
   pErg->Typ = TempInt;
   pErg->Contents.Int = (pRVal->Contents.Int == 0) ? 1 : 0;
+  PromoteLValFlags();
 }
 
 static void LogAndOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = ((pLVal->Contents.Int != 0) && (pRVal->Contents.Int != 0)) ? 1 : 0;
+  PromoteLRValFlags();
 }
 
 static void LogOrOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = ((pLVal->Contents.Int != 0) || (pRVal->Contents.Int != 0)) ? 1 : 0;
+  PromoteLRValFlags();
 }
 
 static void LogXorOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
 {
   pErg->Typ = TempInt;
   pErg->Contents.Int = ((pLVal->Contents.Int != 0) != (pRVal->Contents.Int != 0)) ? 1 : 0;
+  PromoteLRValFlags();
 }
 
 static void EqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -298,6 +340,7 @@ static void EqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void GtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -317,6 +360,7 @@ static void GtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void LtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -336,6 +380,7 @@ static void LtOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void LeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -355,6 +400,7 @@ static void LeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void GeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -374,6 +420,7 @@ static void GeOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 static void UneqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
@@ -393,6 +440,7 @@ static void UneqOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
     default:
       break;
   }
+  PromoteLRValFlags();
 }
 
 #define Int2Int       (TempInt    | (TempInt << 4)   )
