@@ -619,3 +619,70 @@ lbit2	bit.l		#31,@$124
 
 	cmp.l		r5,#$123456
 	cmps.w		r6,#$12.b
+
+	; register aliases
+
+reg_r0	equ		r0
+reg_r1	equ		r1
+reg_r2	equ		r2
+reg_r3	equ		r3
+reg_r4	equ		r4
+reg_r5	equ		r5
+reg_r6	equ		r6
+reg_r7	equ		r7
+reg_r8	equ		r8
+reg_r9	equ		r9
+reg_r10	equ		r10
+reg_r11	equ		r11
+reg_r12	equ		r12
+reg_r13	equ		r13
+reg_r14	equ		r14
+reg_r15	equ		r15
+reg_sp	reg		sp
+
+reg_cr0		equ	cr0
+reg_cr1		equ	cr1
+reg_cr2		equ	cr2
+reg_cr3		equ	cr3
+reg_cr4		equ	cr4
+reg_cr5		equ	cr5
+reg_cr6		equ	cr6
+reg_cr7		equ	cr7
+reg_cr8		equ	cr8
+reg_cr9		equ	cr9
+reg_cr10	equ	cr10
+reg_cr11	equ	cr11
+reg_cr12	equ	cr12
+reg_cr13	equ	cr13
+reg_cr14	equ	cr14
+reg_cr15	equ	cr15
+
+reg_pr0		equ	pr0
+reg_pr1		equ	pr1
+reg_pr2		equ	pr2
+reg_pr3		equ	pr3
+reg_pr4		equ	pr4
+reg_pr5		equ	pr5
+reg_pr6		equ	pr6
+reg_pr7		equ	pr7
+reg_pr8		equ	pr8
+reg_pr9		equ	pr9
+reg_pr10	equ	pr10
+reg_pr11	equ	pr11
+reg_pr12	equ	pr12
+reg_pr13	equ	pr13
+reg_pr14	equ	pr14
+reg_pr15	equ	pr15
+
+		mov.l	@($234567,r4),r0
+		mov.l	@($234567,reg_r4),reg_r0
+		mov.l	@r4+,r13
+		mov.l	@reg_r4+,reg_r13
+		mov.l	@-r4,r13
+		mov.l	@-reg_r4,reg_r13
+		mov.l	@sp+,r13
+		mov.l	@reg_sp+,reg_r13
+		mov.l	@-sp,r13
+		mov.l	@-reg_sp,reg_r13
+		add:g.w	cr4,@($23F5:16,pr7)
+		add:g.w	reg_cr4,@($23F5:16,reg_pr7)

@@ -32,6 +32,9 @@
 #define RegEAOrderCount 9
 #define TwoRegOrderCount 3
 
+#define REG_SP 7
+#define REG_FP 6
+#define REG_MARK 8
 
 #define ModNone (-1)
 #define ModReg 0
@@ -104,54 +107,119 @@ static void SetOpSize(tSymbolSize NSize)
   else if (OpSize != NSize) WrError(ErrNum_UndefOpSizes);
 }
 
-static Boolean DecodeReg(char *Asc, Byte *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Byte *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pArg, Byte *pResult)
 {
-  if (!as_strcasecmp(Asc, "SP")) *pErg = 7;
-  else if (!as_strcasecmp(Asc, "FP")) *pErg=6;
-  else if ((strlen(Asc) == 2) && (mytoupper(*Asc) == 'R') && (Asc[1] >= '0') && (Asc[1] <= '7'))
-    *pErg = Asc[1] - '0';
+  if (!as_strcasecmp(pArg, "SP")) *pResult = REG_SP | REG_MARK;
+  else if (!as_strcasecmp(pArg, "FP")) *pResult = REG_FP | REG_MARK;
+  else if ((strlen(pArg) == 2) && (as_toupper(*pArg) == 'R') && (pArg[1] >= '0') && (pArg[1] <= '7'))
+    *pResult = pArg[1] - '0';
   else
     return False;
   return True;
 }
 
-static Boolean DecodeRegList(char *Asc, Byte *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_H8_5(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - H8/500 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_H8_5(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
 {
-  String Part;
+  switch (InpSize)
+  {
+    case eSymbolSize16Bit:
+      if (Value == (REG_SP | REG_MARK))
+        as_snprintf(pDest, DestSize, "SP");
+      else if (Value == (REG_FP | REG_MARK))
+        as_snprintf(pDest, DestSize, "FP");
+      else
+        as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or CPU alias
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \param  MustBeReg True if argument must be a register
+ * \return EvalResult
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pResult))
+  {
+    *pResult &= ~REG_MARK;
+    return eIsReg;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize16Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
+}
+
+static Boolean DecodeRegList(tStrComp *pArg, Byte *pResult)
+{
+  tStrComp Arg, Remainder;
   Byte Reg1, Reg2, z;
-  char *p;
+  char *p, *p2;
 
-  if (IsIndirect(Asc))
+  Arg = *pArg;
+  if (IsIndirect(Arg.Str))
   {
-    Asc++; Asc[strlen(Asc) - 1] = '\0';
-    KillBlanks(Asc);
+    StrCompIncRefLeft(&Arg, 1);
+    StrCompShorten(&Arg, 1);
+    KillPrefBlanksStrCompRef(&Arg);
+    KillPostBlanksStrComp(&Arg);
   }
 
-  *pErg = 0;
-  while (*Asc)
+  *pResult = 0;
+  do
   {
-    p = QuotPos(Asc, ',');
-    if (!p)
+    p = QuotPos(Arg.Str, ',');
+    if (p)
+      StrCompSplitRef(&Arg, &Remainder, &Arg, p);
+    p2 = strchr(Arg.Str, '-');
+    if (p2)
     {
-      strmaxcpy(Part, Asc, STRINGSIZE); *Asc = '\0';
-    }
-    else
-    {
-      *p = '\0'; strmaxcpy(Part, Asc, STRINGSIZE); strmov(Asc, p + 1);
-    }
-    if (DecodeReg(Part,&Reg1)) *pErg |= (1 << Reg1);
-    else
-    {
-      p = strchr(Part,'-');
-      if (!p)
-        return False;
-      *p = '\0'; 
-      if (!DecodeReg(Part, &Reg1)) return False;
-      if (!DecodeReg(p + 1, &Reg2)) return False;
+      tStrComp Left, Right;
+
+      StrCompSplitRef(&Left, &Right, &Arg, p2);
+      if (DecodeReg(&Left, &Reg1, True) != eIsReg) return False;
+      if (DecodeReg(&Right, &Reg2, True) != eIsReg) return False;
       if (Reg1 > Reg2) Reg2 += 8;
-      for (z = Reg1; z <= Reg2; z++) *pErg |= (1 << (z & 7));
+      for (z = Reg1; z <= Reg2; z++) *pResult |= (1 << (z & 7));
     }
+    else
+    {
+      if (DecodeReg(&Arg, &Reg1, True) != eIsReg) return False;
+      *pResult |= (1 << Reg1);
+    }
+    if (p)
+      Arg = Remainder;
   }
+  while (p);
 
   return True;
 }
@@ -262,9 +330,15 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   /* einfaches Register ? */
 
-  if (DecodeReg(pArg->Str, &AdrByte))
+  switch (DecodeReg(pArg, &AdrByte, False))
   {
-    AdrMode = ModReg; AdrByte |= 0xa0; ChkAdr(Mask); return;
+    case eIsReg:
+      AdrMode = ModReg; AdrByte |= 0xa0;
+      ChkAdr(Mask); return;
+    case eRegAbort:
+      return;
+    case eIsNoReg:
+      break;
   }
 
   /* immediate ? */
@@ -298,7 +372,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   if (*pArg->Str == '@')
   {
-    tStrComp Arg;
+    tStrComp Arg, Remainder;
 
     StrCompRefRight(&Arg, pArg, 1);
     if (IsIndirect(Arg.Str))
@@ -309,108 +383,115 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
     /* Predekrement ? */
 
-    if ((*Arg.Str == '-') && (DecodeReg(Arg.Str + 1, &AdrByte)))
+    if (*Arg.Str == '-')
     {
-      AdrMode = ModPredec; AdrByte |= 0xb0;
+      tStrComp RegArg;
+
+      StrCompRefRight(&RegArg, &Arg, 1);
+      if (DecodeReg(&RegArg, &AdrByte, True) == eIsReg)
+      {
+        AdrMode = ModPredec; AdrByte |= 0xb0;
+        ChkAdr(Mask); return;
+      }
     }
 
     /* Postinkrement ? */
 
-    else if ((*Arg.Str) && (Arg.Str[strlen(Arg.Str) - 1] == '+'))
+    if ((*Arg.Str) && (Arg.Str[strlen(Arg.Str) - 1] == '+'))
     {
       StrCompShorten(&Arg, 1);
-      if (DecodeReg(Arg.Str, &AdrByte))
+      if (DecodeReg(&Arg, &AdrByte, True) == eIsReg)
       {
         AdrMode = ModPostInc; AdrByte |= 0xc0;
+        ChkAdr(Mask); return;
       }
     }
 
     /* zusammengesetzt */
 
-    else
+    DispAcc = 0; DispSize = eSymbolSizeUnknown; RegPart = -1; OK = True; Unknown = False;
+    do
     {
-      tStrComp Remainder;
-
-      DispAcc = 0; DispSize = eSymbolSizeUnknown; RegPart = -1; OK = True; Unknown = False;
-      do
+      p = QuotPos(Arg.Str, ',');
+      if (p)
+        StrCompSplitRef(&Arg, &Remainder, &Arg, p);
+      switch (DecodeReg(&Arg, &HReg, False))
       {
-        p = QuotPos(Arg.Str, ',');
-        if (p)
-          StrCompSplitRef(&Arg, &Remainder, &Arg, p);
-        if (DecodeReg(Arg.Str, &HReg))
-        {
+        case eIsReg:
           if (RegPart != -1)
           {
-            WrError(ErrNum_InvAddrMode); OK = False;
+            WrStrErrorPos(ErrNum_InvAddrMode, &Arg); OK = False;
           }
           else
             RegPart = HReg;
-        }
-        else
-        {
+          break;
+        case eIsNoReg:
           SplitDisp(&Arg, &DispSize);
           DispAcc += EvalStrIntExpressionOffsWithFlags(&Arg, !!(*Arg.Str == '#'), Int32, &OK, &Flags);
           if (mFirstPassUnknown(Flags)) Unknown = True;
-        }
-        if (p)
-          Arg = Remainder;
+          break;
+        default:
+          OK = False;
       }
-      while (p && OK);
-      if (OK)
+      if (p)
+        Arg = Remainder;
+    }
+    while (p && OK);
+    if (OK)
+    {
+      if (RegPart == -1) DecideAbsolute(DispAcc, DispSize, Unknown, Mask);
+      else if (DispAcc == 0)
       {
-        if (RegPart == -1) DecideAbsolute(DispAcc, DispSize, Unknown, Mask);
-        else if (DispAcc == 0)
+        switch (DispSize)
         {
-          switch (DispSize)
-          {
-            case eSymbolSizeUnknown:
-              AdrMode = ModIReg; AdrByte = 0xd0 | RegPart;
-              break;
-            case eSymbolSize8Bit:
-              AdrMode = ModDisp8; AdrByte = 0xe0 | RegPart;
-              AdrVals[0] = 0; AdrCnt = 1;
-              break;
-            case eSymbolSize16Bit:
-              AdrMode = ModDisp16; AdrByte = 0xf0 | RegPart;
-              AdrVals[0] = 0; AdrVals[1] = 0; AdrCnt = 2;
-              break;
-            default:
-              break;
-          }
+          case eSymbolSizeUnknown:
+            AdrMode = ModIReg; AdrByte = 0xd0 | RegPart;
+            break;
+          case eSymbolSize8Bit:
+            AdrMode = ModDisp8; AdrByte = 0xe0 | RegPart;
+            AdrVals[0] = 0; AdrCnt = 1;
+            break;
+          case eSymbolSize16Bit:
+            AdrMode = ModDisp16; AdrByte = 0xf0 | RegPart;
+            AdrVals[0] = 0; AdrVals[1] = 0; AdrCnt = 2;
+            break;
+          default:
+            break;
         }
-        else
+      }
+      else
+      {
+        if (DispSize == eSymbolSizeUnknown)
         {
-          if (DispSize == eSymbolSizeUnknown)
-          {
-            if ((DispAcc >= -128) && (DispAcc < 127)) DispSize = eSymbolSize8Bit;
-            else DispSize = eSymbolSize16Bit;
-          }
-          switch (DispSize)
-          {
-            case eSymbolSize8Bit:
-              if (Unknown) DispAcc &= 0x7f;
-              if (ChkRange(DispAcc, -128, 127))
-              {
-                AdrMode = ModDisp8; AdrByte = 0xe0 | RegPart;
-                AdrVals[0] = DispAcc & 0xff; AdrCnt = 1;
-              }
-              break;
-            case eSymbolSize16Bit:
-              if (Unknown) DispAcc &= 0x7fff;
-              if (ChkRange(DispAcc, -0x8000l, 0xffffl))
-              {
-                AdrMode = ModDisp16; AdrByte = 0xf0 | RegPart;
-                AdrVals[1] = DispAcc & 0xff;
-                AdrVals[0] = (DispAcc >> 8) & 0xff;
-                AdrCnt = 2;
-              }
-              break;
-            default:
-              break;
-          }
+          if ((DispAcc >= -128) && (DispAcc < 127)) DispSize = eSymbolSize8Bit;
+          else DispSize = eSymbolSize16Bit;
+        }
+        switch (DispSize)
+        {
+          case eSymbolSize8Bit:
+            if (Unknown) DispAcc &= 0x7f;
+            if (ChkRange(DispAcc, -128, 127))
+            {
+              AdrMode = ModDisp8; AdrByte = 0xe0 | RegPart;
+              AdrVals[0] = DispAcc & 0xff; AdrCnt = 1;
+            }
+            break;
+          case eSymbolSize16Bit:
+            if (Unknown) DispAcc &= 0x7fff;
+            if (ChkRange(DispAcc, -0x8000l, 0xffffl))
+            {
+              AdrMode = ModDisp16; AdrByte = 0xf0 | RegPart;
+              AdrVals[1] = DispAcc & 0xff;
+              AdrVals[0] = (DispAcc >> 8) & 0xff;
+              AdrCnt = 2;
+            }
+            break;
+          default:
+            break;
         }
       }
     }
+
     ChkAdr(Mask); return;
   }
 
@@ -625,7 +706,7 @@ static void DecodeLDC_STC(Word IsSTC_16)
   int CRegIdx = 2, AdrIdx = 1;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else
   {
     if (IsSTC_16)
@@ -656,7 +737,7 @@ static void DecodeLDM(Word Dummy)
   if (!ChkArgCnt(2, 2));
   else if (OpSize != eSymbolSize16Bit) WrError(ErrNum_InvOpSize);
   else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
-  else if (!DecodeRegList(ArgStr[2].Str, BAsmCode + 1)) WrError(ErrNum_InvRegList);
+  else if (!DecodeRegList(&ArgStr[2], BAsmCode + 1)) WrError(ErrNum_InvRegList);
   else
   {
     DecodeAdr(&ArgStr[1], MModPostInc);
@@ -679,7 +760,7 @@ static void DecodeSTM(Word Dummy)
   if (!ChkArgCnt(2, 2));
   else if (OpSize != eSymbolSize16Bit) WrError(ErrNum_InvOpSize);
   else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
-  else if (!DecodeRegList(ArgStr[1].Str, BAsmCode + 1)) WrError(ErrNum_InvRegList);
+  else if (!DecodeRegList(&ArgStr[1], BAsmCode + 1)) WrError(ErrNum_InvRegList);
   else
   {
     DecodeAdr(&ArgStr[2], MModPredec);
@@ -709,8 +790,7 @@ static void DecodeMOVTPE_MOVFPE(Word IsMOVTPE_16)
     }
     if (OpSize == eSymbolSizeUnknown) SetOpSize(eSymbolSize8Bit);
     if (OpSize != eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
-    else if (!DecodeReg(ArgStr[RegIdx].Str, &HReg)) WrError(ErrNum_InvAddrMode);
-    else
+    else if (DecodeReg(&ArgStr[RegIdx], &HReg, True))
     {
       DecodeAdr(&ArgStr[AdrIdx], MModNoImm & (~MModReg));
       if (AdrMode != ModNone)
@@ -864,8 +944,7 @@ static void DecodeRegEA(Word Index)
   {
     if (OpSize == eSymbolSizeUnknown) SetOpSize(pOrder->DefSize);
     if (!((1 << OpSize) & pOrder->SizeMask)) WrError(ErrNum_InvOpSize);
-    else if (!DecodeReg(ArgStr[2].Str, &HReg)) WrError(ErrNum_InvAddrMode);
-    else
+    else if (DecodeReg(&ArgStr[2], &HReg, True))
     {
       DecodeAdr(&ArgStr[1], MModAll);
       if (AdrMode != ModNone)
@@ -885,10 +964,9 @@ static void DecodeTwoReg(Word Index)
   OneOrder *pOrder = TwoRegOrders + Index;
 
   if (!ChkArgCnt(2, 2));
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
-  else if (!DecodeReg(ArgStr[1].Str, &HReg)) WrError(ErrNum_InvAddrMode);
-  else if (!DecodeReg(ArgStr[2].Str, &AdrByte)) WrError(ErrNum_InvAddrMode);
-  else
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
+  else if (DecodeReg(&ArgStr[1], &HReg, True)
+       &&  DecodeReg(&ArgStr[2], &AdrByte, True))
   {
     if (OpSize == eSymbolSizeUnknown) SetOpSize(pOrder->DefSize);
     if (!((1 << OpSize) & pOrder->SizeMask)) WrError(ErrNum_InvOpSize);
@@ -959,8 +1037,7 @@ static void DecodeOneReg(Word Index)
 
   if (!ChkArgCnt(1, 1));
   else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
-  else if (!DecodeReg(ArgStr[1].Str, &HReg)) WrError(ErrNum_InvAddrMode);
-  else
+  else if (DecodeReg(&ArgStr[1], &HReg, True))
   {
     if (OpSize == -1) SetOpSize(pOrder->DefSize);
     if (!((1 << OpSize) & pOrder->SizeMask)) WrError(ErrNum_InvOpSize);
@@ -987,21 +1064,24 @@ static void DecodeBit(Word Code)
       DecodeAdr(&ArgStr[2], MModNoImm);
       if (AdrMode != ModNone)
       {
-        if (DecodeReg(ArgStr[1].Str, &HReg))
+        switch (DecodeReg(&ArgStr[1], &HReg, False))
         {
-          OK = True; HReg += 8;
-        }
-        else
-        {
-          HReg = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), (OpSize == eSymbolSize8Bit) ? UInt3 : UInt4, &OK);
-          if (OK) HReg |= 0x80;
+          case eIsReg:
+            OK = True; HReg += 8;
+            break;
+          case eIsNoReg:
+            HReg = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), (OpSize == eSymbolSize8Bit) ? UInt3 : UInt4, &OK);
+            if (OK) HReg |= 0x80;
+            break;
+          default:
+            OK = False;
         }
         if (OK)
         {
           BAsmCode[0] = AdrByte | (OpSize << 3);
           memcpy(BAsmCode + 1, AdrVals, AdrCnt);
           BAsmCode[1 + AdrCnt] = Code | HReg;
-          CodeLen=2 + AdrCnt;
+          CodeLen = 2 + AdrCnt;
         }
       }
     }
@@ -1015,7 +1095,7 @@ static void DecodeRel(Word Code)
   LongInt AdrLong;
 
   if (!ChkArgCnt(1, 1));
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else
   {
     AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
@@ -1091,32 +1171,38 @@ static void DecodePJMP_PJSR(Word IsPJMP)
 {
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else if (!Maximum) WrError(ErrNum_OnlyInMaxmode);
   else
   {
-    tStrComp *pArg = &ArgStr[1];
+    tStrComp *pArg = &ArgStr[1], Arg;
     unsigned ArgOffs = !!(*pArg->Str == '@');
     Byte HReg;
 
-    if (DecodeReg(pArg->Str + ArgOffs, &HReg))
+    StrCompRefRight(&Arg, pArg, ArgOffs);
+    switch (DecodeReg(&Arg, &HReg, False))
     {
-      BAsmCode[0] = 0x11; BAsmCode[1] = 0xc0 | ((1 - IsPJMP) << 3) | HReg;
-      CodeLen = 2;
-    }
-    else
-    {
-      Boolean OK;
-      LongInt AdrLong = EvalStrIntExpressionOffs(pArg, ArgOffs, UInt24, &OK);
-
-      if (OK)
+      case eIsReg:
+        BAsmCode[0] = 0x11; BAsmCode[1] = 0xc0 | ((1 - IsPJMP) << 3) | HReg;
+        CodeLen = 2;
+        break;
+      case eIsNoReg:
       {
-        BAsmCode[0] = 0x03 | (IsPJMP << 4);
-        BAsmCode[1] = (AdrLong >> 16) & 0xff;
-        BAsmCode[2] = (AdrLong >> 8) & 0xff;
-        BAsmCode[3] = AdrLong & 0xff;
-        CodeLen = 4;
+        Boolean OK;
+        LongInt AdrLong = EvalStrIntExpressionOffs(pArg, ArgOffs, UInt24, &OK);
+
+        if (OK)
+        {
+          BAsmCode[0] = 0x03 | (IsPJMP << 4);
+          BAsmCode[1] = (AdrLong >> 16) & 0xff;
+          BAsmCode[2] = (AdrLong >> 8) & 0xff;
+          BAsmCode[3] = AdrLong & 0xff;
+          CodeLen = 4;
+        }
+        break;
       }
+      default:
+        break;
     }
   }
 }
@@ -1130,9 +1216,8 @@ static void DecodeSCB(Word Code)
 
   if (!ChkArgCnt(2, 2));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
-  else if (!DecodeReg(ArgStr[1].Str, &HReg)) WrError(ErrNum_InvAddrMode);
-  else
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
+  else if (DecodeReg(&ArgStr[1], &HReg, True))
   {
     AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt24, &OK, &Flags);
     if (OK)
@@ -1161,7 +1246,7 @@ static void DecodePRTD_RTD(Word IsPRTD)
   Integer AdrInt;
 
   if (!ChkArgCnt(1, 1));
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else if (*ArgStr[1].Str != '#') WrError(ErrNum_OnlyImmAddr);
   else
   {
@@ -1210,7 +1295,7 @@ static void DecodeLINK(Word Dummy)
   UNUSED(Dummy);
 
   if (!ChkArgCnt(2, 2));
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else
   {
     DecodeAdr(&ArgStr[1], MModReg);
@@ -1269,7 +1354,7 @@ static void DecodeUNLK(Word Dummy)
 
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else
   {
     DecodeAdr(&ArgStr[1], MModReg);
@@ -1290,7 +1375,7 @@ static void DecodeTRAPA(Word Dummy)
 
   if (!ChkArgCnt(1, 1));
   else if (*AttrPart.Str) WrError(ErrNum_UseLessAttr);
-  else if (strcmp(Format," ")) WrError(ErrNum_InvFormat);
+  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
   else if (*ArgStr[1].Str != '#') WrError(ErrNum_OnlyImmAddr);
   else
   {
@@ -1373,65 +1458,69 @@ static void InitFields(void)
   AddFixed("RTE"  , 0x000a); AddFixed("RTS"    , 0x0019);
   AddFixed("SLEEP", 0x001a); AddFixed("TRAP/VS", 0x0009);
 
-  AddInstTable(InstTable, "MOV", 0, DecodeMOV);
-  AddInstTable(InstTable, "LDC", 0, DecodeLDC_STC);
-  AddInstTable(InstTable, "STC", 16, DecodeLDC_STC);
-  AddInstTable(InstTable, "LDM", 0, DecodeLDM);
-  AddInstTable(InstTable, "STM", 0, DecodeSTM);
-  AddInstTable(InstTable, "MOVTPE", 16, DecodeMOVTPE_MOVFPE);
-  AddInstTable(InstTable, "MOVFPE", 0, DecodeMOVTPE_MOVFPE);
-  AddInstTable(InstTable, "ADD", 0, DecodeADD_SUB);
-  AddInstTable(InstTable, "SUB", 16, DecodeADD_SUB);
-  AddInstTable(InstTable, "CMP", 0, DecodeCMP);
-  AddInstTable(InstTable, "JMP", 0, DecodeJMP_JSR);
-  AddInstTable(InstTable, "JSR", 8, DecodeJMP_JSR);
-  AddInstTable(InstTable, "PJMP", 1, DecodePJMP_PJSR);
-  AddInstTable(InstTable, "PJSR", 0, DecodePJMP_PJSR);
-  AddInstTable(InstTable, "SCB/F", 0x01, DecodeSCB);
+  AddInstTable(InstTable, "MOV"   , 0   , DecodeMOV);
+  AddInstTable(InstTable, "LDC"   , 0   , DecodeLDC_STC);
+  AddInstTable(InstTable, "STC"   , 16  , DecodeLDC_STC);
+  AddInstTable(InstTable, "LDM"   , 0   , DecodeLDM);
+  AddInstTable(InstTable, "STM"   , 0   , DecodeSTM);
+  AddInstTable(InstTable, "MOVTPE", 16  , DecodeMOVTPE_MOVFPE);
+  AddInstTable(InstTable, "MOVFPE", 0   , DecodeMOVTPE_MOVFPE);
+  AddInstTable(InstTable, "ADD"   , 0   , DecodeADD_SUB);
+  AddInstTable(InstTable, "SUB"   , 16  , DecodeADD_SUB);
+  AddInstTable(InstTable, "CMP"   , 0   , DecodeCMP);
+  AddInstTable(InstTable, "JMP"   , 0   , DecodeJMP_JSR);
+  AddInstTable(InstTable, "JSR"   , 8   , DecodeJMP_JSR);
+  AddInstTable(InstTable, "PJMP"  , 1   , DecodePJMP_PJSR);
+  AddInstTable(InstTable, "PJSR"  , 0   , DecodePJMP_PJSR);
+  AddInstTable(InstTable, "SCB/F" , 0x01, DecodeSCB);
   AddInstTable(InstTable, "SCB/NE", 0x06, DecodeSCB);
   AddInstTable(InstTable, "SCB/EQ", 0x07, DecodeSCB);
-  AddInstTable(InstTable, "RTD", 0, DecodePRTD_RTD);
-  AddInstTable(InstTable, "PRTD", 1, DecodePRTD_RTD);
-  AddInstTable(InstTable, "LINK", 0, DecodeLINK);
-  AddInstTable(InstTable, "UNLK", 0, DecodeUNLK);
-  AddInstTable(InstTable, "TRAPA", 0, DecodeTRAPA);
+  AddInstTable(InstTable, "RTD"   , 0   , DecodePRTD_RTD);
+  AddInstTable(InstTable, "PRTD"  , 1   , DecodePRTD_RTD);
+  AddInstTable(InstTable, "LINK"  , 0   , DecodeLINK);
+  AddInstTable(InstTable, "UNLK"  , 0   , DecodeUNLK);
+  AddInstTable(InstTable, "TRAPA" , 0   , DecodeTRAPA);
 
-  AddRel("BRA",0x20); AddRel("BT" ,0x20); AddRel("BRN",0x21);
-  AddRel("BF" ,0x21); AddRel("BHI",0x22); AddRel("BLS",0x23);
-  AddRel("BCC",0x24); AddRel("BHS",0x24); AddRel("BCS",0x25);
-  AddRel("BLO",0x25); AddRel("BNE",0x26); AddRel("BEQ",0x27);
-  AddRel("BVC",0x28); AddRel("BVS",0x29); AddRel("BPL",0x2a);
-  AddRel("BMI",0x2b); AddRel("BGE",0x2c); AddRel("BLT",0x2d);
-  AddRel("BGT",0x2e); AddRel("BLE",0x2f); AddRel("BSR",0x0e);
+  AddRel("BRA", 0x20); AddRel("BT" , 0x20); AddRel("BRN", 0x21);
+  AddRel("BF" , 0x21); AddRel("BHI", 0x22); AddRel("BLS", 0x23);
+  AddRel("BCC", 0x24); AddRel("BHS", 0x24); AddRel("BCS", 0x25);
+  AddRel("BLO", 0x25); AddRel("BNE", 0x26); AddRel("BEQ", 0x27);
+  AddRel("BVC", 0x28); AddRel("BVS", 0x29); AddRel("BPL", 0x2a);
+  AddRel("BMI", 0x2b); AddRel("BGE", 0x2c); AddRel("BLT", 0x2d);
+  AddRel("BGT", 0x2e); AddRel("BLE", 0x2f); AddRel("BSR", 0x0e);
 
   InstrZ = 0; OneOrders = (OneOrder *) malloc(sizeof(OneOrder) * OneOrderCount);
-  AddOne("CLR"  ,0x13,3,eSymbolSize16Bit); AddOne("NEG"  ,0x14,3,eSymbolSize16Bit);
-  AddOne("NOT"  ,0x15,3,eSymbolSize16Bit); AddOne("ROTL" ,0x1c,3,eSymbolSize16Bit);
-  AddOne("ROTR" ,0x1d,3,eSymbolSize16Bit); AddOne("ROTXL",0x1e,3,eSymbolSize16Bit);
-  AddOne("ROTXR",0x1f,3,eSymbolSize16Bit); AddOne("SHAL" ,0x18,3,eSymbolSize16Bit);
-  AddOne("SHAR" ,0x19,3,eSymbolSize16Bit); AddOne("SHLL" ,0x1a,3,eSymbolSize16Bit);
-  AddOne("SHLR" ,0x1b,3,eSymbolSize16Bit); AddOne("TAS"  ,0x17,1,eSymbolSize8Bit);
-  AddOne("TST"  ,0x16,3,eSymbolSize16Bit);
+  AddOne("CLR"  , 0x13, 3, eSymbolSize16Bit); AddOne("NEG"  , 0x14, 3, eSymbolSize16Bit);
+  AddOne("NOT"  , 0x15, 3, eSymbolSize16Bit); AddOne("ROTL" , 0x1c, 3, eSymbolSize16Bit);
+  AddOne("ROTR" , 0x1d, 3, eSymbolSize16Bit); AddOne("ROTXL", 0x1e, 3, eSymbolSize16Bit);
+  AddOne("ROTXR", 0x1f, 3, eSymbolSize16Bit); AddOne("SHAL" , 0x18, 3, eSymbolSize16Bit);
+  AddOne("SHAR" , 0x19, 3, eSymbolSize16Bit); AddOne("SHLL" , 0x1a, 3, eSymbolSize16Bit);
+  AddOne("SHLR" , 0x1b, 3, eSymbolSize16Bit); AddOne("TAS"  , 0x17, 1, eSymbolSize8Bit);
+  AddOne("TST"  , 0x16, 3, eSymbolSize16Bit);
 
   InstrZ = 0; OneRegOrders = (OneOrder *) malloc(sizeof(OneOrder) * OneRegOrderCount);
-  AddOneReg("EXTS",0x11,1,eSymbolSize8Bit); AddOneReg("EXTU",0x12,1,eSymbolSize8Bit);
-  AddOneReg("SWAP",0x10,1,eSymbolSize8Bit);
+  AddOneReg("EXTS", 0x11, 1, eSymbolSize8Bit);
+  AddOneReg("EXTU", 0x12, 1, eSymbolSize8Bit);
+  AddOneReg("SWAP", 0x10, 1, eSymbolSize8Bit);
 
   InstrZ = 0; RegEAOrders = (OneOrder *) malloc(sizeof(OneOrder) * RegEAOrderCount);
-  AddRegEA("ADDS" ,0x28,3,eSymbolSize16Bit); AddRegEA("ADDX" ,0xa0,3,eSymbolSize16Bit);
-  AddRegEA("AND"  ,0x50,3,eSymbolSize16Bit); AddRegEA("DIVXU",0xb8,3,eSymbolSize16Bit);
-  AddRegEA("MULXU",0xa8,3,eSymbolSize16Bit); AddRegEA("OR"   ,0x40,3,eSymbolSize16Bit);
-  AddRegEA("SUBS" ,0x38,3,eSymbolSize16Bit); AddRegEA("SUBX" ,0xb0,3,eSymbolSize16Bit);
-  AddRegEA("XOR"  ,0x60,3,eSymbolSize16Bit);
+  AddRegEA("ADDS" , 0x28, 3, eSymbolSize16Bit); AddRegEA("ADDX" , 0xa0, 3, eSymbolSize16Bit);
+  AddRegEA("AND"  , 0x50, 3, eSymbolSize16Bit); AddRegEA("DIVXU", 0xb8, 3, eSymbolSize16Bit);
+  AddRegEA("MULXU", 0xa8, 3, eSymbolSize16Bit); AddRegEA("OR"   , 0x40, 3, eSymbolSize16Bit);
+  AddRegEA("SUBS" , 0x38, 3, eSymbolSize16Bit); AddRegEA("SUBX" , 0xb0, 3, eSymbolSize16Bit);
+  AddRegEA("XOR"  , 0x60, 3, eSymbolSize16Bit);
 
   InstrZ = 0; TwoRegOrders = (OneOrder *) malloc(sizeof(OneOrder) * TwoRegOrderCount);
-  AddTwoReg("DADD",0xa000,1,eSymbolSize8Bit); AddTwoReg("DSUB",0xb000,1,eSymbolSize8Bit);
-  AddTwoReg("XCH" ,0x90,2,eSymbolSize16Bit);
+  AddTwoReg("DADD", 0xa000, 1, eSymbolSize8Bit);
+  AddTwoReg("DSUB", 0xb000, 1, eSymbolSize8Bit);
+  AddTwoReg("XCH" ,   0x90, 2, eSymbolSize16Bit);
 
-  AddLog("ANDC",0x58); AddLog("ORC",0x48); AddLog("XORC",0x68);
+  AddLog("ANDC", 0x58); AddLog("ORC", 0x48); AddLog("XORC", 0x68);
 
-  AddBit("BCLR",0x50); AddBit("BNOT",0x60);
-  AddBit("BSET",0x40); AddBit("BTST",0x70);
+  AddBit("BCLR", 0x50); AddBit("BNOT", 0x60);
+  AddBit("BSET", 0x40); AddBit("BTST", 0x70);
+
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -1442,6 +1531,26 @@ static void DeinitFields(void)
   free(RegEAOrders);
   free(TwoRegOrders);
   DestroyInstTable(InstTable);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_H8_5(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on H8/500
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_H8_5(char *pArg, TempResult *pResult)
+{
+  Byte Erg;
+
+  if (DecodeRegCore(pArg, &Erg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize16Bit;
+    pResult->Contents.RegDescr.Reg = Erg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_H8_5;
+  }
 }
 
 static Boolean DecodeAttrPart_H8_5(void)
@@ -1526,7 +1635,7 @@ static Boolean ChkPC_H8_5(LargeWord Addr)
 
 static Boolean IsDef_H8_5(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_H8_5(void)
@@ -1557,6 +1666,8 @@ static void SwitchTo_H8_5(void)
   ChkPC = ChkPC_H8_5;
   IsDef = IsDef_H8_5;
   SwitchFrom = SwitchFrom_H8_5;
+  InternSymbol = InternSymbol_H8_5;
+  DissectReg = DissectReg_H8_5;
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);
   AddMoto16PseudoONOFF();

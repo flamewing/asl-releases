@@ -3202,13 +3202,13 @@ static void StripPref(const char *Arg, Byte Opcode)
       /* look for end of string */
 
       for (ptr = ArgStr[1].Str; *ptr; ptr++)
-        if (myisspace(*ptr))
+        if (as_isspace(*ptr))
           break;
 
       /* look for beginning of next string */
 
       for (ptr2 = ptr; *ptr2; ptr2++)
-        if (!myisspace(*ptr2))
+        if (!as_isspace(*ptr2))
           break;
 
       /* copy out new opcode */

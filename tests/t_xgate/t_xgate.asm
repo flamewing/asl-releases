@@ -86,3 +86,21 @@ cnt	set	cnt+1
 	endm
 
 	ldw	r5,#$1234
+
+	; register aliases
+
+regr0	equ	r0
+regr1	reg	r1
+regr2	equ	r2
+regr3	reg	r3
+regr4	equ	r4
+regr5	reg	r5
+regr6	equ	r6
+regr7	reg	r7
+
+	ldb	r5,(r1,#20)
+	ldb	regr5,(regr1,#20)
+	ldw	r5,(r4,r2+)
+	ldw	regr5,(regr4,regr2+)
+	stw	r5,(r2,-r1)
+	stw	regr5,(regr2,-regr1)

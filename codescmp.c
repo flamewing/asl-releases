@@ -33,10 +33,10 @@ static CPUVar CPUSCMP;
 
 static Boolean DecodeReg(const char *pAsc, Byte *pErg)
 {
-  if ((strlen(pAsc) != 2) || (mytoupper(*pAsc) != 'P'))
+  if ((strlen(pAsc) != 2) || (as_toupper(*pAsc) != 'P'))
     return False;
 
-  switch (mytoupper(pAsc[1]))
+  switch (as_toupper(pAsc[1]))
   {
     case 'C':
       *pErg = 0; break;

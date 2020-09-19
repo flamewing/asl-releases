@@ -33,7 +33,7 @@ CPUVar AddCPUUserWithArgs(const char *NewName, tCPUSwitchUserProc Switcher, void
   Neu->pArgs = pArgs;
   /* kein UpString, weil noch nicht initialisiert ! */
   for (p = Neu->Name; *p != '\0'; p++)
-    *p = mytoupper(*p);
+    *p = as_toupper(*p);
   Neu->SwitchProc = Switcher;
   Neu->FreeProc = Freeer;
   Neu->pUserData = pUserData;

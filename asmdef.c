@@ -141,6 +141,7 @@ void (*SwitchFrom)();
 void (*InternSymbol)();
 #endif
 DissectBitProc DissectBit;
+DissectRegProc DissectReg;
 
 StringPtr IncludeList;	                /* Suchpfade fuer Includedateien */
 Integer IncDepth, NextIncDepth;         /* Verschachtelungstiefe INCLUDEs */
@@ -323,6 +324,7 @@ void asmdef_init(void)
   SwitchFrom = NullProc;
   InternSymbol = Default_InternSymbol;
   DissectBit = Default_DissectBit;
+  DissectReg = NULL;
 
   SetMaxCodeLen(MaxCodeLen_Ini);
 

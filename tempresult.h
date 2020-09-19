@@ -15,9 +15,31 @@
 #include "symflags.h"
 #include "symbolsize.h"
 
-typedef enum {TempNone = 0, TempInt = 1, TempFloat = 2, TempString = 4, TempAll = 7} TempType;
+typedef enum
+{
+  TempNone = 0,
+  TempInt = 1,
+  TempFloat = 2,
+  TempString = 4,
+  TempReg = 8,
+  TempAll = 15
+} TempType;
 
 struct sRelocEntry;
+
+typedef unsigned tRegInt;
+
+typedef void (*DissectRegProc)(
+#ifdef __PROTOS__
+char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize
+#endif
+);
+
+typedef struct sRegDescr
+{
+  DissectRegProc Dissect;
+  tRegInt Reg;
+} tRegDescr;
 
 struct sTempResult
 {
@@ -26,11 +48,13 @@ struct sTempResult
   unsigned AddrSpaceMask;
   tSymbolSize DataSize;
   struct sRelocEntry *Relocs;
+  DissectRegProc DissectReg;
   union
   {
     LargeInt Int;
     Double Float;
     tDynString Ascii;
+    tRegDescr RegDescr;
   } Contents;
 };
 typedef struct sTempResult TempResult;

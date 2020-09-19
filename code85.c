@@ -73,7 +73,7 @@ static Boolean DecodeReg8(const char *Asc, tSyntax Syntax, Byte *Erg)
   if (strlen(Asc) != 1) return False;
   else
   {
-    p = strchr(RegNames, mytoupper(*Asc));
+    p = strchr(RegNames, as_toupper(*Asc));
     if (!p) return False;
     else
     {

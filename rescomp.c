@@ -145,8 +145,8 @@ static void Process_LANGS(char *Line)
   p = NLine; z = 0;
   while (*p)
   {
-    for (; ((*p) && (!isspace((unsigned int) *p))); p++);
-    for (; ((*p) && (isspace((unsigned int) *p))); p++);
+    for (; *p && !as_isspace(*p); p++);
+    for (; *p && as_isspace(*p); p++);
     z++;
   }
 
@@ -156,13 +156,13 @@ static void Process_LANGS(char *Line)
     PCat->Messages = NULL;
     PCat->TotLength = 0;
     PCat->CtryCodeCnt = 0;
-    for (p2 = p; ((*p2) && (!myisspace(*p2))); p2++);
+    for (p2 = p; *p2 && !as_isspace(*p2); p2++);
     if (*p2 == '\0')
       strcpy(Part, p);
     else
     {
       *p2 = '\0'; strcpy(Part, p);
-      for (p = p2 + 1; ((*p) && (isspace((unsigned int) *p2))); p++);
+      for (p = p2 + 1; *p && as_isspace(*p2); p++); /* TODO: p instead of p2? */
     }
     if ((!*Part) || (Part[strlen(Part)-1] != ')')) SynError(Part);
     Part[strlen(Part) - 1] = '\0';
@@ -317,7 +317,7 @@ int main(int argc, char **argv)
     IncSym = as_strdup(pHFileName);
     for (p = IncSym; *p; p++)
      if (isalpha(((unsigned int) *p) & 0xff))
-       *p = mytoupper(*p);
+       *p = as_toupper(*p);
      else
        *p = '_';
   }
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
     GetLine(Line); KillPrefBlanks(Line); KillPostBlanks(Line);
     if ((*Line != ';') && (*Line != '#') && (*Line != '\0'))
     {
-      for (p = Line; ((!isspace((unsigned int) *p)) && (*p)); p++);
+      for (p = Line; !as_isspace(*p) && *p; p++);
       Save = *p; *p = '\0'; strmaxcpy(Cmd, Line, 1024); *p = Save; strmov(Line, p);
       if (!as_strcasecmp(Cmd, "LANGS")) Process_LANGS(Line);
       else if (!as_strcasecmp(Cmd, "DEFAULT")) Process_DEFAULT(Line);

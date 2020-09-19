@@ -78,3 +78,14 @@
                 add	gr20,gr40,gr60
                 assume	rbp:0b0000000000000010
 		add	gr20,gr40,gr60
+
+		; register symbols
+
+reg_r223	reg	r223
+reg_gr52	equ	gr52
+reg_lr119	reg	lr119
+
+		add	r223,gr52,lr119
+		add	reg_r223,reg_gr52,reg_lr119
+		add	r223,gr52,42
+		add	reg_r223,reg_gr52,42

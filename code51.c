@@ -75,7 +75,8 @@ enum
 #define BCondOrderCnt 3
 
 #define AccReg 11
-
+#define DPXValue 14
+#define SPXValue 15
 
 static FixedOrder *FixedOrders;
 static FixedOrder *AccOrders;
@@ -113,69 +114,133 @@ static void SetOpSize(ShortInt NewSize)
   }
 }
 
-static Boolean DecodeReg(const char *pAsc, Byte *Erg, Byte *Size)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSize)
+ * \brief  check whether argument describes a CPU register
+ * \param  pAsc argument
+ * \param  pValue resulting register # if yes
+ * \param  pSize resulting register size if yes
+ * \return true if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSize)
 {
   static Byte Masks[3] = { 0, 1, 3 };
 
   const char *Start;
-  char *pRepl;
-  int alen;
+  int alen = strlen(pAsc);
   Boolean IO;
-
-  if (FindRegDef(pAsc, &pRepl))
-    pAsc = pRepl;
-  alen = strlen(pAsc);
 
   if (!as_strcasecmp(pAsc, "DPX"))
   {
-    *Erg = 14;
-    *Size = 2;
+    *pValue = DPXValue;
+    *pSize = eSymbolSize32Bit;
     return True;
   }
 
   if (!as_strcasecmp(pAsc, "SPX"))
   {
-    *Erg = 15;
-    *Size = 2;
+    *pValue = SPXValue;
+    *pSize = eSymbolSize32Bit;
     return True;
   }
 
-  if ((alen >= 2) && (mytoupper(*pAsc) == 'R'))
+  if ((alen >= 2) && (as_toupper(*pAsc) == 'R'))
   {
     Start = pAsc + 1;
-    *Size = 0;
+    *pSize = eSymbolSize8Bit;
   }
-  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*pAsc) == 'W') && (mytoupper(pAsc[1]) == 'R'))
+  else if ((MomCPU >= CPU80251) && (alen >= 3) && (as_toupper(*pAsc) == 'W') && (as_toupper(pAsc[1]) == 'R'))
   {
     Start = pAsc + 2;
-    *Size = 1;
+    *pSize = eSymbolSize16Bit;
   }
-  else if ((MomCPU >= CPU80251) && (alen >= 3) && (mytoupper(*pAsc) == 'D') && (mytoupper(pAsc[1]) == 'R'))
+  else if ((MomCPU >= CPU80251) && (alen >= 3) && (as_toupper(*pAsc) == 'D') && (as_toupper(pAsc[1]) == 'R'))
   {
     Start = pAsc + 2;
-    *Size = 2;
+    *pSize = eSymbolSize32Bit;
   }
   else
     return False;
 
-  *Erg = ConstLongInt(Start, &IO, 10);
+  *pValue = ConstLongInt(Start, &IO, 10);
   if (!IO) return False;
-  else if ((*Erg) & Masks[*Size]) return False;
+  else if (*pValue & Masks[*pSize]) return False;
   else
   {
-    (*Erg) >>= (*Size);
-    switch (*Size)
+    *pValue >>= *pSize;
+    switch (*pSize)
     {
-      case 0:
-        return (((*Erg) < 8) || ((MomCPU >= CPU80251) && ((*Erg) < 16)));
-      case 1:
-        return ((*Erg) < 16);
-      case 2:
-        return (((*Erg) < 8) || ((*Erg) == 14) || ((*Erg) == 15));
+      case eSymbolSize8Bit:
+        return ((*pValue < 8) || ((MomCPU >= CPU80251) && (*pValue < 16)));
+      case eSymbolSize16Bit:
+        return (*pValue < 16);
+      case eSymbolSize32Bit:
+        return ((*pValue < 8) || (*pValue == DPXValue) || (*pValue == SPXValue));
       default:
         return False;
     }
   }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_51(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - 80(2)51 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_51(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "WR%u", (unsigned)Value << 1);
+      break;
+    case eSymbolSize32Bit:
+      if (SPXValue == Value)
+        strmaxcpy(pDest, "SPX", DestSize);
+      else if (DPXValue == Value)
+        strmaxcpy(pDest, "DPX", DestSize);
+      else
+        as_snprintf(pDest, DestSize, "DR%u", (unsigned)Value << 2);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pValue, tSymbolSize *pSize, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or user-defined register alias
+ * \param  pArg argument
+ * \param  pValue resulting register # if yes
+ * \param  pSize resulting register size if yes
+ * \param  MustBeReg operand must be a register
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pValue, tSymbolSize *pSize, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, &RegDescr.Reg, pSize))
+  {
+    *pValue = RegDescr.Reg;
+    return eIsReg;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+  *pValue = RegDescr.Reg;
+  *pSize = EvalResult.DataSize;
+  return RegEvalResult;
 }
 
 static void SaveAdrRelocs(LongWord Type, LongWord Offset)
@@ -210,7 +275,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 {
   Boolean OK, FirstFlag;
   tEvalResult EvalResult;
-  Byte HSize;
+  tSymbolSize HSize;
   Word H16;
   LongWord H32;
   tStrComp SegComp, AddrComp, *pAddrComp;
@@ -306,14 +371,19 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     goto chk;
   }
 
-  if (DecodeReg(pArg->Str, &AdrPart, &HSize))
+  switch (DecodeReg(pArg, &AdrPart, &HSize, False))
   {
-    if ((MomCPU >= CPU80251) && ((Mask & MModReg) == 0))
-      AdrMode = ((HSize == 0) && (AdrPart == AccReg)) ? ModAcc : ModReg;
-    else
-      AdrMode = ModReg;
-    SetOpSize(HSize);
-    goto chk;
+    case eIsReg:
+      if ((MomCPU >= CPU80251) && ((Mask & MModReg) == 0))
+        AdrMode = ((HSize == 0) && (AdrPart == AccReg)) ? ModAcc : ModReg;
+      else
+        AdrMode = ModReg;
+      SetOpSize(HSize);
+      goto chk;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return;
   }
 
   if (*pArg->Str == '@')
@@ -332,8 +402,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
       *PPos = '\0';
       IndirComp.Pos.Len = PPos - IndirComp.Str;
     }
-    if (!DecodeReg(IndirComp.Str, &AdrPart, &HSize)) WrStrErrorPos(ErrNum_InvReg, &IndirComp);
-    else
+    if (DecodeReg(&IndirComp, &AdrPart, &HSize, False) == eIsReg)
     {
       if (!PPos)
       {
@@ -351,12 +420,12 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
       if (OK)
         switch (HSize)
         {
-          case 0:
+          case eSymbolSize8Bit:
             if ((AdrPart>1) || (H32 != 0)) WrError(ErrNum_InvAddrMode);
             else
               AdrMode = ModIReg8;
             break;
-          case 1:
+          case eSymbolSize16Bit:
             if (H32 == 0)
             {
               AdrMode = ModIReg;
@@ -371,7 +440,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
               AdrCnt = 2;
             }
             break;
-          case 2:
+          case eSymbolSize32Bit:
             if (H32 == 0)
             {
               AdrMode = ModIReg;
@@ -385,6 +454,8 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
               AdrVals[0] = (H32 >> 8) & 0xff;
               AdrCnt = 2;
             }
+            break;
+          default:
             break;
         }
     }
@@ -2389,14 +2460,6 @@ static void DecodePORT(Word Index)
     CodeEquate(SegIO, 0, 0x1ff);
 }
 
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
 /*-------------------------------------------------------------------------*/
 /* dynamische Codetabellenverwaltung */
 
@@ -2518,7 +2581,7 @@ static void InitFields(void)
   AddBCond("JBC", 0x0010, CPU87C750);
   AddBCond("JNB", 0x0030, CPU87C750);
 
-  AddInstTable(InstTable, "REG"  , 0, DecodeREG);
+  AddInstTable(InstTable, "REG"  , 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -2571,6 +2634,27 @@ static Boolean IsDef_51(void)
       return Memo("REG");
     default:
       return False;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_51(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on 80x51
+ * \param  pArg source argument
+ * \param  pResult destination buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_51(char *pArg, TempResult *pResult)
+{
+  tRegInt Erg;
+  tSymbolSize Size;
+  
+  if (DecodeRegCore(pArg, &Erg, &Size))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = (tSymbolSize)Size;
+    pResult->Contents.RegDescr.Reg = Erg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_51;
   }
 }
 
@@ -2640,13 +2724,14 @@ static void SwitchTo_51(void)
 
   MakeCode = MakeCode_51;
   IsDef = IsDef_51;
+  InternSymbol = InternSymbol_51;
+  DissectReg = DissectReg_51;
 
   InitFields();
   SwitchFrom = SwitchFrom_51;
   AddONOFF("SRCMODE"  , &SrcMode  , SrcModeName  , False);
   AddONOFF("BIGENDIAN", &BigEndian, BigEndianName, False);
 }
-
 
 void code51_init(void)
 {

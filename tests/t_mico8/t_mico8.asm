@@ -79,3 +79,17 @@ int_handler:
 
 	import	r10,21
 	export	r10,21
+
+; register aliases
+
+myreg1e		equ	r15
+myreg2e		equ	r14
+myreg1r		reg	r15
+myreg2r		reg	r14
+myreg1re	reg	myreg1e
+myreg2re	reg	myreg2e
+
+		add	r14,r15
+		add	myreg2e,myreg1e
+		add	myreg2re,myreg1r
+		add	myreg2re,myreg1re

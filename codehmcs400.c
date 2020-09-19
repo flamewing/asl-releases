@@ -133,8 +133,8 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
 
   l = strlen(pArg->Str);
   if ((l >= 3) && (l <= 4)
-   && (mytoupper(pArg->Str[0]) == 'M')
-   && (mytoupper(pArg->Str[1]) == 'R')
+   && (as_toupper(pArg->Str[0]) == 'M')
+   && (as_toupper(pArg->Str[1]) == 'R')
    && (isdigit(pArg->Str[2]))
    && (isdigit(pArg->Str[l - 1])))
   {

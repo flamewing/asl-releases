@@ -278,3 +278,23 @@ next:
 	data	"abc"
 	endexpect
 	data	"abcd"
+
+; register aliases
+
+myreg1e		equ	r16
+myreg2e		equ	r17
+myreg1r		reg	r16
+myreg2r		reg	r17
+myreg1re	reg	myreg1e
+myreg2re	reg	myreg2e
+
+
+		add	r16,r17
+		add	myreg1e,myreg2e
+		add	myreg1r,myreg2r
+		add	myreg1re,myreg2re
+		add	r17,r16
+		add	myreg2e,myreg1e
+		add	myreg2r,myreg1r
+		add	myreg2re,myreg1re
+

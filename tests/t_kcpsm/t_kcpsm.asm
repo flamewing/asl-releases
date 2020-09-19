@@ -77,8 +77,16 @@ test2:
 	enable	interrupt
 	disable	interrupt
 
+myreg	equ	s12
+myregr	reg	s12
+myregre	reg	myreg
+
+	add	s12,200
+	add	myreg,200
+	add	myregr,200
+	add	myregre,200
+
 	segment	data
 
 	org	0aah
 vari:
-

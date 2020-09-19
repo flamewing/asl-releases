@@ -110,6 +110,24 @@ test1:	jr	test1
 
 	srp	#0
 
+	; register aliases
+
+myrege		equ	r7
+myrrege		equ	rr12
+myregr		reg	r7
+myrregr		reg	rr12
+myregre		reg	myrege
+myrregre	reg	myrrege
+
+	add	r7,#15
+	add	myrege,#15
+	add	myregr,#15
+	add	myregre,#15
+
+	jp	@rr12
+	jp	@myrrege
+	jp	@myrregr
+	jp	@myrregre
 
 	segment	data
 

@@ -97,8 +97,8 @@ static Word EvalARExpression(const tStrComp *pArg, Boolean *OK)
 {
   *OK = True;
 
-  if ((mytoupper(pArg->Str[0]) == 'A')
-   && (mytoupper(pArg->Str[1]) == 'R')
+  if ((as_toupper(pArg->Str[0]) == 'A')
+   && (as_toupper(pArg->Str[1]) == 'R')
    && (pArg->Str[2] >= '0')
    && (pArg->Str[2] <= '7')
    && (pArg->Str[3] <= '\0'))

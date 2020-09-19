@@ -989,7 +989,7 @@ static void InternSymbol_TMS7(char *pAsc, TempResult *pErg)
   Boolean Err;
 
   pErg->Typ = TempNone;
-  if ((strlen(pAsc) < 2) || ((mytoupper(*pAsc) != 'R') && (mytoupper(*pAsc) != 'P')))
+  if ((strlen(pAsc) < 2) || ((as_toupper(*pAsc) != 'R') && (as_toupper(*pAsc) != 'P')))
     return;
 
   strmaxcpy(h, pAsc + 1, STRINGSIZE);
@@ -1000,7 +1000,7 @@ static void InternSymbol_TMS7(char *pAsc, TempResult *pErg)
     return;
 
   pErg->Typ = TempInt;
-  if (mytoupper(*pAsc) == 'P')
+  if (as_toupper(*pAsc) == 'P')
     pErg->Contents.Int += 0x100;
 }
 

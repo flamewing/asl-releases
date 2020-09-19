@@ -2421,10 +2421,10 @@ static void SplitLine(void)
 
   /* Non-blank character in first column is always label: */
 
-  if ((pRun < pEnd) && (*pRun) && (!myisspace(*pRun)))
+  if ((pRun < pEnd) && (*pRun) && (!as_isspace(*pRun)))
   {
     for (pPos = pRun; pPos < pEnd; pPos++)
-      if ((myisspace(*pPos)) || (*pPos == ':'))
+      if ((as_isspace(*pPos)) || (*pPos == ':'))
         break;
     LabPart.Pos.StartCol = pRun - OneLine;
     if (pPos >= pEnd)
@@ -2447,8 +2447,8 @@ static void SplitLine(void)
 
   while (True)
   {
-    for (; (pRun < pEnd) && myisspace(*pRun); pRun++);
-    for (pPos = pRun; (pPos < pEnd) && !myisspace(*pPos); pPos++);
+    for (; (pRun < pEnd) && as_isspace(*pRun); pRun++);
+    for (pPos = pRun; (pPos < pEnd) && !as_isspace(*pPos); pPos++);
 
     /* If potential OpPart starts with argument divider,
        OpPart is empty and rest of line is all-arguments: */
@@ -2550,7 +2550,7 @@ static void SplitLine(void)
 
     while ((pRun < pEnd) || pActDivPos)
     {
-      while (*pRun && myisspace(*pRun))
+      while (*pRun && as_isspace(*pRun))
         pRun++;
       pDivPos = pEnd;
       for (pActDiv = DivideChars; *pActDiv; pActDiv++)
@@ -2609,7 +2609,7 @@ static void ProcessFile(String FileName)
     NextIncDepth = IncDepth;
 
     for (Run = OneLine; *Run != '\0'; Run++)
-      if (!isspace(((unsigned int) * Run) & 0xff))
+      if (!as_isspace(*Run))
         break;
     if (*Run == '#')
       Preprocess();
@@ -2856,7 +2856,6 @@ static void AssembleFile_ExitPass(void)
       pPhaseStacks[z] = pSavePhase->pNext;
       free(pSavePhase);
     }
-  TossRegDefs(-1);
   if (FirstIfSave)
     WrError(ErrNum_MissEndif);
   if (FirstSaveState)
@@ -3093,7 +3092,6 @@ static void AssembleFile(char *Name)
       CloseIfOpen(&LstFile);
       if (CodeOutput)
         unlink(OutName);
-      CleanupRegDefs();
       ClearCodepages();
       if (MakeUseList)
         ClearUseList();
@@ -3277,7 +3275,6 @@ static void AssembleFile(char *Name)
   /* Speicher freigeben */
 
   ClearSymbolList();
-  ClearRegDefs();
   ClearCodepages();
   ClearMacroList();
   ClearFunctionList();
@@ -4209,7 +4206,7 @@ int main(int argc, char **argv)
     case NoRedir:
       Env = getenv("USEANSI");
       strmaxcpy(Dummy, Env ? Env : "Y", STRINGSIZE);
-      if (mytoupper(Dummy[0]) == 'N')
+      if (as_toupper(Dummy[0]) == 'N')
       {
       }
       else

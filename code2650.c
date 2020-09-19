@@ -40,7 +40,7 @@ static Boolean DecodeReg(const char *pAsc, Byte *pRes)
 {
   Boolean Result;
 
-  Result = ((strlen(pAsc) == 2) && (mytoupper(pAsc[0]) == 'R') && (pAsc[1] >= '0') && (pAsc[1] <= '3'));
+  Result = ((strlen(pAsc) == 2) && (as_toupper(pAsc[0]) == 'R') && (pAsc[1] >= '0') && (pAsc[1] <= '3'));
   if (Result)
     *pRes = pAsc[1] - '0';
   return Result;

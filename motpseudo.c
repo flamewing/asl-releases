@@ -1065,7 +1065,7 @@ Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
 
 static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, tSymbolSize *pResult, Boolean Allow24)
 {
-  switch (mytoupper(SizeSpec))
+  switch (as_toupper(SizeSpec))
   {
     case 'B': *pResult = eSymbolSize8Bit; break;
     case 'W': *pResult = eSymbolSize16Bit; break;

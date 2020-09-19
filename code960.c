@@ -85,16 +85,24 @@ typedef struct
 
 typedef struct
 {
-  const char *Name;
+  char Name[4];
   LongWord Code;
 } SpecReg;
+
+#define REG_MARK 32
 
 static FixedOrder *FixedOrders;
 static RegOrder *RegOrders;
 static CobrOrder *CobrOrders;
 static FixedOrder *CtrlOrders;
 static MemOrder *MemOrders;
-static SpecReg *SpecRegs;
+static const SpecReg SpecRegs[SpecRegCnt] =
+{
+  { "FP" , 31 },
+  { "PFP",  0 },
+  { "SP" ,  1 },
+  { "RIP",  2 }
+};
 
 static CPUVar CPU80960;
 
@@ -116,57 +124,209 @@ static Boolean ChkAdr(int AMode, Byte Mask, LongWord *Erg, LongWord *Mode)
   }
 }
 
-static Boolean DecodeIReg(char *Asc, LongWord *Erg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIRegCore(const char *pArg, LongWord *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeIRegCore(const char *pArg, LongWord *pResult)
 {
   int z;
-  char *end;
+  LongWord Offs;
 
   for (z = 0; z < SpecRegCnt; z++)
-   if (!as_strcasecmp(Asc, SpecRegs[z].Name))
+   if (!as_strcasecmp(pArg, SpecRegs[z].Name))
    {
-     *Erg = SpecRegs[z].Code;
+     *pResult = REG_MARK | SpecRegs[z].Code;
      return True;
    }
 
-  if ((mytoupper(*Asc) == 'G') || (mytoupper(*Asc) == 'R'))
+  switch (as_toupper(*pArg))
   {
-    *Erg = strtol(Asc + 1, &end, 10);
-    if ((*end == '\0') && (*Erg <= 15))
+    case 'G':
+      Offs = 16;
+      goto eval;
+    case 'R':
+      Offs = 0;
+      goto eval;
+    default:
+      return False;
+    eval:
     {
-      if (mytoupper(*Asc) == 'G')
-        *Erg += 16;
-      return TRUE;
+      char *pEnd;
+
+      *pResult = strtoul(pArg + 1, &pEnd, 10);
+      if (!*pEnd && (*pResult <= 15))
+      {
+        *pResult += Offs;
+        return True;
+      }
     }
   }
 
   return False;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFPRegCore(const char *pArg, LongWord *pResult)
+ * \brief  check whether argument is an FPU register
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeFPRegCore(const char *pArg, LongWord *pResult)
+{
+  if (!as_strncasecmp(pArg, "FP", 2))
+  {
+    char *pEnd;
+    
+    *pResult = strtoul(pArg + 2, &pEnd, 10);
+    if (!*pEnd && (*pResult <= 3))
+      return True;
+  }
+
+  return False;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_960(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - i960 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_960(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize32Bit:
+    {
+      int z;
+
+      for (z = 0; z < SpecRegCnt; z++)
+        if (Value == (REG_MARK | SpecRegs[z].Code))
+        {
+          as_snprintf(pDest, DestSize, "%s", SpecRegs[z].Name);
+          return;
+        }
+      as_snprintf(pDest, DestSize, "%c%u", Value & 16 ? 'G' : 'R', (unsigned)(Value & 15));
+      break;
+    }
+    case eSymbolSizeFloat64Bit:
+      as_snprintf(pDest, DestSize, "FP%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \param  MustBeReg True if register is expected
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+      
+static tRegEvalResult DecodeIReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+{
+  if (DecodeIRegCore(pArg->Str, pResult))
+  {
+    *pResult &= ~REG_MARK;
+    return eIsReg;
+  }
+  else
+  {
+    tRegDescr RegDescr;
+    tEvalResult EvalResult;
+    tRegEvalResult RegEvalResult;
+
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+    if (eIsReg == RegEvalResult)
+      *pResult = RegDescr.Reg & ~REG_MARK;
+    return RegEvalResult;
+  }
+}
+      
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIOrFPReg(const tStrComp *pArg, LongWord *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU/FPU register or register alias
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \param  pSize returns register size/type
+ * \param  MustBeReg True if register is expected
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+      
+static tRegEvalResult DecodeIOrFPReg(const tStrComp *pArg, LongWord *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+{
+  if (DecodeIRegCore(pArg->Str, pResult))
+  {
+    *pResult &= ~REG_MARK;
+    *pSize = eSymbolSize32Bit;
+    return eIsReg;
+  }
+  else if (DecodeFPRegCore(pArg->Str, pResult))
+  {
+    *pSize = eSymbolSizeFloat64Bit;
+    return eIsReg;
+  }
+  else
+  {
+    tRegDescr RegDescr;
+    tEvalResult EvalResult;
+    tRegEvalResult RegEvalResult;
+
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+    if (eIsReg == RegEvalResult)
+    {
+      *pResult = RegDescr.Reg & ~REG_MARK;
+      *pSize = EvalResult.DataSize;
+    }
+    return RegEvalResult;
+  }
+}
+      
 static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord *Erg, LongWord *Mode)
 {
-  char *end;
   Double FVal;
   tEvalResult EvalResult;
+  tSymbolSize DataSize;
 
   *Mode = ModNone;
   *Erg = 0;
 
-  if (DecodeIReg(pArg->Str, Erg))
+  switch (DecodeIOrFPReg(pArg, Erg, &DataSize, False))
   {
-    if ((*Erg) & OpMasks[Type])
-    {
-      WrStrErrorPos(ErrNum_InvRegPair, pArg);
+    case eIsReg:
+      switch (DataSize)
+      {
+        case eSymbolSize32Bit:
+          if ((*Erg) & OpMasks[Type])
+          {
+            WrStrErrorPos(ErrNum_InvRegPair, pArg);
+            return False;
+          }
+          else
+            return ChkAdr(ModReg, Mask, Erg, Mode);
+          break;
+        case eSymbolSizeFloat64Bit:
+          return ChkAdr(ModFReg, Mask, Erg, Mode);
+        default:
+          break;
+      }
+      break;
+    case eRegAbort:
       return False;
-    }
-    else
-      return ChkAdr(ModReg, Mask, Erg, Mode);
-  }
-
-  if (!as_strncasecmp(pArg->Str, "FP", 2))
-  {
-    *Erg = strtol(pArg->Str + 2, &end, 10);
-    if ((*end == '\0') && (*Erg <= 3))
-      return ChkAdr(ModFReg, Mask, Erg, Mode);
+    case eIsNoReg:
+      break;
   }
 
   if (Type != IntOp)
@@ -204,12 +364,6 @@ static Boolean DecodeAdr(const tStrComp *pArg, Byte Mask, OpType Type, LongWord 
 static int AddrError(tErrorNum Num)
 {
   WrError(Num);
-  return -1;
-}
-
-static int AddrPosError(tErrorNum Num, const tStrComp *pArg)
-{
-  WrStrErrorPos(Num, pArg);
   return -1;
 }
 
@@ -255,8 +409,9 @@ static int DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord *Ext)
               break;
           if (Scale2 != 1) return AddrError(ErrNum_InvAddrMode);
         }
-        if (!DecodeIReg(RegArg.Str, &Index))
-          return AddrPosError(ErrNum_InvReg, &RegArg);
+        if (DecodeIReg(&RegArg, &Index, True) != eIsReg)
+          return -1;
+        
         break;
       case ')':
         if (Base != NOREG) return AddrError(ErrNum_InvAddrMode);
@@ -268,7 +423,8 @@ static int DecodeMem(const tStrComp *pArg, LongWord *Erg, LongWord *Ext)
         StrCompSplitRef(&Arg, &RegArg, &Arg, p);
         if (!as_strcasecmp(RegArg.Str, "IP"))
           Base = IPREG;
-        else if (!DecodeIReg(RegArg.Str, &Base)) return AddrPosError(ErrNum_InvReg, &RegArg);
+        else if (DecodeIReg(&RegArg, &Base, True) != eIsReg)
+          return -1;
         break;
       default:
         Done = True;
@@ -437,7 +593,7 @@ static void DecodeMemO(Word Index)
   unsigned NumArgs = 1 + Ord(Op->RegPos > 0);
 
   if (!ChkArgCnt(NumArgs, NumArgs));
-  else if ((Op->RegPos > 0) && (!DecodeIReg(ArgStr[Op->RegPos].Str, &Reg))) WrStrErrorPos(ErrNum_InvReg, &ArgStr[Op->RegPos]);
+  else if ((Op->RegPos > 0) && (DecodeIReg(&ArgStr[Op->RegPos], &Reg, True) != eIsReg));
   else if (Reg & OpMasks[Op->Type]) WrStrErrorPos(ErrNum_InvReg, &ArgStr[Op->RegPos]);
   else if ((MemType = DecodeMem(&ArgStr[MemPos], &Mem,DAsmCode + 1)) >= 0)
   {
@@ -563,13 +719,6 @@ static void AddMem(const char *NName, LongWord NCode, OpType NType, int NPos)
   MemOrders[InstrZ].Type = NType;
   MemOrders[InstrZ].RegPos = NPos;
   AddInstTable(InstTable, NName, InstrZ++, DecodeMemO);
-}
-
-static void AddSpecReg(const char *NName, LongWord NCode)
-{
-  if (InstrZ >= SpecRegCnt) exit(255);
-  SpecRegs[InstrZ].Code = NCode;
-  SpecRegs[InstrZ++].Name = NName;
 }
 
 static void InitFields(void)
@@ -756,12 +905,9 @@ static void InitFields(void)
   AddMem("LDIS" , 0xc8, IntOp   , 2);
   AddMem("STIS" , 0xca, IntOp   , 1);
 
-  SpecRegs = (SpecReg*) malloc(sizeof(SpecReg)*SpecRegCnt); InstrZ = 0;
-  AddSpecReg("FP" , 31); AddSpecReg("PFP", 0);
-  AddSpecReg("SP" ,  1); AddSpecReg("RIP", 2);
-
   AddInstTable(InstTable, "WORD", 0, DecodeWORD);
   AddInstTable(InstTable, "SPACE", 0, DecodeSPACE);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -771,14 +917,13 @@ static void DeinitFields(void)
   free(RegOrders);
   free(CobrOrders);
   free(CtrlOrders);
-  free(SpecRegs);
 }
 
 /*--------------------------------------------------------------------------*/
 
 static Boolean IsDef_960(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void InitPass_960(void)
@@ -790,6 +935,33 @@ static void SwitchFrom_960(void)
 {
   DeinitFields();
   ClearONOFF();
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_960(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on i960
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_960(char *pArg, TempResult *pResult)
+{
+  LongWord Reg;
+
+  if (DecodeIRegCore(pArg, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize32Bit;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_960;
+  }
+  else if (DecodeFPRegCore(pArg, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSizeFloat64Bit;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_960;
+  }
 }
 
 static void SwitchTo_960(void)
@@ -816,6 +988,8 @@ static void SwitchTo_960(void)
 
   MakeCode = MakeCode_960;
   IsDef = IsDef_960;
+  InternSymbol = InternSymbol_960;
+  DissectReg = DissectReg_960;
   SwitchFrom=SwitchFrom_960;
   AddONOFF("FPU"     , &FPUAvail  , FPUAvailName  , False);
   AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);

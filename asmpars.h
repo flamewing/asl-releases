@@ -14,6 +14,7 @@
 #include "symflags.h"
 #include "tempresult.h"
 #include "lstmacroexp.h"
+#include "errmsg.h"
 
 typedef enum
 {
@@ -151,6 +152,8 @@ extern void EnterStringSymbol(const struct sStrComp *pName, const char *pValue, 
 
 extern void EnterDynStringSymbolWithFlags(const struct sStrComp *pName, const tDynString *pValue, Boolean MayChange, tSymbolFlags Flags);
 
+extern void EnterRegSymbol(const struct sStrComp *pName, const tRegDescr *Value, tSymbolSize Size, Boolean MayChange, Boolean AddList);
+
 #define EnterDynStringSymbol(pName, pValue, MayChange) EnterDynStringSymbolWithFlags(pName, pValue, MayChange, eSymbolFlag_None)
 
 extern void LookupSymbol(const struct sStrComp *pName, TempResult *pValue, Boolean WantRelocs, TempType ReqType);
@@ -202,6 +205,9 @@ extern Double EvalStrFloatExpression(const struct sStrComp *pExpr, FloatType Typ
 extern void EvalStrStringExpressionWithResult(const struct sStrComp *pExpr, struct sEvalResult *pResult, char *pEvalResult);
 extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResult, char *pEvalResult);
 
+extern tErrorNum EvalStrRegExpressionWithResult(const struct sStrComp *pExpr, struct sRegDescr *pResult, struct sEvalResult *pEvalResult);
+typedef enum { eIsNoReg, eIsReg, eRegAbort } tRegEvalResult;
+extern tRegEvalResult EvalStrRegExpressionAsOperand(const struct sStrComp *pArg, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, tSymbolSize ReqSize, Boolean MustBeReg);
 
 extern const char *GetIntelSuffix(unsigned Radix);
 
@@ -262,16 +268,6 @@ extern void PopLocHandle(void);
 
 extern void ClearLocStack(void);
 
-
-extern void AddRegDef(const struct sStrComp *pOrigComp, const struct sStrComp *pReplComp);
-
-extern Boolean FindRegDef(const char *Name, char **Erg);
-
-extern void TossRegDefs(LongInt Sect);
-
-extern void CleanupRegDefs(void);
-
-extern void ClearRegDefs(void);
 
 extern void PrintRegDefs(void);
 

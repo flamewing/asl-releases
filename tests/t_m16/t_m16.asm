@@ -49690,3 +49690,14 @@
 	jrng:g	R1
 	jrng:g	#42
 	jrng:e	#17
+
+	; register aliases
+
+myreg1	equ	r1
+myreg2	equ	r2
+myreg1b	reg	myreg1
+myreg2b	reg	myreg2
+
+        mov:g   @R2.b,R1.w
+        mov:g   @myreg2.b,myreg1.w
+        mov:g   @myreg2b.b,myreg1b.w

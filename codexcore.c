@@ -55,49 +55,80 @@ static unsigned UpVal(unsigned Val1, unsigned Val3, unsigned Val9, unsigned Val2
        + (((Val27 >> 2) & 3) * 27);
 }
 
-static Boolean ParseReg(const char *pAsc, unsigned *pResult)
+/*!------------------------------------------------------------------------
+ * \fn     ParseReg(const char *pArg, unsigned *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg argument
+ * \param  pResult register number if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean ParseReg(const char *pArg, unsigned *pResult)
 {
   char *pEnd;
-  char *pAlias;
 
-  if (FindRegDef(pAsc, &pAlias))
-    pAsc = pAlias;
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'R'))
+    return False;
 
-  if ((strlen(pAsc) < 2) || (mytoupper(*pAsc) != 'R'))
-    return FALSE;
-
-  *pResult = strtoul(pAsc + 1, &pEnd, 10);
-  return ((!*pEnd) && (*pResult <= 11));
+  *pResult = strtoul(pArg + 1, &pEnd, 10);
+  return (!*pEnd && (*pResult <= 11));
 }
 
-static Boolean ParseArgReg(int Index, unsigned *pResult)
-{
-  Boolean Result = ParseReg(ArgStr[Index].Str, pResult);
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_XCore(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - XCORE variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
 
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
-  return Result;
+static void DissectReg_XCore(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ParseArgReg(int Index, unsigned *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  Index index of argument
+ * \param  register number if yes
+ * \param  MustBeReg expecting register as argument
+ * \return register eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult ParseArgReg(int Index, unsigned *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (ParseReg(ArgStr[Index].Str, pResult))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(&ArgStr[Index], &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
 }
 
 /*--------------------------------------------------------------------------*/
 /* Instruction Decoders */
-
-static void CodeREG(Word Index)
-{
-  UNUSED(Index);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
 
 static void Code_3r(Word Index)
 {
   unsigned Op1, Op2, Op3;
 
   if (ChkArgCnt(3, 3)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2)
-   && ParseArgReg(3, &Op3))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True)
+   && ParseArgReg(3, &Op3, True))
   {
     WAsmCode[0] = Index
                 | ((Op3 & 3) << 0)
@@ -114,8 +145,8 @@ static void Code_2rus(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(3, 3)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     tSymbolFlags Flags;
 
@@ -143,8 +174,8 @@ static void Code_2r(Word Index)
   unsigned Op1, Op2;
 
   if (ChkArgCnt(2, 2)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
 
@@ -162,9 +193,9 @@ static void Code_l3r(Word Index)
   unsigned Op1, Op2, Op3;
 
   if (ChkArgCnt(3, 3)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2)
-   && ParseArgReg(3, &Op3))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True)
+   && ParseArgReg(3, &Op3, True))
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -182,8 +213,8 @@ static void Code_l2rus(Word Index)
   Boolean OK;
 
   if (ChkArgCnt(3, 3)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     tSymbolFlags Flags;
 
@@ -211,7 +242,7 @@ static void Code_1r(Word Index)
 {
   unsigned Op1;
 
-  if (ChkArgCnt(1, 1) && ParseArgReg(1, &Op1))
+  if (ChkArgCnt(1, 1) && ParseArgReg(1, &Op1, True))
   {
     WAsmCode[0] = Index | Op1;
     CodeLen = 2;
@@ -223,8 +254,8 @@ static void Code_l2r(Word Index)
   unsigned Op1, Op2;
 
   if (ChkArgCnt(2, 2)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
 
@@ -285,7 +316,7 @@ static void Code_ru6(Word Index)
 {
   unsigned Op1;
 
-  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1))
+  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1, True))
   {
     LongWord Op2;
     Boolean OK;
@@ -308,7 +339,7 @@ static void Code_rus(Word Index)
 {
   unsigned Op1;
 
-  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1))
+  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1, True))
   {
     unsigned Op2;
     Boolean OK;
@@ -349,10 +380,10 @@ static void Code_l4r(Word Index)
   unsigned Op1, Op2, Op3, Op4;
 
   if (ChkArgCnt(4, 4)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2)
-   && ParseArgReg(3, &Op3)
-   && ParseArgReg(4, &Op4))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True)
+   && ParseArgReg(3, &Op3, True)
+   && ParseArgReg(4, &Op4, True))
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -369,11 +400,11 @@ static void Code_l5r(Word Index)
   unsigned Op1, Op2, Op3, Op4, Op5;
 
   if (ChkArgCnt(5, 5)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op4)
-   && ParseArgReg(3, &Op2)
-   && ParseArgReg(4, &Op3)
-   && ParseArgReg(5, &Op5))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op4, True)
+   && ParseArgReg(3, &Op2, True)
+   && ParseArgReg(4, &Op3, True)
+   && ParseArgReg(5, &Op5, True))
   {
     unsigned Up = UpVal(Op5, Op4, 0, 0) + 27;
     WAsmCode[0] = 0xf800
@@ -395,12 +426,12 @@ static void Code_l6r(Word Index)
   unsigned Op1, Op2, Op3, Op4, Op5, Op6;
 
   if (ChkArgCnt(6, 6)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op4)
-   && ParseArgReg(3, &Op2)
-   && ParseArgReg(4, &Op3)
-   && ParseArgReg(5, &Op5)
-   && ParseArgReg(6, &Op6))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op4, True)
+   && ParseArgReg(3, &Op2, True)
+   && ParseArgReg(4, &Op3, True)
+   && ParseArgReg(5, &Op5, True)
+   && ParseArgReg(6, &Op6, True))
   {
     WAsmCode[0] = 0xf800
                 | ((Op3 & 3) << 0)
@@ -479,13 +510,18 @@ static void Code_BRU(Word Index)
 
   if (ChkArgCnt(1, 1))
   {
-    if (ParseReg(ArgStr[1].Str, &Op1))
+    switch (ParseArgReg(1, &Op1, False))
     {
-      WAsmCode[0] = 0x2fe0 | Op1;
-      CodeLen = 2;
+      case eIsReg:
+        WAsmCode[0] = 0x2fe0 | Op1;
+        CodeLen = 2;
+        break;
+      case eIsNoReg:
+        Code_branch_core(0x7300, 1);
+        break;
+      case eRegAbort:
+        break;
     }
-    else
-      Code_branch_core(0x7300, 1);
   }
 }
 
@@ -493,7 +529,7 @@ static void Code_cbranch(Word Index)
 {
   unsigned Op1;
 
-  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1))
+  if (ChkArgCnt(2, 2) && ParseArgReg(1, &Op1, True))
     Code_branch_core(Index | (Op1 << 6), 2);
 }
 
@@ -502,8 +538,8 @@ static void Code_r2r(Word Index)
   unsigned Op1, Op2;
 
   if (ChkArgCnt(2, 2)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     unsigned Up = UpVal(Op1, Op2, 0, 0) + 27;
 
@@ -522,8 +558,8 @@ static void Code_lr2r(Word Index)
   lr2r_Order *pOrder = lr2r_Orders + Index;
 
   if (ChkArgCnt(2, 2)
-   && ParseArgReg(1, &Op1)
-   && ParseArgReg(2, &Op2))
+   && ParseArgReg(1, &Op1, True)
+   && ParseArgReg(2, &Op2, True))
   {
     unsigned Up = UpVal(Op1, Op2, 0, 0) + 27;
 
@@ -538,7 +574,7 @@ static void Code_lr2r(Word Index)
 }
 
 /*--------------------------------------------------------------------------*/
-/* Dynamic Code Table Handling */  
+/* Dynamic Code Table Handling */
 
 static void Add_lr2r(const char *NName, Word NCode1, Word NCode2)
 {
@@ -788,6 +824,27 @@ static void MakeCode_XCore(void)
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_XCore(char *pArg, TempResult *pResult)
+ * \brief  handle built-in (register) symbols for XCORE
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_XCore(char *pArg, TempResult *pResult)
+{
+  unsigned RegNum;
+
+  if (ParseReg(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DissectReg = DissectReg_XCore;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_XCore;
+  }
+}
+
 static Boolean IsDef_XCore(void)
 {
   return Memo("REG");
@@ -812,13 +869,16 @@ static void SwitchTo_XCore(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xffffffffl;
 
-  MakeCode = MakeCode_XCore; IsDef = IsDef_XCore;
+  MakeCode = MakeCode_XCore;
+  InternSymbol = InternSymbol_XCore;
+  DissectReg = DissectReg_XCore;
+  IsDef = IsDef_XCore;
 
   SwitchFrom = SwitchFrom_XCore; InitFields();
 }
 
 /*--------------------------------------------------------------------------*/
-/* Initialisation */  
+/* Initialisation */
 
 void codexcore_init(void)
 {

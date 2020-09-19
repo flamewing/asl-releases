@@ -90,11 +90,11 @@ extern void strutil_init(void);
 /* avoid nasty "subscript has type char..." messages on some platforms */
 
 #define __chartouint(c) (((unsigned int)(c)) & 0xff)
-#define mytoupper(c) (toupper(__chartouint(c)))
-#define mytolower(c) (tolower(__chartouint(c)))
-#define myisspace(c) (isspace(__chartouint(c)))
-#define myisdigit(c) (isdigit(__chartouint(c)))
-#define myisprint(c) (isprint(__chartouint(c)))
-#define myisalpha(c) (isalpha(__chartouint(c)))
+#define as_toupper(c) (toupper(__chartouint(c)))
+#define as_tolower(c) (tolower(__chartouint(c)))
+#define as_isspace(c) (isspace(__chartouint(c)))
+#define as_isdigit(c) (isdigit(__chartouint(c)))
+#define as_isprint(c) (isprint(__chartouint(c)))
+#define as_isalpha(c) (isalpha(__chartouint(c)))
 
 #endif /* _STRUTIL_H */

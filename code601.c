@@ -218,49 +218,114 @@ static void PutCode(LongWord Code)
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodeGenRegCore(const char *Asc, LongWord *Erg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeGenRegCore(const char *pArg, LongWord *pValue)
+ * \brief  check whether argument is general register
+ * \param  pArg source argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeGenRegCore(const char *pArg, LongWord *pValue)
 {
-  Boolean io;
-  char *s;
-
-  if (FindRegDef(Asc, &s))
-    Asc = s;
-
-  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R'))
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'R'))
     return False;
   else
   {
-    *Erg = ConstLongInt(Asc + 1, &io, 10);
-    return ((io) && (*Erg <= 31));
+    Boolean OK;
+
+    *pValue = ConstLongInt(pArg + 1, &OK, 10);
+    return (OK && (*pValue <= 31));
   }
 }
 
-static Boolean DecodeGenReg(const tStrComp *pComp, LongWord *Erg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFPRegCore(const char *pArg, LongWord *pValue)
+ * \brief  check whether argument is floating point register
+ * \param  pArg source argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeFPRegCore(const char *pArg, LongWord *pValue)
 {
-  Boolean Result = DecodeGenRegCore(pComp->Str, Erg);
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvReg, pComp);
-  return Result;
-}
-
-static Boolean DecodeFPReg(const tStrComp *pComp, LongWord *Erg)
-{
-  Boolean io, Result;
-  char *s;
-
-  if (!FindRegDef(pComp->Str, &s))
-    s = pComp->Str;
-
-  if ((strlen(s) < 3) || (mytoupper(*s) != 'F') || (mytoupper(s[1]) != 'R'))
-    Result = False;
+  if ((strlen(pArg) < 3) || (as_toupper(*pArg) != 'F') || (as_toupper(pArg[1]) != 'R'))
+    return False;
   else
   {
-    *Erg = ConstLongInt(s + 2, &io, 10);
-    Result =  (io && (*Erg <= 31));
+    Boolean OK;
+
+    *pValue = ConstLongInt(pArg + 2, &OK, 10);
+    return OK && (*pValue <= 31);
   }
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvReg, pComp);
-  return Result;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeGenReg(const tStrComp *pArg, LongWord *pValue)
+ * \brief  check whether argument is general register, including aliases
+ * \param  pArg source argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeGenReg(const tStrComp *pArg, LongWord *pValue)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeGenRegCore(pArg->Str, pValue))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, True);
+  *pValue = RegDescr.Reg;
+  return (RegEvalResult == eIsReg);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_601(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - PPC variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_601(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize32Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    case eSymbolSizeFloat64Bit:
+      as_snprintf(pDest, DestSize, "FR%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFPReg(const tStrComp *pArg, LongWord *pValue)
+ * \brief  check whether argument is floating point register, including aliases
+ * \param  pArg source argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeFPReg(const tStrComp *pArg, LongWord *pValue)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeFPRegCore(pArg->Str, pValue))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeFloat64Bit, True);
+  *pValue = RegDescr.Reg;
+  return (RegEvalResult == eIsReg);
 }
 
 static Boolean DecodeCondReg(const tStrComp *pComp, LongWord *Erg)
@@ -290,31 +355,33 @@ static Boolean DecodeRegDisp(tStrComp *pComp, LongWord *Erg)
   char *p;
   int l = strlen(pComp->Str);
   LongInt Disp;
-  Boolean OK, Result = False;
+  Boolean OK;
   tStrComp DispArg, RegArg;
 
   if (pComp->Str[l - 1] != ')')
-    goto func_exit;
+  {
+    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
+    return False;
+  }
   pComp->Str[l - 1] = '\0';  l--;
   p = pComp->Str + l - 1;
   while ((p >= pComp->Str) && (*p != '('))
     p--;
   if (p < pComp->Str)
-    goto func_exit;
+  {
+    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
+    return False;
+  }
   StrCompSplitRef(&DispArg, &RegArg, pComp, p);
-  if (!DecodeGenRegCore(RegArg.Str, Erg))
-    goto func_exit;
+  if (!DecodeGenReg(&RegArg, Erg))
+    return False;
   *p = '\0';
   Disp = EvalStrIntExpression(&DispArg, Int16, &OK);
   if (!OK)
-    goto func_exit;
-  *Erg = (*Erg << 16) + (Disp & 0xffff);
-  Result = True;
+    return False;
 
-func_exit:
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvAddrMode, pComp);
-  return Result;
+  *Erg = (*Erg << 16) + (Disp & 0xffff);
+  return True;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1284,14 +1351,6 @@ static void DecodeTLBRE_TLBWE(Word Code)
   } 
 }
 
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
 /*-------------------------------------------------------------------------*/
 
 static void AddFixed(const char *NName1, const char *NName2, LongWord NCode, Byte NMask)
@@ -1672,7 +1731,7 @@ static void InitFields(void)
   AddInstTable(InstTable, (MomCPU == CPU6000) ? "BCRL" : "BCLRL", (16 << 1) | 1, DecodeBCCTR_BCCTRL_BCLR_BCLRL);
   AddInstTable(InstTable, "TLBRE", 0, DecodeTLBRE_TLBWE);
   AddInstTable(InstTable, "TLBWE", 32, DecodeTLBRE_TLBWE);
-  AddInstTable(InstTable, "REG", 0, DecodeREG);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 
   /* --> 0 0 0 */
 
@@ -2011,18 +2070,40 @@ static void InitPass_601(void)
   SetFlag(&BigEnd, BigEndianName, False);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_601(char *Asc, TempResult *Erg)
+ * \brief  handle built.in symbols for PPC
+ * \param  Asc source argument
+ * \param  Erg result buffer
+ * ------------------------------------------------------------------------ */
+
 static void InternSymbol_601(char *Asc, TempResult *Erg)
 {
+  LongWord RegValue;
   int l = strlen(Asc);
 
   Erg->Typ = TempNone;
   if (((l == 3) || (l == 4))
-   && ((mytoupper(*Asc) == 'C') && (mytoupper(Asc[1]) == 'R'))
+   && ((as_toupper(*Asc) == 'C') && (as_toupper(Asc[1]) == 'R'))
    && ((Asc[l - 1] >= '0') && (Asc[l - 1] <= '7'))
-   && ((l == 3) != ((mytoupper(Asc[2]) == 'F') || (mytoupper(Asc[3]) == 'B'))))
+   && ((l == 3) != ((as_toupper(Asc[2]) == 'F') || (as_toupper(Asc[3]) == 'B'))))
   {
-     Erg->Typ = TempInt;
-     Erg->Contents.Int = Asc[l - 1] - '0';
+    Erg->Typ = TempInt;
+    Erg->Contents.Int = Asc[l - 1] - '0';
+  }
+  else if (DecodeGenRegCore(Asc, &RegValue))
+  {
+    Erg->Typ = TempReg;
+    Erg->Contents.RegDescr.Dissect = DissectReg_601;
+    Erg->Contents.RegDescr.Reg = RegValue;
+    Erg->DataSize = eSymbolSize32Bit;
+  }
+  else if (DecodeFPRegCore(Asc, &RegValue))
+  {
+    Erg->Typ = TempReg;
+    Erg->Contents.RegDescr.Dissect = DissectReg_601;
+    Erg->Contents.RegDescr.Reg = RegValue;
+    Erg->DataSize = eSymbolSizeFloat64Bit;
   }
 }
 
@@ -2057,6 +2138,7 @@ static void SwitchTo_601(void)
   IsDef = IsDef_601;
   SwitchFrom = SwitchFrom_601;
   InternSymbol = InternSymbol_601;
+  DissectReg = DissectReg_601;
   AddONOFF("SUPMODE",   &SupAllowed, SupAllowedName, False);
   AddONOFF("BIGENDIAN", &BigEnd,     BigEndianName,  False);
 

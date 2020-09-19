@@ -271,3 +271,34 @@ wdata:	dc.w	$1234
 	sts	reg,r7
 	sts	reg,@-r9
 	endm
+
+	; register aliases
+
+regr0	reg	r0
+regr1	reg	r1
+regr2	reg	r2
+regr3	reg	r3
+regr4	reg	r4
+regr5	reg	r5
+regr6	reg	r6
+regr7	reg	r7
+regr8	reg	r8
+regr9	reg	r9
+regr10	reg	r10
+regr11	reg	r11
+regr12	reg	r12
+regr13	reg	r13
+regr14	reg	r14
+regr15	reg	r15
+regsp	equ	sp
+
+	rotcl	r8
+	rotcl	regr8
+	tas	@sp
+	tas	@regsp
+	and.b	#$55,@(r0,gbr)
+	and.b	#$55,@(regr0,gbr)
+	mac.l	@r5+,@r7+
+	mac.l	@regr5+,@regr7+
+	stc	sr,@-r6
+	stc	sr,@-regr6

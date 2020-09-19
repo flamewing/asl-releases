@@ -24,6 +24,9 @@ extern void ClearONOFF(void);
 
 extern Boolean CodeGlobalPseudo(void);
 
+extern void CodeREG(Word Index);
+extern void CodeNAMEREG(Word Index);
+
 extern void INCLUDE_SearchCore(struct sStrComp *pDest, const struct sStrComp *pArg, Boolean SearchPath);
 
 extern void codeallg_init(void);

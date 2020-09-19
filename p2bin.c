@@ -465,7 +465,7 @@ static CMDResult CMD_StartHeader(Boolean Negate, const char *Arg)
     Sgn = 1;
     if (*Arg == '\0')
       return CMDErr;
-    switch (mytoupper(*Arg))
+    switch (as_toupper(*Arg))
     {
       case 'B':
         Sgn = -1;

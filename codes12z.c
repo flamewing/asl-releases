@@ -1273,7 +1273,7 @@ static void DecodeImm8(Word Code)
 {
   tAdrVals AdrVals;
 
-  if (ChkArgCnt(1, 1) && SetOpSize(eSymbolSize8Bit) & DecodeAdr(1, MModeImm, &AdrVals))
+  if (ChkArgCnt(1, 1) && SetOpSize(eSymbolSize8Bit) && DecodeAdr(1, MModeImm, &AdrVals))
   {
     PutCode(Code);
     AppendAdrVals(&AdrVals);

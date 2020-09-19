@@ -141,7 +141,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean IsDest)
   if (strlen(pArg->Str) == 1)
   {
     for (z = 0; z < Reg8Cnt; z++)
-      if (mytoupper(*pArg->Str) == Reg8Names[z])
+      if (as_toupper(*pArg->Str) == Reg8Names[z])
       {
         AdrType = ModReg8;
         OpSize = 0;

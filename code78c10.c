@@ -62,7 +62,7 @@ static Boolean Decode_r(char *Asc, ShortInt *Erg)
   const char *p;
 
   if (strlen(Asc) != 1) return False;
-  p = strchr(Names, mytoupper(*Asc));
+  p = strchr(Names, as_toupper(*Asc));
   if (!p) return False;
   *Erg = p - Names;
   return True;

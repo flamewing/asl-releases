@@ -132,6 +132,8 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   strmaxcpy(TmpCompStr, MomCPUIdentName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
+  DissectBit = Default_DissectBit;
+  DissectReg = NULL;
   SetIsOccupiedFnc = NULL;
   DecodeAttrPart = NULL;
   SwitchIsOccupied = PageIsOccupied = False;
@@ -280,7 +282,6 @@ static void CodeENDSECTION(Word Index)
       CodeENDSECTION_ChkEmptList(&(Tmp->LocSyms));
       CodeENDSECTION_ChkEmptList(&(Tmp->GlobSyms));
       CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
-      TossRegDefs(MomSectionHandle);
       if (ArgCnt == 0)
         as_snprintf(ListLine, STRINGSIZE, "[%s]", GetSectionName(MomSectionHandle));
       SetMomSection(Tmp->Handle);
@@ -354,6 +355,9 @@ static void CodeSETEQU(Word MayChange)
           case TempString:
             EnterDynStringSymbolWithFlags(pName, &t.Contents.Ascii, MayChange, t.Flags);
             break;
+          case TempReg:
+            EnterRegSymbol(pName, &t.Contents.RegDescr, t.DataSize, MayChange, False);
+            break;
           default:
             break;
         }
@@ -363,6 +367,78 @@ static void CodeSETEQU(Word MayChange)
   }
 }
 
+static void CodeREGCore(const tStrComp *pNameArg, const tStrComp *pValueArg)
+{
+ if (InternSymbol)
+ {
+   TempResult t;
+
+   t.Typ = TempNone;
+   InternSymbol(pValueArg->Str, &t);
+   switch (t.Typ)
+   {
+     case TempReg:
+       goto Set;
+     case TempNone:
+     {
+       tEvalResult EvalResult;
+       tErrorNum ErrorNum;
+
+       ErrorNum = EvalStrRegExpressionWithResult(pValueArg, &t.Contents.RegDescr, &EvalResult);
+
+       switch (ErrorNum)
+       {
+         case ErrNum_SymbolUndef:
+           /* ignore undefined symbols in first pass */
+           if (PassNo <= MaxSymPass)
+           {
+             Repass = True;
+             return;
+           }
+           break;
+         case ErrNum_RegWrongTarget:
+           /* REG is architecture-agnostic */
+           EvalResult.OK = True;
+           break;
+         default:
+           break;
+       }
+
+       if (EvalResult.OK)
+       {
+         t.DataSize = EvalResult.DataSize;
+         goto Set;
+       }
+       else
+         WrStrErrorPos(ErrorNum, pValueArg);
+
+       break;
+     }
+     Set:
+       EnterRegSymbol(pNameArg, &t.Contents.RegDescr, t.DataSize, False, True);
+       break;
+     default:
+       WrStrErrorPos(ErrNum_ExpectReg, pValueArg);
+       return;
+   }
+ }
+}
+
+void CodeREG(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(1, 1))
+    CodeREGCore(&LabPart, &ArgStr[1]);
+}
+
+void CodeNAMEREG(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(2, 2))
+    CodeREGCore(&ArgStr[2], &ArgStr[1]);
+}
 
 static void CodeORG(Word Index)
 {
@@ -1862,7 +1938,7 @@ static void CodeSEGTYPE(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(0, 0))
-    RelSegs = (mytoupper(*OpPart.Str) == 'R');
+    RelSegs = (as_toupper(*OpPart.Str) == 'R');
 }
 
 static void CodePPSyms(PForwardSymbol *Orig,

@@ -4058,5 +4058,71 @@ x2:
 	JMP.S	x3
 x3:
 	JMP	x3
+;
+; test register aliases
+;
+
+regr0l	equ	r0l
+regr0h	equ	r0h
+regr1l	equ	r1l
+regr1h	equ	r1h
+
+regr0	equ	r0
+regr1	equ	r1
+regr2	equ	r2
+regr3	equ	r3
+rega0	equ	a0
+rega1	equ	a1
+regfb	equ	fb
+regsb	equ	sb
+
+regr2r0	equ	r2r0
+regr3r1	equ	r3r1
+rega1a0	equ	a1a0
+
+	; as data operands
+
+	mov	r0l,2345h
+	mov	regr0l,2345h
+	mov	r0h,2345h
+	mov	regr0h,2345h
+	mov	r1l,2345h
+	mov	regr1l,2345h
+	mov	r1h,2345h
+	mov	regr1h,2345h
+	mov.w	a0,2345h
+	mov.w 	rega0,2345h
+	mov.w 	a1,2345h
+	mov.w 	rega1,2345h
+	sha.l	r1h,r2r0
+	sha.l	regr1h,regr2r0
+	sha.l	r1h,r3r1
+	sha.l	regr1h,regr3r1
+	jmpi.a	a1a0
+	jmpi.a	rega1a0
+
+	; in address expressions
+
+	mov.w	r0,12h[a0]
+	mov.w	regr0,12h[rega0]
+	mov.w	r0,12h[a1]
+	mov.w	regr0,12h[rega1]
+	mov.w	r0,12h[sb]
+	mov.w	regr0,12h[regsb]
+	mov.w	r0,12h[fb]
+	mov.w	regr0,12h[regfb]
+	lde.b	[a1a0],[a0]
+	lde.b	[rega1a0],[rega0]
+
+	; in bit operations
+
+	bset:g  [a0]
+	bset:g  [rega0]
+	bset:g  [a1]
+	bset:g  [rega1]
+	bset:g  [fb]
+	bset:g  [regfb]
+	bset:g  [sb]
+	bset:g  [regsb]
 
 	END

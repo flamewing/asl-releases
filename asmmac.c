@@ -201,7 +201,7 @@ static Boolean ExpandDefines_NErl(char inp)
   return (((inp >= '0') && (inp <= '9')) || ((inp >= 'A') && (inp <= 'Z')) || ((inp >= 'a') && (inp <= 'z')));
 }
 
-#define t_toupper(ch) ((CaseSensitive) ? (ch) : (mytoupper(ch)))
+#define t_toupper(ch) ((CaseSensitive) ? (ch) : (as_toupper(ch)))
 
 void ExpandDefines(char *Line)
 {

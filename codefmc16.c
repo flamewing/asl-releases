@@ -178,9 +178,9 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
   /* 2. Register: */
 
-  if (mytoupper(*pArg->Str) == 'R')
+  if (as_toupper(*pArg->Str) == 'R')
   {
-    switch(mytoupper(pArg->Str[1]))
+    switch(as_toupper(pArg->Str[1]))
     {
       case 'W':
         if ((pArg->Str[3] == '\0') && (pArg->Str[2] >= '0') && (pArg->Str[2] <= '7'))
@@ -215,8 +215,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
   /* 3. 32-Bit-Register indirekt: */
 
   if ((*pArg->Str == '(')
-   && (mytoupper(pArg->Str[1]) == 'R')
-   && (mytoupper(pArg->Str[2]) == 'L')
+   && (as_toupper(pArg->Str[1]) == 'R')
+   && (as_toupper(pArg->Str[2]) == 'L')
    && (pArg->Str[3] >= '0') && (pArg->Str[3] <= '3')
    && (pArg->Str[4] == ')')
    && (pArg->Str[5] == '\0'))
@@ -274,7 +274,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
       StrCompRefRight(&RegComp, &Arg, 2);
       AdrPart = 0x1e;
-      if ((*RegComp.Str == '+') || (*RegComp.Str == '-') || (myisspace(*RegComp.Str)))
+      if ((*RegComp.Str == '+') || (*RegComp.Str == '-') || (as_isspace(*RegComp.Str)))
       {
         AdrVal = EvalStrIntExpression(&RegComp, SInt16, &OK);
         if (OK)
@@ -297,8 +297,8 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
     /* base register, 32 bit: */
 
-    else if ((mytoupper(*Arg.Str) == 'R')
-          && (mytoupper(Arg.Str[1]) == 'L')
+    else if ((as_toupper(*Arg.Str) == 'R')
+          && (as_toupper(Arg.Str[1]) == 'L')
           && (Arg.Str[2] >= '0') && (Arg.Str[2] <= '3'))
     {
       AdrVal = EvalStrIntExpressionOffs(&Arg, 3, SInt8, &OK);
@@ -313,7 +313,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
 
     /* base register, 16 bit: */
 
-    else if ((mytoupper(*Arg.Str) == 'R') && (mytoupper(Arg.Str[1]) == 'W') &&
+    else if ((as_toupper(*Arg.Str) == 'R') && (as_toupper(Arg.Str[1]) == 'W') &&
              (Arg.Str[2] >= '0') && (Arg.Str[2] <= '7'))
     {
       tStrComp IComp;
@@ -350,7 +350,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
         case ' ':
         case '\t':
         case '-':
-          while (myisspace(*IComp.Str))  /* skip leading spaces         */
+          while (as_isspace(*IComp.Str))  /* skip leading spaces         */
             StrCompIncRefLeft(&IComp, 1);
           if (!as_strcasecmp(IComp.Str, "+RW7"))  /* base + RW7 as index         */
           {

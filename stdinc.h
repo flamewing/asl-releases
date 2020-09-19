@@ -23,6 +23,7 @@
  *
  *****************************************************************************/
 
+#include <stddef.h>
 #include <stdio.h>
 #ifndef __MUNIX__
 #include <stdlib.h>

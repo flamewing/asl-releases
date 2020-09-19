@@ -143,9 +143,9 @@ static void DiscardArgs(void)
 
   if (DiscPtr)
   {
-    for (p = DiscPtr + 1; myisspace(*p); p++)
+    for (p = DiscPtr + 1; as_isspace(*p); p++)
       if (*p == '\0') break;
-    for (p2 = p; !myisspace(*p2); p2++)
+    for (p2 = p; !as_isspace(*p2); p2++)
       if (*p2 == '\0') break;
     Eaten = (*p2 == '\0');
     *p2 = '\0';
@@ -160,7 +160,7 @@ static void DiscardArgs(void)
     else
     {
       if (p2)
-        for (p2++; myisspace(*p2); p2++);
+        for (p2++; as_isspace(*p2); p2++);
       strmov(ArgStr[SplittedArg].Str, p2);
     }
   }

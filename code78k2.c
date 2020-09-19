@@ -104,7 +104,7 @@ static ShortInt DecodeReg8(char *pAsc)
   if (l == 1) 
   {
     static const char Reg8Names[9] = "XACBEDLH";
-    const char *pPos = strchr(Reg8Names, mytoupper(*pAsc));
+    const char *pPos = strchr(Reg8Names, as_toupper(*pAsc));
 
     if (pPos)
       Result = pPos - Reg8Names;
@@ -284,7 +284,7 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
          which either means +/- or a blank */
 
       for (pSep = Arg.Str; *pSep; pSep++)
-        if (!myisalpha(*pSep))
+        if (!as_isalpha(*pSep))
           break;
       
       /* decode base register.  SP is not otherwise handled. */

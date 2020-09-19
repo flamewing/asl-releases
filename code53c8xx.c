@@ -60,7 +60,7 @@ static void GetToken(tStrComp *pSrc, tStrComp *pDest)
 
   /* search token start, by skipping spaces */
 
-  for (p = pSrc->Str; myisspace(*p); p++)
+  for (p = pSrc->Str; as_isspace(*p); p++)
     if (*p == '\0') break;
   StrCompCutLeft(pSrc, p - pSrc->Str);
   if (*p == '\0')
@@ -612,7 +612,7 @@ static void DecodeMOVE(Word Index)
       } /* ... TO ... */
       else if ((!as_strcasecmp(Parts[1].Str, "SHL")) || (!as_strcasecmp(Parts[1].Str, "SHR")))
       {
-        AriOp = 1 + (Ord(mytoupper(Parts[1].Str[2]) == 'R') << 2);
+        AriOp = 1 + (Ord(as_toupper(Parts[1].Str[2]) == 'R') << 2);
         switch (DecodeComp(&Parts[0], &DReg))
         {
            case SFBR:
@@ -963,7 +963,7 @@ static void DecodeWAIT(Word Index)
       }
       if (OK)
       {
-        if (mytoupper(*Token.Str) == 'S')
+        if (as_toupper(*Token.Str) == 'S')
           DAsmCode[0] |= 0x00000200;
         CodeLen = 8;
       }

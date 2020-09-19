@@ -1300,7 +1300,7 @@ static void InternSymbol_370(char *Asc,  TempResult*Erg)
   String h;
 
   Erg->Typ = TempNone;
-  if ((strlen(Asc) < 2) || ((mytoupper(*Asc) != 'R') && (mytoupper(*Asc) != 'P')))
+  if ((strlen(Asc) < 2) || ((as_toupper(*Asc) != 'R') && (as_toupper(*Asc) != 'P')))
     return;
 
   strcpy(h, Asc + 1);
@@ -1311,7 +1311,7 @@ static void InternSymbol_370(char *Asc,  TempResult*Erg)
     return;
 
   Erg->Typ = TempInt;
-  if (mytoupper(*Asc) == 'P')
+  if (as_toupper(*Asc) == 'P')
     Erg->Contents.Int += 0x1000;
 }
 

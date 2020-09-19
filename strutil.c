@@ -919,7 +919,7 @@ LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
 
   if ((InpLen >= 2)
    && (*inp == '0')
-   && (mytoupper(inp[1]) == 'X'))
+   && (as_toupper(inp[1]) == 'X'))
   {
     inp += 2;
     InpLen -= 2;
@@ -941,7 +941,7 @@ LargeInt ConstLongInt(const char *inp, Boolean *pErr, LongInt Base)
         InpLen--;
         break;
       }
-      else if (mytoupper(inp[InpLen - 1]) == Postfixes[z])
+      else if (as_toupper(inp[InpLen - 1]) == Postfixes[z])
       {
         Base = Bases[z];
         InpLen--;
@@ -1009,7 +1009,7 @@ void KillBlanks(char *s)
           NextEscaped = True;
         break;
     }
-    if (!isspace((unsigned char)*z) || InSgl || InDbl)
+    if (!as_isspace(*z) || InSgl || InDbl)
       *dest++ = *z;
   }
   *dest = '\0';
@@ -1048,7 +1048,7 @@ int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
           ThisEscaped = True;
         break;
     }
-    if ((!isspace((unsigned char)ch)) || (Flags))
+    if (!as_isspace(ch) || Flags)
       *(pDestRun++) = ch;
     if (++Cnt >= MaxLen)
       break;
@@ -1066,7 +1066,7 @@ int KillPrefBlanks(char *s)
 {
   char *z = s;
 
-  while ((*z != '\0') && (isspace((unsigned char)*z)))
+  while ((*z != '\0') && as_isspace(*z))
     z++;
   if (z != s)
     strmov(s, z);
@@ -1081,7 +1081,7 @@ int KillPostBlanks(char *s)
   char *z = s + strlen(s) - 1;
   int count = 0;
 
-  while ((z >= s) && (isspace((unsigned char)*z)))
+  while ((z >= s) && as_isspace(*z))
   {
     *(z--) = '\0';
     count++;
@@ -1203,7 +1203,7 @@ char *ParenthPos(char *pHaystack, char Needle)
 
 char TabCompressed(char in)
 {
-  return (in == '\t') ? ' ' : (myisprint(in) ? in : '*');
+  return (in == '\t') ? ' ' : (as_isprint(in) ? in : '*');
 }
 
 /*--------------------------------------------------------------------------*/

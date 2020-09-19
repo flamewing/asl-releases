@@ -91,7 +91,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl)
   if (strlen(pArg->Str) == 1)
   {
     for (z = 0; z < Reg8Cnt; z++)
-      if (mytoupper(*pArg->Str) == Reg8Names[z])
+      if (as_toupper(*pArg->Str) == Reg8Names[z])
       {
         AdrType = ModReg8;
         OpSize = 0;
@@ -273,7 +273,7 @@ static Boolean SplitBit(tStrComp *pArg, Byte *Erg)
    else
    {
      for (*Erg = 0; *Erg < Reg8Cnt; (*Erg)++)
-       if (mytoupper(*BitArg.Str) == Reg8Names[*Erg])
+       if (as_toupper(*BitArg.Str) == Reg8Names[*Erg])
          break;
      if (*Erg < Reg8Cnt)
      {

@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
@@ -62,32 +63,82 @@ static int TrueCond;
 
 static CPUVar CPUKCPSM;
 
-/*--------------------------------------------------------------------------*/ 
-/* code helpers */
+/*--------------------------------------------------------------------------*/
+/* Code Helpers */
 
-static Boolean IsWReg(const char *Asc, Word *Erg)
+/*!------------------------------------------------------------------------
+ * \fn     IsWRegCore(const char *pArg, Word *pResult)
+ * \brief  check whether argument is CPU register
+ * \param  pArg argument
+ * \param  pResult register number if it is
+ * \return True if it is
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWRegCore(const char *pArg, Word *pResult)
 {
-  Boolean Err;
   Boolean retValue;
-  char *s;
 
-  if (FindRegDef(Asc, &s))
-    Asc = s;
-
-  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'S')) 
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'S'))
     retValue = False;
   else
   {
-    *Erg = ConstLongInt(Asc + 1, &Err, 10);
-    if (!Err) 
+    Boolean OK;
+
+    *pResult = ConstLongInt(pArg + 1, &OK, 10);
+    if (!OK)
       retValue = False;
-    else 
-      retValue = (*Erg <= 15);
+    else
+      retValue = (*pResult <= 15);
   }
 #ifdef DEBUG_PRINTF
-  fprintf( stderr, "IsWReg: %s %d\n", Asc, retValue );
+  fprintf( stderr, "IsWRegCore: %s %d\n", Asc, retValue );
 #endif
   return retValue;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_KCPSM(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - KCPSM3 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_KCPSM(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "S%x", (unsigned)Value);
+      pDest[1] = as_toupper(pDest[1]);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is CPU register, including register aliases
+ * \param  pArg argument
+ * \param  pResult register number if it is
+ * \param  MustBeReg expecting register as arg?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult IsWReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (IsWRegCore(pArg->Str, pResult))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
 }
 
 static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
@@ -110,10 +161,15 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
 
   /* Register ? */
 
-  if (IsWReg(pArg->Str, &AdrMode))
+  switch (IsWReg(pArg, &AdrMode, False))
   {
-    AdrType = ModWReg;
-    goto chk;
+    case eIsReg:
+      AdrType = ModWReg;
+      goto chk;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return;
   }
 
   /* indiziert ? */
@@ -131,8 +187,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Mask, int Segment)
 
       StrCompSplitRef(&DispComp, &RegComp, pArg, p);
       StrCompShorten(&RegComp, 1);
-      if (!IsWReg(RegComp.Str, &AdrMode)) WrStrErrorPos(ErrNum_InvReg, &RegComp);
-      else
+      if (IsWReg(&RegComp, &AdrMode, True) == eIsReg)
       {
         AdrIndex = EvalStrIntExpressionWithResult(&DispComp, UInt8, &EvalResult);
         if (EvalResult.OK)
@@ -175,13 +230,13 @@ static int DecodeCond(char *Asc)
 }
 
 /*--------------------------------------------------------------------------*/
-/* instruction decoders */
+/* Instruction Decoders */
 
 static void DecodeFixed(Word Code)
 {
   if (ChkArgCnt(0, 0))
   {
-    CodeLen = 1; 
+    CodeLen = 1;
     WAsmCode[0] = Code;
   }
 }
@@ -266,7 +321,7 @@ static void DecodeALU1(Word Code)
     switch (AdrType)
     {
       case ModWReg:
-        WAsmCode[0] = 0xd000 | (AdrMode << 8) | Code; 
+        WAsmCode[0] = 0xd000 | (AdrMode << 8) | Code;
         CodeLen = 1;
         break;
     }
@@ -373,7 +428,7 @@ static void DecodeRETURNI(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    NLS_UpString(ArgStr[1].Str);      
+    NLS_UpString(ArgStr[1].Str);
     if (!strcmp(ArgStr[1].Str, "ENABLE"))
     {
       WAsmCode[0] = 0x80f0;
@@ -393,29 +448,13 @@ static void DecodeENABLE_DISABLE(Word Code)
 
   if (ChkArgCnt(1, 1))
   {
-    NLS_UpString(ArgStr[1].Str);      
+    NLS_UpString(ArgStr[1].Str);
     if (!as_strcasecmp(ArgStr[1].Str, "INTERRUPT"))
     {
       WAsmCode[0] = Code;
       CodeLen = 1;
     }
   }
-}
-
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
-static void DecodeNAMEREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(2, 2))
-    AddRegDef(&ArgStr[2], &ArgStr[1]);
 }
 
 static void DecodeCONSTANT(Word Code)
@@ -468,7 +507,7 @@ static void AddCondition(const char *NName, Word NCode)
   Conditions[InstrZ].Name = NName;
   Conditions[InstrZ++].Code = NCode;
 }
-   
+
 static void InitFields(void)
 {
   InstTable = CreateInstTable(201);
@@ -479,8 +518,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "RETURNI", 0, DecodeRETURNI);
   AddInstTable(InstTable, "ENABLE", 0x8030, DecodeENABLE_DISABLE);
   AddInstTable(InstTable, "DISABLE", 0x8010, DecodeENABLE_DISABLE);
-  AddInstTable(InstTable, "REG", 0, DecodeREG);
-  AddInstTable(InstTable, "NAMEREG", 0, DecodeNAMEREG);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
+  AddInstTable(InstTable, "NAMEREG", 0, CodeNAMEREG);
   AddInstTable(InstTable, "CONSTANT", 0, DecodeCONSTANT);
 
   AddFixed("EI"     , 0x8030);  AddFixed("DI"     , 0x8010);
@@ -493,7 +532,7 @@ static void InitFields(void)
   AddALU2("SUBCY" , 0x07);
   AddALU2("OR"    , 0x02);
   AddALU2("AND"   , 0x01);
-  AddALU2("XOR"   , 0x03); 
+  AddALU2("XOR"   , 0x03);
 
   AddALU1("SR0" , 0x0e);
   AddALU1("SR1" , 0x0f);
@@ -523,6 +562,26 @@ static void DeinitFields(void)
 
 /*---------------------------------------------------------------------*/
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_KCPSM(char *pArg, TempResult *pResult)
+ * \brief  handle built-in (register) symbols for KCPSM
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_KCPSM(char *pArg, TempResult *pResult)
+{
+  Word RegNum;
+
+  if (IsWRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_KCPSM;
+  }
+}
+
 static void MakeCode_KCPSM(void)
 {
   CodeLen = 0; DontPrint = False;
@@ -541,7 +600,7 @@ static void MakeCode_KCPSM(void)
 
 static Boolean IsDef_KCPSM(void)
 {
-  return (Memo("REG")); 
+  return (Memo("REG"));
 }
 
 static void SwitchFrom_KCPSM(void)
@@ -570,6 +629,8 @@ static void SwitchTo_KCPSM(void)
 
   MakeCode = MakeCode_KCPSM;
   IsDef = IsDef_KCPSM;
+  InternSymbol = InternSymbol_KCPSM;
+  DissectReg = DissectReg_KCPSM;
   SwitchFrom = SwitchFrom_KCPSM;
   InitFields();
 }
@@ -580,4 +641,3 @@ void codekcpsm_init(void)
 
   AddCopyright("XILINX KCPSM(Picoblaze)-Generator (C) 2003 Andreas Wassatsch");
 }
-

@@ -220,7 +220,7 @@ static void DecodeALU2(Word Code)
   {
     if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
-      ch = mytoupper(ArgStr[1].Str[3]);
+      ch = as_toupper(ArgStr[1].Str[3]);
       if ((ch>='A') && (ch<='B'))
         Acc = ch - 'A';
     }
@@ -243,7 +243,7 @@ static void DecodeALU1(Word Code)
   {
     if ((strlen(ArgStr[1].Str) == 4) && (!as_strncasecmp(ArgStr[1].Str, "ACC", 3)))
     {
-      ch = mytoupper(ArgStr[1].Str[3]);
+      ch = as_toupper(ArgStr[1].Str[3]);
       if ((ch >= 'A') && (ch <= 'B'))
         Acc = ch - 'A';
     }

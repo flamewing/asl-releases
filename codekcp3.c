@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
@@ -45,33 +46,93 @@ static CPUVar CPUKCPSM3;
  * Address Expression Parsing
  *--------------------------------------------------------------------------*/
 
-static Boolean IsWReg(const char *Asc, LongWord *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     IsWRegCore(const char *pArg, LongWord *pResult)
+ * \brief  is argument a built-in register?
+ * \param  pArg argument
+ * \param  pResult register number if yes
+ * \return true if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWRegCore(const char *pArg, LongWord *pResult)
 {
   Boolean OK;
-  char *s;
 
-  if (FindRegDef(Asc, &s)) Asc = s;
-
-  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'S')) 
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'S'))
     return False;
 
-  *pErg = ConstLongInt(Asc + 1, &OK, 16);
+  *pResult = ConstLongInt(pArg + 1, &OK, 16);
   if (!OK)
     return False;
 
-  return (*pErg < 16);
+  return (*pResult < 16);
 }
 
-static Boolean IsIWReg(const char *Asc, LongWord *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_KCPSM3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - KCPSM3 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_KCPSM3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "S%x", (unsigned)Value);
+      pDest[1] = as_toupper(pDest[1]);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+ * \brief  is argument a built-in register or register alias?
+ * \param  pArg argument
+ * \param  pResult register number if yes
+ * \param  MustBeReg expect register arg?
+ * \return reg evel result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult IsWReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (IsWRegCore(pArg->Str, pResult))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     IsIWReg(const tStrComp *pArg, LongWord *pResult)
+ * \brief  is argument an indirect register expression?
+ * \param  pArg argument
+ * \param  pResult register number if yes
+ * \return true if yes
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult IsIWReg(const tStrComp *pArg, LongWord *pResult)
 {
   char Tmp[10];
-  int l = strlen(Asc);
+  tStrComp TmpComp;
+  int l = strlen(pArg->Str);
 
-  if ((l < 3) || (Asc[0] != '(') || (Asc[l - 1] != ')'))
-    return False;
+  if ((l < 3) || (pArg->Str[0] != '(') || (pArg->Str[l - 1] != ')'))
+    return eIsNoReg;
 
-  memcpy(Tmp, Asc + 1, l - 2); Tmp[l - 2] = '\0';
-  return IsWReg(Tmp, pErg);
+  StrCompMkTemp(&TmpComp, Tmp);
+  StrCompCopySub(&TmpComp, pArg, 1, l - 2);
+  return IsWReg(&TmpComp, pResult, False);
 }
 
 static Boolean IsCond(int OtherArgCnt, LongWord *pErg)
@@ -105,28 +166,12 @@ static void DecodePort(Word Index)
   CodeEquate(SegIO, 0, SegLimits[SegIO]);
 }
 
-static void DecodeReg(Word Index)
-{
-  UNUSED(Index);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
-static void DecodeNameReg(Word Index)
-{
-  UNUSED(Index);
-
-  if (ChkArgCnt(2, 2))
-    AddRegDef(&ArgStr[2], &ArgStr[1]);
-}
-
 static void DecodeConstant(Word Index)
 {
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2))
-  {   
+  {
     TempResult t;
     Boolean OK;
 
@@ -135,7 +180,7 @@ static void DecodeConstant(Word Index)
     {
       t.Typ = TempInt;
       SetListLineVal(&t);
-      PushLocHandle(-1); 
+      PushLocHandle(-1);
       EnterIntSymbol(&ArgStr[1], t.Contents.Int, SegNone, False);
       PopLocHandle();
     }
@@ -147,9 +192,8 @@ static void DecodeOneReg(Word Index)
   FixedOrder *pOrder = RegOrders + Index;
   LongWord Reg;
 
-  if (!ChkArgCnt(1, 1));
-  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else
+  if (ChkArgCnt(1, 1)
+   && IsWReg(&ArgStr[1], &Reg, True))
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);
     CodeLen = 1;
@@ -162,22 +206,25 @@ static void DecodeALU(Word Index)
   LongWord Src, DReg;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrError(ErrNum_InvAddrMode);
-  else if (IsWReg(ArgStr[2].Str, &Src))
-  {
-    DAsmCode[0] = pOrder->Code | 0x1000 | (DReg << 8) | (Src << 4);
-    CodeLen = 1;
-  }
-  else
-  {
-    Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-    if (OK)
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &DReg, True))
+    switch (IsWReg(&ArgStr[2], &Src, False))
     {
-      DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src & 0xff);
-      CodeLen = 1;
+      case eIsReg:
+        DAsmCode[0] = pOrder->Code | 0x1000 | (DReg << 8) | (Src << 4);
+        CodeLen = 1;
+        break;
+      case eIsNoReg:
+        Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
+        if (OK)
+        {
+          DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src & 0xff);
+          CodeLen = 1;
+        }
+        break;
+      case eRegAbort:
+        break;
     }
-  }
 }
 
 static void DecodeJmp(Word Index)
@@ -210,7 +257,7 @@ static void DecodeRet(Word Index)
   {
     DAsmCode[0] = 0x2a000 | (Cond << 10);
     CodeLen = 1;
-  }  
+  }
 }
 
 static void DecodeReti(Word Index)
@@ -251,27 +298,31 @@ static void DecodeMem(Word Index)
 {
   LongWord Reg, Addr;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else 
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &Reg, True))
   {
     DAsmCode[0] = (((LongWord)Index) << 13) | (Reg << 8);
-    if (IsIWReg(ArgStr[2].Str, &Addr))
+    switch (IsIWReg(&ArgStr[2], &Addr))
     {
-      DAsmCode[0] |= 0x01000 | (Addr << 4);
-      CodeLen = 1;
-    }
-    else
-    {
-      tEvalResult EvalResult;
-
-      Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt6, &EvalResult);
-      if (EvalResult.OK)
-      {
-        ChkSpace(SegData, EvalResult.AddrSpaceMask);
-        DAsmCode[0] |= Addr & 0x3f;
+      case eIsReg:
+        DAsmCode[0] |= 0x01000 | (Addr << 4);
         CodeLen = 1;
+        break;
+      case eIsNoReg:
+      {
+        tEvalResult EvalResult;
+
+        Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt6, &EvalResult);
+        if (EvalResult.OK)
+        {
+          ChkSpace(SegData, EvalResult.AddrSpaceMask);
+          DAsmCode[0] |= Addr & 0x3f;
+          CodeLen = 1;
+        }
+        break;
       }
+      case eRegAbort:
+        break;
     }
   }
 }
@@ -280,27 +331,31 @@ static void DecodeIO(Word Index)
 {
   LongWord Reg, Addr;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else 
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &Reg, True))
   {
     DAsmCode[0] = (((LongWord)Index) << 13) | (Reg << 8);
-    if (IsIWReg(ArgStr[2].Str, &Addr))
+    switch (IsIWReg(&ArgStr[2], &Addr))
     {
-      DAsmCode[0] |= 0x01000 | (Addr << 4);
-      CodeLen = 1;
-    }
-    else
-    {
-      tEvalResult EvalResult;
-
-      Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt8, &EvalResult);
-      if (EvalResult.OK)
-      {
-        ChkSpace(SegIO, EvalResult.AddrSpaceMask);
-        DAsmCode[0] |= Addr & 0xff;
+      case eIsReg:
+        DAsmCode[0] |= 0x01000 | (Addr << 4);
         CodeLen = 1;
+        break;
+      case eIsNoReg:
+      {
+        tEvalResult EvalResult;
+
+        Addr = EvalStrIntExpressionWithResult(&ArgStr[2], UInt8, &EvalResult);
+        if (EvalResult.OK)
+        {
+          ChkSpace(SegIO, EvalResult.AddrSpaceMask);
+          DAsmCode[0] |= Addr & 0xff;
+          CodeLen = 1;
+        }
+        break;
       }
+      case eRegAbort:
+        break;
     }
   }
 }
@@ -380,8 +435,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "OUTPUT", 0x16, DecodeIO);
 
   AddInstTable(InstTable, "PORT", 0, DecodePort);
-  AddInstTable(InstTable, "REG", 0, DecodeReg);
-  AddInstTable(InstTable, "NAMEREG", 0, DecodeNameReg);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
+  AddInstTable(InstTable, "NAMEREG", 0, CodeNAMEREG);
   AddInstTable(InstTable, "CONSTANT", 0, DecodeConstant);
 
   AddInstTable(InstTable, "NOP", 0, DecodeNop);
@@ -390,7 +445,7 @@ static void InitFields(void)
 static void DeinitFields(void)
 {
   DestroyInstTable(InstTable);
-  free(RegOrders); 
+  free(RegOrders);
   free(ALUOrders);
 }
 
@@ -398,9 +453,29 @@ static void DeinitFields(void)
  * Semipublic Functions
  *--------------------------------------------------------------------------*/
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_KCPSM3(char *pArg, TempResult *pResult)
+ * \brief  handle built-in (register) symbols for KCPSM3
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_KCPSM3(char *pArg, TempResult *pResult)
+{
+  LongWord RegNum;
+
+  if (IsWRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_KCPSM3;
+  }
+}
+
 static Boolean IsDef_KCPSM3(void)
 {
-   return (Memo("REG")) || (Memo("PORT")); 
+   return (Memo("REG")) || (Memo("PORT"));
 }
 
 static void SwitchFrom_KCPSM3(void)
@@ -447,7 +522,10 @@ static void SwitchTo_KCPSM3(void)
    Grans[SegIO] = 1; ListGrans[SegIO] = 1; SegInits[SegIO] = 0;
    SegLimits[SegIO] = 0xff;
 
-   MakeCode = MakeCode_KCPSM3; IsDef = IsDef_KCPSM3;
+   MakeCode = MakeCode_KCPSM3;
+   IsDef = IsDef_KCPSM3;
+   InternSymbol = InternSymbol_KCPSM3;
+   DissectReg = DissectReg_KCPSM3;
    SwitchFrom = SwitchFrom_KCPSM3; InitFields();
 }
 

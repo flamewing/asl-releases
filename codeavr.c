@@ -125,24 +125,69 @@ static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
 /*---------------------------------------------------------------------------*/
 /* Argument Decoders                                                         */
 
-static Boolean DecodeReg(char *Asc, Word *Erg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Word *pResult)
+ * \brief  check wether argument is CPU register
+ * \param  pArg source code argument
+ * \param  pResult register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pArg, Word *pResult)
 {
-  Boolean io;
-  char *s;
-  int l;
+  Boolean OK;
+  int l = strlen(pArg);
 
-  if (FindRegDef(Asc, &s))
-    Asc = s;
-  l = strlen(Asc);
+  if ((l < 2) || (l > 3) || (as_toupper(*pArg) != 'R'))
+    return False;
 
-  if ((l < 2) || (l > 3) || (mytoupper(*Asc) != 'R')) return False;
-  else
+  *pResult = ConstLongInt(pArg + 1, &OK, 10);
+  return (OK
+       && ((*pResult >= 16) || (pCurrCPUProps->Core != eCoreMinTiny))
+       && (*pResult < 32));
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_AVR(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - AVR variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_AVR(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
   {
-    *Erg = ConstLongInt(Asc + 1, &io, 10);
-    return ((io)
-         && ((*Erg >= 16) || (pCurrCPUProps->Core != eCoreMinTiny))
-         && (*Erg < 32));
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
   }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Word *pResult)
+ * \brief  check wether argument is CPU register, including register aliases
+ * \param  pArg source code argument
+ * \param  pResult register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeReg(const tStrComp *pArg, Word *pResult)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pResult))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, True);
+  *pResult = RegDescr.Reg;
+  return (RegEvalResult == eIsReg);
 }
 
 static Boolean DecodeMem(char * Asc, Word *Erg)
@@ -230,10 +275,12 @@ static Boolean DecodeArgReg(unsigned ArgIndex, Word *pReg, LongWord RegMask)
 {
   Boolean Result;
 
-  Result = DecodeReg(ArgStr[ArgIndex].Str, pReg)
-        && ((RegMask >> *pReg) & 1);
-  if (!Result)
+  Result = DecodeReg(&ArgStr[ArgIndex], pReg);
+  if (Result && !((RegMask >> *pReg) & 1))
+  {
     WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgIndex]);
+    return False;
+  }
   return Result;
 }
 
@@ -443,14 +490,6 @@ static void DecodeDATA_AVR(Word Index)
   }
 }
 
-static void DecodeREG(Word Index)
-{
-  UNUSED(Index);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
 /* one register 0..31 */
 
 static void DecodeReg1(Word Index)
@@ -558,8 +597,8 @@ static void DecodeLDDSTD(Word Index)
     MemI = 3 - RegI;
     RegChar = *ArgStr[MemI].Str;
     OK = True;
-    if (mytoupper(RegChar) == 'Y') Index += 8;
-    else if (mytoupper(RegChar) == 'Z');
+    if (as_toupper(RegChar) == 'Y') Index += 8;
+    else if (as_toupper(RegChar) == 'Z');
     else OK = False;
     if (!OK) WrError(ErrNum_InvAddrMode);
     else if (DecodeArgReg(RegI, &Reg, AllRegMask))
@@ -1015,7 +1054,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
   AddInstTable(InstTable, "SFR" , 0, DecodeSFR);
   AddInstTable(InstTable, "RES" , 0, DecodeRES);
-  AddInstTable(InstTable, "REG" , 0, DecodeREG);
+  AddInstTable(InstTable, "REG" , 0, CodeREG);
   AddInstTable(InstTable, "BIT" , 0, DecodeBIT);
 
   AddInstTable(InstTable, "MULS", 0, DecodeMULS);
@@ -1089,6 +1128,26 @@ static Boolean IsDef_AVR(void)
        || Memo("BIT"));
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_AVR(char *pArg, TempResult *pResult)
+ * \brief  parse for built-in symbols
+ * \param  pArg source argument
+ * \param  pResult possible result
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_AVR(char *pArg, TempResult *pResult)
+{
+  Word RegValue;
+  
+  if (DecodeRegCore(pArg, &RegValue))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegValue;
+    pResult->Contents.RegDescr.Dissect = DissectReg_AVR;
+  }
+}
+
 static void SwitchFrom_AVR(void)
 {
   DeinitFields();
@@ -1148,6 +1207,8 @@ static void SwitchTo_AVR(void *pUser)
 
   MakeCode = MakeCode_AVR;
   IsDef = IsDef_AVR;
+  InternSymbol = InternSymbol_AVR;
+  DissectReg = DissectReg_AVR;
   SwitchFrom = SwitchFrom_AVR;
   DissectBit = DissectBit_AVR;
   InitFields();

@@ -2,7 +2,7 @@
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DC[.$<$size$>$]\> DS[.$<$size$>$] \> FULLPMMU    \> FPU         \> PADDING \\
-PMMU       \> SUPMODE \\
+PMMU       \> REG         \> SUPMODE \\
 \end{tabbing}}
 
 \subsubsection{Motorola 56xxx}
@@ -29,7 +29,8 @@ DC[.$<$size$>$] \> DS[.$<$size$>$] \> REG \> SUPMODE \\
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$]
 \\
-FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
+FCB        \> FCC         \> FDB         \> PADDING     \> REG \\
+RMB \\
 \end{tabbing}}
 
 \subsubsection{Motorola 68xx/Hitachi 63xx}
@@ -87,20 +88,21 @@ DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
 \subsubsection{Hitachi H8/300(L/H)}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \\
+DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \> REG \\
 \end{tabbing}}
 
 \subsubsection{Hitachi H8/500}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 ASSUME     \> DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \\
+REG \\
 \end{tabbing}}
 
 \subsubsection{Hitachi SH7x00}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 COMPLITERALS \> DC[.$<$size$>$]  \>  DS[.$<$size$>$]  \>  LTORG    \> PADDING \\
-SUPMODE \\
+REG          \> SUPMODE \\
 \end{tabbing}}
 
 \subsubsection{Hitachi HMCS400}
@@ -112,7 +114,7 @@ DATA       \> RES         \> SFR \\
 \subsubsection{Hitachi H16}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-BIT        \> DC[.$<$size$>$]    \> DS[.$<$size$>$]   \> SUPMODE \\
+BIT        \> DC[.$<$size$>$]    \> DS[.$<$size$>$]   \> REG       \> SUPMODE \\
 \end{tabbing}}
 
 \subsubsection{65xx/MELPS-740}
@@ -140,14 +142,14 @@ DATA       \> RES         \> SFR \\
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DB         \> DD          \> DN          \> DQ          \> DS \\
-DT         \> DW \\
+DT         \> DW          \> REG \\
 \end{tabbing}}
 
 \subsubsection{Mitsubishi M16C}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DB         \> DD          \> DN          \> DQ          \> DS \\
-DT         \> DW \\
+DT         \> DW          \> REG \\
 \end{tabbing}}
 
 \subsubsection{Intel 4004}
@@ -196,8 +198,8 @@ DT         \> DW          \> PORT \\
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill    
 DB         \> DD          \> DN          \> DQ          \> DS \\
-DT         \> DW          \>             \> FPU         \> SPACE \\
-SUPMODE    \> WORD \\
+DT         \> DW          \>             \> FPU         \> REG \\
+SPACE      \> SUPMODE     \> WORD \\
 \end{tabbing}}
 
 \subsubsection{Signetics 8X30x}
@@ -218,7 +220,7 @@ DT         \> DW          \\
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 ASSUME     \> BIT         \> DB          \> DC[.$<$size$>$] \> DD \\
 DN         \> DQ          \> DS[.$<$size$>$] \> DT      \> DW \\
-PADDING    \> PORT        \> SUPMODE \\
+PADDING    \> PORT        \> REG         \> SUPMODE \\
 \end{tabbing}}
 
 \subsubsection{Atmel AVR}
@@ -233,7 +235,8 @@ PORT       \> REG        \> RES         \> SFR \\
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 ASSUME     \> DB          \> DD          \> DN          \> DQ \\
-DS         \> DT          \> DW          \> EMULATED    \> SUPMODE \\
+DS         \> DT          \> DW          \> EMULATED    \> ERG \\
+SUPMODE \\
 \end{tabbing}}
 
 \subsubsection{Siemens 80C166/167}
@@ -365,13 +368,13 @@ ADR        \> BYT         \> DFS         \> FCB         \> FCC \\
 FDB        \> RMB         \> SFR \\
 \end{tabbing}}
 
-\subsubsection{Texas TM3201x}
+\subsubsection{Texas TMS3201x}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DATA       \> PORT        \> RES \\
 \end{tabbing}}
 
-\subsubsection{Texas TM32C02x}
+\subsubsection{Texas TMS32C02x}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 BFLOAT     \> BSS         \> BYTE        \> DATA        \> DOUBLE \\ 
@@ -425,7 +428,7 @@ DS         \> DT          \> DW \\
 \subsubsection{Texas MSP430}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-BSS        \> BYTE        \> PADDING     \> WORD \\
+BSS        \> BYTE        \> PADDING     \> REG         \> WORD \\
 \end{tabbing}}
 
 \subsubsection{National SC/MP}
@@ -458,13 +461,12 @@ DQ         \> DS          \> DSB         \> DSW         \> DT \\
 FB         \> FW          \> SFR         \> WORD \\
 \end{tabbing}}
 
-\subsubsection{National COP8}
+\subsubsection{National SC14xxx}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DC         \> DC8         \> DS          \> DS8         \> DS16 \\
 DW         \> DW16 \\
 \end{tabbing}}
-
 
 \subsubsection{Fairchild ACE}
 {\tt\begin{tabbing}
@@ -528,7 +530,7 @@ DS         \> DT         \> DW \\
 DATA       \> RES \\
 \end{tabbing}}
 
-\subsubsection{NEC $\mu$PD772x}
+\subsubsection{NEC $\mu$PD77230}
 {\tt\begin{tabbing} 
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DS         \> DW \\

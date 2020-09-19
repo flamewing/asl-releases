@@ -86,7 +86,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       goto chk;
     }
 
-  if (mytoupper(*pArg->Str) == 'R')
+  if (as_toupper(*pArg->Str) == 'R')
   {
     if ((strlen(pArg->Str) == 2) && (pArg->Str[1] >= '0') && (pArg->Str[1] <= '7'))
     {
@@ -94,7 +94,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
       AdrPart = pArg->Str[1] - '0';
       goto chk;
     }
-    else if ((ArgLen == 3) && (mytoupper(pArg->Str[1]) == 'P') && (pArg->Str[2] >= '0') && (pArg->Str[2] <= '3'))
+    else if ((ArgLen == 3) && (as_toupper(pArg->Str[1]) == 'P') && (pArg->Str[2] >= '0') && (pArg->Str[2] <= '3'))
     {
       AdrMode = ModReg16;
       AdrPart = pArg->Str[2] - '0';
@@ -105,8 +105,8 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask)
   if (ArgLen == 2)
   {
     for (z = 0; z < 4; z++)
-      if ((mytoupper(*pArg->Str) == *RegNames[(z << 1) + 1])
-       && (mytoupper(pArg->Str[1]) == *RegNames[z << 1]))
+      if ((as_toupper(*pArg->Str) == *RegNames[(z << 1) + 1])
+       && (as_toupper(pArg->Str[1]) == *RegNames[z << 1]))
       {
         AdrMode = ModReg16;
         AdrPart = z;

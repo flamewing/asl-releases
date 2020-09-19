@@ -100,7 +100,7 @@ static const char ShortConds[4][4] =
 
 static Boolean IsAcc(char *Asc)
 {
-  return ((Asc[1] == '\0') && (mytoupper(*Asc) >= 'A') && (mytoupper(*Asc) <= 'B'));
+  return ((Asc[1] == '\0') && (as_toupper(*Asc) >= 'A') && (as_toupper(*Asc) <= 'B'));
 }
 
 static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
@@ -123,7 +123,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
   if (IsAcc(pArg->Str))
   {
     AdrMode = ModAcc;
-    *AdrVals = mytoupper(*pArg->Str) - 'A';
+    *AdrVals = as_toupper(*pArg->Str) - 'A';
     goto done;
   }
 
@@ -183,7 +183,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, int Mask)
               OK = False;
             break;
           default:  /* compare verbatim */
-            if (mytoupper(*pPattern) != mytoupper(*pComp))
+            if (as_toupper(*pPattern) != as_toupper(*pComp))
               OK = False;
         }
         if (OK)

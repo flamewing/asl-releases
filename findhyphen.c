@@ -78,8 +78,8 @@ static void PrintNode(PHyphenNode Node, int Level)
 
 static int GetIndex(char ch)
 {
-  if ((mytolower(ch) >= 'a' - 1) && (mytolower(ch) <= 'z'))
-    return (mytolower(ch) - ('a' - 1));
+  if ((as_tolower(ch) >= 'a' - 1) && (as_tolower(ch) <= 'z'))
+    return (as_tolower(ch) - ('a' - 1));
   else if (ch == '.')
     return 0;
   else if ((ch == *HYPHEN_CHR_ae) || (ch == *HYPHEN_CHR_AE))

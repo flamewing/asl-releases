@@ -175,7 +175,7 @@ static Boolean DecodeReg(char *Asc, LongInt *Erg)
       return True;
     }
   if ((strlen(Asc) == 2) && (Asc[1] >= '0') && (Asc[1] <= '7'))
-    switch (mytoupper(*Asc))
+    switch (as_toupper(*Asc))
     {
       case 'R':
         *Erg = 16 + Asc[1] - '0';
@@ -330,7 +330,7 @@ static Boolean DecodePCReg(char *Asc, LongInt *Erg)
 
 static Boolean DecodeAddReg(char *Asc, LongInt *Erg)
 {
-  if ((strlen(Asc) == 2) && (mytoupper(*Asc) == 'M') && (Asc[1] >= '0') && (Asc[1] <= '7'))
+  if ((strlen(Asc) == 2) && (as_toupper(*Asc) == 'M') && (Asc[1] >= '0') && (Asc[1] <= '7'))
   {
     *Erg = Asc[1] - '0';
     return True;
@@ -453,7 +453,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl, Byte ErlSeg, tAdrResult *p
 
   Offset = 0;
   for (SegIndex = 0; SegIndex < SegCount; SegIndex++)
-    if ((mytoupper(*pArg->Str) == SegNames[SegIndex]) && (pArg->Str[1] == ':'))
+    if ((as_toupper(*pArg->Str) == SegNames[SegIndex]) && (pArg->Str[1] == ':'))
     {
       pResult->Seg = SegVals[SegIndex];
       Offset = 2;
@@ -481,7 +481,7 @@ static void DecodeAdr(const tStrComp *pArg, Word Erl, Byte ErlSeg, tAdrResult *p
             goto chk;
           }
         }
-        else if (ModMasks[z][l] != mytoupper(Arg.Str[l]))
+        else if (ModMasks[z][l] != as_toupper(Arg.Str[l]))
           break;
       if (l > ArgLen)
       {

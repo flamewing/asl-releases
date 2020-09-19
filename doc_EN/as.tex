@@ -66,7 +66,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition May 2020}
+{\large Edition September 2020}
 \end{raggedright}
 
 \clearpage
@@ -2179,7 +2179,9 @@ necessary.  Which is the essence you should learn from this section?
 \section{Register Symbols}
 \label{SectRegSyms} \ttindex{register symbols}
 
-{\em valid for: PowerPC, M-Core, 4004/4040, MCS-48/(2)51, 80C16x, AVR, XS1, Z8}
+{\em valid for: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
+     AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
+     H8/500, SH7x00, H16, i960, XA, 29K}
 
 Sometimes it is desirable not only to assign symbolic names to memory
 addresses or constants, but also to a register, to emphasize its function
@@ -2188,39 +2190,40 @@ treat registers simply as another address space, as this allows to use
 numeric expressions and one can use simple \tty{EQU}s to define such
 symbols.  (e.g. for the MCS-96 or TMS70000).  However, for most
 processors, register identifiers are fixed literals which are seperately
-treated by AS for speed reasons.  A special mechanism is therefore
-necessary to define symbolic register names.  A register symbol is usually
-defined via the \tty{REG} instruction, which has otherwise the same syntax
-as an \tty{EQU} definition.  This however has a couple of restrictions: A
-register symbol is a pure character string stored 'as is' which may
-exclusively be used this way.  For example, no arithmetic is allowed to
-calculate a register's successor, like in the following example:
+treated by AS for speed reasons.  Therefore, registers symbols (sometime
+also called 'register aliases') are also a separate type of symbols in
+the symbol table.  Just like other symbols, they may be defined or re-defined
+with \tty{EQU} or \tty{SET}, and there is a specialized \tty{REG} instruction
+which accepts only symbols and expressions of this type.
+
+On the other hand, register symbols are subject of a couple of restrictions: the
+number of literals is limited and depends on the selected target processor, and
+arithmetic operations are not possibl eon registers A construct like tihs:
 \begin{verbatim}
 myreg   reg     r17         ; definition of register symbol
         addi    myreg+1,3   ; does not work!
 \end{verbatim}
-Additionally, a register symbol has to be defined prior to ist first
-usage; a forward reference would have the result that AS suspects a
-forward reference to a memory location in case a register symbol is not
-found.  Since the usage of memory operands is far more limited on most
-processors, a bunch of errors would be the result...
+is {\em not} valid.  Simple assignments are however possible:
+\begin{verbatim}
+myreg   reg     r17         ; definition of register symbol
+myreg2  reg     myreg       ; myreg2 -> r17
+\end{verbatim}
+Furthermore, forward references are even more critical than for other
+types of symbols.  If a symbol is not (yet) defined, AS does not know
+which type it is going to have,a nd will decide for a plain integer number.
+For most target processors, a number is the equivalent of absolute
+memory addressing, and on most processors, usage of memory operands
+is more limited than of registers.  Depending on situation, one will
+get an error message about a non-allowed addressing mode, and no second
+pass will be started...
 
 Analogous to ordinary symbols, register symbols are local to sections and
 it is possible to access a register symbol from a specific section by
-appending the section's name enclosed in brackets.  Due to the missing
-ability to do forward references, there is nothing like a \tty{FORWARD}
-directive, and an export by something comparable to \tty{PUBLIC} or
-\tty{GLOBAL} is also not possible since register symbols generally have
-their meaning in a small context.
-
-If there is both an ordinary and a register symbol of same name present in
-a context, the register symbol will be preferred.  This is however not the
-case when the name is embedded into a complex expression (parentheses are
-sufficient!), the normal symbol will be used then.
+appending the section's name enclosed in brackets.
 
 %%---------------------------------------------------------------------------
 
-\section{Sharefile}
+\section{Share File}
 \label{ChapShareMain}
 \ttindex{SHARED}
 
@@ -2636,7 +2639,7 @@ PIO_ctrl   port PIO_port_A+3
 \subsection{REG and NAMEREG}
 \ttindex{REG}\ttindex{NAMEREG}
 
-{\em valid for: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
+{\em valid for: 680x0, AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} valid only
  for KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Though it always has the same syntax, this instruction has a slightly
@@ -11092,6 +11095,23 @@ described by:
 \errentry{1144}{expected integer}
                {error}
                {Only an integer number may be used as argument at this place.}
+               {the argument in question}
+\errentry{1145}{expected integer, floating point number or string but got register}
+               {error}
+               {A register symbol may not be used as argument at this place.}
+               {the argument in question}
+\errentry{1146}{expected integer or string}
+               {error}
+               {A floating point number or register symbol may not be used as argument at this place.}
+               {the argument in question}
+\errentry{1147}{expected register}
+               {error}
+               {Only an register may be used as argument at this place.}
+               {the argument in question}
+\errentry{1148}{register symbol for different target}
+               {error}
+               {The used register symbol was defined for a target different from
+                the current one and is not compatible.}
                {the argument in question}
 \errentry{1200}{unknown instruction}
                {error}

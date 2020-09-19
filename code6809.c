@@ -118,7 +118,7 @@ static Boolean CodeReg(char *ChIn, Byte *erg)
     return False;
   else
   {
-    p = strchr(Regs, mytoupper(*ChIn));
+    p = strchr(Regs, as_toupper(*ChIn));
     if (!p)
       return False;
     *erg = p - Regs;
@@ -872,7 +872,7 @@ static void DecodeFlag(Word Index)
     for (z2 = 1; z2 <= ArgCnt; z2++)
       if (OK)
       {
-        p = (strlen(ArgStr[z2].Str) == 1) ? strchr(FlagChars, mytoupper(*ArgStr[z2].Str)) : NULL;
+        p = (strlen(ArgStr[z2].Str) == 1) ? strchr(FlagChars, as_toupper(*ArgStr[z2].Str)) : NULL;
         if (p)
         {
           z3 = p - FlagChars;
@@ -1473,7 +1473,7 @@ static void MakeCode_6809(void)
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
-static void InitCode_6809()
+static void InitCode_6809(void)
 {
   DPRValue = 0;
 }

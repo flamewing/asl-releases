@@ -124,8 +124,10 @@ extern void AddCopyright(const char *NewLine);
 extern void WriteCopyrights(TSwitchProc NxtProc);
 
 
+extern char *ChkSymbNameUpTo(const char *pSym, const char *pUpTo);
 extern Boolean ChkSymbName(const char *pSym);
 
+extern char *ChkMacSymbNameUpTo(const char *pSym, const char *pUpTo);
 extern Boolean ChkMacSymbName(const char *pSym);
 
 extern unsigned visible_strlen(const char *pSym);

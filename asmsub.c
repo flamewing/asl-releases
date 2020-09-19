@@ -282,7 +282,7 @@ ShortInt StrCaseCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Hand2
 {
   int tmp;
 
-  tmp = mytoupper(*s1) - mytoupper(*s2);
+  tmp = as_toupper(*s1) - as_toupper(*s2);
   if (!tmp)
     tmp = as_strcasecmp(s1, s2);
   if (!tmp)
@@ -517,10 +517,14 @@ void FloatString(char *pDest, int DestSize, Double f)
 
 void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned Radix)
 {
+  LargeInt IntVal;
+  
   switch (t->Typ)
   {
     case TempInt:
-      SysString(Dest, DestLen - 3, t->Contents.Int, Radix,
+      IntVal = t->Contents.Int;
+    IsInt:
+      SysString(Dest, DestLen - 3, IntVal, Radix,
                 1, (16 == Radix) && (ConstMode == ConstModeIntel), HexStartCharacter);
       if (WithSystem)
         switch (ConstMode)
@@ -576,6 +580,15 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned
       break;
     case TempString:
       TempResultToPlainString(Dest, t, DestLen);
+      break;
+    case TempReg:
+      if (t->Contents.RegDescr.Dissect)
+        t->Contents.RegDescr.Dissect(Dest, DestLen, t->Contents.RegDescr.Reg, t->DataSize);
+      else
+      {
+        IntVal = t->Contents.RegDescr.Reg;
+        goto IsInt;
+      }
       break;
     default:
       strmaxcpy(Dest, "???", DestLen);
@@ -850,36 +863,64 @@ static Byte GetValidSymChar(unsigned Ch)
   return (Ch < ValidSymCharLen) ? ValidSymChar[Ch] : 0;
 }
 
-static Boolean ChkName(const char *pSym, Byte _Mask)
+static char *ChkNameUpTo(const char *pSym, const char *pUpTo, Byte _Mask)
 {
   Byte Mask = _Mask;
   unsigned Ch;
+  const char *pPrev;
 
   if (!*pSym)
-    return False;
+    return (char*)pSym;
 
-  while (*pSym)
+  while (*pSym && (pSym != pUpTo))
   {
+    pPrev = pSym;
     if (ValidSymCharLen > 256)
       Ch = UTF8ToUnicode(&pSym);
     else
       Ch = ((unsigned int)*pSym++) & 0xff;
 
     if (!(GetValidSymChar(Ch) & Mask))
-      return False;
+      return (char*)pPrev;
     Mask = _Mask << 1;
   }
-  return True;
+  return (char*)pSym;
+}
+
+char *ChkSymbNameUpTo(const char *pSym, const char *pUpTo)
+{
+  char *pResult = ChkNameUpTo(pSym, pUpTo, VALID_S1);
+
+  /* If NULL as UpTo was given, and all is fine up to end of string,
+     also return NULL as result.  So Equation 'Result==UpTo' is fulfilled: */
+
+  if (!pUpTo && !*pResult)
+     pResult= NULL;
+  return pResult;
 }
 
 Boolean ChkSymbName(const char *pSym)
 {
-  return ChkName(pSym, VALID_S1);
+  const char *pEnd = ChkSymbNameUpTo(pSym, NULL);
+  return *pSym && !pEnd;
+}
+
+char *ChkMacSymbNameUpTo(const char *pSym, const char *pUpTo)
+{
+  char *pResult = ChkNameUpTo(pSym, pUpTo, VALID_M1);
+
+  /* If NULL as UpTo was given, and all is fine up to end of string,
+     also return NULL as result.  So Equation 'Result==UpTo' is fulfilled: */
+
+  if (!pUpTo && !*pResult)
+     pResult= NULL;
+  return pResult;
 }
 
 Boolean ChkMacSymbName(const char *pSym)
 {
-  return ChkName(pSym, VALID_M1);
+  const char *pEnd = ChkMacSymbNameUpTo(pSym, NULL);
+  return *pSym && !pEnd;
 }
 
 /*!------------------------------------------------------------------------
@@ -1553,14 +1594,14 @@ void asmsub_init(void)
   /* Bei DOS Auslagerung Overlays in XMS/EMS versuchen */
 
   envval = getenv("USEXMS");
-  if ((envval) && (mytoupper(*envval) == 'N'))
+  if ((envval) && (as_toupper(*envval) == 'N'))
     ovrerg = -1;
   else
     ovrerg = _OvrInitExt(0, 0);
   if (ovrerg != 0)
   {
     envval = getenv("USEEMS");
-    if ((!envval) || (mytoupper(*envval) != 'N'))
+    if ((!envval) || (as_toupper(*envval) != 'N'))
       _OvrInitEms(0, 0, 0);
   }
 #endif

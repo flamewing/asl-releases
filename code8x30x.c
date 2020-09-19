@@ -66,7 +66,7 @@ static Boolean DecodeReg(const tStrComp *pArg, Word *Erg, ShortInt *ErgLen)
     return True;
   }
 
-  if ((mytoupper(*pArg->Str) == 'R') && (Len > 1) && (Len < 4))
+  if ((as_toupper(*pArg->Str) == 'R') && (Len > 1) && (Len < 4))
   {
     Acc = 0;
     OK = True;
@@ -92,12 +92,12 @@ static Boolean DecodeReg(const tStrComp *pArg, Word *Erg, ShortInt *ErgLen)
 
   if ((Len == 4) && (as_strncasecmp(pArg->Str + 1, "IV", 2) == 0) && (pArg->Str[3] >= '0') && (pArg->Str[3] <= '7'))
   {
-    if (mytoupper(*pArg->Str) == 'L')
+    if (as_toupper(*pArg->Str) == 'L')
     {
       *Erg = pArg->Str[3]-'0' + 0x10;
       return True;
     }
-    else if (mytoupper(*pArg->Str) == 'R')
+    else if (as_toupper(*pArg->Str) == 'R')
     {
       *Erg = pArg->Str[3] - '0' + 0x18;
       return True;
@@ -582,7 +582,7 @@ static Boolean IsDef_8x30X(void)
   return (Memo("LIV") || Memo("RIV"));
 }
 
-static void SwitchFrom_8x30X()
+static void SwitchFrom_8x30X(void)
 {
   DeinitFields();
 }

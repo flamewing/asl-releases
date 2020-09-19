@@ -167,3 +167,20 @@
 	op	r1,r5,r3,r4,r10,r7
 	op	r11,r0,r2,r7,r6,r1
 	endm
+
+	; register aliases
+
+myreg1e		equ	r11
+myreg2e		equ	r10
+myreg3e		equ	r9
+myreg1r		reg	r11
+myreg2r		reg	r10
+myreg3r		reg	r9
+myreg1re	reg	myreg1e
+myreg2re	reg	myreg2e
+myreg3re	reg	myreg3e
+
+		add	r11,r10,r9
+		add	myreg1e,myreg2e,myreg3e
+		add	myreg1r,myreg2r,myreg3r
+		add	myreg1re,myreg2re,myreg3re

@@ -138,3 +138,19 @@ ptrreg	reg	r10
 	movi	ptrreg,123
 
 	trap	#2
+
+; register aliases
+
+mysp		equ	sp
+myreg2e		equ	r2
+myreg4e		equ	r4
+mylr		equ	lr
+myreg2r		reg	r2
+myreg4r		reg	r4
+myreg2re	reg	myreg2e
+myreg4re	reg	myreg4e
+
+		and	r2,r4
+		and	myreg2e,myreg4e
+		and	myreg2r,myreg4r
+		and	myreg2re,myreg4re

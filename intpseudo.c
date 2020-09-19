@@ -644,6 +644,9 @@ static Boolean LayoutDoubleWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
       Result = True;
       break;
     }
+    case TempReg:
+      WrStrErrorPos(ErrNum_StringOrIntOrFloatButReg, pExpr);
+      break;
     case TempAll:
       assert(0);
   }
@@ -774,6 +777,9 @@ static Boolean LayoutQuadWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
       Result = True;
       break;
     }
+    case TempReg:
+      WrStrErrorPos(ErrNum_StringOrIntOrFloatButReg, pExpr);
+      break;
     case TempAll:
       assert(0);
   }
@@ -859,6 +865,9 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
       Result = True;
       break;
     }
+    case TempReg:
+      WrStrErrorPos(ErrNum_StringOrIntOrFloatButReg, pExpr);
+      break;
     case TempAll:
       assert(0);
   }
@@ -883,7 +892,7 @@ static Boolean LayoutTenBytes(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
 
 static Boolean DecodeIntelPseudo_ValidSymChar(char ch)
 {
-  ch = mytoupper(ch);
+  ch = as_toupper(ch);
 
   return (((ch >= 'A') && (ch <= 'Z'))
        || ((ch >= '0') && (ch <= '9'))

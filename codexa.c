@@ -41,6 +41,9 @@
 #define ModAbs 3
 #define MModAbs (1 << ModAbs)
 
+#define REG_SP 7
+#define REG_MARK 16
+
 #define JBitOrderCnt 3
 #define RegOrderCnt 4
 #define RelOrderCount 17
@@ -96,45 +99,126 @@ static void SetOpSize(tSymbolSize NSize)
   }
 }
 
-static Boolean DecodeReg(char *Asc, tSymbolSize *NSize, Byte *Erg)
-{
-  int len = strlen(Asc);
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, tSymbolSize *pSize, Byte *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pSize register size if yes
+ * \param  pResult register number if yes
+ * \return Reg eval result
+ * ------------------------------------------------------------------------ */
 
-  if (!as_strcasecmp(Asc, "SP"))
+static tRegEvalResult DecodeRegCore(const char *pArg, tSymbolSize *pSize, Byte *pResult)
+{
+  int len;
+
+  if (!as_strcasecmp(pArg, "SP"))
   {
-    *Erg = 7; *NSize = eSymbolSize16Bit; return True;
+    *pResult = REG_SP | REG_MARK;
+    *pSize = eSymbolSize16Bit;
+    return eIsReg;
   }
-  else if ((len >= 2) && (mytoupper(*Asc) == 'R') && (Asc[1] >= '0') && (Asc[1] <= '7'))
+
+  len = strlen(pArg);
+  if ((len >= 2) && (as_toupper(*pArg) == 'R') && (pArg[1] >= '0') && (pArg[1] <= '7'))
   {
+    *pResult = pArg[1] - '0';
     if (len == 2)
     {
-      *Erg = Asc[1] - '0';
       if (OpSize == eSymbolSize32Bit)
       {
-        if ((*Erg & 1) == 1)
+        *pSize = eSymbolSize32Bit;
+        if (*pResult & 1)
         {
-          WrError(ErrNum_InvRegPair); (*Erg)--;
+          WrError(ErrNum_InvRegPair);
+          (*pResult)--;
+          return eRegAbort;
         }
-        *NSize = eSymbolSize32Bit;
-        return True;
+        else
+          return eIsReg;
       }
       else
       {
-        *NSize = eSymbolSize16Bit;
-        return True;
+        *pSize = eSymbolSize16Bit;
+        return eIsReg;
       }
     }
-    else if ((len == 3) && (mytoupper(Asc[2]) == 'L'))
+    else if ((len == 3) && (as_toupper(pArg[2]) == 'L'))
     {
-      *Erg = (Asc[1] - '0') << 1; *NSize = eSymbolSize8Bit; return True;
+      *pResult <<= 1;
+      *pSize = eSymbolSize8Bit;
+      return eIsReg;
     }
-    else if ((len == 3) && (mytoupper(Asc[2]) == 'H'))
+    else if ((len == 3) && (as_toupper(pArg[2]) == 'H'))
     {
-      *Erg = ((Asc[1] - '0') << 1) + 1; *NSize = eSymbolSize8Bit; return True;
+      *pResult = (*pResult << 1) + 1;
+      *pSize = eSymbolSize8Bit;
+      return eIsReg;
     }
-    else return False;
+    else
+      return eIsNoReg;
   }
-  return False;
+  return eIsNoReg;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_XA(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - XA variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_XA(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u%c", (unsigned)(Value >> 1), "LH"[Value & 1]);
+      break;
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    case eSymbolSize32Bit:
+      as_snprintf(pDest, DestSize, "R%u.D", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, tSymbolSize *pSize, Byte *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg source argument
+ * \param  pSize register size if yes
+ * \param  pResult register number if yes
+ * \param  MustBeReg expecting register?
+ * \return Reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, tSymbolSize *pSize, Byte *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  RegEvalResult = DecodeRegCore(pArg->Str, pSize, pResult);
+  if (RegEvalResult != eIsNoReg)
+  {
+    *pResult &= ~REG_MARK;
+    return RegEvalResult;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+  if (RegEvalResult == eIsReg)
+  {
+    *pResult = RegDescr.Reg & ~REG_MARK;
+    *pSize = EvalResult.DataSize;
+  }
+  return RegEvalResult;
 }
 
 static Boolean ChkAdr(Word Mask, const tStrComp *pComp)
@@ -158,8 +242,8 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
   ArgLen = strlen(pArg->Str);
   if (pArg->Str[ArgLen - 1] == '+')
   {
-    pArg->Str[--ArgLen] = '\0'; pArg->Pos.Len--;
-    if (!DecodeReg(pArg->Str, &NSize, &AdrPart)) WrStrErrorPos(ErrNum_InvReg, pArg);
+    StrCompShorten(pArg, 1); ArgLen--;
+    if (!DecodeReg(pArg, &NSize, &AdrPart, True));
     else if (NSize != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvAddrMode, pArg);
     else
     {
@@ -186,26 +270,30 @@ static Boolean DecodeAdrIndirect(tStrComp *pArg, Word Mask)
       KillPrefBlanksStrComp(&ThisComp);
       KillPostBlanksStrComp(&ThisComp);
 
-      if (DecodeReg(ThisComp.Str, &NSize, &Reg))
+      switch (DecodeReg(&ThisComp, &NSize, &Reg, False))
       {
-        if ((NSize != eSymbolSize16Bit) || (AdrPart != 0xff) || (NegFlag))
+        case eIsReg:
+          if ((NSize != eSymbolSize16Bit) || (AdrPart != 0xff) || NegFlag)
+          {
+            WrStrErrorPos(ErrNum_InvAddrMode, &ThisComp); ErrFlag = True;
+          }
+          else
+            AdrPart = Reg;
+          break;
+        case eRegAbort:
+          return False;
+        default:
         {
-          WrStrErrorPos(ErrNum_InvAddrMode, &ThisComp); ErrFlag = True;
-        }
-        else
-          AdrPart = Reg;
-      }
-      else
-      {
-        LongInt DispPart;
-        tSymbolFlags Flags;
+          LongInt DispPart;
+          tSymbolFlags Flags;
 
-        DispPart = EvalStrIntExpressionWithFlags(&ThisComp, Int32, &ErrFlag, &Flags);
-        ErrFlag = !ErrFlag;
-        if (!ErrFlag)
-        {
-          FirstFlag = FirstFlag || mFirstPassUnknown(Flags);
-          DispAcc += NegFlag ? -DispPart : DispPart;
+          DispPart = EvalStrIntExpressionWithFlags(&ThisComp, Int32, &ErrFlag, &Flags);
+          ErrFlag = !ErrFlag;
+          if (!ErrFlag)
+          {
+            FirstFlag = FirstFlag || mFirstPassUnknown(Flags);
+            DispAcc += NegFlag ? -DispPart : DispPart;
+          }
         }
       }
 
@@ -249,20 +337,25 @@ static Boolean DecodeAdr(tStrComp *pArg, Word Mask)
   KillPrefBlanksStrComp(pArg);
   KillPostBlanksStrComp(pArg);
 
-  if (DecodeReg(pArg->Str, &NSize, &AdrPart))
+  switch (DecodeReg(pArg, &NSize, &AdrPart, False))
   {
-    if (Mask & MModReg)
-    {
-      AdrMode = ModReg;
-      SetOpSize(NSize);
-    }
-    else
-    {
-      AdrMode = ModMem;
-      MemPart = 1;
-      SetOpSize(NSize);
-    }
-    return ChkAdr(Mask, pArg);
+    case eIsReg:
+      if (Mask & MModReg)
+      {
+        AdrMode = ModReg;
+        SetOpSize(NSize);
+      }
+      else
+      {
+        AdrMode = ModMem;
+        MemPart = 1;
+        SetOpSize(NSize);
+      }
+      return ChkAdr(Mask, pArg);
+    case eRegAbort:
+      return False;
+    default:
+      break;
   }
 
   if (*pArg->Str == '#')
@@ -402,44 +495,50 @@ static Boolean DecodeBitAddr(tStrComp *pArg, LongInt *Erg)
     *p = '\0'; pArg->Pos.Len -= l + 1;
     if (EvalResult.OK)
     {
-      if (DecodeReg(pArg->Str, &Size, &Reg))
+      switch (DecodeReg(pArg, &Size, &Reg, False))
       {
-        if ((Size == eSymbolSize8Bit) && (BPos > 7)) WrError(ErrNum_OverRange);
-        else
-        {
-          if (Size == eSymbolSize8Bit) *Erg = (Reg << 3) + BPos;
-          else *Erg = (Reg << 4) + BPos;
-          Res = 1;
-        }
-      }
-      else if (BPos > 7) WrError(ErrNum_OverRange);
-      else
-      {
-        AdrLong = EvalStrIntExpressionWithResult(pArg, UInt24, &EvalResult);
-        if (EvalResult.AddrSpaceMask & (1 << SegIO))
-        {
-          ChkSpace(SegIO, EvalResult.AddrSpaceMask);
-          if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x3f) | 0x400;
-          if (ChkRange(AdrLong, 0x400, 0x43f))
+        case eRegAbort:
+          return False;
+        case eIsReg:
+          if ((Size == eSymbolSize8Bit) && (BPos > 7)) WrError(ErrNum_OverRange);
+          else
           {
-            *Erg = 0x200 + ((AdrLong & 0x3f) << 3) + BPos;
+            if (Size == eSymbolSize8Bit) *Erg = (Reg << 3) + BPos;
+            else *Erg = (Reg << 4) + BPos;
             Res = 1;
           }
+          break;
+        default:
+          if (BPos > 7) WrError(ErrNum_OverRange);
           else
-            Res = -1;
-        }
-        else
-        {
-          ChkSpace(SegData, EvalResult.AddrSpaceMask);
-          if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x00ff003f) | 0x20;
-          if (ChkRange(AdrLong & 0xff, 0x20, 0x3f))
           {
-            *Erg = 0x100 + ((AdrLong & 0x1f) << 3) + BPos + (AdrLong & 0xff0000);
-            Res = 1;
+            AdrLong = EvalStrIntExpressionWithResult(pArg, UInt24, &EvalResult);
+            if (EvalResult.AddrSpaceMask & (1 << SegIO))
+            {
+              ChkSpace(SegIO, EvalResult.AddrSpaceMask);
+              if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x3f) | 0x400;
+              if (ChkRange(AdrLong, 0x400, 0x43f))
+              {
+                *Erg = 0x200 + ((AdrLong & 0x3f) << 3) + BPos;
+                Res = 1;
+              }
+              else
+                Res = -1;
+            }
+            else
+            {
+              ChkSpace(SegData, EvalResult.AddrSpaceMask);
+              if (mFirstPassUnknown(EvalResult.Flags)) AdrLong = (AdrLong & 0x00ff003f) | 0x20;
+              if (ChkRange(AdrLong & 0xff, 0x20, 0x3f))
+              {
+                *Erg = 0x100 + ((AdrLong & 0x1f) << 3) + BPos + (AdrLong & 0xff0000);
+                Res = 1;
+              }
+              else
+                Res = -1;
+            }
           }
-          else
-            Res = -1;
-        }
+        break;
       }
     }
     *p = '.';
@@ -1806,6 +1905,8 @@ static Boolean IsRealDef(void)
       return Memo("PORT");
     case 'B':
       return Memo("BIT");
+    case 'R':
+      return Memo("REG");
     default:
       return FALSE;
   }
@@ -1822,7 +1923,7 @@ static void ForceAlign(void)
 static Boolean DecodeAttrPart_XA(void)
 {
   if (*AttrPart.Str)
-    switch (mytoupper(*AttrPart.Str))
+    switch (as_toupper(*AttrPart.Str))
     {
       case 'B': AttrPartOpSize = eSymbolSize8Bit; break;
       case 'W': AttrPartOpSize = eSymbolSize16Bit; break;
@@ -1945,6 +2046,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "FJMP" , 1, DecodeFCALLJMP);
   AddInstTable(InstTable, "PORT" , 0, DecodePORT);
   AddInstTable(InstTable, "BIT"  , 0, DecodeBIT);
+  AddInstTable(InstTable, "REG"  , 0, CodeREG);
 
   AddFixed("NOP"  , 0x0000);
   AddFixed("RET"  , 0xd680);
@@ -2016,6 +2118,30 @@ static void DeinitFields(void)
 /*-------------------------------------------------------------------------*/
 /* Callbacks */
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_XA(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on XA
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_XA(char *pArg, TempResult *pResult)
+{
+  Byte Reg;
+  tSymbolSize Size;
+
+  if (*AttrPart.Str)
+    OpSize = AttrPartOpSize;
+
+  if (DecodeRegCore(pArg, &Size, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = Size;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_XA;
+  }
+}
+
 static void InitCode_XA(void)
 {
   Reg_DS = 0;
@@ -2037,7 +2163,7 @@ static Boolean ChkPC_XA(LargeWord Addr)
 
 static Boolean IsDef_XA(void)
 {
-  return (ActPC == SegCode);
+  return (ActPC == SegCode) || IsRealDef();
 }
 
 static void SwitchFrom_XA(void)
@@ -2061,6 +2187,8 @@ static void SwitchTo_XA(void)
   MakeCode = MakeCode_XA;
   ChkPC = ChkPC_XA;
   IsDef = IsDef_XA;
+  InternSymbol = InternSymbol_XA;
+  DissectReg = DissectReg_XA;
   SwitchFrom = SwitchFrom_XA; InitFields();
   AddONOFF("SUPMODE",   &SupAllowed,  SupAllowedName, False);
   AddONOFF("BRANCHEXT", &DoBranchExt, BranchExtName , False);

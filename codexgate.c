@@ -39,30 +39,83 @@ static CPUVar CPUXGate;
 /*--------------------------------------------------------------------------*/
 /* Address Decoders */
 
-static Boolean DecodeReg(char *pAsc, Word *pResult)
-{
-  Boolean Result;
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Word *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg argument
+ * \param  pResult register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
 
-  if ((strlen(pAsc) != 2) || (mytoupper(*pAsc) != 'R') || (!myisdigit(pAsc[1])))
+static Boolean DecodeRegCore(const char *pArg, Word *pResult)
+{
+  if ((strlen(pArg) != 2) || (as_toupper(*pArg) != 'R') || (!as_isdigit(pArg[1])))
   {
     *pResult = 0;
-    Result = False;
+    return False;
   }
   else
   {
-    *pResult =  pAsc[1]- '0';
-    Result = *pResult <= 7;
+    *pResult = pArg[1] - '0';
+    return *pResult <= 7;
   }
-  return Result;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_XGATE(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+ * \brief  dissect register symbol - XGATE version
+ * \param  pDest destination buffer
+ * \param  DestSize size of destination buffer
+ * \param  Reg register number
+ * \param  Size register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_XGATE(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+{
+  switch (Size)
+  {
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Reg);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", Size, (unsigned)Reg);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Word *pReg, Boolean MustBeReg)
+ * \brief  check whether argument is CPU register or register alias
+ * \param  pArg argument
+ * \param  pReg register number if yes
+ * \param  MustBeReg True if register is expected
+ * \return Reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Word *pReg, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pReg))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize16Bit, MustBeReg);
+  *pReg = RegDescr.Reg;
+  return RegEvalResult;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeArgReg(int Index, Word *pReg)
+ * \brief  check whether argument #n is CPU register or register alias
+ * \param  Index argument index
+ * \param  pReg register number if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeArgReg(int Index, Word *pReg)
 {
-  Boolean Result = DecodeReg(ArgStr[Index].Str, pReg);
-
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
-  return Result;
+  return DecodeReg(&ArgStr[Index], pReg, True);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -456,9 +509,7 @@ static void DecodeMem(Word Code)
     {
       *pPos = '\0';
       KillBlanks(ArgStr[2].Str);
-      OK = DecodeReg(ArgStr[2].Str, &Base);
-      if (!OK)
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+      OK = DecodeReg(&ArgStr[2], &Base, True);
       strmov(ArgStr[2].Str, pPos + 1);
     }
     else
@@ -478,31 +529,28 @@ static void DecodeMem(Word Code)
         Index = EvalStrIntExpressionOffs(&ArgStr[2], 1, UInt5, &OK);
       else if (*ArgStr[2].Str == '-')
       {
+        tStrComp RegArg;
+
         Code |= 0x2000;
-        OK = DecodeReg(ArgStr[2].Str + 1, &Index);
+        StrCompRefRight(&RegArg, &ArgStr[2], 1);
+        OK = DecodeReg(&RegArg, &Index, True);
         if (OK)
           Index = (Index << 2) | 2;
-        else
-          WrXErrorPos(ErrNum_InvReg, ArgStr[2].Str + 1, &ArgStr[2].Pos);
       }
       else if (((l = strlen(ArgStr[2].Str)) > 1) && (ArgStr[2].Str[l - 1] == '+'))
       {
         Code |= 0x2000;
-        ArgStr[2].Str[l - 1] = '\0'; ArgStr[2].Pos.Len--;
-        OK = DecodeReg(ArgStr[2].Str, &Index);
+        StrCompShorten(&ArgStr[2], 1);
+        OK = DecodeReg(&ArgStr[2], &Index, True);
         if (OK)
           Index = (Index << 2) | 1;
-        else
-          WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
       }
       else
       {
         Code |= 0x2000;
-        OK = DecodeReg(ArgStr[2].Str, &Index);
+        OK = DecodeReg(&ArgStr[2], &Index, True);
         if (OK)
           Index = (Index << 2);
-        else
-          WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
       }
 
       if (OK)
@@ -609,6 +657,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "LDW"  , 0x4800, DecodeMem); 
   AddInstTable(InstTable, "STB"  , 0x5000, DecodeMem);
   AddInstTable(InstTable, "STW"  , 0x5800, DecodeMem);
+
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -618,6 +668,26 @@ static void DeinitFields(void)
 
 /*--------------------------------------------------------------------------*/
 /* Callbacks */
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_XGATE(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on XGATE
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_XGATE(char *pArg, TempResult *pResult)
+{
+  Word Reg;
+
+  if (DecodeRegCore(pArg, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize16Bit;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_XGATE;
+  }
+}
 
 static void MakeCode_XGATE(void)
 {
@@ -669,7 +739,10 @@ static void SwitchTo_XGATE(void)
   Grans[SegCode] = 1; ListGrans[SegCode] = 2; SegInits[SegCode] = 0;
   SegLimits[SegCode] = 0xffffl;
 
-  MakeCode = MakeCode_XGATE; IsDef = IsDef_XGATE;
+  MakeCode = MakeCode_XGATE;
+  IsDef = IsDef_XGATE;
+  InternSymbol = InternSymbol_XGATE;
+  DissectReg = DissectReg_XGATE;
 
   SwitchFrom = SwitchFrom_XGATE; InitFields();
 }

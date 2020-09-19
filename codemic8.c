@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
@@ -67,24 +68,70 @@ static CPUVar CPUMico8_05, CPUMico8_V3, CPUMico8_V31;
  * Address Expression Parsing
  *--------------------------------------------------------------------------*/
 
-static Boolean IsWReg(char *Asc, LongWord *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     IsWRegCore(const char *pArg, LongWord *pValue)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg argument to check
+ * \param  pValue register number if it is a register
+ * \return True if it is a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWRegCore(const char *pArg, LongWord *pValue)
 {
   Boolean OK;
-  char *s;
 
-  if (FindRegDef(Asc, &s)) Asc = s;
-
-  if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R'))
-  {
-    *pErg = 0;
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'R'))
     return False;
-  }
 
-  *pErg = ConstLongInt(Asc + 1, &OK, 10);
+  *pValue = ConstLongInt(pArg + 1, &OK, 10);
   if (!OK)
     return False;
 
-  return (*pErg < 32);
+  return (*pValue < 32);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_Mico8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - MICO8 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_Mico8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWReg(const tStrComp *pArg, LongWord *pValue, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg argument to check
+ * \param  pValue register number if it is a register
+ * \param  MustBeReg expecting register as arg?
+ * \return register parse result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult IsWReg(const tStrComp *pArg, LongWord *pValue, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (IsWRegCore(pArg->Str, pValue))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+  *pValue = RegDescr.Reg;
+  return RegEvalResult;
 }
 
 /*--------------------------------------------------------------------------
@@ -96,14 +143,6 @@ static void DecodePort(Word Index)
   UNUSED(Index);
 
   CodeEquate(SegIO, 0, SegLimits[SegIO]);
-}
-
-static void DecodeRegDef(Word Index)
-{
-  UNUSED(Index);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 static void DecodeFixed(Word Index)
@@ -122,25 +161,31 @@ static void DecodeALU(Word Index)
   ALUOrder *pOrder = ALUOrders + Index;
   LongWord Src, DReg;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else if (IsWReg(ArgStr[2].Str, &Src))
-  {
-    DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
-    CodeLen = 1;
-  }
-  else if (!pOrder->MayImm) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
-  else
-  {
-    Boolean OK;
-
-    Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
-    if (OK)
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &DReg, True))
+    switch (IsWReg(&ArgStr[2], &Src, True))
     {
-      DAsmCode[0] = pOrder->Code | (1 << 13) | (DReg << 8) | (Src & 0xff);
-      CodeLen = 1;
+      case eIsReg:
+        DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
+        CodeLen = 1;
+        break;
+      case eIsNoReg:
+        if (!pOrder->MayImm) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+        else
+        {
+          Boolean OK;
+
+          Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
+          if (OK)
+          {
+            DAsmCode[0] = pOrder->Code | (1 << 13) | (DReg << 8) | (Src & 0xff);
+           CodeLen = 1;
+          }
+        }
+        break;
+      default:
+        break;
     }
-  }
 }
 
 static void DecodeALUI(Word Index)
@@ -149,9 +194,8 @@ static void DecodeALUI(Word Index)
   LongWord Src, DReg;
   Boolean OK;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &DReg, True))
   {
     Src = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
@@ -170,7 +214,7 @@ static void DecodeShortBranch(Word Index)
   tSymbolFlags Flags;
 
   if (ChkArgCnt(1, 1))
-  {   
+  {
     Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeAddrInt, &OK, &Flags);
     if (OK)
     {
@@ -213,25 +257,30 @@ static void DecodeMem(Word Index)
   MemOrder *pOrder = MemOrders + Index;
   LongWord DReg, Src;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else if (IsWReg(ArgStr[2].Str, &Src))
-  {
-    DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3) | 2;
-    CodeLen = 1;
-  }
-  else
-  {
-    tEvalResult EvalResult;
-
-    Src = EvalStrIntExpressionWithResult(&ArgStr[2], DataAddrInt, &EvalResult);
-    if (EvalResult.OK)
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &DReg, True))
+    switch (IsWReg(&ArgStr[2], &Src, False))
     {
-      ChkSpace(pOrder->Space, EvalResult.AddrSpaceMask);
-      DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3);
-      CodeLen = 1;
+      case eIsReg:
+        DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3) | 2;
+        CodeLen = 1;
+        break;
+      case eIsNoReg:
+      {
+        tEvalResult EvalResult;
+
+        Src = EvalStrIntExpressionWithResult(&ArgStr[2], DataAddrInt, &EvalResult);
+        if (EvalResult.OK)
+        {
+          ChkSpace(pOrder->Space, EvalResult.AddrSpaceMask);
+          DAsmCode[0] = pOrder->Code | (DReg << 8) | ((Src & 0x1f) << 3);
+          CodeLen = 1;
+        }
+        break;
+      }
+      default:
+        break;
     }
-  }
 }
 
 static void DecodeMemI(Word Index)
@@ -239,10 +288,9 @@ static void DecodeMemI(Word Index)
   MemOrder *pOrder = MemOrders + Index;
   LongWord DReg, SReg;
 
-  if (!ChkArgCnt(2, 2));
-  else if (!IsWReg(ArgStr[1].Str, &DReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else if (!IsWReg(ArgStr[2].Str, &SReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
-  else
+  if (ChkArgCnt(2, 2)
+   && IsWReg(&ArgStr[1], &DReg, True)
+   && IsWReg(&ArgStr[2], &SReg, True))
   {
     DAsmCode[0] = pOrder->Code | (DReg << 8) | (SReg << 3) | 2;
     CodeLen = 1;
@@ -255,7 +303,7 @@ static void DecodeReg(Word Index)
   LongWord Reg = 0;
 
   if (!ChkArgCnt(1, 1));
-  else if (!IsWReg(ArgStr[1].Str, &Reg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  else if (IsWReg(&ArgStr[1], &Reg, True))
   {
     DAsmCode[0] = pOrder->Code | (Reg << 8);
     CodeLen = 1;
@@ -444,7 +492,7 @@ static void InitFields(void)
     AddMem("SSP"    , "SSPI"   , (15UL << 14) | 4, SegData);
   }
 
-  AddInstTable(InstTable, "REG", 0, DecodeRegDef);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
   AddInstTable(InstTable, "PORT", 0, DecodePort);
 }
 
@@ -462,6 +510,26 @@ static void DeinitFields(void)
 /*--------------------------------------------------------------------------
  * Semipublic Functions
  *--------------------------------------------------------------------------*/
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_Mico8(char *pArg, TempResult *pResult)
+ * \brief  handle built-in (register) symbols for MICO8
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_Mico8(char *pArg, TempResult *pResult)
+{
+  LongWord RegNum;
+
+  if (IsWRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_Mico8;
+  }
+}
 
 static Boolean IsDef_Mico8(void)
 {
@@ -514,7 +582,10 @@ static void SwitchTo_Mico8(void)
    Grans[SegIO] = 1; ListGrans[SegIO] = 1; SegInits[SegIO] = 0;
    SegLimits[SegIO] = 0xff;
 
-   MakeCode = MakeCode_Mico8; IsDef = IsDef_Mico8;
+   MakeCode = MakeCode_Mico8;
+   IsDef = IsDef_Mico8;
+   InternSymbol = InternSymbol_Mico8;
+   DissectReg = DissectReg_Mico8;
    SwitchFrom = SwitchFrom_Mico8; InitFields();
 }
 

@@ -285,6 +285,22 @@ Message ErrMsgExpectInt
  "Ganzzahl erwartet"
  "expected integer"
 
+Message ErrMsgStringOrIntOrFloatButReg
+ "Ganz-, Gleitkommazahl oder String erwartet, aber Register bekommen"
+ "expected integer, floating point number or string but got register"
+
+Message ErrMsgExpectIntOrString
+ "Ganzzahl oder String erwartet"
+ "expected integer or string"
+
+Message ErrMsgExpectReg
+ "Register erwartet"
+ "expected register"
+
+Message ErrMsgRegWrongTarget
+ "Registersymbol f&uuml;r anderes Ziel"
+ "register symbol for different target"
+
 Message ErrMsgUnknownInstruction
  "unbekannter Befehl"
  "unknown instruction"
@@ -980,7 +996,7 @@ Message HeadingPageLab
 ; Strings in Listing
 
 Message ListSymListHead1
- "  Symboltabelle (*=unbenutzt):"
+ "  Symboltabelle (* = unbenutzt):"
  "  Symbol Table (* = unused):"
 
 Message ListSymListHead2
@@ -1004,12 +1020,12 @@ Message ListUSymSumsMsg
  " unused symbols"
 
 Message ListRegDefListHead1
- "  Registerdefinitionen (*=unbenutzt):"
- "  Register Definitions (*=unused):"
+ "  Registerdefinitionen (* = unbenutzt):"
+ "  Register Definitions (* = unused):"
 
 Message ListRegDefListHead2
  "  -----------------------------------"
- "  --------------------------------"
+ "  ----------------------------------"
 
 Message ListRegDefSumMsg
  " Definition"

@@ -47,7 +47,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Mai 2020}
+{\large Stand September 2020}
 \end{raggedright}
 
 \clearpage
@@ -2241,7 +2241,9 @@ einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 \section{Registersymbole}
 \label{SectRegSyms} \ttindex{Registersymbole}
 
-{\em G"ultigkeit: PowerPC, M-Core, 4004/4040, MCS-48/(2)51, 80C16x, AVR, XS1, Z8}
+{\em G"ultigkeit: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
+     AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
+     H8/500, SH7x00, H16, i960, XA, 29K}
 
 Manchmal ist es erw"unscht, nicht nur einer Speicheradresse oder einer
 Konstanten, sondern auch einem Register einen symbolischen Namen zuzuweisen,
@@ -2251,37 +2253,38 @@ Adre"sraum behandeln, recht problemlos, da als Register damit auch
 Zahlenausdr"ucke erlaubt sind und man solche Symbole mit schlichten
 \tty{EQU}s definieren kann (z.B. bei MCS-96 oder TMS7000).  Bei den
 allermeisten Prozessoren jedoch sind Registernamen festgelegte Literale, und
-AS behandelt sie aus Geschwindigkeitsgr"unden gesondert, so da"s ein besonderer
-Mechanismus vonn"oten ist, um symbolische Register zu definieren.  Ein Registersymbol
-wird "ublicherweise durch die \tty{REG}-Anweisung definiert und hat ansonsten
-die gleiche Form wie eine \tty{EQU}-Definition.  Sie unterliegt jedoch einer
-Reihe von Einschr"ankungen:  Zum einen ist ein Registersymbol eine reine 'as is'
-gespeicherte Zeichenkette, die auch nur in dieser Form verwendet werden kann.
-Es ist also z.B. keine Arithmetik m"oglich, um aus einem Register den Nachfolger
-zu berechnen, etwa so:
+AS behandelt sie beim Parsing aus Geschwindigkeitsgr"unden gesondert, so da"s auch
+ein getrennter Typ von Symbolen f"ur solche Registersymbole oder -aliase existiert.
+Registersymbole k"onnen wie gew"ohnliche Symbole mit \tty{EQU} oder \tty{SET}
+definiert und umdefiniert werden, zudem existiert eine spezielle \tty{REG}-Anweisung,
+die explizit nur Symbole bzw. Ausdr"ucke dieses Typs akzeptiert.
+
+Registersymbole unterliegen einer Reihe von Einschr"ankungen: zum einen ist die
+Menge der Literale beschr"ankt und durch den jeweiligen Zielprozessor vorgegeben,
+zum anderen kann man mit Registersymbolen nicht rechnen.  Etwas in dieser Form:
 \begin{verbatim}
 myreg   reg     r17         ; Definition Registersymbol
         addi    myreg+1,3   ; geht nicht!
 \end{verbatim}
-Zum anderen mu"s ein Registersymbol vor seiner ersten Nutzung definiert
-werden; eine Vorw"artsreferenz w"urde dazu f"uhren, da"s AS bei nicht gefundenem
-Registersymbol eine Vorw"artsreferenz auf eine Speicherstelle vermutet, und bei
-den meisten Prozessoren sind die Nutzungsm"oglichkeiten f"ur Speicherstellen als
-Operanden deutlich eingeschr"ankter als f"ur Register, so da"s es mit ziemlicher
-Sicherheit Fehler hagelt...
+ist also {\em nicht} zul"assig.  Einfache Zuweisungen sind dagegen auch "uber mehrere
+Stufen hinweg erlaubt:
+\begin{verbatim}
+myreg   reg     r17         ; Definition Registersymbol
+myreg2  reg     myreg       ; myreg2 -> r17
+\end{verbatim}
+Des weiteren sind Vorw"artsreferenzen bei Registersymbolen noch kritischer als
+bei anderen Typen von Symbolen.  Ist ein Symbol nicht definiert, so kann AS nur
+mutma"sen, was f"ur ein Typ von Symbol es sein wird, und entscheidet sich in
+Zweifelsfall f"ur eine einfache Zahl, was bei den meisten Prozessoren einem Zugriff
+auf eine absolute Adresse im Speicher gleichkommt.  Nun sind bei den meisten
+Prozessoren die Nutzungsm"oglichkeiten f"ur Speicheradressen als Operand deutlich
+eingeschr"ankter als f"ur Register.  Je nach Situation erh"alt man so eine
+Fehlermeldung "uber einen nicht erlaubten Adressierungsmodus, und es kommt zu keinem
+zweiten Pass...
 
 Registersymbole sind analog zu normalen Symbolen lokal zu Sektionen,
 und es ist auch durch Anh"angen eines in eckige Klammern gesetzten Sektionsnamens
 m"oglich, auf ein Registersymbol aus einer bestimmten Sektion zuzugreifen.
-Aufgrund der fehlenden M"oglichkeit zur Vorw"artsreferenz gibt es aber keine
-Entsprechung zur \tty{FORWARD}-Direktive, und da Registersymbole im allgemeinen
-nur in einem sehr eng umschr"ankten Kontext eine Bedeutung haben, ist ein Export
-per \tty{PUBLIC} oder \tty{GLOBAL} auch nicht vorgesehen.
-
-Sind in einem Kontext ein normales als auch ein Registersymbol gleichen Namens
-bekannt, so wird immer das Registersymbol vorgezogen.  Dies ist aber nicht der
-Fall, wenn der Name nicht alleine, sondern eingebunden in einen Ausdruck
-steht (dazu reichen Klammern!), dann wird das normale Symbol benutzt.
 
 %%---------------------------------------------------------------------------
 
@@ -2716,7 +2719,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \subsection{REG und NAMEREG}
 \ttindex{REG}\ttindex{NAMEREG}
 
-{\em G"ultigkeit: AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
+{\em G"ultigkeit: 680x0, AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
  f"ur KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
@@ -11323,8 +11326,25 @@ Angaben:
                {das fehlerhafte Argument}
 \errentry{1144}{Ganzzahl erwartet}
                {Fehler}
-               {An dieser Stelle kann nur eine ganze Zahlals Argument
+               {An dieser Stelle kann nur eine ganze Zahl als Argument
                 verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1145}{Ganz-, Gleitkommazahl oder String erwartet, aber Register bekommen}
+               {Fehler}
+               {An dieser Stelle kann kein Registersymbol als Argument verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1146}{Ganzzahl oder String erwartet}
+               {Fehler}
+               {An dieser Stelle kann keine Gleitkommazahl oder Registersymbol als Argument verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1147}{Register erwartet}
+               {Fehler}
+               {An dieser Stelle kann nur ein Register als Argument verwendet werden.}
+               {das fehlerhafte Argument}
+\errentry{1148}{Registersymbol f"ur anderes Ziel}
+               {Fehler}
+               {Das angesprochene Registersymbol wurde f"ur einen anderen Zielprozessor
+                als den aktuell verwendeten definiert und ist nicht kompatibel.}
                {das fehlerhafte Argument}
 \errentry{1200}{Unbekannter Befehl}
                {Fehler}

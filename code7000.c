@@ -60,6 +60,11 @@ enum
 #define MModPCRel (1 << ModPCRel)
 #define MModImm (1 << ModImm)
 
+#define REG_SP 15
+#define REG_MARK 16
+#define RegNone (-1)
+#define RegPC (-2)
+#define RegGBR (-3)
 
 #define CompLiteralsName "COMPRESSEDLITERALS"
 
@@ -183,20 +188,80 @@ static void SetOpSize(tSymbolSize Size)
   }
 }
 
-static Boolean DecodeReg(char *Asc, Word *Erg)
-{
-  Boolean Err;
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Word *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
 
-  if (as_strcasecmp(Asc, "SP") == 0)
+static Boolean DecodeRegCore(const char *pArg, Word *pResult)
+{
+  size_t l;
+  Boolean OK;
+
+  if (!as_strcasecmp(pArg, "SP"))
   {
-    *Erg = 15; return True;
+    *pResult = REG_SP | REG_MARK;
+    return True;
   }
-  else if ((strlen(Asc) < 2) || (strlen(Asc) > 3) || (mytoupper(*Asc) != 'R')) return False;
-  else
+
+  l = strlen(pArg);
+  if ((l < 2) || (l > 3) || (as_toupper(*pArg) != 'R'))
+    return False;
+
+  *pResult = ConstLongInt(pArg + 1, &OK, 10);
+  return OK && (*pResult <= 15);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_7000(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - SH7x00 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_7000(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
   {
-    *Erg = ConstLongInt(Asc + 1, &Err, 10);
-    return (Err && (*Erg <= 15));
+    case eSymbolSize32Bit:
+      if (Value == (REG_SP | REG_MARK))
+        as_snprintf(pDest, DestSize, "SP");
+      else
+        as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
   }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \return eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+{
+  tRegEvalResult RegEvalResult;
+  tEvalResult EvalResult;
+  tRegDescr RegDescr;
+
+  if (DecodeRegCore(pArg->Str, pResult))
+  {
+    *pResult &= ~REG_MARK;
+    return eIsReg;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
 }
 
 static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
@@ -204,19 +269,19 @@ static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
   CPUVar MinCPU = CPU7000;
 
   *Erg = 0xff;
-  if (as_strcasecmp(Asc, "SR") == 0) *Erg = 0;
-  else if (as_strcasecmp(Asc, "GBR") == 0) *Erg = 1;
-  else if (as_strcasecmp(Asc, "VBR") == 0) *Erg = 2;
-  else if (as_strcasecmp(Asc, "SSR") == 0)
+  if (!as_strcasecmp(Asc, "SR")) *Erg = 0;
+  else if (!as_strcasecmp(Asc, "GBR")) *Erg = 1;
+  else if (!as_strcasecmp(Asc, "VBR")) *Erg = 2;
+  else if (!as_strcasecmp(Asc, "SSR"))
   {
     *Erg = 3; MinCPU = CPU7700;
   }
-  else if (as_strcasecmp(Asc, "SPC") == 0)
+  else if (!as_strcasecmp(Asc, "SPC"))
   {
     *Erg = 4; MinCPU = CPU7700;
   }
-  else if ((strlen(Asc) == 7) && (mytoupper(*Asc) == 'R')
-      && (as_strcasecmp(Asc + 2, "_BANK") == 0)
+  else if ((strlen(Asc) == 7) && (as_toupper(*Asc) == 'R')
+      && (!as_strcasecmp(Asc + 2, "_BANK"))
       && (Asc[1] >= '0') && (Asc[1] <= '7'))
   {
     *Erg = Asc[1]-'0' + 8; MinCPU = CPU7700;
@@ -289,10 +354,6 @@ static LongInt OpMask(ShortInt OpSize)
 
 static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
 {
-#define RegNone (-1)
-#define RegPC (-2)
-#define RegGBR (-3)
-
   Byte p;
   Word HReg;
   char *pos;
@@ -307,11 +368,16 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
 
   AdrMode = ModNone;
 
-  if (DecodeReg(pArg->Str, &HReg))
+  switch (DecodeReg(pArg, &HReg, False))
   {
-    AdrPart = HReg;
-    AdrMode = ModReg;
-    goto chk;
+    case eIsReg:
+      AdrPart = HReg;
+      AdrMode = ModReg;
+      goto chk;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return;
   }
 
   if (*pArg->Str == '@')
@@ -355,27 +421,30 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
             OK = False;
           }
         }
-        else if (DecodeReg(Arg.Str, &HReg))
+        else switch (DecodeReg(&Arg, &HReg, False))
         {
-          if (IndReg == RegNone)
-            IndReg = HReg;
-          else if ((BaseReg == RegNone) && (HReg == 0))
-            BaseReg = 0;
-          else if ((IndReg == 0) && (BaseReg == RegNone))
-          {
-            BaseReg = 0;
-            IndReg = HReg;
-          }
-          else
-          {
-            WrError(ErrNum_InvAddrMode); OK = False;
-          }
-        }
-        else
-        {
-          DispAcc += EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
-          if (mFirstPassUnknown(Flags))
-            FirstFlag = True;
+          case eIsReg:
+            if (IndReg == RegNone)
+              IndReg = HReg;
+            else if ((BaseReg == RegNone) && (HReg == 0))
+              BaseReg = 0;
+            else if ((IndReg == 0) && (BaseReg == RegNone))
+            {
+              BaseReg = 0;
+              IndReg = HReg;
+            }
+            else
+            {
+              WrStrErrorPos(ErrNum_InvAddrMode, &Arg); OK = False;
+            }
+            break;
+          case eIsNoReg:
+            DispAcc += EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
+            if (mFirstPassUnknown(Flags))
+              FirstFlag = True;
+            break;
+          case eRegAbort:
+            OK = False;
         }
         if (pos)
           Arg = Remainder;
@@ -441,27 +510,29 @@ static void DecodeAdr(const tStrComp *pArg, Word Mask, Boolean Signed)
     {
       int ArgLen = strlen(Arg.Str);
 
-      if (DecodeReg(Arg.Str, &HReg))
+      if ((ArgLen > 1) && (*Arg.Str == '-'))
       {
-        AdrPart = HReg;
-        AdrMode = ModIReg;
-      }
-      else if ((ArgLen > 1) && (*Arg.Str == '-') && (DecodeReg(Arg.Str + 1, &HReg)))
-      {
-        AdrPart = HReg;
-        AdrMode = ModPreDec;
+        StrCompIncRefLeft(&Arg, 1);
+        if (DecodeReg(&Arg, &HReg, True) == eIsReg)
+        {
+          AdrPart = HReg;
+          AdrMode = ModPreDec;
+        }
       }
       else if ((ArgLen > 1) && (Arg.Str[ArgLen - 1] == '+'))
       {
         StrCompShorten(&Arg, 1);
-        if (DecodeReg(Arg.Str, &HReg))
+        if (DecodeReg(&Arg, &HReg, True) == eIsReg)
         {
           AdrPart = HReg;
           AdrMode = ModPostInc;
         }
-        else WrError(ErrNum_InvAddrMode);
       }
-      else WrError(ErrNum_InvAddrMode);
+      else if (DecodeReg(&Arg, &HReg, True))
+      {
+        AdrPart = HReg;
+        AdrMode = ModIReg;
+      }
       goto chk;
     }
   }
@@ -675,7 +746,7 @@ static void DecodeMOV(Word Code)
     SetOpSize(eSymbolSize32Bit);
   if (!ChkArgCnt(2, 2));
   else if (OpSize > eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
-  else if (DecodeReg(ArgStr[1].Str, &HReg))
+  else if (DecodeReg(&ArgStr[1], &HReg, False) == eIsReg)
   {
     DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModPreDec | MModIndReg | MModR0Base | MModGBRBase, True);
     switch (AdrMode)
@@ -710,7 +781,7 @@ static void DecodeMOV(Word Code)
         break;
     }
   }
-  else if (DecodeReg(ArgStr[2].Str, &HReg))
+  else if (DecodeReg(&ArgStr[2], &HReg, False) == eIsReg)
   {
     DecodeAdr(&ArgStr[1], MModImm | MModPCRel | MModIReg | MModPostInc | MModIndReg | MModR0Base | MModGBRBase, True);
     switch (AdrMode)
@@ -760,7 +831,7 @@ static void DecodeMOVA(Word Code)
   UNUSED(Code);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[2].Str, &HReg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+  else if (!DecodeReg(&ArgStr[2], &HReg, True));
   else if (HReg != 0) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
   else
   {
@@ -1453,6 +1524,8 @@ static void InitFields(void)
   AddInstTable(InstTable, "XOR", InstrZ++, DecodeLog);
   AddInstTable(InstTable, "OR" , InstrZ++, DecodeLog);
 
+  AddInstTable(InstTable, "REG", 0, CodeREG);
+
   RegDefs = (TRegDef*) malloc(sizeof(TRegDef) * SRegCnt); InstrZ = 0;
   AddSReg("MACH",  0, CPU7000, FALSE);
   AddSReg("MACL",  1, CPU7000, FALSE);
@@ -1529,9 +1602,29 @@ static void InitCode_7000(void)
   SetFlag(&DSPAvail, DSPAvailName, False);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_7000(char *pArg, TempResult *pResult)
+ * \brief  handle built.in symbols in SH7x00
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_7000(char *pArg, TempResult *pResult)
+{
+  Word Reg;
+
+  if (DecodeRegCore(pArg, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize32Bit;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_7000;
+  }
+}
+
 static Boolean IsDef_7000(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_7000(void)
@@ -1561,6 +1654,8 @@ static void SwitchTo_7000(void)
   DecodeAttrPart = DecodeAttrPart_7000;
   MakeCode = MakeCode_7000;
   IsDef = IsDef_7000;
+  InternSymbol = InternSymbol_7000;
+  DissectReg = DissectReg_7000;
   SwitchFrom = SwitchFrom_7000;
   InitFields();
   AddONOFF("SUPMODE",      &SupAllowed,   SupAllowedName  , False);

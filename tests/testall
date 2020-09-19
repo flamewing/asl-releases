@@ -11,6 +11,8 @@ else
  SUBDIRS="$1"
 fi
 for t in $SUBDIRS; do
+ if test -f $t/$t.asm; then
+ if test -f $t/$t.ori; then
  if cd $t ; then
  {
   cat $t.doc
@@ -40,6 +42,8 @@ for t in $SUBDIRS; do
   echo "$t : no such test" >> ../testlog
   SUMFAIL=`expr $SUMFAIL + 1`
  }
+ fi
+ fi
  fi
 done
 echo "successes: $SUMPASS" >> ../testlog

@@ -231,3 +231,42 @@
                 bra     *-130
                 bra     *-131
 
+		; register aliases
+
+reg_r0		equ	r0
+reg_r1		equ	r1
+reg_r2		equ	r2
+reg_r3		equ	r3
+reg_r4		equ	r4
+reg_r5		equ	r5
+reg_r6		equ	r6
+reg_r7		equ	r7
+reg_sp		reg	sp
+reg_fp		reg	fp
+
+                mov.b   #$55,r0
+		mov.b	#$55,reg_r0
+                mov.b   #$55,r1
+		mov.b	#$55,reg_r1
+                mov.b   #$55,r2
+		mov.b	#$55,reg_r2
+                mov.b   #$55,r3
+		mov.b	#$55,reg_r3
+                mov.b   #$55,r4
+		mov.b	#$55,reg_r4
+                mov.b   #$55,r5
+		mov.b	#$55,reg_r5
+                mov.b   #$55,r6
+		mov.b	#$55,reg_r6
+                mov.b   #$55,r7
+		mov.b	#$55,reg_r7
+		mov.b	#$55,sp
+		mov.b	#$55,reg_sp
+		mov.b	#$55,fp
+		mov.b	#$55,reg_fp
+		subx.w	@r0+,r0
+		subx.w	@reg_r0+,reg_r0
+		mov.w	r0,@-r1
+		mov.w	reg_r0,@-reg_r1
+		rotxl.w	@($02,r2)
+		rotxl.w	@($02,reg_r2)

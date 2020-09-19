@@ -41,7 +41,7 @@ static Boolean DecodeReg(char *Asc, Byte *pErg)
 
   if (strlen(Asc) != 1) return False;
  
-  p = strchr(RegNames, mytoupper(*Asc));
+  p = strchr(RegNames, as_toupper(*Asc));
   if (p != NULL) *pErg = p - RegNames;
   return (p != NULL);
 }

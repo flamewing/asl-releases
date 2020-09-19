@@ -51,7 +51,12 @@ Next:
 	fim	r7p, 89h
 
 	; some broken register names
+	; note that this target supports register aliases,
+        ; and the assembler will assume a forward definition
+        ; of these names in pass 1.  Therefore, delay the
+        ; negative test to pass 2:
 
+	if	mompass > 1
 	expect	1445
         fim	rr,12h		; both numbers missing
 	endexpect
@@ -73,6 +78,7 @@ Next:
 	expect	1445
 	fim	r9p,12h		; number out of range
 	endexpect
+	endif
 
 	src	r0r1
 	src	r2r3
@@ -250,6 +256,35 @@ loop:
 	daa
 	kbp
 	dcl
+
+; test register aliases
+
+myreg4e		equ	r9
+myreg8e1	equ	r6p
+myreg8e2	equ	r12r13
+
+myreg4r		reg	r9
+myreg4re	reg	myreg4e
+myreg8r1	reg	r6p
+myreg8re1	reg	myreg8e1
+myreg8r2	reg	r12r13
+myreg8re2	reg	myreg8e2
+
+		src	r12r13
+		src	myreg8e1
+		src	myreg8r1
+		src	myreg8re1
+		src	r6p
+		src	myreg8e2
+		src	myreg8r2
+		src	myreg8re2
+
+		inc	r9
+		inc	myreg4e
+		inc	myreg4r
+		inc	myreg4re
+		inc	ra
+		inc	r10
 
 	data	1,2,3,4,5
 	data	"This is a test"

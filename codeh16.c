@@ -37,6 +37,9 @@ static CPUVar CPU641016;
 static tSymbolSize OpSize;
 static tStrComp FormatPart;
 
+#define REG_SP 15
+#define REG_MARK 16
+
 typedef enum
 {
   eAdrModeNone = -1,
@@ -293,7 +296,6 @@ static void ResetAdrComps(tAdrComps *pComps)
   pComps->RegPrefix = 0x00;
 }
 
-
 /*!------------------------------------------------------------------------
  * \fn     SplitOpSize(tStrComp *pArg, tSymbolSize *pSize)
  * \brief  split off explicit size spec from argument
@@ -361,7 +363,7 @@ static void AppendScale(tStrComp *pArg, Byte Scale)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeReg(const char *pArg, Byte *pResult, Byte *pPrefix)
+ * \fn     DecodeRegCore(const char *pArg, Byte *pResult, Byte *pPrefix)
  * \brief  check whether argument is a register and return register # if yes
  * \param  pArg argument to check
  * \param  pResult register # if argument is a valid (general) register
@@ -369,33 +371,105 @@ static void AppendScale(tStrComp *pArg, Byte Scale)
  * \return True if argument is a register
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeReg(const char *pArg, Byte *pResult, Byte *pPrefix)
+static Boolean DecodeRegCore(const char *pArg, Byte *pResult, Byte *pPrefix)
 {
   Boolean OK;
 
   if (!as_strcasecmp(pArg, "SP"))
   {
-    *pResult = 15;
+    *pResult = REG_MARK | REG_SP;
     *pPrefix = 0x00;
     return True;
   }
 
   if ((strlen(pArg) > 1)
-   && (mytoupper(*pArg) == 'R'))
+   && (as_toupper(*pArg) == 'R'))
     *pPrefix = 0x00;
   else if ((strlen(pArg) > 2)
-   && (mytoupper(*pArg) == 'C')
-   && (mytoupper(pArg[1]) == 'R'))
+   && (as_toupper(*pArg) == 'C')
+   && (as_toupper(pArg[1]) == 'R'))
     *pPrefix = PREFIX_CRn;
   else if ((strlen(pArg) > 2)
-   && (mytoupper(*pArg) == 'P')
-   && (mytoupper(pArg[1]) == 'R'))
+   && (as_toupper(*pArg) == 'P')
+   && (as_toupper(pArg[1]) == 'R'))
     *pPrefix = PREFIX_PRn;
   else
     return False;
 
   *pResult = ConstLongInt(pArg + 1 + !!*pPrefix, &OK, 10);
   return (OK && (*pResult <= 15));
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_H16(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+ * \brief  dissect register symbols - H16 variant
+ * \param  pDest destination buffer
+ * \param  DestSize size of destination buffer
+ * \param  Reg register number
+ * \param  Size register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_H16(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+{
+  switch (Size)
+  {
+    case eSymbolSize32Bit:
+      if (Reg == (REG_MARK | REG_SP))
+        as_snprintf(pDest, DestSize, "SP");
+      else
+      {
+        if (Hi(Reg) == PREFIX_CRn)
+          as_snprintf(pDest, DestSize, "CR");
+        else if (Hi(Reg) == PREFIX_PRn)
+          as_snprintf(pDest, DestSize, "PR");
+        else if (!Hi(Reg))
+          as_snprintf(pDest, DestSize, "R");
+        else
+          as_snprintf(pDest, DestSize, "%u-", Hi(Reg));
+        as_snprcatf(pDest, DestSize, "%u", Lo(Reg));
+      }
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", Size, Reg);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pReg, Byte *pPrefix, Boolean AllowPrefix, Boolean MustBeReg)
+ * \brief  check whether argument is CPU register or register alias
+ * \param  pArg source argument
+ * \param  pReg register number
+ * \param  pPrefix prefix for previous/current bank registers; 0 for global bank registers
+ * \param  AllowPrefix allow previous/current bank registers
+ * \param  MustBeReg argument must be register
+ * \return True if argument is a register
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pReg, Byte *pPrefix, Boolean AllowPrefix, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pReg, pPrefix))
+    RegEvalResult = eIsReg;
+  else
+  {
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+    *pPrefix = Hi(RegDescr.Reg);
+    *pReg = Lo(RegDescr.Reg);
+  }
+
+  if (RegEvalResult == eIsReg)
+  {
+    if (!AllowPrefix && *pPrefix)
+    {
+      WrStrErrorPos(ErrNum_InvReg, pArg);
+      RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
+    }
+  }
+  *pReg &= ~REG_MARK;
+  return RegEvalResult;
 }
 
 /*!------------------------------------------------------------------------
@@ -425,16 +499,10 @@ static Boolean DecodeRegList(Word *pDest, int StartIdx, int StopIdx)
       StrCompSplitRef(&StartComp, &StopComp, &ArgStr[Index], pSep);
       KillPostBlanksStrComp(&StartComp);
       KillPrefBlanksStrCompRef(&StopComp);
-      if (!DecodeReg(StartComp.Str, &RegStart, &Prefix) || Prefix)
-      {
-        WrStrErrorPos(ErrNum_InvReg, &StartComp);
+      if (!DecodeReg(&StartComp, &RegStart, &Prefix, False, True))
         return False;
-      }
-      if (!DecodeReg(StopComp.Str, &RegStop, &Prefix) || Prefix)
-      {
-        WrStrErrorPos(ErrNum_InvReg, &StopComp);
+      if (!DecodeReg(&StopComp, &RegStop, &Prefix, False, True))
         return False;
-      }
       if (RegStart > RegStop)
       {
         Prefix = RegStart;
@@ -445,11 +513,8 @@ static Boolean DecodeRegList(Word *pDest, int StartIdx, int StopIdx)
     }
     else
     {
-      if (!DecodeReg(ArgStr[Index].Str, &RegStart, &Prefix) || Prefix)
-      {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
+      if (!DecodeReg(&ArgStr[Index], &RegStart, &Prefix, False, True))
         return False;
-      }
       Mask = 1ul << RegStart;
     }
     if (*pDest & Mask)
@@ -463,16 +528,17 @@ static Boolean DecodeRegList(Word *pDest, int StartIdx, int StopIdx)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeRegWithSize(const tStrComp *pArg, Byte *pReg, tSymbolSize *pSize, Byte *pPrefix)
+ * \fn     DecodeRegWithSize(const tStrComp *pArg, Byte *pReg, tSymbolSize *pSize, Byte *pPrefix, Boolean MustBeReg)
  * \brief  check whether argument is register with possible size spec
  * \param  pArg argument to check
  * \param  pReg returns register # if argument is a register
  * \param  pSize returns size spec if argument is a register (may be SizeUnknown)
  * \param  pPrefix prefix for previous/current bank registers; 0 for global bank registers
- * \return True if argument is a register
+ * \param  MustBeReg argument must be register
+ * \return RegEval result
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeRegWithSize(const tStrComp *pArg, Byte *pReg, tSymbolSize *pSize, Byte *pPrefix)
+static tRegEvalResult DecodeRegWithSize(const tStrComp *pArg, Byte *pReg, tSymbolSize *pSize, Byte *pPrefix, Boolean MustBeReg)
 {
   String Str;
   tStrComp Copy;
@@ -481,7 +547,7 @@ static Boolean DecodeRegWithSize(const tStrComp *pArg, Byte *pReg, tSymbolSize *
   StrCompCopy(&Copy, pArg);
   if (!SplitOpSize(&Copy, pSize))
     *pSize = eSymbolSizeUnknown;
-  return DecodeReg(Copy.Str, pReg, pPrefix);
+  return DecodeReg(&Copy, pReg, pPrefix, True, MustBeReg);
 }
 
 /*!------------------------------------------------------------------------
@@ -882,93 +948,118 @@ static Boolean ClassComp(tStrComp *pArg, tAdrComps *pComps)
 
     return True;
   }
-  if (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix))
+  switch (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix, False))
   {
-    if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
-      return False;
-    if ((pComps->BaseReg == NOREG) && (OpSize == eSymbolSizeUnknown))
-    {
-      pComps->BaseReg = Reg;
-      pComps->BaseRegIncr = 0;
-      return True;
-    }
-    else if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize))
-    {
-      pComps->IndexReg = Reg;
-      pComps->IndexRegScale = 0;
-      if (OpSize != eSymbolSizeUnknown)
-        pComps->IndexRegSize = OpSize;
-      return True;
-    }
-    else
-      return False;
-  }
-  if ((*pArg->Str == '-') && DecodeReg(pArg->Str + 1, &Reg, &Prefix))
-  {
-    if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
-      return False;
-    if (pComps->BaseReg == NOREG)
-    {
-      pComps->BaseReg = Reg;
-      pComps->BaseRegIncr = -1;
-      return True;
-    }
-    else
-      return False;
-  }
-  if (pArg->Str[pArg->Pos.Len - 1] == '+')
-  {
-    pArg->Str[pArg->Pos.Len - 1] = '\0';
-    if (DecodeReg(pArg->Str, &Reg, &Prefix))
-    {
+    case eIsReg:
       if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
         return False;
-      if (pComps->BaseReg == NOREG)
+      if ((pComps->BaseReg == NOREG) && (OpSize == eSymbolSizeUnknown))
       {
         pComps->BaseReg = Reg;
-        pComps->BaseRegIncr = +1;
+        pComps->BaseRegIncr = 0;
+        return True;
+      }
+      else if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize))
+      {
+        pComps->IndexReg = Reg;
+        pComps->IndexRegScale = 0;
+        if (OpSize != eSymbolSizeUnknown)
+          pComps->IndexRegSize = OpSize;
         return True;
       }
       else
         return False;
+      break;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return False;
+  }
+  if (*pArg->Str == '-')
+  {
+    tStrComp RegComp;
+
+    StrCompRefRight(&RegComp, pArg, 1);
+    switch (DecodeReg(&RegComp, &Reg, &Prefix, True, False))
+    {
+      case eIsReg:
+        if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
+          return False;
+        if (pComps->BaseReg == NOREG)
+        {
+          pComps->BaseReg = Reg;
+          pComps->BaseRegIncr = -1;
+          return True;
+        }
+        else
+          return False;
+      case eRegAbort:
+        return False;
+      case eIsNoReg:
+        break;
     }
-    else
-      pArg->Str[pArg->Pos.Len - 1] = '+';
+  }
+  if (pArg->Str[pArg->Pos.Len - 1] == '+')
+  {
+    pArg->Str[pArg->Pos.Len - 1] = '\0';
+    switch (DecodeReg(pArg, &Reg, &Prefix, True, False))
+    {
+      case eIsReg:
+        if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
+          return False;
+        if (pComps->BaseReg == NOREG)
+        {
+          pComps->BaseReg = Reg;
+          pComps->BaseRegIncr = +1;
+          return True;
+        }
+        else
+          return False;
+      case eRegAbort:
+        return False;
+      case eIsNoReg:
+        pArg->Str[pArg->Pos.Len - 1] = '+';
+        break;
+    }
   }
   Save = SplitScale(pArg, &Scale);
   if (Save)
   {
-    if (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix))
+    switch (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix, False))
     {
-      if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
-        return False;
-      if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize))
-      {
-        pComps->IndexReg = Reg;
-        pComps->IndexRegScale = Scale;
-        if (OpSize != eSymbolSizeUnknown)
-          pComps->IndexRegSize = OpSize;
-      }
-      else if (pComps->BaseReg == NOREG)
-      {
-        if ((Scale == 0) && ValidBaseRegSize(OpSize))
-          pComps->BaseReg = Reg;
-        else if ((Scale != 0) && (pComps->IndexRegScale == 0) && (pComps->IndexRegSize == eSymbolSize32Bit))
+      case eIsReg:
+        if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg))
+          return False;
+        if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize))
         {
-          pComps->BaseReg = pComps->IndexReg;
           pComps->IndexReg = Reg;
           pComps->IndexRegScale = Scale;
-          pComps->IndexRegSize = (OpSize == eSymbolSizeUnknown) ? DefIndexRegSize : OpSize;
+          if (OpSize != eSymbolSizeUnknown)
+            pComps->IndexRegSize = OpSize;
+        }
+        else if (pComps->BaseReg == NOREG)
+        {
+          if ((Scale == 0) && ValidBaseRegSize(OpSize))
+            pComps->BaseReg = Reg;
+          else if ((Scale != 0) && (pComps->IndexRegScale == 0) && (pComps->IndexRegSize == eSymbolSize32Bit))
+          {
+            pComps->BaseReg = pComps->IndexReg;
+            pComps->IndexReg = Reg;
+            pComps->IndexRegScale = Scale;
+            pComps->IndexRegSize = (OpSize == eSymbolSizeUnknown) ? DefIndexRegSize : OpSize;
+          }
+          else
+            return False;
         }
         else
           return False;
-      }
-      else
+        return True;
+      case eIsNoReg:
+        AppendScale(pArg, Scale);
+        break;
+      case eRegAbort:
         return False;
-      return True;
     }
-    else
-      AppendScale(pArg, Scale);
   }
 
   if (!SplitOpSize(pArg, &OpSize))
@@ -1057,12 +1148,17 @@ static Boolean DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, Long
       break;
   }
 
-  if (DecodeReg(pArg->Str, &Reg, &Prefix))
+  switch (DecodeReg(pArg, &Reg, &Prefix, True, False))
   {
-    pAdrVals->Mode = eAdrModeReg;
-    AppendRegPrefix(pAdrVals, Prefix);
-    AppendAdrVals(pAdrVals, 0x40 | Reg);
-    goto Check;
+    case eIsReg:
+      pAdrVals->Mode = eAdrModeReg;
+      AppendRegPrefix(pAdrVals, Prefix);
+      AppendAdrVals(pAdrVals, 0x40 | Reg);
+      goto Check;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return False;
   }
 
   if (*pArg->Str == '#')
@@ -1984,8 +2080,7 @@ static void DecodeEXT(Word Code)
    && ChkOpSize(eSymbolSize16Bit, 7)
    && ChkArgCnt(1, 1))
   {
-    if (!DecodeReg(ArgStr[1].Str, &Reg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-    else
+    if (DecodeReg(&ArgStr[1], &Reg, &Prefix, False, True))
     {
       OpSize = (OpSize == eSymbolSize8Bit) ? eSymbolSize32Bit : (OpSize - 1);
       BAsmCode[CodeLen++] = Code | OpSize;
@@ -2217,7 +2312,8 @@ static void DecodeSCB(Word Code)
    || !ChkArgCnt(2, 2))
     return;
 
-  if (!DecodeReg(ArgStr[1].Str, &Reg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  if (!DecodeReg(&ArgStr[1], &Reg, &Prefix, False, True))
+    return;
 
   Addr = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], !!(*ArgStr[1].Str == '@'), UInt24, &OK, &Flags);
   if (!OK)
@@ -2286,9 +2382,8 @@ static void DecodeXCH(Word Code)
    && ChkOpSize(eSymbolSize32Bit, 4)
    && ChkArgCnt(2, 2))
   {
-    if (!DecodeReg(ArgStr[1].Str, &RegX, &PrefixX) || PrefixX) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-    else if (!DecodeReg(ArgStr[2].Str, &RegY, &PrefixY) || PrefixY) WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
-    else
+    if (DecodeReg(&ArgStr[1], &RegX, &PrefixX, False, True)
+     && DecodeReg(&ArgStr[2], &RegY, &PrefixY, False, True))
     {
       BAsmCode[CodeLen++] = Code;
       BAsmCode[CodeLen++] = (RegX << 4) | RegY;
@@ -2309,7 +2404,7 @@ static void DecodeLINK(Word Code)
   if (!ChkEmptyFormat()
    || !ChkArgCnt(2, 2))
     return;
-  if (!DecodeReg(ArgStr[1].Str, &Reg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+  if (!DecodeReg(&ArgStr[1], &Reg, &Prefix, False, True));
   else if (*ArgStr[2].Str != '#') WrStrErrorPos(ErrNum_OnlyImmAddr, &ArgStr[2]);
   else
   {
@@ -2340,8 +2435,7 @@ static void DecodeUNLK(Word Code)
   if (!ChkEmptyFormat()
    || !ChkArgCnt(1, 1))
     return;
-  if (!DecodeReg(ArgStr[1].Str, &Reg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  if (DecodeReg(&ArgStr[1], &Reg, &Prefix, False, True))
   {
     BAsmCode[CodeLen++] = Code;
     BAsmCode[CodeLen++] = Reg;
@@ -2616,16 +2710,12 @@ static void DecodeString(Word Code)
    && DecodeStringReg(&ArgStr[1], SrcMask, &SrcReg)
    && DecodeStringReg(&ArgStr[2], DestMask, &DestReg))
   {
-    if (!DecodeReg(ArgStr[3].Str, &CntReg, &Prefix) || Prefix) WrStrErrorPos(ErrNum_InvReg, &ArgStr[3]);
-    else
+    if (DecodeReg(&ArgStr[3], &CntReg, &Prefix, False, True))
     {
       if (4 == ExpectArgCnt)
       {
-        if (!DecodeReg(ArgStr[4].Str, &FinalReg, &Prefix) || Prefix)
-        {
-          WrStrErrorPos(ErrNum_InvReg, &ArgStr[4]);
+        if (!DecodeReg(&ArgStr[4], &FinalReg, &Prefix, False, True))
           return;
-        }
       }
       BAsmCode[CodeLen++] = 0x94 | OpSize;
       BAsmCode[CodeLen++] = Code | CntReg;
@@ -2970,6 +3060,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "BTST", 0x60, DecodeBit);
 
   AddInstTable(InstTable, "BIT", 0, DecodeBIT);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 /*!------------------------------------------------------------------------
@@ -3070,7 +3161,27 @@ static void SwitchFrom_H16(void)
 
 static Boolean IsDef_H16(void)
 {
-  return Memo("BIT");
+  return Memo("BIT") || Memo("REG");
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_H16(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on H16
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_H16(char *pArg, TempResult *pResult)
+{
+  Byte Reg, Prefix;
+
+  if (DecodeRegCore(pArg, &Reg, &Prefix))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize32Bit;
+    pResult->Contents.RegDescr.Reg = ((Word)Prefix) << 8 | Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_H16;
+  }
 }
 
 /*!------------------------------------------------------------------------
@@ -3101,6 +3212,8 @@ static void SwitchTo_H16(void)
   IsDef = IsDef_H16;
   SwitchFrom = SwitchFrom_H16;
   DissectBit = DissectBit_H16;
+  DissectReg = DissectReg_H16;
+  InternSymbol = InternSymbol_H16;
   InitFields();
 
   AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);

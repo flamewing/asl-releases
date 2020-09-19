@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "asmstructs.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
@@ -149,57 +150,158 @@ static IntType RegSpaceType;
 /* address expression decoding routines */
 
 /*!------------------------------------------------------------------------
- * \fn     IsWReg(const char *Asc, Byte *Erg)
- * \brief  Is expression a working register? (Rn, n=0..15)
- * \param  Asc expression
- * \param  Erg resulting value if it is
- * \return true if it is
- * ------------------------------------------------------------------------ */
-
-static Boolean IsWReg(const char *Asc, Byte *Erg)
-{
-   Boolean Err;
-   char *pAlias;
-
-   if (FindRegDef(Asc, &pAlias))
-     Asc = pAlias;
-
-   if ((strlen(Asc) < 2) || (mytoupper(*Asc) != 'R')) return False;
-   else
-   {
-     *Erg = ConstLongInt(Asc + 1, &Err, 10);
-     if (!Err)
-       return False;
-     else
-       return (*Erg <= 15);
-   }
-}
-
-/*!------------------------------------------------------------------------
- * \fn     IsWRReg(const char *Asc, Byte *Erg)
- * \brief  Is expression a working register pair? (RRn, n=0..15)
- * \param  Asc expression
- * \param  Erg resulting value if it is
+ * \fn     IsWRegCore(const char *pArg, Byte *pResult)
+ * \brief  Is argument a working register? (Rn, n=0..15)
+ * \param  pArg argument
+ * \param  pResult resulting register number if it is
  * \return True if it is
  * ------------------------------------------------------------------------ */
 
-static Boolean IsWRReg(const char *Asc, Byte *Erg)
+static Boolean IsWRegCore(const char *pArg, Byte *pResult)
 {
-   Boolean Err;
-   char *pAlias;
+  if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'R')) return False;
+  else
+  {
+    Boolean OK;
 
-   if (FindRegDef(Asc, &pAlias))
-     Asc = pAlias;
+    *pResult = ConstLongInt(pArg + 1, &OK, 10);
+    return OK && (*pResult <= 15);
+  }
+}
 
-   if ((strlen(Asc) < 3) || (as_strncasecmp(Asc, "RR", 2) != 0)) return False;
-   else
-   {
-     *Erg = ConstLongInt(Asc + 2, &Err, 10);
-     if (!Err)
-       return False;
-     else
-       return (*Erg <= 15);
-   }
+/*!------------------------------------------------------------------------
+ * \fn     IsWReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+ * \brief  Is argument a working register (Rn, n=0..15) or register alias?
+ * \param  pArg argument
+ * \param  pResult resulting register number if it is
+ * \param  MustBeReg expecting register?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+  
+  if (IsWRegCore(pArg->Str, pResult))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWRRegCore(const char *pArg, Byte *pResult)
+ * \brief  Is argument a working register pair? (RRn, n=0..15)
+ * \param  pArg argument
+ * \param  pResult resulting value if it is
+ * \return True if it is
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWRRegCore(const char *pArg, Byte *pResult)
+{
+  if ((strlen(pArg) < 3) || as_strncasecmp(pArg, "RR", 2)) return False;
+  else
+  {
+    Boolean OK;
+
+    *pResult = ConstLongInt(pArg + 2, &OK, 10);
+    return OK && (*pResult <= 15);
+  }
+}
+
+#if 0
+/*!------------------------------------------------------------------------
+ * \fn     IsWRReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+ * \brief  Is argument a working register pair (RRn, n=0..15) or register pair alias?
+ * \param  pArg argument
+ * \param  pResult resulting value if it is
+ * \param  MustBeReg expecting register?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static Boolean IsWRReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+  
+  if (IsWRRegCore(pArg->Str, pResult))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize16Bit, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
+}
+#endif
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWRegOrWRReg(const tStrComp *pArg, Byte *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+ * \brief  Is argument a working register (pair) ((R)Rn, n=0..15) or register (pair) alias?
+ * \param  pArg argument
+ * \param  pResult resulting value if it is
+ * \param  pSize register size if it is
+ * \param  MustBeReg expecting register?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult IsWRegOrWRReg(const tStrComp *pArg, Byte *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+{
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+  
+  if (IsWRegCore(pArg->Str, pResult))
+  {
+    EvalResult.DataSize = eSymbolSize8Bit;
+    RegEvalResult = eIsReg;
+  }
+  else if (IsWRRegCore(pArg->Str, pResult))
+  {
+    EvalResult.DataSize = eSymbolSize16Bit;
+    RegEvalResult = eIsReg;
+  }
+  else
+  {
+    tRegDescr RegDescr;
+
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+    *pResult = RegDescr.Reg;
+  }
+
+  if ((eIsReg == RegEvalResult) && (EvalResult.DataSize == eSymbolSize16Bit) && (*pResult & 1))
+  {
+    WrStrErrorPos(ErrNum_AddrMustBeEven, pArg);
+    RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
+  }
+
+  *pSize = EvalResult.DataSize;
+  return RegEvalResult;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_Z8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - Z8 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_Z8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "RR%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
 }
 
 /*!------------------------------------------------------------------------
@@ -349,18 +451,16 @@ static ShortInt IsWRegWithRP(const tStrComp *pComp, Byte *pResult, Word Mask16Mo
 {
   tEvalResult EvalResult;
   Word Address;
+  tSymbolSize Size;
 
-  if (IsWReg(pComp->Str, pResult))
-    return eSymbolSize8Bit;
-
-  if (IsWRReg(pComp->Str, pResult))
+  switch (IsWRegOrWRReg(pComp, pResult, &Size, False))
   {
-    if (*pResult & 1)
-    {
-      WrStrErrorPos(ErrNum_AddrMustBeEven, pComp);
+    case eIsReg:
+      return Size;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
       return eSymbolSizeUnknown;
-    }
-    return eSymbolSize16Bit;
   }
 
   /* It's neither Rn nor RRn.  Since an address by itself has no
@@ -402,6 +502,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
   tEvalResult EvalResult;
   char  *p;
   int ForceLen, l;
+  tSymbolSize Size;
 
   if (!mIsSuper8() && !mIsZ8Encore())
     Mask &= ~MModIndRR;
@@ -433,17 +534,15 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
 
   /* Register ? */
 
-  if (IsWReg(pArg->Str, &AdrVal))
+  switch (IsWRegOrWRReg(pArg, &AdrVal, &Size, False))
   {
-    AdrType = ModWReg;
-    return ChkAdr(Mask, pArg);
-  }
-
-  if (IsWRReg(pArg->Str, &AdrVal))
-  {
-    if (AdrVal & 1) WrStrErrorPos(ErrNum_AddrMustBeEven, pArg);
-    else AdrType = ModWRReg;
-    return ChkAdr(Mask, pArg);
+    case eIsReg:
+      AdrType = (Size == eSymbolSize16Bit) ? ModWRReg : ModWReg;
+      return ChkAdr(Mask, pArg);
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return False;
   }
 
   /* treat absolute address as register? */
@@ -466,6 +565,7 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
   if (*pArg->Str == '@')
   {
     tStrComp Comp;
+    tRegEvalResult RegEvalResult;
 
     StrCompRefRight(&Comp, pArg, 1);
     if ((strlen(Comp.Str) >= 6) && (!as_strncasecmp(Comp.Str, ".RR", 3)) && (IsIndirect(Comp.Str + 3)))
@@ -477,11 +577,11 @@ static Boolean DecodeAdr(const tStrComp *pArg, Word Mask)
         ChkSpace(SegData, EvalResult.AddrSpaceMask);
       }
     }
-    else if (IsWReg(Comp.Str, &AdrVal)) AdrType = ModIWReg;
-    else if (IsWRReg(Comp.Str, &AdrVal))
+    else if ((RegEvalResult = IsWRegOrWRReg(&Comp, &AdrVal, &Size, False)) != eIsNoReg)
     {
-      if (AdrVal & 1) WrStrErrorPos(ErrNum_AddrMustBeEven, &Comp);
-      else AdrType = ModIWRReg;
+      if (RegEvalResult == eRegAbort)
+        return False;
+      AdrType = (Size == eSymbolSize16Bit) ? ModIWRReg : ModIWReg;
     }
     else
     {
@@ -2227,13 +2327,13 @@ static void DecodeBit2(Word Code)
       }
       case 2:
       {
-        if (IsWReg(ArgStr[1].Str, &Reg)
+        if ((IsWReg(&ArgStr[1], &Reg, False) == eIsReg)
          && DecodeBitArg(&BitValue, 2, 2, eSymbolSize8Bit))
         {
           BAsmCode[1] = 0x00;
         }
-        else if ((IsWReg(ArgStr[2].Str, &Reg)
-              && DecodeBitArg(&BitValue, 1, 1, eSymbolSize8Bit))
+        else if ((IsWReg(&ArgStr[2], &Reg, False) == eIsReg)
+              && DecodeBitArg(&BitValue, 1, 1, eSymbolSize8Bit)
               && Hi(Code))
         {
           BAsmCode[1] = 0x01;
@@ -2281,20 +2381,11 @@ static void DecodeBitRel(Word Code)
   }
 }
 
-
 static void DecodeSFR(Word Code)
 {
   UNUSED(Code);
 
   CodeEquate(SegData, 0, mIsZ8Encore() ? 0xfff : 0xff);
-}
-
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 static void DecodeDEFBIT(Word Code)
@@ -2536,7 +2627,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "BTJRT",0x0137, DecodeBitRel);
 
   AddInstTable(InstTable, "SFR", 0, DecodeSFR);
-  AddInstTable(InstTable, "REG", 0, DecodeREG);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
   AddInstTable(InstTable, "DEFBIT", 0, DecodeDEFBIT);
 }
 
@@ -2552,6 +2643,33 @@ static void DeinitFields(void)
 }
 
 /*---------------------------------------------------------------------*/
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_Z8(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on Z8
+ * \param  pArg source code argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_Z8(char *pArg, TempResult *pResult)
+{
+  Byte RegNum;
+
+  if (IsWRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_Z8;
+  }
+  else if (IsWRRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize16Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_Z8;
+  }
+}
 
 static void MakeCode_Z8(void)
 {
@@ -2655,6 +2773,8 @@ static void SwitchTo_Z8(void *pUser)
 
   MakeCode = MakeCode_Z8;
   IsDef = IsDef_Z8;
+  InternSymbol = InternSymbol_Z8;
+  DissectReg = DissectReg_Z8;
   DissectBit = DissectBit_Z8;
   SwitchFrom = SwitchFrom_Z8;
   InitFields();

@@ -188,8 +188,8 @@ typedef struct sRegDef
 static PSymbolEntry FirstSymbol, FirstLocSymbol;
 static PDefSymbol FirstDefSymbol;
 /*static*/ PCToken FirstSection;
-static PRegDef FirstRegDef;
-static Boolean DoRefs;              /* Querverweise protokollieren */
+static Boolean DoRefs,              /* Querverweise protokollieren */
+               RegistersDefined;
 static PLocHandle FirstLocHandle;
 static PSymbolStack FirstStack;
 static PCToken MomSection;
@@ -204,11 +204,11 @@ void AsmParsInit(void)
   FirstSection = NULL;
   FirstLocHandle = NULL;
   FirstStack = NULL;
-  FirstRegDef = NULL;
   FirstFunction = NULL;
   DoRefs = True;
   RadixBase = 10;
   OutRadixBase = 16;
+  RegistersDefined = False;
 }
 
 
@@ -280,7 +280,7 @@ static Boolean ProcessBk(char **Start, char *Erg)
   int cnt;
   Boolean Finish;
 
-  switch (mytoupper(**Start))
+  switch (as_toupper(**Start))
   {
     case '\'': case '\\': case '"':
       *Erg = **Start;
@@ -329,7 +329,7 @@ static Boolean ProcessBk(char **Start, char *Erg)
       cnt = (System == 16) ? 1 : ((System == 10) ? 0 : -1);
       do
       {
-        ch = mytoupper(**Start);
+        ch = as_toupper(**Start);
         Finish = False;
         if ((ch >= '0') && (ch <= '9'))
           Digit = ch - '0';
@@ -592,8 +592,8 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
   int Cnt;
   Boolean Result = FALSE;
 
-  for (pBegin = pSrc; myisspace(*pBegin); pBegin++);
-  for (pEnd = pSrc + strlen(pSrc); (pEnd > pBegin) && myisspace(*(pEnd - 1)); pEnd--);
+  for (pBegin = pSrc; as_isspace(*pBegin); pBegin++);
+  for (pEnd = pSrc + strlen(pSrc); (pEnd > pBegin) && as_isspace(*(pEnd - 1)); pEnd--);
 
   /* Note: We have to deal with three symbol definitions:
 
@@ -853,7 +853,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   {
     Found = False;
 
-    if ((l >= 2) && (*pExpr == '0') && (mytoupper(pExpr[1]) == 'X'))
+    if ((l >= 2) && (*pExpr == '0') && (as_toupper(pExpr[1]) == 'X'))
     {
       ActMode = ConstModeC;
       Found = True;
@@ -872,7 +872,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
     if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
     {
-      ch = mytoupper(pExpr[l - 1]);
+      ch = as_toupper(pExpr[l - 1]);
       if (DigitVal(ch, RadixBase) == -1)
       {
         for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
@@ -887,7 +887,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
     if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
     {
-      switch (mytoupper(*pExpr))
+      switch (as_toupper(*pExpr))
       {
         case 'H':
         case 'X':
@@ -911,7 +911,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   switch (ActMode)
   {
     case ConstModeIntel:
-      ch = mytoupper(pExpr[l - 1]);
+      ch = as_toupper(pExpr[l - 1]);
       if (DigitVal(ch, RadixBase) == -1)
       {
         for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
@@ -943,11 +943,11 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       else
       {
         pExpr++; l--;
-        ch = mytoupper(*pExpr);
+        ch = as_toupper(*pExpr);
         if ((RadixBase != 10) && (DigitVal(ch, RadixBase) != -1))
           Base = RadixBase;
         else
-          switch (mytoupper(*pExpr))
+          switch (as_toupper(*pExpr))
           {
             case 'X':
               pExpr++;
@@ -968,7 +968,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       if (isdigit(*pExpr)) break;
       if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
         return -1;
-      switch (mytoupper(*pExpr))
+      switch (as_toupper(*pExpr))
       {
         case 'X':
         case 'H':
@@ -1001,7 +1001,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 
   while (l > 0)
   {
-    Digit = DigitVal(mytoupper(*pExpr), Base);
+    Digit = DigitVal(as_toupper(*pExpr), Base);
     if (Digit == -1)
       return -1;
     Wert = Wert * Base + Digit;
@@ -1252,22 +1252,22 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
     case TempInt:
       switch (Mask)
       {
-        case (1 << TempString):
+        case TempString:
           return ErrNum_StringButInt;
         /* int is convertible to float, so combinations are impossible: */
-        case (1 << TempFloat):
-        case (1 << TempFloat) | (1 << TempString):
+        case TempFloat:
+        case TempFloat | TempString:
         default:
           return ErrNum_InternalError;
       }
     case TempFloat:
       switch (Mask)
       {
-        case (1 << TempInt):
+        case TempInt:
           return ErrNum_IntButFloat;
-        case (1 << TempString):
+        case TempString:
           return ErrNum_StringButFloat;
-        case (1 << TempInt) | (1 << TempString):
+        case TempInt | TempString:
           return ErrNum_StringOrIntButFloat;
         default:
           return ErrNum_InternalError;
@@ -1275,12 +1275,26 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType)
     case TempString:
       switch (Mask)
       {
-        case (1 << TempInt):
+        case TempInt:
           return ErrNum_IntButString;
-        case (1 << TempFloat):
+        case TempFloat:
           return ErrNum_FloatButString;
-        case (1 << TempInt) | (1 << TempFloat):
+        case TempInt | TempFloat:
           return ErrNum_IntOrFloatButString;
+        default:
+          return ErrNum_InternalError;
+      }
+    case TempReg:
+      switch (Mask)
+      {
+        case TempInt:
+          return ErrNum_ExpectInt;
+        case TempString:
+          return ErrNum_ExpectString;
+        case TempInt | TempString:
+          return ErrNum_ExpectIntOrString;
+        case TempInt | TempFloat | TempString:
+          return ErrNum_StringOrIntOrFloatButReg;
         default:
           return ErrNum_InternalError;
       }
@@ -1324,7 +1338,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   PFunction ValFunc;
   tStrComp CopyComp, STempComp;
   String CopyStr, stemp;
-  char *KlPos, *zp, *DummyPtr, *pOpPos;
+  char *KlPos, *zp, *pOpPos;
   const tFunction *pFunction;
   PRelocEntry TReloc;
   tSymbolFlags PromotedFlags;
@@ -1696,17 +1710,14 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     if (!strcmp(FName.Str, "SYMTYPE"))
     {
       pErg->Typ = TempInt;
-      pErg->Contents.Int = FindRegDef(FArg.Str, &DummyPtr) ? 0x80 : GetSymbolType(&FArg);
+      pErg->Contents.Int = GetSymbolType(&FArg);
       LEAVE;
     }
 
     else if (!strcmp(FName.Str, "DEFINED"))
     {
       pErg->Typ = TempInt;
-      if (FindRegDef(FArg.Str, &DummyPtr))
-        pErg->Contents.Int = 1;
-      else
-        pErg->Contents.Int = !!IsSymbolDefined(&FArg);
+      pErg->Contents.Int = !!IsSymbolDefined(&FArg);
       LEAVE;
     }
 
@@ -1875,6 +1886,7 @@ LargeInt EvalStrIntExpressionWithResult(const tStrComp *pComp, IntType Type, tEv
 
   EvalStrExpression(pComp, &t);
   SetRelocs(t.Relocs);
+  
   switch (t.Typ)
   {
     case TempInt:
@@ -2079,6 +2091,116 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
   EvalStrStringExpressionWithResult(pExpr, &Result, pEvalResult);
   *pResult = Result.OK;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalStrRegExpressionWithResult(const struct sStrComp *pExpr, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, Boolean IssueErrors)
+ * \brief  retrieve/evaluate register expression
+ * \param  pExpr source code expression
+ * \param  pResult retrieved register
+ * \param  pEvalResult success flag, symbol size & flags
+ * \param  IssueErrors print errors at all?
+ * \return occured error
+ * ------------------------------------------------------------------------ */
+
+PSymbolEntry ExpandAndFindNode(const struct sStrComp *pComp, TempType SearchType)
+{
+  PSymbolEntry pEntry;
+  String ExpName;
+  const char *pKlPos;
+
+  if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pComp))
+    return NULL;
+
+  /* just [...] without symbol name itself is not valid */
+
+  pKlPos = strchr(ExpName, '[');
+  if ((pKlPos == ExpName) || (ChkSymbNameUpTo(ExpName, pKlPos) != pKlPos))
+    return NULL;
+
+  pEntry = FindLocNode(ExpName, SearchType);
+  if (!pEntry)
+    pEntry = FindNode(ExpName, SearchType);
+  return pEntry;
+}
+
+tErrorNum EvalStrRegExpressionWithResult(const struct sStrComp *pExpr, tRegDescr *pResult, tEvalResult *pEvalResult)
+{
+  PSymbolEntry pEntry;
+
+  EvalResultClear(pEvalResult);
+
+  pEntry = ExpandAndFindNode(pExpr, TempReg);
+  if (!pEntry)
+    return ErrNum_SymbolUndef;
+
+  pEntry->Used = True;
+  pEvalResult->DataSize = pEntry->SymSize;
+
+  if (pEntry->SymWert.Typ != TempReg)
+    return ErrNum_ExpectReg;
+  *pResult = pEntry->SymWert.Contents.RegDescr;
+
+  if (pEntry->SymWert.Contents.RegDescr.Dissect != DissectReg)
+    return ErrNum_RegWrongTarget;
+
+  pEvalResult->OK = True;
+  return ErrNum_None;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalStrRegExpressionAsOperand(const tStrComp *pArg, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, tSymbolSize ReqSize, Boolean MustBeReg)
+ * \brief  check for possible register in instruction operand
+ * \param  pArg source argument
+ * \param  ReqSize possible fixed operand size
+ * \param  MustBeReg operand cannot be anything else but register
+ * \return eIsReg: argument is a register
+           eIsNoReg: argument is no register
+           eRegAbort: argument is faulty, abort anyway (only if !MustBeReg)
+ * ------------------------------------------------------------------------ */
+
+tRegEvalResult EvalStrRegExpressionAsOperand(const tStrComp *pArg, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, tSymbolSize ReqSize, Boolean MustBeReg)
+{
+  tErrorNum ErrorNum;
+
+  ErrorNum = EvalStrRegExpressionWithResult(pArg, pResult, pEvalResult);
+  if (pEvalResult->OK && (ReqSize != eSymbolSizeUnknown) && (pEvalResult->DataSize != ReqSize))
+  {
+    pEvalResult->OK = False;
+    ErrorNum = ErrNum_InvOpSize;
+  }
+  switch (ErrorNum)
+  {
+    case ErrNum_None:
+      return eIsReg;
+    case ErrNum_SymbolUndef:
+      if (MustBeReg)
+      {
+        if (PassNo <= MaxSymPass)
+        {
+          pResult->Reg = 0;
+          pResult->Dissect = NULL;
+          Repass = True;
+          return eIsReg;
+        }
+        else
+        {
+          WrStrErrorPos(ErrNum_InvReg, pArg);
+          return eIsNoReg;
+        }
+      }
+      else
+        return eIsNoReg;
+    case ErrNum_ExpectReg:
+      if (MustBeReg)
+        WrStrErrorPos(ErrorNum, pArg);
+      return eIsNoReg;
+      break;
+    default:
+      WrStrErrorPos(ErrorNum, pArg);
+      return MustBeReg ? eIsNoReg : eRegAbort;
+  }
+}
+
 
 /*!------------------------------------------------------------------------
  * \fn     GetIntelSuffix(unsigned Radix)
@@ -2490,6 +2612,7 @@ PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, Byte Typ, Bool
   }
   else
     EnterLocSymbol(pNeu);
+
   return pNeu;
 }
 
@@ -2579,6 +2702,49 @@ void EnterStringSymbol(const tStrComp *pName, const char *pValue, Boolean MayCha
   DynString.Length = 0;
   DynStringAppend(&DynString, pValue, -1);
   EnterDynStringSymbol(pName, &DynString, MayChange);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     EnterRegSymbol(const struct sStrComp *pName, const tRegDescr *pDescr, tSymbolSize Size, Boolean MayChange, Boolean AddList)
+ * \brief  enter register symbol
+ * \param  pName unexpanded name
+ * \param  pDescr register's numeric value & associated dissector
+ * \param  Size register's data size
+ * \param  MayChange variable or constant?
+ * \param  AddList add value to listing?
+ * ------------------------------------------------------------------------ */
+     
+void EnterRegSymbol(const struct sStrComp *pName, const tRegDescr *pDescr, tSymbolSize Size, Boolean MayChange, Boolean AddList)
+{
+  LongInt DestHandle;
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+
+  if (!pNeu)
+    return;
+
+  pNeu->SymWert.Typ = TempReg;
+  pNeu->SymWert.Contents.RegDescr = *pDescr;
+  pNeu->SymType = 0;
+  pNeu->Flags = eSymbolFlag_None;
+  pNeu->SymSize = Size;
+  pNeu->RefList = NULL;
+  pNeu->Relocs = NULL;
+
+  if ((MomLocHandle == -1) || (DestHandle != -2))
+  {
+    EnterSymbol(pNeu, MayChange, DestHandle);
+    if (MakeDebug)
+      PrintSymTree(pNeu->Tree.Name);
+    RegistersDefined = True;
+  }
+  else
+    EnterLocSymbol(pNeu);
+
+  if (AddList)
+  {
+    *ListLine = '=';
+    pDescr->Dissect(&ListLine[1], STRINGSIZE - 1, pDescr->Reg, Size);
+  }
 }
 
 static void AddReference(PSymbolEntry Node)
@@ -2761,8 +2927,7 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
 {
   PSymbolEntry pEntry;
   String ExpName;
-  char Save = ' ', *pKlPos;
-  Boolean NameOK;
+  const char *pKlPos;
 
   if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pComp))
   {
@@ -2771,15 +2936,7 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
   }
 
   pKlPos = strchr(ExpName, '[');
-  if (pKlPos)
-  {
-    Save = (*pKlPos);
-    *pKlPos = '\0';
-  }
-  NameOK = ChkSymbName(ExpName);
-  if (pKlPos)
-    *pKlPos = Save;
-  if (!NameOK)
+  if (ChkSymbNameUpTo(ExpName, pKlPos) != pKlPos)
   {
     WrStrErrorPos(ErrNum_InvSymName, pComp);
     pValue->Typ = TempNone;
@@ -2802,6 +2959,9 @@ void LookupSymbol(const struct sStrComp *pComp, TempResult *pValue, Boolean Want
       case TempString:
         pValue->Contents.Ascii.Length = 0;
         DynStringAppend(&pValue->Contents.Ascii, pEntry->SymWert.Contents.String.Contents, pEntry->SymWert.Contents.String.Length);
+        break;
+      case TempReg:
+        pValue->Contents.RegDescr = pEntry->SymWert.Contents.RegDescr;
         break;
       default:
         break;
@@ -2971,7 +3131,13 @@ Integer GetSymbolType(const struct sStrComp *pName)
   pEntry = FindLocNode(ExpName, TempAll);
   if (!pEntry)
     pEntry = FindNode(ExpName, TempAll);
-  return pEntry ? pEntry->SymType : -1;
+
+  if (!pEntry)
+    return -1;
+  else if (pEntry->SymType == TempReg)
+    return 0x80;
+  else
+    return pEntry->SymType;
 }
 
 static void ConvertSymbolVal(const PSymbolEntry pInp, TempResult *Outp)
@@ -2988,10 +3154,14 @@ static void ConvertSymbolVal(const PSymbolEntry pInp, TempResult *Outp)
       Outp->Contents.Ascii.Length = 0;
       DynStringAppend(&Outp->Contents.Ascii, pInp->SymWert.Contents.String.Contents, pInp->SymWert.Contents.String.Length);
       break;
+    case TempReg:
+      Outp->Contents.RegDescr = pInp->SymWert.Contents.RegDescr;
+      break;
     default:
       break;
   }
   Outp->Flags = pInp->Flags;
+  Outp->DataSize = pInp->SymSize;
 }
 
 typedef struct
@@ -3027,27 +3197,31 @@ static void PrintSymbolList_AddOut(char *s, TListContext *pContext)
 static void PrintSymbolList_PNode(PTree Tree, void *pData)
 {
   PSymbolEntry Node = (PSymbolEntry) Tree;
-  TListContext *pContext = (TListContext*) pData;
-  String s1, sh;
-  int l1, nBlanks;
-  TempResult t;
 
-  ConvertSymbolVal(Node, &t);
-  if ((t.Typ == TempInt) && DissectBit && (Node->SymType == SegBData))
-    DissectBit(s1, sizeof(s1), t.Contents.Int);
-  else
-    StrSym(&t, False, s1, sizeof(s1), ListRadixBase);
+  if (Node->SymWert.Typ != TempReg)
+  {
+    TListContext *pContext = (TListContext*) pData;
+    String s1, sh;
+    int l1, nBlanks;
+    TempResult t;
 
-  as_snprintf(sh, STRINGSIZE, "%c%s : ", Node->Used ? ' ' : '*', Tree->Name);
-  if (Tree->Attribute != -1)
-    as_snprcatf(sh, STRINGSIZE, " [%s]", GetSectionName(Tree->Attribute));
-  l1 = (strlen(s1) + visible_strlen(sh) + 4);
-  for (nBlanks = pContext->cwidth - 1 - l1; nBlanks < 0; nBlanks += pContext->cwidth);
-  as_snprcatf(sh, STRINGSIZE, "%s%s %c | ", Blanks(nBlanks), s1, SegShorts[Node->SymType]);
-  PrintSymbolList_AddOut(sh, pContext);
-  pContext->Sum++;
-  if (!Node->Used)
-    pContext->USum++;
+    ConvertSymbolVal(Node, &t);
+    if ((t.Typ == TempInt) && DissectBit && (Node->SymType == SegBData))
+      DissectBit(s1, sizeof(s1), t.Contents.Int);
+    else
+      StrSym(&t, False, s1, sizeof(s1), ListRadixBase);
+
+    as_snprintf(sh, STRINGSIZE, "%c%s : ", Node->Used ? ' ' : '*', Tree->Name);
+    if (Tree->Attribute != -1)
+      as_snprcatf(sh, STRINGSIZE, " [%s]", GetSectionName(Tree->Attribute));
+    l1 = (strlen(s1) + visible_strlen(sh) + 4);
+    for (nBlanks = pContext->cwidth - 1 - l1; nBlanks < 0; nBlanks += pContext->cwidth);
+    as_snprcatf(sh, STRINGSIZE, "%s%s %c | ", Blanks(nBlanks), s1, SegShorts[Node->SymType]);
+    PrintSymbolList_AddOut(sh, pContext);
+    pContext->Sum++;
+    if (!Node->Used)
+      pContext->USum++;
+  }
 }
 
 void PrintSymbolList(void)
@@ -3911,251 +4085,56 @@ void ClearLocStack()
 
 /*--------------------------------------------------------------------------*/
 
-static PRegDef LookupReg(const char *Name, Boolean CreateNew)
+static void PrintRegList_PNode(PTree Tree, void *pData)
 {
-  PRegDef Run, Neu, Prev;
-  int cmperg = 0;
-
-  Prev = NULL;
-  Run = FirstRegDef;
-  while (Run)
+  PSymbolEntry Node = (PSymbolEntry) Tree;
+  
+  if (Node->SymWert.Typ == TempReg)
   {
-    cmperg = strcmp(Run->Orig, Name);
-    if (!cmperg)
-      break;
-    Prev = Run;
-    Run = (cmperg < 0) ? Run->Left : Run->Right;
-  }
-  if ((!Run) && (CreateNew))
-  {
-    Neu = (PRegDef) malloc(sizeof(TRegDef));
-    Neu->Orig = as_strdup(Name);
-    Neu->Left = Neu->Right = NULL;
-    Neu->Defs = NULL;
-    Neu->DoneDefs = NULL;
-    if (!Prev)
-      FirstRegDef = Neu;
-    else if (cmperg < 0)
-      Prev->Left = Neu;
-    else
-      Prev->Right = Neu;
-    return Neu;
-  }
-  else
-    return Run;
-}
+    TListContext *pContext = (TListContext*) pData;
+    String tmp, tmp2;
 
-void AddRegDef(const tStrComp *pOrigComp, const tStrComp *pReplComp)
-{
-  PRegDef Node;
-  PRegDefList Neu;
-  String Orig_N, Repl_N;
-  const char *pOrig, *pRepl;
-
-  if (!CaseSensitive)
-  {
-    strmaxcpy(Orig_N, pOrigComp->Str, STRINGSIZE);
-    strmaxcpy(Repl_N, pReplComp->Str, STRINGSIZE);
-    NLS_UpString(Orig_N);
-    NLS_UpString(Repl_N);
-    pOrig = Orig_N;
-    pRepl = Repl_N;
-  }
-  else
-  {
-    pOrig = pOrigComp->Str;
-    pRepl = pReplComp->Str;
-  }
-  if (!ChkSymbName(pOrig))
-  {
-    WrStrErrorPos(ErrNum_InvSymName, pOrigComp);
-    return;
-  }
-  if (!ChkSymbName(pRepl))
-  {
-    WrStrErrorPos(ErrNum_InvSymName, pReplComp);
-    return;
-  }
-  Node = LookupReg(pOrig, True);
-  if ((Node->Defs) && (Node->Defs->Section == MomSectionHandle))
-    WrStrErrorPos(ErrNum_DoubleDef, pOrigComp);
-  else
-  {
-    Neu = (PRegDefList) malloc(sizeof(TRegDefList));
-    Neu->Next = Node->Defs;
-    Neu->Section = MomSectionHandle;
-    Neu->Value = as_strdup(pRepl);
-    Neu->Used = False;
-    Node->Defs = Neu;
-  }
-}
-
-Boolean FindRegDef(const char *Name_N, char **Erg)
-{
-  LongInt Sect;
-  PRegDef Node;
-  PRegDefList Def;
-  String Name;
-
-  if (*Name_N == '[')
-    return FALSE;
-
-  strmaxcpy(Name, Name_N, STRINGSIZE);
-
-  /* TODO: get StrComp */
-  if (!GetSymSection(Name, &Sect, NULL))
-    return False;
-  if (!CaseSensitive)
-    NLS_UpString(Name);
-  Node = LookupReg(Name, False);
-  if (!Node)
-    return False;
-  Def = Node->Defs;
-  if (Sect != -2)
-    while ((Def) && (Def->Section != Sect))
-      Def = Def->Next;
-  if (!Def)
-    return False;
-  else
-  {
-    *Erg = Def->Value;
-    Def->Used = True;
-    return True;
-  }
-}
-
-static void TossRegDefs_TossSingle(PRegDef Node, LongInt Sect)
-{
-  PRegDefList Tmp;
-
-  if (!Node)
-    return;
-  ChkStack();
-
-  if ((Node->Defs) && (Node->Defs->Section == Sect))
-  {
-    Tmp = Node->Defs;
-    Node->Defs = Node->Defs->Next;
-    Tmp->Next = Node->DoneDefs;
-    Node->DoneDefs = Tmp;
-  }
-
-  TossRegDefs_TossSingle(Node->Left, Sect);
-  TossRegDefs_TossSingle(Node->Right, Sect);
-}
-
-void TossRegDefs(LongInt Sect)
-{
-  TossRegDefs_TossSingle(FirstRegDef, Sect);
-}
-
-static void ClearRegDefList(PRegDefList Start)
-{
-  PRegDefList Tmp;
-
-  while (Start)
-  {
-    Tmp = Start;
-    Start = Start->Next;
-    free(Tmp->Value);
-    free(Tmp);
-  }
-}
-
-static void CleanupRegDefs_CleanupNode(PRegDef Node)
-{
-  if (!Node)
-    return;
-  ChkStack();
-  ClearRegDefList(Node->DoneDefs);
-  Node->DoneDefs = NULL;
-  CleanupRegDefs_CleanupNode(Node->Left);
-  CleanupRegDefs_CleanupNode(Node->Right);
-}
-
-void CleanupRegDefs(void)
-{
-  CleanupRegDefs_CleanupNode(FirstRegDef);
-}
-
-static void ClearRegDefs_ClearNode(PRegDef Node)
-{
-  if (!Node)
-    return;
-  ChkStack();
-  ClearRegDefList(Node->Defs);
-  Node->Defs = NULL;
-  ClearRegDefList(Node->DoneDefs);
-  Node->DoneDefs = NULL;
-  ClearRegDefs_ClearNode(Node->Left);
-  ClearRegDefs_ClearNode(Node->Right);
-  free(Node->Orig);
-  free(Node);
-}
-
-void ClearRegDefs(void)
-{
-  ClearRegDefs_ClearNode(FirstRegDef);
-}
-
-static int cwidth;
-
-static void PrintRegDefs_PNode(PRegDef Node, char *buf, LongInt *Sum, LongInt *USum)
-{
-  PRegDefList Lauf;
-  String tmp, tmp2;
-
-  for (Lauf = Node->DoneDefs; Lauf; Lauf = Lauf->Next)
-  {
-    if (Lauf->Section != -1)
-      as_snprintf(tmp2, sizeof(tmp2), "[%s]", GetSectionName(Lauf->Section));
+    if (Node->SymWert.Contents.RegDescr.Dissect)
+      Node->SymWert.Contents.RegDescr.Dissect(tmp2, sizeof(tmp2), Node->SymWert.Contents.RegDescr.Reg, Node->SymSize);
     else
       *tmp2 = '\0';
-    as_snprintf(tmp, sizeof(tmp), "%c%s%s --> %s", (Lauf->Used) ? ' ' : '*', Node->Orig, tmp2, Lauf->Value);
-    if ((int)strlen(tmp) > cwidth - 3)
+    *tmp = '\0';
+    if (Tree->Attribute != -1)
+      as_snprcatf(tmp, sizeof(tmp), "[%s]", GetSectionName(Tree->Attribute));
+    as_snprcatf(tmp, sizeof(tmp), "%c%s --> %s", Node->Used ? ' ' : '*', Tree->Name, tmp2);
+    if ((int)strlen(tmp) > pContext->cwidth - 3)
     {
-      if (*buf != '\0')
-        WrLstLine(buf);
-      *buf = '\0';
+      if (*pContext->Zeilenrest)
+        WrLstLine(pContext->Zeilenrest);
+      *pContext->Zeilenrest = '\0';
       WrLstLine(tmp);
     }
     else
     {
-      strmaxcat(tmp, Blanks(cwidth - 3 - strlen(tmp)), STRINGSIZE);
-      if (*buf == '\0')
-        strcpy(buf, tmp);
+      strmaxcat(tmp, Blanks(pContext->cwidth - 3 - strlen(tmp)), STRINGSIZE);
+      if (!*pContext->Zeilenrest)
+        strcpy(pContext->Zeilenrest, tmp);
       else
       {
-        strcat(buf, " | ");
-        strcat(buf, tmp);
-        WrLstLine(buf);
-        *buf = '\0';
+        strcat(pContext->Zeilenrest, " | ");
+        strcat(pContext->Zeilenrest, tmp);
+        WrLstLine(pContext->Zeilenrest);
+        *pContext->Zeilenrest = '\0';
       }
     }
-    (*Sum)++;
-    if (!Lauf->Used)
-      (*USum)++;
+    pContext->Sum++;
+    if (!Node->Used)
+      pContext->USum++;
   }
-}
-
-static void PrintRegDefs_PrintSingle(PRegDef Node, char *buf, LongInt *Sum, LongInt *USum)
-{
-  if (!Node)
-    return;
-  ChkStack();
-
-  PrintRegDefs_PrintSingle(Node->Left, buf, Sum, USum);
-  PrintRegDefs_PNode(Node, buf, Sum, USum);
-  PrintRegDefs_PrintSingle(Node->Right, buf, Sum, USum);
 }
 
 void PrintRegDefs(void)
 {
   String buf;
-  LongInt Sum, USum;
   LongInt ActPageWidth;
+  TListContext Context;
 
-  if (!FirstRegDef)
+  if (!RegistersDefined)
     return;
 
   NewPage(ChapDepth, True);
@@ -4163,23 +4142,22 @@ void PrintRegDefs(void)
   WrLstLine(getmessage(Num_ListRegDefListHead2));
   WrLstLine("");
 
-  *buf = '\0';
-  Sum = 0;
-  USum = 0;
+  Context.Zeilenrest[0] = '\0';
+  Context.Sum = Context.USum = 0;
   ActPageWidth = (PageWidth == 0) ? 80 : PageWidth;
-  cwidth = ActPageWidth >> 1;
-  PrintRegDefs_PrintSingle(FirstRegDef, buf, &Sum, &USum);
+  Context.cwidth = ActPageWidth >> 1;
+  IterTree((PTree)FirstSymbol, PrintRegList_PNode, &Context);
 
-  if (*buf != '\0')
-    WrLstLine(buf);
+  if (*Context.Zeilenrest)
+    WrLstLine(Context.Zeilenrest);
   WrLstLine("");
   as_snprintf(buf, sizeof(buf), "%7ld%s",
-              (long) Sum,
-              getmessage((Sum == 1) ? Num_ListRegDefSumMsg : Num_ListRegDefSumsMsg));
+              (long) Context.Sum,
+              getmessage((Context.Sum == 1) ? Num_ListRegDefSumMsg : Num_ListRegDefSumsMsg));
   WrLstLine(buf);
   as_snprintf(buf, sizeof(buf), "%7ld%s",
-              (long)USum,
-              getmessage((USum == 1) ? Num_ListRegDefUSumMsg : Num_ListRegDefUSumsMsg));
+              (long)Context.USum,
+              getmessage((Context.USum == 1) ? Num_ListRegDefUSumMsg : Num_ListRegDefUSumsMsg));
   WrLstLine("");
 }
 

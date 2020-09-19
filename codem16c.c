@@ -19,11 +19,15 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 
 #include "codem16c.h"
+
+#define REG_SB 6
+#define REG_FB 7
 
 #define ModNone (-1)
 #define ModGen 0
@@ -92,6 +96,154 @@ static void SetOpSize(ShortInt NSize, tAdrResult *pResult)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize)
+ * \brief  is argument a COU register?
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * \param  pSize resulting register size
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize)
+{
+  if (!as_strcasecmp(pArg, "FB"))
+  {
+    *pResult = REG_FB;
+    *pSize = eSymbolSize16Bit;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "SB"))
+  {
+    *pResult = REG_SB;
+    *pSize = eSymbolSize16Bit;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "R2R0"))
+  {
+    *pResult = 0;
+    *pSize = eSymbolSize32Bit;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "R3R1"))
+  {
+    *pResult = 1;
+    *pSize = eSymbolSize32Bit;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "A1A0"))
+  {
+    *pResult = 2;
+    *pSize = eSymbolSize32Bit;
+    return True;
+  }
+
+  switch (strlen(pArg))
+  {
+    case 3:
+      if ((as_toupper(*pArg) == 'R')
+       && (pArg[1] >= '0') && (pArg[1] <= '1')
+       && ((as_toupper(pArg[2]) == 'L') || (as_toupper(pArg[2]) == 'H')))
+      {
+        *pResult = ((pArg[1] - '0') << 1) + Ord(as_toupper(pArg[2]) == 'H');
+        *pSize = eSymbolSize8Bit;
+        return True;
+      }
+      break;
+    case 2:
+      if ((as_toupper(*pArg) == 'R')
+       && (pArg[1] >= '0') && (pArg[1] <= '3'))
+      {
+        *pResult = pArg[1] - '0';
+        *pSize = eSymbolSize16Bit;
+        return True;
+      }
+      if ((as_toupper(*pArg) == 'A')
+       && (pArg[1] >= '0') && (pArg[1] <= '1'))
+      {
+        *pResult = pArg[1] - '0' + 4;
+        *pSize = eSymbolSize16Bit;
+        return True;
+      }
+      break;
+  }
+
+  return False;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_M16C(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - M16C variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_M16C(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize32Bit:
+      if (Value >= 2)
+        as_snprintf(pDest, DestSize, "A%uA%u", Value - 1, Value - 2);
+      else
+        as_snprintf(pDest, DestSize, "R%uR%u", Value + 2, Value);
+      break;
+    case eSymbolSize16Bit:
+      switch (Value)
+      {
+        case REG_FB:
+          as_snprintf(pDest, DestSize, "FB");
+          break;
+        case REG_SB:
+          as_snprintf(pDest, DestSize, "SB");
+          break;
+        default:
+          as_snprintf(pDest, DestSize, "%c%u", (Value & 4) ? 'A' : 'R', (unsigned)(Value & 3));
+      }
+      break;
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u%c", (unsigned)(Value >> 1), "HL"[Value & 1]);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg, tSymbolSize *pSize)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \param  MustBeReg argument is expected to be a register
+ * \param  pSize register size (in/out)
+ * \return RegEvalResult
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, Boolean MustBeReg, tSymbolSize *pSize)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pResult, &EvalResult.DataSize))
+  {
+    if ((*pSize != eSymbolSizeUnknown) && (EvalResult.DataSize != *pSize))
+    {
+      WrStrErrorPos(ErrNum_InvOpSize, pArg);
+      return MustBeReg ? eIsNoReg : eRegAbort;
+    }
+    *pSize = EvalResult.DataSize;
+    return eIsReg;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, *pSize, MustBeReg);
+  *pResult = RegDescr.Reg;
+  *pSize = EvalResult.DataSize;
+  return RegEvalResult;
+}
+
 static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
 {
   LongInt DispAcc;
@@ -99,6 +251,7 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
   tStrComp RegPart, DispPart;
   char *p;
   Boolean OK;
+  tSymbolSize RegSize = eSymbolSizeUnknown;
   int ArgLen = strlen(pArg->Str);
 
   pResult->Cnt = 0;
@@ -106,66 +259,39 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
   StrCompMkTemp(&RegPart, RegPartStr);
   StrCompMkTemp(&DispPart, DispPartStr);
 
-  /* Datenregister 8 Bit */
-
-  if ((ArgLen == 3)
-   && (mytoupper(*pArg->Str) == 'R')
-   && (pArg->Str[1] >= '0') && (pArg->Str[1] <= '1')
-   && ((mytoupper(pArg->Str[2]) == 'L') || (mytoupper(pArg->Str[2]) == 'H')))
+  switch (DecodeReg(pArg, &pResult->Mode, False, &RegSize))
   {
-    pResult->Type = ModGen;
-    pResult->Mode = ((pArg->Str[1] - '0') << 1) + Ord(mytoupper(pArg->Str[2]) == 'H');
-    SetOpSize(0, pResult);
-    goto chk;
-  }
-
-  /* Datenregister 16 Bit */
-
-  if ((ArgLen == 2)
-   && (mytoupper(*pArg->Str) == 'R')
-   && (pArg->Str[1] >= '0') && (pArg->Str[1] <= '3'))
-  {
-    pResult->Type = ModGen;
-    pResult->Mode = pArg->Str[1] - '0';
-    SetOpSize(1, pResult);
-    goto chk;
-  }
-
-  /* Datenregister 32 Bit */
-
-  if (!as_strcasecmp(pArg->Str, "R2R0"))
-  {
-    pResult->Type = ModReg32;
-    pResult->Mode = 0;
-    SetOpSize(2, pResult);
-    goto chk;
-  }
-  if (!as_strcasecmp(pArg->Str, "R3R1"))
-  {
-    pResult->Type = ModReg32;
-    pResult->Mode = 1;
-    SetOpSize(2, pResult);
-    goto chk;
-  }
-
-  /* Adressregister */
-
-  if ((ArgLen == 2)
-   && (mytoupper(*pArg->Str) == 'A')
-   && (pArg->Str[1] >= '0') && (pArg->Str[1] <= '1'))
-  {
-    pResult->Type = ModGen;
-    pResult->Mode = pArg->Str[1] - '0' + 4;
-    goto chk;
-  }
-
-  /* Adressregister 32 Bit */
-
-  if (!as_strcasecmp(pArg->Str, "A1A0"))
-  {
-    pResult->Type = ModAReg32;
-    SetOpSize(2, pResult);
-    goto chk;
+    case eIsReg:
+      switch (RegSize)
+      {
+        /* Data Register R(0|1)(L|H) */
+        case eSymbolSize8Bit:
+          pResult->Type = ModGen;
+          SetOpSize(RegSize, pResult);
+          goto chk;
+        case eSymbolSize16Bit:
+          /* Data Register R0..R3, Address Register A0...A1 */
+          if (pResult->Type < 6)
+          {
+            pResult->Type = ModGen;
+            /* opsize may be overridden by attribute */
+            goto chk;
+          }
+          break;
+        case eSymbolSize32Bit:
+          /* Data Register R2R0/R3R1, Address Register A1A0 */
+          pResult->Type = (pResult->Mode < 2) ? ModReg32 : ModAReg32;
+          pResult->Mode &= 1;
+          SetOpSize(RegSize, pResult);
+          goto chk;
+        default:
+          break;
+      }
+      break;
+    case eIsNoReg:
+      break;
+    case eRegAbort:
+      return pResult->Type;
   }
 
   /* indirekt */
@@ -173,79 +299,10 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
   p = strchr(pArg->Str, '[');
   if ((p) && (pArg->Str[ArgLen - 1] == ']'))
   {
+    RegSize = eSymbolSizeUnknown;
     StrCompSplitCopy(&DispPart, &RegPart, pArg, p);
     StrCompShorten(&RegPart, 1);
-    if ((!as_strcasecmp(RegPart.Str, "A0")) || (!as_strcasecmp(RegPart.Str, "A1")))
-    {
-      DispAcc = EvalStrIntExpression(&DispPart, (Mask & MModDisp20)  ? Int20 : Int16, &OK);
-      if (OK)
-      {
-        if ((DispAcc == 0) && (Mask & MModGen))
-        {
-          pResult->Type = ModGen;
-          pResult->Mode = RegPart.Str[1] - '0' + 6;
-        }
-        else if ((DispAcc >= 0) && (DispAcc <= 255) && (Mask & MModGen))
-        {
-          pResult->Type = ModGen;
-          pResult->Vals[0] = DispAcc & 0xff;
-          pResult->Cnt = 1;
-          pResult->Mode = RegPart.Str[1] - '0' + 8;
-        }
-        else if ((DispAcc >= -32768) && (DispAcc <= 65535) && (Mask & MModGen))
-        {
-          pResult->Type = ModGen;
-          pResult->Vals[0] = DispAcc & 0xff;
-          pResult->Vals[1] = (DispAcc >> 8) & 0xff;
-          pResult->Cnt = 2;
-          pResult->Mode = RegPart.Str[1] - '0' + 12;
-        }
-        else if (as_strcasecmp(RegPart.Str, "A0")) WrError(ErrNum_InvAddrMode);
-        else
-        {
-          pResult->Type = ModDisp20;
-          pResult->Vals[0] = DispAcc & 0xff;
-          pResult->Vals[1] = (DispAcc >> 8) & 0xff;
-          pResult->Vals[2] = (DispAcc >> 16) & 0x0f;
-          pResult->Cnt = 3;
-          pResult->Mode = RegPart.Str[1] - '0';
-        }
-      }
-    }
-    else if (!as_strcasecmp(RegPart.Str, "SB"))
-    {
-      DispAcc = EvalStrIntExpression(&DispPart, Int16, &OK);
-      if (OK)
-      {
-        if ((DispAcc >= 0) && (DispAcc <= 255))
-        {
-          pResult->Type = ModGen;
-          pResult->Vals[0] = DispAcc & 0xff;
-          pResult->Cnt = 1;
-          pResult->Mode = 10;
-        }
-        else
-        {
-          pResult->Type = ModGen;
-          pResult->Vals[0] = DispAcc & 0xff;
-          pResult->Vals[1] = (DispAcc >> 8) & 0xff;
-          pResult->Cnt = 2;
-          pResult->Mode = 14;
-        }
-      }
-    }
-    else if (!as_strcasecmp(RegPart.Str, "FB"))
-    {
-      DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
-      if (OK)
-      {
-        pResult->Type = ModGen;
-        pResult->Vals[0] = DispAcc & 0xff;
-        pResult->Cnt = 1;
-        pResult->Mode = 11;
-      }
-    }
-    else if (!as_strcasecmp(RegPart.Str, "SP"))
+    if (!as_strcasecmp(RegPart.Str, "SP"))
     {
       DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
       if (OK)
@@ -255,13 +312,103 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
         pResult->Cnt = 1;
       }
     }
-    else if (!as_strcasecmp(RegPart.Str, "A1A0"))
+    else if (eIsReg == DecodeReg(&RegPart, &pResult->Mode, True, &RegSize))
     {
-      DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
-      if (OK)
+      switch (RegSize)
       {
-        if (DispAcc != 0) WrError(ErrNum_OverRange);
-        else pResult->Type = ModIReg32;
+        case eSymbolSize8Bit:
+          WrStrErrorPos(ErrNum_InvReg, &RegPart);
+          break;
+        case eSymbolSize16Bit:
+          switch (pResult->Mode)
+          {
+            case REG_SB:
+              DispAcc = EvalStrIntExpression(&DispPart, Int16, &OK);
+              if (OK)
+              {
+                if ((DispAcc >= 0) && (DispAcc <= 255))
+                {
+                  pResult->Type = ModGen;
+                  pResult->Vals[0] = DispAcc & 0xff;
+                  pResult->Cnt = 1;
+                  pResult->Mode = 10;
+                }
+                else
+                {
+                  pResult->Type = ModGen;
+                  pResult->Vals[0] = DispAcc & 0xff;
+                  pResult->Vals[1] = (DispAcc >> 8) & 0xff;
+                  pResult->Cnt = 2;
+                  pResult->Mode = 14;
+                }
+              }
+              break;
+            case REG_FB:
+              DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
+              if (OK)
+              {
+                pResult->Type = ModGen;
+                pResult->Vals[0] = DispAcc & 0xff;
+                pResult->Cnt = 1;
+                pResult->Mode = 11;
+              }
+              break;
+            case 4: case 5:
+            {
+              DispAcc = EvalStrIntExpression(&DispPart, (Mask & MModDisp20)  ? Int20 : Int16, &OK);
+              if (OK)
+              {
+                if ((DispAcc == 0) && (Mask & MModGen))
+                {
+                  pResult->Type = ModGen;
+                  pResult->Mode = (pResult->Mode & 1) + 6;
+                }
+                else if ((DispAcc >= 0) && (DispAcc <= 255) && (Mask & MModGen))
+                {
+                  pResult->Type = ModGen;
+                  pResult->Vals[0] = DispAcc & 0xff;
+                  pResult->Cnt = 1;
+                  pResult->Mode = (pResult->Mode & 1) + 8;
+                }
+                else if ((DispAcc >= -32768) && (DispAcc <= 65535) && (Mask & MModGen))
+                {
+                  pResult->Type = ModGen;
+                  pResult->Vals[0] = DispAcc & 0xff;
+                  pResult->Vals[1] = (DispAcc >> 8) & 0xff;
+                  pResult->Cnt = 2;
+                  pResult->Mode = (pResult->Mode & 1) + 12;
+                }
+                else if (pResult->Mode != 4) WrError(ErrNum_InvAddrMode);
+                else
+                {
+                  pResult->Type = ModDisp20;
+                  pResult->Vals[0] = DispAcc & 0xff;
+                  pResult->Vals[1] = (DispAcc >> 8) & 0xff;
+                  pResult->Vals[2] = (DispAcc >> 16) & 0x0f;
+                  pResult->Cnt = 3;
+                  pResult->Mode = 0;
+                }
+              }
+              break;
+            }
+            default:
+              WrStrErrorPos(ErrNum_InvReg, &RegPart);
+          }
+          break;
+        case eSymbolSize32Bit:
+          if (pResult->Mode != 2) WrStrErrorPos(ErrNum_InvReg, &RegPart);
+          else
+          {
+            DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
+            if (OK)
+            {
+              if (DispAcc != 0) WrError(ErrNum_OverRange);
+              else pResult->Type = ModIReg32;
+            }
+          }
+          break;
+        default:
+          break;
       }
     }
     goto chk;
@@ -298,7 +445,7 @@ static ShortInt DecodeAdr(const tStrComp *pArg, Word Mask, tAdrResult *pResult)
     goto chk;
   }
 
-  /* dann absolut */
+  /* then it's absolute: */
 
   DispAcc = EvalStrIntExpression(pArg, (Mask & MModAbs20) ? UInt20 : UInt16, &OK);
   if ((DispAcc <= 0xffff) && ((Mask & MModGen) != 0))
@@ -326,25 +473,6 @@ chk:
      WrError(ErrNum_InvAddrMode);
   }
   return pResult->Type;
-}
-
-static Boolean DecodeReg(char *Asc, Byte *Erg)
-{
-  if (!as_strcasecmp(Asc, "FB"))
-    *Erg = 7;
-  else if (!as_strcasecmp(Asc, "SB"))
-    *Erg = 6;
-  else if ((strlen(Asc) == 2)
-        && (mytoupper(*Asc) == 'A')
-        && (Asc[1] >= '0') && (Asc[1] <= '1'))
-    *Erg = Asc[1] - '0' + 4;
-  else if ((strlen(Asc) == 2)
-        && (mytoupper(*Asc) == 'R')
-        && (Asc[1] >= '0') && (Asc[1] <= '3'))
-    *Erg = Asc[1] - '0';
-  else
-    return False;
-  return True;
 }
 
 static Boolean DecodeCReg(char *Asc, Byte *Erg)
@@ -380,6 +508,7 @@ static Boolean DecodeBitAdr(Boolean MayShort, tAdrResult *pResult)
   String RegPartStr, DispPartStr;
   tStrComp RegPart, DispPart;
   int ArgLen;
+  tSymbolSize RegSize = eSymbolSize16Bit;
 
   pResult->Cnt = 0;
   StrCompMkTemp(&RegPart, RegPartStr);
@@ -392,21 +521,27 @@ static Boolean DecodeBitAdr(Boolean MayShort, tAdrResult *pResult)
 
   /* Ist Teil 1 ein Register ? */
 
-  if ((DecodeReg(ArgStr[ArgCnt].Str, &pResult->Mode)))
+  switch (DecodeReg(&ArgStr[ArgCnt], &pResult->Mode, False, &RegSize))
   {
-    if (pResult->Mode < 6)
-    {
-      if (ChkArgCnt(2, 2))
+    case eIsReg:
+      if (pResult->Mode < 6)
       {
-        pResult->Vals[0] = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
-        if (OK)
+        if (ChkArgCnt(2, 2))
         {
-          pResult->Cnt = 1;
-          return True;
+          pResult->Vals[0] = EvalStrIntExpression(&ArgStr[1], UInt4, &OK);
+          if (OK)
+          {
+            pResult->Cnt = 1;
+            return True;
+          }
         }
+        return False;
       }
+      break;
+    case eRegAbort:
       return False;
-    }
+    case eIsNoReg:
+      break;
   }
 
   /* Bitnummer ? */
@@ -429,7 +564,7 @@ static Boolean DecodeBitAdr(Boolean MayShort, tAdrResult *pResult)
   if (!Pos1)
   {
     DecodeDisp(&ArgStr[ArgCnt], UInt16, UInt13, &DispAcc, &OK);
-    if ((OK) && (DispAcc < 0x10000))     /* RMS 09: This is optional, it detects rollover of the bit address. */ 
+    if (OK && (DispAcc < 0x10000))     /* RMS 09: This is optional, it detects rollover of the bit address. */ 
     {
       pResult->Mode = 15;
       pResult->Vals[0] = DispAcc & 0xff;
@@ -437,7 +572,7 @@ static Boolean DecodeBitAdr(Boolean MayShort, tAdrResult *pResult)
       pResult->Cnt = 2;
       return True;
     }
-    WrError(ErrNum_InvBitPos);                     /* RMS 08: Notify user there's a problem with address */
+    WrStrErrorPos(ErrNum_InvBitPos, &ArgStr[ArgCnt]);   /* RMS 08: Notify user there's a problem with address */
     return False;
   }
 
@@ -452,78 +587,78 @@ static Boolean DecodeBitAdr(Boolean MayShort, tAdrResult *pResult)
   StrCompSplitCopy(&DispPart, &RegPart, &ArgStr[ArgCnt], Pos1);
   StrCompShorten(&RegPart, 1);
 
-  if ((strlen(RegPart.Str) == 2) && (mytoupper(*RegPart.Str) == 'A') && (RegPart.Str[1] >= '0') && (RegPart.Str[1] <= '1'))
+  if (DecodeReg(&RegPart, &pResult->Mode, True, &RegSize) == eIsReg)
   {
-    pResult->Mode = RegPart.Str[1] - '0';
-    DecodeDisp(&DispPart, UInt16, UInt16, &DispAcc, &OK); /* RMS 03: The offset is a full 16 bits */
-    if (OK)
+    switch (pResult->Mode)
     {
-      if (DispAcc == 0) pResult->Mode += 6;
-      else if ((DispAcc > 0) && (DispAcc < 256))
-      {
-        pResult->Mode += 8;
-        pResult->Vals[0] = DispAcc & 0xff;
-        pResult->Cnt = 1;
-      }
-      else
-      {
-        pResult->Mode += 12;
-        pResult->Vals[0] = DispAcc & 0xff;
-        pResult->Vals[1] = (DispAcc >> 8) & 0xff;
-        pResult->Cnt = 2;
-      }
-      return True;
+      case REG_SB:
+        DecodeDisp(&DispPart, UInt13, UInt16, &DispAcc, &OK);
+        if (OK)
+        {
+          if ((MayShort) && (DispAcc <= 0x7ff))
+          {
+            pResult->Mode = 16 + (DispAcc & 7);
+            pResult->Vals[0] = DispAcc >> 3;
+            pResult->Cnt = 1;
+          }
+          else if ((DispAcc > 0) && (DispAcc < 256))
+          {
+            pResult->Mode = 10;
+            pResult->Vals[0] = DispAcc & 0xff;
+            pResult->Cnt = 1;
+          }
+          else
+          {
+            pResult->Mode = 14;
+            pResult->Vals[0] = DispAcc & 0xff;
+            pResult->Vals[1] = (DispAcc >> 8) & 0xff;
+            pResult->Cnt = 2;
+          }
+          return True;
+        }
+        WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
+        return False;
+      case REG_FB:
+        DecodeDisp(&DispPart, SInt5, SInt8, &DispAcc, &OK);
+        if (OK)
+        {
+          pResult->Mode = 11;
+          pResult->Vals[0] = DispAcc & 0xff;
+          pResult->Cnt = 1;
+          return True;
+        }
+        WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
+        return False;
+      case 4: case 5:
+        pResult->Mode &= 1;
+        DecodeDisp(&DispPart, UInt16, UInt16, &DispAcc, &OK); /* RMS 03: The offset is a full 16 bits */
+        if (OK)
+        {
+          if (DispAcc == 0) pResult->Mode += 6;
+          else if ((DispAcc > 0) && (DispAcc < 256))
+          {
+            pResult->Mode += 8;
+            pResult->Vals[0] = DispAcc & 0xff;
+            pResult->Cnt = 1;
+          }
+          else
+          {
+            pResult->Mode += 12;
+            pResult->Vals[0] = DispAcc & 0xff;
+            pResult->Vals[1] = (DispAcc >> 8) & 0xff;
+            pResult->Cnt = 2;
+          }
+          return True;
+        }
+        WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
+        return False;
+      default:
+        WrStrErrorPos(ErrNum_InvReg, &RegPart);
+        return False;
     }
-    WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
-    return False;
-  }
-  else if (!as_strcasecmp(RegPart.Str, "SB"))
-  {
-    DecodeDisp(&DispPart, UInt13, UInt16, &DispAcc, &OK);
-    if (OK)
-    {
-      if ((MayShort) && (DispAcc <= 0x7ff))
-      {
-        pResult->Mode = 16 + (DispAcc & 7);
-        pResult->Vals[0] = DispAcc >> 3;
-        pResult->Cnt = 1;
-      }
-      else if ((DispAcc > 0) && (DispAcc < 256))
-      {
-        pResult->Mode = 10;
-        pResult->Vals[0] = DispAcc & 0xff;
-        pResult->Cnt = 1;
-      }
-      else
-      {
-        pResult->Mode = 14;
-        pResult->Vals[0] = DispAcc & 0xff;
-        pResult->Vals[1] = (DispAcc >> 8) & 0xff;
-        pResult->Cnt = 2;
-      }
-      return True;
-    }
-    WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
-    return False;
-  }
-  else if (!as_strcasecmp(RegPart.Str, "FB"))
-  {
-    DecodeDisp(&DispPart, SInt5, SInt8, &DispAcc, &OK);
-    if (OK)
-    {
-      pResult->Mode = 11;
-      pResult->Vals[0] = DispAcc & 0xff;
-      pResult->Cnt = 1;
-      return True;
-    }
-    WrError(ErrNum_InvBitPos);             /* RMS 08: Notify user there's a problem with the offset */
-    return False;
   }
   else
-  {
-    WrStrErrorPos(ErrNum_InvReg, &RegPart);
     return False;
-  }
 }
 
 static Boolean CheckFormat(const char *FSet)
@@ -1043,29 +1178,21 @@ static void DecodePUSHC_POPC(Word Code)
 
 static void DecodePUSHM_POPM(Word IsPOPM)
 {
-  int z;
-  Boolean OK;
-  Byte Reg;
-
   if (ChkArgCnt(1, ArgCntMax))
   {
-    BAsmCode[1] = 0; OK = True; z = 1;
-    while ((OK) && (z <= ArgCnt))
+    int z;
+    Byte Reg;
+    tSymbolSize DataSize = eSymbolSize16Bit;
+
+    BAsmCode[1] = 0; z = 1;
+    for (z = 1; z <= ArgCnt; z++)
     {
-      OK = DecodeReg(ArgStr[z].Str, &Reg);
-      if (OK)
-      {
-        BAsmCode[1] |= 1 << (IsPOPM ? Reg : 7 - Reg);
-        z++;
-      }
+      if (!DecodeReg(&ArgStr[z], &Reg, True, &DataSize))
+        return;
+      BAsmCode[1] |= 1 << (IsPOPM ? Reg : 7 - Reg);
     }
-    if (!OK)
-      WrStrErrorPos(ErrNum_InvCtrlReg, &ArgStr[z]);
-    else
-    {
-      BAsmCode[0] = 0xec + IsPOPM;
-      CodeLen = 2;
-    }
+    BAsmCode[0] = 0xec + IsPOPM;
+    CodeLen = 2;
   }
 }
 
@@ -1923,7 +2050,7 @@ static void DecodeFCLR_FSET(Word Code)
   else if (strlen(ArgStr[1].Str) != 1) WrError(ErrNum_InvAddrMode);
   else
   {
-    const char *p = strchr(Flags, mytoupper(*ArgStr[1].Str));
+    const char *p = strchr(Flags, as_toupper(*ArgStr[1].Str));
     if (!p) WrStrErrorPos(ErrNum_InvCtrlReg, &ArgStr[1]);
     else
     {
@@ -2511,6 +2638,8 @@ static void InitFields(void)
   AddBit("BXOR"  ,12); AddBit("BCLR"  , 8);
   AddBit("BNOT"  ,10); AddBit("BSET"  , 9);
   AddBit("BTST"  ,11);
+
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -2561,7 +2690,7 @@ static Boolean DecodeAttrPart_M16C(void)
 
   /* Attribut abarbeiten */
 
-  switch (mytoupper(*AttrPart.Str))
+  switch (as_toupper(*AttrPart.Str))
   {
     case '\0': AttrPartOpSize = eSymbolSizeUnknown; break;
     case 'B': AttrPartOpSize = eSymbolSize8Bit; break;
@@ -2576,6 +2705,27 @@ static Boolean DecodeAttrPart_M16C(void)
       WrStrErrorPos(ErrNum_UndefAttr, &AttrPart); return False;
   }
   return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_M16C(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on M16C
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_M16C(char *pArg, TempResult *pResult)
+{
+  Byte Erg;
+  tSymbolSize Size;
+
+  if (DecodeRegCore(pArg, &Erg, &Size))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = Size;
+    pResult->Contents.RegDescr.Reg = Erg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_M16C;
+  }
 }
 
 static void MakeCode_M16C(void)
@@ -2596,7 +2746,7 @@ static void MakeCode_M16C(void)
 
 static Boolean IsDef_M16C(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_M16C(void)
@@ -2625,6 +2775,8 @@ static void SwitchTo_M16C(void)
   DecodeAttrPart = DecodeAttrPart_M16C;
   MakeCode = MakeCode_M16C;
   IsDef = IsDef_M16C;
+  InternSymbol = InternSymbol_M16C;
+  DissectReg = DissectReg_M16C;
   SwitchFrom = SwitchFrom_M16C;
   InitFields();
 }

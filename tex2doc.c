@@ -648,7 +648,7 @@ static void AddLine(const char *Part, char *Sep)
       if (*search == ' ')
       {
         for (lastalpha = search + 1; *lastalpha != '\0'; lastalpha++)
-          if ((mytolower(*lastalpha) < 'a') || (mytolower(*lastalpha) > 'z'))
+          if ((as_tolower(*lastalpha) < 'a') || (as_tolower(*lastalpha) > 'z'))
             break;
         if (lastalpha - search > 3)
         {

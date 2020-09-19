@@ -31,7 +31,7 @@ static void ClrBlanks(char *tmp)
 {
   int cnt;
 
-  for (cnt = 0; isspace((unsigned int) tmp[cnt]); cnt++);
+  for (cnt = 0; as_isspace(tmp[cnt]); cnt++);
   if (cnt > 0)
     strmov(tmp, tmp + cnt);
 }
@@ -93,13 +93,13 @@ static CMDResult ProcessParam(const CMDRec *pCMDRecs, int CMDRecCnt, const char 
     if (Param[Start] == '#')
     {
       for (z = Start + 1; z < (int)strlen(Param); z++)
-        Param[z] = mytoupper(Param[z]);
+        Param[z] = as_toupper(Param[z]);
       Start++;
     }
     else if (Param[Start] == '~')
     {
       for (z = Start + 1; z < (int)strlen(Param); z++)
-        Param[z] = mytolower(Param[z]);
+        Param[z] = as_tolower(Param[z]);
       Start++;
     }
 
@@ -108,7 +108,7 @@ static CMDResult ProcessParam(const CMDRec *pCMDRecs, int CMDRecCnt, const char 
     Search = 0;
     strmaxcpy(s, Param + Start, STRINGSIZE);
     for (z = 0; z < (int)strlen(s); z++)
-      s[z] = mytoupper(s[z]);
+      s[z] = as_toupper(s[z]);
     for (Search = 0; Search < CMDRecCnt; Search++)
       if ((strlen(pCMDRecs[Search].Ident) > 1) && (!strcmp(s, pCMDRecs[Search].Ident)))
         break;
@@ -171,7 +171,7 @@ static void DecodeLine(const CMDRec *pCMDRecs, int CMDRecCnt, char *OneLine,
       {
         *p = '\0';
         start = p + 1;
-        while (isspace((unsigned int) *start))
+        while (as_isspace(*start))
            start++;
       }
       else

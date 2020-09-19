@@ -361,7 +361,7 @@ static Byte CodeCReg(char *Asc, Byte *ErgNo, Byte *ErgSize)
    && (!as_strncasecmp(Asc, "DMA", 3))
    && (Asc[4] >= '0') && (Asc[4] <= '3'))
   {
-    switch (mytoupper(Asc[3]))
+    switch (as_toupper(Asc[3]))
     {
       case 'S':
         *ErgNo = (Asc[4] - '0') * 4;

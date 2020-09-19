@@ -6,7 +6,7 @@
 
 OBJDIR =
 CC = gcc
-CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror -Wstrict-prototypes
 #CFLAGS = $(CFLAGS) -ansi -std=c89 -pedantic
 HOST_OBJEXTENSION = .o
 LDFLAGS =

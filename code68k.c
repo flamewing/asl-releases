@@ -25,6 +25,7 @@
 #include "asmitree.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "codepseudo.h"
 
 #include "code68k.h"
 
@@ -123,6 +124,13 @@ typedef struct
 #define EMACAvailName  "HASEMAC"
 #define PMMUAvailName  "HASPMMU"     /* PMMU-Befehle erlaubt */
 #define FullPMMUName   "FULLPMMU"    /* voller PMMU-Befehlssatz */
+
+#define REG_SP 15
+#define REG_MARK 16 /* internal mark to differentiate SP<->A7 */
+#define REG_FPCTRL 8
+#define REG_FPCR 4
+#define REG_FPSR 2
+#define REG_FPIAR 1
 
 enum
 {
@@ -268,6 +276,125 @@ static Boolean FloatOpSizeFitsDataReg(tSymbolSize OpSize)
   return (OpSize <= eSymbolSize32Bit) || (OpSize == eSymbolSizeFloat32Bit);
 }
 
+static Boolean ValReg(char Ch)
+{
+  return ((Ch >= '0') && (Ch <= '7'));
+}
+
+/*-------------------------------------------------------------------------*/
+/* Register Symbols */
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Word *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pArg, Word *pResult)
+{
+  if (!as_strcasecmp(pArg, "SP"))
+  {
+    *pResult = REG_SP | REG_MARK;
+    return True;
+  }
+  
+  if (strlen(pArg) != 2)
+    return False;
+  if ((*pResult = pArg[1] - '0') > 7)
+    return False;
+
+  switch (as_toupper(*pArg))
+  {
+    case 'D':
+      return True;
+    case 'A':
+      *pResult |= 8;
+      return True;
+    default:
+      return False;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFPRegCore(const char *pArg, Word *pResult)
+ * \brief  check whether argument is an FPU register
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeFPRegCore(const char *pArg, Word *pResult)
+{
+  if (!as_strcasecmp(pArg, "FPCR"))
+  {
+    *pResult = REG_FPCTRL | REG_FPCR;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "FPSR"))
+  {
+    *pResult = REG_FPCTRL | REG_FPSR;
+    return True;
+  }
+  if (!as_strcasecmp(pArg, "FPIAR"))
+  {
+    *pResult = REG_FPCTRL | REG_FPIAR;
+    return True;
+  }
+  
+  if (strlen(pArg) != 3)
+    return False;
+  if (as_strncasecmp(pArg, "FP", 2))
+    return False;
+  if ((*pResult = pArg[2] - '0') > 7)
+    return False;
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_68K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - 68K variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_68K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  if (InpSize == NativeFloatSize)
+  {
+    switch (Value)
+    {
+      case REG_FPCTRL | REG_FPCR:
+        as_snprintf(pDest, DestSize, "FPCR");
+        break;
+      case REG_FPCTRL | REG_FPSR:
+        as_snprintf(pDest, DestSize, "FPSR");
+        break;
+      case REG_FPCTRL | REG_FPIAR:
+        as_snprintf(pDest, DestSize, "FPIAR");
+        break;
+      default:
+        as_snprintf(pDest, DestSize, "FP%u", (unsigned)Value);
+    }
+  }
+  else if (InpSize == eSymbolSize32Bit)
+  {
+    switch (Value)
+    {
+      case REG_MARK | REG_SP:
+        as_snprintf(pDest, DestSize, "SP");
+        break;
+      default:
+        as_snprintf(pDest, DestSize, "%c%u", Value & 8 ? 'A' : 'D', (unsigned)(Value & 7));
+    }
+  }
+  else
+    as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+}
+
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
 
@@ -304,69 +431,124 @@ static Boolean ACheckFamily(unsigned FamilyMask, const tStrComp *pAdrComp, tAdrR
   return False;
 }
 
-static Boolean ValReg(char Ch)
-{
-  return ((Ch >= '0') && (Ch <= '7'));
-}
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Word *pErg, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \param  MustBeReg argument is expected to be a register
+ * \return RegEvalResult
+ * ------------------------------------------------------------------------ */
 
-static Boolean CodeReg(const char *s, Word *pErg)
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
 {
-  Boolean Result = True;
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
 
-  if (strlen(s) != 2)
+  if (DecodeRegCore(pArg->Str, pResult))
   {
-    *pErg = 16;
-    Result = False;
+    *pResult &= ~REG_MARK;
+    return eIsReg;
   }
-  else if (!as_strcasecmp(s, "SP"))
-    *pErg = 15;
-  else if (ValReg(s[1]))
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+  *pResult = RegDescr.Reg & ~REG_MARK;
+  return RegEvalResult;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFPReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+ * \brief  check whether argument is a FPU register or register alias
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \param  MustBeReg argument is expected to be a register
+ * \return RegEvalResult
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeFPReg(const tStrComp *pArg, Word *pResult, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeFPRegCore(pArg->Str, pResult))
   {
-    if (mytoupper(*s) == 'D')
-      *pErg = s[1] - '0';
-    else if (mytoupper(*s) == 'A')
-      *pErg = s[1] - '0' + 8;
-    else
-      Result = False;
+    *pResult &= ~REG_MARK;
+    return eIsReg;
   }
-  else
-    Result = False;
 
-  return Result;
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, NativeFloatSize, MustBeReg);
+  *pResult = RegDescr.Reg;
+  return RegEvalResult;
 }
 
-static Boolean CodeRegPair(char *Asc, Word *Erg1, Word *Erg2)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegOrFPReg(const tStrComp *pArg, Word *pErg, tSymbolSize *pSize, Boolean MustBeReg)
+ * \brief  check whether argument is an CPU/FPU register or register alias
+ * \param  pArg argument to check
+ * \param  pResult numeric register value if yes
+ * \param  pSize size of register if yes
+ * \param  MustBeReg argument is expected to be a register
+ * \return RegEvalResult
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeRegOrFPReg(const tStrComp *pArg, Word *pResult, tSymbolSize *pSize, Boolean MustBeReg)
 {
-  if ((strlen(Asc) != 5)
-   || (mytoupper(*Asc) != 'D')
-   || (Asc[2] != ':')
-   || (mytoupper(Asc[3]) != 'D')
-   || (!(ValReg(Asc[1]) && ValReg(Asc[4]))))
-    return False;
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
 
-  *Erg1 = Asc[1] - '0';
-  *Erg2 = Asc[4] - '0';
+  if (DecodeRegCore(pArg->Str, pResult))
+  {
+    *pResult &= ~REG_MARK;
+    *pSize = eSymbolSize32Bit;
+    return eIsReg;
+  }
+  if (DecodeFPRegCore(pArg->Str, pResult))
+  {
+    *pSize = NativeFloatSize;
+    return eIsReg;
+  }
 
-  return True;
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+  *pResult = RegDescr.Reg & ~REG_MARK;
+  *pSize = EvalResult.DataSize;
+  return RegEvalResult;
 }
 
-static Boolean CodeIndRegPair(char *Asc, Word *Erg1, Word *Erg2)
+static Boolean DecodeRegPair(tStrComp *pArg, Word *Erg1, Word *Erg2)
 {
-  if ((strlen(Asc) != 9)
-   || (*Asc != '(')
-   || ((mytoupper(Asc[1]) != 'D') && (mytoupper(Asc[1]) != 'A'))
-   || (Asc[3] != ')')
-   || (Asc[4] != ':')
-   || (Asc[5] != '(')
-   || ((mytoupper(Asc[6]) != 'D') && (mytoupper(Asc[6]) != 'A'))
-   || (Asc[8] != ')')
-   || (!(ValReg(Asc[2]) && ValReg(Asc[7]))))
+  char *pSep = strchr(pArg->Str, ':');
+  tStrComp Left, Right;
+
+  if (!pSep)
     return False;
+  StrCompSplitRef(&Left, &Right, pArg, pSep);
+  return (DecodeReg(&Left, Erg1, False) == eIsReg)
+      && (*Erg1 <= 7)
+      && (DecodeReg(&Right, Erg2, False) == eIsReg)
+      && (*Erg2 <= 7);
+}
 
-  *Erg1 = Asc[2] - '0' + ((mytoupper(Asc[1]) == 'A') ? 8 : 0);
-  *Erg2 = Asc[7] - '0' + ((mytoupper(Asc[6]) == 'A') ? 8 : 0);
+static Boolean CodeIndRegPair(tStrComp *pArg, Word *Erg1, Word *Erg2)
+{
+  char *pSep = strchr(pArg->Str, ':');
+  tStrComp Left, Right;
 
-  return True;
+  if (!pSep)
+    return False;
+  StrCompSplitRef(&Left, &Right, pArg, pSep);
+
+  if (!IsIndirect(Left.Str) || !IsIndirect(Right.Str))
+    return False;
+  StrCompShorten(&Left, 1);
+  StrCompIncRefLeft(&Left, 1);
+  StrCompShorten(&Right, 1);
+  StrCompIncRefLeft(&Right, 1);
+
+  return (DecodeReg(&Left, Erg1, False) == eIsReg)
+      && (DecodeReg(&Right, Erg2, False) == eIsReg);
 }
 
 static Boolean CodeCache(char *Asc, Word *Erg)
@@ -411,19 +593,24 @@ static Boolean DecodeCtrlReg(char *Asc, Word *Erg)
 
 static Boolean OneField(const tStrComp *pArg, Word *Erg, Boolean Ab1)
 {
-  Boolean ValOK;
+  switch (DecodeReg(pArg, Erg, False))
+  {
+    case eIsReg:
+      if (*Erg > 7)
+        return False;
+      *Erg |= 0x20;
+      return True;
+    case eIsNoReg:
+    {
+      Boolean ValOK;
 
-  if ((strlen(pArg->Str) == 2) && (mytoupper(*pArg->Str) == 'D') && (ValReg(pArg->Str[1])))
-  {
-    *Erg = 0x20 + (pArg->Str[1] - '0');
-    return True;
-  }
-  else
-  {
-    *Erg = EvalStrIntExpression(pArg, Int8, &ValOK);
-    if ((Ab1) && (*Erg == 32))
-      *Erg = 0;
-    return ((ValOK) && (*Erg < 32));
+      *Erg = EvalStrIntExpression(pArg, Int8, &ValOK);
+      if (Ab1 && (*Erg == 32))
+        *Erg = 0;
+      return (ValOK && (*Erg < 32));
+    }
+    default:
+      return False;
   }
 }
 
@@ -460,7 +647,7 @@ static Boolean SplitSize(tStrComp *pArg, ShortInt *DispLen, unsigned OpSizeMask)
 
   if ((ArgLen > 2) && (pArg->Str[ArgLen - 2] == '.'))
   {
-    switch (mytoupper(pArg->Str[ArgLen - 1]))
+    switch (as_toupper(pArg->Str[ArgLen - 1]))
     {
       case 'B':
         if (OpSizeMask & 1)
@@ -500,7 +687,8 @@ static Boolean SplitSize(tStrComp *pArg, ShortInt *DispLen, unsigned OpSizeMask)
 static Boolean ClassComp(AdrComp *C)
 {
   int CompLen = strlen(C->Comp.Str);
-  char sh[10];
+  Boolean IsReg;
+  char *pEnd, Save;
 
   C->Art = None;
   C->ANummer = C->INummer = 0;
@@ -521,13 +709,27 @@ static Boolean ClassComp(AdrComp *C)
     return True;
   }
 
-  memcpy(sh, C->Comp.Str, 2);
-  sh[2] = '\0';
-  if (CodeReg(sh, &C->ANummer))
-  {
-    int ScaleOffs = 2;
+  /* use ChkMacSymbName so . is not taken as valid character: TODO: what about _ ? */
 
-    if ((C->ANummer > 7) && (CompLen == 2))
+  pEnd = ChkMacSymbNameUpTo(C->Comp.Str, C->Comp.Str + CompLen);
+  IsReg = (pEnd > C->Comp.Str);
+  if (IsReg)
+  {
+    tRegEvalResult RegEvalResult;
+
+    Save = *pEnd;
+    *pEnd = '\0';
+    RegEvalResult = DecodeReg(&C->Comp, &C->ANummer, False);
+    *pEnd = Save;
+    if (eRegAbort == RegEvalResult)
+      return False;
+    IsReg = (RegEvalResult == eIsReg);
+  }
+  if (IsReg)
+  {
+    int ScaleOffs = pEnd - C->Comp.Str;
+
+    if ((C->ANummer > 7) && (ScaleOffs == CompLen))
     {
       C->Art = AReg;
       C->ANummer -= 8;
@@ -535,9 +737,9 @@ static Boolean ClassComp(AdrComp *C)
     }
     else
     {
-      if ((CompLen > 3) && (C->Comp.Str[2] == '.'))
+      if ((CompLen >= ScaleOffs + 2) && (C->Comp.Str[ScaleOffs] == '.'))
       {
-        switch (mytoupper(C->Comp.Str[3]))
+        switch (as_toupper(C->Comp.Str[ScaleOffs + 1]))
         {
           case 'L':
             C->Long = True;
@@ -548,7 +750,7 @@ static Boolean ClassComp(AdrComp *C)
           default:
             return False;
         }
-        ScaleOffs = 4;
+        ScaleOffs += 2;
       }
       else
         C->Long = (pCurrCPUProps->Family == eColdfire);
@@ -586,7 +788,7 @@ static Boolean ClassComp(AdrComp *C)
   C->Art = Disp;
   if ((CompLen >= 2) && (C->Comp.Str[CompLen - 2] == '.'))
   {
-    switch (mytoupper(C->Comp.Str[CompLen - 1]))
+    switch (as_toupper(C->Comp.Str[CompLen - 1]))
     {
       case 'L':
         C->Size = 2;
@@ -743,9 +945,11 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
   Word SwapField[6];
   String ArgStr;
   tStrComp Arg;
-  char CReg[10];
+  String CReg;
+  tStrComp CRegArg;
   const unsigned ExtAddrFamilyMask = (1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32);
   IntType DispIntType;
+  tSymbolSize RegSize;
 
   /* some insns decode the same arg twice, so we must keep the original string intact. */
 
@@ -755,6 +959,8 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
   KillPostBlanksStrComp(&Arg);
   ArgLen = strlen(Arg.Str);
   ClrAdrVals(pResult);
+
+  StrCompMkTemp(&CRegArg, CReg);
 
   /* immediate : */
 
@@ -877,53 +1083,32 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
     goto chk;
   }
 
-  /* CPU-Register direkt: */
+  /* CPU/FPU-Register direkt: */
 
-  if (CodeReg(Arg.Str, &pResult->Mode))
+  switch (DecodeRegOrFPReg(&Arg, &pResult->Mode, &RegSize, False))
   {
-    pResult->Cnt = 0;
-    pResult->Num = (pResult->Mode >> 3) + ModData;
-    goto chk;
-  }
-
-  /* Gleitkommaregister direkt: */
-
-  if (!as_strncasecmp(Arg.Str, "FP", 2))
-  {
-    if ((ArgLen == 3) && (ValReg(Arg.Str[2])))
-    {
-      pResult->Mode = Arg.Str[2] - '0';
+    case eIsReg:
       pResult->Cnt = 0;
-      pResult->Num = ModFPn;
+      if (RegSize == NativeFloatSize)
+      {
+        pResult->Num = (pResult->Mode > 7) ? ModFPCR : ModFPn;
+        pResult->Mode &= 7;
+      }
+      else
+        pResult->Num = (pResult->Mode >> 3) + ModData;
+      /* fall-through */
+    case eRegAbort:
       goto chk;
-    }
-    if (!as_strcasecmp(Arg.Str, "FPCR"))
-    {
-      pResult->Mode = 4;
-      pResult->Num = ModFPCR;
-      goto chk;
-    }
-    if (!as_strcasecmp(Arg.Str, "FPSR"))
-    {
-      pResult->Mode = 2;
-      pResult->Num = ModFPCR;
-      goto chk;
-    }
-    if (!as_strcasecmp(Arg.Str, "FPIAR"))
-    {
-      pResult->Mode = 1;
-      pResult->Num = ModFPCR;
-      goto chk;
-    }
+    default:
+      break;
   }
 
   /* Adressregister indirekt mit Predekrement: */
 
-  if ((ArgLen == 5) && (*Arg.Str == '-') && (Arg.Str[1] == '(') && (Arg.Str[4] == ')'))
+  if ((ArgLen >= 4) && (*Arg.Str == '-') && (Arg.Str[1] == '(') && (Arg.Str[ArgLen - 1] == ')'))
   {
-    strcpy(CReg, Arg.Str + 2);
-    CReg[2] = '\0';
-    if ((CodeReg(CReg, &rerg)) && (rerg > 7) )
+    StrCompCopySub(&CRegArg, &Arg, 2, ArgLen - 3);
+    if ((DecodeReg(&CRegArg, &rerg, False) == eIsReg) && (rerg > 7))
     {
       pResult->Mode = rerg + 24;
       pResult->Cnt = 0;
@@ -934,11 +1119,10 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 
   /* Adressregister indirekt mit Postinkrement */
 
-  if ((ArgLen == 5) && (*Arg.Str == '(') && (Arg.Str[3] == ')') && (Arg.Str[4] == '+'))
+  if ((ArgLen >= 4) && (*Arg.Str == '(') && (Arg.Str[ArgLen - 2] == ')') && (Arg.Str[ArgLen - 1] == '+'))
   {
-    strcpy(CReg, Arg.Str + 1);
-    CReg[2] = '\0';
-    if ((CodeReg(CReg, &rerg)) && (rerg > 7))
+    StrCompCopySub(&CRegArg, &Arg, 1, ArgLen - 3);
+    if ((DecodeReg(&CRegArg, &rerg, False) == eIsReg) && (rerg > 7))
     {
       pResult->Mode = rerg + 16;
       pResult->Cnt = 0;
@@ -1622,17 +1806,6 @@ chk:
   return pResult->Num;
 }
 
-static Byte OneReg(char *Asc)
-{
-  if (strlen(Asc) != 2)
-    return 16;
-  if ((mytoupper(*Asc) != 'A') && (mytoupper(*Asc) != 'D'))
-    return 16;
-  if (!ValReg(Asc[1]))
-    return 16;
-  return Asc[1] - '0' + ((mytoupper(*Asc) == 'D') ? 0 : 8);
-}
-
 static Boolean DecodeMACACC(const char *pArg, Word *pResult)
 {
   /* interprete ACC like ACC0, independent of MAC or EMAC: */
@@ -1682,33 +1855,37 @@ static Boolean DecodeMACReg(const char *pArg, Word *pResult)
   return DecodeMACACC(pArg, pResult);
 }
 
-static Boolean DecodeRegList(const char *Asc_o, Word *Erg)
+static Boolean DecodeRegList(const tStrComp *pArg, Word *Erg)
 {
-  Byte h, h2, z;
-  char *p, *p2, *pAsc;
-  String Asc;
+  Word h, h2;
+  Byte z;
+  char *p, *p2;
+  String ArgStr;
+  tStrComp Arg, Remainder, From, To;
+
+  StrCompMkTemp(&Arg, ArgStr);
+  StrCompCopy(&Arg, pArg);
 
   *Erg = 0;
-  strmaxcpy(Asc, Asc_o, STRINGSIZE);
-  pAsc = Asc;
   do
   {
-    p = strchr(pAsc, '/');
+    p = strchr(Arg.Str, '/');
     if (p)
-      *p++ = '\0';
-    p2 = strchr(pAsc, '-');
+      StrCompSplitRef(&Arg, &Remainder, &Arg, p);
+    p2 = strchr(Arg.Str, '-');
     if (!p2)
     {
-      if ((h = OneReg(pAsc)) == 16)
+      if (DecodeReg(&Arg, &h, False) != eIsReg)
         return False;
       *Erg |= 1 << h;
     }
     else
     {
-      *p2 = '\0';
-      if ((h = OneReg(pAsc)) == 16)
+      StrCompSplitRef(&From, &To, &Arg, p2);
+      if (!*From.Str || !*To.Str)
         return False;
-      if ((h2 = OneReg(p2 + 1)) == 16)
+      if ((DecodeReg(&From, &h, False) != eIsReg)
+       || (DecodeReg(&To, &h2, False) != eIsReg))
         return False;
       if (h <= h2)
       {
@@ -1723,7 +1900,8 @@ static Boolean DecodeRegList(const char *Asc_o, Word *Erg)
           *Erg |= 1 << z;
       }
     }
-    pAsc = p;
+    if (p)
+      Arg = Remainder;
   }
   while (p);
   return True;
@@ -2259,7 +2437,7 @@ static void DecodeADDSUBCMP(Word Index)
     /* Since CMP only reads operands, PC-relative addressing is also
        allowed for the second operand on 68020++ */
 
-    if ((mytoupper(*OpPart.Str) == 'C')
+    if ((as_toupper(*OpPart.Str) == 'C')
      && (pCurrCPUProps->Family > e68KGen1b))
       DestMask |= MModPC | MModPCIdx;
   }
@@ -2751,7 +2929,7 @@ static void DecodeMOVEM(Word Index)
     tAdrResult AdrResult;
 
     RelPos = 4;
-    if (DecodeRegList(ArgStr[2].Str, WAsmCode + 1))
+    if (DecodeRegList(&ArgStr[2], WAsmCode + 1))
     {
       if (DecodeAdr(&ArgStr[1], MModAdrI | MModDAdrI | ((pCurrCPUProps->Family == eColdfire) ? 0 : MModPost | MModAIX | MModPC | MModPCIdx | MModAbs), &AdrResult))
       {
@@ -2759,7 +2937,7 @@ static void DecodeMOVEM(Word Index)
         CodeLen = 4 + AdrResult.Cnt; CopyAdrVals(WAsmCode + 2, &AdrResult);
       }
     }
-    else if (DecodeRegList(ArgStr[1].Str, WAsmCode + 1))
+    else if (DecodeRegList(&ArgStr[1], WAsmCode + 1))
     {
       if (DecodeAdr(&ArgStr[2], MModAdrI | MModDAdrI  | ((pCurrCPUProps->Family == eColdfire) ? 0 : MModPre | MModAIX | MModAbs), &AdrResult))
       {
@@ -3089,10 +3267,10 @@ static void DecodeMUL_DIV(Word Code)
     Boolean OK;
 
     if (strchr(ArgStr[2].Str, ':'))
-      OK = CodeRegPair(ArgStr[2].Str, &w1, &w2);
+      OK = DecodeRegPair(&ArgStr[2], &w1, &w2);
     else
     {
-      OK = CodeReg(ArgStr[2].Str, &w1) && (w1 < 8);
+      OK = DecodeReg(&ArgStr[2], &w1, True) && (w1 < 8);
       w2 = w1;
     }
     if (!OK) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
@@ -3124,7 +3302,7 @@ static void DecodeDIVL(Word Index)
   if (!ChkArgCnt(2, 2));
   else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)));
   else if (OpSize != eSymbolSize32Bit) WrError(ErrNum_InvOpSize);
-  else if (!CodeRegPair(ArgStr[2].Str, &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+  else if (!DecodeRegPair(&ArgStr[2], &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
   else
   {
     tAdrResult AdrResult;
@@ -3379,13 +3557,13 @@ static void DecodeCAS2(Word Index)
   if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) WrError(ErrNum_InvOpSize);
   else if (!ChkArgCnt(3, 3));
   else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)));
-  else if (!CodeRegPair(ArgStr[1].Str, WAsmCode + 1, WAsmCode + 2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[1]);
-  else if (!CodeRegPair(ArgStr[2].Str, &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+  else if (!DecodeRegPair(&ArgStr[1], WAsmCode + 1, WAsmCode + 2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[1]);
+  else if (!DecodeRegPair(&ArgStr[2], &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
   else
   {
     WAsmCode[1] += (w1 << 6);
     WAsmCode[2] += (w2 << 6);
-    if (!CodeIndRegPair(ArgStr[3].Str, &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[3]);
+    if (!CodeIndRegPair(&ArgStr[3], &w1, &w2)) WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[3]);
     else
     {
       WAsmCode[1] += (w1 << 12);
@@ -3875,123 +4053,123 @@ static void DecodeTRAPcc(Word CondCode)
 /*-------------------------------------------------------------------------*/
 /* Dekodierroutinen Gleitkommaeinheit */
 
-static Boolean DecodeOneFPReg(char *Asc, Byte * h)
-{
-  if ((strlen(Asc) == 3) && (!as_strncasecmp(Asc, "FP", 2)) && ValReg(Asc[2]))
-  {
-    *h = Asc[2] - '0';
-    return True;
-  }
-  else
-    return False;
-}
+enum { eFMovemTypNone = 0, eFMovemTypDyn = 1, eFMovemTypStatic = 2, eFMovemTypCtrl = 3 };
 
-static void DecodeFRegList(char *Asc_o, Byte *Typ, Byte *Erg)
+static void DecodeFRegList(const tStrComp *pArg, Byte *pTyp, Byte *pList)
 {
-  String s, Asc;
-  Word hw;
-  Byte h2, h3, z;
-  char *h1;
+  Word hw, Reg, RegFrom, RegTo;
+  Byte z;
+  char *p, *p2;
+  String ArgStr;
+  tStrComp Arg, Remainder, From, To;
 
-  strmaxcpy(Asc, Asc_o, STRINGSIZE);
-  *Typ = 0;
-  if (*Asc == '\0')
+  StrCompMkTemp(&Arg, ArgStr);
+  StrCompCopy(&Arg, pArg);
+
+  *pTyp = eFMovemTypNone;
+  if (*Arg.Str == '\0')
     return;
 
-  if ((strlen(Asc) == 2) && (mytoupper(*Asc) == 'D') && ValReg(Asc[1]))
+  switch (DecodeReg(&Arg, &Reg, False))
   {
-    *Typ = 1;
-    *Erg = (Asc[1] - '0') << 4;
-    return;
+    case eIsReg:
+      if (Reg & 8)
+        return;
+      *pTyp = eFMovemTypDyn;
+      *pList = Reg << 4;
+      return;
+    case eRegAbort:
+      return;
+    default:
+      break;
   }
 
   hw = 0;
   do
   {
-    h1 = strchr(Asc, '/');
-    if (!h1)
+    p = strchr(Arg.Str, '/');
+    if (p)
+      StrCompSplitRef(&Arg, &Remainder, &Arg, p);
+    p2 = strchr(Arg.Str, '-');
+    if (p2)
     {
-      strcpy(s, Asc);
-      *Asc = '\0';
-    }
-    else
-    {
-      *h1 = '\0';
-      strcpy(s, Asc);
-      strmov(Asc, h1 + 1);
-    }
-    if (!as_strcasecmp(s, "FPCR"))
-      hw |= 0x400;
-    else if (!as_strcasecmp(s, "FPSR"))
-      hw |= 0x200;
-    else if (!as_strcasecmp(s, "FPIAR"))
-      hw |= 0x100;
-    else
-    {
-      h1 = strchr(s, '-');
-      if (!h1)
-      {
-        if (!DecodeOneFPReg(s, &h2))
-          return;
-        hw |= (1 << (7 - h2));
-      }
+      StrCompSplitRef(&From, &To, &Arg, p2);
+      if ((DecodeFPReg(&From, &RegFrom, False) != eIsReg)
+       || (RegFrom & REG_FPCTRL)
+       || (DecodeFPReg(&To, &RegTo, False) != eIsReg)
+       || (RegTo & REG_FPCTRL))
+        return;
+      if (RegFrom <= RegTo)
+        for (z = RegFrom; z <= RegTo; z++) hw |= (1 << (7 - z));
       else
       {
-        *h1 = '\0';
-        if (!DecodeOneFPReg(s, &h2))
-          return;
-        if (!DecodeOneFPReg(h1 + 1, &h3))
-          return;
-        for (z = h2; z <= h3; z++) hw |= (1 << (7 - z));
+        for (z = RegFrom; z <= 7; z++) hw |= (1 << (7 - z));
+        for (z = 0; z <= RegTo; z++) hw |= (1 << (7 - z));
       }
     }
+    else
+    {
+      if (DecodeFPReg(&Arg, &Reg, False) != eIsReg)
+        return;
+      if (Reg & REG_FPCTRL)
+        hw |= (Reg & 7) << 8;
+      else
+        hw |= (1 << (7 - Reg));
+    }
+    if (p)
+      Arg = Remainder;
   }
-  while (*Asc != '\0');
+  while (p);
   if (Hi(hw) == 0)
   {
-    *Typ = 2;
-    *Erg = Lo(hw);
+    *pTyp = eFMovemTypStatic;
+    *pList = Lo(hw);
   }
   else if (Lo(hw) == 0)
   {
-    *Typ = 3;
-    *Erg = Hi(hw);
+    *pTyp = eFMovemTypCtrl;
+    *pList = Hi(hw);
   }
 }
 
-static void GenerateMovem(Byte z1, Byte z2, tAdrResult *pResult)
+static Byte Mirror8(Byte List)
 {
-  Byte hz2, z;
+  Byte hList;
+  int z;
 
+  hList = List; List = 0;
+  for (z = 0; z < 8; z++)
+  {
+    List = List << 1;
+    if (hList & 1)
+      List |= 1;
+    hList = hList >> 1;
+  }
+  return List;
+}
+
+static void GenerateMovem(Byte Typ, Byte List, tAdrResult *pResult)
+{
   if (pResult->Num == ModNone)
     return;
   CodeLen = 4 + pResult->Cnt;
   CopyAdrVals(WAsmCode + 2, pResult);
   WAsmCode[0] = 0xf200 | pResult->Mode;
-  switch (z1)
+  switch (Typ)
   {
-    case ModData:
-    case ModAdr:
+    case eFMovemTypDyn:
+    case eFMovemTypStatic:
       WAsmCode[1] |= 0xc000;
-      if (z1 == 1)
+      if (Typ == eFMovemTypDyn)
         WAsmCode[1] |= 0x800;
-      if (pResult->Num != 5)
+      if (pResult->Num != ModPre)
         WAsmCode[1] |= 0x1000;
-      if ((pResult->Num == ModPre) && (z1 == 2))
-      {
-        hz2 = z2; z2 = 0;
-        for (z = 0; z < 8; z++)
-        {
-          z2 = z2 << 1;
-          if (hz2 & 1)
-            z2 |= 1;
-          hz2 = hz2 >> 1;
-        }
-      }
-      WAsmCode[1] |= z2;
+      if ((pResult->Num == ModPre) && (Typ == eFMovemTypStatic))
+        List = Mirror8(List);
+      WAsmCode[1] |= List;
       break;
-    case 3:
-      WAsmCode[1] |= 0x8000 | (((Word)z2) << 10);
+    case eFMovemTypCtrl:
+      WAsmCode[1] |= 0x8000 | (((Word)List) << 10);
       break;
   }
 }
@@ -4413,14 +4591,14 @@ static void DecodeFMOVEM(Word Code)
   {
     tAdrResult AdrResult;
 
-    DecodeFRegList(ArgStr[2].Str, &Typ, &List);
-    if (Typ != 0)
+    DecodeFRegList(&ArgStr[2], &Typ, &List);
+    if (Typ != eFMovemTypNone)
     {
       if (*AttrPart.Str
-      && (((Typ < 3) && (OpSize != NativeFloatSize))
-        || ((Typ == 3) && (OpSize != eSymbolSize32Bit))))
+      && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
+        || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit))))
         WrError(ErrNum_InvOpSize);
-      else if ((Typ != 2) && (pCurrCPUProps->Family == eColdfire))
+      else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire))
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
       else
       {
@@ -4428,12 +4606,12 @@ static void DecodeFMOVEM(Word Code)
         Mask = MModAdrI | MModDAdrI | MModPC;
         if (pCurrCPUProps->Family != eColdfire)
           Mask |= MModPost | MModAIX | MModPCIdx | MModAbs;
-        if (Typ == 3)   /* Steuerregister auch Predekrement */
+        if (Typ == eFMovemTypCtrl)   /* Steuerregister auch Predekrement */
         {
           Mask |= MModPre;
-          if ((List == 4) | (List == 2) | (List == 1)) /* nur ein Register */
+          if ((List == REG_FPCR) | (List == REG_FPSR) | (List == REG_FPIAR)) /* nur ein Register */
             Mask |= MModData | MModImm;
-          if (List == 1) /* nur FPIAR */
+          if (List == REG_FPIAR) /* nur FPIAR */
             Mask |= MModAdr;
         }
         if (DecodeAdr(&ArgStr[1], Mask, &AdrResult))
@@ -4445,22 +4623,22 @@ static void DecodeFMOVEM(Word Code)
     }
     else
     {
-      DecodeFRegList(ArgStr[1].Str, &Typ, &List);
-      if (Typ != 0)
+      DecodeFRegList(&ArgStr[1], &Typ, &List);
+      if (Typ != eFMovemTypNone)
       {
-        if (*AttrPart.Str && (((Typ < 3) && (OpSize != NativeFloatSize)) || ((Typ == 3) && (OpSize != eSymbolSize32Bit)))) WrError(ErrNum_InvOpSize);
-        else if ((Typ != 2) && (pCurrCPUProps->Family == eColdfire)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        if (*AttrPart.Str && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize)) || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) WrError(ErrNum_InvOpSize);
+        else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
         else
         {
           Mask = MModAdrI | MModDAdrI;
           if (pCurrCPUProps->Family != eColdfire)
             Mask |= MModPre | MModAIX | MModAbs;
-          if (Typ == 3)   /* Steuerregister auch Postinkrement */
+          if (Typ == eFMovemTypCtrl)   /* Steuerregister auch Postinkrement */
           {
             Mask |= MModPre;
-            if ((List == 4) | (List == 2) | (List == 1)) /* nur ein Register */
+            if ((List == REG_FPCR) | (List == REG_FPSR) | (List == REG_FPIAR)) /* nur ein Register */
               Mask |= MModData;
-            if (List == 1) /* nur FPIAR */
+            if (List == REG_FPIAR) /* nur FPIAR */
               Mask |= MModAdr;
           }
           if (DecodeAdr(&ArgStr[2], Mask, &AdrResult))
@@ -4611,7 +4789,7 @@ static void DecodeFTRAPcc(Word CondCode)
 }
 
 /*-------------------------------------------------------------------------*/
-/* Hilfroutinen MMU: */
+/* Hilfsroutinen MMU: */
 
 static Boolean DecodeFC(const tStrComp *pArg, Word *erg)
 {
@@ -4630,10 +4808,19 @@ static Boolean DecodeFC(const tStrComp *pArg, Word *erg)
     return True;
   }
 
-  if ((strlen(pArg->Str) == 2) && (toupper(*pArg->Str) == 'D') && ValReg(pArg->Str[1]))
+  switch (DecodeReg(pArg, erg, False))
   {
-    *erg = pArg->Str[1] - '0' + 8;
-    return True;
+    case eIsReg:
+      if (*erg < 8)
+      {
+        *erg += 8;
+        return True;
+      }
+      break;
+    case eIsNoReg:
+      break;
+    default:
+      return False;
   }
 
   if (*pArg->Str == '#')
@@ -5569,7 +5756,7 @@ static void DecodeCPLDST(Word Code)
         pETArg = &ArgStr[3];
         break;
       case 3:
-        if (CodeReg(ArgStr[2].Str, &Reg))
+        if (DecodeReg(&ArgStr[2], &Reg, False) == eIsReg)
           pRnArg = &ArgStr[2];
         else
           pETArg = &ArgStr[2];
@@ -5578,11 +5765,8 @@ static void DecodeCPLDST(Word Code)
 
     if (pRnArg)
     {
-      if (!CodeReg(pRnArg->Str, &Reg))
-      {
-        WrStrErrorPos(ErrNum_InvReg, pRnArg);
+      if (DecodeReg(pRnArg, &Reg, True) != eIsReg)
         return;
-      }
       WAsmCode[1] |= Reg << 12;
     }
     if (pETArg)
@@ -5985,6 +6169,8 @@ static void InitFields(void)
   AddPMMUReg("PSR"  , eSymbolSize16Bit, 24); AddPMMUReg("PCSR" , eSymbolSize16Bit, 25);
   AddPMMUReg("TT0"  , eSymbolSize32Bit,  2); AddPMMUReg("TT1"  , eSymbolSize32Bit,  3);
   AddPMMUReg("MMUSR", eSymbolSize16Bit, 24);
+
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -5996,6 +6182,33 @@ static void DeinitFields(void)
 }
 
 /*-------------------------------------------------------------------------*/
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_68K(char *pArg, TempResult *pResult)
+ * \brief  handle built-in (register) symbols for 68K
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_68K(char *pArg, TempResult *pResult)
+{
+  Word RegNum;
+
+  if (DecodeRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize32Bit;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_68K;
+  }
+  else if (DecodeFPRegCore(pArg, &RegNum))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = NativeFloatSize;
+    pResult->Contents.RegDescr.Reg = RegNum;
+    pResult->Contents.RegDescr.Dissect = DissectReg_68K;
+  }
+}
 
 static Boolean DecodeAttrPart_68K(void)
 {
@@ -6042,7 +6255,7 @@ static void InitCode_68K(void)
 
 static Boolean IsDef_68K(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_68K(void)
@@ -6072,9 +6285,10 @@ static void SwitchTo_68K(void *pUser)
   pCurrCPUProps = (const tCPUProps*)pUser;
 
   DecodeAttrPart = DecodeAttrPart_68K;
-
   MakeCode = MakeCode_68K;
   IsDef = IsDef_68K;
+  DissectReg = DissectReg_68K;
+  InternSymbol = InternSymbol_68K;
 
   SwitchFrom = SwitchFrom_68K;
   InitFields();

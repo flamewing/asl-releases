@@ -155,14 +155,14 @@ static Boolean CheckOpt(char *Asc)
     Flag = True;
     if (l != 2)
       Flag = False;
-    else if (mytoupper(*Asc) == 'A')
+    else if (as_toupper(*Asc) == 'A')
     {
       if ((Asc[1] >= '1') && (Asc[1] <= '2'))
         Condition += (Asc[1] - '0' + 3) << 1;
       else
         Flag = False;
     }
-    else if (mytoupper(*Asc) == 'B')
+    else if (as_toupper(*Asc) == 'B')
     {
       if ((Asc[1] >= '0') && (Asc[1] <= '2'))
         Condition += (Asc[1] - '0' + 1) << 1;
@@ -276,7 +276,7 @@ static Boolean DecodeSReg(char *Asc, LongWord *Reg, Boolean Quarrel)
   Boolean TFlag;
 
   TFlag = True;
-  switch (mytoupper(*Asc))
+  switch (as_toupper(*Asc))
   {
     case 'A':
       *Reg = 0; break;
@@ -2689,7 +2689,7 @@ static void MakeCode_3206X(void)
   ThisCross = False;
   if (*AttrPart.Str)
   {
-    if (mytoupper(AttrPart.Str[strlen(AttrPart.Str) - 1]) == 'X')
+    if (as_toupper(AttrPart.Str[strlen(AttrPart.Str) - 1]) == 'X')
     {
       ThisCross = True;
       AttrPart.Str[strlen(AttrPart.Str) - 1] = '\0';

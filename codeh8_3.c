@@ -61,6 +61,8 @@
 #define M_CPU6413309  (1 << 3)
 #define M_CPUH8_300H  (1 << 4)
 
+#define REG_MARK 16
+#define REG_SP 7
 
 static tSymbolSize OpSize;
 static ShortInt AdrMode;    /* Ergebnisadressmodus */
@@ -104,67 +106,137 @@ static Boolean IsNum(char Inp, Byte *Erg)
   }
 }
 
-static Boolean DecodeReg(char *Asc, Byte *Erg, tSymbolSize *Size)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(char *pArg, Byte *pResult, tSymbolSize *pSize)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \param  pSize register size if yes
+ * \return True if it is a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(char *pArg, Byte *pResult, tSymbolSize *pSize)
 {
-  int l = strlen(Asc);
-
-  if (!as_strcasecmp(Asc, "SP"))
+  if (!as_strcasecmp(pArg, "SP"))
   {
-    *Erg = 7;
-    *Size = (Maximum) ? eSymbolSize32Bit : eSymbolSize16Bit;
+    *pResult = REG_SP | REG_MARK;
+    *pSize = (Maximum) ? eSymbolSize32Bit : eSymbolSize16Bit;
     return True;
   }
 
-  else if ((l == 3) && (mytoupper(*Asc) == 'R') && (IsNum(Asc[1], Erg)))
+  switch (strlen(pArg))
   {
-    if (mytoupper(Asc[2]) == 'L')
-    {
-      *Erg += 8;
-      *Size = eSymbolSize8Bit;
-      return True;
-    }
-    else if (mytoupper(Asc[2]) == 'H')
-    {
-      *Size = eSymbolSize8Bit;
-      return True;
-    }
-    else
-    {
-      *Size = eSymbolSizeUnknown;
-      return False;
-    }
+    case 2:
+      if (IsNum(pArg[1], pResult))
+      {
+        if (as_toupper(*pArg) == 'R')
+        {
+          *pSize = eSymbolSize16Bit;
+          return True;
+        }
+        else if (as_toupper(*pArg) == 'E')
+        {
+          *pResult += 8;
+          *pSize = eSymbolSize16Bit;
+          return True;
+        }
+      }
+      break;
+    case 3:
+      if ((as_toupper(*pArg) == 'R') && IsNum(pArg[1], pResult))
+      {
+        if (as_toupper(pArg[2]) == 'L')
+        {
+          *pResult += 8;
+          *pSize = eSymbolSize8Bit;
+          return True;
+        }
+        else if (as_toupper(pArg[2]) == 'H')
+        {
+          *pSize = eSymbolSize8Bit;
+          return True;
+        }
+      }
+      else if ((as_toupper(*pArg) == 'E') && (as_toupper(pArg[1]) == 'R') && IsNum(pArg[2], pResult))
+      {
+        *pSize = eSymbolSize32Bit;
+        return True;
+      }
   }
 
-  else if ((l == 2) && (IsNum(Asc[1], Erg)))
-  {
-    if (mytoupper(*Asc) == 'R')
-    {
-      *Size = eSymbolSize16Bit;
-      return True;
-    }
-    else if (mytoupper(*Asc) == 'E')
-    {
-      *Erg += 8;
-      *Size = eSymbolSize16Bit;
-      return True;
-    }
-    else
-    {
-      *Size = eSymbolSizeUnknown;
-      return False;
-    }
-  }
+  *pSize = eSymbolSizeUnknown;
+  return False;
+}
 
-  else if ((l == 3) && (mytoupper(*Asc) == 'E') && (mytoupper(Asc[1]) == 'R') & (IsNum(Asc[2], Erg)))
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_H8_3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - C16x variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_H8_3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
   {
-    *Size = eSymbolSize32Bit;
-    return True;
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u%c", (unsigned)(Value & 7), "HL"[(Value >> 3) & 1]);
+      break;
+    case eSymbolSize16Bit:
+      if (Value == (REG_SP | REG_MARK))
+        as_snprintf(pDest, DestSize, "SP");
+      else
+        as_snprintf(pDest, DestSize, "%c%u", "RE"[(Value >> 3) & 1], (unsigned)(Value & 7));
+      break;
+    case eSymbolSize32Bit:
+      if (Value == (REG_SP | REG_MARK))
+        as_snprintf(pDest, DestSize, "SP");
+      else
+        as_snprintf(pDest, DestSize, "ER%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pResult, tSymbolSize ReqSize, tSymbolSize *pSize)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg source argument
+ * \param  pResult register # if yes
+ * \param  SizeMask requested register size(s)
+ * \param  pSize register size if yes
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, unsigned SizeMask, tSymbolSize *pSize, Boolean MustBeReg)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pResult, pSize))
+  {
+    RegEvalResult = eIsReg;
+    *pResult &= ~REG_MARK;
   }
   else
   {
-    *Size = eSymbolSizeUnknown;
-    return False;
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+    *pSize = EvalResult.DataSize;
+    *pResult = RegDescr.Reg & ~REG_MARK;
   }
+
+  if ((RegEvalResult == eIsReg)
+   && !((SizeMask >> *pSize) & 1))
+  {
+    WrStrErrorPos(ErrNum_InvOpSize, pArg);
+    return MustBeReg ? eIsNoReg : eRegAbort;
+  }
+
+  return RegEvalResult;
 }
 
 static void CutSize(tStrComp *pArg)
@@ -193,19 +265,26 @@ static Boolean ChkCPU32(tErrorNum ErrorNum)
   return ChkMinCPUExt(CPU6413309, ErrorNum);
 }
 
-static Byte DecodeBaseReg(char *Asc, Byte *Erg)
+static Byte DecodeBaseReg(const tStrComp *pArg, Byte *Erg, Boolean MustBeReg)
 {
   tSymbolSize HSize;
   Word Mask;
 
-  if (!DecodeReg(Asc, Erg, &HSize))
-    return 0;
-  if ((HSize == 0) || ((HSize == 1) && (*Erg > 7)))
+  switch (DecodeReg(pArg, Erg, (1 << eSymbolSize16Bit) | (1 << eSymbolSize32Bit), &HSize, MustBeReg))
   {
-    WrError(ErrNum_InvAddrMode);
+    case eIsNoReg:
+      return 0;
+    case eRegAbort:
+      return 1;
+    default:
+      break;
+  }
+  if ((HSize == eSymbolSize16Bit) && (*Erg > 7))
+  {
+    WrStrErrorPos(ErrNum_InvReg, pArg);
     return 1;
   }
-  Mask = (HSize == 1) ? (M_CPUH8_300L | M_CPU6413308 | M_CPUH8_300) : (M_CPU6413309 | M_CPUH8_300H);
+  Mask = (HSize == eSymbolSize16Bit) ? (M_CPUH8_300L | M_CPU6413308 | M_CPUH8_300) : (M_CPU6413309 | M_CPUH8_300H);
   if (ChkExactCPUMaskExt(Mask, CPUH8_300L, ErrNum_AddrModeNotSupported) < 0)
     return 1;
   return 2;
@@ -347,12 +426,17 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   /* Register ? */
 
-  if (DecodeReg(pArg->Str, &HReg, &HSize))
+  switch (DecodeReg(pArg, &HReg, (1 << eSymbolSize8Bit) | (1 << eSymbolSize16Bit) | (1 << eSymbolSize32Bit), &HSize, False))
   {
-    AdrMode = ModReg;
-    AdrPart = HReg;
-    SetOpSize(HSize);
-    goto chk;
+    case eIsReg:
+      AdrMode = ModReg;
+      AdrPart = HReg;
+      SetOpSize(HSize);
+      goto chk;
+    case eRegAbort:
+      return;
+    case eIsNoReg:
+      break;
   }
 
   /* indirekt ? */
@@ -374,7 +458,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
       goto chk;
     }
 
-    switch (DecodeBaseReg(Arg.Str, &AdrPart))
+    switch (DecodeBaseReg(&Arg, &AdrPart, False))
     {
       case 1:
         goto chk;
@@ -385,7 +469,10 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
     if (*Arg.Str == '-')
     {
-      switch (DecodeBaseReg(Arg.Str + 1, &AdrPart))
+      tStrComp Reg;
+
+      StrCompRefRight(&Reg, &Arg, 1);
+      switch (DecodeBaseReg(&Reg, &AdrPart, True))
       {
         case 1:
           goto chk;
@@ -399,7 +486,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
     if (*Arg.Str && (Arg.Str[ArgLen - 1] == '+'))
     {
       StrCompShorten(&Arg, 1);
-      switch (DecodeBaseReg(Arg.Str, &AdrPart))
+      switch (DecodeBaseReg(&Arg, &AdrPart, True))
       {
         case 1:
           goto chk;
@@ -424,7 +511,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
         p = QuotPos(Part.Str, ',');
         if (p)
           StrCompSplitRef(&Part, &Remainder, &Part, p);
-        switch (DecodeBaseReg(Part.Str, &HReg))
+        switch (DecodeBaseReg(&Part, &HReg, False))
         {
           case 2:
             if (AdrPart != 0xff)
@@ -1414,13 +1501,7 @@ static void DecodeBit2(Word Code)
     else
     {
       OpCode = Code + 0x60;
-      OK = DecodeReg(ArgStr[1].Str, &Bit, &HSize);
-      if (!OK) WrError(ErrNum_InvAddrMode);
-      if ((OK) && (HSize != 0))
-      {
-        WrError(ErrNum_InvOpSize);
-        OK = False;
-      }
+      OK = DecodeReg(&ArgStr[1], &Bit, 1 << eSymbolSize8Bit, &HSize, True) == eIsReg;
     }
     if (OK)
     {
@@ -1877,6 +1958,8 @@ static void InitFields(void)
   AddBit2("BNOT", 1);
   AddBit2("BSET", 0);
   AddBit2("BTST", 3);
+
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -1885,6 +1968,27 @@ static void DeinitFields(void)
 }
 
 /*-------------------------------------------------------------------------*/
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_H8_3(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on H8/300
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_H8_3(char *pArg, TempResult *pResult)
+{
+  Byte Result;
+  tSymbolSize Size;
+
+  if (DecodeRegCore(pArg, &Result, &Size))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = Size;
+    pResult->Contents.RegDescr.Reg = Result;
+    pResult->Contents.RegDescr.Dissect = DissectReg_H8_3;
+  }
+}
 
 static Boolean DecodeAttrPart_H8_3(void)
 {
@@ -1921,7 +2025,7 @@ static void MakeCode_H8_3(void)
 
 static Boolean IsDef_H8_3(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_H8_3(void)
@@ -1951,6 +2055,8 @@ static void SwitchTo_H8_3(void)
   DecodeAttrPart = DecodeAttrPart_H8_3;
   MakeCode = MakeCode_H8_3;
   IsDef = IsDef_H8_3;
+  InternSymbol = InternSymbol_H8_3;
+  DissectReg = DissectReg_H8_3;
   SwitchFrom = SwitchFrom_H8_3;
   InitFields();
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);

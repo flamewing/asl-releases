@@ -122,7 +122,7 @@ static Boolean Is4x(void)
 
 static Boolean DecodeReg(const char *Asc, Byte *Erg)
 {
-  if ((mytoupper(*Asc) == 'R') && (strlen(Asc) <= 3) && (strlen(Asc) >= 2))
+  if ((as_toupper(*Asc) == 'R') && (strlen(Asc) <= 3) && (strlen(Asc) >= 2))
   {
     Boolean OK;
 
@@ -143,7 +143,7 @@ static Boolean DecodeReg(const char *Asc, Byte *Erg)
   }
 
   if ((strlen(Asc) == 3)
-   && (mytoupper(*Asc) == 'A') && (mytoupper(Asc[1]) == 'R')
+   && (as_toupper(*Asc) == 'A') && (as_toupper(Asc[1]) == 'R')
    && (Asc[2] >= '0') && (Asc[2] <= '7'))
   {
     *Erg = Asc[2] - '0' + ARxRegStart;
@@ -212,7 +212,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte Erl, Boolean ImmFloat)
     BitRev = False;
     Circ = False;
     l = strlen(Arg.Str);
-    if ((l > 0) && (mytoupper(Arg.Str[l - 1]) == 'B'))
+    if ((l > 0) && (as_toupper(Arg.Str[l - 1]) == 'B'))
     {
       BitRev = True;
       StrCompShorten(&Arg, 1);

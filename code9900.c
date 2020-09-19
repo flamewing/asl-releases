@@ -1379,9 +1379,9 @@ static void InternSymbol_9900(char *Asc, TempResult*Erg)
   char *h = Asc;
 
   Erg->Typ = TempNone;
-  if ((strlen(Asc) >= 2) && (mytoupper(*Asc) == 'R'))
+  if ((strlen(Asc) >= 2) && (as_toupper(*Asc) == 'R'))
     h = Asc + 1;
-  else if ((strlen(Asc) >= 3) && (mytoupper(*Asc) == 'W') && (mytoupper(Asc[1]) == 'R'))
+  else if ((strlen(Asc) >= 3) && (as_toupper(*Asc) == 'W') && (as_toupper(Asc[1]) == 'R'))
     h = Asc + 2;
 
   Erg->Contents.Int = ConstLongInt(h, &err, 10);

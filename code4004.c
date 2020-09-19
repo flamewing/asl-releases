@@ -18,6 +18,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "asmallg.h"
 #include "codevars.h"
 #include "headids.h"
 #include "fourpseudo.h"
@@ -33,13 +34,21 @@ static CPUVar CPU4004, CPU4040;
 /*---------------------------------------------------------------------------*/
 /* Parser */
 
+/*!------------------------------------------------------------------------
+ * \fn     RegVal(const char *pInp, int l)
+ * \brief  decode numeric part of register name - either single hex digit or two dec digits
+ * \param  pInp numberic value from argument
+ * \param  length of numberic value from argument
+ * \return register number or 0xff if invalid
+ * ------------------------------------------------------------------------ */
+
 static Byte RegVal(const char *pInp, int l)
 {
   switch (l)
   {
     case 1:
     {
-      char ch = mytoupper(*pInp);
+      char ch = as_toupper(*pInp);
       if ((ch >='0') && (ch <= '9'))
         return ch - '0';
       else if ((ch >='A') && (ch <= 'F'))
@@ -64,64 +73,134 @@ static Byte RegVal(const char *pInp, int l)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Byte *pValue, int l)
+ * \brief  decode 4 bit register
+ * \param  pArg potential register argument
+ * \param  pValue register # if it's a register
+ * \param  l length of argument
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
 static Boolean DecodeRegCore(const char *pAsc, Byte *pErg, int l)
 {
-  if ((l < 2) || (l > 3) || (mytoupper(*pAsc) != 'R'))
+  if ((l < 2) || (l > 3) || (as_toupper(*pAsc) != 'R'))
     return False;
 
   *pErg = RegVal(pAsc + 1, l - 1);
   return (*pErg != 0xff);
 }
 
-static Boolean DecodeReg(const char *pAsc, Byte *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRRegCore(const char *pArg, Byte *pValue)
+ * \brief  decode 8 bit register pair
+ * \param  pArg ASCII argument of potential register
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRRegCore(const char *pArg, Byte *pValue)
 {
-  char *s;
-
-  if (FindRegDef(pAsc, &s))
-    pAsc = s;
-
-  return DecodeRegCore(pAsc, pErg, strlen(pAsc));
-}
-
-static Boolean DecodeRReg(char *pAsc, Byte *pErg)
-{
-  Byte h;
-  char *s, *pPair, Save;
+  Byte UpperValue;
+  const char *pPair;
   int l;
 
-  if (FindRegDef(pAsc, &s))
-    pAsc = s;
-
-  l = strlen(pAsc);
+  l = strlen(pArg);
 
   /* syntax RnP: */
 
   if ((l >= 3) && (l <= 4)
-   && (mytoupper(pAsc[l -1]) == 'P')
-   && DecodeRegCore(pAsc, pErg, l - 1))
+   && (as_toupper(pArg[l -1]) == 'P')
+   && DecodeRegCore(pArg, pValue, l - 1))
   {
-    if (*pErg > 7)
+    if (*pValue > 7)
       return False;
-    *pErg <<= 1;
+    *pValue <<= 1;
     return True;
   }
 
   /* syntax RnRn+1 */
 
-  if ((l < 4) || (l > 6) || (mytoupper(*pAsc) != 'R'))
+  if ((l < 4) || (l > 6) || (as_toupper(*pArg) != 'R'))
     return False;
 
-  for (pPair = pAsc + 1; *pPair; pPair++)
-    if (mytoupper(*pPair) == 'R')
+  for (pPair = pArg + 1; *pPair; pPair++)
+    if (as_toupper(*pPair) == 'R')
       break;
-  if ((!*pPair) || (pPair - pAsc < 2) || (pPair - pAsc >= l - 1))
+  if ((!*pPair) || (pPair - pArg < 2) || (pPair - pArg >= l - 1))
     return False;
 
-  Save = *pPair; *pPair = '\0';
-  *pErg = RegVal(pAsc + 1, pPair - pAsc - 1);
-  h = RegVal(pPair + 1, l - (pPair - pAsc + 1));
-  *pPair = Save;
-  return (*pErg != 0xff) && (h != 0xff) && (Odd(h)) && (*pErg + 1 == h);
+  *pValue = RegVal(pArg + 1, pPair - pArg - 1);
+  UpperValue = RegVal(pPair + 1, l - (pPair - pArg + 1));
+  return (*pValue != 0xff) && (UpperValue != 0xff) && Odd(UpperValue) && (*pValue + 1 == UpperValue);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_4004(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - 4004 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_4004(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "R%uP", (unsigned)(Value >> 1));
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pValue)
+ * \brief  decode 4 bit register, including register aliases
+ * \param  pArg potential register argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeReg(const tStrComp *pArg, Byte *pValue)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, pValue, strlen(pArg->Str)))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, True);
+  *pValue = RegDescr.Reg;
+  return (RegEvalResult == eIsReg);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRReg(const tStrComp *pArg, Byte *pValue)
+ * \brief  decode 8 bit register pair, including register aliases
+ * \param  pArg potential register argument
+ * \param  pValue register # if it's a register
+ * \return True if it's a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRReg(const tStrComp *pArg, Byte *pValue)
+{
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRRegCore(pArg->Str, pValue))
+    return True;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize16Bit, True);
+  *pValue = RegDescr.Reg;
+  return (RegEvalResult == eIsReg);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -144,8 +223,7 @@ static void DecodeOneReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  else if (DecodeReg(&ArgStr[1], &Erg))
   {
     BAsmCode[0] = Lo(Code) + Erg;
     CodeLen = 1;
@@ -157,8 +235,7 @@ static void DecodeOneRReg(Word Code)
   Byte Erg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!DecodeRReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  else if (DecodeRReg(&ArgStr[1], &Erg))
   {
     BAsmCode[0] = Lo(Code) + Erg;
     CodeLen = 1;
@@ -171,8 +248,7 @@ static void DecodeAccReg(Word Code)
 
   if (!ChkArgCnt(1, 2));
   else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].Str, "A"))) WrError(ErrNum_InvAddrMode);
-  else if (!DecodeReg(ArgStr[ArgCnt].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
-  else
+  else if (DecodeReg(&ArgStr[ArgCnt], &Erg))
   {
     BAsmCode[0] = Lo(Code) + Erg;
     CodeLen = 1;
@@ -220,8 +296,7 @@ static void DecodeISZ(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeReg(ArgStr[1].Str, &Erg)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  else if (DecodeReg(&ArgStr[1], &Erg))
   {
     Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt12, &OK, &Flags);
     if (OK && ChkSamePage(EProgCounter() + 1, Adr, 8, Flags))
@@ -244,7 +319,7 @@ static void DecodeJCN(Word Index)
 
     BAsmCode[0] = 0;
     for (pCond = ArgStr[1].Str; *pCond; pCond++)
-      switch (mytoupper(*pCond))
+      switch (as_toupper(*pCond))
       {
         case 'Z': BAsmCode[0] |= 4; break;
         case 'C': BAsmCode[0] |= 2; break;
@@ -281,8 +356,7 @@ static void DecodeFIM(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2, 2));
-  else if (!DecodeRReg(ArgStr[1].Str, BAsmCode)) WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-  else
+  else if (DecodeRReg(&ArgStr[1], BAsmCode))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
@@ -298,14 +372,6 @@ static void DecodeDATA_4004(Word Code)
   UNUSED(Code); 
 
   DecodeDATA(Int8, Int4);
-}
-
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-    AddRegDef(&LabPart, &ArgStr[1]);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -388,7 +454,7 @@ static void InitFields(void)
 
   AddInstTable(InstTable, "DS", 0, DecodeRES);
   AddInstTable(InstTable, "DATA", 0, DecodeDATA_4004);
-  AddInstTable(InstTable, "REG", 0, DecodeREG);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -398,6 +464,33 @@ static void DeinitFields(void)
 
 /*---------------------------------------------------------------------------*/
 /* Callbacks */
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_4004
+ * \brief  Built-in symbols for 4004
+ * \param  pArg source argument
+ * \param  pResult buffer for result
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_4004(char *pArg, TempResult *pResult)
+{
+  Byte RegValue;
+  
+  if (DecodeRegCore(pArg, &RegValue, strlen(pArg)))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize8Bit;
+    pResult->Contents.RegDescr.Reg = RegValue;
+    pResult->Contents.RegDescr.Dissect = DissectReg_4004;
+  }
+  else if (DecodeRRegCore(pArg, &RegValue))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize16Bit;
+    pResult->Contents.RegDescr.Reg = RegValue;
+    pResult->Contents.RegDescr.Dissect = DissectReg_4004;
+  }
+}
 
 static void MakeCode_4004(void)
 {
@@ -446,6 +539,8 @@ static void SwitchTo_4004(void)
 
   MakeCode = MakeCode_4004;
   IsDef = IsDef_4004;
+  InternSymbol = InternSymbol_4004;
+  DissectReg = DissectReg_4004;
   SwitchFrom = SwitchFrom_4004;
 
   InitFields();

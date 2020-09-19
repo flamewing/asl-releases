@@ -1,3 +1,9 @@
+2020-09-19 [1.42 Bld 174]
+
+- Change      : rework register symbol handling
+- Addition    : register symbols for 68K, M16, M16C, H8/300, H8/500,
+                SH7x00, XGATE, H16, i960, XA, and 29K
+
 2020-08-25 [1.42 Bld 173]
 
 - Change      : avoid error/warning number of zero

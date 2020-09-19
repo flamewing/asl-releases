@@ -4,8 +4,8 @@
 
 OBJDIR =
 CC = gcc
-CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror
-#CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror -ansi -std=c89 -pedantic
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror -Wstrict-prototypes
+#CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror -Wstrict-prototypes -ansi -std=c89 -pedantic
 HOST_OBJEXTENSION = .o
 LD = $(CC)
 LDFLAGS =

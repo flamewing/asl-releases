@@ -625,3 +625,47 @@ d4:     djnz.w	123h,d4
          mov     r5,[r5+]
 	endexpect
 
+	; register aliases
+
+regr0l	equ	r0l
+regr0h	equ	r0h
+regr1l	equ	r1l
+regr1h	equ	r1h
+regr2l	equ	r2l
+regr2h	equ	r2h
+regr3l	equ	r3l
+regr3h	equ	r3h
+regr4l	equ	r4l
+regr4h	equ	r4h
+regr5l	equ	r5l
+regr5h	equ	r5h
+regr6l	equ	r6l
+regr6h	equ	r6h
+regr7l	equ	r7l
+regr7h	equ	r7h
+
+regr0	reg	r0
+regr1	reg	r1
+regr2	reg	r2
+regr3	reg	r3
+regr4	reg	r4
+regr5	reg	r5
+regr6	reg	r6
+regr7	reg	r7
+
+regr0d	equ.d	r0
+regr2d	equ.d	r2
+regr4d	equ.d	r4
+regr6d	equ.d	r6
+
+regsp	equ	sp
+
+	add.b	r4h,r1l
+	add.b	regr4h,regr1l
+	add.w	r4,[r3+100]
+	add.w	regr4,[regr3+100]
+	asl.d	r2,r4l
+	asl.d	regr2d,regr4l
+	expect	1131
+	asl.d	regr2,regr4l
+	endexpect

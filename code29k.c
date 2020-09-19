@@ -48,6 +48,8 @@ typedef struct
   LongWord Code;
 } SPReg;
 
+#define REG_LRMARK 256
+
 #define StdOrderCount 51
 #define NoImmOrderCount 22
 #define VecOrderCount 10
@@ -71,10 +73,11 @@ static StringList Emulations;
 
 /*-------------------------------------------------------------------------*/
 
-static void ChkSup(void)
+static Boolean ChkSup(void)
 {
   if (!SupAllowed)
     WrError(ErrNum_PrivOrder);
+  return SupAllowed;
 }
 
 static Boolean IsSup(LongWord RegNo)
@@ -89,43 +92,107 @@ static Boolean ChkCPU(CPUVar Min)
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean DecodeReg(char *Asc, LongWord *Erg)
-{
-  Boolean io, OK;
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, LongWord *pResult)
+ * \brief  check whether argument describes a CPU register
+ * \param  pArg source argument
+ * \param  pResult resulting register # if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
 
-  if ((strlen(Asc) >= 2) && (mytoupper(*Asc) == 'R'))
+static Boolean DecodeRegCore(const char *pArg, LongWord *pResult)
+{
+  int l = strlen(pArg);
+  Boolean OK;
+
+  if ((l >= 2) && (as_toupper(*pArg) == 'R'))
   {
-    *Erg = ConstLongInt(Asc + 1, &io, 10);
-    OK = ((io) && (*Erg <= 255));
+    *pResult = ConstLongInt(pArg + 1, &OK, 10);
+    return OK && (*pResult <= 255);
   }
-  else if ((strlen(Asc) >= 3) && (mytoupper(*Asc) == 'G') && (mytoupper(Asc[1]) == 'R'))
+  else if ((l >= 3) && (as_toupper(*pArg) == 'G') && (as_toupper(pArg[1]) == 'R'))
   {
-    *Erg = ConstLongInt(Asc + 2, &io, 10);
-    OK = ((io) && (*Erg <= 127));
+    *pResult = ConstLongInt(pArg + 2, &OK, 10);
+    if (!OK || (*pResult >= 128))
+      return False;
+    *pResult |= REG_LRMARK;
+    return True;
   }
-  else if ((strlen(Asc) >= 3) && (mytoupper(*Asc) == 'L') && (mytoupper(Asc[1]) == 'R'))
+  else if ((l >= 3) && (as_toupper(*pArg) == 'L') && (as_toupper(pArg[1]) == 'R'))
   {
-    *Erg = ConstLongInt(Asc + 2, &io, 10);
-    OK = ((io) && (*Erg <= 127));
-    *Erg += 128;
+    *pResult = ConstLongInt(pArg + 2, &OK, 10);
+    if (!OK || (*pResult >= 128))
+      return False;
+    *pResult |= 128 | REG_LRMARK;
+    return True;
   }
   else
-    OK = False;
-  if (OK)
+    return False;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_29K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - 29K variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_29K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
   {
-    if ((*Erg < 127) && (Odd(Reg_RBP >> ((*Erg) >> 4))))
-      ChkSup();
+    case eSymbolSize32Bit:
+      if (Value & REG_LRMARK)
+        as_snprintf(pDest, DestSize, "%cR%u", "GL"[(Value >> 7) & 1], (unsigned)(Value & 127));
+      else
+        as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
   }
-  return OK;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_29K(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+ * \brief  check whether argument describes a CPU register
+ * \param  pArg source argument
+ * \param  pResult resulting register # if yes
+ * \param  MustBeReg True if register is expected
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+{
+  tRegEvalResult RegEvalResult;
+  tEvalResult EvalResult;
+  tRegDescr RegDescr;
+
+  if (DecodeRegCore(pArg->Str, pResult))
+    RegEvalResult = eIsReg;
+  else
+  {
+    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+    if (eIsReg == RegEvalResult)
+      *pResult = RegDescr.Reg;
+  }
+
+  if (eIsReg == RegEvalResult)
+  {
+    *pResult &= ~REG_LRMARK;
+    if ((*pResult < 127) && (Odd(Reg_RBP >> (*pResult >> 4))))
+    {
+      if (!ChkSup())
+        RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
+    }
+  }
+  return RegEvalResult;
 }
 
 static Boolean DecodeArgReg(int ArgIndex, LongWord *pRes)
 {
-  Boolean Result = DecodeReg(ArgStr[ArgIndex].Str, pRes);
-
-  if (!Result)
-    WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgIndex]);
-  return Result;
+  return DecodeReg(&ArgStr[ArgIndex], pRes, True);
 }
 
 static Boolean DecodeSpReg(char *Asc_O, LongWord *Erg)
@@ -170,14 +237,17 @@ static void DecodeStd(Word Index)
     else OK = DecodeArgReg(2, &Src1);
     if (OK)
     {
-      if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
+      switch (DecodeReg(&ArgStr[ArgCnt], &Src2, False))
       {
-        OK = True; Src3 = 0;
-      }
-      else
-      {
-        Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
-        Src3 = 0x1000000;
+        case eIsReg:
+          OK = True; Src3 = 0;
+          break;
+        case eIsNoReg:
+          Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
+          Src3 = 0x1000000;
+          break;
+        case eRegAbort:
+          return;
       }
       if (OK)
       {
@@ -230,14 +300,17 @@ static void DecodeVec(Word Index)
     {
       if (DecodeArgReg(2, &Src1))
       {
-        if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
+        switch (DecodeReg(&ArgStr[ArgCnt], &Src2, False))
         {
-          OK = True; Src3 = 0;
-        }
-        else
-        {
-          Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
-          Src3 = 0x1000000;
+          case eIsReg:
+            OK = True; Src3 = 0;
+            break;
+          case eIsNoReg:
+            Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
+            Src3 = 0x1000000;
+            break;
+          default:
+            return;
         }
         if (OK)
         {
@@ -290,14 +363,17 @@ static void DecodeMem(Word Index)
       Dest = EvalStrIntExpression(&ArgStr[ArgCnt - 2], UInt7, &OK);
       if (OK && DecodeArgReg(ArgCnt - 1, &Src1))
       {
-        if (DecodeReg(ArgStr[ArgCnt].Str, &Src2))
+        switch (DecodeReg(&ArgStr[ArgCnt], &Src2, False))
         {
-          OK = True; Src3 = 0;
-        }
-        else
-        {
-          Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
-          Src3 = 0x1000000;
+          case eIsReg:
+            OK = True; Src3 = 0;
+            break;
+          case eIsNoReg:
+            Src2 = EvalStrIntExpression(&ArgStr[ArgCnt], UInt8, &OK);
+            Src3 = 0x1000000;
+            break;
+          default:
+            return;
         }
         if (OK)
         {
@@ -323,56 +399,64 @@ static void DecodeJmp(Word Index)
   tSymbolFlags Flags;
   unsigned NumArgs = 1 + Ord(pOrder->HasReg);
 
-  if (ChkArgCnt(NumArgs, NumArgs)
-   && DecodeReg(ArgStr[ArgCnt].Str, &Src1))
+  if (!ChkArgCnt(NumArgs, NumArgs))
+    return;
+
+  switch (DecodeReg(&ArgStr[ArgCnt], &Src1, False))
   {
-    if (!pOrder->HasReg)
-    {
-      Dest = 0;
-      OK = True;
-    }
-    else OK = DecodeReg(ArgStr[1].Str, &Dest);
-    if (OK)
-    {
-      CodeLen = 4;
-      DAsmCode[0] = ((pOrder->Code + 0x20) << 24) + (Dest << 8) + Src1;
-    }
-  }
-  else if (Immediate) WrError(ErrNum_InvAddrMode);
-  else
-  {
-    if (!pOrder->HasReg)
-    {
-      Dest = 0;
-      OK = True;
-    }
-    else
-      OK = DecodeReg(ArgStr[1].Str, &Dest);
-    if (OK)
-    {
-      AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags);
-      AdrInt = AdrLong - EProgCounter();
+    case eIsReg:
+      if (!pOrder->HasReg)
+      {
+        Dest = 0;
+        OK = True;
+      }
+      else
+        OK = DecodeReg(&ArgStr[1], &Dest, True);
       if (OK)
       {
-        if ((AdrLong & 3) != 0) WrError(ErrNum_NotAligned);
-         else if ((AdrInt <= 0x1ffff) && (AdrInt >= -0x20000))
+        CodeLen = 4;
+        DAsmCode[0] = ((pOrder->Code + 0x20) << 24) + (Dest << 8) + Src1;
+      }
+      break;
+    case eRegAbort:
+      return;
+    case eIsNoReg:
+      if (Immediate) WrError(ErrNum_InvAddrMode);
+      else
+      {
+        if (!pOrder->HasReg)
         {
-          CodeLen = 4;
-          AdrLong -= EProgCounter();
-          DAsmCode[0] = (pOrder->Code << 24)
-                      + ((AdrLong & 0x3fc00) << 6)
-                      + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
+          Dest = 0;
+          OK = True;
         }
-        else if (!mSymbolQuestionable(Flags) && (AdrLong > 0x3fffff)) WrError(ErrNum_JmpDistTooBig);
         else
+          OK = DecodeReg(&ArgStr[1], &Dest, True);
+        if (OK)
         {
-          CodeLen = 4;
-          DAsmCode[0] = ((pOrder->Code + 1) << 24)
-                      + ((AdrLong & 0x3fc00) << 6)
-                      + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
+          AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags);
+          AdrInt = AdrLong - EProgCounter();
+          if (OK)
+          {
+            if ((AdrLong & 3) != 0) WrError(ErrNum_NotAligned);
+             else if ((AdrInt <= 0x1ffff) && (AdrInt >= -0x20000))
+            {
+              CodeLen = 4;
+              AdrLong -= EProgCounter();
+              DAsmCode[0] = (pOrder->Code << 24)
+                          + ((AdrLong & 0x3fc00) << 6)
+                          + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
+            }
+            else if (!mSymbolQuestionable(Flags) && (AdrLong > 0x3fffff)) WrError(ErrNum_JmpDistTooBig);
+            else
+            {
+              CodeLen = 4;
+              DAsmCode[0] = ((pOrder->Code + 1) << 24)
+                          + ((AdrLong & 0x3fc00) << 6)
+                          + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
+            }
+          }
         }
       }
-    }
   }
 }
 
@@ -462,14 +546,17 @@ static void DecodeCLZ(Word Code)
 
   if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Dest))
   {
-    if (DecodeReg(ArgStr[2].Str, &Src1))
+    switch (DecodeReg(&ArgStr[2], &Src1, False))
     {
-      OK = True; Src3 = 0;
-    }
-    else
-    {
-      Src1 = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
-      Src3 = 0x1000000;
+      case eIsReg:
+        OK = True; Src3 = 0;
+        break;
+      case eIsNoReg:
+        Src1 = EvalStrIntExpression(&ArgStr[2], UInt8, &OK);
+        Src3 = 0x1000000;
+        break;
+      default:
+        return;
     }
     if (OK)
     {
@@ -792,6 +879,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "MFTLB", 0, DecodeMFTLB);
   AddInstTable(InstTable, "MTTLB", 0, DecodeMTTLB);
   AddInstTable(InstTable, "EMULATED", 0, DecodeEMULATED);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 
   StdOrders = (StdOrder *) malloc(sizeof(StdOrder)*StdOrderCount); InstrZ = 0;
   AddStd("ADD"    , CPU29245, False, 0x14); AddStd("ADDC"   , CPU29245, False, 0x1c);
@@ -900,6 +988,26 @@ static void DeinitFields(void)
 
 /*-------------------------------------------------------------------------*/
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_29K(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on 29K
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_29K(char *pArg, TempResult *pResult)
+{
+  LongWord Reg;
+
+  if (DecodeRegCore(pArg, &Reg))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = eSymbolSize32Bit;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_29K;
+  }
+}
+
 static void MakeCode_29K(void)
 {
   CodeLen = 0;
@@ -927,7 +1035,7 @@ static void InitCode_29K(void)
 
 static Boolean IsDef_29K(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_29K(void)
@@ -957,6 +1065,8 @@ static void SwitchTo_29K(void)
 
   MakeCode = MakeCode_29K;
   IsDef = IsDef_29K;
+  InternSymbol = InternSymbol_29K;
+  DissectReg = DissectReg_29K;
   AddONOFF("SUPMODE", &SupAllowed, SupAllowedName, False);
 
   pASSUMERecs = ASSUME29Ks;

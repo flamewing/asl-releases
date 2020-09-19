@@ -340,6 +340,154 @@ targ:   bsr	targ
 	ldc	$123456,ccr
 	stc	ccr,$123456
 
+; register aliases
+
+regr0l	equ	r0l
+regr1l	equ	r1l
+regr2l	equ	r2l
+regr3l	equ	r3l
+regr4l	equ	r4l
+regr5l	equ	r5l
+regr6l	equ	r6l
+regr7l	equ	r7l
+regr0h	equ	r0h
+regr1h	equ	r1h
+regr2h	equ	r2h
+regr3h	equ	r3h
+regr4h	equ	r4h
+regr5h	equ	r5h
+regr6h	equ	r6h
+regr7h	equ	r7h
+
+regr0	reg	r0
+regr1	reg	r1
+regr2	reg	r2
+regr3	reg	r3
+regr4	reg	r4
+regr5	reg	r5
+regr6	reg	r6
+regr7	reg	r7
+rege0	reg	e0
+rege1	reg	e1
+rege2	reg	e2
+rege3	reg	e3
+rege4	reg	e4
+rege5	reg	e5
+rege6	reg	e6
+rege7	reg	e7
+
+reger0	equ	er0
+reger1	equ	er1
+reger2	equ	er2
+reger3	equ	er3
+reger4	equ	er4
+reger5	equ	er5
+reger6	equ	er6
+reger7	equ	er7
+
+regsp	reg	sp
+
+	; register as plain operand
+
+	addx	#10,r0l
+	addx	#10,regr0l
+	addx	#10,r1l
+	addx	#10,regr1l
+	addx	#10,r2l
+	addx	#10,regr2l
+	addx	#10,r3l
+	addx	#10,regr3l
+	addx	#10,r4l
+	addx	#10,regr4l
+	addx	#10,r5l
+	addx	#10,regr5l
+	addx	#10,r6l
+	addx	#10,regr6l
+	addx	#10,r7l
+	addx	#10,regr7l
+	addx	#10,r0h
+	addx	#10,regr0h
+	addx	#10,r1h
+	addx	#10,regr1h
+	addx	#10,r2h
+	addx	#10,regr2h
+	addx	#10,r3h
+	addx	#10,regr3h
+	addx	#10,r4h
+	addx	#10,regr4h
+	addx	#10,r5h
+	addx	#10,regr5h
+	addx	#10,r6h
+	addx	#10,regr6h
+	addx	#10,r7h
+	addx	#10,regr7h
+
+	dec	r0
+	dec	regr0
+	dec	r1
+	dec	regr1
+	dec	r2
+	dec	regr2
+	dec	r3
+	dec	regr3
+	dec	r4
+	dec	regr4
+	dec	r5
+	dec	regr5
+	dec	r6
+	dec	regr6
+	dec	r7
+	dec	regr7
+	dec	e0
+	dec	rege0
+	dec	e1
+	dec	rege1
+	dec	e2
+	dec	rege2
+	dec	e3
+	dec	rege3
+	dec	e4
+	dec	rege4
+	dec	e5
+	dec	rege5
+	dec	e6
+	dec	rege6
+	dec	e7
+	dec	rege7
+
+	dec	er0
+	dec	reger0
+	dec	er1
+	dec	reger1
+	dec	er2
+	dec	reger2
+	dec	er3
+	dec	reger3
+	dec	er4
+	dec	reger4
+	dec	er5
+	dec	reger5
+	dec	er6
+	dec	reger6
+	dec	er7
+	dec	reger7
+
+	; register in addressing mode
+
+	mov.b	@er4,r6h
+	mov.b	@reger4,regr6h
+	mov.b	@er2+,r6h
+	mov.b	@reger2+,regr6h
+	mov.b	r6h,@-er5
+	mov.b	r6h,@-reger5
+	mov.l	@(-300,sp),er5
+	mov.l	@(-300,regsp),reger5
+
+	; register as bit number
+
+	btst	r5l,r6h
+	btst	regr5l,regr6h
+
 	dc	20
 
 	dc.b	5,"Hallo"

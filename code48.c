@@ -19,6 +19,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "asmitree.h"
 #include "intpseudo.h"
 #include "codevars.h"
@@ -90,20 +91,73 @@ static SelOrder *SelOrders;
 
 /****************************************************************************/
 
-static Boolean DecodeReg(const char *pAsc, Byte *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSize)
+ * \brief  check whether argument describes a CPU register
+ * \param  pAsc argument
+ * \param  pValue resulting register # if yes
+ * \param  pSize resulting register size if yes
+ * \return true if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSize)
 {
-  char *s;
-
-  if (FindRegDef(pAsc, &s))
-    pAsc = s;
-
   if ((strlen(pAsc) != 2)
-   || (mytoupper(pAsc[0]) != 'R')
+   || (as_toupper(pAsc[0]) != 'R')
    || (!isdigit(pAsc[1])))
     return False;
 
-  *pErg = pAsc[1] - '0';
-  return (*pErg <= 7);
+  *pValue = pAsc[1] - '0';
+  *pSize = eSymbolSize8Bit;
+  return (*pValue <= 7);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_48(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - 8048 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_48(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const tStrComp *pArg, Byte *pValue, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or user-defined register alias
+ * \param  pArg argument
+ * \param  pValue resulting register # if yes
+ * \param  MustBeReg expect register at this arg?
+ * \return eIsReg/eIsNoReg/eRegAbort
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pValue, Boolean MustBeReg)
+{
+  tSymbolSize Size;
+  tRegDescr RegDescr;
+  tEvalResult EvalResult;
+  tRegEvalResult RegEvalResult;
+
+  if (DecodeRegCore(pArg->Str, &RegDescr.Reg, &Size))
+  {
+    *pValue = RegDescr.Reg;
+    return eIsReg;
+  }
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+  *pValue = RegDescr.Reg;
+  return RegEvalResult;
 }
 
 static Boolean IsPort(const char *pArg, Word PortMask, Byte *pPortNum)
@@ -111,7 +165,7 @@ static Boolean IsPort(const char *pArg, Word PortMask, Byte *pPortNum)
   if (!as_strcasecmp(pArg, "BUS"))
     *pPortNum = 8;
   else if ((strlen(pArg) == 2)
-        && (mytoupper(pArg[0]) == 'P')
+        && (as_toupper(pArg[0]) == 'P')
         && isdigit(pArg[1]))
     *pPortNum = pArg[1] - '0';
   else
@@ -123,7 +177,7 @@ static Boolean IsPort(const char *pArg, Word PortMask, Byte *pPortNum)
 static Boolean IsSerialPort(const char *pArg, Word PortMask, Byte *pPortNum)
 {
   if ((strlen(pArg) == 2)
-   && (mytoupper(pArg[0]) == 'S')
+   && (as_toupper(pArg[0]) == 'S')
    && isdigit(pArg[1]))
     *pPortNum = pArg[1] - '0';
   else
@@ -146,7 +200,7 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned Mask)
     goto found;
   }
 
-  else if (*pArg->Str == '#')
+  if (*pArg->Str == '#')
   {
     AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
     if (OK)
@@ -157,16 +211,29 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned Mask)
     }
   }
 
-  else if (DecodeReg(pArg->Str, &AdrVal))
+  switch (DecodeReg(pArg, &AdrVal, False))
   {
-    AdrMode = ModReg;
-    goto found;
+    case eIsReg:
+      AdrMode = ModReg;
+      goto found;
+    case eRegAbort:
+      return ModNone;
+    default:
+      break;
   }
 
-  else if ((*pArg->Str == '@')
-        && (DecodeReg(pArg->Str + 1, &AdrVal))
-        && (AdrVal <= 1))
+  if (*pArg->Str == '@')
   {
+    tStrComp Arg;
+
+    StrCompRefRight(&Arg, pArg, 1);
+    if (!DecodeReg(&Arg, &AdrVal, True))
+      return ModNone;
+    if (AdrVal > 1)
+    {
+      WrStrErrorPos(ErrNum_InvReg, &Arg);
+      return ModNone;
+    }
     AdrMode = ModInd;
     goto found;
   }
@@ -207,13 +274,22 @@ static void ChkPx(Byte PortNum, const tStrComp *pArg)
   }
 }
 
-static Boolean IsIReg3(const char *pAsc)
+static Boolean IsIReg3(const tStrComp *pArg)
 {
+  tStrComp Arg;
   Byte RegNum;
 
-  if (*pAsc != '@')
+  if (*pArg->Str != '@')
     return False;
-  return DecodeReg(pAsc + 1, &RegNum) && (RegNum == 3);
+  StrCompRefRight(&Arg, pArg, 1);
+  if (!DecodeReg(&Arg, &RegNum, True))
+    return False;
+  if (RegNum != 3)
+  {
+    WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+    return False;
+  }
+  return True;
 }
 
 /****************************************************************************/
@@ -682,7 +758,7 @@ static void DecodeMOV(Word Code)
   }
   else if (IsPort(ArgStr[1].Str, 0x02, &PortNum))
   {
-    if (IsIReg3(ArgStr[2].Str))
+    if (IsIReg3(&ArgStr[2]))
     {
       if (AChkCPUFlags(eCPUFlagOKI, &ArgStr[1]))
       {
@@ -690,8 +766,6 @@ static void DecodeMOV(Word Code)
         BAsmCode[0] = 0xe3 | (PortNum << 4);
       }
     }
-    else
-      WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
   }
   else if (IsSerialPort(ArgStr[1].Str, 0x07, &PortNum))
   {
@@ -830,8 +904,7 @@ static void DecodeMOVP1(Word Code)
   if (!ChkArgCnt(2, 2));
   else if (!ChkCPUFlags(eCPUFlagOKI));
   else if (as_strcasecmp(ArgStr[1].Str, "P")) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
-  else if (!IsIReg3(ArgStr[2].Str)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
-  else
+  else if (IsIReg3(&ArgStr[2]))
   {
     CodeLen = 1;
     BAsmCode[0] = 0xc3;
@@ -1111,15 +1184,6 @@ static void DecodeOKIFixed(Word Code)
   }
 }
 
-static void DecodeREG(Word Code)
-{
-  UNUSED(Code);
-
-  if (!ChkArgCnt(1, 1));
-  else
-    AddRegDef(&LabPart, &ArgStr[1]);
-}
-
 /****************************************************************************/
 
 static void AddAcc(const char *Name, Byte Code)
@@ -1249,7 +1313,7 @@ static void InitFields(void)
   AddSel("AN0" , 0x95);
   AddSel("AN1" , 0x85);
 
-  AddInstTable(InstTable, "REG", 0, DecodeREG);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void)
@@ -1282,6 +1346,27 @@ static void MakeCode_48(void)
 static Boolean IsDef_48(void)
 {
   return Memo("REG");
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_48(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on MCS-48
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_48(char *pArg, TempResult *pResult)
+{
+  tRegInt Erg;
+  tSymbolSize Size;
+
+  if (DecodeRegCore(pArg, &Erg, &Size))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = Size;
+    pResult->Contents.RegDescr.Reg = Erg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_48;
+  }
 }
 
 static void SwitchFrom_48(void)
@@ -1319,6 +1404,8 @@ static void SwitchTo_48(void *pUser)
 
   MakeCode = MakeCode_48;
   IsDef = IsDef_48;
+  InternSymbol = InternSymbol_48;
+  DissectReg = DissectReg_48;
   SwitchFrom = SwitchFrom_48;
   InitFields();
 }

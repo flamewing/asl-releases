@@ -388,7 +388,7 @@ Boolean CodeIFs(void)
 
   ActiveIF = False;
 
-  switch (mytoupper(*OpPart.Str))
+  switch (as_toupper(*OpPart.Str))
   {
     case 'I':
       if (Memo("IF")) CodeIF();

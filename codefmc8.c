@@ -106,7 +106,7 @@ static void DecodeAdr(const tStrComp *pArg, unsigned Mask)
   else if (!as_strcasecmp(pArg->Str, "PS"))
     AdrMode = ModPS;
 
-  else if ((strlen(pArg->Str) == 2) && (mytoupper(*pArg->Str) == 'R') && (pArg->Str[1]>= '0') && (pArg->Str[1] <= '7'))
+  else if ((strlen(pArg->Str) == 2) && (as_toupper(*pArg->Str) == 'R') && (pArg->Str[1]>= '0') && (pArg->Str[1] <= '7'))
   {
     AdrMode = ModReg;
     AdrPart = pArg->Str[1] - '0' + 8;

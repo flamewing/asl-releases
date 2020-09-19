@@ -137,8 +137,8 @@ static Boolean DecodeReg(char *Asc, Byte *Result)
   Boolean Err;
   int l = strlen(Asc);
 
-  if ((l > 4) || (l < 3) || (mytoupper(*Asc) != 'R')) return False;
-  switch (mytoupper(Asc[1]))
+  if ((l > 4) || (l < 3) || (as_toupper(*Asc) != 'R')) return False;
+  switch (as_toupper(Asc[1]))
   {
     case 'B': 
       *Result = 0x00;
@@ -2385,10 +2385,10 @@ static Boolean DecodeAttrPart_97C241(void)
     default:
       Format = ' ';
   }
-  Format = mytoupper(Format);
+  Format = as_toupper(Format);
 
   if (*AttrPart.Str)
-    switch (mytoupper(*AttrPart.Str))
+    switch (as_toupper(*AttrPart.Str))
     {
       case 'B':
         AttrPartOpSize = eSymbolSize8Bit;

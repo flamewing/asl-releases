@@ -211,7 +211,7 @@ static tSymbolSize CutSizeSuffix(const tStrComp *pArg)
 
   if ((l >= 3) && (pArg->Str[l - 2] == '.'))
   {
-    switch (mytoupper(pArg->Str[l - 1]))
+    switch (as_toupper(pArg->Str[l - 1]))
     {
       case 'B':
         pArg->Str[l - 2] = '\0';

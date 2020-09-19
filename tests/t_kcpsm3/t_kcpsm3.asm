@@ -86,8 +86,18 @@ test2:
 	test	s8,0aah
 	test	sC,s3
 
+; register aliases
+
+myreg	equ	sc
+myregr	reg	sc
+myregre	reg	myreg
+
+	add	sc,200
+	add	myreg,200
+	add	myregr,200
+	add	myregre,200
+
 	segment	data
 
 	org	01ah
 vari:
-

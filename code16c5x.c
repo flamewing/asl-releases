@@ -308,7 +308,7 @@ static Boolean IsDef_16C5X(void)
   return Memo("SFR");
 }
 
-static void SwitchFrom_16C5X()
+static void SwitchFrom_16C5X(void)
 {
   DeinitFields();
 }

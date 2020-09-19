@@ -83,7 +83,7 @@ static void FuncUPSTRING(TempResult *pResult, const TempResult *pArgs, unsigned 
   for (pRun = pResult->Contents.Ascii.Contents;
        pRun < pResult->Contents.Ascii.Contents + pResult->Contents.Ascii.Length;
        pRun++)
-    *pRun = mytoupper(*pRun);
+    *pRun = as_toupper(*pRun);
 }
 
 /* in Kleinbuchstaben wandeln */
@@ -99,7 +99,7 @@ static void FuncLOWSTRING(TempResult *pResult, const TempResult *pArgs, unsigned
   for (pRun = pResult->Contents.Ascii.Contents;
        pRun < pResult->Contents.Ascii.Contents + pResult->Contents.Ascii.Length;
        pRun++)
-    *pRun = mytolower(*pRun);
+    *pRun = as_tolower(*pRun);
 }
 
 /* Laenge ermitteln */

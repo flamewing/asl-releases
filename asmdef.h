@@ -35,6 +35,7 @@ typedef struct
       char *Contents;
       unsigned Length;
     } String;
+    tRegDescr RegDescr;
   } Contents;
 } SymbolVal;
 
@@ -332,6 +333,7 @@ extern Boolean (*IsDef)(void);
 extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char *Asc, TempResult *Erg);
 extern DissectBitProc DissectBit;
+extern DissectRegProc DissectReg;
 
 extern StringPtr IncludeList;
 extern Integer IncDepth,NextIncDepth;

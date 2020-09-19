@@ -378,7 +378,7 @@ static void Try2Split(int Src)
   KillPrefBlanksStrComp(&ArgStr[Src]);
   KillPostBlanksStrComp(&ArgStr[Src]);
   p = ArgStr[Src].Str + strlen(ArgStr[Src].Str) - 1;
-  while ((p > ArgStr[Src].Str) && (!isspace((unsigned int) *p)))
+  while ((p > ArgStr[Src].Str) && !as_isspace(*p))
     p--;
   if (p > ArgStr[Src].Str)
   {
@@ -947,7 +947,7 @@ static Boolean IsDef_68(void)
   return False;
 }
 
-static void SwitchFrom_68()
+static void SwitchFrom_68(void)
 {
   DeinitFields();
   ClearONOFF();

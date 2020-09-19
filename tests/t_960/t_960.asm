@@ -96,6 +96,60 @@ start:
 	dt	1.0
 	dw	0
 
+; register aliases
+
+reg_r0	reg	r0
+reg_r1	reg	r1
+reg_r2	reg	r2
+reg_r3	reg	r3
+reg_r4	reg	r4
+reg_r5	reg	r5
+reg_r6	reg	r6
+reg_r7	reg	r7
+reg_r8	reg	r8
+reg_r9	reg	r9
+reg_r10	reg	r10
+reg_r11	reg	r11
+reg_r12	reg	r12
+reg_r13	reg	r13
+reg_r14	reg	r14
+reg_r15	reg	r15
+reg_g0	equ	g0
+reg_g1	equ	g1
+reg_g2	equ	g2
+reg_g3	equ	g3
+reg_g4	equ	g4
+reg_g5	equ	g5
+reg_g6	equ	g6
+reg_g7	equ	g7
+reg_g8	equ	g8
+reg_g9	equ	g9
+reg_g10	equ	g10
+reg_g11	equ	g11
+reg_g12	equ	g12
+reg_g13	equ	g13
+reg_g14	equ	g14
+reg_g15	equ	g15
+reg_fp	reg	fp
+reg_sp	reg	sp
+reg_pfp	reg	pfp
+reg_rip	reg	rip
+reg_fp0	equ	fp0
+reg_fp1	equ	fp1
+reg_fp2	equ	fp2
+reg_fp3	equ	fp3
+
+	addc	r3,r4,r5
+	addc	reg_r3,reg_r4,reg_r5
+	addc	g3,g4,g5
+	addc	reg_g3,reg_g4,reg_g5
+	addc    sp,fp,rip
+	addc    reg_sp,reg_fp,reg_rip
+	st	r7,123(r5)[r6*4]
+	st	reg_r7,123(reg_r5)[reg_r6*4]
+	addr	fp2,r4,r5
+	addr	reg_fp2,reg_r4,reg_r5
+
 	space	32
 
 	word	1,2,3,4,5
