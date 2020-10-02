@@ -113,7 +113,7 @@ static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSi
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_48(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_48(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - 8048 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -121,7 +121,7 @@ static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSi
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_48(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_48(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

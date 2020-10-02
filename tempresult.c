@@ -39,7 +39,7 @@ int TempResultToFloat(TempResult *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     TempResultToPlainString(char *pDest, const TempResult *pResult, unsigned DestSize)
+ * \fn     TempResultToPlainString(char *pDest, const TempResult *pResult, size_t DestSize)
  * \brief  convert result to readable form
  * \param  pDest where to write ASCII representation
  * \param  pResult result to convert
@@ -47,7 +47,7 @@ int TempResultToFloat(TempResult *pResult)
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
-int TempResultToPlainString(char *pDest, const TempResult *pResult, unsigned DestSize)
+int TempResultToPlainString(char *pDest, const TempResult *pResult, size_t DestSize)
 {
   switch (pResult->Typ)
   {

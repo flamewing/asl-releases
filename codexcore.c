@@ -75,7 +75,7 @@ static Boolean ParseReg(const char *pArg, unsigned *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_XCore(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_XCore(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - XCORE variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -83,7 +83,7 @@ static Boolean ParseReg(const char *pArg, unsigned *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_XCore(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_XCore(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

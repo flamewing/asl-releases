@@ -115,7 +115,7 @@ static void Filename2CName(char *pDest, const char *pSrc)
   *pDest = '\0';
 }
 
-static void GetCBlockName(char *pDest, int DestSize, unsigned Num)
+static void GetCBlockName(char *pDest, size_t DestSize, unsigned Num)
 {
   if (Num > 0)
     as_snprintf(pDest, DestSize, "_%u", Num + 1);

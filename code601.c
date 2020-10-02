@@ -283,7 +283,7 @@ static Boolean DecodeGenReg(const tStrComp *pArg, LongWord *pValue)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_601(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_601(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - PPC variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -291,7 +291,7 @@ static Boolean DecodeGenReg(const tStrComp *pArg, LongWord *pValue)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_601(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_601(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

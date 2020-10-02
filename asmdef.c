@@ -45,7 +45,6 @@ char SegShorts[PCMax + 2] =
 
 StringPtr SourceFile;                    /* Hauptquelldatei */
 
-StringPtr ClrEol;       	            /* String fuer loeschen bis Zeilenende */
 StringPtr CursUp;		            /*   "     "  Cursor hoch */
 
 LargeWord *PCs;                          /* Programmzaehler */
@@ -86,7 +85,7 @@ Boolean MakeUseList;                     /* Belegungsliste ? */
 Boolean MakeCrossList;	                 /* Querverweisliste ? */
 Boolean MakeSectionList;                 /* Sektionsliste ? */
 Boolean MakeIncludeList;                 /* Includeliste ? */
-Boolean RelaxedMode;		         /* alle Integer-Syntaxen zulassen ? */
+Boolean RelaxedMode, DefRelaxedMode;     /* alle Integer-Syntaxen zulassen ? */
 Word ListMask;                           /* Listingmaske */
 ShortInt ExtendErrors;	                 /* erweiterte Fehlermeldungen */
 Integer EnumSegment;                     /* ENUM state & config */
@@ -122,6 +121,7 @@ Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
 const char *PCSymbol;	                 /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
 TConstMode ConstMode;
+Boolean ConstModeWeirdNoTerm;
 Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
 Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE ist Prozessorbefehl */
         PageIsOccupied;
@@ -142,6 +142,7 @@ void (*InternSymbol)();
 #endif
 DissectBitProc DissectBit;
 DissectRegProc DissectReg;
+tQualifyQuoteFnc QualifyQuote;
 
 StringPtr IncludeList;	                /* Suchpfade fuer Includedateien */
 Integer IncDepth, NextIncDepth;         /* Verschachtelungstiefe INCLUDEs */
@@ -264,7 +265,7 @@ void Default_InternSymbol(char *Asc, TempResult *Erg)
   Erg->Typ = TempNone;
 }
 
-void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec)
+void Default_DissectBit(char *pDest, size_t DestSize, LargeWord BitSpec)
 {
   HexString(pDest, DestSize, BitSpec, 0);
 }
@@ -325,6 +326,7 @@ void asmdef_init(void)
   InternSymbol = Default_InternSymbol;
   DissectBit = Default_DissectBit;
   DissectReg = NULL;
+  QualifyQuote = NULL;
 
   SetMaxCodeLen(MaxCodeLen_Ini);
 
@@ -341,7 +343,6 @@ void asmdef_init(void)
   ArgStr = NULL;
   AllocArgCnt = 0;
   SourceFile = GetString();
-  ClrEol = GetString();
   CursUp = GetString();
   ErrorPath = GetString();
   ErrorName = GetString();

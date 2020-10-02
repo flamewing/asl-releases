@@ -20,7 +20,7 @@ char *Name
 
 extern char *FExpand(char *Src);
 
-extern int FSearch(char *pDest, unsigned DestSize, const char *FileToSearch, const char *pCurrFileName, const char *SearchPath);
+extern int FSearch(char *pDest, size_t DestSize, const char *FileToSearch, const char *pCurrFileName, const char *SearchPath);
 
 extern long FileSize(FILE *file);
 

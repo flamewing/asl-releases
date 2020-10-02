@@ -169,7 +169,7 @@ static Boolean DecodeRegCore(char *pArg, Byte *pResult, tSymbolSize *pSize)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_H8_3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_H8_3(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - C16x variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -177,7 +177,7 @@ static Boolean DecodeRegCore(char *pArg, Byte *pResult, tSymbolSize *pSize)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_H8_3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_H8_3(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

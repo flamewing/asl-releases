@@ -17,6 +17,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "console.h"
 #include "strutil.h"
 #include "nlmessages.h"
 #include "stdhandl.h"
@@ -697,7 +698,10 @@ void WrErrorString(const char *pMessage, const char *pAdd, Boolean Warning, Bool
   if (strcmp(LstName, "!1") || !ListOn || !ErrorsWrittenToListing)
   {
     for (z = 0; z <= ErrStrCount; z++)
-      fprintf(pErrFile, "%s%s\n", ErrStr[z], ClrEol);
+      if (ErrorFile)
+        fprintf(pErrFile, "%s\n", ErrStr[z]);
+      else
+        WrConsoleLine(ErrStr[z], True);
   }
 
   if (Fatal)

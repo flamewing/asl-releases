@@ -1307,6 +1307,7 @@ Message InfoMessHelp
  "            !0..!4 f&uuml;r Standardhandles\n" \
  "            Default <Quelldatei>.LOG\n" \
  "-r : Meldungen erzeugen, falls zus&auml;tzlicher Pass erforderlich\n" \
+ "-relaxed : beliebige Integer-Syntax im Default zulassen\n" \
  "-Y : Sprungfehlerunterdr&uuml;ckung (siehe Anleitung)\n" \
  "-w : Warnungen unterdr&uuml;cken           +G : Code-Erzeugung unterdr&uuml;cken\n" \
  "-s : Sektionsliste erzeugen           -t : Listing-Teile ein/ausblenden\n" \
@@ -1346,6 +1347,7 @@ Message InfoMessHelp
  "            !0..!4 for standard handles\n" \
  "            default is <srcname>.LOG\n" \
  "-r : generate messages if repassing necessary\n" \
+ "-relaxed : allow arbitrary integer syntax by default\n" \
  "-Y : branch error suppression (see manual)\n" \
  "-w : suppress warnings                +G : suppress code generation\n" \
  "-s : generate section list            -t : enable/disable parts of listing\n" \

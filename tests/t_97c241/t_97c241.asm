@@ -336,3 +336,71 @@ Targ:		jr	Targ
 
 		add.w	(rw4+>0eah),rw7
 		add.w	(rw4->0eah),rw7
+
+		; register aliases
+
+reg_rb0		reg	rb0
+reg_rb1		reg	rb1
+reg_rb2		reg	rb2
+reg_rb3		reg	rb3
+reg_rb4		reg	rb4
+reg_rb5		reg	rb5
+reg_rb6		reg	rb6
+reg_rb7		reg	rb7
+reg_rb8		reg	rb8
+reg_rb9		reg	rb9
+reg_rb10	reg	rb10
+reg_rb11	reg	rb11
+reg_rb12	reg	rb12
+reg_rb13	reg	rb13
+reg_rb14	reg	rb14
+reg_rb15	reg	rb15
+
+reg_rw0		equ	rw0
+reg_rw1		equ	rw1
+reg_rw2		equ	rw2
+reg_rw3		equ	rw3
+reg_rw4		equ	rw4
+reg_rw5		equ	rw5
+reg_rw6		equ	rw6
+reg_rw7		equ	rw7
+reg_rw8		equ	rw8
+reg_rw9		equ	rw9
+reg_rw10	equ	rw10
+reg_rw11	equ	rw11
+reg_rw12	equ	rw12
+reg_rw13	equ	rw13
+reg_rw14	equ	rw14
+reg_rw15	equ	rw15
+
+reg_rd0		equ	rd0
+reg_rd2		equ	rd2
+reg_rd4		equ	rd4
+reg_rd6		equ	rd6
+reg_rd8		equ	rd8
+reg_rd10	equ	rd10
+reg_rd12	equ	rd12
+reg_rd14	equ	rd14
+
+		add.b	rb2,150
+		add.b	reg_rb2,150
+		add.w	rw2,150
+		add.w	reg_rw2,150
+		add.d	rd2,150
+		add.d	reg_rd2,150
+		or.w	(Targ),(rd4+rw2*4-5)
+		or.w	(Targ),(reg_rd4+reg_rw2*4-5)
+		bs0b	rb10,rd12
+		bs0b	reg_rb10,reg_rd12
+		bs0f	(Targ),rw3
+		bs0f	(Targ),reg_rw3
+		bs1b.w	rb10,(Targ)
+		bs1b.w	reg_rb10,(Targ)
+		bs1f.b	(Targ),(rw10+2)
+		bs1f.b	(Targ),(reg_rw10+2)
+		cpl.b	(rw4  + rw6  *8 + 12h)
+		cpl.b	(reg_rw4  + reg_rw6  *8 + 12h)
+		cpl.w	(rw5  + rd8  *4 + 12h)
+		cpl.w	(reg_rw5  + reg_rd8  *4 + 12h)
+		cpl.d	(rd4  + rw9  *2 + 12h)
+		cpl.d	(reg_rd4  + reg_rw9  *2 + 12h)

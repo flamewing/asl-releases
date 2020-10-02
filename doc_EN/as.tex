@@ -5,7 +5,7 @@
 %% other people around the net who deserve my deep appreciation for this job.
 %% My parts of the translation are the results of a brute-force attempt,
 %% so there are surely tons of spelling errors and passages that will
-%% make people with english as their mother tongue either laugh or cry...
+%% make people with English as their mother tongue either laugh or cry...
 
 %% Alfred Arnold
 
@@ -987,6 +987,13 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       first pass where issuing of such messages shall start.
       Without this argument, warnings will come starting with
       the first pass.  Be prepared for a bunch of messages!!}
+\item{\tty{relaxed}: this switch enables the RELAXED mode right from the
+      beginning of the program, which otherwise has to be enabled by the
+      pseudo instruction of sane name(see section \ref{SectRELAXED}).}
+\item{\tty{Y}: This switch instructs AS to to suppress all messages about
+      out-of-branch conditions, once the necessity for another pass is given.
+      See section \ref{ForwRefs} for the (rare) situations that might make
+      use of this switch necessary.}
 \item{\tty{cpu $<$name$>$}: this switch allows to set the target processor
       AS shall generate code for, in case the source file does not contain
       a {\tt CPU} instruction and is not 68008 code.  If the selected target
@@ -997,7 +1004,7 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       type \tty{$<$old$>$}.  See section \ref{SectAlias} for the sense of
       processor aliases.}
 \item{{\tt gnuerrors}: display messages about errors resp. warnings not
-      in the As standard format, but instaed in a format similar to the
+      in the AS standard format, but instead in a format similar to the
       GNU C compiler.  This simplifies the integration of AS into
       environments tuned for this format, however also suppresses the
       display of precise error positions in macro bodies!}
@@ -2032,6 +2039,7 @@ into capital letters a DOS version $\geq$ 3.30 is required.
 %%---------------------------------------------------------------------------
 
 \section{Forward References and Other Disasters}
+\label{ForwRefs}
 
 This section is the result of a significant amount of hate on the
 (legal) way some people program.  This way can lead to trouble in
@@ -2181,7 +2189,7 @@ necessary.  Which is the essence you should learn from this section?
 
 {\em valid for: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
      AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
-     H8/500, SH7x00, H16, i960, XA, 29K}
+     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000}
 
 Sometimes it is desirable not only to assign symbolic names to memory
 addresses or constants, but also to a register, to emphasize its function
@@ -5200,8 +5208,8 @@ HP28...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em valid for: PIC, 320xx, AVR, MELPS-4500, HMCS400,\\
-     4004/4040, $\mu$PD772x, OLMS-40/50}
+{\em valid for: PIC, 320xx, AVR, MELPS-4500, H8/500 \\
+     HMCS400, 4004/4040, $\mu$PD772x, OLMS-40/50}
 
 This command stores data in the current segment.  Both integer
 values as well as character strings are supported.  On
@@ -13678,6 +13686,22 @@ pointers:
       unidentified names could signify ordinary symbols (the parser will
       check this afterwards).  Be extreme careful with this routine as
       it allows you to intervene into the parser's heart!}
+\item{\tty{DissectBit} : In case the target platform supports bit objects,
+      i.e. objects that pack both a register or memory address and a bit
+      position into one integer number, this is the callback to dissect
+      such a packed representation and transform it back into a source-code
+      like, human-readable form.  This provides better readability of the
+      listing.}
+\item{\tty{DissectReg} : In case the target platform supports register
+      symbols, this is the callback that translates register number and size
+      back to a source-code like, human-readable form.  Again, this function
+      is used for the listing.}
+\item{\tty{QualifyQuote} : This optional callback allows to define on a
+      per-platform base situations when a single quotation character does
+      {\em not} lead in a character string.  An example for this is the
+      Z80's alternate register bank, which is written as \tty{AF'}, or
+      the hexadecimal constant syntax \tty{H'...} used on some Hitachi
+      processors.}
 \end{itemize}
 
 By the way: People who want to become immortal may add a copyright

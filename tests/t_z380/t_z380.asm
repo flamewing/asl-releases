@@ -526,7 +526,13 @@
 	push	ix
 	push	iy
 
-	ex	af,af'
+	; The AF' syntax for the alternate register bank is
+        ; really nasty.  This requires a quotation qualifier
+        ; for the parser:
+
+	ex	af,af'		; will comment be recognized?
+	ex	af',af		; will comment be recognized?
+
 	ex	(sp),hl
 	ex	hl,(sp)
 	ex	(sp),ix

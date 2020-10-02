@@ -998,6 +998,10 @@ bzw. \ref{ChapShareOrder}.
       werden; ohne Angabe kommen die Warnungen ab dem ersten Pass.  Machen
       Sie sich aber so oder so auf einen ziemlichen Haufen an Meldungen
       gefa"st!!}
+\item{\tty{relaxed}: Mit diesem Schalter aktiviert man den RELAXED-Modus
+      vom Beginn des Programms an, der ansonsten erst durch die gleichnamige
+      Pseudoanweisung (siehe Abschnitt \ref{SectRELAXED}) eingeschaltet
+      werden mu"s.}
 \item{\tty{Y}: Mit diesem Schalter weist man AS an, alle Fehlermeldungen
       wegen zu langer Sprungdistanzen zu verwerfen, sobald die Notwendigkeit
       eines neuen Durchlaufs feststeht.  In welchen (seltenen) Situationen
@@ -2243,7 +2247,7 @@ einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 
 {\em G"ultigkeit: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
      AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
-     H8/500, SH7x00, H16, i960, XA, 29K}
+     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000}
 
 Manchmal ist es erw"unscht, nicht nur einer Speicheradresse oder einer
 Konstanten, sondern auch einem Register einen symbolischen Namen zuzuweisen,
@@ -5343,8 +5347,8 @@ verrechnet haben sollte...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, HMCS400, 4004/4040,
- $\mu$PD772x, OLMS-40/50}
+{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, H8/500, HMCS400,
+ 4004/4040, $\mu$PD772x, OLMS-40/50}
 
 Mit diesem Befehl werden Daten im aktuellen Segment abgelegt,
 wobei sowohl Integer- als auch Stringwerte zul"assig sind.  Bei
@@ -14054,6 +14058,22 @@ besetzen:
       dies immer noch anderweitig g"ultige Symbole sein k"onnen.  Seien
       Sie extrem vorsichtig mit dieser Routine, da sie einen Eingriff in
       den Parser darstellt!}
+\item{\tty{DissectBit} : Falls die Zielplattform Bit-Objekte unterst"utzt,
+      d.h. Objekte, die sowohl eine Register/Speicheradresse als auch eine
+      Bitposition in einer einzelnen Integer-Zahl gepackt abspeichern, ist
+      dies der Callback, "uber den solche gepackten Objekte f"urs Listing
+      wieder in eine Quellcode-artige Form r"uck"ubersetzt werden.}
+\item{\tty{DissectReg} : Falls die Zielplattform Registersymbole unterst"utzt,
+      ist dies der Callback, "uber den Registernummer und -l"ange f"urs Listing
+      wieder in eine Quellcode-artige Form r"uck"ubersetzt werden.
+      Falls Registersymbole unterst"utzt werden, ist "ublicherweise auch
+      der \tty{InternSymbol}-Callback auszuf"ullen.}
+\item{\tty{QualifyQuote} : "Uber diesen optionalen Callback kann f"ur
+      eine bestimmte Zielplattform von Fall zu Fall festgelegt werden, da"s
+      ein einzelnes Hochkomma {\em keine} Zeichenkette einleitet.  Ein
+      Beispiel daf"ur ist die als \tty{AF'} geschriebene alternative
+      Registerbank beim Z80, oder die Hexadezimal-Syntax \tty{H'...} bei
+      manchen Hitachi-Prozessoren.}
 \end{itemize}
 
 Wer will, kann sich "ubrigens auch mit einem Copyright-Eintrag verewigen,

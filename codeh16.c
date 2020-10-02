@@ -80,8 +80,7 @@ typedef enum
 } tFormat;
 
 #ifdef __cplusplus
-# include "cppops.h"
-DefCPPOps_Enum(tFormat)
+# include "codeh16.hpp"
 #endif
 
 typedef struct
@@ -401,7 +400,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult, Byte *pPrefix)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_H16(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+ * \fn     DissectReg_H16(char *pDest, size_t DestSize, tRegInt Reg, tSymbolSize Size)
  * \brief  dissect register symbols - H16 variant
  * \param  pDest destination buffer
  * \param  DestSize size of destination buffer
@@ -409,7 +408,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult, Byte *pPrefix)
  * \param  Size register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_H16(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+static void DissectReg_H16(char *pDest, size_t DestSize, tRegInt Reg, tSymbolSize Size)
 {
   switch (Size)
   {
@@ -1579,14 +1578,14 @@ static Boolean DissectBitSymbol(LongWord BitSymbol, LongWord *pAddress, Byte *pB
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectBit_H16(char *pDest, int DestSize, LargeWord Inp)
+ * \fn     DissectBit_H16(char *pDest, size_t DestSize, LargeWord Inp)
  * \brief  dissect compact storage of bit (field) into readable form for listing
  * \param  pDest destination for ASCII representation
  * \param  DestSize destination buffer size
  * \param  Inp compact storage
  * ------------------------------------------------------------------------ */
 
-static void DissectBit_H16(char *pDest, int DestSize, LargeWord Inp)
+static void DissectBit_H16(char *pDest, size_t DestSize, LargeWord Inp)
 {
   Byte BitPos;
   LongWord Address;

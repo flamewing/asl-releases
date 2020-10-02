@@ -35,8 +35,7 @@ typedef enum
 } TUnit;
 
 #ifdef __cplusplus
-# include "cppops.h"
-DefCPPOps_Enum(TUnit)
+# include "code3206x.hpp"
 #endif
 
 typedef struct

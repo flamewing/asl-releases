@@ -216,7 +216,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_7000(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_7000(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - SH7x00 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -224,7 +224,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_7000(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_7000(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

@@ -110,7 +110,7 @@ static Boolean ChkCoreMask(Word CoreMask)
   return False;
 }
 
-static void DissectBit_AVR(char *pDest, int DestSize, LargeWord Inp)
+static void DissectBit_AVR(char *pDest, size_t DestSize, LargeWord Inp)
 {
   LongWord BitSpec = Inp;
 
@@ -148,7 +148,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_AVR(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_AVR(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - AVR variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -156,7 +156,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_AVR(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_AVR(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

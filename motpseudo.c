@@ -735,56 +735,100 @@ void AddMoto16PseudoONOFF(void)
   AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
 }
 
-Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
+/*!------------------------------------------------------------------------
+ * \fn     GetWSize(tSymbolSize OpSize)
+ * \brief  return size in bytes of data type
+ * \param  OpSize data type
+ * \return size in bytes
+ * ------------------------------------------------------------------------ */
+
+static Word GetWSize(tSymbolSize OpSize)
 {
+  switch (OpSize)
+  {
+    case eSymbolSize8Bit:
+      return 1;
+    case eSymbolSize16Bit:
+      return 2;
+    case eSymbolSize24Bit:
+      return 3;
+    case eSymbolSize32Bit:
+      return 4;
+    case eSymbolSize64Bit:
+      return 8;
+    case eSymbolSizeFloat32Bit:
+      return 4;
+    case eSymbolSizeFloat64Bit:
+      return 8;
+
+    /* NOTE: Double_2_ieee10() creates 10 bytes, but WSize is set to 12 (two
+       padding bytes in binary representation).  This means that WSwap() will
+       swap 12 instead of 10 bytes, which doesn't hurt, since TurnField is
+       large enough and the two (garbage) bytes at the end will not be used
+       by EnterIEEE10() anyway: */
+
+    case eSymbolSizeFloat96Bit:
+      return 12;
+    case eSymbolSizeFloatDec96Bit:
+      return 12;
+    default:
+      return 0;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeMotoDC(void)
+ * \brief  decode DC.x instruction
+ * ------------------------------------------------------------------------ */
+
+void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn)
+{
+  ShortInt SpaceFlag;
   tStrComp *pArg, Arg;
+  LongInt z2, WSize, Rep = 0;
+  char *zp;
+  Boolean OK;
+  TempResult t;
+  tSymbolFlags Flags;
   void (*EnterInt)(LargeWord) = NULL;
   void (*ConvertFloat)(Double, Byte*, Boolean) = NULL;
   void (*EnterFloat)(Word*) = NULL;
   void (*Swap)(void*, int) = NULL;
   IntType IntTypeEnum = UInt1;
   FloatType FloatTypeEnum = Float32;
-  Word TurnField[8];
-  LongInt z2;
-  char *zp;
-  LongInt WSize, Rep = 0;
-  LongInt NewPC, HVal;
-  TempResult t;
-  Boolean OK, ValOK;
-  tSymbolFlags Flags;
-  ShortInt SpaceFlag;
-  Boolean PadBeforeStart;
+  Boolean PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
 
   UNUSED(Turn);
+
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, OpSize);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
 
   if (OpSize < 0)
     OpSize = eSymbolSize16Bit;
 
-  PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
+  WSize = GetWSize(OpSize);
   switch (OpSize)
   {
     case eSymbolSize8Bit:
-      WSize = 1;
       EnterInt = EnterByte;
       IntTypeEnum = Int8;
       break;
     case eSymbolSize16Bit:
-      WSize = 2;
       EnterInt = EnterWord;
       IntTypeEnum = Int16;
       break;
     case eSymbolSize24Bit:
-      WSize = 3;
       EnterInt = EnterPointer;
       IntTypeEnum = Int24;
       break;
     case eSymbolSize32Bit:
-      WSize = 4;
       EnterInt = EnterLWord;
       IntTypeEnum = Int32;
       break;
     case eSymbolSize64Bit:
-      WSize = 8;
       EnterInt = EnterQWord;
 #ifdef HAS64
       IntTypeEnum = Int64;
@@ -793,14 +837,12 @@ Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
 #endif
       break;
     case eSymbolSizeFloat32Bit:
-      WSize = 4;
       ConvertFloat = Double_2_ieee4;
       EnterFloat = EnterIEEE4;
       FloatTypeEnum = Float32;
       Swap = DWSwap;
       break;
     case eSymbolSizeFloat64Bit:
-      WSize = 8;
       ConvertFloat = Double_2_ieee8;
       EnterFloat = EnterIEEE8;
       FloatTypeEnum = Float64;
@@ -814,210 +856,223 @@ Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
        by EnterIEEE10() anyway: */
 
     case eSymbolSizeFloat96Bit:
-      WSize = 12;
       ConvertFloat = Double_2_ieee10;
       EnterFloat = EnterIEEE10;
       FloatTypeEnum = Float80;
       Swap = WSwap;
       break;
     case eSymbolSizeFloatDec96Bit:
-      WSize = 12;
       ConvertFloat = ConvertMotoFloatDec;
       EnterFloat = EnterMotoFloatDec;
       FloatTypeEnum = FloatDec;
       break;
     default:
-      WSize = 0;
+      break;
   }
 
+  OK = True;
+  SpaceFlag = -1;
+
+  forallargs (pArg, OK)
+  {
+    if (!*pArg->Str)
+    {
+      OK = FALSE;
+      WrError(ErrNum_EmptyArgument);
+      break;
+    }
+
+    OK = CutRep(&Arg, pArg, &Rep, &Flags);
+    if (!OK)
+      break;
+    if (mFirstPassUnknown(Flags))
+    {
+      OK = FALSE;
+      WrError(ErrNum_FirstPassCalc);
+      break;
+    }
+
+    if (!strcmp(Arg.Str, "?"))
+    {
+      if (SpaceFlag == 0)
+      {
+        WrError(ErrNum_MixDBDS);
+        OK = FALSE;
+      }
+      else
+      {
+        if (PadBeforeStart)
+        {
+          InsertPadding(1, True);
+          PadBeforeStart = False;
+        }
+
+        SpaceFlag = 1;
+        CodeLen += (Rep * WSize);
+      }
+    }
+    else if (SpaceFlag == 1)
+    {
+      WrError(ErrNum_MixDBDS);
+      OK = FALSE;
+    }
+    else
+    {
+      SpaceFlag = 0;
+
+      if (PadBeforeStart)
+      {
+        InsertPadding(1, False);
+        PadBeforeStart = False;
+      }
+
+      EvalStrExpression(&Arg, &t);
+
+      switch (t.Typ)
+      {
+        case TempInt:
+        ToInt:
+          if (!EnterInt)
+          {
+            if (ConvertFloat && EnterFloat)
+            {
+              t.Contents.Float = t.Contents.Int;
+              t.Typ = TempFloat;
+              goto HandleFloat;
+            }
+            else
+            {
+              WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
+              OK = False;
+            }
+          }
+          else if (!mFirstPassUnknownOrQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, IntTypeEnum))
+          {
+            WrError(ErrNum_OverRange);
+            OK = False;
+          }
+          else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
+          {
+            WrError(ErrNum_CodeOverflow);
+            OK = False;
+          }
+          else
+            for (z2 = 0; z2 < Rep; z2++)
+              EnterInt(t.Contents.Int);
+          break;
+        HandleFloat:
+        case TempFloat:
+          if ((!ConvertFloat) || (!EnterFloat))
+          {
+            WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
+            OK = False;
+          }
+          else if (!FloatRangeCheck(t.Contents.Float, FloatTypeEnum))
+          {
+            WrError(ErrNum_OverRange);
+            OK = False;
+          }
+          else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
+          {
+            WrError(ErrNum_CodeOverflow);
+            OK = False;
+          }
+          else
+          {
+            Word TurnField[8];
+
+            ConvertFloat(t.Contents.Float, (Byte *) TurnField, BigEndian);
+            if (BigEndian  && Swap)
+              Swap((void*) TurnField, WSize);
+            for (z2 = 0; z2 < Rep; z2++)
+              EnterFloat(TurnField);
+          }
+          break;
+        case TempString:
+          if (MultiCharToInt(&t, (WSize < 8) ? WSize : 8))
+            goto ToInt;
+          if (!EnterInt)
+          {
+            if (ConvertFloat && EnterFloat)
+            {
+              if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.Ascii.Length)))
+              {
+                WrError(ErrNum_CodeOverflow);
+                OK = False;
+              }
+              else
+              {
+                for (z2 = 0; z2 < Rep; z2++)
+                  for (zp = t.Contents.Ascii.Contents; zp < t.Contents.Ascii.Contents + t.Contents.Ascii.Length; zp++)
+                  {
+                    Word TurnField[8];
+
+                    ConvertFloat(CharTransTable[(usint) (*zp & 0xff)], (Byte *) TurnField, BigEndian);
+                    if ((BigEndian)  && (Swap))
+                      Swap((void*) TurnField, WSize);
+                    EnterFloat(TurnField);
+                  }
+              }
+            }
+            else
+            {
+              WrError(ErrNum_FloatButString);
+              OK = False;
+            }
+          }
+          else if (SetMaxCodeLen(CodeLen + Rep * t.Contents.Ascii.Length))
+          {
+            WrError(ErrNum_CodeOverflow);
+            OK = False;
+          }
+          else
+            for (z2 = 0; z2 < Rep; z2++)
+              for (zp = t.Contents.Ascii.Contents; zp < t.Contents.Ascii.Contents + t.Contents.Ascii.Length; EnterInt(CharTransTable[((usint) *(zp++)) & 0xff]));
+          break;
+        case TempNone:
+          OK = False;
+          break;
+        default:
+          assert(0);
+      }
+
+    }
+  }
+
+  /* purge results if an error occured */
+
+  if (!OK) CodeLen = 0;
+
+  /* just space reservation ? */
+
+  else if (SpaceFlag == 1)
+    DontPrint = True;
+}
+
+Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn)
+{
+  LongInt NewPC, HVal;
+  Boolean ValOK;
+  tSymbolFlags Flags;
+  Boolean PadBeforeStart;
+
+  if (OpSize < 0)
+    OpSize = eSymbolSize16Bit;
+
+  PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
   if (*OpPart.Str != 'D')
     return False;
 
   if (Memo("DC"))
   {
-    if (ChkArgCnt(1, ArgCntMax))
-    {
-      OK = True;
-      SpaceFlag = -1;
-
-      forallargs (pArg, OK)
-      {
-        if (!*pArg->Str)
-        {
-          OK = FALSE;
-          WrError(ErrNum_EmptyArgument);
-          break;
-        }
-
-        OK = CutRep(&Arg, pArg, &Rep, &Flags);
-        if (!OK)
-          break;
-        if (mFirstPassUnknown(Flags))
-        {
-          OK = FALSE;
-          WrError(ErrNum_FirstPassCalc);
-          break;
-        }
-
-        if (!strcmp(Arg.Str, "?"))
-        {
-          if (SpaceFlag == 0)
-          {
-            WrError(ErrNum_MixDBDS);
-            OK = FALSE;
-          }
-          else
-          {
-            if (PadBeforeStart)
-            {
-              InsertPadding(1, True);
-              PadBeforeStart = False;
-            }
-
-            SpaceFlag = 1;
-            CodeLen += (Rep * WSize);
-          }
-        }
-        else if (SpaceFlag == 1)
-        {
-          WrError(ErrNum_MixDBDS);
-          OK = FALSE;
-        }
-        else
-        {
-          SpaceFlag = 0;
-
-          if (PadBeforeStart)
-          {
-            InsertPadding(1, False);
-            PadBeforeStart = False;
-          }
-
-          EvalStrExpression(&Arg, &t);
-
-          switch (t.Typ)
-          {
-            case TempInt:
-            ToInt:
-              if (!EnterInt)
-              {
-                if (ConvertFloat && EnterFloat)
-                {
-                  t.Contents.Float = t.Contents.Int;
-                  t.Typ = TempFloat;
-                  goto HandleFloat;
-                }
-                else
-                {
-                  WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                  OK = False;
-                }
-              }
-              else if (!mFirstPassUnknownOrQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, IntTypeEnum))
-              {
-                WrError(ErrNum_OverRange);
-                OK = False;
-              }
-              else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
-              {
-                WrError(ErrNum_CodeOverflow);
-                OK = False;
-              }
-              else
-                for (z2 = 0; z2 < Rep; z2++)
-                  EnterInt(t.Contents.Int);
-              break;
-            HandleFloat:
-            case TempFloat:
-              if ((!ConvertFloat) || (!EnterFloat))
-              {
-                WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                OK = False;
-              }
-              else if (!FloatRangeCheck(t.Contents.Float, FloatTypeEnum))
-              {
-                WrError(ErrNum_OverRange);
-                OK = False;
-              }
-              else if (SetMaxCodeLen(CodeLen + (Rep * WSize)))
-              {
-                WrError(ErrNum_CodeOverflow);
-                OK = False;
-              }
-              else
-              {
-                ConvertFloat(t.Contents.Float, (Byte *) TurnField, BigEndian);
-                if ((BigEndian)  && (Swap))
-                  Swap((void*) TurnField, WSize);
-                for (z2 = 0; z2 < Rep; z2++)
-                  EnterFloat(TurnField);
-              }
-              break;
-            case TempString:
-              if (MultiCharToInt(&t, (WSize < 8) ? WSize : 8))
-                goto ToInt;
-              if (!EnterInt)
-              {
-                if (ConvertFloat && EnterFloat)
-                {
-                  if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.Ascii.Length)))
-                  {
-                    WrError(ErrNum_CodeOverflow);
-                    OK = False;
-                  }
-                  else
-                  {
-                    for (z2 = 0; z2 < Rep; z2++)
-                      for (zp = t.Contents.Ascii.Contents; zp < t.Contents.Ascii.Contents + t.Contents.Ascii.Length; zp++)
-                      {
-                        ConvertFloat(CharTransTable[(usint) (*zp & 0xff)], (Byte *) TurnField, BigEndian);
-                        if ((BigEndian)  && (Swap))
-                          Swap((void*) TurnField, WSize);
-                        EnterFloat(TurnField);
-                      }
-                  }
-                }
-                else
-                {
-                  WrError(ErrNum_FloatButString);
-                  OK = False;
-                }
-              }
-              else if (SetMaxCodeLen(CodeLen + Rep * t.Contents.Ascii.Length))
-              {
-                WrError(ErrNum_CodeOverflow);
-                OK = False;
-              }
-              else
-                for (z2 = 0; z2 < Rep; z2++)
-                  for (zp = t.Contents.Ascii.Contents; zp < t.Contents.Ascii.Contents + t.Contents.Ascii.Length; EnterInt(CharTransTable[((usint) *(zp++)) & 0xff]));
-              break;
-            case TempNone:
-              OK = False;
-              break;
-            default:
-              assert(0);
-          }
-
-        }
-      }
-
-      /* purge results if an error occured */
-
-      if (!OK) CodeLen = 0;
-
-      /* just space reservation ? */
-
-      else if (SpaceFlag == 1)
-        DontPrint = True;
-    }
-    if (*LabPart.Str)
-      SetSymbolOrStructElemSize(&LabPart, OpSize);
+    DecodeMotoDC(OpSize, Turn);
     return True;
   }
 
   if (Memo("DS"))
   {
+    Word WSize = GetWSize(OpSize);
+
     if (ChkArgCnt(1, 1))
     {
       HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags);

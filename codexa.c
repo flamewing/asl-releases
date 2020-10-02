@@ -162,7 +162,7 @@ static tRegEvalResult DecodeRegCore(const char *pArg, tSymbolSize *pSize, Byte *
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_XA(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_XA(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - XA variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -170,7 +170,7 @@ static tRegEvalResult DecodeRegCore(const char *pArg, tSymbolSize *pSize, Byte *
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_XA(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_XA(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

@@ -20,6 +20,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmallg.h"
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
@@ -131,34 +132,101 @@ static void InsertSinglePrefix(Byte Index)
   }
 }
 
-static Boolean DecodeReg(char *Asc, Byte *Result)
-{
-  Byte tmp;
-  Boolean Err;
-  int l = strlen(Asc);
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult register number if yes
+ * \param  pSize register size if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
 
-  if ((l > 4) || (l < 3) || (as_toupper(*Asc) != 'R')) return False;
-  switch (as_toupper(Asc[1]))
+static Boolean DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize)
+{
+  Boolean OK;
+  int l = strlen(pArg);
+
+  if (as_toupper(*pArg) != 'R')
+    return False;
+  l = strlen(pArg);
+  if ((l > 4) || (l < 3))
+    return False;
+
+  switch (as_toupper(pArg[1]))
   {
     case 'B': 
-      *Result = 0x00;
+      *pSize = eSymbolSize8Bit;
       break;
     case 'W':
-      *Result = 0x40;
+      *pSize = eSymbolSize16Bit;
       break;
     case 'D':
-      *Result = 0x80;
+      *pSize = eSymbolSize32Bit;
       break;
     default:
       return False;
   }
-  tmp = ConstLongInt(Asc + 2, &Err, 10);
-  if ((!Err) || (tmp > 15))
+  *pResult = ConstLongInt(pArg + 2, &OK, 10);
+  if (!OK || (*pResult > 15))
     return False;
-  if ((*Result == 0x80) && (Odd(tmp)))
+  if ((*pSize == eSymbolSize32Bit) && Odd(*pResult))
     return False;
-  *Result += tmp;
   return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectReg_97C241(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \brief  dissect register symbols - TLCS-9000 variant
+ * \param  pDest destination buffer
+ * \param  DestSize destination buffer size
+ * \param  Value numeric register value
+ * \param  InpSize register size
+ * ------------------------------------------------------------------------ */
+
+static void DissectReg_97C241(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
+{
+  switch (InpSize)
+  {
+    case eSymbolSize8Bit:
+      as_snprintf(pDest, DestSize, "RB%u", (unsigned)Value);
+      break;
+    case eSymbolSize16Bit:
+      as_snprintf(pDest, DestSize, "RW%u", (unsigned)Value);
+      break;
+    case eSymbolSize32Bit:
+      as_snprintf(pDest, DestSize, "RD%u", (unsigned)Value);
+      break;
+    default:
+      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg source argument
+ * \param  pResult register number if yes
+ * \param  pSize register size if yes
+ * \param  MustBeReg True if register is expected
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, tSymbolSize *pSize, Boolean MustBeReg)
+{
+  tRegEvalResult RegEvalResult;
+  tEvalResult EvalResult;
+  tRegDescr RegDescr;
+
+  if (DecodeRegCore(pArg->Str, pResult, pSize))
+    return eIsReg;
+
+  RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
+  if (eIsReg == RegEvalResult)
+  {
+    *pResult = RegDescr.Reg;
+    *pSize = EvalResult.DataSize;
+  }
+  return RegEvalResult;
 }
 
 static Boolean DecodeSpecReg(char *Asc, Byte *Result)
@@ -175,18 +243,20 @@ static Boolean DecodeSpecReg(char *Asc, Byte *Result)
   return True;
 }
 
-static Boolean DecodeRegAdr(char *Asc, Byte *Erg)
+static Boolean DecodeRegAdr(const tStrComp *pArg, Byte *pResult)
 {
-  if (!DecodeReg(Asc,Erg))
+  tSymbolSize Size;
+  
+  if (DecodeReg(pArg, pResult, &Size, True) != eIsReg)
     return False;
-  if (OpSize == -1)
-    OpSize = (*Erg) >> 6;
-  if (((*Erg) >> 6) != OpSize)
+  if (OpSize == eSymbolSizeUnknown)
+    OpSize = Size;
+  if (Size != OpSize)
   {
-    WrError(ErrNum_UndefOpSizes);
+    WrError(ErrNum_ConfOpSizes);
     return False;
   }
-  *Erg &= 0x3f;
+  *pResult &= 0x3f;
   return True;
 }
 
@@ -201,6 +271,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
   tStrComp AdrPart, Remainder;
   Boolean OK;
   int ArgLen;
+  tSymbolSize Size;
+  tRegEvalResult RegEvalResult;
 
   AdrCnt = 0; AdrOK = False;
   StrCompMkTemp(&AdrPart, AdrPartStr);
@@ -210,11 +282,14 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
   if (IsIndirect(pArg->Str))
   {
     Boolean ForcePrefix = False, MinFlag, NMinFlag;
-    tStrComp Arg;
-    String tmp;
+    tStrComp Arg, TmpComp;
+    String Tmp;
     char *PMPos, *EPos;
     Byte BaseReg, IndReg, ScaleFact;
+    tSymbolSize BaseRegSize, IndRegSize;
     LongInt DispAcc;
+
+    StrCompMkTemp(&TmpComp, Tmp);
 
     /* I.1. vorkonditionieren */
 
@@ -225,23 +300,27 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
     /* I.2. Predekrement */
 
-    if ((*Arg.Str == '-')
-     && (Arg.Str[1] == '-')
-     && (DecodeReg(Arg.Str + 2, &Reg)))
+    if ((*Arg.Str == '-') && (Arg.Str[1] == '-'))
     {
-      switch (Reg >> 6)
+      tStrComp RegComp;
+      
+      StrCompRefRight(&RegComp, &Arg, 2);
+      if (DecodeReg(&RegComp, &Reg, &Size, True) == eIsReg)
       {
-        case 0:
-          WrError(ErrNum_InvAddrMode);
-           break;
-        case 1:
-          AdrMode = 0x50 + (Reg & 15);
-          AdrOK = True;
-          break;
-        case 2:
-          AdrMode = 0x71 + (Reg & 14);
-          AdrOK = True;
-          break;
+        switch (Size)
+        {
+          case eSymbolSize16Bit:
+            AdrMode = 0x50 + (Reg & 15);
+            AdrOK = True;
+            break;
+          case eSymbolSize32Bit:
+            AdrMode = 0x71 + (Reg & 14);
+            AdrOK = True;
+            break;
+          default:
+            WrStrErrorPos(ErrNum_InvAddrMode, &Arg);
+            break;
+        }
       }
       return;
     }
@@ -253,20 +332,20 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
     {
       StrCompCopy(&AdrPart, &Arg);
       StrCompShorten(&AdrPart, 2);
-      if (DecodeReg(AdrPart.Str, &Reg))
+      if (DecodeReg(&AdrPart, &Reg, &Size, True) == eIsReg)
       {
-        switch (Reg >> 6)
+        switch (Size)
         {
-          case 0:
-            WrError(ErrNum_InvAddrMode);
-            break;
-          case 1:
+          case eSymbolSize16Bit:
             AdrMode = 0x40 + (Reg & 15);
             AdrOK = True;
             break;
-          case 2:
+          case eSymbolSize32Bit:
             AdrMode = 0x70 + (Reg & 14);
             AdrOK = True;
+            break;
+          default:
+            WrError(ErrNum_InvAddrMode);
             break;
         }
         return;
@@ -275,8 +354,8 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
     /* I.4. Adresskomponenten zerlegen */
 
-    BaseReg = FreeReg;
-    IndReg = FreeReg;
+    BaseReg = IndReg = FreeReg;
+    BaseRegSize = IndRegSize = eSymbolSizeUnknown;
     ScaleFact = 0;
     DispAcc = AdrInc;
     MinFlag = False;
@@ -298,21 +377,24 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
       EPos = QuotPos(Arg.Str, '*');
       if (EPos)
       {
-        strcpy(tmp, Arg.Str);
-        tmp[EPos - Arg.Str] = '\0';
-        KillPostBlanks(tmp);
+        StrCompCopy(&TmpComp, &Arg);
+        TmpComp.Str[EPos - Arg.Str] = '\0';
+        KillPostBlanksStrComp(&TmpComp);
       }
       ArgLen = strlen(Arg.Str);
       if ((EPos == Arg.Str + ArgLen - 2) 
        && ((Arg.Str[ArgLen - 1] == '1') || (Arg.Str[ArgLen - 1] == '2') || (Arg.Str[ArgLen - 1] == '4') || (Arg.Str[ArgLen - 1] == '8'))
-       && (DecodeReg(tmp, &Reg)))
+       && ((RegEvalResult = DecodeReg(&TmpComp, &Reg, &Size, False)) != eIsNoReg))
       {
-        if (((Reg >> 6) == 0) || (MinFlag) || (IndReg != FreeReg))
+        if (RegEvalResult == eRegAbort)
+          return;
+        if ((Size == eSymbolSize8Bit) || MinFlag || (IndReg != FreeReg))
         {
           WrError(ErrNum_InvAddrMode);
           return;
         }
         IndReg = Reg;
+        IndRegSize = Size;
         switch (Arg.Str[ArgLen - 1])
         {
           case '1':
@@ -332,23 +414,29 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
       /* I.4.c. Basisregister */
 
-      else if (DecodeReg(Arg.Str, &Reg))
+      else if ((RegEvalResult = DecodeReg(&Arg, &Reg, &Size, False)) != eIsNoReg)
       {
-        if (((Reg >> 6) == 0) || (MinFlag))
+        if (RegEvalResult == eRegAbort)
+          return;
+        if ((Size == eSymbolSize8Bit) || (MinFlag))
         {
           WrError(ErrNum_InvAddrMode);
           return;
         }
         if (BaseReg == FreeReg)
+        {
           BaseReg = Reg;
+          BaseRegSize = Size;
+        }
         else if (IndReg == FreeReg)
         {
           IndReg = Reg;
+          IndRegSize = Size;
           ScaleFact = 0;
         }
         else
         {
-          WrError(ErrNum_InvAddrMode);
+          WrStrErrorPos(ErrNum_InvAddrMode, &Arg);
           return;
         }
       }
@@ -360,6 +448,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
         if ((BaseReg != FreeReg) && (IndReg == FreeReg))
         {
           IndReg = BaseReg;
+          IndRegSize = BaseRegSize;
           BaseReg = FreeReg;
           ScaleFact = 0;
         };
@@ -397,7 +486,9 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
     if ((BaseReg == FreeReg) && (IndReg != FreeReg) && (ScaleFact == 0))
     {
-      BaseReg = IndReg; IndReg = FreeReg;
+      BaseReg = IndReg;
+      BaseRegSize = IndRegSize;
+      IndReg = FreeReg;
     }
 
     /* I.6. absolut */
@@ -419,7 +510,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
       if (DispAcc == 0)
       {
-        if ((BaseReg >> 6) == 1)
+        if (BaseRegSize == eSymbolSize16Bit)
           AdrMode = 0x10 + (BaseReg & 15);
         else
           AdrMode = 0x61 + (BaseReg & 14);
@@ -429,14 +520,14 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
       /* I.7.b. Nullregister mit Displacement muss in Erweiterungswort */
 
-      else if ((BaseReg & 15) == 0)
+      else if (BaseReg == 0)
       {
         if (DispAcc > 0x7ffff) WrError(ErrNum_OverRange);
         else if (DispAcc < -0x80000) WrError(ErrNum_UnderRange);
         else
         {
           AdrMode = 0x20;
-          if ((BaseReg >> 6) == 1)
+          if (BaseRegSize == eSymbolSize16Bit)
             AdrVals[0] = ((Word)BaseReg & 15) << 11;
           else
             AdrVals[0] = (((Word)BaseReg & 14) << 11) + 0x8000;
@@ -494,7 +585,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
         else if (DispAcc < -0x800000) WrError(ErrNum_UnderRange);
         else
         {
-          if ((BaseReg >> 6) == 1)
+          if (BaseRegSize == eSymbolSize16Bit)
             AdrMode = 0x20 + (BaseReg & 15);
           else
             AdrMode = 0x60 + (BaseReg & 14);
@@ -516,7 +607,7 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
       else if ((IndReg & 15) == 0) WrError(ErrNum_InvAddrMode);
       else
       {
-        if ((IndReg >> 6) == 1)
+        if (IndRegSize == eSymbolSize16Bit)
           AdrMode = 0x20 + (IndReg & 15);
         else
           AdrMode = 0x60 + (IndReg & 14);
@@ -528,16 +619,11 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
             AdrVals[0] = 0xd000; break;
           case PCReg:
             AdrVals[0] = 0xd800; break;
-          case 0x40: case 0x41: case 0x42: case 0x43:
-          case 0x44: case 0x45: case 0x46: case 0x47:
-          case 0x48: case 0x49: case 0x4a: case 0x4b:
-          case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-            AdrVals[0] = ((Word)BaseReg & 15) << 11; break;
-          case 0x80: case 0x81: case 0x82: case 0x83:
-          case 0x84: case 0x85: case 0x86: case 0x87:
-          case 0x88: case 0x89: case 0x8a: case 0x8b:
-          case 0x8c: case 0x8d: case 0x8e:
-            AdrVals[0] = 0x8000 + (((Word)BaseReg & 14) << 10); break;
+          default:
+            if (BaseRegSize == eSymbolSize16Bit)
+              AdrVals[0] = ((Word)BaseReg & 15) << 11;
+            else
+              AdrVals[0] = 0x8000 + (((Word)BaseReg & 14) << 10);
         }
         AdrVals[0] += (((Word)ScaleFact) << 9) + (DispAcc & 0x1ff);
         AdrCnt = 2;
@@ -550,14 +636,16 @@ static void DecodeAdr(const tStrComp *pArg, Byte PrefInd, Boolean MayImm, Boolea
 
   /* II. Arbeitsregister */
 
-  else if (DecodeReg(pArg->Str, &Reg))
+  else if ((RegEvalResult = DecodeReg(pArg, &Reg, &Size, False)) != eIsNoReg)
   {
-    if (!MayReg) WrError(ErrNum_InvAddrMode);
+    if (RegEvalResult == eRegAbort)
+      return;
+    if (!MayReg) WrStrErrorPos(ErrNum_InvAddrMode, pArg);
     else
     {
-      if (OpSize == -1)
-        OpSize = Reg >> 6;
-      if ((Reg >> 6) != OpSize) WrError(ErrNum_ConfOpSizes);
+      if (OpSize == eSymbolSizeUnknown)
+        OpSize = Size;
+      if (Size != OpSize) WrError(ErrNum_ConfOpSizes);
       else
       {
         AdrMode = Reg & 15;
@@ -1075,8 +1163,7 @@ static void DecodeTrinom(Word Code)
   if (Code == 2) /* MAC */
     LowLim8 = 0;
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeRegAdr(ArgStr[1].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else
+  else if (DecodeRegAdr(&ArgStr[1], &Reg))
   {
     if (Code >= 2)
       OpSize--;
@@ -1115,10 +1202,11 @@ static void DecodeRLM_RRM(Word Code)
 {
   int Cnt;
   Byte Reg;
+  tSymbolSize Size;
 
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeReg(ArgStr[2].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
+  else if (!DecodeReg(&ArgStr[2], &Reg, &Size, True));
+  else if (Size != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[2]);
   else
   {
     Reg &= 0x3f;
@@ -1362,14 +1450,15 @@ static void DecodeBField(Word Code)
   Byte Reg, Num1, Num2;
   Boolean OK;
   tSymbolFlags Flags;
+  tSymbolSize Size;
 
   if (ChkArgCnt(4, 4))
   {
     tStrComp *pArg1 = (Code == 2) ? &ArgStr[2] : &ArgStr[1],
              *pArg2 = (Code == 2) ? &ArgStr[1] : &ArgStr[2];
 
-    if (!DecodeReg(pArg1->Str, &Reg)) WrError(ErrNum_InvAddrMode);
-    else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
+    if (!DecodeReg(pArg1, &Reg, &Size, True));
+    else if (Size != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvOpSize, pArg1);
     else
     {
       Reg &= 0x3f;
@@ -1380,7 +1469,7 @@ static void DecodeBField(Word Code)
           Num2 &= 15;
         Num2--;
         if (Num2 > 15) WrError(ErrNum_OverRange);
-        else if ((OpSize == -1) && (!DecodeRegAdr(pArg2->Str, &Num1))) WrError(ErrNum_UndefOpSizes);
+        else if ((OpSize == -1) && (!DecodeRegAdr(pArg2, &Num1)));
         else
         {
           switch (OpSize)
@@ -1820,10 +1909,11 @@ static void DecodeString(Word Code)
 {
   Byte Reg;
   int Cnt;
+  tSymbolSize Size;
 
   if (!ChkArgCnt(3, 3));
-  else if (!DecodeReg(ArgStr[3].Str, &Reg)) WrError(ErrNum_InvAddrMode);
-  else if ((Reg >> 6) != 1) WrError(ErrNum_InvOpSize);
+  else if (!DecodeReg(&ArgStr[3], &Reg, &Size, True));
+  else if (Size != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[3]);
   else
   {
     Reg &= 0x3f;
@@ -2224,6 +2314,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "RETD", 0xc801, DecodeLINK_RETD);
   AddInstTable(InstTable, "SWI", 0, DecodeSWI);
   AddInstTable(InstTable, "LDA", 0, DecodeLDA);
+  AddInstTable(InstTable, "REG", 0, CodeREG);
 
   AddFixed("CCF" , 0x7f82);
   AddFixed("CSF" , 0x7f8a);
@@ -2438,9 +2529,30 @@ static void MakeCode_97C241(void)
   WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     InternSymbol_97C241(char *pArg, TempResult *pResult)
+ * \brief  handle built-in symbols on TLCS-9000
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * ------------------------------------------------------------------------ */
+
+static void InternSymbol_97C241(char *pArg, TempResult *pResult)
+{
+  Byte Reg;
+  tSymbolSize Size;
+
+  if (DecodeRegCore(pArg, &Reg, &Size))
+  {
+    pResult->Typ = TempReg;
+    pResult->DataSize = Size;
+    pResult->Contents.RegDescr.Reg = Reg;
+    pResult->Contents.RegDescr.Dissect = DissectReg_97C241;
+  }
+}
+
 static Boolean IsDef_97C241(void)
 {
-  return False;
+  return Memo("REG");
 }
 
 static void SwitchFrom_97C241(void)
@@ -2469,6 +2581,8 @@ static void SwitchTo_97C241(void)
   DecodeAttrPart = DecodeAttrPart_97C241;
   MakeCode = MakeCode_97C241;
   IsDef = IsDef_97C241;
+  InternSymbol = InternSymbol_97C241;
+  DissectReg = DissectReg_97C241;
   SwitchFrom = SwitchFrom_97C241;
   InitFields();
 }

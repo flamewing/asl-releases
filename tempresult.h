@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stddef.h>
+
 #include "datatypes.h"
 #include "dynstring.h"
 #include "symflags.h"
@@ -31,7 +33,7 @@ typedef unsigned tRegInt;
 
 typedef void (*DissectRegProc)(
 #ifdef __PROTOS__
-char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize
+char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize
 #endif
 );
 
@@ -61,6 +63,6 @@ typedef struct sTempResult TempResult;
 
 extern int TempResultToFloat(TempResult *pResult);
 
-extern int TempResultToPlainString(char *pDest, const TempResult *pResult, unsigned DestSize);
+extern int TempResultToPlainString(char *pDest, const TempResult *pResult, size_t DestSize);
 
 #endif /* _TEMPRESULT_H */

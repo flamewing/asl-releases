@@ -153,7 +153,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_MSP(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_MSP(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - MSP variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -161,7 +161,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_MSP(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_MSP(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

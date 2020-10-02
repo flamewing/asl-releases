@@ -462,7 +462,7 @@ Boolean MultiCharToInt(TempResult *pResult, unsigned MaxLen)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc)
+ * \fn     ExpandStrSymbol(char *pDest, size_t DestSize, const tStrComp *pSrc)
  * \brief  expand symbol name from string component
  * \param  pDest dest buffer
  * \param  DestSize size of dest buffer
@@ -470,7 +470,7 @@ Boolean MultiCharToInt(TempResult *pResult, unsigned MaxLen)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const tStrComp *pSrc)
+Boolean ExpandStrSymbol(char *pDest, size_t DestSize, const tStrComp *pSrc)
 {
   tStrComp SrcComp;
   const char *pStart;
@@ -885,7 +885,10 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       }
     }
 
-    if ((!Found) && (l >= 3) && (pExpr[1] == '\'') && (pExpr[l - 1] == '\''))
+    if (!Found
+     && (l >= 3)
+     && (pExpr[1] == '\'')
+     && ((pExpr[l - 1] == '\'') || ConstModeWeirdNoTerm))
     {
       switch (as_toupper(*pExpr))
       {
@@ -966,7 +969,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       break;
     case ConstModeWeird:
       if (isdigit(*pExpr)) break;
-      if ((l < 3) || (pExpr[1] != '\'') || (pExpr[l - 1] != '\''))
+      if ((l < 2) || (pExpr[1] != '\''))
         return -1;
       switch (as_toupper(*pExpr))
       {
@@ -983,8 +986,13 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         default:
           return -1;
       }
+      if ((pExpr[l - 1] == '\'') && (l >= 3))
+        l -= 3;
+      else if (ConstModeWeirdNoTerm)
+        l -= 2;
+      else
+        return -1;
       pExpr += 2;
-      l -= 3;
       break;
   }
 

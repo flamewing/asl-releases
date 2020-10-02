@@ -131,7 +131,7 @@ static Boolean DecodeRegCore(const char *pArg, LongWord *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_29K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_29K(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - 29K variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -139,7 +139,7 @@ static Boolean DecodeRegCore(const char *pArg, LongWord *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_29K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_29K(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {
@@ -155,7 +155,7 @@ static void DissectReg_29K(char *pDest, int DestSize, tRegInt Value, tSymbolSize
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_29K(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
+ * \fn     DecodeReg(const tStrComp *pArg, LongWord *pResult, Boolean MustBeReg)
  * \brief  check whether argument describes a CPU register
  * \param  pArg source argument
  * \param  pResult resulting register # if yes

@@ -62,7 +62,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_XGATE(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+ * \fn     DissectReg_XGATE(char *pDest, size_t DestSize, tRegInt Reg, tSymbolSize Size)
  * \brief  dissect register symbol - XGATE version
  * \param  pDest destination buffer
  * \param  DestSize size of destination buffer
@@ -70,7 +70,7 @@ static Boolean DecodeRegCore(const char *pArg, Word *pResult)
  * \param  Size register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_XGATE(char *pDest, int DestSize, tRegInt Reg, tSymbolSize Size)
+static void DissectReg_XGATE(char *pDest, size_t DestSize, tRegInt Reg, tSymbolSize Size)
 {
   switch (Size)
   {

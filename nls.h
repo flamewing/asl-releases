@@ -12,6 +12,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stddef.h>
+
 #include "chardefs.h"
 
 typedef enum
@@ -47,15 +49,15 @@ extern Word NLS_GetCountryCode(void);
 
 extern tCodepage NLS_GetCodepage(void);
 
-extern void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, int DestSize);
+extern void NLS_DateString(Word Year, Word Month, Word Day, char *Dest, size_t DestSize);
 
-extern void NLS_CurrDateString(char *Dest, int DestSize);
+extern void NLS_CurrDateString(char *Dest, size_t DestSize);
 
-extern void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, int DestSize);
+extern void NLS_TimeString(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, size_t DestSize);
 
-extern void NLS_CurrTimeString(Boolean Use100, char *Dest, int DestSize);
+extern void NLS_CurrTimeString(Boolean Use100, char *Dest, size_t DestSize);
 
-extern void NLS_CurrencyString(double inp, char *erg, int DestSize);
+extern void NLS_CurrencyString(double inp, char *erg, size_t DestSize);
 
 extern char Upcase(char inp);
 

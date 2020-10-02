@@ -163,7 +163,7 @@ static Boolean IsRegCore(const char *pArg, tRegInt *pValue, tSymbolSize *pSize)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_166(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_166(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - C16x variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -171,7 +171,7 @@ static Boolean IsRegCore(const char *pArg, tRegInt *pValue, tSymbolSize *pSize)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_166(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_166(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

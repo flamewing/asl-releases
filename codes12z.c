@@ -995,14 +995,14 @@ static Boolean DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPo
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectBit_S12Z(char *pDest, int DestSize, LargeWord Inp)
+ * \fn     DissectBit_S12Z(char *pDest, size_t DestSize, LargeWord Inp)
  * \brief  dissect compact storage of bit (field) into readable form for listing
  * \param  pDest destination for ASCII representation
  * \param  DestSize destination buffer size
  * \param  Inp compact storage
  * ------------------------------------------------------------------------ */
 
-static void DissectBit_S12Z(char *pDest, int DestSize, LargeWord Inp)
+static void DissectBit_S12Z(char *pDest, size_t DestSize, LargeWord Inp)
 {
   Byte BitPos, BitWidth;
   Word Address;

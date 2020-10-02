@@ -69,7 +69,7 @@ static Boolean IsWRegCore(const char *pArg, LongWord *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_KCPSM3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_KCPSM3(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - KCPSM3 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -77,7 +77,7 @@ static Boolean IsWRegCore(const char *pArg, LongWord *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_KCPSM3(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_KCPSM3(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

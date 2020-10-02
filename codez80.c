@@ -63,8 +63,7 @@ typedef enum
 } tOpPrefix;
 
 #ifdef __cplusplus
-# include "cppops.h"
-DefCPPOps_Enum(tOpPrefix)
+# include "codez80.hpp"
 #endif
 
 #define ExtFlagName    "INEXTMODE"       /* Flag-Symbolnamen */
@@ -3284,6 +3283,18 @@ static Boolean IsDef_Z80(void)
   return Memo("PORT");
 }
 
+/* treat special case of AF' which is no quoting: */
+
+static Boolean QualifyQuote_Z80(const char *pStart, const char *pQuotePos)
+{
+  if ((*pQuotePos == '\'')
+   && (pQuotePos >= pStart + 2)
+   && (as_toupper(*(pQuotePos - 2)) == 'A')
+   && (as_toupper(*(pQuotePos - 1)) == 'F'))
+    return False;
+  return True;
+}
+
 static void SwitchFrom_Z80(void)
 {
   DeinitFields();
@@ -3310,7 +3321,9 @@ static void SwitchTo_Z80(void)
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegInits[SegIO  ] = 0;
   SegLimits[SegIO  ] = PortEnd();
 
-  MakeCode = MakeCode_Z80; IsDef = IsDef_Z80;
+  MakeCode = MakeCode_Z80;
+  IsDef = IsDef_Z80;
+  QualifyQuote = QualifyQuote_Z80;
   SwitchFrom = SwitchFrom_Z80; InitFields();
 
   /* erweiterte Modi nur bei Z380 */

@@ -60,8 +60,7 @@ typedef struct
 } Condition;
 
 #ifdef __cplusplus
-# include "cppops.h"
-DefCPPOps_Mask(tCoreFlags)
+# include "codez8.hpp"
 #endif
 
 typedef struct
@@ -281,7 +280,7 @@ static tRegEvalResult IsWRegOrWRReg(const tStrComp *pArg, Byte *pResult, tSymbol
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_Z8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_Z8(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - Z8 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -289,7 +288,7 @@ static tRegEvalResult IsWRegOrWRReg(const tStrComp *pArg, Byte *pResult, tSymbol
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_Z8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_Z8(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {
@@ -953,14 +952,14 @@ static Boolean DecodeWRBitArg(int StartArg, int EndArg, Byte *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectBit_Z8(char *pDest, int DestSize, LargeWord Inp)
+ * \fn     DissectBit_Z8(char *pDest, size_t DestSize, LargeWord Inp)
  * \brief  dissect compact storage of bit (field) into readable form for listing
  * \param  pDest destination for ASCII representation
  * \param  DestSize destination buffer size
  * \param  Inp compact storage
  * ------------------------------------------------------------------------ */
 
-static void DissectBit_Z8(char *pDest, int DestSize, LargeWord Inp)
+static void DissectBit_Z8(char *pDest, size_t DestSize, LargeWord Inp)
 {
   Byte BitPos;
   Word Address;

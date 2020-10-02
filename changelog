@@ -1,3 +1,16 @@
+2020-10-02 [1.42 Bld 175]
+
+- Addition    : register symbols for TLCS-9000
+- Addition    : -relaxed command line switch to enable RELAXED mode
+                by default
+- Addition    : For H8/500, allow H'... syntax for hex constants in
+                relaxed mode
+- Addition    : For H8/500, bit operations by default assume word size
+                if destination is a register
+- Addition    : For H8/500, allow :8 and :16 size specifiers on immediate
+                source operand for MOV and CMP
+- Addition    : For H8/500, allow DATA as an alias for DC
+
 2020-09-19 [1.42 Bld 174]
 
 - Change      : rework register symbol handling

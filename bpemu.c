@@ -158,7 +158,7 @@ char *FExpand(char *Src)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FSearch(char *pDest, unsigned DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
+ * \fn     FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
  * \brief  search for file in given path(s)
  * \param  pDest where to put result
  * \param  DestSize size of result buffer
@@ -168,7 +168,7 @@ char *FExpand(char *Src)
  * \return 0 if found or error code
  * ------------------------------------------------------------------------ */
 
-static int AssembleAndCheck(char *pDest, unsigned DestSize, const char *pPath, unsigned PathLen, const char *pFileToSearch)
+static int AssembleAndCheck(char *pDest, size_t DestSize, const char *pPath, unsigned PathLen, const char *pFileToSearch)
 {
   FILE *pDummy;
   
@@ -192,7 +192,7 @@ static int AssembleAndCheck(char *pDest, unsigned DestSize, const char *pPath, u
     return 2;
 }
 
-int FSearch(char *pDest, unsigned DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
+int FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
 {
   const char *pPos, *pStart;
 

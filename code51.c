@@ -184,7 +184,7 @@ static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSi
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_51(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_51(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - 80(2)51 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -192,7 +192,7 @@ static Boolean DecodeRegCore(const char *pAsc, tRegInt *pValue, tSymbolSize *pSi
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_51(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_51(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {
@@ -561,7 +561,7 @@ chk:
   }
 }
 
-static void DissectBit_251(char *pDest, int DestSize, LargeWord Inp)
+static void DissectBit_251(char *pDest, size_t DestSize, LargeWord Inp)
 {
   as_snprintf(pDest, DestSize, "=%~02.*u%s.%u",
               ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),

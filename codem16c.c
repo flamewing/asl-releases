@@ -172,7 +172,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_M16C(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_M16C(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - M16C variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -180,7 +180,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult, tSymbolSize *pSize
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_M16C(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_M16C(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

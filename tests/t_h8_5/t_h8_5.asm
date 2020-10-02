@@ -86,6 +86,12 @@
 
                 btst.b  r0,@$f0:8
 
+		btst	#15,r4
+		btst.w	#15,r4
+		expect	1320
+		btst.b	#15,r4
+		endexpect
+
                 clr.w   @($1000,r5)
 
                 cmp:g.b #$aa,@-r3
@@ -270,3 +276,86 @@ reg_fp		reg	fp
 		mov.w	reg_r0,@-reg_r1
 		rotxl.w	@($02,r2)
 		rotxl.w	@($02,reg_r2)
+
+		; specifying operand size late
+
+		mov.w	#$ff00,r5
+		mov	#$ff00:16,r5
+
+		; The very special hex syntax, which requires a quote qualify
+                ; callback in the parser and which is only enabled on request.
+		; We optionally also allow a terminating ':
+
+		relaxed	on
+
+		mov	#h'aa55:16 ,@h'ffe0  ; comment
+		mov	#h'aa55:16 ,@h'ffe0' ; comment
+		mov	#h'aa55':16,@h'ffe0  ; comment
+		mov	#h'aa55':16,@h'ffe0' ; comment
+		mov	#$aa55:16  ,@$ffe0   ; comment
+
+		; For MOV and CMP, the immediate src's size
+                ; may differ from the destination's size.  A sign
+                ; extension is then executed and the object code is one
+                ; byte shorter.  Earlier versions of AS always did
+                ; this optimization, but there is code that explicitly
+                ; requests it not being done, by adding a :16 attribute to
+                ; the source operand:
+
+		mov.w	#H'fee0,@H'1000
+		expect	1320
+		mov.w	#H'fee0:8,@H'1000
+		endexpect
+		mov.w	#H'fee0:16,@H'1000
+
+		mov.w	#H'ffe0,@H'1000
+		mov.w	#H'ffe0:8,@H'1000
+		mov.w	#H'ffe0:16,@H'1000
+
+		mov.w	#H'0130,@H'1000
+		expect	1320
+		mov.w	#H'0130:8,@H'1000
+		endexpect
+		mov.w	#H'0130:16,@H'1000
+
+		mov.w	#H'0030,@H'1000
+		mov.w	#H'0030:8,@H'1000
+		mov.w	#H'0030:16,@H'1000
+
+		mov.w	#0:16,@r0+
+		mov.w	#0:8,@r0+
+		mov.w	#0,@r0+
+
+		cmp.w	#H'fee0,@H'1000
+		expect	1320
+		cmp.w	#H'fee0:8,@H'1000
+		endexpect
+		cmp.w	#H'fee0:16,@H'1000
+
+		cmp.w	#H'ffe0,@H'1000
+		cmp.w	#H'ffe0:8,@H'1000
+		cmp.w	#H'ffe0:16,@H'1000
+
+		cmp.w	#H'0130,@H'1000
+		expect	1320
+		cmp.w	#H'0130:8,@H'1000
+		endexpect
+		cmp.w	#H'0130:16,@H'1000
+
+		cmp.w	#H'0030,@H'1000
+		cmp.w	#H'0030:8,@H'1000
+		cmp.w	#H'0030:16,@H'1000
+
+		cmp.w	#0:16,@r0+
+		cmp.w	#0:8,@r0+
+		cmp.w	#0,@r0+
+
+		; On H8/500, DATA is an alias for DC
+
+		dc.b	10,20,30
+		data.b	10,20,30
+		dc.w	10,20,30
+		data.w	10,20,30
+		dc.s	1.0
+		data.s	1.0
+

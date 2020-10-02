@@ -38,7 +38,7 @@ const char *Blanks(int cnt)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
+ * \fn     SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
  * \brief  convert number to string in given number system, leading zeros
  * \param  pDest where to write
  * \param  DestSize size of dest buffer
@@ -49,7 +49,7 @@ const char *Blanks(int cnt)
  * \param  StartCharacter 'a' or 'A' for hex digits
  * ------------------------------------------------------------------------ */
 
-int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
+int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
 {
   int Len = 0, Cnt;
   LargeWord digit;
@@ -58,7 +58,7 @@ int SysString(char *pDest, int DestSize, LargeWord i, int System, int Stellen, B
   if (DestSize < 1)
     return 0;
 
-  if (Stellen > DestSize - 1)
+  if (Stellen > (int)DestSize - 1)
     Stellen = DestSize - 1;
 
   ptr = pDest + DestSize - 1;
@@ -139,20 +139,31 @@ static void ResetFormatContext(tFormatContext *pContext)
   pContext->AddPlus = False;
 }
 
-static int AppendPad(char **ppDest, int *pDestSize, char Src, int Cnt)
+static size_t LimitMinusOne(size_t Cnt, size_t Limit)
 {
-  int AddCnt = Cnt;
+  if (!Limit)
+    return 0;
+  else if (Cnt > Limit - 1)
+    return Limit - 1;
+  else
+    return Cnt;
+}
 
-  if (AddCnt + 1 > *pDestSize)
-    AddCnt = *pDestSize - 1;
-  memset(*ppDest, Src, AddCnt);
-  *ppDest += AddCnt;
-  *pDestSize -= AddCnt;
+static int AppendPad(char **ppDest, size_t *pDestSize, char Src, size_t Cnt)
+{
+  Cnt = LimitMinusOne(Cnt, *pDestSize);
+
+  if (Cnt > 0)
+  {
+    memset(*ppDest, Src, Cnt);
+    *ppDest += Cnt;
+    *pDestSize -= Cnt;
+  }
   return Cnt;
 }
 
 #if 0
-static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+static int FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
 {
   int DecPt;
   int Sign, Result = 0;
@@ -191,7 +202,7 @@ static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boole
   return Result;
 }
 #else
-static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+static int FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
 {
   char Format[10];
 
@@ -204,9 +215,9 @@ static int FloatConvert(char *pDest, int DestSize, double Src, int Digits, Boole
 }
 #endif
 
-static int Append(char **ppDest, int *pDestSize, const char *pSrc, int Cnt, tFormatContext *pFormatContext)
+static int Append(char **ppDest, size_t *pDestSize, const char *pSrc, size_t Cnt, tFormatContext *pFormatContext)
 {
-  int AddCnt = Cnt, PadLen, Result = 0;
+  int PadLen, Result = 0;
 
   PadLen = pFormatContext->Arg[0] - Cnt;
   if (PadLen < 0)
@@ -215,12 +226,13 @@ static int Append(char **ppDest, int *pDestSize, const char *pSrc, int Cnt, tFor
   if ((PadLen > 0) && !pFormatContext->LeftAlign)
     Result += AppendPad(ppDest, pDestSize, ' ', PadLen);
 
-  if (AddCnt + 1 > *pDestSize)
-    AddCnt = *pDestSize - 1;
-  if (AddCnt > 0)
-    memcpy(*ppDest, pSrc, AddCnt);
-  *ppDest += AddCnt;
-  *pDestSize -= AddCnt;
+  Cnt = LimitMinusOne(Cnt, *pDestSize);
+  if (Cnt > 0)
+  {
+    memcpy(*ppDest, pSrc, Cnt);
+    *ppDest += Cnt;
+    *pDestSize -= Cnt;
+  }
 
   if ((PadLen > 0) && pFormatContext->LeftAlign)
     Result += AppendPad(ppDest, pDestSize, ' ', PadLen);
@@ -231,22 +243,21 @@ static int Append(char **ppDest, int *pDestSize, const char *pSrc, int Cnt, tFor
   return Result + Cnt;
 }
 
-int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap)
+int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
 {
   const char *pFormatStart = pFormat;
-  int Result = 0, OrigLen = strlen(pDest);
+  int Result = 0;
+  size_t OrigLen = strlen(pDest);
   tFormatContext FormatContext;
   LargeInt IntArg;
 
-  if (DestSize == (int)sizeof(char*))
+  if (DestSize == sizeof(char*))
   {
     fprintf(stderr, "pointer size passed to as_vsnprcatf\n");
     exit(2);
   }
 
-  DestSize -= OrigLen;
-  if (DestSize < 0)
-    DestSize = 0;
+  DestSize = (DestSize > OrigLen) ? (DestSize - OrigLen) : 0;
   pDest += OrigLen;
 
   ResetFormatContext(&FormatContext);
@@ -411,14 +422,14 @@ int as_vsnprcatf(char *pDest, int DestSize, const char *pFormat, va_list ap)
   return Result;
 }
 
-int as_vsnprintf(char *pDest, int DestSize, const char *pFormat, va_list ap)
+int as_vsnprintf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
 {
   if (DestSize > 0)
     *pDest = '\0';
   return as_vsnprcatf(pDest, DestSize, pFormat, ap);
 }
 
-int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...)
+int as_snprintf(char *pDest, size_t DestSize, const char *pFormat, ...)
 {
   va_list ap;
   int Result;
@@ -431,7 +442,7 @@ int as_snprintf(char *pDest, int DestSize, const char *pFormat, ...)
   return Result;
 }
 
-int as_snprcatf(char *pDest, int DestSize, const char *pFormat, ...)
+int as_snprcatf(char *pDest, size_t DestSize, const char *pFormat, ...)
 {
   va_list ap;
   int Result;
@@ -511,13 +522,15 @@ char *strrmultchr(const char *haystack, const char *needles)
 /*---------------------------------------------------------------------------*/
 /* das originale strncpy plaettet alle ueberstehenden Zeichen mit Nullen */
 
-int strmaxcpy(char *dest, const char *src, int Max)
+size_t strmaxcpy(char *dest, const char *src, size_t Max)
 {
-  int cnt = strlen(src);
+  size_t cnt = strlen(src);
 
   /* leave room for terminating NUL */
 
-  if (cnt > (Max - 1))
+  if (!Max)
+    return 0;
+  if (cnt + 1 > Max)
     cnt = Max - 1;
   memcpy(dest, src, cnt);
   dest[cnt] = '\0';
@@ -527,11 +540,12 @@ int strmaxcpy(char *dest, const char *src, int Max)
 /*---------------------------------------------------------------------------*/
 /* einfuegen, mit Begrenzung */
 
-int strmaxcat(char *Dest, const char *Src, int MaxLen)
+size_t strmaxcat(char *Dest, const char *Src, size_t MaxLen)
 {
-  int TLen = strlen(Src), DLen = strlen(Dest);
+  int TLen = strlen(Src);
+  size_t DLen = strlen(Dest);
 
-  if (TLen > MaxLen - 1 - DLen)
+  if (TLen > (int)MaxLen - 1 - (int)DLen)
     TLen = MaxLen - DLen - 1;
   if (TLen > 0)
   {
@@ -549,9 +563,9 @@ void strprep(char *Dest, const char *Src)
   memmove(Dest, Src, strlen(Src));
 }
 
-void strmaxprep(char *Dest, const char *Src, int MaxLen)
+void strmaxprep(char *Dest, const char *Src, size_t MaxLen)
 {
-  int RLen, DestLen;
+  size_t RLen, DestLen;
 
   RLen = strlen(Src);
   DestLen = strlen(Dest);
@@ -567,12 +581,12 @@ void strins(char *Dest, const char *Src, int Pos)
   memmove(Dest + Pos, Src, strlen(Src));
 }
 
-void strmaxins(char *Dest, const char *Src, int Pos, int MaxLen)
+void strmaxins(char *Dest, const char *Src, int Pos, size_t MaxLen)
 {
-  int RLen;
+  size_t RLen;
 
   RLen = strlen(Src);
-  if (RLen > MaxLen - ((int)strlen(Dest)))
+  if (RLen > MaxLen - strlen(Dest))
     RLen = MaxLen - strlen(Dest);
   memmove(Dest + Pos + RLen, Dest + Pos, strlen(Dest) + 1 - Pos);
   memmove(Dest + Pos, Src, RLen);
@@ -615,11 +629,11 @@ unsigned fstrlenprint(FILE *pFile, const char *pStr, unsigned StrLen)
   return Result;
 }
 
-unsigned snstrlenprint(char *pDest, unsigned DestLen,
-                       const char *pStr, unsigned StrLen,
+unsigned snstrlenprint(char *pDest, size_t DestLen,
+                       const char *pStr, size_t StrLen,
                        char QuoteToEscape)
 {
-  unsigned Result = 0;
+  size_t Result = 0;
   const char *pRun, *pEnd;
 
   for (pRun = pStr, pEnd = pStr + StrLen; pRun < pEnd; pRun++)
@@ -656,9 +670,9 @@ unsigned snstrlenprint(char *pDest, unsigned DestLen,
   return Result;
 }
 
-unsigned as_strnlen(const char *pStr, unsigned MaxLen)
+size_t as_strnlen(const char *pStr, size_t MaxLen)
 {
-  unsigned Res = 0;
+  size_t Res = 0;
   
   for (; (MaxLen > 0); MaxLen--, pStr++, Res++)
     if (!*pStr)
@@ -667,7 +681,7 @@ unsigned as_strnlen(const char *pStr, unsigned MaxLen)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     strreplace(char *pHaystack, const char *pFrom, const char *pTo, int ToMaxLen, unsigned HaystackSize)
+ * \fn     strreplace(char *pHaystack, const char *pFrom, const char *pTo, size_t ToMaxLen, size_t HaystackSize)
  * \brief  replaces all occurences of From to To in Haystack
  * \param  pHaystack string to search in
  * \param  pFrom what to find
@@ -678,7 +692,7 @@ unsigned as_strnlen(const char *pStr, unsigned MaxLen)
  * \return # of occurences
  * ------------------------------------------------------------------------ */
 
-int strreplace(char *pHaystack, const char *pFrom, const char *pTo, int ToMaxLen, unsigned HaystackSize)
+int strreplace(char *pHaystack, const char *pFrom, const char *pTo, size_t ToMaxLen, size_t HaystackSize)
 {
   int HaystackLen = -1, FromLen = -1, ToLen = -1, Count = 0;
   int HeadLen, TailLen;
@@ -1015,11 +1029,11 @@ void KillBlanks(char *s)
   *dest = '\0';
 }
 
-int CopyNoBlanks(char *pDest, const char *pSrc, int MaxLen)
+int CopyNoBlanks(char *pDest, const char *pSrc, size_t MaxLen)
 {
   const char *pSrcRun;
   char *pDestRun = pDest;
-  int Cnt = 0;
+  size_t Cnt = 0;
   Byte Flags = 0;
   char ch;
   Boolean ThisEscaped, PrevEscaped;
@@ -1147,7 +1161,7 @@ char *strcpy(char *pDest, const char *pSrc)
 #endif
 
 /*!------------------------------------------------------------------------
- * \fn     strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
+ * \fn     strmemcpy(char *pDest, size_t DestSize, const char *pSrc, size_t SrcLen)
  * \brief  copy string with length limitation
  * \param  pDest where to write
  * \param  DestSize destination capacity
@@ -1156,12 +1170,10 @@ char *strcpy(char *pDest, const char *pSrc)
  * \return actual, possibly limited length
  * ------------------------------------------------------------------------ */
 
-int strmemcpy(char *pDest, int DestSize, const char *pSrc, int SrcLen)
+int strmemcpy(char *pDest, size_t DestSize, const char *pSrc, size_t SrcLen)
 {
   if (DestSize < SrcLen + 1)
     SrcLen = DestSize - 1;
-  if (SrcLen < 0)
-    SrcLen = 0;
   memmove(pDest, pSrc, SrcLen);
   pDest[SrcLen] = '\0';
   return SrcLen;

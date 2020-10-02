@@ -55,9 +55,10 @@
 #define MModAbs16 (1 << ModAbs16)
 #define ModImm 8
 #define MModImm (1 << ModImm)
+#define MModImmVariable (1 << 9)
 
 #define MModAll (MModReg|MModIReg|MModDisp8|MModDisp16|MModPredec|MModPostInc|MModAbs8|MModAbs16|MModImm)
-#define MModNoImm (MModAll-MModImm)
+#define MModNoImm (MModAll & ~MModImm)
 
 
 typedef struct
@@ -77,10 +78,12 @@ static ShortInt AdrMode;
 static Byte AdrByte,FormatCode;
 static Byte AdrVals[3];
 static Byte AbsBank;
+static tSymbolSize ImmSize;
 
 static ShortInt Adr2Mode;
-static Byte Adr2Byte,Adr2Cnt;
+static Byte Adr2Byte, Adr2Cnt;
 static Byte Adr2Vals[3];
+static tSymbolSize Imm2Size;
 
 static LongInt Reg_DP,Reg_EP,Reg_TP,Reg_BR;
 
@@ -127,7 +130,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_H8_5(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_H8_5(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - H8/500 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -135,7 +138,7 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_H8_5(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_H8_5(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {
@@ -327,6 +330,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
   char *p;
 
   AdrMode = ModNone; AdrCnt = 0;
+  ImmSize = eSymbolSizeUnknown;
 
   /* einfaches Register ? */
 
@@ -345,6 +349,17 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   if (*pArg->Str == '#')
   {
+    SplitDisp(pArg, &ImmSize);
+    if (ImmSize == eSymbolSizeUnknown)
+    {
+      if (!(Mask & MModImmVariable))
+        ImmSize = OpSize;
+    }
+    else if ((ImmSize != OpSize) && !(Mask & MModImmVariable))
+    {
+      WrStrErrorPos(ErrNum_ConfOpSizes, pArg);
+      return;
+    }
     switch (OpSize)
     {
       case eSymbolSizeUnknown:
@@ -523,6 +538,73 @@ static LongInt ImmVal(void)
   return t;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     AdaptImmSize(const tStrComp *pArg)
+ * \brief  necessary post-processing if immediate operand size may differ from insn size
+ * \param  pArg immediate argument
+ * \return True if adaption succeeded
+ * ------------------------------------------------------------------------ */
+
+static Boolean AdaptImmSize(const tStrComp *pArg)
+{
+  LongInt ImmV = ImmVal();
+  Boolean ImmValShort = (ImmV >= -128) && (ImmV < 127);
+
+  switch (OpSize)
+  {
+    /* no AdrVals adaptions needed for pure 8 bit: */
+
+    case eSymbolSize8Bit:
+      if (ImmSize == eSymbolSize16Bit)
+      {
+        WrStrErrorPos(ErrNum_ConfOpSizes, pArg);
+        return False;
+      }
+      else
+      {
+        ImmSize = eSymbolSize8Bit;
+        return True;
+      }
+
+    case eSymbolSize16Bit:
+      switch (ImmSize)
+      {
+        case eSymbolSize16Bit:
+          return True;
+        case eSymbolSize8Bit:
+          if (!ImmValShort)
+          {
+            WrStrErrorPos(ErrNum_OverRange, pArg);
+            return False;
+          }
+          else
+            goto Make8;
+        case eSymbolSizeUnknown:
+          if (ImmValShort)
+          {
+            ImmSize = eSymbolSize8Bit;
+            goto Make8;
+          }
+          else
+          {
+            ImmSize = eSymbolSize16Bit;
+            return True;
+          }
+        default:
+          WrStrErrorPos(ErrNum_InternalError, pArg);
+          return False;
+        Make8:
+          AdrVals[0] = AdrVals[1];
+          AdrCnt--;
+          return True;
+      }
+
+    default:
+      WrStrErrorPos(ErrNum_InternalError, pArg);
+      return False;
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 
 static Boolean CheckFormat(const char *FSet)
@@ -550,6 +632,7 @@ static void CopyAdr(void)
   Adr2Mode = AdrMode;
   Adr2Byte = AdrByte;
   Adr2Cnt = AdrCnt;
+  Imm2Size = ImmSize;
   memcpy(Adr2Vals, AdrVals, AdrCnt);
 }
 
@@ -586,12 +669,12 @@ static void DecodeMOV(Word Dummy)
       if (AdrMode != ModNone)
       {
         CopyAdr();
-        DecodeAdr(&ArgStr[1], MModAll);
+        DecodeAdr(&ArgStr[1], MModAll | MModImmVariable);
         if (AdrMode != ModNone)
         {
           if (FormatCode == 0)
           {
-            if ((AdrMode == ModImm) && (Adr2Mode == ModReg)) FormatCode = 2 + OpSize;
+            if ((AdrMode == ModImm) && ((ImmSize == OpSize) || (ImmSize == eSymbolSizeUnknown)) && (Adr2Mode == ModReg)) FormatCode = 2 + OpSize;
             else if ((AdrMode == ModReg) && (Adr2Byte == 0xe6)) FormatCode = 4;
             else if ((Adr2Mode == ModReg) && (AdrByte == 0xe6)) FormatCode = 4;
             else if ((AdrMode == ModReg) && (Adr2Mode == ModAbs8)) FormatCode = 6;
@@ -625,17 +708,11 @@ static void DecodeMOV(Word Dummy)
               {
                 BAsmCode[0] = Adr2Byte | (OpSize << 3);
                 memcpy(BAsmCode + 1, Adr2Vals, Adr2Cnt);
-                if ((OpSize == eSymbolSize8Bit) || ((ImmVal() >= -128) && (ImmVal() < 127)))
+                if (AdaptImmSize(&ArgStr[1]))
                 {
-                  BAsmCode[1 + Adr2Cnt] = 0x06;
-                  BAsmCode[2 + Adr2Cnt] = AdrVals[OpSize];
-                  CodeLen = 3 + Adr2Cnt;
-                }
-                else
-                {
-                  BAsmCode[1 + Adr2Cnt] = 0x07;
-                  memcpy(BAsmCode + 2 + Adr2Cnt, AdrVals, AdrCnt);
-                  CodeLen=2 + Adr2Cnt + AdrCnt;
+                  BAsmCode[1 + Adr2Cnt] = 0x06 + ImmSize;
+                  memcpy(BAsmCode + 1 + Adr2Cnt + 1, AdrVals, AdrCnt);
+                  CodeLen = 1 + Adr2Cnt + 1 + AdrCnt;
                 }
               }
               else WrError(ErrNum_InvAddrMode);
@@ -879,12 +956,12 @@ static void DecodeCMP(Word Dummy)
       if (AdrMode != ModNone)
       {
         CopyAdr();
-        DecodeAdr(&ArgStr[1], MModAll);
+        DecodeAdr(&ArgStr[1], MModAll | MModImmVariable);
         if (AdrMode != ModNone)
         {
           if (FormatCode == 0)
           {
-            if ((AdrMode == ModImm) && (Adr2Mode == ModReg)) FormatCode = 2 + OpSize;
+            if ((AdrMode == ModImm) && ((ImmSize == OpSize) || (ImmSize == eSymbolSizeUnknown)) && (Adr2Mode == ModReg)) FormatCode = 2 + OpSize;
             else FormatCode = 1;
           }
           switch (FormatCode)
@@ -899,11 +976,14 @@ static void DecodeCMP(Word Dummy)
               }
               else if (AdrMode == ModImm)
               {
-                BAsmCode[0] = Adr2Byte | (OpSize << 3);
-                memcpy(BAsmCode + 1,Adr2Vals, Adr2Cnt);
-                BAsmCode[1 + Adr2Cnt] = 0x04 | OpSize;
-                memcpy(BAsmCode + 2 + Adr2Cnt, AdrVals, AdrCnt);
-                CodeLen = 2 + AdrCnt + Adr2Cnt;
+                if (AdaptImmSize(&ArgStr[1]))
+                {
+                  BAsmCode[0] = Adr2Byte | (OpSize << 3);
+                  memcpy(BAsmCode + 1,Adr2Vals, Adr2Cnt);
+                  BAsmCode[1 + Adr2Cnt] = 0x04 | ImmSize;
+                  memcpy(BAsmCode + 2 + Adr2Cnt, AdrVals, AdrCnt);
+                  CodeLen = 2 + AdrCnt + Adr2Cnt;
+                }
               }
               else WrError(ErrNum_InvAddrMode);
               break;
@@ -1057,12 +1137,13 @@ static void DecodeBit(Word Code)
 
   if (ChkArgCnt(2, 2))
   {
-    if (OpSize == eSymbolSizeUnknown) OpSize = eSymbolSize8Bit;
-    if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
-    else
+    DecodeAdr(&ArgStr[2], MModNoImm);
+    if (AdrMode != ModNone)
     {
-      DecodeAdr(&ArgStr[2], MModNoImm);
-      if (AdrMode != ModNone)
+      if (OpSize == eSymbolSizeUnknown)
+        OpSize = (AdrMode == ModReg) ? eSymbolSize16Bit : eSymbolSize8Bit;
+      if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
+      else
       {
         switch (DecodeReg(&ArgStr[1], &HReg, False))
         {
@@ -1389,6 +1470,13 @@ static void DecodeTRAPA(Word Dummy)
   }
 }
 
+static void DecodeDATA(Word Dummy)
+{
+  UNUSED(Dummy);
+
+  DecodeMotoDC(OpSize, True);
+}
+
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
@@ -1521,6 +1609,7 @@ static void InitFields(void)
   AddBit("BSET", 0x40); AddBit("BTST", 0x70);
 
   AddInstTable(InstTable, "REG", 0, CodeREG);
+  AddInstTable(InstTable, "DATA", 0, DecodeDATA);
 }
 
 static void DeinitFields(void)
@@ -1609,7 +1698,7 @@ static void MakeCode_H8_5(void)
 {
   CodeLen = 0; DontPrint = False; AbsBank = Reg_DP;
 
-  /* zu ignorierendes */
+  /* to be ignored */
 
   if (Memo("")) return;
 
@@ -1617,7 +1706,7 @@ static void MakeCode_H8_5(void)
   if (*AttrPart.Str)
     SetOpSize(AttrPartOpSize);
 
-  if (DecodeMoto16Pseudo(OpSize,True)) return;
+  if (DecodeMoto16Pseudo(OpSize, True)) return;
 
   /* Sonderfaelle */
 
@@ -1641,6 +1730,69 @@ static Boolean IsDef_H8_5(void)
 static void SwitchFrom_H8_5(void)
 {
   DeinitFields(); ClearONOFF();
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     QualifyQuote_H8_5(const char *pStart, const char *pQuotePos)
+ * \brief  check whether ' in source is lead-in to character string or int constant
+ * \param  pStart complete string
+ * \param  pQuotePos single quote position
+ * \return True if this is NO lead-in of int constant
+ * ------------------------------------------------------------------------ */
+
+static Boolean QualifyQuote_H8_5(const char *pStart, const char *pQuotePos)
+{
+  const char *pRun;
+  Boolean OK;
+  int Base;
+
+  /* previous character must be H X B O */
+
+  if (pQuotePos == pStart)
+    return True;
+  switch (as_toupper(*(pQuotePos - 1)))
+  {
+    case 'B':
+      Base = 2; break;
+    case 'O':
+      Base = 8; break;
+    case 'X':
+    case 'H':
+      Base = 16; break;
+    default:
+      return True;
+  }
+
+  /* Scan for following valid (binary/octal/hex) character(s) */
+
+  for (pRun = pQuotePos + 1; *pRun; pRun++)
+  {
+    switch (Base)
+    {
+      case 16: OK = as_isxdigit(*pRun); break;
+      case 8: OK = as_isdigit(*pRun) && (*pRun < '8'); break;
+      case 2: OK = as_isdigit(*pRun) && (*pRun < '2'); break;
+      default: OK = False;
+    }
+    if (!OK)
+      break;
+  }
+
+  /* none? -> bad */
+
+  if (pRun <= pQuotePos + 1)
+    return True;
+
+  /* If we've hit another ' after them, its the "harmless" x'...' form,
+     and no special treatment is needed */
+
+  if ('\'' == *pRun)
+    return True;
+
+  /* Other token or string continues -> cannot be such a constant, otherwise we
+     have a match and the ' does NOT lead in a character string: */
+
+  return isalnum(*pRun);
 }
 
 static void InitCode_H8_5(void)
@@ -1668,6 +1820,8 @@ static void SwitchTo_H8_5(void)
   SwitchFrom = SwitchFrom_H8_5;
   InternSymbol = InternSymbol_H8_5;
   DissectReg = DissectReg_H8_5;
+  QualifyQuote = QualifyQuote_H8_5;
+  ConstModeWeirdNoTerm = True;
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);
   AddMoto16PseudoONOFF();

@@ -94,8 +94,8 @@ DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \> REG \\
 \subsubsection{Hitachi H8/500}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ASSUME     \> DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \\
-REG \\
+ASSUME          \> DATA   \> DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE \\
+PADDING         \> REG \\
 \end{tabbing}}
 
 \subsubsection{Hitachi SH7x00}
@@ -314,7 +314,7 @@ DS         \> DT          \> DW         \> PORT \\
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
 DB         \> DD          \> DN         \> DQ          \> DS \\
-DT         \> DW \\
+DT         \> DW          \> REG \\
 \end{tabbing}}
 
 \subsubsection{Microchip PIC16C5x}

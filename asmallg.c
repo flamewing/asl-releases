@@ -16,6 +16,7 @@
 #include "strutil.h"
 #include "stringlists.h"
 #include "bpemu.h"
+#include "console.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -132,8 +133,10 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   strmaxcpy(TmpCompStr, MomCPUIdentName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
+  ConstModeWeirdNoTerm = False;
   DissectBit = Default_DissectBit;
   DissectReg = NULL;
+  QualifyQuote = NULL;
   SetIsOccupiedFnc = NULL;
   DecodeAttrPart = NULL;
   SwitchIsOccupied = PageIsOccupied = False;
@@ -198,7 +201,7 @@ static void SetNSeg(Byte NSeg)
   }
 }
 
-static void IntLine(char *pDest, int DestSize, LargeWord Inp, TConstMode ThisConstMode)
+static void IntLine(char *pDest, size_t DestSize, LargeWord Inp, TConstMode ThisConstMode)
 {
   switch (ThisConstMode)
   {
@@ -488,7 +491,7 @@ static void CodeRORG(Word Index)
   }
 }
 
-static void CodeSHARED_BuildComment(char *c, int DestSize)
+static void CodeSHARED_BuildComment(char *c, size_t DestSize)
 {
   switch (ShareMode)
   {
@@ -770,7 +773,7 @@ static void CodeMESSAGE(Word Index)
     if (!OK) WrError(ErrNum_InvString);
     else
     {
-      printf("%s%s\n", mess, ClrEol);
+      WrConsoleLine(mess, True);
       if (strcmp(LstName, "/dev/null"))
         WrLstLine(mess);
     }

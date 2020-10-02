@@ -65,8 +65,7 @@ typedef enum
 #define eSymbolSizeShiftCnt ((tSymbolSize)8)
 
 #ifdef __cplusplus
-# include "cppops.h"
-DefCPPOps_Mask(tSuppFlags)
+# include "code68k.hpp"
 #endif
 
 enum
@@ -353,7 +352,7 @@ static Boolean DecodeFPRegCore(const char *pArg, Word *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_68K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_68K(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - 68K variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -361,7 +360,7 @@ static Boolean DecodeFPRegCore(const char *pArg, Word *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_68K(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_68K(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   if (InpSize == NativeFloatSize)
   {

@@ -193,7 +193,7 @@ static Boolean DecodeFPRegCore(const char *pArg, LongWord *pResult)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_960(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_960(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - i960 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -201,7 +201,7 @@ static Boolean DecodeFPRegCore(const char *pArg, LongWord *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_960(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_960(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

@@ -91,7 +91,7 @@ static Boolean IsWRegCore(const char *pArg, LongWord *pValue)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_Mico8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_Mico8(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - MICO8 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -99,7 +99,7 @@ static Boolean IsWRegCore(const char *pArg, LongWord *pValue)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_Mico8(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_Mico8(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

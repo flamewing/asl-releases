@@ -886,7 +886,7 @@ static void DumpTable(void)
   fprintf(outfile, "</TABLE></CENTER>\n");
 }
 
-static void GetTableName(char *Dest, int DestSize)
+static void GetTableName(char *Dest, size_t DestSize)
 {
   int ThisTableNum = (CurrEnv == EnvTabular) ? TableNum + 1 : TableNum;
 
@@ -896,7 +896,7 @@ static void GetTableName(char *Dest, int DestSize)
     as_snprintf(Dest, DestSize, "%d.%d", Chapters[0], ThisTableNum);
 }
 
-static void GetSectionName(char *Dest, int DestSize)
+static void GetSectionName(char *Dest, size_t DestSize)
 {
   int z;
 

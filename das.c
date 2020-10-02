@@ -9,6 +9,7 @@
 #include "cmdarg.h"
 #include "dasmdef.h"
 #include "cpulist.h"
+#include "console.h"
 #include "das.rsc"
 
 #include "deco68.h"
@@ -363,11 +364,11 @@ static void NxtLine(void)
     if (Redirected != NoRedir)
       return;
 #endif
-    printf("%s", getmessage(Num_KeyWaitMsg));
+    WrConsoleLine(getmessage(Num_KeyWaitMsg), False);
     fflush(stdout);
     while (getchar() != '\n');
 #if 0
-    printf("%s%s", CursUp, ClrEol);
+    printf("%s", CursUp);
 #endif
   }
 }

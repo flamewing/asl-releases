@@ -17,6 +17,7 @@
 #include "version.h"
 #include "endian.h"
 #include "stdhandl.h"
+#include "console.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "as.rsc"
@@ -76,11 +77,11 @@ void WriteCopyrights(TSwitchProc NxtProc)
 
   if (!StringListEmpty(CopyrightList))
   {
-    printf("%s\n", GetStringListFirst(CopyrightList, &Lauf));
+    WrConsoleLine(GetStringListFirst(CopyrightList, &Lauf), True);
     NxtProc();
     while (Lauf)
     {
-      printf("%s\n", GetStringListNext(&Lauf));
+      WrConsoleLine(GetStringListNext(&Lauf), True);
       NxtProc();
     }
   }
@@ -90,7 +91,7 @@ void WriteCopyrights(TSwitchProc NxtProc)
 /* ermittelt das erste/letzte Auftauchen eines Zeichens ausserhalb */
 /* "geschuetzten" Bereichen */
 
-char *QuotMultPos(const char *s, const char *pSearch)
+char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc)
 {
   register ShortInt Brack = 0, AngBrack = 0;
   register const char *i;
@@ -112,7 +113,10 @@ char *QuotMultPos(const char *s, const char *pSearch)
         break;
       case '\'':
         if (!InDblQuot && !ThisEscaped)
-          InSglQuot = !InSglQuot;
+        {
+          if (InSglQuot || !QualifyQuoteFnc || QualifyQuoteFnc(s, i))
+            InSglQuot = !InSglQuot;
+        }
         break;
       case '\\':
         if ((InSglQuot || InDblQuot) && !ThisEscaped)
@@ -140,13 +144,13 @@ char *QuotMultPos(const char *s, const char *pSearch)
   return NULL;
 }
 
-char *QuotPos(const char *s, char Zeichen)
+char *QuotPosQualify(const char *s, char Zeichen, tQualifyQuoteFnc QualifyQuoteFnc)
 {
   char Tmp[2];
 
   Tmp[0] = Zeichen;
   Tmp[1] = '\0';
-  return QuotMultPos(s, Tmp);
+  return QuotMultPosQualify(s, Tmp, QualifyQuoteFnc);
 }
 
 char *RQuotPos(char *s, char Zeichen)
@@ -370,7 +374,7 @@ const char *NamePart(const char *Name)
 /****************************************************************************/
 /* eine Gleitkommazahl in einen String umwandeln */
 
-void FloatString(char *pDest, int DestSize, Double f)
+void FloatString(char *pDest, size_t DestSize, Double f)
 {
 #define MaxLen 18
   char *p, *d, ExpChar = HexStartCharacter + ('E' - 'A');
@@ -515,7 +519,7 @@ void FloatString(char *pDest, int DestSize, Double f)
 /****************************************************************************/
 /* Symbol in String wandeln */
 
-void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned Radix)
+void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsigned Radix)
 {
   LargeInt IntVal;
   
@@ -699,7 +703,6 @@ void NewPage(ShortInt Level, Boolean WithFF)
     ChkIO(ErrNum_ListWrError);
   }
 }
-
 
 /*--------------------------------------------------------------------------*/
 /* eine Zeile ins Listing schieben */

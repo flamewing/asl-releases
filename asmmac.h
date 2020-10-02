@@ -70,7 +70,7 @@ typedef struct _TInputTag
                                        );
   Boolean (*GetPos)(
 #ifdef __PROTOS__
-                    struct _TInputTag *P, char *Dest, int DestSize
+                    struct _TInputTag *P, char *Dest, size_t DestSize
 #endif
                                                     );
   PMacroRec Macro;

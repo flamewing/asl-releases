@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stddef.h>
+
 #define LISTLINESPACE 20
 
 struct sLineComp;
@@ -30,8 +32,10 @@ extern long GTime(void);
 
 extern void UpString(char *s);
 
-extern char *QuotPos(const char *s, char Zeichen);
-extern char *QuotMultPos(const char *s, const char *pSearch);
+extern char *QuotPosQualify(const char *s, char Zeichen, tQualifyQuoteFnc QualifyQuoteFnc);
+#define QuotPos(s, Zeichen) QuotPosQualify(s, Zeichen, NULL)
+extern char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc);
+#define QuotMultPos(s, pSearch) QuotMultPosQualify(s, pSearch, NULL)
 
 extern char *RQuotPos(char *s, char Zeichen);
 
@@ -63,9 +67,9 @@ extern const char *NamePart(const char *Name);
 extern char *PathPart(char *Name);
 
 
-extern void FloatString(char *pDest, int DestSize, Double f);
+extern void FloatString(char *pDest, size_t DestSize, Double f);
 
-extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest, int DestLen, unsigned Radix);
+extern void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsigned Radix);
 
 
 extern void ResetPageCounter(void);

@@ -341,7 +341,7 @@ static void DissectBitValue(LargeWord Symbol, Word *pAddr, Byte *pBit)
   *pBit = (Symbol >> 16) & 7;
 }
 
-static void DissectBit_370(char *pDest, int DestSize, LargeWord Symbol)
+static void DissectBit_370(char *pDest, size_t DestSize, LargeWord Symbol)
 {
   Word Addr;
   Byte Bit;

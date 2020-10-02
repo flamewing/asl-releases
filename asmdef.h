@@ -10,6 +10,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stddef.h>
 #include <stdio.h>
 
 #include "chunks.h"
@@ -159,10 +160,11 @@ void
 
 typedef void (*DissectBitProc)(
 #ifdef __PROTOS__
-char *pDest, int DestSize, LargeWord Inp
+char *pDest, size_t DestSize, LargeWord Inp
 #endif
 );
 
+typedef Boolean (*tQualifyQuoteFnc)(const char *pStart, const char *pQuotePos);
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
 typedef enum
@@ -234,7 +236,6 @@ typedef struct _ASSUMERec
 
 extern StringPtr SourceFile;
 
-extern StringPtr ClrEol;
 extern StringPtr CursUp;
 
 extern LargeWord *PCs;
@@ -273,7 +274,7 @@ extern Boolean MakeUseList;
 extern Boolean MakeCrossList;
 extern Boolean MakeSectionList;
 extern Boolean MakeIncludeList;
-extern Boolean RelaxedMode;
+extern Boolean RelaxedMode, DefRelaxedMode;
 extern Word ListMask;
 extern ShortInt ExtendErrors;
 extern Integer EnumSegment;
@@ -324,6 +325,7 @@ extern Boolean TurnWords;
 extern Byte HeaderID;
 extern const char *PCSymbol;
 extern TConstMode ConstMode;
+extern Boolean ConstModeWeirdNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied;
 extern Boolean (*DecodeAttrPart)(void);
@@ -334,6 +336,7 @@ extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char *Asc, TempResult *Erg);
 extern DissectBitProc DissectBit;
 extern DissectRegProc DissectReg;
+extern tQualifyQuoteFnc QualifyQuote;
 
 extern StringPtr IncludeList;
 extern Integer IncDepth,NextIncDepth;
@@ -409,7 +412,7 @@ extern int SetMaxCodeLen(LongWord NewMaxCodeLen);
 
 extern void Default_InternSymbol(char *Asc, TempResult *Erg);
 
-extern void Default_DissectBit(char *pDest, int DestSize, LargeWord BitSpec);
+extern void Default_DissectBit(char *pDest, size_t DestSize, LargeWord BitSpec);
 
 extern void IncArgCnt(void);
 

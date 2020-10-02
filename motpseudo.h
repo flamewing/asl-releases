@@ -24,6 +24,8 @@ extern void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig);
 
 extern void AddMoto16PseudoONOFF(void);
 
+extern void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn);
+
 extern Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn);
 
 extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean Allow24);

@@ -136,7 +136,7 @@ static Boolean DecodeRRegCore(const char *pArg, Byte *pValue)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectReg_4004(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+ * \fn     DissectReg_4004(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
  * \brief  dissect register symbols - 4004 variant
  * \param  pDest destination buffer
  * \param  DestSize destination buffer size
@@ -144,7 +144,7 @@ static Boolean DecodeRRegCore(const char *pArg, Byte *pValue)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_4004(char *pDest, int DestSize, tRegInt Value, tSymbolSize InpSize)
+static void DissectReg_4004(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
 {
   switch (InpSize)
   {

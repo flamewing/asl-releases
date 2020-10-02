@@ -29,6 +29,7 @@
 #include "asmitree.h"
 #include "trees.h"
 #include "chunks.h"
+#include "console.h"
 #include "asminclist.h"
 #include "asmfnums.h"
 #include "asmdef.h"
@@ -166,7 +167,7 @@ static void NULL_Restorer(PInputTag PInp)
   UNUSED(PInp);
 }
 
-static Boolean NULL_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean NULL_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   UNUSED(PInp);
 
@@ -752,7 +753,7 @@ static void MACRO_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Params));
 }
 
-static Boolean MACRO_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean MACRO_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   String Tmp;
 
@@ -1081,7 +1082,7 @@ static void IRP_Cleanup(PInputTag PInp)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Posisionsangabe im IRP(C) fuer Fehlermeldungen */
 
-static Boolean IRP_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
   const char *IRPType;
@@ -1455,7 +1456,7 @@ static void REPT_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean REPT_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean REPT_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -1650,7 +1651,7 @@ static void WHILE_Cleanup(PInputTag PInp)
   ClearStringList(&(PInp->Lines));
 }
 
-static Boolean WHILE_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean WHILE_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
 
@@ -1867,22 +1868,24 @@ static void ExpandWHILE(void)
 
 static void INCLUDE_Cleanup(PInputTag PInp)
 {
-  String Tmp;
-
   fclose(PInp->Datei);
   free(PInp->Buffer);
   LineSum += MomLineCounter;
   if ((*LstName != '\0') && (!QuietMode))
   {
-    as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, CurrLine);
-    printf("%s(%s)", NamePart(CurrFileName), Tmp);
-    printf("%s\n", ClrEol); fflush(stdout);
+    String Tmp;
+
+    as_snprintf(Tmp, sizeof(Tmp), "%s(", NamePart(CurrFileName));
+    as_snprcatf(Tmp, sizeof(Tmp), LongIntFormat, CurrLine);
+    as_snprcatf(Tmp, sizeof(Tmp), ")");
+    WrConsoleLine(Tmp, True);
+    fflush(stdout);
   }
   if (MakeIncludeList)
     PopInclude();
 }
 
-static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, int DestSize)
+static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   String Tmp;
   UNUSED(PInp);
@@ -2006,7 +2009,7 @@ static void GetNextLine(char *Line)
 typedef struct
 {
   char *pStr;
-  unsigned AllocLen;
+  size_t AllocLen;
 } tAllocStr;
 
 static void InitStr(tAllocStr *pStr)
@@ -2409,7 +2412,7 @@ static void SplitLine(void)
 
   /* If comment is present, ignore everything after it: */
 
-  pPos = QuotPos(pRun, ';');
+  pPos = QuotPosQualify(pRun, ';', QualifyQuote);
   if (pPos)
   {
     CommPart.Pos.StartCol = pPos - OneLine;
@@ -2552,10 +2555,15 @@ static void SplitLine(void)
     {
       while (*pRun && as_isspace(*pRun))
         pRun++;
+#if 0 /* should work, but doesn't yet */
+      pDivPos = QuotMultPosFixup(pRun, DivideChars, NULL);
+      if (!pDivPos)
+        pDivPos = pEnd;
+#endif
       pDivPos = pEnd;
       for (pActDiv = DivideChars; *pActDiv; pActDiv++)
       {
-        pActDivPos = QuotPos(pRun, *pActDiv);
+        pActDivPos = QuotPosQualify(pRun, *pActDiv, QualifyQuote);
         if (pActDivPos && (pActDivPos < pDivPos))
           pDivPos = pActDivPos;
       }
@@ -2578,7 +2586,6 @@ static void SplitLine(void)
 static void ProcessFile(String FileName)
 {
   long NxtTime, ListTime;
-  String Num;
   const char *Name;
   char *Run;
 
@@ -2630,11 +2637,13 @@ static void ProcessFile(String FileName)
       NxtTime = GTime();
       if (((!ListToStdout) || ((ListMask&1) == 0)) && (DTime(ListTime, NxtTime) > 50))
       {
-        as_snprintf(Num, sizeof(Num), LongIntFormat, MomLineCounter);
+        String Num;
+
         Name = NamePart(CurrFileName);
-        printf("%s(%s)%s", Name, Num, ClrEol);
-        /*for (z = 0; z < strlen(Name) + strlen(Num) + 2; z++) putchar('\b');*/
-        putchar('\r');
+        as_snprintf(Num, sizeof(Num), "%s(", Name);
+        as_snprcatf(Num, sizeof(Num), LongIntFormat, MomLineCounter);
+        as_snprcatf(Num, sizeof(Num), ")");
+        WrConsoleLine(Num, False);
         fflush(stdout);
         ListTime = NxtTime;
       }
@@ -2668,7 +2677,7 @@ static const char *TWrite_Plur(int n)
   return (n != 1) ? getmessage(Num_ListPlurName) : "";
 }
 
-static void TWrite(long DTime, char *dest, int DestSize)
+static void TWrite(long DTime, char *dest, size_t DestSize)
 {
   int h;
 
@@ -2810,7 +2819,7 @@ static void AssembleFile_InitPass(void)
   SetLstMacroExp(eLstMacroExpAll);
   InitLstMacroExpMod(&LstMacroExpModOverride);
   InitLstMacroExpMod(&LstMacroExpModDefault);
-  SetFlag(&RelaxedMode, RelaxedName, False);
+  SetFlag(&RelaxedMode, RelaxedName, DefRelaxedMode);
   strmaxcpy(TmpCompStr, NestMaxName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
 
@@ -2869,7 +2878,7 @@ static void AssembleFile_ExitPass(void)
 static void AssembleFile_WrSummary(const char *pStr)
 {
   if (!QuietMode)
-    printf("%s%s\n", pStr, ClrEol);
+    WrConsoleLine(pStr, True);
   if (ListMode == 2)
     WrLstLine(pStr);
 }
@@ -2993,8 +3002,9 @@ static void AssembleFile(char *Name)
     AsmErrPassInit();
     if (!QuietMode)
     {
-      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
-      printf("%s%s%s\n", getmessage(Num_InfoMessPass), Tmp, ClrEol);
+      as_snprintf(Tmp, sizeof(Tmp), "%s", getmessage(Num_InfoMessPass));
+      as_snprcatf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
+      WrConsoleLine(Tmp, True);
     }
 
     /* Dateien oeffnen */
@@ -3205,12 +3215,16 @@ static void AssembleFile(char *Name)
 
   StopTime = GTime();
   TWrite(DTime(StartTime, StopTime), s, sizeof(s));
+  strmaxcat(s, getmessage(Num_InfoMessAssTime), STRINGSIZE);
   if (!QuietMode)
-    printf("\n%s%s%s\n\n", s, getmessage(Num_InfoMessAssTime), ClrEol);
+  {
+    WrConsoleLine("", True);
+    WrConsoleLine(s, True);
+    WrConsoleLine("", True);
+  }
   if (ListMode == 2)
   {
     WrLstLine("");
-    strmaxcat(s, getmessage(Num_InfoMessAssTime), STRINGSIZE);
     WrLstLine(s);
     WrLstLine("");
   }
@@ -3259,7 +3273,7 @@ static void AssembleFile(char *Name)
 
     as_snprintf(s, sizeof(s), "%4lu.%02lu%s", Sum / 100, Sum % 100, " Oppart Compares");
     if (!QuietMode)
-      printf("%s%s\n", s, ClrEol);
+      WrConsoleLine(s, True);
     if (ListMode == 2)
       WrLstLine(s);
   }
@@ -3555,6 +3569,14 @@ static CMDResult CMD_MsgIfRepass(Boolean Negate, const char *Arg)
   }
   else
     return CMDOK;
+}
+
+static CMDResult CMD_Relaxed(Boolean Negate, const char *pArg)
+{
+  UNUSED(pArg);
+
+  DefRelaxedMode = !Negate;
+  return CMDOK;
 }
 
 static CMDResult CMD_ExtendErrors(Boolean Negate, const char *Arg)
@@ -3978,6 +4000,7 @@ static CMDRec ASParams[] =
   { "q"             , CMD_QuietMode       },
   { "QUIET"         , CMD_QuietMode       },
   { "r"             , CMD_MsgIfRepass     },
+  { "RELAXED"       , CMD_Relaxed         },
   { "s"             , CMD_SectionList     },
   { "SHAREOUT"      , CMD_ShareOutFile    },
   { "OLIST"         , CMD_ListOutFile     },
@@ -4029,10 +4052,10 @@ static void NxtLine(void)
     LineZ = 0;
     if (Redirected != NoRedir)
       return;
-    printf("%s", getmessage(Num_KeyWaitMsg));
+    WrConsoleLine(getmessage(Num_KeyWaitMsg), False);
     fflush(stdout);
     while (getchar() != '\n');
-    printf("%s%s", CursUp, ClrEol);
+    printf("%s", CursUp);
   }
 }
 
@@ -4040,15 +4063,15 @@ static void WrHead(void)
 {
   if (!QuietMode)
   {
-    printf("%s%s\n", getmessage(Num_InfoMessMacroAss), Version);
-    NxtLine();
-    printf("(%s-%s)\n", ARCHPRNAME, ARCHSYSNAME);
-    NxtLine();
-    printf("%s\n", InfoMessCopyright);
-    NxtLine();
+    String Tmp;
+
+    as_snprintf(Tmp, sizeof(Tmp), "%s%s", getmessage(Num_InfoMessMacroAss), Version);
+    WrConsoleLine(Tmp, True); NxtLine();
+    as_snprintf(Tmp, sizeof(Tmp), "(%s-%s)", ARCHPRNAME, ARCHSYSNAME);
+    WrConsoleLine(Tmp, True); NxtLine();
+    WrConsoleLine(InfoMessCopyright, True); NxtLine();
     WriteCopyrights(NxtLine);
-    printf("\n");
-    NxtLine();
+    WrConsoleLine("\n", True); NxtLine();
   }
 }
 
@@ -4200,7 +4223,6 @@ int main(int argc, char **argv)
 #endif
 
   *CursUp = '\0';
-  *ClrEol = '\0';
   switch (Redirected)
   {
     case NoRedir:
@@ -4211,18 +4233,13 @@ int main(int argc, char **argv)
       }
       else
       {
-        strcpy(ClrEol, " [K"); ClrEol[0] = Char_ESC;  /* ANSI-Sequenzen */
         strcpy(CursUp, " [A"); CursUp[0] = Char_ESC;
       }
       break;
     case RedirToDevice:
-      /* Basissteuerzeichen fuer Geraete */
-      memset(ClrEol, ' ', 20);
-      memset(ClrEol + 20, '\b', 20);
-      ClrEol[40] = '\0';
       break;
     case RedirToFile:
-      strcpy(ClrEol, "\n");  /* CRLF auf Datei */
+      break;
   }
 
   ShareMode = 0;
@@ -4236,6 +4253,7 @@ int main(int argc, char **argv)
   ListMask = 0x1ff;
   MakeDebug = False;
   ExtendErrors = 0;
+  DefRelaxedMode = False;
   MacroOutput = False;
   MacProOutput = False;
   CodeOutput = True;

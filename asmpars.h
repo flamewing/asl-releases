@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stddef.h>
+
 #include "symbolsize.h"
 #include "symflags.h"
 #include "tempresult.h"
@@ -134,7 +136,7 @@ extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
 extern Boolean IdentifySection(const struct sStrComp *pName, LongInt *Erg);
 
 
-extern Boolean ExpandStrSymbol(char *pDest, unsigned DestSize, const struct sStrComp *pSrc);
+extern Boolean ExpandStrSymbol(char *pDest, size_t DestSize, const struct sStrComp *pSrc);
 
 extern void ChangeSymbol(struct sSymbolEntry *pEntry, LargeInt Value);
 
