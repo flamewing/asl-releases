@@ -76,6 +76,7 @@ typedef enum
   Float80,
   FloatDec,
   FloatCo,
+  Float16,
   FloatTypeCnt
 } FloatType;
 

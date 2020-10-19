@@ -359,3 +359,16 @@ reg_fp		reg	fp
 		dc.s	1.0
 		data.s	1.0
 
+bitstruct	struct
+word		ds.w	1
+byte1		ds.b	1
+byte2		ds.b	2
+msb16		bit.w	#15,word
+lsb8		bit	0,byte1
+msb8		bit	#7,byte2
+		endstruct
+
+mystruct	bitstruct
+		btst	mystruct_msb16
+		btst	mystruct_msb8
+		btst	mystruct_lsb8

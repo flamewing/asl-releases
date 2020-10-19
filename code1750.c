@@ -28,6 +28,7 @@
 #include "codevars.h"
 #include "headids.h"
 #include "endian.h"
+#include "ieeefloat.h"
 #include "errmsg.h"
 
 #include "code1750.h"

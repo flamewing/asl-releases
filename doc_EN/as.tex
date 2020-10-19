@@ -1180,10 +1180,11 @@ the case of the 680x0 family (table \ref{TabAttrs}).
 attribute & arithmetic-logic instruction & jump instruction\\
 \hline
 \hline
-B     & byte (8 bits)                       &  --------- \\
-W     & word (16 bits)                      &  --------- \\
+B     & byte (8 bits)                       &  8-bit-displacement \\
+W     & word (16 bits)                      &  16-bit-displacement \\
 L     & long word (32 bits)                 &  16-bit-displacement \\
 Q     & quad word (64 bits)                 &  --------- \\
+C     & half precision (16 bits)            &  --------- \\
 S     & single precision (32 bits)          &  8-bit-displacement \\
 D     & double precision (64 bits)          &  --------- \\
 X     & extended precision (80/96 bits)     &  32-bit-displacement \\
@@ -2450,7 +2451,8 @@ generates a symbol with correct attributes.
 \subsection{BIT}
 \ttindex{BIT}
 
-{\em valid for: MCS/(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16}
+{\em valid for: MCS/(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16,
+                H8/300, H8/500}
 
 \tty{BIT} serves to equate a single bit of a memory cell with a symbolic
 name.  This instruction varies from target platform to target platform due
@@ -4951,7 +4953,7 @@ the specification of the operand length is moved into the mnemonic:
 \begin{itemize}
 \item{\tty{DN}: 4-bit integer}
 \item{\tty{DB}: byte or ASCII string similar to \tty{DC.B}}
-\item{\tty{DW}: 16-bit integer}
+\item{\tty{DW}: 16-bit integer or half precision}
 \item{\tty{DD}: 32-bit integer or single precision}
 \item{\tty{DQ}: double precision   (64 bits)}
 \item{\tty{DT}: extended precision (80 bits)}

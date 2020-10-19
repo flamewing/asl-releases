@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmallg.h"
+#include "asmstructs.h"
 #include "asmitree.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
@@ -64,7 +65,7 @@
 #define REG_MARK 16
 #define REG_SP 7
 
-static tSymbolSize OpSize;
+static tSymbolSize OpSize, MomSize;
 static ShortInt AdrMode;    /* Ergebnisadressmodus */
 static Byte AdrPart;        /* Adressierungsmodusbits im Opcode */
 static Word AdrVals[6];     /* Adressargument */
@@ -76,12 +77,6 @@ static Boolean CPU16;       /* keine 32-Bit-Register */
 
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
-
-typedef enum
-{
-  SizeNone, Size8, Size16, Size24
-} MomSize_t;
-static MomSize_t MomSize;
 
 static void SetOpSize(tSymbolSize Size)
 {
@@ -246,17 +241,17 @@ static void CutSize(tStrComp *pArg)
   if ((ArgLen >= 2) && !strcmp(pArg->Str + ArgLen - 2, ":8"))
   {
     StrCompShorten(pArg, 2);
-    MomSize = Size8;
+    MomSize = eSymbolSize8Bit;
   }
   else if ((ArgLen >= 3) && !strcmp(pArg->Str + ArgLen - 3, ":16"))
   {
     StrCompShorten(pArg, 3);
-    MomSize = Size16;
+    MomSize = eSymbolSize16Bit;
   }
   else if ((ArgLen >= 3) && !strcmp(pArg->Str + ArgLen - 3, ":24"))
   {
     StrCompShorten(pArg, 3);
-    MomSize = Size24;
+    MomSize = eSymbolSize24Bit;
   }
 }
 
@@ -307,28 +302,28 @@ static void DecideVAbsolute(LongInt Address, Word Mask)
 {
   /* bei Automatik Operandengroesse festlegen */
 
-  if (MomSize == SizeNone)
+  if (MomSize == eSymbolSizeUnknown)
   {
     if (Is8(Address))
-      MomSize = Size8;
+      MomSize = eSymbolSize8Bit;
     else if (Is16(Address))
-      MomSize = Size16;
+      MomSize = eSymbolSize16Bit;
     else
-      MomSize = Size24;
+      MomSize = eSymbolSize24Bit;
   }
 
   /* wenn nicht vorhanden, eins rauf */
 
-  if ((MomSize == Size8) && ((Mask & MModAbs8) == 0))
-    MomSize = Size16;
-  if ((MomSize == Size16) && ((Mask & MModAbs16) == 0))
-    MomSize = Size24;
+  if ((MomSize == eSymbolSize8Bit) && ((Mask & MModAbs8) == 0))
+    MomSize = eSymbolSize16Bit;
+  if ((MomSize == eSymbolSize16Bit) && ((Mask & MModAbs16) == 0))
+    MomSize = eSymbolSize24Bit;
 
   /* entsprechend Modus Bytes ablegen */
 
   switch (MomSize)
   {
-    case Size8:
+    case eSymbolSize8Bit:
       if (!Is8(Address)) WrError(ErrNum_AdrOverflow);
       else
       {
@@ -337,7 +332,7 @@ static void DecideVAbsolute(LongInt Address, Word Mask)
         AdrMode = ModAbs8;
       }
       break;
-    case Size16:
+    case eSymbolSize16Bit:
       if (!Is16(Address)) WrError(ErrNum_AdrOverflow);
       else
       {
@@ -346,7 +341,7 @@ static void DecideVAbsolute(LongInt Address, Word Mask)
         AdrMode = ModAbs16;
       }
       break;
-    case Size24:
+    case eSymbolSize24Bit:
       AdrCnt = 4;
       AdrVals[1] = Address & 0xffff;
       AdrVals[0] = Lo(Address >> 16);
@@ -380,7 +375,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
   AdrMode = ModNone;
   AdrCnt = 0;
-  MomSize = SizeNone;
+  MomSize = eSymbolSizeUnknown;
 
   /* immediate ? */
 
@@ -544,14 +539,14 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
       {
         if ((CPU16) && ((DispAcc & 0xffff8000) == 0x8000))
           DispAcc += 0xffff0000;
-        if (MomSize == SizeNone)
-          MomSize = ((DispAcc >= -32768) && (DispAcc <= 32767)) ? Size16 : Size24;
+        if (MomSize == eSymbolSizeUnknown)
+          MomSize = ((DispAcc >= -32768) && (DispAcc <= 32767)) ? eSymbolSize16Bit : eSymbolSize24Bit;
         switch (MomSize)
         {
-          case Size8:
+          case eSymbolSize8Bit:
             WrError(ErrNum_InvOpSize);
             break;
-          case Size16:
+          case eSymbolSize16Bit:
             if (ChkRange(DispAcc, -32768, 32767))
             {
               AdrCnt = 2;
@@ -559,7 +554,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
               AdrMode = ModInd16;
             }
             break;
-          case Size24:
+          case eSymbolSize24Bit:
             AdrVals[1] = DispAcc & 0xffff;
             AdrVals[0] = Lo(DispAcc >> 16);
             AdrCnt = 4;
@@ -615,6 +610,166 @@ static LongInt ImmVal(void)
       WrError(ErrNum_InternalError);
       return 0;
   }
+}
+
+/*--------------------------------------------------------------------------*/
+/* Bit Symbol Handling */
+
+/*
+ * Compact representation of bits in symbol table:
+ * Bits 10...3: Absolute address (8-bit value for range $FFxx or $FFFFxx)
+ * Bits 0..2: Bit position
+ */
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
+ * \brief  evaluate bit position
+ * \param  bit position argument (with or without #)
+ * \param  pOK parsing OK?
+ * \return numeric bit position
+ * ------------------------------------------------------------------------ */
+
+static LongWord EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
+{
+  return EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '#'), UInt3, pOK);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     AssembleBitSymbol(Byte BitPos, LongWord Address)
+ * \brief  build the compact internal representation of a bit symbol
+ * \param  BitPos bit position in byte
+ * \param  Address register address
+ * \return compact representation
+ * ------------------------------------------------------------------------ */
+
+static LongWord AssembleBitSymbol(Byte BitPos, Word Address)
+{
+  return
+    (Address << 3)
+  | (BitPos << 0);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrComp *pRegArg)
+ * \brief  encode a bit symbol, address & bit position separated
+ * \param  pResult resulting encoded bit
+ * \param  pRegArg register argument
+ * \param  pBitArg bit argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrComp *pRegArg)
+{
+  Boolean OK;
+  LongWord BitPos;
+
+  BitPos = EvalBitPosition(pBitArg, &OK);
+  if (!OK)
+    return False;
+
+  DecideAbsolute(pRegArg, MModAbs8);
+  if (AdrMode != ModAbs8)
+    return False;
+
+  *pResult = AssembleBitSymbol(BitPos, AdrVals[0]);
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop)
+ * \brief  encode a bit symbol from instruction argument(s)
+ * \param  pResult resulting encoded bit
+ * \param  Start first argument
+ * \param  Stop last argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
+{
+  *pResult = 0;
+
+  /* Just one argument -> parse as bit argument */
+
+  if (Start == Stop)
+  {
+    tEvalResult EvalResult;
+
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt32, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
+  }
+
+  /* register & bit position are given as separate arguments */
+
+  else if (Stop == Start + 1)
+    return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop]);
+
+  /* other # of arguments not allowed */
+
+  else
+  {
+    WrError(ErrNum_WrongArgCnt);
+    return False;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos)
+ * \brief  transform compact representation of bit (field) symbol into components
+ * \param  BitSymbol compact storage
+ * \param  pAddress register address
+ * \param  pBitPos bit position
+ * \return constant True
+ * ------------------------------------------------------------------------ */
+
+static Boolean DissectBitSymbol(LongWord BitSymbol, LongWord *pAddress, Byte *pBitPos)
+{
+  *pAddress = (BitSymbol >> 3) & 0xfful;
+  *pBitPos = BitSymbol & 7;
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBit_H8_3(char *pDest, size_t DestSize, LargeWord Inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  pDest destination for ASCII representation
+ * \param  DestSize destination buffer size
+ * \param  Inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void DissectBit_H8_3(char *pDest, size_t DestSize, LargeWord Inp)
+{
+  Byte BitPos;
+  LongWord Address;
+
+  DissectBitSymbol(Inp, &Address, &BitPos);
+
+  as_snprintf(pDest, DestSize, "#%u,$%s%x", BitPos, 
+              (HexStartCharacter == 'A') ? (CPU16 ? "FF" : "FFFF") : (CPU16 ? "ff" : "ffff"),
+              (unsigned)Address);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ExpandBit_H8_3(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \brief  expands bit definition when a structure is instantiated
+ * \param  pVarName desired symbol name
+ * \param  pStructElem element definition
+ * \param  Base base address of instantiated structure
+ * ------------------------------------------------------------------------ */
+
+static void ExpandBit_H8_3(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+{
+  LongWord Address = Base + pStructElem->Offset;
+
+  if (!ChkRange(Address, SegLimits[SegCode] - 0xff, SegLimits[SegCode])
+   || !ChkRange(pStructElem->BitPos, 0, 7))
+    return;
+
+  PushLocHandle(-1);
+  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
+  PopLocHandle();
+  /* TODO: MakeUseList? */
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1440,47 +1595,65 @@ static void DecodeMul(Word Code)
 static void DecodeBit1(Word Code)
 {
   Word OpCode = 0x60 + (Code & 0x7f);
+  Byte BitPos;
 
-  if (ChkArgCnt(2, 2))
+  switch (ArgCnt)
   {
-    if (*ArgStr[1].Str != '#') WrError(ErrNum_InvAddrMode);
-    else
+    case 1:
+    {
+      LongWord BitSpec;
+
+      if (DecodeBitArg(&BitSpec, 1, 1))
+      {
+        LongWord Addr;
+
+        DissectBitSymbol(BitSpec, &Addr, &BitPos);
+        AdrMode = ModAbs8;
+        AdrVals[0] = Addr & 0xff;
+        AdrCnt = 2;
+        goto common;
+      }
+      break;
+    }
+    case 2:
     {
       Boolean OK;
-      Byte Bit = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt3, &OK);
+
+      BitPos = EvalBitPosition(&ArgStr[1], &OK);
       if (OK)
       {
         DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModAbs8);
         if (AdrMode != ModNone)
-        {
-          if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
-          else
-          {
-            switch (AdrMode)
-            {
-              case ModReg:
-                CodeLen = 2;
-                WAsmCode[0] = (OpCode << 8) + (Code & 0x80) + (Bit << 4) + AdrPart;
-                break;
-              case ModIReg:
-                CodeLen = 4;
-                WAsmCode[0] = 0x7c00 + (AdrPart << 4);
-                WAsmCode[1] = (OpCode << 8) + (Code & 0x80) + (Bit << 4);
-                if (OpCode < 0x70)
-                  WAsmCode[0] += 0x100;
-                break;
-              case ModAbs8:
-                CodeLen = 4;
-                WAsmCode[0] = 0x7e00 + Lo(AdrVals[0]);
-                WAsmCode[1] = (OpCode << 8) + (Code & 0x80) + (Bit << 4);
-                if (OpCode < 0x70)
-                  WAsmCode[0] += 0x100;
-                break;
-            }
-          }
-        }
+          goto common;
       }
+      break;
     }
+    common:
+      if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
+      else switch (AdrMode)
+      {
+        case ModReg:
+          CodeLen = 2;
+          WAsmCode[0] = (OpCode << 8) + (Code & 0x80) + (BitPos << 4) + AdrPart;
+          break;
+        case ModIReg:
+          CodeLen = 4;
+          WAsmCode[0] = 0x7c00 + (AdrPart << 4);
+          WAsmCode[1] = (OpCode << 8) + (Code & 0x80) + (BitPos << 4);
+          if (OpCode < 0x70)
+            WAsmCode[0] += 0x100;
+          break;
+        case ModAbs8:
+          CodeLen = 4;
+          WAsmCode[0] = 0x7e00 + Lo(AdrVals[0]);
+          WAsmCode[1] = (OpCode << 8) + (Code & 0x80) + (BitPos << 4);
+          if (OpCode < 0x70)
+            WAsmCode[0] += 0x100;
+          break;
+      }
+      break;
+    default:
+      (void)ChkArgCnt(1, 2);
   }
 }
 
@@ -1491,50 +1664,75 @@ static void DecodeBit2(Word Code)
   Boolean OK;
   tSymbolSize HSize;
 
-  if (ChkArgCnt(2, 2))
+  switch (ArgCnt)
   {
-    if (*ArgStr[1].Str == '#')
+    case 1:
     {
-      OpCode = Code + 0x70;
-      Bit = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt3, &OK);
-    }
-    else
-    {
-      OpCode = Code + 0x60;
-      OK = DecodeReg(&ArgStr[1], &Bit, 1 << eSymbolSize8Bit, &HSize, True) == eIsReg;
-    }
-    if (OK)
-    {
-      DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModAbs8);
-      if (AdrMode != ModNone)
+      LongWord BitSpec;
+
+      if (DecodeBitArg(&BitSpec, 1, 1))
       {
-        if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
-        else
+        LongWord Addr;
+
+        DissectBitSymbol(BitSpec, &Addr, &Bit);
+        OpCode = Code + 0x70;
+        AdrMode = ModAbs8;
+        AdrVals[0] = Addr & 0xff;
+        AdrCnt = 2;
+        goto common;
+      }
+      break;
+    }
+    case 2:
+      switch (DecodeReg(&ArgStr[1], &Bit, 1 << eSymbolSize8Bit, &HSize, False))
+      {
+        case eIsReg:
+          OpCode = Code + 0x60;
+          OK = True;
+          break;
+        case eIsNoReg:
+          OpCode = Code + 0x70;
+          Bit = EvalBitPosition(&ArgStr[1], &OK);
+          break;
+        default: /* eRegAbort */
+          return; 
+      }
+      if (OK)
+      {
+        DecodeAdr(&ArgStr[2], MModReg | MModIReg | MModAbs8);
+        if (AdrMode != ModNone)
+          goto common;
+        break;
+      }
+    common:
+      if (OpSize > eSymbolSize8Bit) WrError(ErrNum_InvOpSize);
+      else
+      {
+        switch (AdrMode)
         {
-          switch (AdrMode)
-          {
-            case ModReg:
-              CodeLen = 2;
-              WAsmCode[0] = (OpCode << 8) + (Bit << 4) + AdrPart;
-              break;
-            case ModIReg:
-              CodeLen = 4;
-              WAsmCode[0] = 0x7d00 + (AdrPart << 4);
-              WAsmCode[1] = (OpCode << 8) + (Bit << 4);
-              if (Code == 3)
-                WAsmCode[0] -= 0x100;
-              break;
-            case ModAbs8:
-              CodeLen = 4;
-              WAsmCode[0] = 0x7f00 + Lo(AdrVals[0]);
-              WAsmCode[1] = (OpCode << 8) + (Bit << 4);
-              if (Code == 3)
-                WAsmCode[0] -= 0x100;
-              break;
-          }
+          case ModReg:
+            CodeLen = 2;
+            WAsmCode[0] = (OpCode << 8) + (Bit << 4) + AdrPart;
+            break;
+          case ModIReg:
+            CodeLen = 4;
+            WAsmCode[0] = 0x7d00 + (AdrPart << 4);
+            WAsmCode[1] = (OpCode << 8) + (Bit << 4);
+            if (Code == 3)
+              WAsmCode[0] -= 0x100;
+            break;
+          case ModAbs8:
+            CodeLen = 4;
+            WAsmCode[0] = 0x7f00 + Lo(AdrVals[0]);
+            WAsmCode[1] = (OpCode << 8) + (Bit << 4);
+            if (Code == 3)
+              WAsmCode[0] -= 0x100;
+            break;
         }
       }
-    }
+      break;
+    default:
+      (void)ChkArgCnt(1, 2);
   }
 }
 
@@ -1850,6 +2048,56 @@ static void DecodeTRAPA(Word Code)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBIT(Word Code)
+ * \brief  handle BIT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeBIT(Word Code)
+{
+  UNUSED(Code);
+
+  /* if in structure definition, add special element to structure */
+
+  if ((OpSize != eSymbolSize8Bit) && (OpSize != eSymbolSizeUnknown))
+  {
+    WrError(ErrNum_InvOpSize);
+    return;
+  }
+  if (ActPC == StructSeg)
+  {
+    Boolean OK;
+    Byte BitPos;
+    PStructElem pElement;
+
+    if (!ChkArgCnt(2, 2))
+      return;
+    BitPos = EvalBitPosition(&ArgStr[1], &OK);
+    if (!OK)
+      return;
+    pElement = CreateStructElem(LabPart.Str);
+    pElement->pRefElemName = as_strdup(ArgStr[2].Str);
+    pElement->OpSize = eSymbolSize8Bit;
+    pElement->BitPos = BitPos;
+    pElement->ExpandFnc = ExpandBit_H8_3;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
+  }
+  else
+  {
+    LongWord BitSpec;
+
+    if (DecodeBitArg(&BitSpec, 1, ArgCnt))
+    {
+      *ListLine = '=';
+      DissectBit_H8_3(ListLine + 1, STRINGSIZE - 3, BitSpec);
+      PushLocHandle(-1);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
+      PopLocHandle();
+      /* TODO: MakeUseList? */
+    }
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
@@ -1960,6 +2208,7 @@ static void InitFields(void)
   AddBit2("BTST", 3);
 
   AddInstTable(InstTable, "REG", 0, CodeREG);
+  AddInstTable(InstTable, "BIT", 0, DecodeBIT);
 }
 
 static void DeinitFields(void)
@@ -2025,7 +2274,8 @@ static void MakeCode_H8_3(void)
 
 static Boolean IsDef_H8_3(void)
 {
-  return Memo("REG");
+  return Memo("REG")
+      || Memo("BIT");
 }
 
 static void SwitchFrom_H8_3(void)
@@ -2057,6 +2307,9 @@ static void SwitchTo_H8_3(void)
   IsDef = IsDef_H8_3;
   InternSymbol = InternSymbol_H8_3;
   DissectReg = DissectReg_H8_3;
+  DissectBit = DissectBit_H8_3;
+  QualifyQuote = QualifyQuote_SingleQuoteConstant;
+  ConstModeWeirdNoTerm = True;
   SwitchFrom = SwitchFrom_H8_3;
   InitFields();
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);
@@ -2064,7 +2317,7 @@ static void SwitchTo_H8_3(void)
 
   CPU16 = (MomCPU <= CPUH8_300);
 
-  SetFlag(&DoPadding,DoPaddingName,False);
+  SetFlag(&DoPadding, DoPaddingName, False);
 }
 
 void codeh8_3_init(void)

@@ -25,6 +25,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "errmsg.h"
+#include "ieeefloat.h"
 
 #include "intpseudo.h"
 
@@ -60,6 +61,7 @@ struct sLayoutCtx
   Boolean (*Put4I)(Byte b, struct sLayoutCtx *pCtx);
   Boolean (*Put8I)(Byte b, struct sLayoutCtx *pCtx);
   Boolean (*Put16I)(Word w, struct sLayoutCtx *pCtx);
+  Boolean (*Put16F)(Double f, struct sLayoutCtx *pCtx);
   Boolean (*Put32I)(LongWord l, struct sLayoutCtx *pCtx);
   Boolean (*Put32F)(Double f, struct sLayoutCtx *pCtx);
   Boolean (*Put64I)(LargeWord q, struct sLayoutCtx *pCtx);
@@ -467,11 +469,37 @@ static Boolean Put16I_To_8(Word w, struct sLayoutCtx *pCtx)
   return True;
 }
 
+static Boolean Put16F_To_8(Double t, struct sLayoutCtx *pCtx)
+{
+  if (!IncMaxCodeLen(pCtx, 2))
+    return False;
+  if (!Double_2_ieee2(t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap))
+  {
+    WrError(ErrNum_OverRange);
+    return False;
+  }
+  pCtx->CurrCodeFill.FullWordCnt += 2;
+  return True;
+}
+
 static Boolean Put16I_To_16(Word w, struct sLayoutCtx *pCtx)
 {
   if (!IncMaxCodeLen(pCtx, 1))
     return False;
   WAsmCode[pCtx->CurrCodeFill.FullWordCnt++] = w;
+  return True;
+}
+
+static Boolean Put16F_To_16(Double t, struct sLayoutCtx *pCtx)
+{
+  Byte Tmp[2];
+
+  if (!IncMaxCodeLen(pCtx, 1))
+    return False;
+
+  Double_2_ieee2(t, Tmp, !!pCtx->LoHiMap);
+  WAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0] = ByteInWord(Tmp[0], 0 ^ pCtx->LoHiMap) | ByteInWord(Tmp[1], 1 ^ pCtx->LoHiMap);
+  pCtx->CurrCodeFill.FullWordCnt += 1;
   return True;
 }
 
@@ -517,7 +545,13 @@ static Boolean LayoutWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
       }
       break;
     case TempFloat:
-      WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
+      if (!FloatRangeCheck(t.Contents.Float, Float16)) WrStrErrorPos(ErrNum_OverRange, pExpr);
+      else
+      {
+        if (!pCtx->Put16F(t.Contents.Float, pCtx))
+          return Result;
+        Result = True;
+      }
       break;
     case TempString:
     {
@@ -1144,11 +1178,13 @@ Boolean DecodeIntelPseudo(Boolean BigEndian)
         {
           case 1:
             LayoutCtx.Put16I = Put16I_To_8;
+            LayoutCtx.Put16F = Put16F_To_8;
             LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
             LayoutCtx.Replicate = Replicate8ToN_To_8;
             break;
           case 2:
             LayoutCtx.Put16I = Put16I_To_16;
+            LayoutCtx.Put16F = Put16F_To_16;
             LayoutCtx.Replicate = Replicate16ToN_To_16;
             break;
         }

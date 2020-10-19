@@ -15,7 +15,7 @@
 #include "stdinc.h"
 #include <math.h>
 
-#include "endian.h"
+#include "ieeefloat.h"
 #include "errmsg.h"
 #include "asmerr.h"
 #include "ibmfloat.h"

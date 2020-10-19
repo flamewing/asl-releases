@@ -6,6 +6,8 @@ CODE_OBJECTS = \
  $(TARG_OBJDIR)natpseudo$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)fourpseudo$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)ibmfloat$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)ieeefloat$(TARG_OBJEXTENSION) \
+ $(TARG_OBJDIR)vaxfloat$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)codevars$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)code68k$(TARG_OBJEXTENSION) \
  $(TARG_OBJDIR)code56k$(TARG_OBJEXTENSION) \
@@ -392,6 +394,12 @@ $(TARG_OBJDIR)fourpseudo$(TARG_OBJEXTENSION) : fourpseudo.c
 
 $(TARG_OBJDIR)ibmfloat$(TARG_OBJEXTENSION) : ibmfloat.c
 	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c ibmfloat.c
+
+$(TARG_OBJDIR)ieeefloat$(TARG_OBJEXTENSION) : ieeefloat.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c ieeefloat.c
+
+$(TARG_OBJDIR)vaxfloat$(TARG_OBJEXTENSION) : vaxfloat.c
+	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c vaxfloat.c
 
 $(TARG_OBJDIR)codevars$(TARG_OBJEXTENSION) : codevars.c
 	$(TARG_CC) $(ALLFLAGS) -o$(OBLANK)$@ -c codevars.c

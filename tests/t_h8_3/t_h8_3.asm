@@ -499,3 +499,34 @@ regsp	reg	sp
 	dc.x	1,2,3,4
 	dc.p	1,2,3,4
 
+	; The very special hex syntax, which requires a quote qualify
+	; callback in the parser and which is only enabled on request.
+	; We optionally also allow a terminating ':
+
+	relaxed	on
+
+	mov	#$aa55  ,r2  ; comment
+	mov	#h'aa55 ,r2  ; comment
+	mov	#h'aa55',r2  ; comment
+	mov	r2 ,@$ffe0   ; comment
+	mov	r2 ,@h'ffe0  ; comment
+	mov	r2 ,@h'ffe0' ; comment
+
+	; bit symbols
+
+	band	#7,$ffffe0
+bit1	bit	#7,$ffffe0
+	band	bit1
+
+bitstruct	struct
+byte1		ds.b	1
+byte2		ds.b	2
+lsb8		bit	0,byte1
+msb8		bit	#7,byte2
+		endstruct
+
+		btst	mystruct_msb8
+		btst	mystruct_lsb8
+
+		org	$ffffc0
+mystruct	bitstruct

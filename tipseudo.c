@@ -18,6 +18,7 @@
 #include <math.h>
 
 #include "endian.h"
+#include "ieeefloat.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

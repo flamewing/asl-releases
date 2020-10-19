@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "asmitree.h"
+#include "asmstructs.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
@@ -274,7 +275,7 @@ static void SplitDisp(tStrComp *pArg, tSymbolSize *pSize)
   }
 }
 
-static void DecideAbsolute(LongInt Value, ShortInt Size, Boolean Unknown, Word Mask)
+static void DecideAbsolute(LongInt Value, tSymbolSize Size, Boolean Unknown, Word Mask)
 {
   LongInt Base;
 
@@ -283,6 +284,9 @@ static void DecideAbsolute(LongInt Value, ShortInt Size, Boolean Unknown, Word M
     if (((Value >> 8) == Reg_BR) && (Mask & MModAbs8)) Size = eSymbolSize8Bit;
     else Size = eSymbolSize16Bit;
   }
+
+  AdrMode = ModNone;
+  AdrCnt = 0;
 
   switch (Size)
   {
@@ -306,6 +310,8 @@ static void DecideAbsolute(LongInt Value, ShortInt Size, Boolean Unknown, Word M
       AdrVals[0] = (Value >> 8) & 0xff;
       AdrVals[1] = Value & 0xff;
       AdrCnt = 2;
+      break;
+    default:
       break;
   }
 }
@@ -603,6 +609,200 @@ static Boolean AdaptImmSize(const tStrComp *pArg)
       WrStrErrorPos(ErrNum_InternalError, pArg);
       return False;
   }
+}
+
+/*--------------------------------------------------------------------------*/
+/* Bit Symbol Handling */
+
+/*
+ * Compact representation of bits in symbol table:
+ * Bit 31/30: Operand size (00 = unknown, 10=8, 11=16 bits)
+ * Bit 29/28: address field size (00 = unknown, 10=8, 11=16 bits)
+ * Bits 27...4 or 26..3: Absolute address
+ * Bits 0..2 or 0..3: Bit position
+ */
+
+static LongWord CodeOpSize(tSymbolSize Size)
+{
+  return (Size == eSymbolSizeUnknown)
+       ? 0
+       : ((Size == eSymbolSize16Bit) ? 3 : 2);
+}
+
+static tSymbolSize DecodeOpSize(Byte SizeCode)
+{
+  return (SizeCode & 2)
+       ? ((SizeCode & 1) ? eSymbolSize16Bit : eSymbolSize8Bit)
+       : eSymbolSizeUnknown;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     EvalBitPosition(const tStrComp *pArg, tSymbolSize Size, Boolean *pOK)
+ * \brief  evaluate bit position
+ * \param  bit position argument (with or without #)
+ * \param  Size operand size (8/16/unknown)
+ * \param  pOK parsing OK?
+ * \return numeric bit position
+ * ------------------------------------------------------------------------ */
+
+static LongWord EvalBitPosition(const tStrComp *pArg, tSymbolSize Size, Boolean *pOK)
+{
+  return EvalStrIntExpressionOffs(pArg, !!(*pArg->Str == '#'), (Size == eSymbolSize16Bit) ? UInt4 : UInt3, pOK);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     AssembleBitSymbol(Byte BitPos, LongWord Address, tSymbolSize OpSize, tSymbolSize AddrSize)
+ * \brief  build the compact internal representation of a bit symbol
+ * \param  BitPos bit position in word
+ * \param  Address register address
+ * \param  OpSize memory operand size
+ * \param  AddrSize address length
+ * \return compact representation
+ * ------------------------------------------------------------------------ */
+
+static LongWord AssembleBitSymbol(Byte BitPos, Word Address, tSymbolSize OpSize, tSymbolSize AddrSize)
+{
+  return
+    (CodeOpSize(OpSize) << 30)
+  | (CodeOpSize(AddrSize) << 28)
+  | (Address << ((OpSize == eSymbolSize8Bit) ? 3 : 4))
+  | (BitPos << 0);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrComp *pRegArg)
+ * \brief  encode a bit symbol, address & bit position separated
+ * \param  pResult resulting encoded bit
+ * \param  pRegArg register argument
+ * \param  pBitArg bit argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrComp *pRegArg)
+{
+  Boolean OK;
+  LongWord Addr, BitPos;
+  tSymbolSize AddrSize = eSymbolSizeUnknown;
+
+  BitPos = EvalBitPosition(pBitArg, (OpSize == eSymbolSizeUnknown) ? eSymbolSize16Bit : OpSize, &OK);
+  if (!OK)
+    return False;
+
+  SplitDisp(pRegArg, &AddrSize);
+  Addr = EvalStrIntExpression(pRegArg, UInt24, &OK);
+  if (!OK)
+    return False;
+
+  *pResult = AssembleBitSymbol(BitPos, Addr, OpSize, AddrSize);
+
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop)
+ * \brief  encode a bit symbol from instruction argument(s)
+ * \param  pResult resulting encoded bit
+ * \param  Start first argument
+ * \param  Stop last argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
+{
+  *pResult = 0;
+
+  /* Just one argument -> parse as bit argument */
+
+  if (Start == Stop)
+  {
+    tEvalResult EvalResult;
+
+    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt32, &EvalResult);
+    if (EvalResult.OK)
+      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+    return EvalResult.OK;
+  }
+
+  /* register & bit position are given as separate arguments */
+
+  else if (Stop == Start + 1)
+    return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop]);
+
+  /* other # of arguments not allowed */
+
+  else
+  {
+    WrError(ErrNum_WrongArgCnt);
+    return False;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos, tSymbolSize *pOpSize, tSymbolSize *pAddrSize)
+ * \brief  transform compact representation of bit (field) symbol into components
+ * \param  BitSymbol compact storage
+ * \param  pAddress register address
+ * \param  pBitPos bit position
+ * \param  pOpSize operand size
+ * \param  pAddrSize address length
+ * \return constant True
+ * ------------------------------------------------------------------------ */
+
+static Boolean DissectBitSymbol(LongWord BitSymbol, LongWord *pAddress, Byte *pBitPos, tSymbolSize *pOpSize, tSymbolSize *pAddrSize)
+{
+  *pOpSize = DecodeOpSize(BitSymbol >> 30);
+  *pAddrSize = DecodeOpSize(BitSymbol >> 28);
+  *pAddress = (BitSymbol >> ((*pOpSize == eSymbolSize8Bit) ? 3 : 4)) & 0xfffffful;
+  *pBitPos = BitSymbol & (*pOpSize ? 15 : 7);
+  return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DissectBit_H8_5(char *pDest, size_t DestSize, LargeWord Inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  pDest destination for ASCII representation
+ * \param  DestSize destination buffer size
+ * \param  Inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void DissectBit_H8_5(char *pDest, size_t DestSize, LargeWord Inp)
+{
+  Byte BitPos;
+  LongWord Address;
+  tSymbolSize OpSize, AddrSize;
+
+  DissectBitSymbol(Inp, &Address, &BitPos, &OpSize, &AddrSize);
+
+  as_snprintf(pDest, DestSize, "#%u,$%llx", BitPos, (LargeWord)Address);
+  if (AddrSize != eSymbolSizeUnknown)
+    as_snprcatf(pDest, DestSize, ":%u", AddrSize ? 16 : 8);
+  if (OpSize != eSymbolSizeUnknown)
+    as_snprcatf(pDest, DestSize, ".%c", "BW"[OpSize]);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ExpandBit_H8_5(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+ * \brief  expands bit definition when a structure is instantiated
+ * \param  pVarName desired symbol name
+ * \param  pStructElem element definition
+ * \param  Base base address of instantiated structure
+ * ------------------------------------------------------------------------ */
+
+static void ExpandBit_H8_5(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
+{
+  tSymbolSize OpSize = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
+  LongWord Address = Base + pStructElem->Offset;
+
+  if (!ChkRange(Address, 0, 0xffffff)
+   || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
+    return;
+
+  fprintf(stderr, "%x %u %d\n", (unsigned)Address, pStructElem->BitPos, OpSize);
+
+  PushLocHandle(-1);
+  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address, OpSize, eSymbolSizeUnknown), SegBData, False);
+  PopLocHandle();
+  /* TODO: MakeUseList? */
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1133,39 +1333,72 @@ static void DecodeOneReg(Word Index)
 static void DecodeBit(Word Code)
 {
   Boolean OK;
-  Byte HReg;
+  Byte BitPos;
 
-  if (ChkArgCnt(2, 2))
+  switch (ArgCnt)
   {
-    DecodeAdr(&ArgStr[2], MModNoImm);
-    if (AdrMode != ModNone)
+    case 1:
     {
-      if (OpSize == eSymbolSizeUnknown)
-        OpSize = (AdrMode == ModReg) ? eSymbolSize16Bit : eSymbolSize8Bit;
-      if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
-      else
+      LongWord BitSpec;
+
+      if (DecodeBitArg(&BitSpec, 1, 1))
       {
-        switch (DecodeReg(&ArgStr[1], &HReg, False))
+        LongWord Addr;
+        tSymbolSize ThisOpSize, ThisAddrSize;
+
+        DissectBitSymbol(BitSpec, &Addr, &BitPos, &ThisOpSize, &ThisAddrSize);
+        if (OpSize == eSymbolSizeUnknown)
+          OpSize = ThisOpSize;
+        else if (OpSize != ThisOpSize)
         {
-          case eIsReg:
-            OK = True; HReg += 8;
-            break;
-          case eIsNoReg:
-            HReg = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), (OpSize == eSymbolSize8Bit) ? UInt3 : UInt4, &OK);
-            if (OK) HReg |= 0x80;
-            break;
-          default:
-            OK = False;
+          WrStrErrorPos(ErrNum_ConfOpSizes, &ArgStr[1]);
+          return;
         }
-        if (OK)
+        if (OpSize == eSymbolSizeUnknown)
+          OpSize = eSymbolSize8Bit;
+        BitPos |= 0x80;
+        DecideAbsolute(Addr, ThisAddrSize, False, MModAbs8 | MModAbs16);
+        if (AdrMode != ModNone)
+          goto common;
+      }
+      break;
+    }
+    case 2:
+    {
+      DecodeAdr(&ArgStr[2], MModNoImm);
+      if (AdrMode != ModNone)
+      {
+        if (OpSize == eSymbolSizeUnknown)
+          OpSize = (AdrMode == ModReg) ? eSymbolSize16Bit : eSymbolSize8Bit;
+        if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
+        else
         {
-          BAsmCode[0] = AdrByte | (OpSize << 3);
-          memcpy(BAsmCode + 1, AdrVals, AdrCnt);
-          BAsmCode[1 + AdrCnt] = Code | HReg;
-          CodeLen = 2 + AdrCnt;
+          switch (DecodeReg(&ArgStr[1], &BitPos, False))
+          {
+            case eIsReg:
+              OK = True; BitPos += 8;
+              break;
+            case eIsNoReg:
+              BitPos = EvalStrIntExpressionOffs(&ArgStr[1], !!(*ArgStr[1].Str == '#'), (OpSize == eSymbolSize8Bit) ? UInt3 : UInt4, &OK);
+              if (OK) BitPos |= 0x80;
+              break;
+            default:
+              OK = False;
+          }
+          if (OK)
+            goto common;
         }
       }
+      break;
     }
+    common:
+      BAsmCode[0] = AdrByte | (OpSize << 3);
+      memcpy(BAsmCode + 1, AdrVals, AdrCnt);
+      BAsmCode[1 + AdrCnt] = Code | BitPos;
+      CodeLen = 2 + AdrCnt;
+      break;
+    default:
+      (void)ChkArgCnt(1, 2);
   }
 }
 
@@ -1477,6 +1710,51 @@ static void DecodeDATA(Word Dummy)
   DecodeMotoDC(OpSize, True);
 }
 
+static void DecodeBIT(Word Code)
+{
+  UNUSED(Code);
+
+  /* if in structure definition, add special element to structure */
+
+  if (OpSize > eSymbolSize16Bit)
+  {
+    WrError(ErrNum_InvOpSize);
+    return;
+  }
+  if (ActPC == StructSeg)
+  {
+    Boolean OK;
+    Byte BitPos;
+    PStructElem pElement;
+
+    if (!ChkArgCnt(2, 2))
+      return;
+    BitPos = EvalBitPosition(&ArgStr[1], OpSize, &OK);
+    if (!OK)
+      return;
+    pElement = CreateStructElem(LabPart.Str);
+    pElement->pRefElemName = as_strdup(ArgStr[2].Str);
+    pElement->OpSize = OpSize;
+    pElement->BitPos = BitPos;
+    pElement->ExpandFnc = ExpandBit_H8_5;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
+  }
+  else
+  {
+    LongWord BitSpec;
+
+    if (DecodeBitArg(&BitSpec, 1, ArgCnt))
+    {
+      *ListLine = '=';
+      DissectBit_H8_5(ListLine + 1, STRINGSIZE - 3, BitSpec);
+      PushLocHandle(-1);
+      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
+      PopLocHandle();
+      /* TODO: MakeUseList? */
+    }
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /* dynamische Belegung/Freigabe Codetabellen */
 
@@ -1610,6 +1888,7 @@ static void InitFields(void)
 
   AddInstTable(InstTable, "REG", 0, CodeREG);
   AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+  AddInstTable(InstTable, "BIT", 0, DecodeBIT);
 }
 
 static void DeinitFields(void)
@@ -1724,75 +2003,13 @@ static Boolean ChkPC_H8_5(LargeWord Addr)
 
 static Boolean IsDef_H8_5(void)
 {
-  return Memo("REG");
+  return Memo("REG")
+      || Memo("BIT");
 }
 
 static void SwitchFrom_H8_5(void)
 {
   DeinitFields(); ClearONOFF();
-}
-
-/*!------------------------------------------------------------------------
- * \fn     QualifyQuote_H8_5(const char *pStart, const char *pQuotePos)
- * \brief  check whether ' in source is lead-in to character string or int constant
- * \param  pStart complete string
- * \param  pQuotePos single quote position
- * \return True if this is NO lead-in of int constant
- * ------------------------------------------------------------------------ */
-
-static Boolean QualifyQuote_H8_5(const char *pStart, const char *pQuotePos)
-{
-  const char *pRun;
-  Boolean OK;
-  int Base;
-
-  /* previous character must be H X B O */
-
-  if (pQuotePos == pStart)
-    return True;
-  switch (as_toupper(*(pQuotePos - 1)))
-  {
-    case 'B':
-      Base = 2; break;
-    case 'O':
-      Base = 8; break;
-    case 'X':
-    case 'H':
-      Base = 16; break;
-    default:
-      return True;
-  }
-
-  /* Scan for following valid (binary/octal/hex) character(s) */
-
-  for (pRun = pQuotePos + 1; *pRun; pRun++)
-  {
-    switch (Base)
-    {
-      case 16: OK = as_isxdigit(*pRun); break;
-      case 8: OK = as_isdigit(*pRun) && (*pRun < '8'); break;
-      case 2: OK = as_isdigit(*pRun) && (*pRun < '2'); break;
-      default: OK = False;
-    }
-    if (!OK)
-      break;
-  }
-
-  /* none? -> bad */
-
-  if (pRun <= pQuotePos + 1)
-    return True;
-
-  /* If we've hit another ' after them, its the "harmless" x'...' form,
-     and no special treatment is needed */
-
-  if ('\'' == *pRun)
-    return True;
-
-  /* Other token or string continues -> cannot be such a constant, otherwise we
-     have a match and the ' does NOT lead in a character string: */
-
-  return isalnum(*pRun);
 }
 
 static void InitCode_H8_5(void)
@@ -1820,7 +2037,8 @@ static void SwitchTo_H8_5(void)
   SwitchFrom = SwitchFrom_H8_5;
   InternSymbol = InternSymbol_H8_5;
   DissectReg = DissectReg_H8_5;
-  QualifyQuote = QualifyQuote_H8_5;
+  DissectBit = DissectBit_H8_5;
+  QualifyQuote = QualifyQuote_SingleQuoteConstant;
   ConstModeWeirdNoTerm = True;
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);

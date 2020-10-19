@@ -31,6 +31,7 @@
 #include "trees.h"
 #include "operator.h"
 #include "function.h"
+#include "ieeefloat.h"
 
 #include "asmpars.h"
 
@@ -227,8 +228,16 @@ Boolean RangeCheck(LargeInt Wert, IntType Typ)
 
 Boolean FloatRangeCheck(Double Wert, FloatType Typ)
 {
+  /* NaN/Infinity is representable in all formats */
+
+  int class = as_fpclassify(Wert);
+  if ((class == AS_FP_NAN) || (class == AS_FP_INFINITE))
+    return True;
+
   switch (Typ)
   {
+    case Float16:
+      return (fabs(Wert) <= 65504.0);
     case Float32:
       return (fabs(Wert) <= 3.4e38);
     case Float64:

@@ -1208,10 +1208,11 @@ Operandengr"o"se, wie z. B. bei der 680x0-Familie (Tabelle
 Attribut & arithmetisch-logischer Befehl & Sprungbefehl \\
 \hline
 \hline
-B     & Byte (8 Bit)                   & --------- \\
-W     & Wort (16 Bit)                  & --------- \\
+B     & Byte (8 Bit)                   & 8-bit-displacement \\
+W     & Wort (16 Bit)                  & 16-Bit-Displacement \\
 L     & Langwort (32 Bit)              & 16-Bit-Displacement \\
 Q     & Vierfachwort (64 Bit)          & --------- \\
+C     & Half Precision (16 Bit)        & --------- \\
 S     & Single Precision (32 Bit)      & 8-Bit-Displacement \\
 D     & Double Precision (64 Bit)      & --------- \\
 X     & Extended Precision (80/96 Bit) & 32-Bit-Displacement \\
@@ -2518,7 +2519,8 @@ erzeugt aber ein Symbol mit korrekten Attributen.
 \subsection{BIT}
 \ttindex{BIT}
 
-{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16}
+{\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16,
+                  H8/300, H8/500}
 
 \tty{BIT} dient dazu, ein einzelnes Bit einer Speicherstelle mit einem
 symbolischen Namen gleichzusetzen.  Da die Art und Weise, wie
@@ -5078,7 +5080,7 @@ verlegt:
 \begin{itemize}
 \item{\tty{DN}: 4-Bit-Integer}
 \item{\tty{DB}: Byte oder ASCII-String wie bei \tty{DC.B}}
-\item{\tty{DW}: 16-Bit-Integer}
+\item{\tty{DW}: 16-Bit-Integer oder half precision}
 \item{\tty{DD}: 32-Bit-Integer oder single precision}
 \item{\tty{DQ}: double precision (64 Bit)}
 \item{\tty{DT}: extended precision (80 Bit)}

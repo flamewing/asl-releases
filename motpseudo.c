@@ -20,6 +20,7 @@
 
 #include "bpemu.h"
 #include "endian.h"
+#include "ieeefloat.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -632,6 +633,20 @@ static void EnterQWord(LargeWord q)
   CodeLen += 8;
 }
 
+static void EnterIEEE2(Word *pField)
+{
+  if (ListGran() == 1)
+  {
+     BAsmCode[CodeLen    ] = Hi(pField[1]);
+     BAsmCode[CodeLen + 1] = Lo(pField[0]);
+  }
+  else
+  {
+    WAsmCode[(CodeLen >> 1)    ] = pField[0];
+  }
+  CodeLen += 2;
+}
+
 static void EnterIEEE4(Word *pField)
 {
   if (ListGran() == 1)
@@ -730,6 +745,11 @@ static void EnterMotoFloatDec(Word *pField)
   CodeLen += 12;
 }
 
+static void Double_2_ieee2_wrap(Double Inp, Byte *pDest, Boolean BigEndian)
+{
+  (void)Double_2_ieee2(Inp, pDest, BigEndian);
+}
+
 void AddMoto16PseudoONOFF(void)
 {
   AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
@@ -771,6 +791,8 @@ static Word GetWSize(tSymbolSize OpSize)
       return 12;
     case eSymbolSizeFloatDec96Bit:
       return 12;
+    case eSymbolSizeFloat16Bit:
+      return 2;
     default:
       return 0;
   }
@@ -835,6 +857,12 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn)
 #else
       IntTypeEnum = Int32;
 #endif
+      break;
+    case eSymbolSizeFloat16Bit:
+      ConvertFloat = Double_2_ieee2_wrap;
+      EnterFloat = EnterIEEE2;
+      FloatTypeEnum = Float16;
+      Swap = WSwap;
       break;
     case eSymbolSizeFloat32Bit:
       ConvertFloat = Double_2_ieee4;
@@ -1129,6 +1157,7 @@ static Boolean DecodeMoto16AttrSizeCore(char SizeSpec, tSymbolSize *pResult, Boo
     case 'S': *pResult = eSymbolSizeFloat32Bit; break;
     case 'D': *pResult = eSymbolSizeFloat64Bit; break;
     case 'X': *pResult = eSymbolSizeFloat96Bit; break;
+    case 'C': *pResult = eSymbolSizeFloat16Bit; break;
     case 'P': *pResult = Allow24 ? eSymbolSize24Bit : eSymbolSizeFloatDec96Bit; break;
     case '\0': break;
     default:

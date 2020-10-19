@@ -101,3 +101,66 @@ void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     QualifyQuote_SingleQuoteConstant(const char *pStart, const char *pQuotePos)
+ * \brief  check whether ' in source is lead-in to character string or int constant
+ * \param  pStart complete string
+ * \param  pQuotePos single quote position
+ * \return True if this is NO lead-in of int constant
+ * ------------------------------------------------------------------------ */
+
+Boolean QualifyQuote_SingleQuoteConstant(const char *pStart, const char *pQuotePos)
+{
+  const char *pRun;
+  Boolean OK;
+  int Base;
+
+  /* previous character must be H X B O */
+
+  if (pQuotePos == pStart)
+    return True;
+  switch (as_toupper(*(pQuotePos - 1)))
+  {
+    case 'B':
+      Base = 2; break;
+    case 'O':
+      Base = 8; break;
+    case 'X':
+    case 'H':
+      Base = 16; break;
+    default:
+      return True;
+  }
+
+  /* Scan for following valid (binary/octal/hex) character(s) */
+
+  for (pRun = pQuotePos + 1; *pRun; pRun++)
+  {
+    switch (Base)
+    {
+      case 16: OK = as_isxdigit(*pRun); break;
+      case 8: OK = as_isdigit(*pRun) && (*pRun < '8'); break;
+      case 2: OK = as_isdigit(*pRun) && (*pRun < '2'); break;
+      default: OK = False;
+    }
+    if (!OK)
+      break;
+  }
+
+  /* none? -> bad */
+
+  if (pRun <= pQuotePos + 1)
+    return True;
+
+  /* If we've hit another ' after them, it is the "harmless" x'...' form,
+     and no special treatment is needed */
+
+  if ('\'' == *pRun)
+    return True;
+
+  /* Other token or string continues -> cannot be such a constant, otherwise we
+     have a match and the ' does NOT lead in a character string: */
+
+  return isalnum(*pRun);
+}
+

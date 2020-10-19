@@ -88,14 +88,15 @@ DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
 \subsubsection{Hitachi H8/300(L/H)}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \> REG \\
+BIT    \> DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE     \> PADDING \\
+REG    \\
 \end{tabbing}}
 
 \subsubsection{Hitachi H8/500}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ASSUME          \> DATA   \> DC[.$<$size$>$] \> DS[.$<$size$>$] \> MAXMODE \\
-PADDING         \> REG \\
+ASSUME          \> BIT    \> DATA   \> DC[.$<$size$>$] \> DS[.$<$size$>$] \\
+MAXMODE         \> PADDING         \> REG \\
 \end{tabbing}}
 
 \subsubsection{Hitachi SH7x00}

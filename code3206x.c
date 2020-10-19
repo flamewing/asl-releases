@@ -21,6 +21,7 @@
 #include "asmpars.h"
 #include "asmcode.h"
 #include "errmsg.h"
+#include "ieeefloat.h"
 #include "codepseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
