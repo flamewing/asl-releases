@@ -106,6 +106,7 @@ typedef enum
   ErrNum_IncompCond = 1365,
   ErrNum_JmpDistTooBig = 1370,
   ErrNum_DistIsOdd = 1375,
+  ErrNum_SkipTargetMismatch = 1376,
   ErrNum_InvShiftArg = 1380,
   ErrNum_Range18 = 1390,
   ErrNum_Only1 = 1391,

@@ -1,0 +1,288 @@
+From 17ef58f718d9baa56d43467fdc7d71657bc03dbd Mon Sep 17 00:00:00 2001
+From: Alfred Arnold <alfred@ccac.rwth-aachen.de>
+Date: Fri, 23 Oct 2020 15:44:43 +0200
+Subject: [PATCH] KENBAK: first stepts at implementing alternate syntax
+
+---
+ codekenbak.c                | 108 ++++++++++++++++++++++++++++++++----
+ doc_DE/as.tex               |   1 +
+ doc_EN/as.tex               |   1 +
+ include/kenbak.inc          |  29 ++++++++++
+ tests/t_kenbk4/asflags      |   0
+ tests/t_kenbk4/t_kenbk4.asm |  27 +++++++++
+ tests/t_kenbk4/t_kenbk4.doc |   5 ++
+ tests/t_kenbk4/t_kenbk4.ori | Bin 0 -> 8 bytes
+ 8 files changed, 161 insertions(+), 10 deletions(-)
+ create mode 100644 include/kenbak.inc
+ create mode 100644 tests/t_kenbk4/asflags
+ create mode 100644 tests/t_kenbk4/t_kenbk4.asm
+ create mode 100644 tests/t_kenbk4/t_kenbk4.doc
+ create mode 100644 tests/t_kenbk4/t_kenbk4.ori
+
+diff --git a/codekenbak.c b/codekenbak.c
+index e32d67c7..6beb6179 100644
+--- a/codekenbak.c
++++ b/codekenbak.c
+@@ -137,6 +137,40 @@ static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, Word RegMas
+   return RegEvalResult;
+ }
+ 
++/*!------------------------------------------------------------------------
++ * \fn     DecodeRegWithMemOpt(const tStrComp *pArg, Byte *pResult, Word RegMask)
++ * \brief  check whether argument is CPU register, register alias, or memory location representing a register
++ * \param  pArg source code argument
++ * \param  pResult register # if it's a register
++ * \param  RegMask bit mask of allowed registers
++ * \return True if argument can be interpreted as register in some way
++ * ------------------------------------------------------------------------ */
++
++static Boolean DecodeRegWithMemOpt(const tStrComp *pArg, Byte *pResult, Word RegMask)
++{
++  switch (DecodeReg(pArg, pResult, RegMask, False))
++  {
++    case eIsReg:
++      return True;
++    case eRegAbort:
++      return False;
++    default:
++    {
++      tEvalResult EvalResult;
++      
++      *pResult = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
++      if (!EvalResult.OK)
++        return False;
++      if (!(1 & (RegMask >> *pResult)))
++      {
++        WrStrErrorPos(ErrNum_InvReg, pArg);
++        return False;
++      }
++      return True;
++    }
++  }
++}
++
+ /*!------------------------------------------------------------------------
+  * \fn     DecodeAdr(const tStrComp *pArg, tAdrData *pAdrData, Word ModeMask)
+  * \brief  decode address expression
+@@ -203,6 +237,44 @@ static Boolean DecodeAdr(tStrComp *pArg1, tStrComp *pArg2, tAdrData *pAdrData, W
+   }
+ }
+ 
++/*!------------------------------------------------------------------------
++ * \fn     DecodeAddrKeyword(const char *pKeyword, Byte *pMode)
++ * \brief  deduce addressing mode form key word
++ * \param  pKeyword keyword from source
++ * \param  pMode resulting mode if yes
++ * \return True if valid key word
++ * ------------------------------------------------------------------------ */
++
++static Boolean DecodeAddrKeyword(const char *pKeyword, Byte *pMode)
++{
++  if (!as_strcasecmp(pKeyword, "Constant"))
++  {
++    *pMode = ModImm;
++    return True;
++  }
++  if (!as_strcasecmp(pKeyword, "Memory"))
++  {
++    *pMode = ModMemory;
++    return True;
++  }
++  if (!as_strcasecmp(pKeyword, "Indexed"))
++  {
++    *pMode = ModIndexed;
++    return True;
++  }
++  if (!as_strcasecmp(pKeyword, "Indirect"))
++  {
++    *pMode = ModIndirect;
++    return True;
++  }
++  if (!as_strcasecmp(pKeyword, "Indirect-Indexed"))
++  {
++    *pMode = ModIndirectIndexed;
++    return True;
++  }
++  return False;
++}
++
+ /*--------------------------------------------------------------------------*/
+ /* Bit Symbol Handling */
+ 
+@@ -369,15 +441,31 @@ static void ExpandBit_KENBAK(const tStrComp *pVarName, const struct sStructElem
+ 
+ static void CodeGen(Word Code)
+ {
+-  Byte Reg;
+-  tAdrData AdrData;
+-
+-  if (ChkArgCnt(2, 3)
+-   && (DecodeReg(&ArgStr[1], &Reg, Code & 0xc0 ? 1 : 7, True) == eIsReg)
+-   && DecodeAdr(&ArgStr[2], (ArgCnt == 3) ? &ArgStr[3] : NULL, &AdrData, MModAll))
++  if (ChkArgCnt(2, 3))
+   {
+-    BAsmCode[CodeLen++] = (Reg << 6) | Code | AdrData.Mode;
+-    BAsmCode[CodeLen++] = AdrData.Val;
++    int RegArg;
++    Boolean AddrOK;
++    Byte Reg;
++    tAdrData AdrData;
++    
++    /* addressing mode is either given by keyword or by addressing syntax: */
++  
++    if ((ArgCnt == 3) && DecodeAddrKeyword(ArgStr[1].Str, &AdrData.Mode))
++    {
++      AdrData.Val = EvalStrIntExpression(&ArgStr[3], Int8, &AddrOK);
++      RegArg = 2;
++    }
++    else
++    {
++      AddrOK = DecodeAdr(&ArgStr[2], (ArgCnt == 3) ? &ArgStr[3] : NULL, &AdrData, MModAll);
++      RegArg = 1;
++    }
++
++    if (AddrOK && DecodeRegWithMemOpt(&ArgStr[RegArg], &Reg, Code & 0xc0 ? 1 : 7))
++    {
++      BAsmCode[CodeLen++] = (Reg << 6) | Code | AdrData.Mode;
++      BAsmCode[CodeLen++] = AdrData.Val;
++    }
+   }
+ }
+ 
+@@ -396,7 +484,7 @@ static void CodeJumpCommon(Word Code, const tAdrData *pAdrData)
+ 
+   if ((ArgCnt == 1) || !as_strcasecmp(ArgStr[1].Str, "Unconditional"))
+     Reg = 3;
+-  else if (DecodeReg(&ArgStr[1], &Reg, 7, True) != eIsReg)
++  else if (!DecodeRegWithMemOpt(&ArgStr[1], &Reg, 7))
+     return;
+ 
+   if (ArgCnt == 1)
+@@ -526,7 +614,7 @@ static void CodeShift(Word Code)
+   Byte Reg;
+   
+   if (ChkArgCnt(1, 2)
+-   && (DecodeReg(&ArgStr[1], &Reg, 3, True) == eIsReg))
++   && DecodeRegWithMemOpt(&ArgStr[1], &Reg, 3))
+   {
+     Byte Count = 1;
+     
+diff --git a/doc_DE/as.tex b/doc_DE/as.tex
+index 17ef324b..2e7bd524 100644
+--- a/doc_DE/as.tex
++++ b/doc_DE/as.tex
+@@ -539,6 +539,7 @@ CTYPE.INC         & Funktionen zur Klassifizierung von \\
+ 80C50X.INC        & Registeradressen SAB C50x \\
+ 80C552.INC        & Registeradressen 80C552 \\
+ H8\_3048.INC      & Registeradressen H8/3048 \\
++KENBAK.INC        & Registeradressen Kenbak-1 \\
+ REG166.INC        & Adressen \& Befehlsmakros 80C166/167 \\
+ REG251.INC        & Adressen \& Bits 80C251 \\
+ REG29K.INC        & Peripherieadressen AMD 2924x \\
+diff --git a/doc_EN/as.tex b/doc_EN/as.tex
+index 42505dc2..5f0aff41 100644
+--- a/doc_EN/as.tex
++++ b/doc_EN/as.tex
+@@ -534,6 +534,7 @@ CTYPE.INC         & functions for classification of \\
+ 80C50X.INC        & register addresses SAB C50x \\
+ 80C552.INC        & register addresses 80C552 \\
+ H8\_3048.INC      & register addresses H8/3048 \\
++KENBAK.INC        & register addressed Kenbak-1 \\
+ REG166.INC        & addresses and instruction macros 80C166/167 \\
+ REG251.INC        & addresses and bits 80C251 \\
+ REG29K.INC        & peripheral addresses AMD 2924x \\
+diff --git a/include/kenbak.inc b/include/kenbak.inc
+new file mode 100644
+index 00000000..d8840708
+--- /dev/null
++++ b/include/kenbak.inc
+@@ -0,0 +1,29 @@
++		ifndef	__kenbak_inc	; avoid multiple inclusion
++__kenbak_inc	equ	1		
++
++		save
++		listing	off		; no listing over this file
++
++;****************************************************************************
++;*                                                                          *
++;*   AS 1.42 - Datei KENBAK.INC                                             *
++;*   								            *
++;*   Contains Address Definitions for KENBAK(-1)                            *
++;*                                                                          *
++;****************************************************************************
++
++RegisterA	equ	00h		; Registers
++RegisterB	equ	01h
++RegisterX	equ	02h
++RegisterP	equ	03h
++
++OverflowA	equ	81h		; Overflow & Carry
++OverflowB	equ	82h
++OverflowX	equ	83h
++
++Input		equ	0ffh		; Switch Input
++
++Lamps		equ	80h		; LED/Lamp Row
++
++		restore			; allow listing again
++		endif			; __kenbak_inc
+diff --git a/tests/t_kenbk4/asflags b/tests/t_kenbk4/asflags
+new file mode 100644
+index 00000000..e69de29b
+diff --git a/tests/t_kenbk4/t_kenbk4.asm b/tests/t_kenbk4/t_kenbk4.asm
+new file mode 100644
+index 00000000..0419ad56
+--- /dev/null
++++ b/tests/t_kenbk4/t_kenbk4.asm
+@@ -0,0 +1,27 @@
++	page	0
++	cpu	KENBAK
++	include	kenbak.inc
++
++	ORG	004		;First non-special address
++
++	; First, a small sample program...
++
++Loop:
++	ADD	Constant, RegisterA, 1
++	STORE	Memory, RegisterA, Lamps
++	JPD	Unconditional, Zero,  Loop
++
++	HALT
++	NOOP
++
++	; ...then, things in a systematic way:
++
++; [ADD/SUB/LOAD/STORE] [Addressing Mode], [Register], [Address]
++; [OR/AND/LNEG] [Addressing Mode], [Register]
++; [JPD/JPI/JMD/JMI] [Register], [Condition], [Address]
++; SET [0/1], [Position], [Address]
++; SKIP  [0/1], [Position], [Address]
++; BSHIFT [Direction], [Places], [Register]
++; ROTATE [Direction], [Places], [Register]
++; NOOP (no parameters)
++; HALT (no parameters)
+diff --git a/tests/t_kenbk4/t_kenbk4.doc b/tests/t_kenbk4/t_kenbk4.doc
+new file mode 100644
+index 00000000..c7910351
+--- /dev/null
++++ b/tests/t_kenbk4/t_kenbk4.doc
+@@ -0,0 +1,5 @@
+++-----------------------  Test Application KENBAK4 --------------------------+
++|                                                                            |
++| This is a test of the KENBAK assembly sytax as defined by Grant Stockly    |
++|                                                                            |
+++----------------------------------------------------------------------------+
+diff --git a/tests/t_kenbk4/t_kenbk4.ori b/tests/t_kenbk4/t_kenbk4.ori
+new file mode 100644
+index 0000000000000000000000000000000000000000..23d281bd3b75534299357336f38c015cda2a43da
+GIT binary patch
+literal 8
+PcmZQ(lxcXv!q5N!2WtWe
+
+literal 0
+HcmV?d00001
+
+-- 
+2.20.1
+

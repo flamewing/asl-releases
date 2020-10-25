@@ -121,7 +121,7 @@ error''-Verfahren gelernt.
 
 Bevor es in medias res geht, erst einmal der unvermeidliche Prolog:
 \par
-AS in der vorliegenden Version untersteht der Gnu General Public License
+AS in der vorliegenden Version untersteht der GNU General Public License
 (GPL); die Details dieser Lizenz k"onnen Sie in der beiliegenden Datei
 COPYING nachlesen.  Falls Sie diese nicht mit AS erhalten haben,
 beschweren Sie sich bei demjenigen, von dem Sie AS erhalten haben!
@@ -151,7 +151,7 @@ bitte ich, Fehlerberichten folgende Angaben beizuf"ugen:
                 \item{installierte speicherresidente Programme}
                 \item{benutzte Version von AS + Datum des EXE-Files}
                 \end{itemize}}
-\item{m"oglicht die Quelldatei, bei der der Fehler auftritt}
+\item{m"oglichst die Quelldatei, bei der der Fehler auftritt}
 \end{itemize}
 Zu erreichen bin ich folgenderma"sen:
 \begin{itemize}
@@ -168,7 +168,7 @@ bis 21.00 Uhr im Computerclub an der RWTH Aachen (Elisabethstra"se 16,
 erster Stock, rechter Flur).
 \par
 Von Telefonanrufen bitte ich abzusehen.  Erstens, weil sich die
-komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"orten
+komplizierten Zusammenh"ange am Telefon nur "au"serst schwer er"ortern
 lassen, und zweitens ist die Telekom schon reich genug...
 \par
 Die neueste Version von AS (DPMI, Win32, C) findet sich auf folgendem
@@ -289,6 +289,7 @@ folgende Prozessorfamilien implementiert:
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
 \item{MIL STD 1750}
+\item{KENBAK-1}
 \end{itemize}
 in Arbeit / Planung / "Uberlegung :
 \begin{itemize}
@@ -317,7 +318,7 @@ M"oglichkeit, einen neuen Codegenerator praktisch zu testen, so da"s bei
 Neuerungen "Uberraschungen nie ganz auszuschlie"sen sind.  Das in
 Abschnitt \ref{SectLicense} gesagte hat also schon seinen Grund...
 \par
-Diese Flexibilit"at bedingt ein etwas exotisches Codeformat, f"ur dessen
+Diese Flexibilit"at bedingt ein etwas exotisches Code-Format, f"ur dessen
 Bearbeitung ich einige Tools beigelegt habe.  Deren Beschreibung findet
 sich in Abschnitt \ref{ChapTools}.
 \par
@@ -327,7 +328,7 @@ beherrscht er die bedingte Assemblierung.  Labels in Makror"umpfen werden
 automatisch als lokal betrachtet.
 \par
 Symbole k"onnen f"ur den Assembler sowohl Integer-, String- als auch
-Gleitkommawerte haben.  Diese werden --- wie Zwischergebnisse bei Formeln
+Gleitkommawerte haben.  Diese werden --- wie Zwischenergebnisse bei Formeln
 --- mit einer Breite von 32 Bit f"ur Integerwerte, 80/64 Bit f"ur
 Gleitkommawerte und 255 Zeichen f"ur Strings gespeichert.  F"ur eine Reihe
 von Mikrokontrollern besteht die M"oglichkeit, durch Segmentbildung die
@@ -356,7 +357,7 @@ linkf"ahigen Code.  Eine Erweiterung um einen Linker w"are mit erheblichem
 Aufwand verbunden und ist momentan nicht in Planung.
 \par
 Wer einen Blick in die Quellen von AS werfen will, besorge sich einfach
-die Unix-Version von AS, die als Quelltext zum Selber"ubersetzen kommt.
+die Unix-Version von AS, die als Quelltext zum Selber "ubersetzen kommt.
 Die Quellen sind mit Sicherheit nicht in einem Format, da"s das
 Verst"andnis m"oglichst leicht macht - an vielen Stellen schaut noch
 der originale Pascal-Quellcode heraus, und ich teile einige h"aufig
@@ -434,7 +435,7 @@ Hauptspeichergr"o"se von 512 Kbyte ausf"uhrbar sein.
 
 Die Version von AS f"ur das \marginpar{{\em DPMI}}
 DOS-Protected-Mode-Interface (DPMI) ben"otigt zum Ablaufen mindestens
-einen 80286-Prozessor und 1 Mbyte freies extended memory.  Daher stellen 2
+einen 80286-Prozessor und 1 Mbyte freies Extended Memory.  Daher stellen 2
 Mbyte Hauptspeicher das absolute Minimum dar, wenn man im XMS sonst keine
 anderen Spielereien (Platten-Cache, RAM-Disk, hochgeladenes DOS)
 installiert hat, sonst entsprechend mehr.  Falls man die DPMI-Version in
@@ -538,6 +539,7 @@ CTYPE.INC         & Funktionen zur Klassifizierung von \\
 80C50X.INC        & Registeradressen SAB C50x \\
 80C552.INC        & Registeradressen 80C552 \\
 H8\_3048.INC      & Registeradressen H8/3048 \\
+KENBAK.INC        & Registeradressen Kenbak-1 \\
 REG166.INC        & Adressen \& Befehlsmakros 80C166/167 \\
 REG251.INC        & Adressen \& Bits 80C251 \\
 REG29K.INC        & Peripherieadressen AMD 2924x \\
@@ -731,7 +733,7 @@ erledigt hat...falls doch nicht, bitte ich um R"uckmeldung!
 
 Die Installation der OS/2-Version \marginpar{{\em OS/2}} kann in weiten
 Z"ugen genauso ablaufen wie f"ur die DOS-Version, nur da"s dem System noch
-die DLLs bwkannt gemacht werden m"ussen.  Wenn Sie den {\tt
+die DLLs bekannt gemacht werden m"ussen.  Wenn Sie den {\tt
 LIBPATH}-Eintrag in Ihrer {\tt CONFIG.SYS} nicht erweitern wollen, ist es
 nat"urlich auch m"oglich, die DLLs in ein Verzeichnis zu verschieben, das
 bereits dort aufgef"uhrt ist.
@@ -745,7 +747,7 @@ geht der Verweis hier unisono in Anhang \ref{ChapSource}.
 
 \section{Aufruf, Parameter}\label{SectCallConvention}
 
-AS ist ein kommandozeilengesteuertes Programm, d.h. alle Parameter
+AS ist ein Kommandozeilen-gesteuertes Programm, d.h. alle Parameter
 und Dateiangaben sind in der Kommandozeile anzugeben.
 
 Zu AS geh"ort eine Reihe Reihe von Nachrichtendateien (erkennbar an der
@@ -934,9 +936,9 @@ bzw. \ref{ChapShareOrder}.
 \item{\tty{I}: Analog zur Sektionsliste eine Liste aller bearbeiteten
       Include-Dateien ausgeben.}
 \item{\tty{t $<$Maske$>$}: Mit diesem Schalter lassen sich einzelne Komponenten
-      des standardm"a"sig ausgegebenen Assemblerlistings ein-und ausblenden.
+      des standardm"a"sig ausgegebenen Assembler-Listings ein-und ausblenden.
       Welcher Teil dabei welchem Bit zugeordnet ist, ist im "ubern"achsten
-      Abschnitt, der genauer auf das Format des Assemblerlistings eingeht,
+      Abschnitt, der genauer auf das Format des Assembler Listings eingeht,
       nachgelesen werden.}
 \item{\tty{D $<$Symbolliste$>$}: Symbole definieren. Die hinter dieser Option
       angegebenen, durch Kommas getrennten Symbole werden in der
@@ -976,7 +978,7 @@ bzw. \ref{ChapShareOrder}.
       werden soll.}
 \item{\tty{U}: Mit dieser Option schaltet man AS in den case-sensitiven
       Modus um, d.h. in Namen von Symbolen, Sektionen, Makros,
-      Zeichentabellen und selbstdefinierte Funktionen werden Klein-
+      Zeichentabellen und selbst definierte Funktionen werden Klein-
       und Gro"sbuchstaben unterschieden, was normalerweise nicht der
       Fall ist.}
 \item{\tty{P}: weist AS an, den von Makroprozessor und bedingter Assemblierung
@@ -990,7 +992,7 @@ bzw. \ref{ChapShareOrder}.
 \item{\tty{G}: Dieser Schalter bestimmt, ob AS Code erzeugen soll oder nicht.
       Ist er ausgeschaltet, wird die Datei zwar assembliert,
       aber keine Code-Datei geschrieben. Dieser Schalter ist defaultm"a"sig aktiviert
-      (logisch, sonst bek"ame man ja auch gar kein Codefile).}
+      (logisch, sonst bek"ame man ja auch gar kein Code-File).}
 \item{\tty{r [n]}: Warnungen ausgeben, falls Situationen eintreten, die
       einen weiteren Pass erfordern.  Diese Information kann genutzt
       werden, um die Anzahl der Durchl"aufe zu verringern.  Optional kann
@@ -1014,7 +1016,7 @@ bzw. \ref{ChapShareOrder}.
       \ref{SectCPU}), k"onnen diese auch hier angegeben werden.}
 \item{\tty{alias $<$neu$>$=$<$alt$>$}:\\
       definiert den Prozessortyp \tty{$<$neu$>$} als einen Alias f"ur den
-      Typen \tty{$<$alt$>$}.  Zu den Sinn und Zweck von Aliassen siehe
+      Typen \tty{$<$alt$>$}.  Zu den Sinn und Zweck von Aliasen siehe
       Abschnitt \ref{SectAlias}}
 \item{{\tt gnuerrors}: Meldungen "uber Fehler bzw. Warnungen und deren
       Position nicht im Standardformat von AS, sondern in einem dem GNU
@@ -1461,7 +1463,7 @@ Neben seinem Wert besitzt auch jedes Symbol eine Markierung, zu welchen
 bei Prozessoren ben"otigt, die mehrere Adre"sr"aume besitzen.  AS kann mit
 dieser Zusatzinformation bei Zugriffen "uber ein Symbol warnen, wenn ein
 f"ur diesen Adre"sraum ungeeigneter Befehl verwendet wird.  Ein
-Segmentattribut wird einem Symol automatisch angeh"angt, wenn es als Label
+Segmentattribut wird einem Symbol automatisch angeh"angt, wenn es als Label
 oder mit einem Spezialbefehl (z.B. \tty{BIT}) definiert wird; ein mit
 dem ,,Universalbefehl'' \tty{SET} oder \tty{EQU} definiertes Symbol ist
 jedoch ,,typenlos'', d.h. seine Verwendung wird niemals Warnungen
@@ -1618,7 +1620,7 @@ lokalen Symbolen und Sektionen am n"achsten kommt.  Wann immer der Name
 eines Symboles mit einem Punkt (.) anf"angt, wird das Symbol nicht mit
 diesem Namen in der Symboltabelle abgelegt.  Stattdessen wird der Name des
 zuletzt definierten Symbols ohne vorangestellten Punkt davorgeh"angt.  Auf
-diese Weise nehmen Sybole, deren Name nicht mit einem Punkt anf"angt, quasi
+diese Weise nehmen Symbole, deren Name nicht mit einem Punkt anf"angt, quasi
 die Rolle von 'Bereichsgrenzen' ein und Symbole, deren Name mit einem
 Punkt anf"angt, k"onnen in jedem Bereich neu verwendet werden.  Sehen wir
 uns das folgende kurze Beispiel an:
@@ -1689,7 +1691,7 @@ oktal       & nachgestelltes O & vorangestelltes @    & vorangestellte 0 \\
 \end{tabular}\end{center}
 \caption{m"ogliche Zahlensysteme\label{TabSystems}}
 \end{table*}
-Falls das Zahlensystem nicht explizit durch vor-oder nachgestelle Zeichen
+Falls das Zahlensystem nicht explizit durch vor-oder nachgestellte Zeichen
 vorgegeben wird, nimmt AS die Basis an, die mit dem {\tt RADIX}-Befehl
 vorgegeben wurde (der Default dieser Einstellung ist wiederum 10).  Mit
 diesem Befehl lassen sich auch ,,ungew"ohnliche" Zahlensysteme, d.h.
@@ -1799,7 +1801,7 @@ die Ausgabe
 Der Assembler w"ahlt anhand des Formelergebnistyps die richtige
 Ausgabeform, zu vermeiden sind lediglich weitere Stringkonstanten
 im Ausdruck, da der Assembler bei der Gro"s-zu-Kleinbuchstabenumwandlung
-sonst durcheinanderkommt.  Integer-Ausdr"ucke werden defaultm"a"sig
+sonst durcheinander kommt.  Integer-Ausdr"ucke werden defaultm"a"sig
 hexadezimal ausgegeben, dies l"a"st sich jedoch mit dem
 \tty{OUTRADIX}-Befehl "andern.
 \par
@@ -1824,7 +1826,7 @@ w"are z.B., \verb!\h! anstelle \verb!\'! zu schreiben.
 Fr"uhere Versionen von AS verfolgten eine strikte Trennung von Strings
 und sogenannten ''Zeichenkonstanten'': Eine Zeichenkonstante sieht
 auf den ersten Blick aus wie ein String, nur sind die Zeichen in 
-einfache Hochkommans statt doppelte eingeschlossen.  Ein solches
+einfache Hochkommas statt doppelte eingeschlossen.  Ein solches
 Objekt hatte den Datentyp 'Integer', war also eine Zahl, deren Wert
 durch den (ASCII-)Wert des jeweiligen Zeichens definiert war, und wurde
 strikt von einer String-Konstante unterschieden:
@@ -1944,7 +1946,7 @@ bin"are UND-Verkn"upfung mit einer passenden Maske ist daher unvermeidlich!
 \subsection{Funktionen}
 
 Zus"atzlich zu den Operatoren definiert der Assembler noch eine Reihe
-in erster Linie transzendenter Funktionen mit Gleitkommaargument, die
+in erster Linie transzendenter Funktionen mit Gleitkomma-Argument, die
 Tabellen \ref{TabFuncs1} und \ref{TabFuncs2} auflisten.
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|l|l|l|}
@@ -1989,7 +1991,7 @@ BITPOS   & einziges 1-Bit       & Integer      & Integer \\
 \hline
 \end{tabular}\end{center}
 \caption{vordefinierte Funktionen in AS - Teil 1 (Integer- und
-         Gleitkommafunktionen)\label{TabFuncs1}}
+         Gleitkomma-Funktionen)\label{TabFuncs1}}
 \end{table*}
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|l|l|l|}
@@ -2040,7 +2042,7 @@ erstes Argument und die Zeichenposition als zweites Argument.  Falls die
 angegebene Position gr"o"ser oder gleich der L"ange des Quellstrings ist,
 liefert \tty{SUBSTR} einen Leerstring, w"ahrend \tty{CHARFROMSTR} eine -1
 ergibt.  Eine Position kleiner Null wird von \tty{SUBSTR} als Null
-behandlet, w"ahrend \tty{CHARFROMSTR} in diesem Fall ebenfalls eine -1
+behandelt, w"ahrend \tty{CHARFROMSTR} in diesem Fall ebenfalls eine -1
 liefert.
 
 Hier ein Beispiel, wie man die beiden Funktionen einsetzt, um einen
@@ -2125,12 +2127,12 @@ Benutzung definiert sein mu"s, nutzen genau diese Eigenschaft aus, um den
 
 Leider ist die Sache im Falle von Assembler nicht so einfach, denn man
 will ja bisweilen auch vorw"arts im Code springen oder mu"s aus bestimmten
-Gr"unden Variablendefinitionen hinter den Code verlegen.  Dies ist
+Gr"unden Variablen Definitionen hinter den Code verlegen.  Dies ist
 im Beispiel der Fall f"ur den bedingten Sprung, mit dem ein anderer
 Befehl "ubersprungen wird.  Wenn der Assembler im ersten Durchlauf auf
 den Sprungbefehl trifft, so sieht er sich mit der Situation konfrontiert,
 entweder die Teilfelder der Instruktion, die die Sprungadresse beinhalten,
-leerzulassen, oder seitens des Formelparsers (der das Adre"sargument ja
+leer zulassen, oder seitens des Formelparsers (der das Adre"sargument ja
 auswerten mu"s) anstelle des korrekten, aber unbekannten Wertes einen Wert
 anzubieten, der ,,niemandem wehtut''.  Bei einem einfachen Assembler, der
 nur eine Zielarchitektur kennt und bei dem sich die betroffenen Befehle
@@ -2225,13 +2227,13 @@ sym2    equ     sym1+5
 sym1    equ     0
 \end{verbatim}
 so handelt man sich im zweiten Pass eine Fehlermeldung wegen eines
-undefinerten Symbols ein...aber warum machen Leute eigentlich solche
+undefinierten Symbols ein...aber warum machen Leute eigentlich solche
 Dinge ???
 
 Zugegeben, das war ein ziemlich l"anglicher Ausflug, aber es mu"ste einfach
 einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 \begin{enumerate}
-\item{AS versucht immer, den k"urzestm"oglichen Code zu erzeugen.  Dazu
+\item{AS versucht immer, den k"urzest m"oglichen Code zu erzeugen.  Dazu
       ben"otigt er eine endliche Zahl von Durchl"aufen.  Wenn man ihn
       nicht gerade knebelt, kennt AS keine R"ucksichten...}
 \item{Wenn sinnvoll und m"oglich, Sprung- und Adre"sl"angen explizit
@@ -2248,7 +2250,7 @@ einmal sein.  Was sollte man als Erkenntnis aus diesem Abschnitt mitnehmen?
 
 {\em G"ultigkeit: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
      AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
-     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000}
+     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000, KANBAK}
 
 Manchmal ist es erw"unscht, nicht nur einer Speicheradresse oder einer
 Konstanten, sondern auch einem Register einen symbolischen Namen zuzuweisen,
@@ -2321,12 +2323,12 @@ w"are doch sehr l"astig...
 
 %%---------------------------------------------------------------------------
 
-\section{Prozessor-Aliasse}
+\section{Prozessor-Aliase}
 \label{SectAlias}
 
 Mit Varianten g"angiger Mikrocontroller-Familien ist es wie mit
 Kaninchen: Sie vermehren sich schneller, als man mit der Versorgung
-hinterherkommen kann.  Im Zuge der Entwicklung von Prozessorkernen als
+hinterher kommen kann.  Im Zuge der Entwicklung von Prozessorkernen als
 Bausteine f"ur ASICs und von Controller-Familien mit vom Kunden w"ahlbarer
 Peripherie wird die Zahl von Controller-Varianten, die sich von einem
 bekannten Typ nur in einigen Peripherie-Details unterscheiden, immer
@@ -2433,7 +2435,7 @@ Namen und Wert als Argument erwartet, also z.B. so:
 {\tt CONSTANT} ist allerdings auf Integer-Konstanten beschr"ankt.
 \par
 Defaultm"a"sig sind mit \tty{SET} oder \tty{EQU} definierte Symbole
-typenlos, optional kann jedoch als zweites obzw. drittes Argument ein
+typenlos, optional kann jedoch als zweites bzw. drittes Argument ein
 Segmentname (\tty{CODE, DATA, IDATA, XDATA, YDATA, BITDATA, IO oder REG})
 oder \tty{MOMSEGMENT} f"ur das aktuell gesetzte Segment angegeben werden,
 um das Symbol einem bestimmten Adre"sraum zuordnen.  AS ber"ucksichtigt
@@ -2520,7 +2522,7 @@ erzeugt aber ein Symbol mit korrekten Attributen.
 \ttindex{BIT}
 
 {\em G"ultigkeit: MCS-(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16,
-                  H8/300, H8/500}
+                  H8/300, H8/500, KENBAK}
 
 \tty{BIT} dient dazu, ein einzelnes Bit einer Speicherstelle mit einem
 symbolischen Namen gleichzusetzen.  Da die Art und Weise, wie
@@ -2725,8 +2727,8 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \subsection{REG und NAMEREG}
 \ttindex{REG}\ttindex{NAMEREG}
 
-{\em G"ultigkeit: 680x0, AVR, M*Core, ST9, 80C16x, KCPSM ({\tt NAMEREG} nur
- f"ur KCPSM(3)), LatticeMico8, MSP430(X)}
+{\em G"ultigkeit: 680x0, AVR, M*Core, ST9, 80C16x, KCPSM \\
+     ({\tt NAMEREG} nur  f"ur KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
 zu Prozessor eine leicht abweichende Bedeutung: Falls der Zielprozessor
@@ -2917,7 +2919,7 @@ zu erzeugen.
 {\em G"ultigkeit: alle Prozessoren}
 
 Mit \tty{PUSHV} und \tty{POPV} ist es m"oglich, den Wert von (nicht
-makrolokalen) Symbolen tempor"ar zu speichern und zu einem sp"ateren
+Makro-lokalen) Symbolen tempor"ar zu speichern und zu einem sp"ateren
 Zeitpunkt wiederherzustellen.  Die Speicherung erfolgt auf {\em Stacks},
 d.h. Last-In-First-Out-Speichern.  Ein Stack hat einen Namen, der den
 allgemeinen Symbolkonventionen gen"ugen mu"s, und existiert so lange,
@@ -2936,7 +2938,7 @@ nicht lokal zu Sektionen.
 \par
 Wichtig ist, da"s die Variablenliste {\em immer} von links nach rechts
 abgearbeitet wird.  Wer also mehrere Variablen mit \tty{POPV} von einem
-Stack herunterholen will, mu"s diese in genau umgekehrter Reihenfolge
+Stack herunter holen will, mu"s diese in genau umgekehrter Reihenfolge
 zum entsprechenden \tty{PUSHV} angeben!
 \par
 Der Name des Stacks kann auch weggelassen werden, etwa so:
@@ -2966,7 +2968,7 @@ hinwegzuretten: Zu Beginn eines Durchlaufes werden alle Stacks geleert!
 
 {\em G"ultigkeit: alle Prozessoren}
 
-\tty{ORG} erlaubt es, den assemblerinternen Adre"sz"ahler mit einem neuen
+\tty{ORG} erlaubt es, den Assembler-internen Adre"sz"ahler mit einem neuen
 Wert zu besetzen.  Der Wertebereich ist vom momentan gew"ahlten Segment
 und vom Prozessortyp abh"angig (Tabelle \ref{TabORG}).
 Die untere Grenze ist dabei immer 0; die obere Grenze der angegebene Wert
@@ -3074,7 +3076,7 @@ a) \> 68008 $\rightarrow$ 68000 $\rightarrow$ 68010 $\rightarrow$ 68012 $\righta
 In dieser Familie liegen die Unterschiede in hinzukommenden Befehlen
 und Adressierungsarten (ab 68020).  Eine kleine Ausnahme stellt der
 Schritt zum 68030 dar, dem 2 Befehle fehlen: \tty{CALLM} und \tty{RTM}.
-Die drei Vertreter der 683xx-Famile haben den gleichen Prozessorkern (eine
+Die drei Vertreter der 683xx-Familie haben den gleichen Prozessorkern (eine
 leicht abgemagerte 68020-CPU), jedoch v"ollig unterschiedliche Peripherie.
 MCF5xxx repr"asentiert verschiedene ColdFire-Varianten von Motorola/Freescale/NXP,
 zum 680x0 bin"ar abw"artskompatible RISC-Prozesoren. Beim 68040 kommen die zus"atzlichen
@@ -3094,7 +3096,7 @@ c) PPC403 $\rightarrow$ PPC403GC $\rightarrow$ MPC505 $\rightarrow$ MPC601 $\rig
 \end{quote}
 Der PCC403 ist eine abgespeckte Version der PowerPC-Linie ohne
 Gleitkommaeinheit, demzufolge sind s"amtliche Gleitkommabefehle
-bei ihm gesperrt; daf"ur sind einige mikrocontrollerspezifische
+bei ihm gesperrt; daf"ur sind einige Mikrocontroller-spezifische
 Befehle enthalten, die er als einziges Mitglied in dieser Familie
 kennt.  Die GC-Variante des PPC403 hat zus"atzlich eine MMU und deshalb
 einige Befehle zu deren Steuerung mehr.  Der MPC505 (eine Mikrokontroller-Variante mit FPU)
@@ -3124,8 +3126,8 @@ zweites Indexregister Y zur Adressierung.
 \begin{quote}
 g) 6809/6309 und 6805/68HC08/68HCS08
 \end{quote}
-Diese Prozessoren sind zwar teilweise quellcodekompatibel zu den
-anderen 68xx-ern, haben aber ein anderes Bin"arcodeformat und einen
+Diese Prozessoren sind zwar teilweise Quellcode-kompatibel zu den
+anderen 68xx-ern, haben aber ein anderes Bin"arcode-Format und einen
 deutlich eingeschr"ankteren (6805) bzw. erweiterten (6809) Befehlssatz.
 Der 6309 ist eine CMOS-Version des 6809, die zwar offiziell
 nur kompatibel zum 6809 ist, inoffiziell aber mehr Register und
@@ -3153,7 +3155,7 @@ i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
    S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
 \end{quote}
 Alle Derivate beinhalten den gleichen Prozessorkern und den
-gleichen Befehlssatz, lediglich die on-chip-Peripherie und
+gleichen Befehlssatz, lediglich die on-Chip-Peripherie und
 die Menge eingebauten Speichers (RAM, Flash-ROM, EEPROM)
 variieren.
 %%-----------
@@ -3215,7 +3217,7 @@ eine Reihe neuer Befehle und eine programmierbare Base-Page.
 Der 65C19 ist {\em nicht} bin"ar aufw"artskompatibel zum
 originalen 6502!  Einige Adressierungsarten wurden durch andere
 ersetzt.  Des weiteren enth"alt dieser Prozessor
-Befehlssatzerweiterungen, die die Implementierung digitaler
+Befehlssatz-Erweiterungen, die die Implementierung digitaler
 Signalverarbeitung erleichtern.
 
 Die Mitsubishi-Mikrokontroller dagegen erweitern den
@@ -3889,6 +3891,11 @@ cg) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
+%%-----------
+\begin{quote}
+ch) KENBAK
+\end{quote}
+Es hat nie einen KENBAK-2 gegeben...
 
 Beim CPU-Befehl mu"s der Prozessortyp als einfaches Literal
 angegeben werden, eine Berechnung \`a la
@@ -5349,8 +5356,8 @@ verrechnet haben sollte...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, H8/500, HMCS400,
- 4004/4040, $\mu$PD772x, OLMS-40/50}
+{\em G"ultigkeit: PIC, 320xx, AVR, MELPS-4500, H8/500, \\
+     HMCS400, 4004/4040, $\mu$PD772x, OLMS-40/50}
 
 Mit diesem Befehl werden Daten im aktuellen Segment abgelegt,
 wobei sowohl Integer- als auch Stringwerte zul"assig sind.  Bei
@@ -6074,7 +6081,7 @@ vollst"andig ,,ausbrechen'' will, mu"s auf den h"oheren Ebenen ebenfalls
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SHIFT}
-\ttindex{SHIFT}
+\ttindex{SHIFT}\ttindex{SHFT}
 
 {\tt SHIFT} ist ein Mittel, um Makros mit variablen Argumentlisten
 abzuarbeiten: Es verwirft den ersten Parameter, so da"s der zweite
@@ -6104,6 +6111,9 @@ pushlist  macro reg
 Also eine Rekursion, in der pro Schritt die Argumentliste ({\tt ALLARGS})
 um eins verk"uzt wird.  Der wichtige Trick ist, da"s jedes Mal eine neue
 Expansion gestartet wird...
+
+Auf Plattformen, bei denen {\tt SHIFT} bereits eine Maschineninstruktion ist,
+mu"s stattdessen {\tt SHFT} geschrieben werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6450,7 +6460,7 @@ Zeilennummer des entsprechenden {\tt IF}s angezeigt.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SWITCH(SELECT) / CASE / ELSECASE / ENDCASE}
+\subsection{SWITCH / CASE / ELSECASE / ENDCASE}
 \ttindex{SWITCH}\ttindex{SELECT}\ttindex{CASE}\ttindex{ELSECASE}\ttindex{ENDCASE}
 
 \tty{SWITCH} ist ein Spezialfall von \tty{IF} und f"ur den Fall gedacht, da"s ein
@@ -10193,6 +10203,95 @@ Adre"sraum von 256 KWorten des MN1613 verwenden will, oder mit dem
 Gleitkommaformat des MN1613 experimentieren will, mu"s das \tty{ALT}-
 Target verwenden.
 
+%%---------------------------------------------------------------------------
+
+\section{KENBAK}
+
+Der KENBAK-1 wurde 1970 entwickelt, zu einer Zeit, als der erste
+Mikroprozessor noch drei Jahre entfernt war.  Man kann davon ausgehen, da"s
+er f"ur die Hobbyisten, die sich den Bausatz seinerzeit leisten konnten, ihr
+erster und einziger Computer war.  Demzufolge hatten sie auch nichts, auf
+dem sie einen Assembler f"ur diesen Computer h"atten laufen lassen k"onnen -
+der KENBAK-1 mit seinem Speicher von 256 Byte war daf"ur viel zu klein.  Die
+pr"aferierte Methode waren vorgedruckte Tabellen, in die man die Befehle und
+ihren Maschinencode eintrug.  War man mit dieser ,,Programmierung'' fertig,
+konnte man den Code "uber die Schalterleiste per Hand in den Computer laden.
+
+Daraus resultiert leider, da"s die Assembler-Sprache des KENBAK zwar im
+Programming Manual beschrieben, aber nicht wirklich formal definiert ist.  Als
+Grant Stockly vor ein paar Jahren neue KENBAK-Kits herausbrachte, hat er 
+eine erste KENBAK-Portierung f"ur meinen Assembler gemacht, die hat ihren
+Weg jedoch leider nie wieder ''upstream'' gefunden.  In meiner Implementierung
+habe ich versucht, seine Ideen aufzugreifen, jedoch andererseits auch eine
+Syntax anzubieten, wie sie Programmierern eines 6502, Z80 oder "ahnlichem
+eher vertraut sein d"urfte.  In der folgenden Tabelle sind die Syntax-Unterschiede
+gegen"uber gestellt:
+
+\hfuzz=5pt
+\begin{center}\begin{longtable}{|l|l|l|}
+\hline
+Stockly & Alternativ & Bemerkung \\
+\hline
+\hline
+\endhead
+\multicolumn{3}{|l|}{\bf Arithmetisch/Logisch (ADD/SUB/LOAD/STORE/AND/OR/LNEG)} \\
+\hline
+{\it instr} {\tt Constant}, {\it Reg}, {\it Wert}, & {\it instr} {\it Reg}, {\it \#Wert} & immediate \\
+{\it instr} {\tt Memory}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it Addr} & direkt \\
+{\it instr} {\tt Indirect}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it (Addr)} & direkt \\
+{\it instr} {\tt Indexed}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it Addr},X & indiziert \\
+{\it instr} {\tt Indirect-Indexed}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it (Addr)},X & indirekt-indiziert \\
+\hline
+\multicolumn{3}{|l|}{\bf Spr"unge} \\
+\hline
+{\tt JPD} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JP} {\it Reg}, {\it Cond}, {\it Addr} & bedingt-direkt \\
+{\tt JPI} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JP} {\it Reg}, {\it Cond}, {\it (Addr)} & bedingt-indirekt \\
+{\tt JMD} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JM} {\it Reg}, {\it Cond}, {\it Addr} & bedingt-direkt \\
+{\tt JMI} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JM} {\it Reg}, {\it Cond}, {\it (Addr)} & bedingt-indirekt \\
+{\tt JPD} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JP} {\it Addr} & unbedingt-direkt \\
+{\tt JPI} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JP} {\it (Addr)} & unbedingt-indirekt \\
+{\tt JMD} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JM} {\it Addr} & unbedingt-direkt \\
+{\tt JMI} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JM} {\it (Addr)} & unbedingt-indirekt \\
+\hline
+\multicolumn{3}{|l|}{\bf Sprungbedingungen} \\
+\hline
+{\tt Non-zero} & {\tt NZ} & $\neq 0$ \\
+{\tt Zero} & {\tt Z} & $= 0$ \\
+{\tt Negative} & {\tt N} & $< 0$ \\
+{\tt Positive} & {\tt P} & $\geq 0$ \\
+{\tt Positve-Non-zero} & {\tt PNZ} & $ > 0$ \\
+\hline
+\multicolumn{3}{|l|}{\bf Skips} \\
+\hline
+{\tt SKP 0}, {\it bit}, {\it Addr} & {\tt SKP0} {\it bit}, {\it Addr} {\it [,Dest]} & \\
+{\tt SKP 1}, {\it bit}, {\it Addr} & {\tt SKP1} {\it bit}, {\it Addr} {\it [,Dest]} & \\
+\hline
+\multicolumn{3}{|l|}{\bf Bitmanipulation} \\
+\hline
+{\tt SET 0}, {\it bit}, {\it Addr} & {\tt SET0} {\it bit}, {\it Addr} & \\
+{\tt SET 1}, {\it bit}, {\it Addr} & {\tt SET1} {\it bit}, {\it Addr} & \\
+\hline
+\multicolumn{3}{|l|}{\bf Schiebe/Rotierbefehle} \\
+\hline
+{\tt SHIFT LEFT}, {\it cnt}, {\it Reg} & {\tt SFTL} {\it [cnt,]} {\it Reg} & \\
+{\tt SHIFT RIGHT}, {\it cnt}, {\it Reg} & {\tt SFTR} {\it [cnt,]} {\it Reg} & arithm. Shift \\
+{\tt ROTATE LEFT}, {\it cnt}, {\it Reg} & {\tt ROTL} {\it [cnt,]} {\it Reg} & \\
+{\tt ROTATE RIGHT}, {\it cnt}, {\it Reg} & {\tt ROTR} {\it [cnt,]} {\it Reg} & \\
+\hline
+\caption{KENBAK-Befehlssyntax \label{TabKENBAKSyntax}}
+\end{longtable}\end{center}
+\hfuzz=0pt
+
+Es gibt keinen Pseudobefehl, um zwischen diesen beiden Syntax-Varianten umzuschalten.
+Beide d"urfen jederzeit und auch in beliebiger Mischung genutzt werden.
+
+Die Zieladresse {\it [Dest]}, die man optional bei den Skip-Befehlen angeben
+kann, geht nicht in den erzeugten Code ein.  Der Assembler "uberpr"uft lediglich,
+ob der Prozessor zur Laufzeit wirklich zur angegebene Adresse springen w"urde.
+Dadurch kann z.B. gepr"uft werden, ob man nicht versehentlich versucht, einen
+einzelnen Ein-Byte-Befehl zu "uberspringen.  Ein weggelassenes Schiebeargument
+{\it [cnt]} bedeutet, da"s um eine Stelle geschoben werden soll.
+
 %%===========================================================================
 
 \cleardoublepage
@@ -11453,6 +11552,11 @@ Angaben:
                 worden.  Grund ist "ublicherweise die Ablage einer
                 ungeraden Anzahl von Daten in Bytes oder ein falsches \tty{ORG}.}
                {keines}
+\errentry{1376}{Skip-Ziel passt nicht}
+               {Fehler}
+               {Das angegebene Sprungziel ist nicht die Adresse, die der
+                Prozessor bei Ausf"uhrung der Skip-Anweisung anspringen w"urde.}
+               {die angegebene (beabsichtigte) Sprungadresse}
 \errentry{1380}{ung"ultiges Schiebeargument}
                {Fehler}
                {als Argument f"ur die Schiebeamplitude darf nur

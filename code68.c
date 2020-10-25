@@ -73,7 +73,7 @@ enum
 
 #define FixedOrderCnt 45
 #define RelOrderCnt   19
-#define ALU16OrderCnt 13
+#define ALU16OrderCnt 16
 
 
 static tSymbolSize OpSize;
@@ -194,6 +194,20 @@ static void TranslateAddress(LongWord *Address)
 
 /*---------------------------------------------------------------------------*/
 
+static Boolean DecodeAcc(const char *pArg, Byte *pReg)
+{
+  static const char Regs[] = "AB";
+  char *pPos;
+
+  if ((strlen(pArg) == 1)
+   && ((pPos = strchr(Regs, as_toupper(*pArg)))))
+  {
+    *pReg = pPos - Regs;
+    return True;
+  }
+  return False;
+}
+
 static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
 {
   tStrComp *pStartArg = &ArgStr[StartInd];
@@ -212,18 +226,10 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl)
   {
     /* Akkumulatoren ? */
 
-    if (!as_strcasecmp(pStartArg->Str, "A"))
+    if (DecodeAcc(pStartArg->Str, &AdrPart))
     {
       if (MModAcc & Erl)
         AdrMode = ModAcc;
-    }
-    else if (!as_strcasecmp(pStartArg->Str, "B"))
-    {
-      if (MModAcc & Erl)
-      {
-        AdrMode = ModAcc;
-        AdrPart = 1;
-      }
     }
 
     /* immediate ? */
@@ -655,7 +661,16 @@ static void DecodeBTxx(Word Index)
 
 static void DecodeALU8(Word Code)
 {
-  int MinArgCnt = (Code >> 8) & 3;
+  Byte Reg;
+  int MinArgCnt = Hi(Code) & 3;
+
+  /* dirty hack: LDA/STA/ORA, and first arg is not A or B, treat like LDAA/STAA/ORAA: */
+
+  if ((MinArgCnt == 2)
+   && (as_toupper(OpPart.Str[2]) == 'A')
+   && (ArgCnt >= 1)
+   && !DecodeAcc(ArgStr[1].Str, &Reg))
+    MinArgCnt = 1;
 
   if (ChkArgCnt(MinArgCnt, MinArgCnt + 1))
   {
@@ -752,13 +767,15 @@ static void AddRel(const char *NName, CPUVar NMin, Word NCode)
   AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddALU8(const char *NamePlain, const char *NameA, const char *NameB, Boolean MayImm, Byte NCode)
+static void AddALU8(const char *NamePlain, const char *NameA, const char *NameB, const char *NameB2, Boolean MayImm, Byte NCode)
 {
   Word BaseCode = NCode | (MayImm ? 0x8000 : 0);
 
   AddInstTable(InstTable, NamePlain, BaseCode | (2 << 8), DecodeALU8);
   AddInstTable(InstTable, NameA, BaseCode | (1 << 8), DecodeALU8);
   AddInstTable(InstTable, NameB, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
+  if (NameB2)
+    AddInstTable(InstTable, NameB2, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
 }
 
 static void AddALU16(const char *NName, Boolean NMay, CPUVar NMin, Byte NShift, Byte NCode)
@@ -838,23 +855,26 @@ static void InitFields(void)
   AddRel("BVC", CPU6800, 0x28);
   AddRel("BVS", CPU6800, 0x29);
 
-  AddALU8("ADC", "ADCA", "ADCB", True , 0x89);
-  AddALU8("ADD", "ADDA", "ADDB", True , 0x8b);
-  AddALU8("AND", "ANDA", "ANDB", True , 0x84);
-  AddALU8("BIT", "BITA", "BITB", True , 0x85);
-  AddALU8("CMP", "CMPA", "CMPB", True , 0x81);
-  AddALU8("EOR", "EORA", "EORB", True , 0x88);
-  AddALU8("LDA", "LDAA", "LDAB", True , 0x86);
-  AddALU8("ORA", "ORAA", "ORAB", True , 0x8a);
-  AddALU8("SBC", "SBCA", "SBCB", True , 0x82);
-  AddALU8("STA", "STAA", "STAB", False, 0x87);
-  AddALU8("SUB", "SUBA", "SUBB", True , 0x80);
+  AddALU8("ADC", "ADCA", "ADCB", NULL , True , 0x89);
+  AddALU8("ADD", "ADDA", "ADDB", NULL , True , 0x8b);
+  AddALU8("AND", "ANDA", "ANDB", NULL , True , 0x84);
+  AddALU8("BIT", "BITA", "BITB", NULL , True , 0x85);
+  AddALU8("CMP", "CMPA", "CMPB", NULL , True , 0x81);
+  AddALU8("EOR", "EORA", "EORB", NULL , True , 0x88);
+  AddALU8("LDA", "LDAA", "LDAB", "LDB", True , 0x86);
+  AddALU8("ORA", "ORAA", "ORAB", "ORB", True , 0x8a);
+  AddALU8("SBC", "SBCA", "SBCB", NULL , True , 0x82);
+  AddALU8("STA", "STAA", "STAB", "STB", False, 0x87);
+  AddALU8("SUB", "SUBA", "SUBB", NULL , True , 0x80);
                          
   ALU16Orders = (ALU16Order *) malloc(sizeof(ALU16Order) * ALU16OrderCnt); InstrZ = 0;
   AddALU16("ADDD", True , CPU6801, 0, 0xc3);
   AddALU16("CPD" , True , CPU6811, 1, 0x83);
+  AddALU16("CMPD", True , CPU6811, 1, 0x83);
   AddALU16("CPX" , True , CPU6800, 2, 0x8c);
+  AddALU16("CMPX", True , CPU6800, 2, 0x8c);
   AddALU16("CPY" , True , CPU6811, 3, 0x8c);
+  AddALU16("CMPY", True , CPU6811, 3, 0x8c);
   AddALU16("LDD" , True , CPU6801, 0, 0xcc);
   AddALU16("LDS" , True , CPU6800, 0, 0x8e);
   AddALU16("LDX" , True , CPU6800, 2, 0xce);

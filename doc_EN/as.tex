@@ -295,6 +295,7 @@ following processor families have been implemented:
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
 \item{MIL STD 1750}
+\item{KENBAK-1}
 \end{itemize}
 under work / planned / in consideration :
 \begin{itemize}
@@ -533,6 +534,7 @@ CTYPE.INC         & functions for classification of \\
 80C50X.INC        & register addresses SAB C50x \\
 80C552.INC        & register addresses 80C552 \\
 H8\_3048.INC      & register addresses H8/3048 \\
+KENBAK.INC        & register addressed Kenbak-1 \\
 REG166.INC        & addresses and instruction macros 80C166/167 \\
 REG251.INC        & addresses and bits 80C251 \\
 REG29K.INC        & peripheral addresses AMD 2924x \\
@@ -2190,7 +2192,7 @@ necessary.  Which is the essence you should learn from this section?
 
 {\em valid for: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x,
      AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300,
-     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000}
+     H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000, KENBAK}
 
 Sometimes it is desirable not only to assign symbolic names to memory
 addresses or constants, but also to a register, to emphasize its function
@@ -2452,7 +2454,7 @@ generates a symbol with correct attributes.
 \ttindex{BIT}
 
 {\em valid for: MCS/(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16,
-                H8/300, H8/500}
+                H8/300, H8/500, KENBAK}
 
 \tty{BIT} serves to equate a single bit of a memory cell with a symbolic
 name.  This instruction varies from target platform to target platform due
@@ -3793,6 +3795,11 @@ cg) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
+%%-----------
+\begin{quote}
+cg) KENBAK
+\end{quote}
+Since there has never been a KENBAK-2, the target is simply KENBAK...
 
 The \tty{CPU} instruction needs the processor type as a simple literal, a
 calculation like:
@@ -5889,7 +5896,7 @@ completely break out of a nested construct, one has to use additional
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{SHIFT}
-\ttindex{SHIFT}
+\ttindex{SHIFT}\ttindex{SHFT}
 
 {\tt SHIFT} is a tool to construct macros with variable argument lists: it
 discards the first parameter, with the result that the second parameter
@@ -5919,6 +5926,9 @@ pushlist  macro reg
 Effectively, this is a recursion that shortens the argument list once per
 step.  The important trick is that a new macro expansion is started in
 each step...
+
+In case {\tt SHIFT} ist already a machine instruction for a certain target,
+one has to use {\tt SHFT} instead.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -6273,7 +6283,7 @@ the corresponding {\tt IF...} will be shown.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{SWITCH(SELECT) / CASE / ELSECASE / ENDCASE}
+\subsection{SWITCH / CASE / ELSECASE / ENDCASE}
 \ttindex{SWITCH}\ttindex{SELECT}\ttindex{CASE}\ttindex{ELSECASE}\ttindex{ENDCASE}
 
 \tty{CASE} is a special case of \tty{IF} and is designed for situations
@@ -9988,6 +9998,91 @@ written by me and is activated via the CPU names \tty{MN1610ALT} resp.
 256 KWords, or if you want to experiment with the MN1613's floating point
 formant, you have to use the \tty{ALT} target.
 
+%%---------------------------------------------------------------------------
+
+\section{KENBAK}
+
+The KENBAK-1 was developed in 1970, at a time when the first microprocessor
+was still three years away.  One may assume that for the few hobbyists that
+could afford the kit back then, this was their first and only computer.  As
+a consequence, they had nothing they could run an assembler on, the KENBAK-1 
+itself with its 256 bytes of memory was way too small for such a task.  The
+preferred method was to use pre-printed tables, which had fields to fill in
+instructions and machine codes.  Once this ''programming job'' was done, one
+would enter the machine code manually via the computer's switch row.
+
+The effect of this is that though the KENBAK's assembly language is described
+in the manual, there is no real formal definition of it.  When Grant Stockly
+released new KENBAK kits a few years ago, he did a first implementation of the
+KENBAK on my assembler.  Unfortunately, this never went upstream.  I tried
+to take up his ideas in my implementation, but on the other hand I also tried to
+offer a syntax that should be familiar to programmers of 6502, Z80 or similar
+processors.  The following table lists the syntax differences:
+
+\hfuzz=60pt
+\begin{center}\begin{longtable}{|l|l|l|}
+\hline
+Stockly & Alternativ & Bemerkung \\
+\hline
+\hline
+\endhead
+\multicolumn{3}{|l|}{\bf Arithmetic/Logic (ADD/SUB/LOAD/STORE/AND/OR/LNEG)} \\
+\hline
+{\it instr} {\tt Constant}, {\it Reg}, {\it Wert}, & {\it instr} {\it Reg}, {\it \#Wert} & immediate \\
+{\it instr} {\tt Memory}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it Addr} & direct \\
+{\it instr} {\tt Indirect}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it (Addr)} & direct \\
+{\it instr} {\tt Indexed}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it Addr},X & indexed \\
+{\it instr} {\tt Indirect-Indexed}, {\it Reg}, {\it Addr}, & {\it instr} {\it Reg}, {\it (Addr)},X & indirect-indexed \\
+\hline
+\multicolumn{3}{|l|}{\bf Jumps} \\
+\hline
+{\tt JPD} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JP} {\it Reg}, {\it Cond}, {\it Addr} & conditional-direct \\
+{\tt JPI} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JP} {\it Reg}, {\it Cond}, {\it (Addr)} & conditional-indirect \\
+{\tt JMD} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JM} {\it Reg}, {\it Cond}, {\it Addr} & conditional-direct \\
+{\tt JMI} {\it Reg}, {\it Cond}, {\it Addr} & {\tt JM} {\it Reg}, {\it Cond}, {\it (Addr)} & conditional-indirect \\
+{\tt JPD} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JP} {\it Addr} & unconditional-direct \\
+{\tt JPI} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JP} {\it (Addr)} & unconditional-indirect \\
+{\tt JMD} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JM} {\it Addr} & unconditional-direct \\
+{\tt JMI} {\tt Unconditional}, {\it Cond}, {\it Addr} & {\tt JM} {\it (Addr)} & unconditional-indirect \\
+\hline
+\multicolumn{3}{|l|}{\bf Jump Conditions} \\
+\hline
+{\tt Non-zero} & {\tt NZ} & $\neq 0$ \\
+{\tt Zero} & {\tt Z} & $= 0$ \\
+{\tt Negative} & {\tt N} & $< 0$ \\
+{\tt Positive} & {\tt P} & $\geq 0$ \\
+{\tt Positve-Non-zero} & {\tt PNZ} & $ > 0$ \\
+\hline
+\multicolumn{3}{|l|}{\bf Skips} \\
+\hline
+{\tt SKP 0}, {\it bit}, {\it Addr} & {\tt SKP0} {\it bit}, {\it Addr} {\it [,Dest]} & \\
+{\tt SKP 1}, {\it bit}, {\it Addr} & {\tt SKP1} {\it bit}, {\it Addr} {\it [,Dest]} & \\
+\hline
+\multicolumn{3}{|l|}{\bf Bit Manipulation} \\
+\hline
+{\tt SET 0}, {\it bit}, {\it Addr} & {\tt SET0} {\it bit}, {\it Addr} & \\
+{\tt SET 1}, {\it bit}, {\it Addr} & {\tt SET1} {\it bit}, {\it Addr} & \\
+\hline
+\multicolumn{3}{|l|}{\bf Shifts/Rotates} \\
+\hline
+{\tt SHIFT LEFT}, {\it cnt}, {\it Reg} & {\tt SFTL} {\it [cnt,]} {\it Reg} & \\
+{\tt SHIFT RIGHT}, {\it cnt}, {\it Reg} & {\tt SFTR} {\it [cnt,]} {\it Reg} & arithm. Shift \\
+{\tt ROTATE LEFT}, {\it cnt}, {\it Reg} & {\tt ROTL} {\it [cnt,]} {\it Reg} & \\
+{\tt ROTATE RIGHT}, {\it cnt}, {\it Reg} & {\tt ROTR} {\it [cnt,]} {\it Reg} & \\
+\hline
+\caption{KENBAK-Befehlssyntax \label{TabKENBAKSyntax}}
+\end{longtable}\end{center}
+\hfuzz=0pt
+
+There is no pseudo instruction to switch between these syntax variants.  They may
+both be used anytime and in an arbitrary mix.
+
+The target address {\it [Dest]} that may optionally be added to skip instructions
+will not become part of the machine code.  The assembler only checks whether the
+processor wil actually skip to the given address.  This allows for instance to check
+whether one actually tries to skip a one-byte instruction.  If the shift count
+argument {\it [cnt]} is omitted, a one-bit shift/rotate is coded.
+
 %%===========================================================================
 
 \cleardoublepage
@@ -11214,6 +11309,11 @@ described by:
                 presence of an odd number of data in bytes or a wrong
                 \tty{ORG}.}
                {none}
+\errentry{1376}{skip target mismatch}
+               {error}
+               {The gien branch target is not the address the processor would
+                jump to if the skip instruction were executed.}
+               {the given (intended) jump target}
 \errentry{1380}{invalid argument for shifting}
                {error}
                {only a constant or a data register can be used for defining

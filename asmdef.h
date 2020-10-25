@@ -327,7 +327,7 @@ extern const char *PCSymbol;
 extern TConstMode ConstMode;
 extern Boolean ConstModeWeirdNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void);
-extern Boolean SwitchIsOccupied, PageIsOccupied;
+extern Boolean SwitchIsOccupied, PageIsOccupied, ShiftIsOccupied;
 extern Boolean (*DecodeAttrPart)(void);
 extern void (*MakeCode)(void);
 extern Boolean (*ChkPC)(LargeWord Addr);

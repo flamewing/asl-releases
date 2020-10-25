@@ -343,6 +343,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgJmpDistTooBig; break;
     case ErrNum_DistIsOdd:
       msgno = Num_ErrMsgDistIsOdd; break;
+    case ErrNum_SkipTargetMismatch:
+      msgno = Num_ErrMsgSkipTargetMismatch; break;
     case ErrNum_InvShiftArg:
       msgno = Num_ErrMsgInvShiftArg; break;
     case ErrNum_Only1:

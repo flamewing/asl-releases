@@ -123,8 +123,9 @@ const char *PCSymbol;	                 /* Symbol, womit Programmzaehler erreicht
 TConstMode ConstMode;
 Boolean ConstModeWeirdNoTerm;
 Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
-Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE ist Prozessorbefehl */
-        PageIsOccupied;
+Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE/SHIFT ist Prozessorbefehl */
+        PageIsOccupied,
+        ShiftIsOccupied;
 #ifdef __PROTOS__
 Boolean (*DecodeAttrPart)(void);         /* dissect attribute of instruction */
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */

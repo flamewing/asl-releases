@@ -1,3 +1,8 @@
+2020-10-25 [1.42 Bld 177]
+
+- Addition    : Add some 68xx instruction aliases used on other assemblers
+- Addition    : new target: KENBAK
+
 2020-10-19 [1.42 Bld 176]
 
 - Addition    : bit symbols for H8/300 and H8/500

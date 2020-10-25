@@ -143,6 +143,7 @@
 #include "codevector.h"
 #include "codexcore.h"
 #include "code1750.h"
+#include "codekenbak.h"
 /**          Code21xx};**/
 
 static char *FileMask;
@@ -2303,7 +2304,7 @@ static void Produce_Code(void)
       case 'S':
         /* shift macro arguments ? */
         Found = True;
-        if (Memo("SHIFT")) ExpandSHIFT();
+        if (Memo(ShiftIsOccupied ? "SHFT" : "SHIFT")) ExpandSHIFT();
         else Found = False;
         break;
       case 'I':
@@ -4211,6 +4212,7 @@ int main(int argc, char **argv)
     codevector_init();
     codexcore_init();
     code1750_init();
+    codekenbak_init();
     First = FALSE;
   }
 

@@ -563,7 +563,7 @@ chk:
 
 static void DissectBit_251(char *pDest, size_t DestSize, LargeWord Inp)
 {
-  as_snprintf(pDest, DestSize, "=%~02.*u%s.%u",
+  as_snprintf(pDest, DestSize, "%~02.*u%s.%u",
               ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),
               (unsigned)(Inp >> 24));
 }
@@ -2434,7 +2434,8 @@ static void DecodeBIT(Word Index)
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      DissectBit_251(ListLine, STRINGSIZE, AdrLong);
+      *ListLine = '=';
+      DissectBit_251(ListLine + 1, STRINGSIZE - 1, AdrLong);
       LimitListLine();
     }
   }

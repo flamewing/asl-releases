@@ -139,7 +139,9 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   QualifyQuote = NULL;
   SetIsOccupiedFnc = NULL;
   DecodeAttrPart = NULL;
-  SwitchIsOccupied = PageIsOccupied = False;
+  SwitchIsOccupied =
+  PageIsOccupied =
+  ShiftIsOccupied = False;
   ChkPC = DefChkPC;
   ASSUMERecCnt = 0;
   pASSUMERecs = NULL;

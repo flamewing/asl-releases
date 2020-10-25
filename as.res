@@ -373,6 +373,10 @@ Message ErrMsgDistIsOdd
  "Sprungdistanz ist ungerade"
  "jump distance is odd"
 
+Message ErrMsgSkipTargetMismatch
+ "Skip-Ziel passt nicht"
+ "skip target mismatch"
+
 Message ErrMsgInvShiftArg
  "ung&uuml;ltiges Schiebeargument"
  "invalid argument for shifting"

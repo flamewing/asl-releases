@@ -230,8 +230,8 @@ Boolean FloatRangeCheck(Double Wert, FloatType Typ)
 {
   /* NaN/Infinity is representable in all formats */
 
-  int class = as_fpclassify(Wert);
-  if ((class == AS_FP_NAN) || (class == AS_FP_INFINITE))
+  int numclass = as_fpclassify(Wert);
+  if ((numclass == AS_FP_NAN) || (numclass == AS_FP_INFINITE))
     return True;
 
   switch (Typ)
@@ -1397,6 +1397,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
     pErg->Typ = TempInt;
     pErg->Contents.Int = EProgCounter();
     pErg->Relocs = NULL;
+    pErg->AddrSpaceMask |= 1 << ActPC;
     LEAVE;
   }
 

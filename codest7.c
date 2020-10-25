@@ -594,7 +594,7 @@ static Boolean DecodeRegCore(const tStrComp *pArg, tAdrMode *pResult)
  * \brief  decode addressing expression, registers-only
  * \param  pArg argument
  * \param  pResult resulting mode
- * \param  Mask list of allowed masks
+ * \param  Mask list of allowed modes
  * \return True if argument is a CPU register
  * ------------------------------------------------------------------------ */
 

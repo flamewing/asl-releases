@@ -1,0 +1,7 @@
++----------------------- Test Application 68ALIAS ---------------------------+
+|                                                                            |
+| This test covers some instruction aliases for the 68xx.  They are not      |
+| mentioned in the 68HC11 Reference Manual, but some other assemblers seem   |
+| to use them...                                                             |
+|                                                                            |
++----------------------------------------------------------------------------+

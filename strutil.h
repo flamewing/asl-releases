@@ -90,6 +90,8 @@ extern void strutil_init(void);
 
 /* avoid nasty "subscript has type char..." messages on some platforms */
 
+#include <ctype.h>
+
 #define __chartouint(c) (((unsigned int)(c)) & 0xff)
 #define as_toupper(c) (toupper(__chartouint(c)))
 #define as_tolower(c) (tolower(__chartouint(c)))
