@@ -1,3 +1,9 @@
+2020-11-04 [1.42 Bld 178]
+
+- Addition    : Add DW and DB as aliases for BYT/ADR for 68xx targets
+- Addition    : Add MB assume value for MCS-48
+- Bugfix      : fix -r option on p2bin and p2hex
+
 2020-10-25 [1.42 Bld 177]
 
 - Addition    : Add some 68xx instruction aliases used on other assemblers

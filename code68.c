@@ -197,13 +197,16 @@ static void TranslateAddress(LongWord *Address)
 static Boolean DecodeAcc(const char *pArg, Byte *pReg)
 {
   static const char Regs[] = "AB";
-  char *pPos;
 
-  if ((strlen(pArg) == 1)
-   && ((pPos = strchr(Regs, as_toupper(*pArg)))))
+  if (strlen(pArg) == 1)
   {
-    *pReg = pPos - Regs;
-    return True;
+    const char *pPos = strchr(Regs, as_toupper(*pArg));
+
+    if (pPos)
+    {
+      *pReg = pPos - Regs;
+      return True;
+    }
   }
   return False;
 }
@@ -912,6 +915,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "TIM", 0x6b, DecodeBit63);
 
   AddInstTable(InstTable, "PRWINS", 0, DecodePRWINS);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 }
 
 static void DeinitFields(void)

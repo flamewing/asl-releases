@@ -1581,6 +1581,9 @@ static void InitFields(void)
   AddReg("SPH" , eRegSPH  , 0, CPU6812X);
   AddReg("CCRH", eRegCCRH , 0, CPU6812X);
   AddReg("CCRW", eRegCCRW , 1, CPU6812X);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 }
 
 static void DeinitFields(void)

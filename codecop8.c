@@ -669,8 +669,6 @@ static void DeinitFields(void)
 
 static void MakeCode_COP8(void)
 {
-  Boolean BigFlag;
-
   CodeLen = 0; DontPrint = False;
 
   /* zu ignorierendes */
@@ -679,9 +677,8 @@ static void MakeCode_COP8(void)
 
   /* Pseudoanweisungen */
 
-  if (DecodeNatPseudo(&BigFlag)) return;
-
-  if (DecodeIntelPseudo(BigFlag)) return;
+  if (DecodeNatPseudo()) return;
+  if (DecodeIntelPseudo(False)) return;
 
   if (!LookupInstTable(InstTable, OpPart.Str))
     WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

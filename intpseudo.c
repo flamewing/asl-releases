@@ -24,6 +24,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
+#include "asmitree.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
 
@@ -433,7 +434,7 @@ static Boolean LayoutByte(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     {
       unsigned z;
 
-      if (MultiCharToInt(&t, 4))
+      if (MultiCharToInt(&t, 1))
         goto ToInt;
 
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -557,7 +558,7 @@ static Boolean LayoutWord(const tStrComp *pExpr, struct sLayoutCtx *pCtx)
     {
       unsigned z;
 
-      if (MultiCharToInt(&t, 4))
+      if (MultiCharToInt(&t, 2))
         goto ToInt;
 
       TranslateString(t.Contents.Ascii.Contents, t.Contents.Ascii.Length);
@@ -1116,214 +1117,306 @@ func_exit:
   return Result;
 }
 
-Boolean DecodeIntelPseudo(Boolean BigEndian)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDx(tLayoutCtx *pLayoutCtx)
+ * \brief  Intel-style constant disposition
+ * \param  pLayoutCtx layout infos & context
+ * ------------------------------------------------------------------------ */
+
+static void DecodeIntelDx(tLayoutCtx *pLayoutCtx)
 {
   tStrComp *pArg;
   Boolean OK;
-  LongInt HVal;
-  char Ident;
 
-  if ((strlen(OpPart.Str) != 2) || (*OpPart.Str != 'D'))
-    return False;
-  Ident = OpPart.Str[1];
-
-  if ((Ident == 'B') || (Ident == 'W') || (Ident == 'D') || (Ident == 'Q') || (Ident == 'T') || (Ident == 'N'))
+  pLayoutCtx->DSFlag = DSNone;
+  pLayoutCtx->FullWordSize = Grans[ActPC];
+  pLayoutCtx->ElemsPerFullWord = (8 * pLayoutCtx->FullWordSize) / pLayoutCtx->BaseElemLenBits;
+  if (pLayoutCtx->ElemsPerFullWord > 1)
   {
-    tLayoutCtx LayoutCtx;
+    pLayoutCtx->FillIncPerElem.FullWordCnt = 0;
+    pLayoutCtx->FillIncPerElem.LastWordFill = 1;
+  }
+  else
+  {
+    pLayoutCtx->FillIncPerElem.FullWordCnt = pLayoutCtx->BaseElemLenBits / (8 * pLayoutCtx->FullWordSize);
+    pLayoutCtx->FillIncPerElem.LastWordFill = 0;
+  }
 
-    memset(&LayoutCtx, 0, sizeof(LayoutCtx));
-    LayoutCtx.DSFlag = DSNone;
-    LayoutCtx.FullWordSize = Grans[ActPC];
-    switch (Ident)
+  OK = True;
+  forallargs(pArg, OK)
+  {
+    if (!*pArg->Str)
     {
-      case 'N':
-        LayoutCtx.LayoutFunc = LayoutNibble;
-        LayoutCtx.BaseElemLenBits = 4;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put4I = Put4I_To_8;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate4_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put4I = Put4I_To_16;
-            LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
-            LayoutCtx.Replicate = Replicate4_To_16;
-            break;
-        }
-        break;
-      case 'B':
-        LayoutCtx.LayoutFunc = LayoutByte;
-        LayoutCtx.BaseElemLenBits = 8;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put8I = Put8I_To_8;
-            LayoutCtx.Replicate = Replicate8ToN_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put8I = Put8I_To_16;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate8_To_16;
-            break;
-        }
-        if (*LabPart.Str)
-          SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
-        break;
-      case 'W':
-        LayoutCtx.LayoutFunc = LayoutWord;
-        LayoutCtx.BaseElemLenBits = 16;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put16I = Put16I_To_8;
-            LayoutCtx.Put16F = Put16F_To_8;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate8ToN_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put16I = Put16I_To_16;
-            LayoutCtx.Put16F = Put16F_To_16;
-            LayoutCtx.Replicate = Replicate16ToN_To_16;
-            break;
-        }
-        if (*LabPart.Str)
-          SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
-        break;
-      case 'D':
-        LayoutCtx.LayoutFunc = LayoutDoubleWord;
-        LayoutCtx.BaseElemLenBits = 32;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put32I = Put32I_To_8;
-            LayoutCtx.Put32F = Put32F_To_8;
-            LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
-            LayoutCtx.Replicate = Replicate8ToN_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put32I = Put32I_To_16;
-            LayoutCtx.Put32F = Put32F_To_16;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate16ToN_To_16;
-            break;
-        }
-        if (*LabPart.Str)
-          SetSymbolOrStructElemSize(&LabPart, eSymbolSize32Bit);
-        break;
-      case 'Q':
-        LayoutCtx.LayoutFunc = LayoutQuadWord;
-        LayoutCtx.BaseElemLenBits = 64;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put64I = Put64I_To_8;
-            LayoutCtx.Put64F = Put64F_To_8;
-            LayoutCtx.LoHiMap = BigEndian ? 7 : 0;
-            LayoutCtx.Replicate = Replicate8ToN_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put64I = Put64I_To_16;
-            LayoutCtx.Put64F = Put64F_To_16;
-            LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
-            LayoutCtx.Replicate = Replicate16ToN_To_16;
-            break;
-        }
-        if (*LabPart.Str)
-          SetSymbolOrStructElemSize(&LabPart, eSymbolSize64Bit);
-        break;
-      case 'T':
-        LayoutCtx.LayoutFunc = LayoutTenBytes;
-        LayoutCtx.BaseElemLenBits = 80;
-        switch (Grans[ActPC])
-        {
-          case 1:
-            LayoutCtx.Put80F = Put80F_To_8;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate8ToN_To_8;
-            break;
-          case 2:
-            LayoutCtx.Put80F = Put80F_To_16;
-            LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
-            LayoutCtx.Replicate = Replicate16ToN_To_16;
-            break;
-        }
-        if (*LabPart.Str)
-          SetSymbolOrStructElemSize(&LabPart, eSymbolSize80Bit);
-        break;
-      default:
-        return False;
-    }
-    LayoutCtx.ElemsPerFullWord = (8 * LayoutCtx.FullWordSize) / LayoutCtx.BaseElemLenBits;
-    if (LayoutCtx.ElemsPerFullWord > 1)
-    {
-      LayoutCtx.FillIncPerElem.FullWordCnt = 0;
-      LayoutCtx.FillIncPerElem.LastWordFill = 1;
+      OK = FALSE;
+      WrStrErrorPos(ErrNum_EmptyArgument, pArg);
     }
     else
-    {
-      LayoutCtx.FillIncPerElem.FullWordCnt = LayoutCtx.BaseElemLenBits / (8 * LayoutCtx.FullWordSize);
-      LayoutCtx.FillIncPerElem.LastWordFill = 0;
-    }
-
-    OK = True;
-    forallargs(pArg, OK)
-    {
-      if (!*pArg->Str)
-      {
-        OK = FALSE;
-        WrStrErrorPos(ErrNum_EmptyArgument, pArg);
-      }
-      else
-        OK = DecodeIntelPseudo_LayoutMult(pArg, &LayoutCtx);
-    }
-
-    /* Finalize: add optional padding if fractions of full words
-       remain unused & set code length */
-
-    if (OK)
-    {
-      if (LayoutCtx.CurrCodeFill.LastWordFill)
-      {
-        WrError(ErrNum_PaddingAdded);
-        LayoutCtx.CurrCodeFill.LastWordFill = 0;
-        LayoutCtx.CurrCodeFill.FullWordCnt++;
-      }
-      CodeLen = LayoutCtx.CurrCodeFill.FullWordCnt;
-    }
-
-
-    DontPrint = (LayoutCtx.DSFlag == DSSpace);
-    if (DontPrint)
-    {
-      BookKeeping();
-      if (!CodeLen && OK) WrError(ErrNum_NullResMem);
-    }
-    if (OK && (LayoutCtx.FullWordSize == 1))
-      ActListGran = 1;
-    return True;
+      OK = DecodeIntelPseudo_LayoutMult(pArg, pLayoutCtx);
   }
 
-  if (Ident == 'S')
+  /* Finalize: add optional padding if fractions of full words
+     remain unused & set code length */
+
+  if (OK)
   {
-    if (ChkArgCnt(1, 1))
+    if (pLayoutCtx->CurrCodeFill.LastWordFill)
     {
-      tSymbolFlags Flags;
-
-      HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
-      if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
-      else if (OK)
-      {
-        DontPrint = True;
-        CodeLen = HVal;
-        if (!HVal)
-          WrError(ErrNum_NullResMem);
-        BookKeeping();
-      }
+      WrError(ErrNum_PaddingAdded);
+      pLayoutCtx->CurrCodeFill.LastWordFill = 0;
+      pLayoutCtx->CurrCodeFill.FullWordCnt++;
     }
-    return True;
+    CodeLen = pLayoutCtx->CurrCodeFill.FullWordCnt;
   }
 
-  return False;
+  DontPrint = (pLayoutCtx->DSFlag == DSSpace);
+  if (DontPrint)
+  {
+    BookKeeping();
+    if (!CodeLen && OK) WrError(ErrNum_NullResMem);
+  }
+  if (OK && (pLayoutCtx->FullWordSize == 1))
+    ActListGran = 1;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDN(Word BigEndian)
+ * \brief  Intel-style constant disposition - nibbles
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDN(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutNibble;
+  LayoutCtx.BaseElemLenBits = 4;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put4I = Put4I_To_8;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate4_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put4I = Put4I_To_16;
+      LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
+      LayoutCtx.Replicate = Replicate4_To_16;
+      break;
+  }
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDB(Word BigEndian)
+ * \brief  Intel-style constant disposition - bytes
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDB(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutByte;
+  LayoutCtx.BaseElemLenBits = 8;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put8I = Put8I_To_8;
+      LayoutCtx.Replicate = Replicate8ToN_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put8I = Put8I_To_16;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate8_To_16;
+      break;
+  }
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDW(Word BigEndian)
+ * \brief  Intel-style constant disposition - words
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDW(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutWord;
+  LayoutCtx.BaseElemLenBits = 16;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put16I = Put16I_To_8;
+      LayoutCtx.Put16F = Put16F_To_8;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate8ToN_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put16I = Put16I_To_16;
+      LayoutCtx.Put16F = Put16F_To_16;
+      LayoutCtx.Replicate = Replicate16ToN_To_16;
+      break;
+  }
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDD(Word BigEndian)
+ * \brief  Intel-style constant disposition - 32-bit words
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDD(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutDoubleWord;
+  LayoutCtx.BaseElemLenBits = 32;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put32I = Put32I_To_8;
+      LayoutCtx.Put32F = Put32F_To_8;
+      LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
+      LayoutCtx.Replicate = Replicate8ToN_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put32I = Put32I_To_16;
+      LayoutCtx.Put32F = Put32F_To_16;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate16ToN_To_16;
+      break;
+  }
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, eSymbolSize32Bit);
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDQ(Word BigEndian)
+ * \brief  Intel-style constant disposition - 64-bit words
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDQ(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutQuadWord;
+  LayoutCtx.BaseElemLenBits = 64;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put64I = Put64I_To_8;
+      LayoutCtx.Put64F = Put64F_To_8;
+      LayoutCtx.LoHiMap = BigEndian ? 7 : 0;
+      LayoutCtx.Replicate = Replicate8ToN_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put64I = Put64I_To_16;
+      LayoutCtx.Put64F = Put64F_To_16;
+      LayoutCtx.LoHiMap = BigEndian ? 3 : 0;
+      LayoutCtx.Replicate = Replicate16ToN_To_16;
+      break;
+  }
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, eSymbolSize64Bit);
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDT(Word BigEndian)
+ * \brief  Intel-style constant disposition - 80-bit words
+ * \param  BigEndian endianess
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDT(Word BigEndian)
+{
+  tLayoutCtx LayoutCtx;
+
+  memset(&LayoutCtx, 0, sizeof(LayoutCtx));
+  LayoutCtx.LayoutFunc = LayoutTenBytes;
+  LayoutCtx.BaseElemLenBits = 80;
+  switch (Grans[ActPC])
+  {
+    case 1:
+      LayoutCtx.Put80F = Put80F_To_8;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate8ToN_To_8;
+      break;
+    case 2:
+      LayoutCtx.Put80F = Put80F_To_16;
+      LayoutCtx.LoHiMap = BigEndian ? 1 : 0;
+      LayoutCtx.Replicate = Replicate16ToN_To_16;
+      break;
+  }
+  if (*LabPart.Str)
+    SetSymbolOrStructElemSize(&LabPart, eSymbolSize80Bit);
+  DecodeIntelDx(&LayoutCtx);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelDS(Word Code)
+ * \brief  Intel-style memory reservation
+ * ------------------------------------------------------------------------ */
+
+void DecodeIntelDS(Word Code)
+{
+  UNUSED(Code);
+
+  if (ChkArgCnt(1, 1))
+  {
+    tSymbolFlags Flags;
+    Boolean OK;
+    LongInt HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+
+    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
+    else if (OK)
+    {
+      DontPrint = True;
+      CodeLen = HVal;
+      if (!HVal)
+        WrError(ErrNum_NullResMem);
+      BookKeeping();
+    }
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeIntelPseudo(Boolean BigEndian)
+ * \brief  decode Intel-style pseudo instructions
+ * \param  BigEndian target endianess
+ * \return True if instruction found
+ * ------------------------------------------------------------------------ */
+
+Boolean DecodeIntelPseudo(Boolean BigEndian)
+{
+  static PInstTable InstTables[2] = { NULL, NULL };
+  int Idx = !!BigEndian;
+
+  if (!InstTables[Idx])
+  {
+    PInstTable InstTable = CreateInstTable(17);
+    AddInstTable(InstTable, "DN", BigEndian, DecodeIntelDN);
+    AddInstTable(InstTable, "DB", BigEndian, DecodeIntelDB);
+    AddInstTable(InstTable, "DW", BigEndian, DecodeIntelDW);
+    AddInstTable(InstTable, "DD", BigEndian, DecodeIntelDD);
+    AddInstTable(InstTable, "DQ", BigEndian, DecodeIntelDQ);
+    AddInstTable(InstTable, "DT", BigEndian, DecodeIntelDT);
+    AddInstTable(InstTable, "DS", 0, DecodeIntelDS);
+    InstTables[Idx] = InstTable;
+  }
+  return LookupInstTable(InstTables[Idx], OpPart.Str);
+}
+

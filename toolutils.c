@@ -413,7 +413,7 @@ extern CMDResult CMD_Range(LongWord *pStartAddr, LongWord *pStopAddr,
   if (*pStartAuto)
     ok = True;
   else
-    *pStartAddr = ConstLongInt(Arg, &ok, 10);
+    *pStartAddr = ConstLongInt(StartStr, &ok, 10);
   if (!ok)
     return CMDErr;
 

@@ -460,8 +460,6 @@ static void DeinitFields(void)
 
 static void MakeCode_COP4(void)
 {
-  Boolean BigFlag;
-
   CodeLen = 0; DontPrint = False;
 
   /* zu ignorierendes */
@@ -470,9 +468,8 @@ static void MakeCode_COP4(void)
 
   /* pseudo instructions */
 
-  if (DecodeNatPseudo(&BigFlag)) return;
-
-  if (DecodeIntelPseudo(BigFlag)) return;
+  if (DecodeNatPseudo()) return;
+  if (DecodeIntelPseudo(False)) return;
 
   /* machine instructions */
 

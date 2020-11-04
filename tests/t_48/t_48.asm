@@ -178,3 +178,15 @@ Myreg	reg	r2
         sel     an1
         rad
 
+	cpu	8039
+
+	assume	mb:nothing
+	jmp	856h		; auto-inserts SEL MB1
+
+	assume	mb:0
+	expect	110
+	jmp	856h		; explicitly wrong bank
+	endexpect
+
+	assume	mb:1
+	jmp	856h		; no SEL instruction inserted

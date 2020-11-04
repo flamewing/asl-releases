@@ -88,7 +88,7 @@ static void PutByte(Byte Value)
   CodeLen++;
 }
 
-static void DecodeBYT(Word Index)
+void DecodeMotoBYT(Word Index)
 {
   UNUSED(Index);
 
@@ -230,7 +230,7 @@ static void PutADR(Word Value)
   }
 }
 
-static void DecodeADR(Word Index)
+void DecodeMotoADR(Word Index)
 {
   UNUSED(Index);
 
@@ -404,7 +404,7 @@ static void DecodeFCC(Word Index)
   }
 }
 
-static void DecodeDFS(Word Index)
+void DecodeMotoDFS(Word Index)
 {
   UNUSED(Index);
 
@@ -441,13 +441,13 @@ Boolean DecodeMotoPseudo(Boolean Turn)
   if (!InstTable)
   {
     InstTable = CreateInstTable(17);
-    AddInstTable(InstTable, "BYT", 0, DecodeBYT);
-    AddInstTable(InstTable, "FCB", 0, DecodeBYT);
-    AddInstTable(InstTable, "ADR", 0, DecodeADR);
-    AddInstTable(InstTable, "FDB", 0, DecodeADR);
+    AddInstTable(InstTable, "BYT", 0, DecodeMotoBYT);
+    AddInstTable(InstTable, "FCB", 0, DecodeMotoBYT);
+    AddInstTable(InstTable, "ADR", 0, DecodeMotoADR);
+    AddInstTable(InstTable, "FDB", 0, DecodeMotoADR);
     AddInstTable(InstTable, "FCC", 0, DecodeFCC);
-    AddInstTable(InstTable, "DFS", 0, DecodeDFS);
-    AddInstTable(InstTable, "RMB", 0, DecodeDFS);
+    AddInstTable(InstTable, "DFS", 0, DecodeMotoDFS);
+    AddInstTable(InstTable, "RMB", 0, DecodeMotoDFS);
   }
 
   M16Turn = Turn;

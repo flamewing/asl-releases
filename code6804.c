@@ -421,6 +421,10 @@ static void InitFields(void)
   AddALU("SUB", 0x03);
   AddALU("CMP", 0x04);
   AddALU("AND", 0x05);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
+  AddInstTable(InstTable, "DS", 0, DecodeMotoDFS);
 }
 
 static void DeinitFields(void)

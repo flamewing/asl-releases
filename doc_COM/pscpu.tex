@@ -27,8 +27,7 @@ DC[.$<$size$>$] \> DS[.$<$size$>$] \> REG \> SUPMODE \\
 \subsubsection{Motorola XGATE}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$]
-\\
+ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$] \\
 FCB        \> FCC         \> FDB         \> PADDING     \> REG \\
 RMB \\
 \end{tabbing}}
@@ -36,53 +35,57 @@ RMB \\
 \subsubsection{Motorola 68xx/Hitachi 63xx}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$] \\
-FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
+ADR        \> BYT         \> DB          \> DC[.$<$size$>$] \> DFS     \\
+DS[.$<$size$>$] \> DW     \> FCB         \> FCC         \> FDB         \\
+PADDING     \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Motorola/Freescale 6805/68HC(S)08}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$] \\
-FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
+ADR        \> BYT         \> DB          \> DC[.$<$size$>$] \> DFS     \\
+DS[.$<$size$>$] \> DW     \> FCB         \> FCC         \> FDB         \\
+PADDING     \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Motorola 6809/Hitachi 6309}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> ASSUME      \> BYT         \> DC[.$<$size$>$] \\
-DFS        \> DS[.$<$size$>$] \> FCB     \> FCC \\
-FDB         \> PADDING     \> RMB \\
+ADR        \> ASSUME      \> BYT         \> DB          \> DC[.$<$size$>$] \\
+DFS        \> DS[.$<$size$>$] \> DW      \> FCB         \> FCC \\
+FDB        \> PADDING     \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Motorola 68HC12}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DC[.$<$size$>$] \> DFS     \> DS[.$<$size$>$] \\
-FCB        \> FCC         \> FDB         \> PADDING     \> RMB \\
+ADR        \> BYT         \> DB          \> DC[.$<$size$>$] \> DFS     \\
+DS[.$<$size$>$] DW        \> FCB         \> FCC         \> FDB \\
+PADDING     \> RMB \\
 \end{tabbing}}
 
 \subsubsection{NXP S12Z}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DC[.$<$size$>$] \> DEFBIT  \> DEFBITFIELD \\
-DFS        \> DS[.$<$size$>$] \> FCB         \> FCC     \> FDB         \\
-PADDING     \> RMB \\
+ADR        \> BYT         \> DB          \> DC[.$<$size$>$] \> DEFBIT \\
+DEFBITFIELD \> DFS        \> DS[.$<$size$>$] \> DW          \> FCB \\
+FCC     \> FDB \> PADDING \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Motorola 68HC16}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> ASSUME      \> BYT         \> DC[.$<$size$>$] \> DFS \\
-DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
-RMB \\
+ADR        \> ASSUME      \> BYT         \> DB          \> DC[.$<$size$>$] \\
+DFS        \> DS[.$<$size$>$] \> DW      \> FCB         \> FCC \\
+FDB         \> PADDING    \> RMB \\
 \end{tabbing}}
 
 \subsubsection{Freescale 68RS08}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> ASSUME      \> BYT         \> DC[.$<$size$>$] \> DFS \\
-DS[.$<$size$>$] FCB       \> FCC         \> FDB         \> PADDING \\
+ADR        \> ASSUME      \> BYT         \> DB          \> DC[.$<$size$>$] \\
+DFS        \> DS[.$<$size$>$] \> DW      \> FCB         \> FCC \\
+FDB         \> PADDING \\
 \end{tabbing}}
 
 \subsubsection{Hitachi H8/300(L/H)}
@@ -169,8 +172,8 @@ DT         \> DW \\
 \subsubsection{Intel MCS-48}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-DB         \> DD          \> DN          \> DQ          \> DS \\
-DT         \> DW          \> REG \\
+ASSUME     \> DB         \> DD          \> DN          \> DQ \\
+DS         \> DT         \> DW          \> REG \\
 \end{tabbing}}
 
 \subsubsection{Intel MCS-(2)51}
@@ -365,8 +368,9 @@ DQ         \> DS          \> DT          \> DW          \> REG \\
 \subsubsection{6804}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-ADR        \> BYT         \> DFS         \> FCB         \> FCC \\
-FDB        \> RMB         \> SFR \\
+ADR        \> BYT         \> DB          \> DFS         \> DS \\
+DW         \> FCB         \> FCC         \> FDB         \> RMB \\
+SFR \\
 \end{tabbing}}
 
 \subsubsection{Texas TMS3201x}
@@ -592,5 +596,6 @@ DATA       \> EXTENDED    \> FLOAT \\
 \subsubsection{KENBAK}
 {\tt\begin{tabbing}
 \hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\hspace{3cm}\=\kill
-BIT        \> REG \\
+BIT        \> DB          \> DD          \> DN          \> DQ \\
+DS         \> DT          \> DW          \> REG \\
 \end{tabbing}}

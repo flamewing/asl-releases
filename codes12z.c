@@ -2604,6 +2604,9 @@ static void InitFields(void)
 
   AddInstTable(InstTable, "DEFBIT", 0, DecodeDEFBIT);
   AddInstTable(InstTable, "DEFBITFIELD", 0, DecodeDEFBITFIELD);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 }
 
 static void DeinitFields(void)

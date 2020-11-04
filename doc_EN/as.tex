@@ -8139,25 +8139,34 @@ integers in the range from 0 to E resp. 1 to F.  The equation {\tt m = n +
 
 \section{MCS-48}
 
-The maximum address space of these processors is 4 Kbytes large.  This
-address space is not organized in a linear way (how could this be on an
-Intel CPU...).  Instead, it is split into 2 banks of 2 Kbytes.  The only
-way to change the program counter from one bank to the other are the
-instructions \tty{CALL} and \tty{JMP}, by setting the most significant bit
-of the address with the instructions \tty{SEL MB0} resp. \tty{SEL MB1}.
+The maximum address space of these processors is 4 Kbytes, resp.  up to
+8 Kbytes on some Philips varaints.  This address space is not organized
+in a linear way (how could this be on an Intel CPU...).  Instead, it is
+split into 2 banks of 2 Kbytes.  The only way to change the program
+counter from one bank to the other are the instructions \tty{CALL} and
+\tty{JMP}, by setting the most significant bit of the address with the
+instructions \tty{SEL MB0} to \tty{SEL MB3}.
 
-To simplify jumps between these two banks, the instructions \tty{JMP} and
-\tty{CALL} contain an automatism that inserts one of these two instructions
-if the current program counter and the target address are in
-different banks.  Explicit usage of these \tty{SEL MBx} instructions should
-therefore not be necessary (though it is possible), and it can puzzle
-the automatism, like in the following example:
+The assembler may be informed about the bank currently being selected for
+jumps and calls, via an {\tt ASSUME} statement:
+\begin{verbatim}
+         ASSUME MB:<0..3>
+\end{verbatim}
+If one tries to jump to an address in a different bank, a warnig is
+issued.
+
+If the special value {\tt NOTHING} is used (this is by the way the
+default), an automatism uilt into \tty{JMP} and \tty{CALL} is activated.
+It will insert a {\tt SEL MBx} instruction if the current program counter
+and the target address are located in different banks.  Explicit usage of
+\tty{SEL MBx} instructions is no longer necessary (though it remains possible),
+and it might interfere with this mechanism, like in the following example:
 \begin{verbatim}
  000:  SEL      MB1
        JMP      200h
 \end{verbatim}
 AS assumes that the MB flag is 0 and therefore does not insert a \tty{SEL
-MBO} instruction, with the result that the CPU jumps to address
+MB0} instruction, with the result that the CPU jumps to address
 A00h.
 
 Furthermore, one should keep in mind that a jump instruction might
@@ -12155,8 +12164,13 @@ additionally available for a certain processor family.
 
 \subsubsection{Instructions that are always available}
 \input{../doc_COM/pscomm.tex}
-There is an additional \tty{SET} resp. \tty{EVAL} instruction (in case
-\tty{SET} is already a machine instruction).
+Additionally, there are:
+\begin{itemize}
+\item{\tty{SET} resp. \tty{EVAL}, in case \tty{SET} is already a machine
+      instruction.}
+\item{\tty{SHIFT} resp. \tty{SHFT}, in case \tty{SHIFT} is already a machine
+      instruction.}
+\end{itemize}
 
 \input{../doc_COM/pscpu.tex}
 

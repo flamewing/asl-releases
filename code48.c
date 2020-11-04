@@ -72,6 +72,8 @@ typedef enum
 #define eCPUFlagSerial (1ul << 22)
 #define eCPUFlag84xx (1ul << 23)
 
+#define MB_NOTHING 0xff
+
 typedef struct
 {
   const char *pName;
@@ -88,6 +90,7 @@ static Byte AdrVal;
 static const char **ClrCplVals;
 static Byte *ClrCplCodes;
 static SelOrder *SelOrders;
+static LongInt Reg_MB;
 
 /****************************************************************************/
 
@@ -383,11 +386,19 @@ static void DecodeCALL_JMP(Word Code)
       if (AdrWord > SegLimits[SegCode]) WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
       else
       {
-        if ((((int)EProgCounter()) & 0x800) != (AdrWord & 0x800))
+        Word DestBank = (AdrWord >> 11) & 3,
+             CurrBank = (EProgCounter() >> 11) & 3;
+
+        if (Reg_MB == MB_NOTHING)
         {
-          BAsmCode[0] = 0xe5 + ((AdrWord & 0x800) >> 7);
-          CodeLen = 1;
+          if (CurrBank != DestBank)
+          {
+            BAsmCode[0] = SelOrders[DestBank].Code;
+            CodeLen = 1;
+          }
         }
+        else if (DestBank != Reg_MB)
+          WrStrErrorPos(ErrNum_InAccPage, &ArgStr[1]);
         BAsmCode[CodeLen + 1] = AdrWord & 0xff;
         BAsmCode[CodeLen] = Code + ((AdrWord & 0x700) >> 3);
         CodeLen += 2;
@@ -1303,6 +1314,8 @@ static void InitFields(void)
   AddAcc("RRC" , 0x67);
   AddAcc("SWAP", 0x47);
 
+  /* Leave MBx first, used by CALL/JMP! */
+
   SelOrders = (SelOrder *) malloc(sizeof(SelOrder) * SelOrderCnt); InstrZ = 0;
   AddSel("MB0" , 0xe5);
   AddSel("MB1" , 0xf5);
@@ -1374,9 +1387,21 @@ static void SwitchFrom_48(void)
   DeinitFields();
 }
 
+static void InitCode_48(void)
+{
+  Reg_MB = MB_NOTHING;
+}
+
 static void SwitchTo_48(void *pUser)
 {
+#define ASSUME48Count (sizeof(ASSUME48s) / sizeof(*ASSUME48s))
+  static ASSUMERec ASSUME48s[] =
+  {
+    { "MB"   , &Reg_MB   , 0,  1, MB_NOTHING, NULL },
+  };
+
   pCurrCPUProps = (const tCPUProps*)pUser;
+  ASSUME48s[0].Max = (pCurrCPUProps->CodeSize >> 11) & 3;
 
   TurnWords = False;
   ConstMode = ConstModeIntel;
@@ -1408,6 +1433,9 @@ static void SwitchTo_48(void *pUser)
   DissectReg = DissectReg_48;
   SwitchFrom = SwitchFrom_48;
   InitFields();
+
+  pASSUMERecs = ASSUME48s;
+  ASSUMERecCnt = ASSUME48Count;
 }
 
 /* Limit code segment size only for variants known to have no
@@ -1439,4 +1467,6 @@ void code48_init(void)
 
   for (pProp = CPUProps; pProp->pName; pProp++)
     (void)AddCPUUser(pProp->pName, SwitchTo_48, (void*)pProp, NULL);
+
+  AddInitPassProc(InitCode_48);
 }

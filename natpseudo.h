@@ -9,18 +9,11 @@
 /* Pseudo Instructions commonly used on National targets                     */
 /*                                                                           */
 /*****************************************************************************/
-/* $Id: natpseudo.h,v 1.1 2006/04/09 12:40:11 alfred Exp $                   */
-/***************************************************************************** 
- * $Log: natpseudo.h,v $
- * Revision 1.1  2006/04/09 12:40:11  alfred
- * - unify COP pseudo instructions
- *
- *****************************************************************************/
 
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
 
-extern Boolean DecodeNatPseudo(Boolean *pBigFlag);
+extern Boolean DecodeNatPseudo(void);
 
 #endif /* _NATPSEUDO_H */

@@ -1054,6 +1054,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "JSR", 1, DecodeJmpJsr);
   AddInstTable(InstTable, "BSR", 0, DecodeBsr);
 
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
+
   Regs = (const char **) malloc(sizeof(char *) * RegCnt);
   Regs[0] = "D"; Regs[1] = "E"; Regs[2] = "X"; Regs[3] = "Y";
   Regs[4] = "Z"; Regs[5] = "K"; Regs[6] = "CCR";

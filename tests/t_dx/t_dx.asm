@@ -77,15 +77,9 @@
 	db	255
 	db	-128
 	db	'A'
-	expect	1320
-	db	'AB'
-	endexpect
-	expect	1320
-	db	'ABC'
-	endexpect
-	expect	1320
-	db	'ABCD'
-	endexpect
+	db	'AB'		; treat like "AB"
+	db	'ABC'		; treat like "ABC"
+	db	'ABCD'		; treat like "ABCD"
 	db	"A"
 	db	"AB"
 	db	"ABC"
@@ -96,12 +90,8 @@
 	dw	-32768
 	dw	'A'
 	dw	'AB'
-	expect	1320
-	dw	'ABC'
-	endexpect
-	expect	1320
-	dw	'ABCD'
-	endexpect
+	dw	'ABC'		; treat like "ABC"
+	dw	'ABCD'		; treat like "ABCD"
 	dw	"A"
 	dw	"AB"
 	dw	"ABC"

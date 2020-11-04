@@ -644,27 +644,6 @@ static void DecodeASCII_ASCIZ(Word IsZ)
   }
 }
 
-static void DecodeBYTE(Word Code)
-{
-  UNUSED(Code);
-  strmaxcpy(OpPart.Str, "BYT", STRINGSIZE);
-  DecodeMotoPseudo(False);
-}
-
-static void DecodeWORD(Word Code)
-{
-  UNUSED(Code);
-  strmaxcpy(OpPart.Str, "ADR", STRINGSIZE);
-  DecodeMotoPseudo(False);
-}
-
-static void DecodeBLOCK(Word Code)
-{
-  UNUSED(Code);
-  strmaxcpy(OpPart.Str, "DFS", STRINGSIZE);
-  DecodeMotoPseudo(False);
-}
-
 /*!------------------------------------------------------------------------
  * \fn     DecodeBIT(Word Code)
  * \brief  decode BIT instruction
@@ -751,9 +730,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "SFR", 0, DecodeSFR);
   AddInstTable(InstTable, "ASCII", 0, DecodeASCII_ASCIZ);
   AddInstTable(InstTable, "ASCIZ", 1, DecodeASCII_ASCIZ);
-  AddInstTable(InstTable, "BYTE", 0, DecodeBYTE);
-  AddInstTable(InstTable, "WORD", 0, DecodeWORD);
-  AddInstTable(InstTable, "BLOCK", 0, DecodeBLOCK);
+  AddInstTable(InstTable, "BYTE", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "WORD", 0, DecodeMotoADR);
+  AddInstTable(InstTable, "BLOCK", 0, DecodeMotoDFS);
   AddInstTable(InstTable, "BIT", 0, DecodeBIT);
 
   AddFixed("NOP" , 0x04);

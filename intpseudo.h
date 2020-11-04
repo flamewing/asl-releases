@@ -13,6 +13,13 @@
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
+
+extern void DecodeIntelDN(Word BigEndian);
+extern void DecodeIntelDB(Word BigEndian);
+extern void DecodeIntelDW(Word BigEndian);
+extern void DecodeIntelDD(Word BigEndian);
+extern void DecodeIntelDQ(Word BigEndian);
+extern void DecodeIntelDT(Word BigEndian);
    
 extern Boolean DecodeIntelPseudo(Boolean BigEndian);
 

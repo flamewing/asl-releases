@@ -970,6 +970,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "BSET", 0x00, DecodeBx);
   AddInstTable(InstTable, "BRCLR", 0x01, DecodeBRx);
   AddInstTable(InstTable, "BRSET", 0x00, DecodeBRx);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 }
 
 static void DeinitFields(void)

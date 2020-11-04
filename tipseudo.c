@@ -17,6 +17,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "strutil.h"
 #include "endian.h"
 #include "ieeefloat.h"
 #include "asmdef.h"
@@ -235,220 +236,348 @@ static void wr_code_byte_lohi(Boolean *ok, int *adr, LongInt val, tSymbolFlags F
   CodeLen = ((*adr) + 1) / 2;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFLOAT(Word Code)
+ * \brief  decode FLOAT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeFLOAT(Word Code)
+{
+  Boolean ok;
+  tStrComp *pArg;
+  Byte Dest[4];
+
+  UNUSED(Code);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
+  define_untyped_label();
+  ok = True;
+  if (SetMaxCodeLen(ArgCnt * 4))
+    return;
+  forallargs (pArg, ok)
+  {
+    if (!*pArg->Str)
+    {
+      ok = False;
+      break;
+    }
+    Double_2_ieee4(EvalStrFloatExpression(pArg, Float32, &ok), Dest, False);
+    WAsmCode[CodeLen++] = (Word)Dest[0] | ((Word)Dest[1]) << 8;
+    WAsmCode[CodeLen++] = (Word)Dest[2] | ((Word)Dest[3]) << 8;
+  }
+  if (!ok)
+    CodeLen = 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeDOUBLE(Word Code)
+ * \brief  decode DOUBLE instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeDOUBLE(Word Code)
+{
+  Boolean ok;
+  tStrComp *pArg;
+  Byte Dest[8];
+
+  UNUSED(Code);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
+  define_untyped_label();
+  ok = True;
+  if (SetMaxCodeLen(ArgCnt * 8))
+    return;
+  forallargs (pArg, ok)
+  {
+    if (!*pArg->Str)
+    {
+      ok = False;
+      break;
+    }
+    Double_2_ieee8(EvalStrFloatExpression(pArg, Float64, &ok), Dest, False);
+    WAsmCode[CodeLen++] = (Word)Dest[0] | ((Word)Dest[1]) << 8;
+    WAsmCode[CodeLen++] = (Word)Dest[2] | ((Word)Dest[3]) << 8;
+    WAsmCode[CodeLen++] = (Word)Dest[4] | ((Word)Dest[5]) << 8;
+    WAsmCode[CodeLen++] = (Word)Dest[6] | ((Word)Dest[7]) << 8;
+  }
+  if (!ok)
+    CodeLen = 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeEFLOAT(Word Code)
+ * \brief  decode EFLOAT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeEFLOAT(Word Code)
+{
+  Boolean ok;
+  tStrComp *pArg;
+  double dbl, mant;
+  int exp;
+
+  UNUSED(Code);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
+  define_untyped_label();
+  ok = True;
+  if (SetMaxCodeLen(ArgCnt * 4))
+    return;
+  forallargs (pArg, ok)
+  {
+    if (!*pArg->Str)
+    {
+      ok = False;
+      break;
+    }
+    dbl = EvalStrFloatExpression(pArg, Float64, &ok);
+    mant = frexp(dbl, &exp);
+    WAsmCode[CodeLen++] = ldexp(mant, 15);
+    WAsmCode[CodeLen++] = exp - 1;
+  }
+  if (!ok)
+    CodeLen = 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBFLOAT(Word Code)
+ * \brief  decode BFLOAT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeBFLOAT(Word Code)
+{
+  Boolean ok;
+  tStrComp *pArg;
+  double dbl, mant;
+  long lmant;
+  int exp;
+
+  UNUSED(Code);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
+  define_untyped_label();
+  ok = True;
+  if (SetMaxCodeLen(ArgCnt * 6))
+    return;
+  forallargs (pArg, ok)
+  {
+    if (!*pArg->Str)
+    {
+      ok = False;
+      break;
+    }
+    dbl = EvalStrFloatExpression(pArg, Float64, &ok);
+    mant = frexp(dbl, &exp);
+    lmant = ldexp(mant, 31);
+    WAsmCode[CodeLen++] = (lmant & 0xffff);
+    WAsmCode[CodeLen++] = (lmant >> 16);
+    WAsmCode[CodeLen++] = exp - 1;
+  }
+  if (!ok)
+    CodeLen = 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeTFLOAT(Word Code)
+ * \brief  decode TFLOAT instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeTFLOAT(Word Code)
+{
+  Boolean ok;
+  tStrComp *pArg;
+  double dbl, mant;
+  int exp;
+
+  UNUSED(Code);
+
+  if (!ChkArgCnt(1, ArgCntMax))
+    return;
+  define_untyped_label();
+  ok = True;
+  if (SetMaxCodeLen(ArgCnt * 12))
+    return;
+  forallargs (pArg, ok)
+  {
+    if (!*pArg->Str)
+    {
+      ok = False;
+      break;
+    }
+    dbl = EvalStrFloatExpression(pArg, Float64, &ok);
+    mant = frexp(dbl, &exp);
+    mant = modf(ldexp(mant, 15), &dbl);
+    WAsmCode[CodeLen + 3] = dbl;
+    mant = modf(ldexp(mant, 16), &dbl);
+    WAsmCode[CodeLen + 2] = dbl;
+    mant = modf(ldexp(mant, 16), &dbl);
+    WAsmCode[CodeLen + 1] = dbl;
+    mant = modf(ldexp(mant, 16), &dbl);
+    WAsmCode[CodeLen] = dbl;
+    CodeLen += 4;
+    WAsmCode[CodeLen++] = ((exp - 1) & 0xffff);
+    WAsmCode[CodeLen++] = ((exp - 1) >> 16);
+  }
+  if (!ok)
+    CodeLen = 0;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeSTRING(Word Code)
+ * \brief  decode STRING instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeSTRING(Word Code)
+{
+  UNUSED(Code);
+
+  pseudo_store(wr_code_byte_hilo, 1); 
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeRSTRING(Word Code)
+ * \brief  decode RSTRING instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeRSTRING(Word Code)
+{
+  UNUSED(Code);
+
+  pseudo_store(wr_code_byte_lohi, 1); 
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBYTE(Word Code)
+ * \brief  decode BYTE instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeBYTE(Word Code)
+{
+  UNUSED(Code);
+
+  pseudo_store(wr_code_byte, 1); 
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeWORD(Word Code)
+ * \brief  decode WORD instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeWORD(Word Code)
+{
+  UNUSED(Code);
+
+  pseudo_store(wr_code_word, 2); 
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeLONG(Word Code)
+ * \brief  decode LONG instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeLONG(Word Code)
+{
+  UNUSED(Code);
+
+  pseudo_store(wr_code_long, 4); 
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBSS(Word Code)
+ * \brief  decode BSS instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeBSS_TI(Word Code)
+{
+  UNUSED(Code);
+
+  define_untyped_label();
+  DecodeRES(Code);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeDATA_TI(Word Code)
+ * \brief  decode TI-specific DATA instruction
+ * ------------------------------------------------------------------------ */
+
+static void DecodeDATA_TI(Word Code)
+{
+  UNUSED(Code);
+  DecodeDATA(Int16, Int16);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     Boolean Is99(const char *pStr, Integer *pNum)
+ * \brief  does string end with number 00...99?
+ * \param  pStr string to check
+ * \param  pNum appended number if yes
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean Is99(const char *pStr, Integer *pNum)
+{
+  int l = strlen(pStr);
+
+  if ((l >= 3)
+   && as_isdigit(pStr[l - 2])
+   && as_isdigit(pStr[l - 1]))
+  {
+    *pNum = 10 * (pStr[l - 2] - '0') + (pStr[l - 1] - '0');
+    return True;
+  }
+  return False;
+}
+
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
 
 Boolean DecodeTIPseudo(void)
 {
-  Boolean ok;
-  tStrComp *pArg;
-  int exp;
-  double dbl, mant;
-  float flt;
-  long lmant;
-  Word w;
-
-  if (Memo("RES") || Memo("BSS"))
-  {
-    if (Memo("BSS"))
-      define_untyped_label();
-    DecodeRES(0);
-    return True;
-  }
-
-  if (Memo("DATA"))
-  {
-    DecodeDATA(Int16, Int16);
-    return True;
-  }
-
-  if (Memo("STRING"))
-  {
-    pseudo_store(wr_code_byte_hilo, 1); 
-    return True;
-  }
-  if (Memo("RSTRING"))
-  {
-    pseudo_store(wr_code_byte_lohi, 1); 
-    return True;
-  }
-  if (Memo("BYTE"))
-  {
-    pseudo_store(wr_code_byte, 1); 
-    return True;
-  }
-  if (Memo("WORD"))
-  {
-    pseudo_store(wr_code_word, 2); 
-    return True;
-  }
-  if (Memo("LONG"))
-  {
-    pseudo_store(wr_code_long, 4); 
-    return True;
-  }
+  static PInstTable InstTable;
+  Integer Num;
 
   /* Qxx */
 
-  if ((OpPart.Str[0] == 'Q') && (OpPart.Str[1] >= '0') && (OpPart.Str[1] <= '9') &&
-     (OpPart.Str[2] >= '0') && (OpPart.Str[2] <= '9') && (OpPart.Str[3] == '\0'))
+  if (!as_strncasecmp(OpPart.Str, "Q", 1)
+   && Is99(OpPart.Str, &Num))
   {
-    pseudo_qxx(10 * (OpPart.Str[1] - '0') + OpPart.Str[2] - '0');
+    pseudo_qxx(Num);
     return True;
   }
 
   /* LQxx */
 
-  if ((OpPart.Str[0] == 'L') && (OpPart.Str[1] == 'Q') && (OpPart.Str[2] >= '0') && 
-     (OpPart.Str[2] <= '9') && (OpPart.Str[3] >= '0') && (OpPart.Str[3] <= '9') && 
-     (OpPart.Str[4] == '\0'))
+  if (!as_strncasecmp(OpPart.Str, "LQ", 2)
+   && Is99(OpPart.Str, &Num))
   {
-    pseudo_lqxx(10 * (OpPart.Str[2] - '0') + OpPart.Str[3] - '0');
+    pseudo_lqxx(Num);
     return True;
   }
 
-  /* Floating point definitions */
-
-  if (Memo("FLOAT"))
+  if (!InstTable)
   {
-    if (!ChkArgCnt(1, ArgCntMax))
-      return True;
-    define_untyped_label();
-    ok = True;
-    forallargs (pArg, ok)
-    {
-      if (!*pArg->Str)
-      {
-        ok = False;
-        break;
-      }
-      flt = EvalStrFloatExpression(pArg, Float32, &ok);
-      memcpy(WAsmCode+CodeLen, &flt, sizeof(float));
-      if (BigEndian)
-      {
-        w = WAsmCode[CodeLen];
-        WAsmCode[CodeLen] = WAsmCode[CodeLen+1];
-        WAsmCode[CodeLen+1] = w;
-      }
-      CodeLen += sizeof(float)/2;
-    }
-    if (!ok)
-      CodeLen = 0;
-    return True;
+    InstTable = CreateInstTable(23);
+    AddInstTable(InstTable, "RES"    , 0, DecodeRES);
+    AddInstTable(InstTable, "BSS"    , 0, DecodeBSS_TI);
+    AddInstTable(InstTable, "DATA"   , 0, DecodeDATA_TI);
+    AddInstTable(InstTable, "STRING" , 0, DecodeSTRING);
+    AddInstTable(InstTable, "RSTRING", 0, DecodeRSTRING);
+    AddInstTable(InstTable, "BYTE"   , 0, DecodeBYTE);
+    AddInstTable(InstTable, "WORD"   , 0, DecodeWORD);
+    AddInstTable(InstTable, "LONG"   , 0, DecodeLONG);
+    AddInstTable(InstTable, "FLOAT"  , 0, DecodeFLOAT);
+    AddInstTable(InstTable, "DOUBLE" , 0, DecodeDOUBLE);
+    AddInstTable(InstTable, "EFLOAT" , 0, DecodeEFLOAT);
+    AddInstTable(InstTable, "BFLOAT" , 0, DecodeBFLOAT);
+    AddInstTable(InstTable, "TFLOAT" , 0, DecodeTFLOAT);
   }
 
-  if (Memo("DOUBLE"))
-  {
-    if (!ChkArgCnt(1, ArgCntMax))
-      return True;
-    define_untyped_label();
-    ok = True;
-    forallargs (pArg, ok)
-    {
-      if (!*pArg->Str)
-      {
-        ok = False;
-        break;
-      }
-      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
-      memcpy(WAsmCode+CodeLen, &dbl, sizeof(dbl));
-      if (BigEndian)
-      {
-        w = WAsmCode[CodeLen];
-        WAsmCode[CodeLen] = WAsmCode[CodeLen+3];
-        WAsmCode[CodeLen+3] = w;
-        w = WAsmCode[CodeLen+1];
-        WAsmCode[CodeLen+1] = WAsmCode[CodeLen+2];
-        WAsmCode[CodeLen+2] = w;
-      }
-      CodeLen += sizeof(dbl)/2;
-    }
-    if (!ok)
-      CodeLen = 0;
-    return True;
-  }
-
-  if (Memo("EFLOAT"))
-  {
-    if (!ChkArgCnt(1, ArgCntMax))
-      return True;
-    define_untyped_label();
-    ok = True;
-    forallargs (pArg, ok)
-    {
-      if (!*pArg->Str)
-      {
-        ok = False;
-        break;
-      }
-      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
-      mant = frexp(dbl, &exp);
-      WAsmCode[CodeLen++] = ldexp(mant, 15);
-      WAsmCode[CodeLen++] = exp-1;
-    }
-    if (!ok)
-      CodeLen = 0;
-    return True;
-  }
-
-  if (Memo("BFLOAT"))
-  {
-    if (!ChkArgCnt(1, ArgCntMax))
-      return True;
-    define_untyped_label();
-    ok = True;
-    forallargs (pArg, ok)
-    {
-      if (!*pArg->Str)
-      {
-        ok = False;
-        break;
-      }
-      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
-      mant = frexp(dbl, &exp);
-      lmant = ldexp(mant, 31);
-      WAsmCode[CodeLen++] = (lmant & 0xffff);
-      WAsmCode[CodeLen++] = (lmant >> 16);
-      WAsmCode[CodeLen++] = exp-1;
-    }
-    if (!ok)
-      CodeLen = 0;
-    return True;
-  }
-
-  if (Memo("TFLOAT"))
-  {
-    if (!ChkArgCnt(1, ArgCntMax))
-      return True;
-    define_untyped_label();
-    ok = True;
-    forallargs (pArg, ok)
-    {
-      if (!*pArg->Str)
-      {
-        ok = False;
-        break;
-      }
-      dbl = EvalStrFloatExpression(pArg, Float64, &ok);
-      mant = frexp(dbl, &exp);
-      mant = modf(ldexp(mant, 15), &dbl);
-      WAsmCode[CodeLen + 3] = dbl;
-      mant = modf(ldexp(mant, 16), &dbl);
-      WAsmCode[CodeLen + 2] = dbl;
-      mant = modf(ldexp(mant, 16), &dbl);
-      WAsmCode[CodeLen + 1] = dbl;
-      mant = modf(ldexp(mant, 16), &dbl);
-      WAsmCode[CodeLen] = dbl;
-      CodeLen += 4;
-      WAsmCode[CodeLen++] = ((exp - 1) & 0xffff);
-      WAsmCode[CodeLen++] = ((exp - 1) >> 16);
-    }
-    if (!ok)
-      CodeLen = 0;
-    return True;
-  }
-  return False;
+  return LookupInstTable(InstTable, OpPart.Str);
 }
 
 Boolean IsTIDef(void)
@@ -598,7 +727,7 @@ static void DecodeEXTENDED(Word Code)
   }
 }
 
-static void DecodeWORD(Word Code)
+static void DecodeWORD_TI34x(Word Code)
 {
   Boolean OK;
   tStrComp *pArg;
@@ -615,7 +744,7 @@ static void DecodeWORD(Word Code)
   }
 }
 
-static void DecodeDATA34x(Word Code)
+static void DecodeDATA_TI34x(Word Code)
 {
   Boolean OK;
   TempResult t;
@@ -673,7 +802,7 @@ static void DecodeDATA34x(Word Code)
   }
 }
 
-static void DecodeBSS(Word Code)
+static void DecodeBSS_TI34x(Word Code)
 {
   Boolean OK;
   tSymbolFlags Flags;
@@ -700,7 +829,7 @@ void AddTI34xPseudo(TInstTable *pInstTable)
 {
   AddInstTable(pInstTable, "SINGLE", 0, DecodeSINGLE);
   AddInstTable(pInstTable, "EXTENDED", 0, DecodeEXTENDED);
-  AddInstTable(pInstTable, "WORD", 0, DecodeWORD);
-  AddInstTable(pInstTable, "DATA", 0, DecodeDATA34x);
-  AddInstTable(pInstTable, "BSS", 0, DecodeBSS);
+  AddInstTable(pInstTable, "WORD", 0, DecodeWORD_TI34x);
+  AddInstTable(pInstTable, "DATA", 0, DecodeDATA_TI34x);
+  AddInstTable(pInstTable, "BSS", 0, DecodeBSS_TI34x);
 }

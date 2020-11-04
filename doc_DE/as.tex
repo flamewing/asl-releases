@@ -8295,18 +8295,28 @@ gilt immer \tty{m = n + 1}.
 
 \section{MCS-48}
 
-Der maximale Adre"sraum dieser Prozessoren betr"agt 4 Kbyte.  Dieser Raum
-ist jedoch nicht linear organisiert (wie k"onnte das bei Intel auch anders
-sein...), sondern in 2 B"anke zu 2 Kbyte geteilt.  Ein Wechsel zwischen
-diesen beiden B"anken ist nur durch die Befehle \tty{CALL} und \tty{JMP}
-erlaubt, indem vor dem Sprung das h"ochste Adre"sbit mit den Befehlen
-\tty{SEL MB0} bzw. \tty{SEL MB1} vorgegeben wird.
-Um den Wechsel zwischen den B"anken zu vereinfachen, ist
-eine Automatik in den Befehlen \tty{JMP} und \tty{CALL} eingebaut, die einen dieser
-beiden Befehle einf"ugt, falls die Adresse des Sprungbefehles und das
+Der maximale Adre"sraum dieser Prozessoren betr"agt 4 KByte, bzw. 8 KByte
+bei einigen Philps-Varianten.  Dieser Raum ist jedoch nicht linear organisiert
+(wie k"onnte das bei Intel auch anders sein...), sondern in 2 B"anke zu 2
+Kbyte geteilt.  Ein Wechsel zwischen diesen beiden B"anken ist nur durch die
+Befehle \tty{CALL} und \tty{JMP} erlaubt, indem vor dem Sprung das h"ochste
+Adre"sbit mit den Befehlen \tty{SEL MB0} bis \tty{SEL MB3} vorgegeben wird.
+
+Man kann dem Assembler mit einem
+\begin{verbatim}
+         ASSUME MB:<0..3>
+\end{verbatim}
+mitteilen, welche Speicherbank gerade f"ur Sprungziele gew"ahlt ist; wird auf
+eine Adresse gesprungen, die au"serhalb dieser Bank liegt, wird eine Warnung
+ausgegeben.
+
+Wenn der Sonderwert {\tt NOTHING} angegeben wird (dies ist auch der Default), 
+so greift eine in den Befehlen \tty{JMP} und \tty{CALL} eingebaute Automatik ,
+die den Wechsel zwischen den B"anken vereinfacht.  Sie f"ugt automatisch einen
+{\tt SEL MBx} Befehl ein, falls die Adresse des Sprungbefehles und das
 Sprungziel in unterschiedlichen B"anken liegen.  Die explizite Benutzung der
-\tty{SEL MBx}-Befehle sollte daher nicht notwendig sein (obwohl sie m"oglich
-ist) und kann die Automatik auch durcheinanderbringen, wie in dem folgenden
+\tty{SEL MBx}-Befehle ist dann nicht mehr notwendig (obwohl sie m"oglich
+bleibt) und kann die Automatik auch durcheinanderbringen, wie in dem folgenden
 Beispiel:
 \begin{verbatim}
 000:    SEL     MB1
@@ -12486,8 +12496,13 @@ jede Prozessorfamilie die zus"atzlich vorhandenen Befehle:
 
 \subsubsection{Immer vorhandene Befehle}
 \input{../doc_COM/pscomm.tex}
-Zus"atzlich existiert \tty{SET} bzw. \tty{EVAL}, falls \tty{SET} bereits
-ein Prozessorbefehl ist.
+Zus"atzlich existieren:
+\begin{itemize}
+\item{\tty{SET} bzw. \tty{EVAL}, falls \tty{SET} bereits ein Prozessorbefehl
+      ist.}
+\item{\tty{SHIFT} bzw. \tty{SHFT}, falls \tty{SHIFT} bereits ein Prozessorbefehl
+      ist.}
+\end{itemize}
 
 \input{../doc_COM/pscpu.tex}
 

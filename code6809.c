@@ -1426,6 +1426,9 @@ static void InitFields(void)
   AddInstTable(InstTable, "BIEOR", InstrZ++, DecodeBit);
   AddInstTable(InstTable, "LDBT" , InstrZ++, DecodeBit);
   AddInstTable(InstTable, "STBT" , InstrZ++, DecodeBit);
+
+  AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
+  AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 }
 
 static void DeinitFields(void)
