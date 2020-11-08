@@ -1,3 +1,8 @@
+2020-11-08 [1.42 Bld 179]
+
+- Bugfix      : MCS-48: correctly regard forward references when checking
+                memory bank of CALL/JMP target
+
 2020-11-04 [1.42 Bld 178]
 
 - Addition    : Add DW and DB as aliases for BYT/ADR for 68xx targets

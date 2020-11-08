@@ -397,7 +397,7 @@ static void DecodeCALL_JMP(Word Code)
             CodeLen = 1;
           }
         }
-        else if (DestBank != Reg_MB)
+        else if ((DestBank != Reg_MB) && !mFirstPassUnknownOrQuestionable(EvalResult.Flags))
           WrStrErrorPos(ErrNum_InAccPage, &ArgStr[1]);
         BAsmCode[CodeLen + 1] = AdrWord & 0xff;
         BAsmCode[CodeLen] = Code + ((AdrWord & 0x700) >> 3);
