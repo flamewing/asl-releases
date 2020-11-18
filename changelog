@@ -1,3 +1,9 @@
+2020-11-18 [1.42 Bld 180]
+
+- Addition    : Support Toshiba TLCS-870/C as target
+- Bugfix      : do not search relative to current file's path if (B)INCLUDEd
+                file's path is absolute
+
 2020-11-08 [1.42 Bld 179]
 
 - Bugfix      : MCS-48: correctly regard forward references when checking

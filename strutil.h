@@ -100,5 +100,7 @@ extern void strutil_init(void);
 #define as_isxdigit(c) (!!isxdigit(__chartouint(c)))
 #define as_isprint(c) (!!isprint(__chartouint(c)))
 #define as_isalpha(c) (!!isalpha(__chartouint(c)))
+#define as_isupper(c) (!!isupper(__chartouint(c)))
+#define as_islower(c) (!!islower(__chartouint(c)))
 
 #endif /* _STRUTIL_H */

@@ -1272,13 +1272,6 @@ static void DecodeCALLV(Word Code)
   }
 }
 
-static void DecodeUnimplemented(Word Code)
-{
-  UNUSED(Code);
-
-  WrStrErrorPos(ErrNum_Unimplemented, &OpPart);
-}
-
 /*--------------------------------------------------------------------------*/
 
 static void AddFixed(const char *NName, Word NCode)
@@ -1326,16 +1319,16 @@ static void InitFields(void)
   AddInstTable(InstTable, "JRS", 0, DecodeJRS);
   AddInstTable(InstTable, "JP", 0xfe, DecodeJP_CALL);
   AddInstTable(InstTable, "J", 0, DecodeJ);
-  AddInstTable(InstTable, "CALL", 0, DecodeUnimplemented); /* would be on TLCS-870, but is JR here */
+  AddInstTable(InstTable, "CALL", 0xfd, DecodeJP_CALL);
   AddInstTable(InstTable, "CALLV", 0, DecodeCALLV);
 
   AddFixed("DI"  , 0xc83a);
   AddFixed("EI"  , 0xc03a);
-  AddInstTable(InstTable, "RET" , 0x0005, DecodeUnimplemented);
-  AddInstTable(InstTable, "RETI", 0x0004, DecodeUnimplemented);
-  AddInstTable(InstTable, "RETN", 0xe804, DecodeUnimplemented);
-  AddInstTable(InstTable, "SWI" , 0x00ff, DecodeUnimplemented);
-  AddInstTable(InstTable, "NOP" , 0x0000, DecodeUnimplemented);
+  AddFixed("RET" , 0x00fa);
+  AddFixed("RETI", 0x00fb);
+  AddFixed("RETN", 0xe8fb);
+  AddFixed("SWI" , 0x00ff);
+  AddFixed("NOP" , 0x0000);
 
   Conditions = (CondRec *) malloc(sizeof(CondRec)*ConditionCnt); InstrZ = 0;
   AddCond("EQ" , 0x00d8); AddCond("Z"  , 0x00d8);

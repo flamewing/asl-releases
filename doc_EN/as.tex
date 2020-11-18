@@ -247,7 +247,7 @@ following processor families have been implemented:
 \item{LatticeMico8}
 \item{Toshiba TLCS-900(L)}
 \item{Toshiba TLCS-90}
-\item{Toshiba TLCS-870}
+\item{Toshiba TLCS-870(/C)}
 \item{Toshiba TLCS-47}
 \item{Toshiba TLCS-9000}
 \item{Toshiba TC9331}
@@ -3414,45 +3414,49 @@ the same name are located at different addresses.  The file
 possible by different types to provide the correct symbol set
 automatically.
 %%-----------
+ao) TLCS-870/C
+Currently, only the processor core of the TLCS-870/C family is
+implemented.
+%%-----------
 \begin{quote}
-ao) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+ap) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 These three variations of the TLCS-47-family have on-chip RAM and ROM
 of different size, which leads to several bank switching instructions
 being added or suppressed.
 %%-----------
 \begin{quote}
-ap) 97C241
+aq) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-aq) TC9331
+ar) TC9331
 \end{quote}
 %%-----------
 \begin{quote}
-ar) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+as) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 These processors differ by the available code area, i.e. by the address
 limit after which AS reports overruns.
 %%-----------
 \begin{quote}
-as) 16C84, 16C64
+at) 16C84, 16C64
 \end{quote}
 Analog to the MCS-51 family, no distinction is made in the code generator,
 the different numbers only serve to include the correct SFRs in
 \tty{STDDEF18.INC}.
 %%-----------
 \begin{quote}
-at) 17C42
+au) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-au) SX20, SX28
+av) SX20, SX28
 \end{quote}
 The SX20 uses a smaller housing and lacks port C.
 %%-----------
 \begin{quote}
-av) ST6200, ST6201, ST6203, ST6208, ST6209,\\
+aw) ST6200, ST6201, ST6203, ST6208, ST6209,\\
     ST6210, ST6215, ST6218, ST6220, ST6225,\\
     ST6228, ST6230, ST6232, ST6235, ST6240,\\
     ST6242, ST6245, ST6246, ST6252, ST6253,\\
@@ -3463,7 +3467,7 @@ The various ST6 derivates differ in the amount of
 on-chip peripherals and built-in memory.
 %%-----------
 \begin{quote}
-aw) ST7 \\
+ax) ST7 \\
     ST72251G1, ST72251G2, ST72311J2, ST72311J4, \\
     ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, \\
     ST72325S6, ST72325J7, ST72325R9, ST72324J6, \\
@@ -3523,7 +3527,7 @@ a couple of new instructions.  Though many instructions have the same
 machine code as for ST7, it is not binary upward compatible.
 %%-----------
 \begin{quote}
-ax) ST9020, ST9030, ST9040, ST9050
+ay) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 These 4 names represent the four ''sub-families'' of the ST9 family,
 which only differ in their on-chip peripherals.  Their processor
@@ -3531,24 +3535,24 @@ cores are identical, which is why this distinction is again only used
 in the include file containing the peripheral addresses.
 %%-----------
 \begin{quote}
-ay) 6804
+az) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-az) 32010$\rightarrow$32015
+ba) 32010$\rightarrow$32015
 \end{quote}
 The TMS32010 owns just 144 bytes of internal RAM, and so AS limits
 addresses in the data segment just up to this amount.  This restriction
 does not apply for the 32015, the full range from 0..255 can be used.
 %%-----------
 \begin{quote}
-ba) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+bb) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 These processors only differ slightly in their on-chip peripherals
 and in their configuration instructions.
 %%-----------
 \begin{quote}
-bb) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
+bc) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
 The 320C31 is a reduced version with the same instruction set,
 however fewer peripherals.  The distinction is exploited in
@@ -3559,19 +3563,19 @@ version of the C40, with less peripherals and a smaller address
 space.
 %%-----------
 \begin{quote}
-bc) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+bd) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 The first one represents the C20x family of signal processors which
 implement a subset of the C5x instruction set.  The distinction among the
 C5x processors is currently not used by AS.
 %%-----------
 \begin{quote}
-bd) 320C541
+be) 320C541
 \end{quote}
 This one at the moment represents the TMS320C54x family...
 %%-----------
 \begin{quote}
-be) TI990/4, TI990/10, TI990/12 \\
+bf) TI990/4, TI990/10, TI990/12 \\
     TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
 \end{quote}
 The TMS99xx/99xxx processors are basically single chip implementations
@@ -3583,7 +3587,7 @@ privileged mode.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bf) \> TMS70C00, TMS70C20, TMS70C40,\\
+bg) \> TMS70C00, TMS70C20, TMS70C40,\\
     \> TMS70CT20, TMS70CT40,\\
     \> TMS70C02, TMS70C42, TMS70C82,\\
     \> TMS70C08, TMS70C48\\
@@ -3597,21 +3601,21 @@ RAM and the same on-chip peripherals, they differ only in the amount of
 integrated ROM.
 %%-----------
 \begin{quote}
-bg) 370C010, 370C020, 370C030, 370C040 and 370C050
+bh) 370C010, 370C020, 370C030, 370C040 and 370C050
 \end{quote}
 Similar to the MCS-51 family, the different types are only used to
 differentiate the peripheral equipment in \tty{STDDEF37.INC}; the
 instruction set is always the same.
 %%-----------
 \begin{quote}
-bh) MSP430 $\rightarrow$ MSP430X
+bi) MSP430 $\rightarrow$ MSP430X
 The X variant of the CPU core extends the address space from 64
 KiBytes to 1 MiByte and augments the instruction set, e.g. by
 prefixed to repeat instructions.
 \end{quote}
 %%-----------
 \begin{quote}
-bi) TMS1000, TMS1100, TMS1200, TMS1300
+bj) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 TMS1000 and TMS1200 each provide 1 KByte of ROM and 64 nibbles of
 RAM, while TMS1100 and TMS1300 provide twice the amount of RAM
@@ -3620,17 +3624,17 @@ default instruction set fot TMS1100 and TMS1300(AS only knows the
 default instruction sets!)
 %%-----------
 \begin{quote}
-bj) SC/MP
+bk) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bk) 8070
+bl) 8070
 \end{quote}
 This processor represents the whole 807x family (which consists at least
 of the 8070, 8072, and 8073), which however shares identical CPU cores.
 %%-----------
 \begin{quote}
-bl) COP87L84
+bm) COP87L84
 \end{quote}
 This is the only member of National Semiconductor's COP8 family that
 is currently supported.  I know that the family is substantially
@@ -3639,7 +3643,7 @@ instruction sets which will be added when a need occurs.  It is a
 beginning, and National's documentation is quite extensive...
 %%-----------
 \begin{quote}
-bm) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bn) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 The COP42x derivates offer some additional instructions, plus other
 instructions have an extended operand range.
 \end{quote}
@@ -3647,7 +3651,7 @@ instructions have an extended operand range.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bn) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bo) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3656,11 +3660,11 @@ instructions, since each of them supports different B field formats and
 their architecture has been optimized over time.
 %%-----------
 \begin{quote}
-bo) ACE1101, ACE1202
+bp) ACE1101, ACE1202
 \end{quote}
 %%-----------
 \begin{quote}
-bp) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+bq) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
     MK38C70
 \end{quote}
 The instruxction st of all F8 variants is the same, except for the
@@ -3670,14 +3674,14 @@ Otherwise, they only differ by the amount of built-in memory (2 or
 integrated peripherals (with or without serial port).
 %%-----------
 \begin{quote}
-bq) 7810$\rightarrow$78C10
+br) 7810$\rightarrow$78C10
 \end{quote}
 The NMOS version has no stop-mode; the respective command and the ZCM
 register are omitted.  \bb{CAUTION!}  NMOS and CMOS version partially
 differ in the reset values of some registers!
 %%-----------
 \begin{quote}
-br) 7500 $\leftrightarrow$ 7508
+bs) 7500 $\leftrightarrow$ 7508
 \end{quote}
 There are two different types of CPU cores in the $\mu$PD75xx
 family: the 7566 represents the the 'instruction set B', which
@@ -3688,7 +3692,7 @@ CAUTION!} These instruction sets are not 100\% binary compatible!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bs) \> 75402,\\
+bt) \> 75402,\\
     \> 75004, 75006, 75008,\\
     \> 75268,\\
     \> 75304, 75306, 75308, 75312, 75316,\\
@@ -3704,40 +3708,40 @@ peripherals on the one hand and by their instruction set's power on
 the other hand.
 %%-----------
 \begin{quote}
-bt) 78070
+bu) 78070
 \end{quote}
 This is currently the only member of NEC's 78K0 family I am familiar
 with.  Similar remarks like for the COP8 family apply!
 %%-----------
 \begin{quote}
-bu) 78214
+bv) 78214
 \end{quote}
 This is currently the representor of NEC's 78K2 family.
 %%-----------
 \begin{quote}
-bv) 78310
+bw) 78310
 \end{quote}
 This is currently the representor of NEC's 78K3 family.
 %%-----------
 \begin{quote}
-bw) 784026
+bx) 784026
 \end{quote}
 This is currently the representor of NEC's 78K4 family.
 %%-----------
 \begin{quote}
-bx) 7720 $\rightarrow$ 7725
+by) 7720 $\rightarrow$ 7725
 \end{quote}
 The $\mu$PD7725 offers larger address spaces and som more instructions
 compared to his predecessor. {\bf CAUTION!}  The processors are not binary
 compatible to each other!
 %%-----------
 \begin{quote}
-by) 77230
+bz) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-bz) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+ca) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3746,37 +3750,37 @@ instruction variants, furthermore they are different in their set of
 internal registers.
 %%-----------
 \begin{quote}
-ca) MB89190
+cb) MB89190
 \end{quote}
 This processor type represents Fujitsu's F$^{2}$MC8L series...
 %%-----------
 \begin{quote}
-cb) MB9500
+cc) MB9500
 \end{quote}
 ...just like this one does it currently for the 16-bit variants from
 Fujitsu!
 %%-----------
 \begin{quote}
-cc) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+cd) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 These variants of the OLMS-40 family differ in their instruction
 set and in the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-cd) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+ce) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 The as for the OLMS-40 family: differences in instruction
 set and the amount of internal program and data memory.
 %%-----------
 \begin{quote}
-ce) MN1610[ALT] $\rightarrow$ MN1613[ALT]
+cf) MN1610[ALT] $\rightarrow$ MN1613[ALT]
 \end{quote}
 In addition to its predecessor's features, the MN1613 offers a larger
 address space, a floating point unit and a couple of new machine
 instructions.
 %%-----------
 \begin{quote}
-ce) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
+cg) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
 1805A, 1806A
 \end{quote}
 1804, 1805, and 1806 feature an instruction set that is slightly
@@ -3786,18 +3790,18 @@ an integrated timer.  The A variants extend the instruction set by
 subtraction in BCD format.
 %%-----------
 \begin{quote}
-cf) XS1
+ch) XS1
 \end{quote}
 This type represents the XCore-"family".
 %%-----------
 \begin{quote}
-cg) 1750
+ci) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
 %%-----------
 \begin{quote}
-cg) KENBAK
+cj) KENBAK
 \end{quote}
 Since there has never been a KENBAK-2, the target is simply KENBAK...
 

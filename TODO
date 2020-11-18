@@ -4,6 +4,10 @@
   bisheriger Unix-Teil
 - Anleitung: Quellenkapitel neuschreiben
 - Anleitung: FAQ wenn viele Passes
+- Anleitung FAQ Include-Path Änderung
 
 - IsDef liefert Dekoder
 - Entschüsselung AttrPart über strchr()
+- Test-Batch DOS: leere Verzeichnisse auch abfangen
+- rekursive Verschachtelung abfangen
+

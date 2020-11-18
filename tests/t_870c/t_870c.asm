@@ -266,3 +266,17 @@ targ2:
 	j	slt,$-1000	; coded as skipped JP
 
 	callv	9
+
+	call	1234h
+	irp	reg,B16Regs
+	 call	 reg
+	endm
+	irp	mem,SrcMem
+	 call	 mem
+	endm
+
+	ret
+	reti
+	retn
+	swi
+	nop

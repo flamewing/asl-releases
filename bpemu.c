@@ -194,9 +194,23 @@ static int AssembleAndCheck(char *pDest, size_t DestSize, const char *pPath, uns
 
 int FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
 {
+  /* If the file has an absolute path ('/....', '\....', 'X:....'), do not search relative
+     to current file's directory: */
+
+  Boolean Absolute = (*pFileToSearch == '/');
   const char *pPos, *pStart;
 
-  if (pCurrFileName)
+#if (defined _WIN32) || (defined __EMX__) || (defined __IBMC__) || (defined __MSDOS__)
+  if (*pFileToSearch == PATHSEP)
+    Absolute = True;
+#endif
+#ifdef DRSEP
+  if ((as_islower(*pFileToSearch) || as_isupper(*pFileToSearch))
+   && (pFileToSearch[1] == DRSEP))
+    Absolute = True;
+#endif
+
+  if (pCurrFileName && !Absolute)
   {
 #if (defined _WIN32) || (defined __EMX__) || (defined __IBMC__) || (defined __MSDOS__)
     /* On systems with \ as path separator, we may get a mixture of / and \ in the path.
@@ -214,6 +228,8 @@ int FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char 
     if (!AssembleAndCheck(pDest, DestSize, NULL, 0, pFileToSearch))
       return 0;
   }
+
+  /* TODO: if the file has an absolute path, searching the include path should be pointless: */
 
   pStart = pSearchPath;
   while (True)
