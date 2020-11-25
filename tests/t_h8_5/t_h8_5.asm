@@ -34,46 +34,16 @@
 
                 andc.b  #$fe,ccr
 
-                bra     *+20
-                bra     *+2000
-                bt      *+20
-                bt      *+2000
-                brn     *+20
-                brn     *+2000
-                bf      *+20
-                bf      *+2000
-                bhi     *+20
-                bhi     *+2000
-                bls     *+20
-                bls     *+2000
-                bcc     *+20
-                bcc     *+2000
-                bhs     *+20
-                bhs     *+2000
-                bcs     *+20
-                bcs     *+2000
-                blo     *+20
-                blo     *+2000
-                bne     *+20
-                bne     *+2000
-                beq     *+20
-                beq     *+2000
-                bvc     *+20
-                bvc     *+2000
-                bvs     *+20
-                bvs     *+2000
-                bpl     *+20
-                bpl     *+2000
-                bmi     *+20
-                bmi     *+2000
-                bge     *+20
-                bge     *+2000
-                blt     *+20
-                blt     *+2000
-                bgt     *+20
-                bgt     *+2000
-                ble     *+20
-                ble     *+2000
+		; :8 and :16 are synonyms for short and long branch
+
+		irp	instr,bra,bt,brn,bf,bhi,bls,bcc,bhs,bcs,blo,bne,beq,bvc,bvs,bpl,bmi,bge,blt,bgt,ble
+		instr	*+20
+                instr	*+2000
+		instr.l	*+20
+		instr:16 *+20
+		instr.s	*+20
+		instr:8	*+20
+		endm
 
                 bclr.b  #7,@$ff00
 
@@ -349,6 +319,21 @@ reg_fp		reg	fp
 		cmp.w	#0:16,@r0+
 		cmp.w	#0:8,@r0+
 		cmp.w	#0,@r0+
+
+		; used in more complex expressions
+
+DID		equ	42
+
+		CMP.B	#H'00+DID,R0
+		CMP.B	#H'01+DID,R0
+		CMP.B	#H'02+DID,R0
+		CMP.B	#H'03+DID,R0
+
+		ADD.W	#(H'80*H'20),R6
+		CMP.W	#(H'80*H'20),R6
+		CMP.W	#(H'7f80+(H'80*H'20)),R6
+		SUB.W	#(H'7F*H'80),R6
+		ADD.W	#(H'6F*H'80),R6
 
 		; On H8/500, DATA is an alias for DC
 

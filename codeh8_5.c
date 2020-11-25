@@ -108,7 +108,7 @@ static ASSUMERec ASSUMEH8_5s[ASSUMEH8_5Count] =
 static void SetOpSize(tSymbolSize NSize)
 {
   if (OpSize == eSymbolSizeUnknown) OpSize = NSize;
-  else if (OpSize != NSize) WrError(ErrNum_UndefOpSizes);
+  else if (OpSize != NSize) WrError(ErrNum_ConfOpSizes);
 }
 
 /*!------------------------------------------------------------------------
@@ -827,6 +827,36 @@ static Boolean CheckFormat(const char *FSet)
   return True;
 }
 
+static Boolean FormatToBranchSize(const char *pFormat, tSymbolSize *pOpSize)
+{
+  if (!strcmp(pFormat, " "));
+
+  else if (!strcmp(pFormat, "16")) /* treat like .L */
+  {
+    if (*pOpSize == eSymbolSizeUnknown) *pOpSize = eSymbolSize32Bit;
+    else if (*pOpSize != eSymbolSize32Bit)
+    {
+      WrXError(ErrNum_ConfOpSizes, Format);
+      return False;
+    }
+  }
+  else if (!strcmp(pFormat, "8")) /* treat like .S */
+  {
+    if (*pOpSize == eSymbolSizeUnknown) *pOpSize = eSymbolSizeFloat32Bit;
+    else if (*pOpSize != eSymbolSizeFloat32Bit)
+    {
+      WrXError(ErrNum_ConfOpSizes, Format);
+      return False;
+    }
+  }
+  else
+  {
+    WrXError(ErrNum_InvFormat, Format);
+    return False;
+  }
+  return True;
+}
+
 static void CopyAdr(void)
 {
   Adr2Mode = AdrMode;
@@ -1408,9 +1438,8 @@ static void DecodeRel(Word Code)
   tSymbolFlags Flags;
   LongInt AdrLong;
 
-  if (!ChkArgCnt(1, 1));
-  else if (strcmp(Format, " ")) WrError(ErrNum_InvFormat);
-  else
+  if (ChkArgCnt(1, 1)
+   && FormatToBranchSize(Format, &OpSize))
   {
     AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags);
     if (OK)

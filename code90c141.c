@@ -1093,10 +1093,9 @@ static void DecodeMUL_DIV(Word Code)
         memcpy(BAsmCode + 1, AdrVals, AdrCnt);
         break;
       case ModImm:
-        CodeLen = 3;
-        BAsmCode[0] = 0xe7;
+        CodeLen = 2;
+        BAsmCode[0] = Code;
         BAsmCode[1] = AdrVals[0];
-        BAsmCode[2] = Code;
         break;
     }
   }

@@ -1,3 +1,9 @@
+2020-11-25 [1.42 Bld 181]
+
+- Addition    : Support :8 and :16 instruction formats for branches on H8/500
+- Bugfix      : Some fixes to H'xxxx hex syntax on H8/500 and H8/300
+- Bugfix      : correct TLCS-90 MUL/DIV with immediate addressing
+
 2020-11-18 [1.42 Bld 180]
 
 - Addition    : Support Toshiba TLCS-870/C as target

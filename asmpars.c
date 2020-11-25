@@ -1479,7 +1479,10 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         break;
       case '\'':
         if (!InDbl && !ThisEscaped)
-          InSgl = !InSgl;
+        {
+          if (InSgl || !QualifyQuote || QualifyQuote(CopyComp.Str, zp))
+            InSgl = !InSgl;
+        }
         break;
       case '\\':
         if ((InDbl || InSgl) && !ThisEscaped)

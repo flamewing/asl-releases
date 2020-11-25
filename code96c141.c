@@ -718,7 +718,7 @@ static void DecodeAdrMem(tStrComp *pArg)
   }
   while (EPos);
 
-  /* auto-deduce address/displacmeent size? */
+  /* auto-deduce address/displacement size? */
 
   if (DispSize == eSymbolSizeUnknown)
   {
