@@ -971,8 +971,18 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
               l--;
               Base = 2;
               break;
+
+            /* in relaxed mode, treat pseudo octal constants like decimal: */
+
             default:
-              Base = 8;
+            {
+              const char *pRun;
+
+              for (pRun = pExpr; *pRun; pRun++)
+                if ((*pRun == '8') || (*pRun == '9'))
+                  break;
+              Base = (RelaxedMode && *pRun) ? 10 : 8;
+            }
           }
       }
       break;

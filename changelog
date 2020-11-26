@@ -1,3 +1,10 @@
+2020-11-26 [1.42 Bld 182]
+
+- Bugfix      : Better treatment of (mis)detection of non-octal constants
+                in relaxed mode
+- Bugfix      : If whole instruction has dot prefix, still search for
+                attribute in it
+
 2020-11-25 [1.42 Bld 181]
 
 - Addition    : Support :8 and :16 instruction formats for branches on H8/500

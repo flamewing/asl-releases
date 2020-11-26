@@ -2509,7 +2509,9 @@ static void SplitLine(void)
   {
     const char *pActAttrChar;
     char *pAttrPos, *pActAttrPos;
+    int Tries = 0;
 
+again:
     pAttrPos = NULL; AttrSplit = ' ';
     for (pActAttrChar = AttrChars; *pActAttrChar; pActAttrChar++)
     {
@@ -2522,12 +2524,17 @@ static void SplitLine(void)
       AttrSplit = (*pAttrPos);
       AttrPart.Pos.StartCol = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.Str);
       AttrPart.Pos.Len = strmemcpy(AttrPart.Str, STRINGSIZE, pAttrPos + 1, strlen(pAttrPos + 1));
-
       *pAttrPos = '\0';
+
+      /* The dot-prefixed OpPart may itself contain an attribute (.instr.attr).  So reiterate
+         splitting off attribute, but only once ;-) */
+
       if ((*OpPart.Str == '\0') && (*AttrPart.Str != '\0'))
       {
         StrCompCopy(&OpPart, &AttrPart);
         StrCompReset(&AttrPart);
+        if (++Tries < 2)
+          goto again;
       }
     }
     else
