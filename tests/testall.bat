@@ -2,6 +2,8 @@
 if "%1"=="" goto main
 
 cd %1
+if not exist %1.asm goto end
+if not exist %1.ori goto end
 type %1.doc | ..\..\addcr
 set ASCMD=@asflags
 ..\..\asl -i ..\..\include -L +t 31 %1.asm

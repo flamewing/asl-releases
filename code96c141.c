@@ -538,11 +538,11 @@ static tSymbolSize SplitSize(tStrComp *pArg)
   return eSymbolSizeUnknown;
 }
 
-static void DecodeAdrMem(tStrComp *pArg)
+static void DecodeAdrMem(const tStrComp *pArg)
 {
   LongInt DispPart, DispAcc;
   char *EPos;
-  tStrComp Remainder;
+  tStrComp Arg, Remainder;
   Boolean NegFlag, NNegFlag, FirstFlag, OK;
   Byte BaseReg, BaseSize;
   Byte IndReg, IndSize;
@@ -625,32 +625,33 @@ static void DecodeAdrMem(tStrComp *pArg)
     }
   }
 
+  Arg = *pArg;
   DispSize = eSymbolSizeUnknown;
   do
   {
-    EPos = QuotMultPos(pArg->Str, "+-");
+    EPos = QuotMultPos(Arg.Str, "+-");
     NNegFlag = EPos && (*EPos == '-');
-    if ((EPos == pArg->Str) || (EPos == pArg->Str + strlen(pArg->Str) - 1))
+    if ((EPos == Arg.Str) || (EPos == Arg.Str + strlen(Arg.Str) - 1))
     {
       WrError(ErrNum_InvAddrMode);
       return;
     }
     if (EPos)
-      StrCompSplitRef(pArg, &Remainder, pArg, EPos);
-    KillPrefBlanksStrComp(pArg);
-    KillPostBlanksStrComp(pArg);
+      StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
+    KillPrefBlanksStrComp(&Arg);
+    KillPostBlanksStrComp(&Arg);
 
-    switch (CodeEReg(pArg->Str, &HNum, &HSize))
+    switch (CodeEReg(Arg.Str, &HNum, &HSize))
     {
       case 0:
       {
         tSymbolSize ThisSize;
         tSymbolFlags Flags;
 
-        if ((ThisSize = SplitSize(pArg)) != eSymbolSizeUnknown)
+        if ((ThisSize = SplitSize(&Arg)) != eSymbolSizeUnknown)
           if (ThisSize > DispSize)
             DispSize = ThisSize;
-        DispPart = EvalStrIntExpressionWithFlags(pArg, Int32, &OK, &Flags);
+        DispPart = EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
         if (mFirstPassUnknown(Flags)) FirstFlag = True;
         if (!OK) return;
         if (NegFlag)
@@ -714,7 +715,7 @@ static void DecodeAdrMem(tStrComp *pArg)
     NegFlag = NNegFlag;
     NNegFlag = False;
     if (EPos)
-      *pArg = Remainder;
+      Arg = Remainder;
   }
   while (EPos);
 

@@ -8,6 +8,5 @@
 
 - IsDef liefert Dekoder
 - Entschüsselung AttrPart über strchr()
-- Test-Batch DOS: leere Verzeichnisse auch abfangen
 - rekursive Verschachtelung abfangen
 

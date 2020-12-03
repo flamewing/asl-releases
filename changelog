@@ -1,3 +1,8 @@
+2020-12-03 [1.42 Bld 183]
+
+- Bugfix      : Disallow optimzation to CoMPare 8-bit immediate value with
+                16-bit operand on H8/500
+
 2020-11-26 [1.42 Bld 182]
 
 - Bugfix      : Better treatment of (mis)detection of non-octal constants

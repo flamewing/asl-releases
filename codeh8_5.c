@@ -797,8 +797,6 @@ static void ExpandBit_H8_5(const tStrComp *pVarName, const struct sStructElem *p
    || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
     return;
 
-  fprintf(stderr, "%x %u %d\n", (unsigned)Address, pStructElem->BitPos, OpSize);
-
   PushLocHandle(-1);
   EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address, OpSize, eSymbolSizeUnknown), SegBData, False);
   PopLocHandle();
@@ -1170,6 +1168,15 @@ static void DecodeADD_SUB(Word IsSUB_16)
   }
 }
 
+/* NOTE: though the length of immediate data im G format is explicitly
+   coded and independent of the operand size, the manual seems to suggest
+   that it is not allowed for CMP to use an 8-bit immediate value with a
+   16-bit operand, assuming the immediate value will be sign-extended.
+   This mechanism is described e.g. for MOV:G, but not for CMP:G.  So
+   we omit this optimization here: */
+
+#define CMP_IMMVARIABLE 0
+
 static void DecodeCMP(Word Dummy)
 {
   UNUSED(Dummy);
@@ -1178,7 +1185,7 @@ static void DecodeCMP(Word Dummy)
    && CheckFormat("GEI"))
   {
     if (OpSize == eSymbolSizeUnknown)
-     SetOpSize((FormatCode == 2) ? eSymbolSize8Bit : eSymbolSize16Bit);
+      SetOpSize((FormatCode == 2) ? eSymbolSize8Bit : eSymbolSize16Bit);
     if ((OpSize != 0) && (OpSize != 1)) WrError(ErrNum_InvOpSize);
     else
     {
@@ -1186,7 +1193,13 @@ static void DecodeCMP(Word Dummy)
       if (AdrMode != ModNone)
       {
         CopyAdr();
-        DecodeAdr(&ArgStr[1], MModAll | MModImmVariable);
+
+
+        DecodeAdr(&ArgStr[1], MModAll 
+#if CMP_IMMVARIABLE
+                            | MModImmVariable
+#endif
+                 );
         if (AdrMode != ModNone)
         {
           if (FormatCode == 0)
@@ -1206,10 +1219,12 @@ static void DecodeCMP(Word Dummy)
               }
               else if (AdrMode == ModImm)
               {
+#if CMP_IMMVARIABLE
                 if (AdaptImmSize(&ArgStr[1]))
+#endif
                 {
                   BAsmCode[0] = Adr2Byte | (OpSize << 3);
-                  memcpy(BAsmCode + 1,Adr2Vals, Adr2Cnt);
+                  memcpy(BAsmCode + 1, Adr2Vals, Adr2Cnt);
                   BAsmCode[1 + Adr2Cnt] = 0x04 | ImmSize;
                   memcpy(BAsmCode + 2 + Adr2Cnt, AdrVals, AdrCnt);
                   CodeLen = 2 + AdrCnt + Adr2Cnt;

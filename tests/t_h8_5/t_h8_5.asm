@@ -264,7 +264,8 @@ reg_fp		reg	fp
 		mov	#h'aa55':16,@h'ffe0' ; comment
 		mov	#$aa55:16  ,@$ffe0   ; comment
 
-		; For MOV and CMP, the immediate src's size
+		; For MOV (and not for CMP, though the coding suggests it),
+                ; the immediate src's size
                 ; may differ from the destination's size.  A sign
                 ; extension is then executed and the object code is one
                 ; byte shorter.  Earlier versions of AS always did
@@ -297,27 +298,33 @@ reg_fp		reg	fp
 		mov.w	#0,@r0+
 
 		cmp.w	#H'fee0,@H'1000
-		expect	1320
+		expect	1131
 		cmp.w	#H'fee0:8,@H'1000
 		endexpect
 		cmp.w	#H'fee0:16,@H'1000
 
 		cmp.w	#H'ffe0,@H'1000
+		expect	1131
 		cmp.w	#H'ffe0:8,@H'1000
+		endexpect
 		cmp.w	#H'ffe0:16,@H'1000
 
 		cmp.w	#H'0130,@H'1000
-		expect	1320
+		expect	1131
 		cmp.w	#H'0130:8,@H'1000
 		endexpect
 		cmp.w	#H'0130:16,@H'1000
 
 		cmp.w	#H'0030,@H'1000
+		expect	1131
 		cmp.w	#H'0030:8,@H'1000
+		endexpect
 		cmp.w	#H'0030:16,@H'1000
 
 		cmp.w	#0:16,@r0+
+		expect	1131
 		cmp.w	#0:8,@r0+
+		endexpect
 		cmp.w	#0,@r0+
 
 		; used in more complex expressions

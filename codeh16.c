@@ -1119,35 +1119,37 @@ static Boolean ClassCompList(tAdrComps *pComps, tStrComp *pArg)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, LongInt EAAddr)
+ * \fn     DecodeAdr(const tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, LongInt EAAddr)
  * \brief  parse address expression
  * \param  pArg expression to parse
  * \param  Mask bit mask of allowed addressing modes
  * \param  pAdrVals returns parsed addressing mode
- * \param  EAAddr position of associared EA byt ein code (needed for PC-relative addressing)
+ * \param  EAAddr position of associared EA byte in code (needed for PC-relative addressing)
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, LongInt EAAddr)
+static Boolean DecodeAdr(const tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, LongInt EAAddr)
 {
   Byte Reg, Prefix;
+  tStrComp Arg;
 
   ResetAdrVals(pAdrVals);
 
+  Arg = *pArg;
   while (True)
   {
-    if (!as_strncasecmp(pArg->Str, "<CRn>", 5)
-     || !as_strncasecmp(pArg->Str, "<PRn>", 5))
+    if (!as_strncasecmp(Arg.Str, "<CRn>", 5)
+     || !as_strncasecmp(Arg.Str, "<PRn>", 5))
     {
-      AppendAdrVals(pAdrVals, (toupper(pArg->Str[1]) == 'C') ? PREFIX_CRn : PREFIX_PRn);
-      StrCompIncRefLeft(pArg, 5);
-      KillPrefBlanksStrCompRef(pArg);
+      AppendAdrVals(pAdrVals, (toupper(Arg.Str[1]) == 'C') ? PREFIX_CRn : PREFIX_PRn);
+      StrCompIncRefLeft(&Arg, 5);
+      KillPrefBlanksStrCompRef(&Arg);
     }
     else
       break;
   }
 
-  switch (DecodeReg(pArg, &Reg, &Prefix, True, False))
+  switch (DecodeReg(&Arg, &Reg, &Prefix, True, False))
   {
     case eIsReg:
       pAdrVals->Mode = eAdrModeReg;
@@ -1160,30 +1162,30 @@ static Boolean DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, Long
       return False;
   }
 
-  if (*pArg->Str == '#')
+  if (*Arg.Str == '#')
   {
     tSymbolSize ImmOpSize;
-    LongInt Arg;
+    LongInt ArgVal;
     Boolean OK;
 
-    if (!SplitOpSize(pArg, &ImmOpSize))
+    if (!SplitOpSize(&Arg, &ImmOpSize))
       ImmOpSize = OpSize;
-    Arg = EvalArg(pArg, 1, ImmOpSize, &OK);
+    ArgVal = EvalArg(&Arg, 1, ImmOpSize, &OK);
     if (OK)
     {
       AppendAdrVals(pAdrVals, 0x70 | (ImmOpSize + 1));
-      AppendToAdrValsBySize(pAdrVals, Arg, ImmOpSize);
+      AppendToAdrValsBySize(pAdrVals, ArgVal, ImmOpSize);
       pAdrVals->Mode = eAdrModeImm;
     }
     goto Check;
   }
 
-  if (*pArg->Str == '@')
+  if (*Arg.Str == '@')
   {
     tStrComp IndirComp;
     tAdrComps Comps;
 
-    StrCompRefRight(&IndirComp, pArg, 1);
+    StrCompRefRight(&IndirComp, &Arg, 1);
     if (!ClassCompList(&Comps, &IndirComp))
       return False;
 
@@ -1381,7 +1383,7 @@ static Boolean DecodeAdr(tStrComp *pArg, unsigned Mask, tAdrVals *pAdrVals, Long
       goto Check;
     }
 
-    WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+    WrStrErrorPos(ErrNum_InvAddrMode, &Arg);
   }
 
   /* None of this.  Should we treat it as absolute? */
