@@ -1026,6 +1026,8 @@ bzw. \ref{ChapShareOrder}.
       Fehlerposition innerhalb Makror"umpfen!}
 \item{{\tt maxerrors [n]}: Weist den Assembler an, nach der gegebenen
       Anzahl von Fehlern die Assemblierung abzubrechen.}
+\item{{\tt maxinclevel [n]}: Weist den Assembler an, nach der gegebenen
+      Include-Verschachtelungstiefe abzubrechen (Default ist 200).}
 \item{{\tt Werror}: Weist den Assembler an, Warnungen als Fehler zu
       behandeln.}
 \end{itemize}
@@ -7271,8 +7273,9 @@ ProgEnd:
         endif
 \end{verbatim}
 Neben diesen fehlererzeugenden Befehlen gibt es noch den Befehl
-\tty{MESSAGE}, der einfach nur eine Meldung auf der Konsole bzw. im
-Listing erzeugt.  Seine Benutzung ist den anderen drei Befehlen
+\tty{MESSAGE}, der einfach nur eine Meldung im Listing und auf
+der Konsole erzeugt (letzteres nur, wenn nicht im quiet-Modus
+gearbeitet wird).  Seine Benutzung ist den anderen drei Befehlen
 gleich.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -12232,6 +12235,14 @@ Angaben:
 	        oder Makrotabelle "ubergelaufen.  Versuchen Sie es noch
 	        einmal mit der \tty{-A}-Option.}
                {keines}
+\errentry{10008}{INCLUDE zu tief verschachtelt}
+               {fatal}
+               {Die Include-Verschachtelungstiefe hat das gegebene Limit
+                (im Default 200) "uberschritten.  Dieses Limit kann "uber
+                den {\tt -maxinclevel}-Schalter herauf gesetzt werden, eine
+                fehlerhafte (rekusive) Verschachtelung ist aber die
+                wahrscheinlichere Ursache.}
+               {Die INCLUDE-Anweisung, mit der das Limit "uberschritten wurde.}
 \end{description}
 
 %%===========================================================================

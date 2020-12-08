@@ -897,6 +897,10 @@ Message ErrMsgStackOvfl
  "Stapel&uuml;berlauf"
  "stack overflow"
  
+Message ErrMsgMaxIncLevelExceeded
+ "INCLUDE zu tief verschachtelt"
+ "INCLUDE nested too deeply"
+
 Message ErrMsgTooManyErrors
  "zu viele Fehler, Assembler abgebrochen"
  "too many errors, assembly terminated"
@@ -1306,6 +1310,7 @@ Message InfoMessHelp
  "-D <Symbol>[,Symbol]... : Symbole vordefinieren\n" \
  "-gnuerrors: Fehlermeldungen im GNU-Format\n" \
  "-maxerrors <Anzahl> : Assemblierung nach <Anzahl> Fehlern abbrechen\n" \
+ "-maxinclevel <Anzahl>: Include-Verschachtelungstiefe auf <Anzahl> begrenzen\n" \
  "-Werror : Warnungen als Fehler behandeln\n" \
  "-E [Name] : Zieldatei f&uuml;r Fehlerliste,\n" \
  "            !0..!4 f&uuml;r Standardhandles\n" \
@@ -1346,6 +1351,7 @@ Message InfoMessHelp
  "-D <symbol>[,symbol]... : predefine symbols\n" \
  "-gnuerrors: error messages in GNU format\n" \
  "-maxerrors <number>: terminate assembly after <number> errors\n" \
+ "-maxinclevel <number>: limit include nesting level to <number>\n" \
  "-Werror : treat warnings as errors\n" \
  "-E <name> : target file for error list,\n" \
  "            !0..!4 for standard handles\n" \

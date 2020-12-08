@@ -186,7 +186,7 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
         AbsAddress &= 0xff;
       else
       {
-        pOK = False;
+        *pOK = False;
         WrError(ErrNum_OverRange);
       }
     }
@@ -212,7 +212,7 @@ static Word EvalAddress(const tStrComp *pArg, IntType Type, Boolean *pOK)
     {
       if ((Hi(Address) != RegB) && !mFirstPassUnknown(Flags))
       {
-        pOK = False;
+        *pOK = False;
         WrError(ErrNum_OverRange);
       }
       if (*pOK)

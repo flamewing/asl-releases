@@ -200,6 +200,7 @@ static PInputTag GenerateProcessor(void)
   PInp->Buffer = NULL;
   PInp->Datei = NULL;
   PInp->IfLevel = SaveIFs();
+  PInp->IncludeLevel = CurrIncludeLevel;
   PInp->Restorer = NULL_Restorer;
   PInp->GetPos = NULL_GetPos;
   PInp->Macro = NULL;
@@ -1884,6 +1885,7 @@ static void INCLUDE_Cleanup(PInputTag PInp)
   }
   if (MakeIncludeList)
     PopInclude();
+  CurrIncludeLevel = PInp->IncludeLevel;
 }
 
 static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, size_t DestSize)
@@ -1966,9 +1968,12 @@ static void ExpandINCLUDE(Boolean SearchPath)
 
   /* neu besetzen */
 
-  strmaxcpy(CurrFileName, FNameArg.Str, STRINGSIZE); Tag->LineZ = MomLineCounter = 0;
+  strmaxcpy(CurrFileName, FNameArg.Str, STRINGSIZE);
+  Tag->LineZ = MomLineCounter = 0;
   NextIncDepth++; AddFile(FNameArg.Str);
   PushInclude(FNameArg.Str);
+  if (++CurrIncludeLevel > MaxIncludeLevel)
+    WrStrErrorPos(ErrNum_MaxIncLevelExceeded, &ArgStr[1]);
 
   /* einhaengen */
 
@@ -2858,6 +2863,11 @@ static void AssembleFile_ExitPass(void)
   tSavePhase *pSavePhase;
   int z;
 
+#if 0
+  if CurrIncludeLevel)
+    WrXError(ErrNum_InternalError, "open include");
+#endif
+
   if (SwitchFrom)
   {
     SwitchFrom();
@@ -2985,6 +2995,7 @@ static void AssembleFile(char *Name)
   }
 
   ClearIncludeList();
+  CurrIncludeLevel = 0;
 
   if (DebugMode != DebugNone)
     InitLineInfo();
@@ -3963,6 +3974,37 @@ static CMDResult CMD_MaxErrors(Boolean Negate, const char *Arg)
   }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     CMD_MaxIncludeLevel(Boolean Negate, const char *pArg)
+ * \brief  set maximum include nesting level
+ * \param  Negate back to default?
+ * \param  pArg numeric argument
+ * \return exec result
+ * ------------------------------------------------------------------------ */
+
+#define DEFAULT_MACINCLUDELEVEL 200
+
+static CMDResult CMD_MaxIncludeLevel(Boolean Negate, const char *pArg)
+{
+  if (Negate)
+  {
+    MaxErrors = DEFAULT_MACINCLUDELEVEL;
+    return CMDOK;
+  }
+  else if (pArg[0] == '\0')
+    return CMDErr;
+  else
+  {
+    Boolean OK;
+    Integer NewMaxIncludeLevel = ConstLongInt(pArg, &OK, 10);
+
+    if (!OK)
+      return CMDErr;
+    MaxIncludeLevel = NewMaxIncludeLevel;
+    return CMDArg;
+  }
+}
+
 static CMDResult CMD_TreatWarningsAsErrors(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
@@ -4000,6 +4042,7 @@ static CMDRec ASParams[] =
   { "LISTRADIX"     , CMD_ListRadix       },
   { "M"             , CMD_MacroOutput     },
   { "MAXERRORS"     , CMD_MaxErrors       },
+  { "MAXINCLEVEL"   , CMD_MaxIncludeLevel },
   { "n"             , CMD_NumericErrors   },
   { "NOICEMASK"     , CMD_NoICEMask       },
   { "o"             , CMD_OutFile         },
@@ -4279,6 +4322,7 @@ int main(int argc, char **argv)
   MaxErrors = 0;
   TreatWarningsAsErrors = False;
   ListRadixBase = 16;
+  MaxIncludeLevel = DEFAULT_MACINCLUDELEVEL;
 
   LineZ = 0;
 

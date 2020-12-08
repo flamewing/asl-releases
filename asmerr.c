@@ -605,6 +605,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgHeapOvfl; break;
     case ErrNum_StackOvfl:
       msgno = Num_ErrMsgStackOvfl; break;
+    case ErrNum_MaxIncLevelExceeded:
+      msgno = Num_ErrMsgMaxIncLevelExceeded; break;
     default:
       as_snprintf(Buf, BufSize, "%s %d", getmessage(Num_ErrMsgIntError), (int) Num);
   }

@@ -50,7 +50,8 @@ Message InfoMessHelp
  "          -m <Modus>        :  EPROM-Modus (odd,even,byte0..byte3)\n" \
  "          -e <Adresse>      :  Startadresse festlegen\n" \
  "          -S [L|B]<L&auml;nge>   :  Startadresse voranstellen\n" \
- "          -k                :  Quelldateien automatisch l&ouml;schen\n"
+ "          -k                :  Quelldateien automatisch l&ouml;schen\n" \
+ "          -q, -quiet        : Stiller Betrieb\n"
  "\n" \
  "options: -f <header list>  :  records to filter out\n" \
  "         -r <start>-<stop> :  address range to filter out\n" \
@@ -61,7 +62,8 @@ Message InfoMessHelp
  "         -m <mode>         :  EPROM-mode (odd,even,byte0..byte3)\n" \
  "         -e <address>      :  set entry address\n" \
  "         -S [L|B]<length>  :  prepend entry address to image\n" \
- "         -k                :  automatically erase source files\n"
+ "         -k                :  automatically erase source files\n" \
+ "         -q, -quiet        :  quiet operation\n"
 
 Message InfoMessDeducedRange
  "Ermittelter Adre&szlig;bereich"

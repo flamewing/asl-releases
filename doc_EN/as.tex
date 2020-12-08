@@ -1012,6 +1012,9 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       display of precise error positions in macro bodies!}
 \item{{\tt maxerrors [n]}: instructs the assembler to terminate
       assembly after the given number of errors.}
+\item{{\tt maxerrors [n]}: instructs the assembler to terminate
+      assembly if the include nesting level exceeds the given limit
+      (default is 200).}
 \item{{\tt Werror}: instructs the assembler to treat warnings as errors.}
 \end{itemize}
 As long as switches require no arguments and their concatenation does
@@ -7110,9 +7113,9 @@ ProgEnd:
         endif
 \end{verbatim}
 Apart from the instructions generating errors, there is also an
-instruction \tty{MESSAGE} that simply prints a message to the console
-resp. to the assembly listing.  Its usage is equal to the other three
-instructions.
+instruction \tty{MESSAGE} that simply prints a message to the assembly
+listing and th ecosole (the latter only if the quiet mode is not used).
+Its usage is equal to the other three instructions.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -11945,6 +11948,13 @@ described by:
                 a bad disposition of symbols and/or macros were used. Try
                 again, using AS with the option \tty{-A}.}
                {none}
+\errentry{10008}{INCLUDE nested too deeply}
+               {fatal}
+               {The include nesting depth has exceeded the given limit (200
+                by default). The limit may be raised via the {\tt -maxinclevel}
+                command line argument, a wrong (recursive) inclusion is however
+                the more probable cause.}
+               {the INCLUDE statement that exceeded the limit}
 \end{description}
 
 %%===========================================================================

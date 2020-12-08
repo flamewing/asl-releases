@@ -2,8 +2,8 @@
 if "%1"=="" goto main
 
 cd %1
-if not exist %1.asm goto end
-if not exist %1.ori goto end
+if not exist %1.asm goto notest
+if not exist %1.ori goto notest
 type %1.doc | ..\..\addcr
 set ASCMD=@asflags
 ..\..\asl -i ..\..\include -L +t 31 %1.asm
@@ -20,6 +20,7 @@ type %1.lst | find "Assemblierzeit" >> ..\..\testlog
 if exist %1.lst del %1.lst >nul
 if exist %1.inc del %1.inc >nul
 if exist %1.bin del %1.bin >nul
+:notest
 cd ..
 goto end
 

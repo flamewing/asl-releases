@@ -60,7 +60,8 @@ Message InfoMessHelp
  "          -d <Start>-<Stop> : Datenbereich festlegen (veraltet, siehe Handbuch)\n" \
  "          -e <Adresse>      : Startadresse festlegen\n" \
  "          -k                : Quelldateien autom. l&ouml;schen\n" \
- "          -avrlen <2|3>     : Adre&szlig;feldl&auml;nge Atmel-Format setzen\n"
+ "          -avrlen <2|3>     : Adre&szlig;feldl&auml;nge Atmel-Format setzen\n" \
+ "          -q, -quiet        : Stiller Betrieb\n"
  "\n" \
  "options: -f <header list>  : records to filter out\n" \
  "         -r <start>-<stop> : address range to filter out\n" \
@@ -81,7 +82,8 @@ Message InfoMessHelp
  "         -d <start>-<stop> : set data range (obsolete, see manual)\n" \
  "         -e <address>      : set entry address\n" \
  "         -k                : automatically erase source files\n" \
- "         -avrlen <2|3>     : set address field length of Atmel format\n"
+ "         -avrlen <2|3>     : set address field length of Atmel format\n" \
+ "         -q, -quiet        :  quiet operation\n"
 
 Message InfoMessDeducedRange
  "Ermittelter Adre&szlig;bereich"

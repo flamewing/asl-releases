@@ -1131,7 +1131,7 @@ static void DecodeADD_SUB(Word IsSUB_16)
           AdrLong = ImmVal();
           if (FormatCode == 0)
           {
-            if ((AdrMode == ModImm) && (abs(AdrLong) >= 1) && (abs(AdrLong) <= 2)) FormatCode = 2;
+            if ((AdrMode == ModImm) && (abs(AdrLong) >= 1) && (abs(AdrLong) <= 2) && !IsSUB_16) FormatCode = 2;
             else FormatCode = 1;
           }
           switch (FormatCode)

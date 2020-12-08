@@ -38,6 +38,8 @@ extern const char *OutName;
 
 extern const char *SegNames[PCMax + 1];
 
+extern Boolean QuietMode;
+
 extern void WrCopyRight(const char *Msg);
 
 extern void DelSuffix(char *Name);
@@ -67,6 +69,8 @@ extern CMDResult CMD_FilterList(Boolean Negate, const char *Arg);
 extern CMDResult CMD_Range(LongWord *pStart, LongWord *pStop,
                            Boolean *pStartAuto, Boolean *pStopAuto,
                            const char *Arg);
+
+extern CMDResult CMD_QuietMode(Boolean Negate, const char *Arg);
 
 extern Boolean FilterOK(Byte Header);
 

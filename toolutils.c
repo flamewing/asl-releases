@@ -37,6 +37,8 @@ const char *OutName = "STDOUT";   /* Pseudoname Output */
 
 static TMsgCat MsgCat;
 
+Boolean QuietMode;
+
 const char *SegNames[PCMax + 1] =
 {
   "NONE",
@@ -429,6 +431,14 @@ extern CMDResult CMD_Range(LongWord *pStartAddr, LongWord *pStopAddr,
     return CMDErr;
 
   return CMDArg;
+}
+
+CMDResult CMD_QuietMode(Boolean Negate, const char *Arg)
+{
+  UNUSED(Arg);
+
+  QuietMode = !Negate;
+  return CMDOK;
 }
 
 Boolean FilterOK(Byte Header)

@@ -270,6 +270,7 @@ extern DebugType DebugMode;
 extern Word NoICEMask;
 extern Byte ListMode;
 extern Byte ListOn;
+extern Integer MaxIncludeLevel;
 extern Boolean MakeUseList;
 extern Boolean MakeCrossList;
 extern Boolean MakeSectionList;
@@ -314,6 +315,7 @@ extern FILE *PrgFile;
 
 extern StringPtr ErrorPath,ErrorName;
 extern StringPtr OutName;
+extern Integer CurrIncludeLevel;
 extern StringPtr CurrFileName;
 extern LongInt CurrLine;
 extern LongInt MomLineCounter;

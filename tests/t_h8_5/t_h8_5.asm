@@ -21,10 +21,10 @@
                 add.w   @2000,r2
                 add.b   #5,r2
                 add.w   #100,r2
-                add.b:g #1,r2
-                add.w:g #-1,r2
-                add.b   #1,r2
-                add.w   #-1,r2
+                add.b:g #1,r2		; forced to add:g
+                add.w:g #-1,r2		; forced to add:g
+                add.b   #1,r2		; optimized to add:q
+                add.w   #-1,r2		; optimized to add:q
 
                 adds.w  #$10,r3
 
@@ -165,6 +165,13 @@
                 stm     (r0-r3),@-sp
 
                 sub.w   @r1,r0
+
+                sub.b:g #1,r2		; forced to sub:g
+                sub.w:g #-1,r2		; forced to sub:g
+                sub.b:q #1,r2		; forced to sub:q, which becomes add:q #-1,...
+                sub.w:q #-1,r2		; forced to sub:q, which becomes add:q #1,...
+                sub.b   #1,r2		; assembled as sub:g, since there is officially no sub:q
+                sub.w   #-1,r2		; assembled as sub:g, since there is officially no sub:q
 
                 subs.w  #2,r2
 

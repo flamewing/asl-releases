@@ -69,7 +69,7 @@ static void ChkIO_L(char *s, int line)
 
 static void ParamError(Boolean InEnv, char *Arg)
 {
-  printf("%s%s\n%s\n", getmessage((InEnv)?Num_ErrMsgInvEnvParam:Num_ErrMsgInvParam), Arg, getmessage(Num_ErrMsgProgTerm));
+  fprintf(stderr, "%s%s\n%s\n", getmessage((InEnv)?Num_ErrMsgInvEnvParam:Num_ErrMsgInvParam), Arg, getmessage(Num_ErrMsgProgTerm));
   exit(1);
 }
 
@@ -199,7 +199,8 @@ static void ProcessFile(const char *FileName, LongWord Offset)
     FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
 
   errno = 0;
-  printf("%s==>>%s", FileName, TargName);
+  if (!QuietMode)
+    printf("%s==>>%s", FileName, TargName);
   ChkIO(OutName);
 
   SumLen = 0;
@@ -244,7 +245,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           if (AddChunk(&UsedList, ErgStart, ErgStop - ErgStart + 1, True))
           {
             errno = 0;
-            printf(" %s\n", getmessage(Num_ErrMsgOverlap));
+            fprintf(stderr, " %s\n", getmessage(Num_ErrMsgOverlap));
             ChkIO(OutName);
           }
         }
@@ -294,9 +295,12 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   }
   while (InpHeader != 0);
 
-  errno = 0; printf("  ("); ChkIO(OutName);
-  errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
-  errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  if (!QuietMode)
+  {
+    errno = 0; printf("  ("); ChkIO(OutName);
+    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+    errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  }
   if (!SumLen)
   {
     errno = 0;
@@ -545,15 +549,17 @@ static CMDResult CMD_ForceSegment(Boolean Negate,  const char *Arg)
 #define P2BINParamCnt (sizeof(P2BINParams) / sizeof(*P2BINParams))
 static CMDRec P2BINParams[] =
 {
-  { "f", CMD_FilterList },
-  { "r", CMD_AdrRange },
-  { "s", CMD_CheckSum },
-  { "m", CMD_ByteMode },
-  { "l", CMD_FillVal },
-  { "e", CMD_EntryAdr },
-  { "S", CMD_StartHeader },
-  { "k", CMD_AutoErase },
-  { "SEGMENT", CMD_ForceSegment },
+  { "f"        , CMD_FilterList },
+  { "r"        , CMD_AdrRange },
+  { "s"        , CMD_CheckSum },
+  { "m"        , CMD_ByteMode },
+  { "l"        , CMD_FillVal },
+  { "e"        , CMD_EntryAdr },
+  { "S"        , CMD_StartHeader },
+  { "k"        , CMD_AutoErase },
+  { "q"        , CMD_QuietMode },
+  { "QUIET"    , CMD_QuietMode },
+  { "SEGMENT"  , CMD_ForceSegment },
 };
 
 int main(int argc, char **argv)	
@@ -574,9 +580,6 @@ int main(int argc, char **argv)
   chunks_init();
   cmdarg_init(*argv);
   toolutils_init(*argv);
-
-  as_snprintf(Ver, sizeof(Ver), "P2BIN/C V%s", Version);
-  WrCopyRight(Ver);
 
   InitChunk(&UsedList);
 
@@ -609,10 +612,16 @@ int main(int argc, char **argv)
   ValidSegment = SegCode;
   ProcessCMD(argc, argv, P2BINParams, P2BINParamCnt, ParUnprocessed, "P2BINCMD", ParamError);
 
+  if (!QuietMode)
+  {
+    as_snprintf(Ver, sizeof(Ver), "P2BIN/C V%s", Version);
+    WrCopyRight(Ver);
+  }
+
   if (ProcessedEmpty(ParUnprocessed))
   {
     errno = 0;
-    printf("%s\n", getmessage(Num_ErrMsgTargMissing));
+    fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargMissing));
     ChkIO(OutName);
     exit(1);
   }
@@ -647,12 +656,15 @@ int main(int argc, char **argv)
     if (StartAdr > StopAdr)
     {
       errno = 0;
-      printf("%s\n", getmessage(Num_ErrMsgAutoFailed));
+      fprintf(stderr, "%s\n", getmessage(Num_ErrMsgAutoFailed));
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
-    printf("0x%08lX\n", LoDWord(StopAdr));
+    if (!QuietMode)
+    {
+      printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr));
+      printf("0x%08lX\n", LoDWord(StopAdr));
+    }
   }
 
   OpenTarget();

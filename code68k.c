@@ -1618,9 +1618,9 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
             i = 2;
             break;
           default:
-            i = -1;
+            i = 3;
         }
-        if (AdrComps[i].Art != None)
+        if ((i >= 3) || AdrComps[i].Art != None)
         {
           WrError(ErrNum_InvAddrMode);
           return ModNone;
@@ -2552,8 +2552,6 @@ static void DecodeANDOR(Word Index)
   if (!ChkArgCnt(2, 2));
   else if (CheckColdSize())
   {
-    if ((as_strcasecmp(ArgStr[2].Str, "CCR")) && (as_strcasecmp(ArgStr[2].Str, "SR")))
-      DecodeAdr(&ArgStr[2], MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult);
     if (!as_strcasecmp(ArgStr[2].Str, "CCR"))     /* AND #...,CCR */
     {
       if (*AttrPart.Str && (OpSize != eSymbolSize8Bit)) WrError(ErrNum_InvOpSize);
@@ -2583,43 +2581,48 @@ static void DecodeANDOR(Word Index)
         }
       }
     }
-    else if (AdrResult.Num == ModData)                 /* AND <EA>,Dn */
+    else
     {
-      WAsmCode[0] = 0x8000 | (OpSize << 6) | ((Reg = AdrResult.Mode) << 9) | (Op << 14);
-      if (DecodeAdr(&ArgStr[1], ((Variant == I_Variant) ? 0 : MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModPC | MModPCIdx | MModAbs) | MModImm, &AdrResult))
+      DecodeAdr(&ArgStr[2], MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult);
+      if (AdrResult.Num == ModData)                 /* AND <EA>,Dn */
       {
-        if ((AdrResult.Num == ModImm) && (Variant == I_Variant))
-          WAsmCode[0] = (OpSize << 6) | (Op << 9) | Reg;
-        else
-          WAsmCode[0] |= AdrResult.Mode;
-        CodeLen = 2 + AdrResult.Cnt;
-        CopyAdrVals(WAsmCode + 1, &AdrResult);
-      }
-    }
-    else if (AdrResult.Num != ModNone)                 /* AND ...,<EA> */
-    {
-      if (DecodeAdr(&ArgStr[1], MModData | MModImm, &AdrResult) == ModImm)                   /* AND #..,<EA> */
-      {
-        WAsmCode[0] = (OpSize << 6) | (Op << 9);
-        CodeLen = 2 + AdrResult.Cnt;
-        CopyAdrVals(WAsmCode + 1, &AdrResult);
-        if (DecodeAdr(&ArgStr[2], MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult))
+        Reg = AdrResult.Mode;
+        WAsmCode[0] = 0x8000 | (OpSize << 6) | (Reg << 9) | (Op << 14);
+        if (DecodeAdr(&ArgStr[1], ((Variant == I_Variant) ? 0 : MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModPC | MModPCIdx | MModAbs) | MModImm, &AdrResult))
         {
-          WAsmCode[0] |= AdrResult.Mode;
-          CopyAdrVals(WAsmCode + (CodeLen >> 1), &AdrResult);
-          CodeLen += AdrResult.Cnt;
-        }
-        else
-          CodeLen = 0;
-      }
-      else if (AdrResult.Num != ModNone)               /* AND Dn,<EA> ? */
-      {
-        WAsmCode[0] = 0x8100 | (OpSize << 6) | (AdrResult.Mode << 9) | (Op << 14);
-        if (DecodeAdr(&ArgStr[2], MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult))
-        {
+          if ((AdrResult.Num == ModImm) && (Variant == I_Variant))
+            WAsmCode[0] = (OpSize << 6) | (Op << 9) | Reg;
+          else
+            WAsmCode[0] |= AdrResult.Mode;
           CodeLen = 2 + AdrResult.Cnt;
           CopyAdrVals(WAsmCode + 1, &AdrResult);
-          WAsmCode[0] |= AdrResult.Mode;
+        }
+      }
+      else if (AdrResult.Num != ModNone)                 /* AND ...,<EA> */
+      {
+        if (DecodeAdr(&ArgStr[1], MModData | MModImm, &AdrResult) == ModImm)                   /* AND #..,<EA> */
+        {
+          WAsmCode[0] = (OpSize << 6) | (Op << 9);
+          CodeLen = 2 + AdrResult.Cnt;
+          CopyAdrVals(WAsmCode + 1, &AdrResult);
+          if (DecodeAdr(&ArgStr[2], MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult))
+          {
+            WAsmCode[0] |= AdrResult.Mode;
+            CopyAdrVals(WAsmCode + (CodeLen >> 1), &AdrResult);
+            CodeLen += AdrResult.Cnt;
+          }
+          else
+            CodeLen = 0;
+        }
+        else if (AdrResult.Num != ModNone)               /* AND Dn,<EA> ? */
+        {
+          WAsmCode[0] = 0x8100 | (OpSize << 6) | (AdrResult.Mode << 9) | (Op << 14);
+          if (DecodeAdr(&ArgStr[2], MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs, &AdrResult))
+          {
+            CodeLen = 2 + AdrResult.Cnt;
+            CopyAdrVals(WAsmCode + 1, &AdrResult);
+            WAsmCode[0] |= AdrResult.Mode;
+          }
         }
       }
     }

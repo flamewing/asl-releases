@@ -125,8 +125,8 @@ static void GetCBlockName(char *pDest, size_t DestSize, unsigned Num)
 
 static void ParamError(Boolean InEnv, char *Arg)
 {
-   printf("%s%s\n", getmessage(InEnv ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
-   printf("%s\n", getmessage(Num_ErrMsgProgTerm));
+   fprintf(stderr, "%s%s\n", getmessage(InEnv ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
+   fprintf(stderr, "%s\n", getmessage(Num_ErrMsgProgTerm));
    exit(1);
 }
 
@@ -200,7 +200,10 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   if (TestID !=FileMagic)
     FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
 
-  errno = 0; printf("%s==>>%s", FileName, TargName); ChkIO(OutName);
+  if (!QuietMode)
+  {
+    errno = 0; printf("%s==>>%s", FileName, TargName); ChkIO(OutName);
+  }
 
   SumLen = 0;
 
@@ -283,14 +286,14 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           ErgLen = (ErgStop + 1 - ErgStart) * Gran;
           if (AddChunk(&UsedList, ErgStart, ErgStop - ErgStart + 1, True))
           {
-            errno = 0; printf(" %s\n", getmessage(Num_ErrMsgOverlap)); ChkIO(OutName);
+            errno = 0; fprintf(stderr, " %s\n", getmessage(Num_ErrMsgOverlap)); ChkIO(OutName);
           }
         }
       }
 
       if (doit && (ErgStop > MaxAdr))
       {
-        errno = 0; printf(" %s\n", getmessage(Num_ErrMsgAdrOverflow)); ChkIO(OutName);
+        errno = 0; fprintf(stderr, " %s\n", getmessage(Num_ErrMsgAdrOverflow)); ChkIO(OutName);
       }
 
       if (doit)
@@ -688,12 +691,15 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   }
   while (InpHeader !=0);
 
-  errno = 0; printf("  ("); ChkIO(OutName);
-  errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
-  errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  if (!QuietMode)
+  {
+    errno = 0; printf("  ("); ChkIO(OutName);
+    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+    errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  }
   if (!SumLen)
   {
-    errno = 0; fputs(getmessage(Num_WarnEmptyFile), stdout); ChkIO(OutName);
+    errno = 0; fputs(getmessage(Num_WarnEmptyFile), stderr); ChkIO(OutName);
   }
 
   errno = 0;
@@ -1097,23 +1103,25 @@ static CMDResult CMD_CFormat(Boolean Negate, const char *pArg)
 #define P2HEXParamCnt (sizeof(P2HEXParams) / sizeof(*P2HEXParams))
 static CMDRec P2HEXParams[] =
 {
-  { "f", CMD_FilterList },
-  { "r", CMD_AdrRange },
-  { "R", CMD_AdrRelocate },
-  { "a", CMD_RelAdr },
-  { "i", CMD_IntelMode },
-  { "m", CMD_MultiMode },
-  { "F", CMD_DestFormat },
-  { "5", CMD_Rec5 },
-  { "s", CMD_SepMoto },
-  { "d", CMD_DataAdrRange },
-  { "e", CMD_EntryAdr },
-  { "l", CMD_LineLen },
-  { "k", CMD_AutoErase },
-  { "M", CMD_MinMoto },
-  { "SEGMENT", CMD_ForceSegment },
-  { "AVRLEN", CMD_AVRLen },
-  { "CFORMAT", CMD_CFormat },
+  { "f"        , CMD_FilterList },
+  { "r"        , CMD_AdrRange },
+  { "R"        , CMD_AdrRelocate },
+  { "a"        , CMD_RelAdr },
+  { "i"        , CMD_IntelMode },
+  { "m"        , CMD_MultiMode },
+  { "F"        , CMD_DestFormat },
+  { "5"        , CMD_Rec5 },
+  { "s"        , CMD_SepMoto },
+  { "d"        , CMD_DataAdrRange },
+  { "e"        , CMD_EntryAdr },
+  { "l"        , CMD_LineLen },
+  { "k"        , CMD_AutoErase },
+  { "M"        , CMD_MinMoto },
+  { "q"        , CMD_QuietMode },
+  { "QUIET"    , CMD_QuietMode },
+  { "SEGMENT"  , CMD_ForceSegment },
+  { "AVRLEN"   , CMD_AVRLen },
+  { "CFORMAT"  , CMD_CFormat },
 };
 
 static Word ChkSum;
@@ -1135,9 +1143,6 @@ int main(int argc, char **argv)
   toolutils_init(*argv);
   nlmessages_init("p2hex.msg", *argv, MsgId1, MsgId2);
   ioerrs_init(*argv);
-
-  as_snprintf(Ver, sizeof(Ver), "P2HEX/C V%s", Version);
-  WrCopyRight(Ver);
 
   InitChunk(&UsedList);
 
@@ -1173,9 +1178,15 @@ int main(int argc, char **argv)
   strcpy(CFormat, DefaultCFormat);
   ProcessCMD(argc, argv, P2HEXParams, P2HEXParamCnt, ParUnprocessed, "P2HEXCMD", ParamError);
 
+  if (!QuietMode)
+  {
+    as_snprintf(Ver, sizeof(Ver), "P2HEX/C V%s", Version);
+    WrCopyRight(Ver);
+  }
+
   if (ProcessedEmpty(ParUnprocessed))
   {
-    errno = 0; printf("%s\n", getmessage(Num_ErrMsgTargMissing)); ChkIO(OutName);
+    errno = 0; fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargMissing)); ChkIO(OutName);
     exit(1);
   }
 
@@ -1216,12 +1227,15 @@ int main(int argc, char **argv)
     if (StartAdr[ChkSegment] > StopAdr[ChkSegment])
     {
       errno = 0;
-      printf("%s\n", getmessage(Num_ErrMsgAutoFailed));
+      fprintf(stderr, "%s\n", getmessage(Num_ErrMsgAutoFailed));
       ChkIO(OutName);
       exit(1);
     }
-    printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr[ChkSegment]));
-    printf("0x%08lX\n", LoDWord(StopAdr[ChkSegment]));
+    if (!QuietMode)
+    {
+      printf("%s: 0x%08lX-", getmessage(Num_InfoMessDeducedRange), LoDWord(StartAdr[ChkSegment]));
+      printf("0x%08lX\n", LoDWord(StopAdr[ChkSegment]));
+    }
   }
 
   OpenTarget();

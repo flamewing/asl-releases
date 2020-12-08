@@ -8,5 +8,4 @@
 
 - IsDef liefert Dekoder
 - Entschüsselung AttrPart über strchr()
-- rekursive Verschachtelung abfangen
 

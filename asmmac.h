@@ -38,7 +38,7 @@ typedef struct _TInputTag
 {
   struct _TInputTag *Next;
   Boolean IsMacro;
-  Integer IfLevel;
+  Integer IfLevel, IncludeLevel;
   Boolean First;
   Boolean GlobalSymbols;
   tLstMacroExp OrigDoLst;

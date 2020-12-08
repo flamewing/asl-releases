@@ -18,7 +18,7 @@
 #endif
 #include "ieeefloat.h"
 
-#define DBG_FLOAT 1
+#define DBG_FLOAT 0
 
 /*!------------------------------------------------------------------------
  * \fn     as_fpclassify(Double inp)
