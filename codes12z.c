@@ -879,7 +879,7 @@ static Boolean DecodeBitfieldArg2(LongWord *pResult, const tStrComp *pRegArg, tS
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop)
+ * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop, ShortInt OpSize)
  * \brief  encode a bit symbol from instruction argument(s)
  * \param  pResult resulting encoded bit
  * \param  Start first argument
@@ -919,7 +919,7 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop, ShortInt OpS
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBitfieldArg(LongWord *pResult, int Start, int Stop)
+ * \fn     DecodeBitfieldArg(LongWord *pResult, int Start, int Stop, ShortInt OpSize)
  * \brief  encode a bit symbol from instruction argument(s)
  * \param  pResult resulting encoded bit
  * \param  Start first argument
@@ -1012,7 +1012,6 @@ static void DissectBit_S12Z(char *pDest, size_t DestSize, LargeWord Inp)
   DissectBitSymbol(Inp, &Address, &BitPos, &BitWidth, &OpSize);
   Attribute = (OpSize == eSymbolSize24Bit) ? 'p' : "bwl"[OpSize];
 
-  UNUSED(DestSize);
   if (BitWidth > 1)
     as_snprintf(pDest, DestSize, "$%x(%c).%u:%u", (unsigned)Address, Attribute, (unsigned)BitWidth, (unsigned)BitPos);
   else

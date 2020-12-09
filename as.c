@@ -1873,7 +1873,7 @@ static void INCLUDE_Cleanup(PInputTag PInp)
   fclose(PInp->Datei);
   free(PInp->Buffer);
   LineSum += MomLineCounter;
-  if ((*LstName != '\0') && (!QuietMode))
+  if ((*LstName != '\0') && !QuietMode)
   {
     String Tmp;
 
@@ -2833,6 +2833,7 @@ static void AssembleFile_InitPass(void)
   InitLstMacroExpMod(&LstMacroExpModOverride);
   InitLstMacroExpMod(&LstMacroExpModDefault);
   SetFlag(&RelaxedMode, RelaxedName, DefRelaxedMode);
+  SetFlag(&CompMode, CompModeName, DefCompMode);
   strmaxcpy(TmpCompStr, NestMaxName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
 
@@ -3634,6 +3635,14 @@ static CMDResult CMD_QuietMode(Boolean Negate, const char *Arg)
   return CMDOK;
 }
 
+static CMDResult CMD_CompMode(Boolean Negate, const char *Arg)
+{
+  UNUSED(Arg);
+
+  DefCompMode = !Negate;
+  return CMDOK;
+}
+
 static CMDResult CMD_ThrowErrors(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
@@ -4050,8 +4059,9 @@ static CMDRec ASParams[] =
   { "p"             , CMD_SharePascal     },
   { "q"             , CMD_QuietMode       },
   { "QUIET"         , CMD_QuietMode       },
+  { CompModeName    , CMD_CompMode        },
   { "r"             , CMD_MsgIfRepass     },
-  { "RELAXED"       , CMD_Relaxed         },
+  { RelaxedName     , CMD_Relaxed         },
   { "s"             , CMD_SectionList     },
   { "SHAREOUT"      , CMD_ShareOutFile    },
   { "OLIST"         , CMD_ListOutFile     },
@@ -4306,6 +4316,7 @@ int main(int argc, char **argv)
   MakeDebug = False;
   ExtendErrors = 0;
   DefRelaxedMode = False;
+  DefCompMode = False;
   MacroOutput = False;
   MacProOutput = False;
   CodeOutput = True;

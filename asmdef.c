@@ -87,6 +87,7 @@ Boolean MakeCrossList;	                 /* Querverweisliste ? */
 Boolean MakeSectionList;                 /* Sektionsliste ? */
 Boolean MakeIncludeList;                 /* Includeliste ? */
 Boolean RelaxedMode, DefRelaxedMode;     /* alle Integer-Syntaxen zulassen ? */
+Boolean DefCompMode, CompMode;           /* enable compatibility mode */
 Word ListMask;                           /* Listingmaske */
 ShortInt ExtendErrors;	                 /* erweiterte Fehlermeldungen */
 Integer EnumSegment;                     /* ENUM state & config */

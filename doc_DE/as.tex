@@ -1030,6 +1030,9 @@ bzw. \ref{ChapShareOrder}.
       Include-Verschachtelungstiefe abzubrechen (Default ist 200).}
 \item{{\tt Werror}: Weist den Assembler an, Warnungen als Fehler zu
       behandeln.}
+\item{\tty{compmode}: Dieser Schalter weist den Assembler an, im Default
+      im Kompatibilit"atsmodus zu arbeiten.  Genauere Informationen zu
+      diesem Modus finden sich im Abschnitt \ref{SectCompMode}.}
 \end{itemize}
 Sofern Schalter keine Argumente ben"otigen und ihre Zusammenziehung
 keinen mehrbuchstabigen Schalter ergibt, k"onnen mehrere Schalter
@@ -7362,6 +7365,32 @@ werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+\subsection{COMPMODE}
+\label{SectCompMode}
+\ttindex{COMPMODE}
+
+{\em G"ultigkeit: verschiedene}
+
+Auch wenn sich AS bem"uht, sich m"oglichst genauso zu verhalten wie die
+jeweiligen ''Original-Assembler'', so gibt es in der Praxis immer wieder
+Details, wo ein hundertprozentiges Nachbilden des jeweiligen Original-
+Verhaltens Optimierungen verhindern w"urde, die aus meiner Sicht valide
+und n"utzlich sind.  Mit einem
+\begin{verbatim}
+        compmode on
+\end{verbatim}
+kann man in eine Betriebsart umschalten, die dem ''Original-Verhalten''
+Vorrang vor optimalem Code gibt.  Ob f"ur das jeweilige Target solche
+F"alle vorliegen, ist im jeweiligen Unterkapitel mit dem prozessorspezifischen
+Hinweisen ausgef"uhrt.
+\par
+Im Default ist dieser Kompatibilit"ats-Modus ausgeschaltet, au"ser er
+wurde durch die gleichnamige Kommandozeilen-Option eingeschaltet. Die
+momentane Einstellung kann aus dem gleichnamigen Symbol ausgelesen
+werden.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 \subsection{END}
 \ttindex{END}
 
@@ -7520,11 +7549,53 @@ verwendet werden k"onnen.  Bei AS geht das (noch) nicht.
 Bei der Assemblersyntax dieser Prozessoren hat Hitachi reichlich
 bei Motorola abgekupfert (was so verkehrt ja nun auch nicht war...),
 nur leider wollte die Firma unbedingt ihr eigenes Format f"ur
-Hexadezimalzahlen einf"uhren, und dazu noch eines, das "ahnlich wie
-bei Microchip Hochkommas verwendet.  Das konnte (und wollte) ich bei
-AS nicht nachvollziehen, bei dem Hochkommas zur Einrahmung von
-ASCII-Sequenzen benutzt werden.  Anstelledessen werden Zahlen in der
-"ublichen Motorola-Syntax geschrieben, d.h. mit einem Dollarzeichen.
+Hexadezimalzahlen einf"uhren, und dazu noch eines, das ein einzelne
+Hochkommas verwendet, etwa in dieser Form:
+\begin{verbatim}
+   mov.w #h'ff,r0
+\end{verbatim}
+Dieses Format wird von AS im Default nicht unterst"utzt, es wird
+stattdessen die ''Motorola-Syntax'' mit vorangestelltem Dollarzeichen
+angeboten.  Falls man doch unbedingt die 'Hitachi-Syntax' benutzen
+will, z.B. um existierenden Code zu "ubersetzen, so mu"s der
+RELAXED-Modus eingeschaltet werden.  Bitte beachten, da"s diese Syntax
+bisher wenig getestet wurde und ich keine Garantie geben kann, da"s sie
+in allen F"allen funktioniert!
+
+%%---------------------------------------------------------------------------
+
+\section{H8/500}
+
+Der {\tt MOV}-Befehl des H8/500 bietet eine interessante und ungew"ohnliche
+Optimierung: Hat der Zieloperand eine L"ange von 16 Bit, so ist es trotzdem
+m"oglich, einen nur 8-bittigen (Immediate-)Quelloperanden zu verwenden.  Bei
+einer Anweisung der Form
+\begin{verbatim}
+   mov.w #$ffff,@$1234
+\end{verbatim}
+ist es also m"oglich, den Immediate-Quellwert lediglich in einem Byte mit
+dem Wert \$ff zu kodieren und ein Byte einzusparen.  Der Prozessor f"uhrt
+eine Vorzeichenerweiterung durch, so da"s aus \$ff das gew"unschte \$ffff
+wird.  AS kennt diese Optimierung und benutzt sie auch, wenn dies nicht
+durch einen expliziten \tty{:16}-Suffix am Immediate-Operanden verboten
+wird.
+
+Leider scheint der Original-Assembler von Hitachi diese Optimierung anders
+zu implementiern, er geht von einer Null-Erweiterung statt einer Vorzeichen-
+Erweiterung aus.  Das bedeutet, nicht Argumente von -128 bis +127 (\$ff80 bis
+\$007f) werden als ein Byte kodiert, sondern von 0 bis 255 (\$0000 bis \$00ff).
+Ob nun der Hitachi-Assember recht hat oder doch das H8/500 Programming
+Manual ist mir leider nicht bekannt und ich kann es auch nicht nachpr"ufen.
+Wie dem auch sein, falls man ohne "Anderung von existierendem Code das
+''Hitachi-Assembler-Verhalten'' m"ochte, kann man in den Kompatibilit"atsmodus
+schalten, entweder durch ein
+\begin{verbatim}
+  compmode on
+\end{verbatim}
+oder den entsprechenden Kommandozeilen-Schalter.
+
+Ansonsten gelten die gleichen Hinweise bez"uglich der Syntax hexadezimaler
+Zahlen wie f"ur H8/300.
 
 %%---------------------------------------------------------------------------
 

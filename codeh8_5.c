@@ -554,7 +554,7 @@ static LongInt ImmVal(void)
 static Boolean AdaptImmSize(const tStrComp *pArg)
 {
   LongInt ImmV = ImmVal();
-  Boolean ImmValShort = (ImmV >= -128) && (ImmV < 127);
+  Boolean ImmValShort = CompMode ? ((ImmV >= 0) && (ImmV <= 255)) : ((ImmV >= -128) && (ImmV <= 127));
 
   switch (OpSize)
   {

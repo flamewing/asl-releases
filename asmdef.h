@@ -129,6 +129,7 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 #define DefStackName     "DEFSTACK"   /* Default-Stack */
 #define NestMaxName      "NESTMAX"    /* max. nesting level of a macro */
 #define DottedStructsName "DOTTEDSTRUCTS" /* struct elements by default with . */
+#define CompModeName     "COMPMODE"   /* compatibility mode */
 
 extern const char *EnvName;
 
@@ -276,6 +277,7 @@ extern Boolean MakeCrossList;
 extern Boolean MakeSectionList;
 extern Boolean MakeIncludeList;
 extern Boolean RelaxedMode, DefRelaxedMode;
+extern Boolean CompMode, DefCompMode;
 extern Word ListMask;
 extern ShortInt ExtendErrors;
 extern Integer EnumSegment;

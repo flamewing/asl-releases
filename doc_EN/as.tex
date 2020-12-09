@@ -1016,6 +1016,9 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
       assembly if the include nesting level exceeds the given limit
       (default is 200).}
 \item{{\tt Werror}: instructs the assembler to treat warnings as errors.}
+\item{\tty{compmode}: This switch instructs the assembler to operate by
+      default in compatibility mode.  See section \ref{SectCompMode} for
+      more information about this mode.}
 \end{itemize}
 As long as switches require no arguments and their concatenation does
 not result in a multi-letter switch, it is possible to specify several
@@ -7194,6 +7197,29 @@ The current setting may be read from a symbol with the same name.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+\subsection{COMPMODE}
+\label{SectCompMode}
+\ttindex{COMPMODE}
+
+{\em valid for: various processors}
+
+Though the assember strives to behave like the correspondig "original
+assemblers", there are cases when emulating the original assembler's
+behaviour would forbid code optimizations which are valid and useful in
+my opinion.  Use the statement
+\begin{verbatim}
+        compmode on
+\end{verbatim}
+to switch to a 'compatibility mode' which prioritizes 'original behaviour'
+to most efficient code.  See the respective section with processor-specific
+hints whether there are any situations for the specific target.
+\par
+Compatibility mode is disabled by default, unless it was activated by the
+command line switch of same name.  The current setting may be read from a
+symbol with the same name.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 \subsection{END}
 \ttindex{END}
 
@@ -7357,11 +7383,48 @@ Regarding the assembler syntax of these processors, Hitachi generously
 copied from Motorola (that wasn't by far the worst choice...),
 unfortunately the company wanted to introduce its own format for
 hexadecimal numbers.  To make it even worse, it is a format that uses
-unbalanced single quotes, just like Microchip does.  This is something I
-could not (I even did not want to) reproduce with AS, as AS uses single
-quotes to surround ASCII character sequences.  Instead, one has to write
+unbalanced single quotes, just like Microchip does:
+\begin{verbatim}
+   mov.w #h'ff,r0
+\end{verbatim}
+This format is not supported by default.  Instead, one has to write
 hexadecimal numbers in the well-known Motorola syntax: with a leading
-dollar sign.
+dollar sign.  If you really need the 'Hitachi Syntax', e.g. to assemble
+existing code, enable the RELAXED mode.  Bear in mind that this syntax has
+received few testing so far.  I can therefore not guarantee that it will
+work in all cases!
+
+%%---------------------------------------------------------------------------
+
+\section{H8/500}
+
+The H8/500's {\tt MOV} instruction features an interesting and uncommon
+optimization: If the target operand has a size of 16 bits, it is still possible
+to use an 8-bit (immediate) source operand.  For example, for an instruction
+like this:
+\begin{verbatim}
+   mov.w #$ffff,@$1234
+\end{verbatim}
+it is possible to encode the source just as a single \$ff and to save one
+byte in code size.  The processor automatically performs a sign extension,
+which turns \$ff into the desired value \$ffff.  AS is awarte of this
+optimization and will use it, unless it was explicitly forbidden via a \tty{:16}
+suffix at the immediate operand.
+
+Unfortunately, the original Hitachi assembler seems to implement this optimization
+in another way: it assumes a zero instead of a sign extension.  This means that
+values from 0 to 255 (\$0000 to \$00ff) and not from -128 to +127 (\$ff80 to
+\$007f) are encoded as one byte.  I do not know whether the Hitachi assembler
+or the H8/500 Programmers Manual is right, and I have no way to verify this.
+Anyway, if one wants the ''Hitachi Assembler Behaviour'' for existing source
+code, one may enable the compatibility mode, either by the statement
+\begin{verbatim}
+  compmode on
+\end{verbatim}
+or by the respective command line switch.
+
+Aside from this, the same remarks regarding hexadecimal number syntax apply
+as for H8/500.
 
 %%---------------------------------------------------------------------------
 
