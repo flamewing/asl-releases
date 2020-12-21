@@ -17,6 +17,7 @@
 #undef strlen   /* VORSICHT, Rekursion!!! */
 
 char HexStartCharacter;	    /* characters to use for 10,11,...35 */
+char SplitByteCharacter;    /* output large numbers per-byte with given split char */
 
 /*--------------------------------------------------------------------------*/
 /* eine bestimmte Anzahl Leerzeichen liefern */
@@ -38,7 +39,7 @@ const char *Blanks(int cnt)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
+ * \fn     SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter)
  * \brief  convert number to string in given number system, leading zeros
  * \param  pDest where to write
  * \param  DestSize size of dest buffer
@@ -47,13 +48,33 @@ const char *Blanks(int cnt)
  * \param  ForceLeadZero prepend zero if first character is no number
  * \param  System number system
  * \param  StartCharacter 'a' or 'A' for hex digits
+ * \param  SplitCharacter split bytes if not NUL
  * ------------------------------------------------------------------------ */
 
-int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter)
+char *SysStringCore(char *pDest, char *pDestCurr, LargeWord Num, int System, int Stellen, char StartCharacter)
 {
-  int Len = 0, Cnt;
-  LargeWord digit;
-  char *ptr;
+  LargeWord Digit;
+
+  do
+  {
+    if (pDestCurr <= pDest)
+      break;
+    Digit = Num % System;
+    if (Digit < 10)
+      *(--pDestCurr) = Digit + '0';
+    else
+      *(--pDestCurr) = Digit - 10 + StartCharacter;
+    Num /= System;
+    Stellen--;
+  }
+  while ((Stellen > 0) || Num);
+  return pDestCurr;
+}
+
+int SysString(char *pDest, size_t DestSize, LargeWord Num, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter)
+{
+  int Len = 0;
+  char *pDestCurr, *pDestNext;
 
   if (DestSize < 1)
     return 0;
@@ -61,33 +82,55 @@ int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen
   if (Stellen > (int)DestSize - 1)
     Stellen = DestSize - 1;
 
-  ptr = pDest + DestSize - 1;
-  *ptr = '\0';
-  Cnt = Stellen;
-  do
+  pDestCurr = pDest + DestSize - 1;
+  *pDestCurr = '\0';
+  if (SplitCharacter)
   {
-    if (ptr <= pDest)
-      break;
+    LargeWord Part;
+    int ThisLen;
+    static int SystemByteLen[37];
 
-    digit = i % System;
-    if (digit < 10)
-      *(--ptr) = digit + '0';
-    else
-      *(--ptr) = digit - 10 + StartCharacter;
-    i /= System;
-    Cnt--;
+    if (!SystemByteLen[System])
+    {
+      char Dummy[50];
+
+      SystemByteLen[System] = SysString(Dummy, sizeof(Dummy), 0xff, System, 0, False, StartCharacter, False);
+    }
+
+    do
+    {
+      Part = Num % 256;
+      Num = Num / 256;
+      pDestNext = SysStringCore(pDest, pDestCurr, Part, System, Num ? SystemByteLen[System] : Stellen, StartCharacter);
+      ThisLen = pDestCurr - pDestNext;
+      Len += ThisLen;
+      pDestCurr = pDestNext;
+      Stellen -= ThisLen;
+      if (Num)
+      {
+        if (pDestCurr <= pDest)
+          break;
+        *(--pDestCurr) = SplitCharacter;
+        Len++;
+      }
+    }
+    while ((Stellen > 0) || Num);
+  }
+  else
+  {
+    pDestNext = SysStringCore(pDest, pDestCurr, Num, System, Stellen, StartCharacter);
+    Len += pDestCurr - pDestNext;
+    pDestCurr = pDestNext;
+  }
+
+  if (ForceLeadZero && !isdigit(*pDestCurr) && (pDestCurr > pDest))
+  {
+    *(--pDestCurr) = '0';
     Len++;
   }
-  while ((Cnt > 0) || (i != 0));
 
-  if (ForceLeadZero && !isdigit(*ptr) && (ptr > pDest))
-  {
-    *(--ptr) = '0';
-    Len++;
-  }
-
-  if (ptr != pDest)
-    strmov(pDest, ptr);
+  if (pDestCurr != pDest)
+    strmov(pDest, pDestCurr);
   return Len;
 }
 
@@ -383,7 +426,7 @@ int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
           Cnt = (pStr - Str)
               + SysString(pStr, sizeof(Str) - (pStr - Str), IntArg,
                           FormatContext.Arg[1] ? FormatContext.Arg[1] : 10,
-                          NumPadZeros, FormatContext.ForceLeadZero, HexStartCharacter);
+                          NumPadZeros, FormatContext.ForceLeadZero, HexStartCharacter, SplitByteCharacter);
           if (Cnt > (int)sizeof(Str))
             Cnt = sizeof(Str);
           Result += Append(&pDest, &DestSize, Str, Cnt, &FormatContext);

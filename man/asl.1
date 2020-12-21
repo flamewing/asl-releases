@@ -82,6 +82,11 @@ for including into a C program.  The file's name is constructed by replacing
 the source file's extension with '.h'. See the user manual for more information
 about symbol sharing.
 .TP
+.B -compmode
+Enable the 'compatibility mode', which aims at making the behaviour of AS more
+like the respective 'original assembler' in some situations.  See the manual for
+target-specific details.
+.TP
 .B -D <name[=value]>[,...]
 Pre-define symbols.  Predefined symbols are entered into the global symbol
 table prior to assembly of the source file(s).  If no value is given for a
@@ -123,6 +128,11 @@ standard format used by AS, locations inside macros are not reported!
 
 Force AS to terminate assembly after the given number of errors occured.
 .TP
+.B -maxinclevel <num>
+
+Limit the maximum nesting level of include statements to the given number.
+By default, this limit is set to 200.
+.TP
 .B -werror
 
 Force AS to treat warnings as errors.
@@ -136,6 +146,11 @@ than with uppercase letters A..F which is the default.
 Set the number system to be used in the listing.  By default, all integer
 values are printed in hex, but an arbitrary base between 2 and 36 may be
 used via this switch.
+.TP
+.B -splitbyte [character]
+
+Use split-byte display of numbers in the listing, e.g. to obtain split
+octal notation.
 .TP
 .B -i <path[:path...]>
 Add new entries to the list of paths that are searched for include files.
@@ -163,6 +178,9 @@ constructed by replacing the source file's extension with '.lst'.
 .B -l
 
 Turn on generation of an assembly listing and send it to the console.
+.TP
+.B -olist <file name>
+Override the default path and file name for the file the listing is written to.
 .TP
 .B -M
 
@@ -231,6 +249,11 @@ multi-passing, but be aware that it might yield a fairly large number of
 warnings, especially in the first pass.  Optionally, a pass number may be added
 to this option to inhibit output until a certain pass is reached.
 .TP
+.B -relaxed
+Enable the relaxed mode by default, which allows all syntax variants
+for hexadecimal/binary/ocatal constants (Intel, Motorola, Hitachi, C),
+rahter than only the target-specific one.
+.TP
 .B -s
 
 Add a section list to the assembly listing.  A section list contains
@@ -242,6 +265,10 @@ on via the
 or
 .B -l
 parameters.
+.TP
+.B -shareout <file>
+Override the default path and file name for the file containing shared
+symbols.
 .TP
 .B -t <mask>
 Turn on or off parts of the assembly listing that have no individual

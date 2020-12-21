@@ -75,6 +75,10 @@ Message ErrMsgOverlap
  "&uuml;berlappende Speicherbelegung"
  "overlapping memory usage"
 
+Message ErrMsgOverlapReg
+ "&uuml;berlappende Registernutzung"
+ "overlapping register usage"
+
 Message ErrMsgNoCaseHit
  "keine CASE-Bedingung zugetroffen"
  "none of the CASE conditions was true"
@@ -186,6 +190,10 @@ Message ErrMsgTrapValidInstruction
 Message ErrMsgPaddingAdded
  "Padding hinzugef&uuml;gt"
  "Padding added"
+
+Message ErrMsgRegNumWraparound
+ "Registernummer-Umlauf"
+ "register number wraparound"
 
 ;*****
 
@@ -364,6 +372,22 @@ Message ErrMsgUndefCond
 Message ErrMsgIncompCond
  "inkompatible Bedingungen"
  "incompatible conditions"
+
+Message ErrMsgUnknownFlag
+ "unbekanntes Flag"
+ "unknown flag"
+
+Message ErrMsgDuplicateFlag
+ "doppeltes Flag"
+ "duplicate flag"
+
+Message ErrMsgUnknownInt
+ "unbekannter Interrupt"
+ "unknown interrupt"
+
+Message ErrMsgDuplicateInt
+ "doppelter Interrupt"
+ "duplicate interrupt"
 
 Message ErrMsgJmpDistTooBig
  "Sprungdistanz zu gro&szlig;"
@@ -865,6 +889,22 @@ Message ErrMsgUnknownArg
  "unbekanntes Argument"
  "unknown argument"
 
+Message ErrMsgIndexRegMustBe16Bit
+ "Indexregister muss 16 Bit sein"
+ "index register must be 16 bit"
+
+Message ErrMsgIOAddrRegMustBe16Bit
+ "I/O Adressregister muss 16 Bit sein"
+ "I/O address register must be 16 bit"
+
+Message ErrMsgSegAddrRegMustBe32Bit
+ "Adressregister im segmentierten Modus muss 32 Bit sein"
+ "address register in segmented mode must be 32 bit"
+
+Message ErrMsgNonSegAddrRegMustBe16Bit
+ "Adressregister im nicht-segmentierten Modus muss 16 Bit sein"
+ "address register in non-segmented mode must be 16 bit"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"
@@ -1328,6 +1368,7 @@ Message InfoMessHelp
  "-x : erweiterte Fehlermeldungen       -n : Fehlermeldungen mit Nummer\n" \
  "-P : Makroprozessorausgabe erzeugen   -M : Makrodefinitionen extrahieren\n" \
  "-h : Hexadezimalzahlen mit Kleinbuchstaben\n" \
+ "-splitbyte [Zeichen] : Split-Byte-Darstellung von Zahlen\n" \
  "\n" \
  "Quelldateiangabe darf Jokerzeichen enthalten\n" \
  "\n" \
@@ -1369,6 +1410,7 @@ Message InfoMessHelp
  "-x : extended error messages          -n : add error #s to error messages\n" \
  "-P : write macro processor output     -M : extract macro definitions\n" \
  "-h : use lower case in hexadecimal output\n" \
+ "-splitbyte [character] : use split byte display of numbers\n" \
  "\n" \
  "source file specification may contain wildcards\n" \
  "\n" \

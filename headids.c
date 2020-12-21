@@ -59,6 +59,7 @@ static TFamilyDescr Descrs[] =
   { "Z8"           , 0x0079, eHexFormatIntel   },
   { "Super8"       , 0x0035, eHexFormatIntel   },
   { "eZ8"          , 0x0059, eHexFormatIntel   },
+  { "Z8000"        , 0x0034, eHexFormatIntel   },
   { "KCPSM"        , 0x006b, eHexFormatIntel   },
   { "KCPSM3"       , 0x005b, eHexFormatIntel   },
   { "Mico8"        , 0x005c, eHexFormatIntel   },

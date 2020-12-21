@@ -17,12 +17,13 @@
 #include "datatypes.h"
 
 extern char HexStartCharacter;
+extern char SplitByteCharacter;
 
 extern const char *Blanks(int cnt);
 
-#define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, False, HexStartCharacter)
+#define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, False, HexStartCharacter, SplitByteCharacter)
 
-extern int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter);
+extern int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter);
 
 extern char *as_strdup(const char *s);
 
@@ -102,5 +103,6 @@ extern void strutil_init(void);
 #define as_isalpha(c) (!!isalpha(__chartouint(c)))
 #define as_isupper(c) (!!isupper(__chartouint(c)))
 #define as_islower(c) (!!islower(__chartouint(c)))
+#define as_isalnum(c) (!!isalnum(__chartouint(c)))
 
 #endif /* _STRUTIL_H */

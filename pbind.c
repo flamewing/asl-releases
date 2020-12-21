@@ -74,7 +74,10 @@ static void ProcessFile(char *FileName)
   if (TestID != FileMagic)
     FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
 
-  errno = 0; printf("%s==>>%s", FileName, TargName); ChkIO(OutName);
+  if (!QuietMode)
+  {
+    errno = 0; printf("%s==>>%s", FileName, TargName); ChkIO(OutName);
+  }
 
   SumLen = 0;
 
@@ -132,9 +135,12 @@ static void ProcessFile(char *FileName)
   }
   while (InpHeader != FileHeaderEnd);
 
-  errno = 0; printf("  ("); ChkIO(OutName);
-  errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
-  errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  if (!QuietMode)
+  {
+    errno = 0; printf("  ("); ChkIO(OutName);
+    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+    errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
+  }
 
   if (fclose(SrcFile) == EOF)
     ChkIO(FileName);
@@ -142,15 +148,17 @@ static void ProcessFile(char *FileName)
 
 static void ParamError(Boolean InEnv, char *Arg)
 {
-  printf("%s%s\n", getmessage(InEnv ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
-  printf("%s\n", getmessage(Num_ErrMsgProgTerm));
+  fprintf(stderr, "%s%s\n", getmessage(InEnv ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
+  fprintf(stderr, "%s\n", getmessage(Num_ErrMsgProgTerm));
   exit(1);
 }
 
 #define BINDParamCnt (sizeof(BINDParams) / sizeof(*BINDParams))
 static CMDRec BINDParams[] =
 {
-  {"f", CMD_FilterList}
+  { "f"        , CMD_FilterList},
+  { "q"        , CMD_QuietMode },
+  { "QUIET"    , CMD_QuietMode }
 };
 
 int main(int argc, char **argv)
@@ -162,9 +170,6 @@ int main(int argc, char **argv)
   if (!NLS_Initialize(&argc, argv))
     exit(4);
   endian_init();
-
-  as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
-  WrCopyRight(Ver);
 
   stdhandl_init();
   cmdarg_init(*argv);
@@ -189,12 +194,18 @@ int main(int argc, char **argv)
 
   ProcessCMD(argc, argv, BINDParams, BINDParamCnt, ParUnprocessed, "BINDCMD", ParamError);
 
+  if (!QuietMode)
+  {
+    as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
+    WrCopyRight(Ver);
+  }
+
   z = argc - 1;
   while ((z > 0) && (!ParUnprocessed[z]))
     z--;
   if (z == 0)
   {
-    errno = 0; printf("%s\n", getmessage(Num_ErrMsgTargetMissing)); ChkIO(OutName);
+    errno = 0; fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargetMissing)); ChkIO(OutName);
     exit(1);
   }
   else

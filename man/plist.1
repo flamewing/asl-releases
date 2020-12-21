@@ -5,7 +5,7 @@
 
 .SH SYNTAX
 .B plist
-[ file name ]
+[ option(s) ] [ file(s) ]
 
 .SH DESCRIPTION
 
@@ -21,12 +21,15 @@ are target processors whose memory is not bytewise-organized.  The records
 that specify entry address and file creator have a different layout and
 therefore have a little bit different look in PLIST's output.
 
-PLIST does not accept multiple file arguments; processing of several files
-must be done with individual calls.
+PLIST accept multiple file arguments; processing of several files can be
+done with a single call.
 
 .SH COMMAND-LINE PARAMETERS
 
-none.
+To suppress the copyright message and reduce output to the necessary
+minimum, add the command line argument
+.TP
+.B -q or -quiet
 
 .SH NATIONAL LANGUAGE SUPPORT
 

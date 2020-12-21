@@ -129,7 +129,7 @@ typedef struct
 /*!------------------------------------------------------------------------
  * \fn     IsRegCore(const char *pArg, tRegInt *pValue, tSymbolSize *pSize)
  * \brief  check whether argument describes a CPU (general purpose) register
- * \param  pAsc argument
+ * \param  pArg argument
  * \param  pValue resulting register # if yes
  * \param  pSize resulting register size if yes
  * \return true if yes

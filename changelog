@@ -1,3 +1,10 @@
+2020-12-21 [1.42 Bld 186]
+
+- Addition    : add -q(uiet) command line switch to PLIST and support
+                multiple files
+- Addition    : Support Z8000 as target
+- Addition    : add -splitbyte command line switch
+
 2020-12-09 [1.42 Bld 185]
 
 - Addition    : Add compatibility mode switch for better compatibility

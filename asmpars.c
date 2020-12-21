@@ -1052,7 +1052,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   {
     *pResult = True;
     WrError(ErrNum_WOverRange);
-    return Wert&IntTypeDefs[(int)Typ].Mask;
+    return Wert & IntTypeDefs[(int)Typ].Mask;
   }
 }
 
@@ -1197,7 +1197,7 @@ static void ConstStringVal(const tStrComp *pExpr, TempResult *pDest, Boolean *pR
       switch (t.Typ)
       {
         case TempInt:
-          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0, False, HexStartCharacter);
+          TLen = SysString(Str, sizeof(Str), t.Contents.Int, OutRadixBase, 0, False, HexStartCharacter, SplitByteCharacter);
           pStr = Str;
           break;
         case TempFloat:

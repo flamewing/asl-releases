@@ -47,7 +47,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand September 2020}
+{\large Stand Dezember 2020}
 \end{raggedright}
 
 \clearpage
@@ -237,6 +237,7 @@ folgende Prozessorfamilien implementiert:
 \item{Siemens 80C166/167}
 \item{Zilog Z80, Z180, Z380}
 \item{Zilog Z8, Super8, Z8 Encore}
+\item{Zilog Z8000}
 \item{Xilinx KCPSM/KCPSM3 ('PicoBlaze')}
 \item{LatticeMico8}
 \item{Toshiba TLCS-900(L)}
@@ -858,6 +859,12 @@ Momentan sind folgende Schalter definiert:
       (Adressen, erzeugter Code, Symboltabelle) im Hexadezimalsystem.  Mit
       diesem Schalter kann ein beliebiges anderes Zahlensystem im Bereich
       2 bis 36 angegeben werden, z.B. '-listradix 8' f"ur oktale Ausgaben.}
+\item{\tty{SPLITBYTE [Zeichen]}: Zahlen im Listing werden Byte-weise
+      dargestellt, mit dem angegebenen Zeichen als Trenner.  Ein Punkt wird
+      als Trenner verwendet, wenn kein Zeichen angegeben wurde.  Diese Option
+      wird "ublichwerweise zusammen mit der \tty{LISTRADIX}-Option verwendet;
+      Listradix 8 zusammen mit einem Punkt als Trenner ergibt die sogenannte
+      ''Split-Octal''-Darstellung.}
 \item{\tty{o}:Bestimmt einen neuen Namen f"ur die von AS zu erzeugende
       Code-Datei.  Wird diese Option mehrfach verwendet, so werden
       die angegebenen Namen nacheinander den zu assemblierenden
@@ -2603,8 +2610,9 @@ und \tty{JBIT} genutzt werden.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\subsection{DEFBIT}
+\subsection{DEFBIT und DEFBITB}
 \ttindex{DEFBIT}
+\ttindex{DEFBITB}
 
 \subsubsection{S12Z}
 
@@ -2670,6 +2678,16 @@ P"archen aus Register und Bitposition einsetzen:
 	bitc	workbit		; gleich bedeutend
 \end{verbatim}
 
+\subsubsection{Z8000}
+
+Der Z8000 verf"ugt zwar "uber Befehle zum Setzen und R"ucksetzen
+von Bits, diese k"onnen jedoch nur auf Adressen im Speicher- und nicht
+im I/O-Adre"sraum wirken.  Aus diesem Grund lassen sich mit {\tt DEFBIT}
+bzw. {\tt DEFBITB} auch nur Bit-Objekte im Speicher-Adre"sraum definieren.
+Die Unterscheidung der Operandengr"o"se ist wichtig, weil der Z8000 ein
+Big-Endian-Prozessor ist: Bit {\em n} eines 16-Bit-Worts bei Adresse {\em m}
+entspr"ache Bit {\em n} eines 8-Bit-Byte bei Adresse {\em m+1}.
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \subsection{DEFBITFIELD}
@@ -2713,11 +2731,11 @@ f"ur \tty{BFINS} und \tty{BFEXT} verwendet werden.
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em G"ultigkeit: 8080/8085/8086, XA, Z80, 320C2x/5x, TLCS-47, AVR, F8}
+{\em G"ultigkeit: 8080/8085/8086, XA, Z80, Z8000, 320C2x/5x, TLCS-47, AVR, F8}
 
 \tty{PORT} arbeitet analog zu \tty{SFR}, nur wird das Symbol dem I/O-Adre"sbereich
 zugeordnet.  Erlaubte Werte sind 0..7 beim 3201x, 0..15 beim 320C2x,
-0..65535 beim 8086 und 320C5x, 0..63 beim AVR und 0..255 beim Rest.
+0..65535 beim 8086, Z8000 und 320C5x, 0..63 beim AVR und 0..255 beim Rest.
 \par
 Beispiel: eine PIO 8255 liege auf Adresse 20H:
 \begin{verbatim}
@@ -2732,7 +2750,7 @@ PIO_Ctrl   PORT PIO_Port_A+3
 \subsection{REG und NAMEREG}
 \ttindex{REG}\ttindex{NAMEREG}
 
-{\em G"ultigkeit: 680x0, AVR, M*Core, ST9, 80C16x, KCPSM \\
+{\em G"ultigkeit: 680x0, AVR, M*Core, ST9, 80C16x, Z8000, KCPSM \\
      ({\tt NAMEREG} nur  f"ur KCPSM(3)), LatticeMico8, MSP430(X)}
 
 Obwohl immer mit gleicher Syntax, hat diese Anweisung von Prozessor
@@ -3466,7 +3484,15 @@ Richtungen) stark erweiterten Befehlss"atzen, die auch auf Quellcode-Ebene
 nur g"o"stenteils aufw"arts-kompatibel sind.
 %%-----------
 \begin{quote}
-aj) KCPSM, KCPSM3
+aj) Z8001, Z8002, Z8003, Z8004
+\end{quote}
+"Uber die Wahl des Prozessors wird die Betriebsart (segmentiert f"ur
+Z8001 und Z8003, nicht segmentiert f"ur Z8002 und Z8004) bestimmt.  Eine
+Unterscheidung zwischen dem Z8001/8002 einerseits und Z8003/8004 andererseits
+findet aktuell nicht statt.
+%%-----------
+\begin{quote}
+ak) KCPSM, KCPSM3
 \end{quote}
 Bei beiden Prozessorkernen handelt es sich um keine eigenst"andigen
 Bausteine, sondern Logik-Kerne f"ur Gate-Arrays der Firma Xilinx.  Die
@@ -3475,7 +3501,7 @@ Instruktionen.  Es ist zu beachten, da"s sie nicht bin"ar
 aufw"artskompatibel ist!
 %%-----------
 \begin{quote}
-ak) MICO8\_05, MICO8\_V3, MICO8\_V31
+al) MICO8\_05, MICO8\_V3, MICO8\_V31
 \end{quote}
 Leider hat Lattice die Maschinencodes des Mico8 mehrfach ge"andert, so
 da"s verschiedene Targets notwendig wurden, um auch alte Designs weiter
@@ -3484,18 +3510,18 @@ im 2005er-Manual beschrieben wurde, die beiden anderen die Versionen 3.0
 bzw. 3.1.
 %%-----------
 \begin{quote}
-al) 96C141, 93C141
+am) 96C141, 93C141
 \end{quote}
 Diese beiden Prozessoren repr"asentieren die beiden Varianten der
 Prozessorfamilie: TLCS-900 und TLCS-900L.  Die Unterschiede dieser beiden
 Varianten werden in Abschnitt \ref{TLCS900Spec} genauer beleuchtet.
 %%-----------
 \begin{quote}
-am) 90C141
+an) 90C141
 \end{quote}
 %%-----------
 \begin{quote}
-an) 87C00, 87C20, 87C40, 87C70
+ao) 87C00, 87C20, 87C40, 87C70
 \end{quote}
 Die Prozessoren der TLCS-870-Reihe haben zwar den identischen CPU-Kern, je
 nach Variante aber eine unterschiedliche Peripherieausstattung.  Zum
@@ -3504,50 +3530,50 @@ Die Datei STDDEF87.INC benutzt analog zur MCS-51-Familie die hier
 m"ogliche Unterscheidung, um automatisch den korrekten Symbolsatz
 bereitzustellen.
 %%-----------
-ao) TLCS-870/C
-Momentan ist nur der Prozessorkern der TLCS-870/C-Familie impleemntiert.
+ap) TLCS-870/C
+Momentan ist nur der Prozessorkern der TLCS-870/C-Familie implmentiert.
 %%-----------
 \begin{quote}
-ap) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
+aq) 47C00 $\rightarrow$ 470C00 $\rightarrow$ 470AC00
 \end{quote}
 Diese drei Varianten der TLCS-47-Familie haben unterschiedlich gro"se
 RAM-und ROM-Adre"sbereiche, wodurch jeweils einige Befehle zur
 Bankumschaltung hinzukommen oder wegfallen.
 %%-----------
 \begin{quote}
-aq) 97C241
+ar) 97C241
 \end{quote}
 %%-----------
 \begin{quote}
-ar) TC9331
+as) TC9331
 \end{quote}
 %%-----------
 \begin{quote}
-as) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
+at) 16C54 $\rightarrow$ 16C55 $\rightarrow$ 16C56 $\rightarrow$ 16C57
 \end{quote}
 Diese Prozessoren unterscheiden sich durch den verf"ugbaren
 Adre"sraum im Programmspeicher, d.h. durch die Adresse, ab der
 der AS "Uberl"aufe anmeckert.
 %%-----------
 \begin{quote}
-at) 16C64, 16C84
+au) 16C64, 16C84
 \end{quote}
 Analog zur MCS-51-Familie findet hier keine Unterscheidung im
 Codegenerator statt, die unterschiedlichen Nummern dienen lediglich
 der Einblendung der korrekten SFRs in STDDEF18.INC.
 %%-----------
 \begin{quote}
-au) 17C42
+av) 17C42
 \end{quote}
 %%-----------
 \begin{quote}
-av) SX20, SX28
+aw) SX20, SX28
 \end{quote}
 Der SX20 steckt in einem kleineren Geh"ause, weshalb der Port C
 fehlt.
 %%-----------
 \begin{quote}
-aw) ST6200, ST6201, ST6203, ST6208, ST6209,\\
+ax) ST6200, ST6201, ST6203, ST6208, ST6209,\\
     ST6210, ST6215, ST6218, ST6220, ST6225,\\
     ST6228, ST6230, ST6232, ST6235, ST6240,\\
     ST6242, ST6245, ST6246, ST6252, ST6253,\\
@@ -3558,7 +3584,7 @@ Die einzelnen ST6-Varianten differieren in der Menge der
 On-Chip-Peripherie und dem eingebauten Speicher.
 %%-----------
 \begin{quote}
-ax) ST7 \\
+ay) ST7 \\
     ST72251G1, ST72251G2, ST72311J2, ST72311J4, \\
     ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, \\
     ST72325S6, ST72325J7, ST72325R9, ST72324J6, \\
@@ -3619,7 +3645,7 @@ gleichen Maschinencode wie beim ST7 haben, ist er nicht bin"ar
 aufw"artskompatibel.
 %%-----------
 \begin{quote}
-ay) ST9020, ST9030, ST9040, ST9050
+az) ST9020, ST9030, ST9040, ST9050
 \end{quote}
 Diese 4 Namen vetreten die vier ,,Unterfamilien'' der ST9-Familie, die
 sich durch eine unterschiedliche Ausstattung mit On-Chip-Peripherie
@@ -3628,11 +3654,11 @@ Unterscheidung wieder nur im Includefile mit den Peripherieadressen zum
 Zuge kommt.
 %%-----------
 \begin{quote}
-az) 6804
+ba) 6804
 \end{quote}
 %%-----------
 \begin{quote}
-ba) 32010 $\rightarrow$ 32015
+bb) 32010 $\rightarrow$ 32015
 \end{quote}
 Der TMS32010 besitzt nur 144 Byte internes RAM, weshalb AS Adressen im
 Datensegment auf eben diesen Bereich begrenzt.  F"ur den 32015 gilt diese
@@ -3640,13 +3666,13 @@ Beschr"ankung nicht, es kann der volle Bereich von 0--255 angesprochen
 werden.
 %%-----------
 \begin{quote}
-bb) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
+bc) 320C25 $\rightarrow$ 320C26 $\rightarrow$ 320C28
 \end{quote}
 Diese Prozessoren unterscheiden sich nur leicht in der
 On-Chip-Peripherie sowie den Konfigurationsbefehlen.
 %%-----------
 \begin{quote}
-bc) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
+bd) 320C30, 320C31 $\rightarrow$ 320C40, 320C44
 \end{quote}
 Der 320C31 ist eine etwas ,,abgespeckte'' Version des 320C30 mit dem
 gleichen Befehlssatz, jedoch weniger Peripherie.  In STDDEF3X.INC
@@ -3657,7 +3683,7 @@ der C44 eine abgespeckte Version des C40, mit weniger Peripherie
 und kleinerem Adre"raum.
 %%-----------
 \begin{quote}
-bd) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
+be) 320C203 $\rightarrow$ 320C50, 320C51, 320C53
 \end{quote}
 Ersterer ist der generelle Repr"asentant f"ur die
 C20x-Signalprozessorfamilie, die eine Untermenge des C5x-Befehlssatzes
@@ -3665,12 +3691,12 @@ implementieren.  Die Unterscheidung zwischen den verschiedenen
 C5x-Prozessoren wird von AS momentan nicht ausgenutzt.
 %%-----------
 \begin{quote}
-be) 320C541
+bf) 320C541
 \end{quote}
 Dies ist momentan der Pepr"asentant f"ur die TMS320C54x-Familie...
 %%-----------
 \begin{quote}
-bf) TI990/4, TI990/10, TI990/12 \\
+bg) TI990/4, TI990/10, TI990/12 \\
     TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
 \end{quote}
 Die TMS99xx/99xxx-Prozessoren sind im Prinzip Single-Chip-Implementierungen
@@ -3682,7 +3708,7 @@ dem Vorhandensein eines privilegierten Modus.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bg) \> TMS70C00, TMS70C20, TMS70C40, \\
+bh) \> TMS70C00, TMS70C20, TMS70C40, \\
     \> TMS70CT20, TMS70CT40, \\
     \> TMS70C02, TMS70C42, TMS70C82, \\
     \> TMS70C08, TMS70C48 \\
@@ -3697,21 +3723,21 @@ interne RAM-Menge, unterscheiden sich also nur in der Menge
 eingebauten ROMs.
 %%-----------
 \begin{quote}
-bh) 370C010, 370C020, 370C030, 370C040 und 370C050
+bi) 370C010, 370C020, 370C030, 370C040 und 370C050
 \end{quote}
 Analog zur MCS-51-Familie werden die unterschiedlichen Typen nur
 zur Unterscheidung der Peripherie in STDDEF37.INC genutzt, der
 Befehlssatz ist identisch.
 %%-----------
 \begin{quote}
-bi) MSP430 $\rightarrow$ MSP430X
+bj) MSP430 $\rightarrow$ MSP430X
 Die X-Variante des CPU-Kerns erweitert den Adre"sraum von 64
 KiByte auf 1 MiByte und erweitert den Befehlssatz, um
 Instrutionen mehrfach ausf"uhren zu k"onnen.
 \end{quote}
 %%-----------
 \begin{quote}
-bj) TMS1000, TMS1100, TMS1200, TMS1300
+bk) TMS1000, TMS1100, TMS1200, TMS1300
 \end{quote}
 F"ur TMS1000 und TMS1200 sind jeweils 1 KByte ROM und 64 Nibbles
 RAM vorgesehen, f"ur TMS1100 und TMS1300 jeweils das doppelte.  Des
@@ -3720,18 +3746,18 @@ Dewfault-Befehlssatz vorgesehen (AS kennt nur die Default-
 Befehlss"atze!).
 %%-----------
 \begin{quote}
-bk) SC/MP
+bl) SC/MP
 \end{quote}
 %%-----------
 \begin{quote}
-bl) 8070
+bm) 8070
 \end{quote}
 Dieser Prozessor repr"asentiert die gesamte 807x-Familie (die mindestens
 aus den 8070, 8072 und 8073 besteht), der jedoch ein einheitlicher
 CPU-Kern gemeinsam ist.
 %%-----------
 \begin{quote}
-bm) COP87L84
+bn) COP87L84
 \end{quote}
 Dies ist das momentan einzige unterst"utzte Mitglied der COP8-Familie
 von National Semiconductor.  Mir ist bekannt, da"s die Familie
@@ -3740,7 +3766,7 @@ Befehlssatz existieren, die nach Bedarf hinzukommen werden.  Es ist eben
 ein Anfang, und die Dokumentation von National ist ziemlich umfangreich...
 %%-----------
 \begin{quote}
-bn) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
+bo) COP410 $\rightarrow$ COP420 $\rightarrow$ COP440 $\rightarrow$ COP444
 Die COP42x-Derivate bieten einige weitere Befehle, des weiteren wurden
 Befehlen in ihrem Wertebereich erweitert.
 \end{quote}
@@ -3748,7 +3774,7 @@ Befehlen in ihrem Wertebereich erweitert.
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bo) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
+bp) \> SC14400, SC14401, SC14402, SC14404, SC14405, \\
     \> SC14420, SC14421, SC14422, SC14424 \\
 \end{tabbing}
 \end{quote}
@@ -3758,11 +3784,11 @@ unterst"utzt werden und deren Architektur im Laufe der Zeit optimiert
 wurde.
 %%-----------
 \begin{quote}
-bp) ACE1101, ACE1202
+bq) ACE1101, ACE1202
 \end{quote}
 %%-----------
 \begin{quote}
-bq) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
+br) MK3870, MK3872, MK3873, MK3874, MK3875, MK3876, \\
     MK38C70
 \end{quote}
 Der Befehlssatz aller F8-Varianten ist identisch, mit Ausnahme
@@ -3773,14 +3799,14 @@ und in der eingebauten Peripherie (mit serieller Schnittstelle
 oder ohne).
 %%-----------
 \begin{quote}
-br) 7810 $\rightarrow$ 78C10
+bs) 7810 $\rightarrow$ 78C10
 \end{quote}
 Die NMOS-Version besitzt keinen STOP-Modus; der entspechende Befehl sowie
 das ZCM-Register fehlen demzufolge.  \bb{VORSICHT!} NMOS- und CMOS-Version
 differieren zum Teil in den Reset-Werten einiger Register!
 %%-----------
 \begin{quote}
-bs) 7566 $\leftrightarrow$ 7508
+bt) 7566 $\leftrightarrow$ 7508
 \end{quote}
 Es existieren in der $\mu$PD75xx-Familie zwei verschiedene
 CPU-Kerne: Der 7566 repr"asentiert den 'instruction set B', der
@@ -3792,7 +3818,7 @@ sind nicht 100\%-ig bin"arkompatibel!
 \begin{quote}
 \begin{tabbing}
 \hspace{0.7cm} \= \kill
-bt) \> 75402, \\
+bu) \> 75402, \\
     \> 75004, 75006, 75008, \\
     \> 75268, \\
     \> 75304, 75306, 75308, 75312, 75316, \\
@@ -3808,41 +3834,41 @@ unterscheiden sich einmal durch ihre on-chip-Peripherie und
 zum anderen durch die M"achtigkeit des Befehlssatzes.
 %%-----------
 \begin{quote}
-bu) 78070
+bv) 78070
 \end{quote}
 Dies ist das einzige, mir momentan vertraute Mitglied der
 78K0-Familie von NEC.  Es gelten "ahnliche Aussagen wie zur
 COP8-Familie!
 %%-----------
 \begin{quote}
-bv) 78214
+bw) 78214
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K2-Familie von NEC.
 %%-----------
 \begin{quote}
-bw) 78310
+bx) 78310
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K3-Familie von NEC.
 %%-----------
 \begin{quote}
-bx) 784026
+by) 784026
 \end{quote}
 Dies ist momentan der Repr"asentant der 78K4-Familie von NEC.
 %%-----------
 \begin{quote}
-by) 7720 $\rightarrow$ 7725
+bz) 7720 $\rightarrow$ 7725
 \end{quote}
 Der $\mu$PD7725 bietet im Vergleich zu seinem Vorg"anger gr"o"sere
 Adre"sr"aume und einige zus"atzliche Befehle. {\bf VORSICHT!}  Die
 Prozessoren sind nicht zueinander bin"arkompatibel!
 %%-----------
 \begin{quote}
-bz) 77230
+ca) 77230
 \end{quote}
 %%-----------
 \begin{quote}
 \begin{tabbing}
-ca) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
+cb) \= SYM53C810, SYM53C860, SYM53C815, SYM53C825, \\
     \> SYM53C875, SYM53C895
 \end{tabbing}
 \end{quote}
@@ -3851,36 +3877,36 @@ einige Befehlsvarianten nicht, au"serdem unterscheiden sie sich in ihrem
 Satz interner Register.
 %%-----------
 \begin{quote}
-cb) MB89190
+cc) MB89190
 \end{quote}
 Dieser Prozessortyp repr"asentiert die F$^{2}$MC8L-Serie von Fujitsu...
 %%-----------
 \begin{quote}
-cc) MB9500
+cd) MB9500
 \end{quote}
 ...so wie dieser es momentan f"ur die 16-Bit-Varianten von Fujitsu tut!
 %%-----------
 \begin{quote}
-cd) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
+ce) MSM5840, MSM5842, MSM58421, MSM58422, MSM5847
 \end{quote}
 Diese Varianten der OLMS-40-Familie unterscheiden sich im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-ce) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
+cf) MSM5054, MSM5055, MSM5056, MSM6051, MSM6052
 \end{quote}
 Gleiches wie bei der OLMS-40-Familie: Unterschiede im
 Befehlssatz sowie im internen Programm- und Datenspeicher.
 %%-----------
 \begin{quote}
-cf) MN1610[ALT] $\rightarrow$ MN1613[ALT]
+cg) MN1610[ALT] $\rightarrow$ MN1613[ALT]
 \end{quote}
 Zus"atzlich zu den Funktionen seines Vorg"angers bietet der
 MN1613 einen gr"o"seren Adre"sraum, eine Floating-Point-Einheit
 sowie eine ganze Reihe neuer Befehle.
 %%-----------
 \begin{quote}
-cg) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
+ch) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A, 1805A
 1806A
 \end{quote}
 1804, 1805 und 1806 haben gegen"uber dem 'Original' 1802 einen leicht
@@ -3890,18 +3916,18 @@ Timer.  Die A-Versionen erweitern den Befehlssatz um \tty{DSAV},
 BCD-Format.
 %%-----------
 \begin{quote}
-ch) XS1
+ci) XS1
 \end{quote}
 Dieser Typ repr"asentiert die XCore-''Familie''.
 %%-----------
 \begin{quote}
-ci) 1750
+cj) 1750
 \end{quote}
 MIL STD 1750 ist ein Standard, also gibt es auch nur eine
 (Standard-)Variante...
 %%-----------
 \begin{quote}
-cj) KENBAK
+ck) KENBAK
 \end{quote}
 Es hat nie einen KENBAK-2 gegeben...
 
@@ -8971,9 +8997,9 @@ Dabei stehen \tty{Rx} bzw. \tty{Ry} f"ur \tty{IXL, IXU, IYL} oder
 beide Register aus dem gleichen Indexregister stammen m"ussen.
 \par
 Die Kodierung von Schiebebefehlen besitzt noch eine undefinierte
-Bitkombination, die als \tty{SLIA}-Befehl zug"anglich ist.  \tty{SLIA}
-funktioniert wie \tty{SLA}, es wird jedoch eine Eins und nicht eine Null
-in Bit 0 eingeschoben.  Dieser Befehl kann, wie alle anderen
+Bitkombination, die als \tty{SLIA}- oder \tty{SLS}-Befehl zug"anglich ist.
+\tty{SLIA/SLS} funktioniert wie \tty{SLA}, es wird jedoch eine Eins und
+nicht eine Null in Bit 0 eingeschoben.  Dieser Befehl kann, wie alle anderen
 Schiebebefehle auch, noch in einer weiteren Variante geschrieben
 werden:
 \begin{verbatim}
@@ -9108,6 +9134,36 @@ Die unteren vier Bits von RP definieren beim eZ8 gleichzeitig das
 ein analoger Mechanismus, der daf"ur sorgt, da"s AS automatisch 12-
 oder 8-Bit-Adressen verwendet.  'Lange' 12-Bit-Adressen kann man mit
 zwei vorangestellten $>$-Zeichen erzwingen.
+
+%%---------------------------------------------------------------------------
+
+\section{Z8000}
+\label{Z8000Spec}
+
+Der Z8001/8003 kann in zwei verschiedenen Modi betrieben werden:
+\begin{itemize}
+\item{{\em Nicht segmentiert}: Der Speicheradre"sraum ist auf 64 KByte
+      beschr"ankt, alle Adressen sind 'einfache' lineare 16-Bit-
+      Adressen.  Adre"sregister sind einfache 16-Bit-Register (Rn),
+      und absolute Adressen in Befehlen sind ein 16-Bit-Wort lang.}
+\item{{\em Segmentiert}: Der Speicher ist in bis zu 128 Segmente von
+      jeweils maximal 64 KByte aufgeteilt.  Adressen bestehen aus
+      einem 7-bittigen Segment und einem 16-bittigen Offset.  Adre"sregister
+      sind immer Registerpaare (RRn).  Absolute Adressen in Befehlen
+      sind zwei 16-Bit-Worte lang, au"ser der Offset is kleiner 256.}
+\end{itemize}
+
+Die Betriebsart (segmentiert oder nicht segmentiert) hat also einen
+Einflu"s auf den erzeugten Code und wird implizit "uber den verwendeten
+Prozessortyp umgeschaltet.  Ist das Ziel also z.B. ein Z8001 im nicht
+segmentierten Modus, so w"ahlt man einfach Z8002 als Ziel.
+
+Eine 'echte' Unterst"utzung eines segmentierten Speichermodells bietet
+AS indes f"ur den Z8000 genauso wenig wie f"ur den 8086.  Im segmentierten
+Modus wird die Segmentnummer einfach als die oberen sieben Adre"sbits
+eines gedacht linearen 8MB-Adre"sraums behandelt.  Dies ist eigentlich
+nicht im Sinne des Erfinders, aber es entspricht der Art und Weise, wie
+der Z8001 in Systemen ohne MMU effektiv betrieben wurde.
 
 %%---------------------------------------------------------------------------
 
@@ -11208,6 +11264,11 @@ Angaben:
                 mehrfach benutzt wurde.  Ursache k"onnen un"uberlegte
                 \tty{ORG}-Anweisungen sein.}
                {keines}
+\errentry{  95}{"Uberlappende Registernutzung}
+               {Warnung}
+               {In der Anweisung wurden Register ganz oder teilweise
+                mehrfach in nicht zul"assiger Weise verwendet.}
+               {Das den Konflikt ausl"osende Argument}
 \errentry{ 100}{keine CASE-Bedingung zugetroffen}
                {Warnung}
                {bei einem \tty{SWITCH}..\tty{CASE}-Konstrukt ohne
@@ -11384,6 +11445,11 @@ Angaben:
                {Die Menge abgelegter Bytes ist ungerade; eine H"alfte des letzten
                 16-Bit-Wortes bleibt ungenutzt.}
                {keines}
+\errentry{ 370}{Registernummer-Umlauf}
+               {Warnung}
+               {Die Startregisternummer plus die Anzahl der Register ergibt ein
+                letztes Register jenseits des Endes der Registerbank.}
+               {das Argument mit der Registeranzahl}
 \errentry{1000}{Symbol doppelt definiert}
                {Fehler}
                {Einem Symbol wurde durch ein Label oder
@@ -11613,7 +11679,7 @@ Angaben:
                 sind zwar im sequentiellen Modus zul"assig, jedoch nicht
                 bei parallelen Instruktionen.}
                {keines}
-\errentry{1360}{Undefinierte Bedingung}
+\errentry{1360}{undefinierte Bedingung}
                {Fehler}
                {Die benutzte Bedingung f"ur bedingte Spr"unge
                 existiert nicht.}
@@ -11624,6 +11690,22 @@ Angaben:
                 in einem Befehl verwendet werden.}
                {die Bedingung, bei der die Unvertr"aglichkeit
                 entdeckt wurde.}
+\errentry{1366}{unbekanntes Flag}
+               {Fehler}
+               {Das angegebene Flag existiert nicht.}
+               {Das Argument mit dem fraglichen Flag}
+\errentry{1367}{doppeltes Flag}
+               {Fehler}
+               {Das angegebene Flag wurde mehrfach in der Liste verwendet.}
+               {Das Argument mit dem doppelten Flag}
+\errentry{1368}{unbekannter Interrupt}
+               {Fehler}
+               {Der angegebene Interrupt existiert nicht.}
+               {Das Argument mit dem fraglichen Interrupt}
+\errentry{1369}{doppelter Interrupt}
+               {Fehler}
+               {Der angegebene Interrupt wurde mehrfach in der Liste verwendet.}
+               {Das Argument mit dem doppelten Interrupt}
 \errentry{1370}{Sprungdistanz zu gro"s}
                {Fehler}
                {Sprungbefehl und Sprungziel liegen zu weit
@@ -12272,6 +12354,24 @@ Angaben:
 \errentry{2200}{unbekanntes Argument}
                {Fehler}
                {Dieses Variable wird von der gew"ahlten Zielplattform nicht unterst"utzt.}
+               {das fragliche Argument}
+\errentry{2210}{Indexregister muss 16 Bit sein}
+               {Fehler}
+               {Indexregister beim Z8000 m"ussen eine L"ange von 16 Bit (Rn) haben.}
+               {das fragliche Argument}
+\errentry{2211}{I/O Adressregister muss 16 Bit sein}
+               {Fehler}
+               {Z8000-Register, um I/O-Adressen zu adressieren, m"ussen eine L"ange von 16 Bit (Rn) haben.}
+               {das fragliche Argument}
+\errentry{2212}{Adressregister im segmentierten Modus muss 32 Bit sein}
+               {Fehler}
+               {Z8000-Register, um Speicheradressen im segmentierten Modus zu adressieren, m"ussen
+                eine L"ange von 32 Bit (RRn) haben.}
+               {das fragliche Argument}
+\errentry{2213}{Adressregister im nicht-segmentierten Modus muss 16 Bit sein}
+               {Fehler}
+               {Z8000-Register, um Speicheradressen im nicht-segmentierten Modus zu adressieren, m"ussen
+                eine L"ange von 16 Bit (Rn) haben.}
                {das fragliche Argument}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}

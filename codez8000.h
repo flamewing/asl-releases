@@ -1,24 +1,14 @@
-#ifndef _ENTRYADDRESS_H
-#define _ENTRYADDRESS_H
-/* entryaddress.h */
+#ifndef _CODEZ8000_H
+#define _CODEZ8000_H
+/* codez8000.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
 /* AS-Portierung                                                             */
 /*                                                                           */
-/* Maintain list of possible entry addresses                                 */
+/* Codegenerator Zilog Z8000                                                 */
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdio.h>
-
-#include "datatypes.h"
-
-void entryaddress_init(void);
-
-extern Boolean EntryAddressAvail(void);
-extern void AddEntryAddress(LargeWord Address);
-extern void PrintEntryAddress(FILE *pDestFile);
-extern LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddress);
-
-#endif /* _ENTRYADDRESS_H */
+extern void codez8000_init(void);
+#endif /* _CODEZ8000_H */

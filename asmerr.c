@@ -189,6 +189,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgPhaseErr; break;
     case ErrNum_Overlap:
       msgno = Num_ErrMsgOverlap; break;
+    case ErrNum_OverlapReg:
+      msgno = Num_ErrMsgOverlapReg; break;
     case ErrNum_NoCaseHit:
       msgno = Num_ErrMsgNoCaseHit; break;
     case ErrNum_InAccPage:
@@ -243,6 +245,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgTrapValidInstruction; break;
     case ErrNum_PaddingAdded:
       msgno = Num_ErrMsgPaddingAdded; break;
+    case ErrNum_RegNumWraparound:
+      msgno = Num_ErrMsgRegNumWraparound; break;
     case ErrNum_DoubleDef:
       msgno = Num_ErrMsgDoubleDef; break;
     case ErrNum_SymbolUndef:
@@ -339,6 +343,14 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgUndefCond; break;
     case ErrNum_IncompCond:
       msgno = Num_ErrMsgIncompCond; break;
+    case ErrNum_UnknownFlag:
+      msgno = Num_ErrMsgUnknownFlag; break;
+    case ErrNum_DuplicateFlag:
+      msgno = Num_ErrMsgDuplicateFlag; break;
+    case ErrNum_UnknownInt:
+      msgno = Num_ErrMsgUnknownInt; break;
+    case ErrNum_DuplicateInt:
+      msgno = Num_ErrMsgDuplicateInt; break;
     case ErrNum_JmpDistTooBig:
       msgno = Num_ErrMsgJmpDistTooBig; break;
     case ErrNum_DistIsOdd:
@@ -591,6 +603,14 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgArgValueMissing; break;
     case ErrNum_UnknownArg:
       msgno = Num_ErrMsgUnknownArg; break;
+    case ErrNum_IndexRegMustBe16Bit:
+      msgno = Num_ErrMsgIndexRegMustBe16Bit; break;
+    case ErrNum_IOAddrRegMustBe16Bit:
+      msgno = Num_ErrMsgIOAddrRegMustBe16Bit; break;
+    case ErrNum_SegAddrRegMustBe32Bit:
+      msgno = Num_ErrMsgSegAddrRegMustBe32Bit; break;
+    case ErrNum_NonSegAddrRegMustBe16Bit:
+      msgno = Num_ErrMsgNonSegAddrRegMustBe16Bit; break;
     case ErrNum_InternalError:
       msgno = Num_ErrMsgInternalError; break;
     case ErrNum_OpeningFile:

@@ -122,6 +122,14 @@ enable a second pass over all input files to find the minimum and
 maximum values before conversion starts, reducing the speed of P2BIN
 slightly.
 .TP
+.B -segment <CODE|DATA|....>
+
+Select the address space hex data is created from.  By default, only records
+for the CODE segment (plus DATA for TI DSK) will be considered.  Use this
+option with different arguments if the source file contains data from other
+address spaces.  This way, multiple HEX files (one per address space) can
+be produced.
+.TP
 .B -e <address>
 
 Set an entry address or modify an existing one.  P2BIN can optionally
@@ -151,6 +159,11 @@ more!
 .B -k
 
 Instruct P2BIN to erase the program source files after conversion.
+.TP
+.B -q or -quiet
+
+Enable quiet operation mode, suppressing copyright and purely informative
+messages.  Only errors will be displayed.
 
 .SH PRESETTING PARAMETERS
 

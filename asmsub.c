@@ -36,7 +36,7 @@
 
 #ifdef __TURBOC__
 #ifdef __DPMI16__
-#define STKSIZE 36864
+#define STKSIZE 35840
 #else
 #define STKSIZE 49152
 #endif
@@ -529,7 +529,8 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsig
       IntVal = t->Contents.Int;
     IsInt:
       SysString(Dest, DestLen - 3, IntVal, Radix,
-                1, (16 == Radix) && (ConstMode == ConstModeIntel), HexStartCharacter);
+                1, (16 == Radix) && (ConstMode == ConstModeIntel),
+                HexStartCharacter, SplitByteCharacter);
       if (WithSystem)
         switch (ConstMode)
         {

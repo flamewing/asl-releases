@@ -30,6 +30,14 @@ Message MessHeaderLine2
  "--------------------------------------------------------------"
  "----------------------------------------------------------------"
 
+Message MessHeaderLine1F
+ "Datei "
+ "File  "
+
+Message MessHeaderLine2F
+ "------"
+ "------"
+
 Message MessGenerator
  "Erzeuger : "
  "creator : "
@@ -59,8 +67,8 @@ Message MessExportInfo
  "<exported symbol>   "
 
 Message InfoMessHead2
- " [Programmdateiname]"
- " [name of program file]"
+ " [-q] [Programmdateiname(n)]"
+ " [-q] [name of program file(s)]"
 
 Message InfoMessHelp
  "\n"

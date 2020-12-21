@@ -73,23 +73,7 @@ include makedefs.str
 
 binaries: $(ALLMSGTARGETS)
 
-include $(TARG_OBJDIR)codeobjs.dep
-include $(TARG_OBJDIR)asmobjs.dep
-include $(TARG_OBJDIR)asobjs.dep
-include $(TARG_OBJDIR)dasmobjs.dep
-include $(TARG_OBJDIR)dasobjs.dep
-include $(TARG_OBJDIR)nlsobjs.dep
-include $(TARG_OBJDIR)stobjs.dep
-include $(TARG_OBJDIR)plisobjs.dep
-include $(TARG_OBJDIR)alinobjs.dep
-include $(TARG_OBJDIR)pbinobjs.dep
-include $(TARG_OBJDIR)p2hxobjs.dep
-include $(TARG_OBJDIR)p2bnobjs.dep
-include $(OBJDIR)rescobjs.dep
-include $(OBJDIR)tx2dobjs.dep
-include $(OBJDIR)tx2hobjs.dep
-include $(OBJDIR)umlobjs.dep
-include $(OBJDIR)uumlobjs.dep
+include makedefs.abh
 
 #---------------------------------------------------------------------------
 # Documentation

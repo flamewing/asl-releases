@@ -87,6 +87,7 @@
 #include "code166.h"
 #include "codez80.h"
 #include "codez8.h"
+#include "codez8000.h"
 #include "codekcpsm.h"
 #include "codekcp3.h"
 #include "codemic8.h"
@@ -3627,6 +3628,29 @@ static CMDResult CMD_HexLowerCase(Boolean Negate, const char *Arg)
   return CMDOK;
 }
 
+static CMDResult CMD_SplitByte(Boolean Negate, const char *Arg)
+{
+  UNUSED(Arg);
+
+  if (Negate)
+  {
+    SplitByteCharacter = '\0';
+    return CMDOK;
+  }
+  else if (*Arg)
+  {
+    if (strlen(Arg) != 1)
+      return CMDErr;
+    SplitByteCharacter = *Arg;
+    return CMDArg;
+  }
+  else
+  {
+    SplitByteCharacter = '.';
+    return CMDOK;
+  }
+}
+
 static CMDResult CMD_QuietMode(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
@@ -4049,6 +4073,7 @@ static CMDRec ASParams[] =
   { "L"             , CMD_ListFile        },
   { "l"             , CMD_ListConsole     },
   { "LISTRADIX"     , CMD_ListRadix       },
+  { "SPLITBYTE"     , CMD_SplitByte       },
   { "M"             , CMD_MacroOutput     },
   { "MAXERRORS"     , CMD_MaxErrors       },
   { "MAXINCLEVEL"   , CMD_MaxIncludeLevel },
@@ -4216,6 +4241,7 @@ int main(int argc, char **argv)
     code166_init();
     codez80_init();
     codez8_init();
+    codez8000_init();
     codekcpsm_init();
     codekcpsm3_init();
     codemico8_init();
