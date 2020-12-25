@@ -1,3 +1,8 @@
+2020-12-25 [1.42 Bld 187]
+
+Bugfix        : add a couple of missing instructions and
+                instruction/operand combinations to Z8000 target
+
 2020-12-21 [1.42 Bld 186]
 
 - Addition    : add -q(uiet) command line switch to PLIST and support

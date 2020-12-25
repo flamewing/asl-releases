@@ -403,6 +403,16 @@ static Boolean ChkRegSize_Idx(const tStrComp *pArg, tSymbolSize ActSize)
   return True;
 }
 
+static Boolean ChkRegSize_8To32(const tStrComp *pArg, tSymbolSize ActSize)
+{
+  if (ActSize > eSymbolSize32Bit)
+  {
+    WrStrErrorPos(ErrNum_InvOpSize, pArg);
+    return False;
+  }
+  return True;
+}
+
 static Boolean ChkRegSize_IOAddr(const tStrComp *pArg, tSymbolSize ActSize)
 {
   if (ActSize != eSymbolSize16Bit)
@@ -1390,33 +1400,49 @@ static void DecodeLDCTL(Word Code)
 
 static void DecodeLDR(Word Code)
 {
-  tAdrVals DestAdrVals;
+  Word Reg;
+  tSymbolSize RegSize;
+  int RegArgIndex = 1;
 
   if (SetOpSizeFromCode(Code)
-   && ChkArgCnt(2, 2)
-   && DecodeAdr(&ArgStr[1], MModReg, &DestAdrVals))
+   && ChkArgCnt(2, 2))
+  switch (DecodeReg(&ArgStr[RegArgIndex], &Reg, &RegSize, ChkRegSize_8To32, False))
   {
-    tEvalResult EvalResult;
-    LongWord Addr;
-
-    if (OpSize > eSymbolSize32Bit)
+    case eIsNoReg:
+      RegArgIndex = 2;
+      if (DecodeReg(&ArgStr[RegArgIndex], &Reg, &RegSize, ChkRegSize_8To32, True) != eIsReg)
+        return;
+      Code |= 2;
+      /* fall-thru */
+    case eIsReg:
     {
-      WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[1]);
-      return;
+      tEvalResult EvalResult;
+      LongWord Addr;
+
+      if (!SetOpSize(RegSize, &ArgStr[RegArgIndex]))
+        return;
+      if (OpSize > eSymbolSize32Bit)
+      {
+        WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[RegArgIndex]);
+        return;
+      }
+
+      Addr = EvalStrIntExpressionWithResult(&ArgStr[3 - RegArgIndex], MemIntType, &EvalResult);
+      if (EvalResult.OK)
+      {
+        Word Delta;
+
+        if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags) && (GetSegment(Addr) != GetSegment(EProgCounter())))
+          WrStrErrorPos(ErrNum_InAccSegment, &ArgStr[2]);
+
+        Delta = (Addr & 0xffff) - ((EProgCounter() + 4) & 0xffff);
+        AppendCode(((Lo(Code) | ((OpSize == eSymbolSize32Bit) ? 0x5 : OpSize)) << 8) | Reg);
+        AppendCode(Delta);
+      }
+      break;
     }
-
-    Addr = EvalStrIntExpressionWithResult(&ArgStr[2], MemIntType, &EvalResult);
-    if (EvalResult.OK)
-    {
-      Word Delta;
-
-      if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags) && (GetSegment(Addr) != GetSegment(EProgCounter())))
-        WrStrErrorPos(ErrNum_InAccSegment, &ArgStr[2]);
-
-      Delta = (Addr & 0xffff) - ((EProgCounter() + 4) & 0xffff);
-      AppendCode(((Lo(Code) | ((OpSize == eSymbolSize32Bit) ? 0x5 : OpSize)) << 8) | DestAdrVals.Val);
-      AppendCode(Delta);
-    }
+    case eRegAbort:
+      break;
   }
 }
 
@@ -1809,21 +1835,31 @@ static void DecodeBitOp(Word Code)
 static void DecodeCALL_JP(Word Code)
 {
   tAdrVals AdrVals;
+  Boolean IsCALL = Code & 1;
 
-  if (ChkArgCnt(1, 1))
-    switch (DecodeAdr(&ArgStr[1], MModIReg | MModDirect | MModIndexed, &AdrVals))
+  if (ChkArgCnt(1, 2 - IsCALL))
+  {
+    Word Condition;
+
+    if (IsCALL)
+      Condition = 0;
+    else if (!DecodeCondition((ArgCnt == 2) ? &ArgStr[1] : NULL, &Condition))
+      return;
+
+    switch (DecodeAdr(&ArgStr[ArgCnt], MModIReg | MModDirect | MModIndexed, &AdrVals))
     {
       case eModIReg:
-        AppendCode(0x0000 | (Code << 8) | (AdrVals.Val << 4));
+        AppendCode(0x0000 | (Code << 8) | (AdrVals.Val << 4) | Condition);
         break;
       case eModDirect:
       case eModIndexed:
-        AppendCode(0x4000 | (Code << 8) | (AdrVals.Val << 4));
+        AppendCode(0x4000 | (Code << 8) | (AdrVals.Val << 4) | Condition);
         AppendAdrVals(&AdrVals);
         break;
       default:
         break;
     }
+  }
 }
 
 /*!------------------------------------------------------------------------
@@ -1976,7 +2012,7 @@ static void DecodeTEST(Word Code)
   tAdrVals AdrVals;
 
   if (SetOpSizeFromCode(Code)
-   && ChkArgCnt(1,1)
+   && ChkArgCnt(1, 1)
    && DecodeAdr(&ArgStr[1], MModReg | MModIReg | MModDirect | MModIndexed, &AdrVals))
   {
     if (OpSize == eSymbolSizeUnknown)
@@ -2000,6 +2036,90 @@ static void DecodeTEST(Word Code)
           break;
         default:
           break;
+      }
+    }
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeEX(Word Code)
+ * \brief  decode EX instruction
+ * \param  Code machine code + size spec
+ * ------------------------------------------------------------------------ */
+
+static void DecodeEX(Word Code)
+{
+  tAdrVals SrcAdrVals, DestAdrVals;
+
+  if (SetOpSizeFromCode(Code)
+   && ChkArgCnt(2, 2)
+   && DecodeAdr(&ArgStr[1], MModReg | MModIReg | MModDirect | MModIndexed, &DestAdrVals)
+   && DecodeAdr(&ArgStr[2], MModReg | ((DestAdrVals.Mode == eModReg) ? (MModIReg | MModDirect | MModIndexed) : 0), &SrcAdrVals))
+  {
+    if (OpSize == eSymbolSizeUnknown)
+      OpSize = eSymbolSize16Bit;
+    if (OpSize > eSymbolSize16Bit) WrError(ErrNum_InvOpSize);
+    else
+    {
+      if (DestAdrVals.Mode != eModReg)
+      {
+        tAdrVals Swap;
+        Swap = SrcAdrVals;
+        SrcAdrVals = DestAdrVals;
+        DestAdrVals = Swap;
+      }
+      Code = (Lo(Code) | OpSize) << 8;
+      switch (SrcAdrVals.Mode)
+      {
+        case eModReg:
+          AppendCode(0x8000 | Code | (SrcAdrVals.Val << 4) | DestAdrVals.Val);
+          break;
+        case eModIReg:
+          AppendCode(0x0000 | Code | (SrcAdrVals.Val << 4) | DestAdrVals.Val);
+          break;
+        case eModDirect:
+        case eModIndexed:
+          AppendCode(0x4000 | Code | (SrcAdrVals.Val << 4) | DestAdrVals.Val);
+          AppendAdrVals(&SrcAdrVals);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeEXTS(Word Code)
+ * \brief  decode EXTS instruction
+ * \param  Code machine code + size spec
+ * ------------------------------------------------------------------------ */
+
+static void DecodeEXTS(Word Code)
+{
+  if (SetOpSizeFromCode(Code)
+   && ChkArgCnt(1, 1))
+  {
+    tAdrVals AdrVals;
+
+    if (OpSize != eSymbolSizeUnknown)
+      OpSize++;
+    if (DecodeAdr(&ArgStr[1], MModReg, &AdrVals))
+    {
+      Code = (Lo(Code) << 8) | 0x8000 | (AdrVals.Val << 4);
+      switch (OpSize)
+      {
+        case eSymbolSize16Bit:
+          AppendCode(Code | 0x0000);
+          break;
+        case eSymbolSize32Bit:
+          AppendCode(Code | 0x000a);
+          break;
+        case eSymbolSize64Bit:
+          AppendCode(Code | 0x0007);
+          break;
+        default:
+          WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[1]);
       }
     }
   }
@@ -2204,8 +2324,8 @@ static void DecodeCPRep(Word Code)
   tAdrMode DestMode = (Code & 0x02) ? eModIReg : eModReg;
 
   if (!SetOpSizeFromCode(Code)
-   || !ChkArgCnt(4, 4)
-   || !DecodeCondition(&ArgStr[4], &Condition))
+   || !ChkArgCnt(3, 4)
+   || !DecodeCondition((ArgCnt == 4) ? &ArgStr[4] : NULL, &Condition))
     return;
 
   if ((DecodeAdr(&ArgStr[1], 1 << DestMode, &DestAdrVals) == DestMode)
@@ -2499,58 +2619,72 @@ static void DecodeMREQ(Word Code)
 
 static void DecodePUSH_POP(Word Code)
 {
-  tAdrVals RegAdrVals, OpAdrVals;
-  int OpArg = !(Code & 0x04) + 1, RegArg = 3 - OpArg;
+  tAdrVals RegAdrVals;
+  Word IsPOP = Code & 0x04;
+  int OpArg = !IsPOP + 1, RegArg = 3 - OpArg;
 
   if (SetOpSizeFromCode(Code)
    && ChkArgCnt(2, 2)
-   && DecodeAdr(&ArgStr[RegArg], MModIReg, &RegAdrVals)
-   && DecodeAdr(&ArgStr[OpArg], MModReg | MModIReg | MModDirect | MModIndexed, &OpAdrVals))
+   && DecodeAdr(&ArgStr[RegArg], MModIReg, &RegAdrVals))
   {
-    int Index;
+    tAdrVals OpAdrVals;
+    
+    ImmOpSize = (OpSize == eSymbolSizeUnknown) ? eSymbolSize16Bit : OpSize;
+    if (DecodeAdr(&ArgStr[OpArg], MModReg | MModIReg | MModDirect | MModIndexed | (IsPOP ? 0 : MModImm), &OpAdrVals))
+    {
+      int Index;
 
-    if (OpSize == eSymbolSizeUnknown)
-      OpSize = eSymbolSize16Bit;
-    if ((OpSize < eSymbolSize16Bit) || (OpSize > eSymbolSize32Bit))
-    {
-      WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[OpArg]);
-      return;
-    }
-    switch (OpAdrVals.Mode)
-    {
-      case eModReg:
-        Index = ChkRegOverlap((unsigned)OpAdrVals.Val, OpSize,
-                              (unsigned)RegAdrVals.Val, (int)AddrRegSize(),
-                              0, eSymbolSizeUnknown);
-        break;
-      case eModIReg:
-      case eModIndexed:
-        Index = ChkRegOverlap((unsigned)OpAdrVals.Val, AddrRegSize(),
-                              (unsigned)RegAdrVals.Val, (int)AddrRegSize(),
-                              0, eSymbolSizeUnknown);
-        break;
-      default:
-        Index = -1;
-        break;
-    }
-    if (Index >= 0)
-      WrStrErrorPos(ErrNum_OverlapReg, &ArgStr[Index ? RegArg : OpArg]);
-    Code = Lo(Code) | ((OpSize == eSymbolSize16Bit) ? 2 : 0);
-    switch (OpAdrVals.Mode)
-    {
-      case eModReg:
-        AppendCode(0x8000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
-        break;
-      case eModIReg:
-        AppendCode(0x0000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
-        break;
-      case eModDirect:
-      case eModIndexed:
-        AppendCode(0x4000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
-        AppendAdrVals(&OpAdrVals);
-        break;
-      default:
-        break;
+      if (OpSize == eSymbolSizeUnknown)
+        OpSize = eSymbolSize16Bit;
+      if ((OpSize < eSymbolSize16Bit) || (OpSize > eSymbolSize32Bit))
+      {
+        WrStrErrorPos(ErrNum_InvOpSize, &ArgStr[OpArg]);
+        return;
+      }
+      switch (OpAdrVals.Mode)
+      {
+        case eModReg:
+          Index = ChkRegOverlap((unsigned)OpAdrVals.Val, OpSize,
+                                (unsigned)RegAdrVals.Val, (int)AddrRegSize(),
+                                0, eSymbolSizeUnknown);
+          break;
+        case eModIReg:
+        case eModIndexed:
+          Index = ChkRegOverlap((unsigned)OpAdrVals.Val, AddrRegSize(),
+                                (unsigned)RegAdrVals.Val, (int)AddrRegSize(),
+                                0, eSymbolSizeUnknown);
+          break;
+        default:
+          Index = -1;
+          break;
+      }
+      if (Index >= 0)
+        WrStrErrorPos(ErrNum_OverlapReg, &ArgStr[Index ? RegArg : OpArg]);
+      Code = Lo(Code) | ((OpSize == eSymbolSize16Bit) ? 2 : 0);
+      switch (OpAdrVals.Mode)
+      {
+        case eModImm:
+          if (OpSize != eSymbolSize16Bit) WrStrErrorPos(ErrNum_InvOpSize, &OpPart);
+          else
+          {
+            AppendCode(0x0d09 | (RegAdrVals.Val << 4));
+            AppendAdrVals(&OpAdrVals);
+          }
+          break;
+        case eModReg:
+          AppendCode(0x8000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
+          break;
+        case eModIReg:
+          AppendCode(0x0000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
+          break;
+        case eModDirect:
+        case eModIndexed:
+          AppendCode(0x4000 | (Code << 8) | (RegAdrVals.Val << 4) | OpAdrVals.Val);
+          AppendAdrVals(&OpAdrVals);
+          break;
+        default:
+          break;
+      }
     }
   }
 }
@@ -2730,10 +2864,10 @@ static void DecodeTCC(Word Code)
   Word Condition;
   tAdrVals DestAdrVals;
 
-  if (ChkArgCnt(2, 2)
+  if (ChkArgCnt(1, 2)
    && SetOpSizeFromCode(Code)
-   && DecodeCondition(&ArgStr[1], &Condition)
-   && DecodeAdr(&ArgStr[2], MModReg, &DestAdrVals))
+   && DecodeCondition((ArgCnt == 2) ? &ArgStr[1] : NULL, &Condition)
+   && DecodeAdr(&ArgStr[ArgCnt], MModReg, &DestAdrVals))
   {
     if (OpSize > eSymbolSize16Bit)
     {
@@ -2906,6 +3040,8 @@ static void InitFields(void)
   AddSizeInstTable("NEG" , 1 << eSymbolSize8Bit, 0x2c, DecodeCLR_COM_NEG_TSET);
   AddSizeInstTable("TSET", 1 << eSymbolSize8Bit, 0x6c, DecodeCLR_COM_NEG_TSET);
   AddSizeInstTable("TEST", (1 << eSymbolSize8Bit) | (1 << eSymbolSize32Bit), 0x0c, DecodeTEST);
+  AddSizeInstTable("EX", 1 << eSymbolSize8Bit, 0x2c, DecodeEX);
+  AddSizeInstTable("EXTS", (1 << eSymbolSize8Bit) | (1 << eSymbolSize32Bit), 0x31, DecodeEXTS);
   AddInstTable(InstTable, "DAB", 0xb000, DecodeDAB);
   AddInstTable(InstTable, "COMFLG", 0x8d05, DecodeFLG);
   AddInstTable(InstTable, "SETFLG", 0x8d01, DecodeFLG);

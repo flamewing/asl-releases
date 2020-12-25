@@ -254,6 +254,31 @@
 	cpi	r5,@r6,r6,eq	; expect overlap src<->cnt
 	endexpect
 
+	cpi	rh5,@r10,r4
+	cpib	rh5,@r10,r4
+	cpi	r5,@r10,r4
+	expect	1131
+	cpib	r5,@r10,r4	; expect operand size conflict
+	endexpect
+	expect	1130
+	cpi	rr8,@r10,r4	; expect invalid operand size
+	endexpect
+	expect	95
+	cpi	rh5,@r5,r4	; expect overlap dst<->src
+	endexpect
+	expect	95
+	cpi	r5,@r5,r4	; expect overlap dst<->src
+	endexpect
+	expect	95
+	cpi	rh5,@r6,r5	; expect overlap dst<->cnt
+	endexpect
+	expect	95
+	cpi	r5,@r6,r5	; expect overlap dst<->cnt
+	endexpect
+	expect	95
+	cpi	r5,@r6,r6	; expect overlap src<->cnt
+	endexpect
+
 	cpir	rh5,@r10,r4,eq
 	cpirb	rh5,@r10,r4,eq
 	cpir	r5,@r10,r4,eq
@@ -430,6 +455,34 @@
 	ei	vi,vi
 	endexpect
 
+	ex	r5,r6
+	ex	rh5,rh6
+	exb	rh5,rh6
+	expect	1130
+	ex	rr6,rr8
+	endexpect
+	ex	r5,@r6
+	ex	rh5,@r6
+	ex	r5,1234h
+	ex	rh5,1234h
+	ex	r5,1234h(r6)
+	ex	rh5,1234h(r6)
+	ex	@r6,r5 
+	ex	@r6,rh5
+	ex	1234h,r5 
+	ex	1234h,rh5
+	ex	1234h(r6),r5 
+	ex	1234h(r6),rh5
+
+	exts	r5
+	extsb	r5
+	exts	rr6
+	exts	rq4
+	extsl	rq4
+	expect	1130
+	exts	rh2
+	endexpect
+
 	halt
 
         in	r12,@r13
@@ -492,6 +545,15 @@
 	jp	@r8
 	jp	1234h
 	jp	1234h(r6)
+	jp	,@r8
+	jp	,1234h
+	jp	,1234h(r6)
+	jp	f,@r8
+	jp	f,1234h
+	jp	f,1234h(r6)
+	jp	nc,@r8
+	jp	nc,1234h
+	jp	nc,1234h(r6)
 
 	jr	f,$+80h
 	jr	f,$-90h
@@ -668,6 +730,15 @@
 	ldr     rr6,$+100
 	ldrl	rr6,$+100
 
+	ldr	$+100,rh5
+	ldrb	$+100,rh5
+	ldr	$+100,r5
+	ldr     $+100,rr6
+	ldrl	$+100,rr6
+	expect	1130
+	ldr	$+100,rq8
+	endexpect
+
 	mbit
 
 	mreq	r14
@@ -812,6 +883,10 @@
 	pushl	@r6,1234h
 	push	@r6,1234h(r7)
 	pushl	@r6,1234h(r7)
+	push	@r6,#1234h
+	expect	1130
+	pushl	@r6,#12345678h
+	endexpect
 
 	; RES R,IM
 	res	rl3,#4
@@ -1104,6 +1179,9 @@
 	sub	rr4,1234h(r10)
 	subl	rr4,1234h(r10)
 
+	tcc	r10
+	tcc	rl2
+	tccb	rl2
 	tcc	eq,r10
 	tcc	eq,rl2
 	tccb	eq,rl2
