@@ -16,6 +16,9 @@ __regf8inc	equ     1
 ; include proper CPU-specific register definitions
 
 		switch	MOMCPUNAME
+		case    "F3850"
+__hasserial       equ	0
+
 		case	"MK3870","MK38C70"
 ROMSTART	  label	0
 ROMEND		  label	7ffh
@@ -54,11 +57,11 @@ XRAMEND		  label	0fffh
 __hasserial	  equ	0
 
 		elsecase
-		  error  "wrong processor type set: only MK38(C)70, MK3872, MK3873, MK3874, MK3875, or MK3876 allowed!"
+		  error  "wrong processor type set: only F3850, MK38(C)70, MK3872, MK3873, MK3874, MK3875, or MK3876 allowed!"
                 endcase
 
                 if      MOMPASS=1
-                 message "F8-Definitions (C) 2018 Alfred Arnold"
+                 message "F8-Definitions (C) 2018 Alfred Arnold, Haruo Asano"
                 endif
 
 ;----------------------------------------------------------------------------

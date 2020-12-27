@@ -1,6 +1,12 @@
+2020-12-27 [1.42 Bld 188]
+
+- Bugfix      : correct encoding of Z8000 EI/DI instruction
+- Addition    : Add F3850 as target (contribution by Haruo Asano)
+- Bugfix      : do not display line numbers in split byte notation
+
 2020-12-25 [1.42 Bld 187]
 
-Bugfix        : add a couple of missing instructions and
+- Bugfix      : add a couple of missing instructions and
                 instruction/operand combinations to Z8000 target
 
 2020-12-21 [1.42 Bld 186]

@@ -22,6 +22,7 @@ extern char SplitByteCharacter;
 extern const char *Blanks(int cnt);
 
 #define HexString(pDest, DestSize, i, Stellen) SysString(pDest, DestSize, i, 16, Stellen, False, HexStartCharacter, SplitByteCharacter)
+#define DecString(pDest, DestSize, i, Digits) SysString(pDest, DestSize, i, 10, Digits, False, HexStartCharacter, '\0')
 
 extern int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter);
 

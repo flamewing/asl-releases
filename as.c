@@ -760,7 +760,7 @@ static Boolean MACRO_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   String Tmp;
 
-  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ - 1);
+  DecString(Tmp, sizeof(Tmp), PInp->LineZ - 1, 0);
   as_snprintf(dest, DestSize, "%s(%s) ", PInp->SpecName.Str, Tmp);
   return False;
 }
@@ -1089,7 +1089,7 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
   const char *IRPType;
-  char *IRPVal, tmp[10];
+  char *IRPVal, tmp[20];
 
   /* LineZ/ParZ already hopped to next line - step one back: */
 
@@ -1120,7 +1120,8 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
     IRPVal = tmp;
   }
 
-  as_snprintf(dest, DestSize, "%s:%s(%ld) ", IRPType, IRPVal, (long)LineZ);
+  DecString(tmp, sizeof(tmp), LineZ, 0);
+  as_snprintf(dest, DestSize, "%s:%s(%s) ", IRPType, IRPVal, tmp);
 
   return False;
 }
@@ -1462,13 +1463,16 @@ static void REPT_Cleanup(PInputTag PInp)
 static Boolean REPT_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
+  char tmp1[20], tmp2[20];
 
   if (--z2 <= 0)
   {
     z2 = PInp->LineCnt;
     z1--;
   }
-  as_snprintf(dest, DestSize, "REPT %ld(%ld)", (long)z1, (long)z2);
+  DecString(tmp1, sizeof(tmp1), z1, 0);
+  DecString(tmp2, sizeof(tmp2), z2, 0);
+  as_snprintf(dest, DestSize, "REPT %s(%s)", tmp1, tmp2);
   return False;
 }
 
@@ -1657,13 +1661,16 @@ static void WHILE_Cleanup(PInputTag PInp)
 static Boolean WHILE_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z1 = PInp->ParZ, z2 = PInp->LineZ;
+  char tmp1[20], tmp2[20];
 
   if (--z2 <= 0)
   {
     z2 = PInp->LineCnt;
     z1--;
   }
-  as_snprintf(dest, DestSize, "WHILE %ld/%ld", (long)z1, (long)z2);
+  DecString(tmp1, sizeof(tmp1), z1, 0);
+  DecString(tmp2, sizeof(tmp2), z2, 0);
+  as_snprintf(dest, DestSize, "WHILE %s/%s", tmp1, tmp2);
   return False;
 }
 
@@ -1876,11 +1883,11 @@ static void INCLUDE_Cleanup(PInputTag PInp)
   LineSum += MomLineCounter;
   if ((*LstName != '\0') && !QuietMode)
   {
+    char LineS[20];
     String Tmp;
 
-    as_snprintf(Tmp, sizeof(Tmp), "%s(", NamePart(CurrFileName));
-    as_snprcatf(Tmp, sizeof(Tmp), LongIntFormat, CurrLine);
-    as_snprcatf(Tmp, sizeof(Tmp), ")");
+    DecString(LineS, sizeof(LineS), CurrLine, 0);
+    as_snprintf(Tmp, sizeof(Tmp), "%s(%s)", NamePart(CurrFileName), LineS);
     WrConsoleLine(Tmp, True);
     fflush(stdout);
   }
@@ -1894,7 +1901,7 @@ static Boolean INCLUDE_GetPos(PInputTag PInp, char *dest, size_t DestSize)
   String Tmp;
   UNUSED(PInp);
 
-  as_snprintf(Tmp, sizeof(Tmp), LongIntFormat, PInp->LineZ);
+  DecString(Tmp, sizeof(Tmp), PInp->LineZ, 0);
   as_snprintf(dest, DestSize, GNUErrors ? "%s:%s" : "%s(%s) ", NamePart(PInp->SpecName.Str), Tmp);
   return !GNUErrors;
 }

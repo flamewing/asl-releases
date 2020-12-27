@@ -32,8 +32,10 @@
 #define Flg_Code (1 << 9)
 #define Flg_CMOS (1 << 10)
 
-static CPUVar CPU3870, CPU3872, CPU3873, CPU3874, CPU3875, CPU3876,
+static CPUVar CPU3850,
+              CPU3870, CPU3872, CPU3873, CPU3874, CPU3875, CPU3876,
               CPU38C70;
+static IntType CodeIntType;
 
 /*---------------------------------------------------------------------------*/
 
@@ -147,7 +149,7 @@ static void DecodeImm16(Word Code)
   if (ChkArgCnt(1, 1))
   {
     tEvalResult EvalResult;
-    Word Arg = EvalStrIntExpressionWithResult(&ArgStr[1], IsCode ? UInt16 : Int16, &EvalResult);
+    Word Arg = EvalStrIntExpressionWithResult(&ArgStr[1], IsCode ? CodeIntType : Int16, &EvalResult);
 
     if (EvalResult.OK)
     {
@@ -468,8 +470,9 @@ static void SwitchTo_F8(void)
   DivideChars = ",";
   HasAttrs = False;
 
+  CodeIntType = (MomCPU == CPU3850) ? UInt16 : UInt12;
   ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegIO);
-  Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegLimits[SegCode] = 0xfff;
+  Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegLimits[SegCode] = IntTypeDefs[CodeIntType].Max;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegLimits[SegData] = 0x3f;
   Grans[SegIO  ] = 1; ListGrans[SegIO  ] = 1; SegLimits[SegIO  ] = 0xff;
 
@@ -481,6 +484,7 @@ static void SwitchTo_F8(void)
 
 void codef8_init(void)
 {
+  CPU3850 = AddCPU("F3850", SwitchTo_F8);
   CPU3870 = AddCPU("MK3870", SwitchTo_F8);
   CPU3872 = AddCPU("MK3872", SwitchTo_F8);
   CPU3873 = AddCPU("MK3873", SwitchTo_F8);

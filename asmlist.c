@@ -63,7 +63,7 @@ void MakeList(const char *pSrcLine)
     }
     if (ListMask & ListMask_LineNums)
     {
-      as_snprintf(h2, sizeof(h2), Integ32Format, CurrLine);
+      DecString(h2, sizeof(h2), CurrLine, 0);
       as_snprcatf(h, sizeof(h), "%5s/", h2);
     }
     ListPC = EProgCounter() - CodeLen;

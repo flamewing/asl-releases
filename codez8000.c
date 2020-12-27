@@ -2244,6 +2244,8 @@ static void DecodeDI_EI(Word Code)
   {
     int z;
     Word Num;
+
+    Code |= 3;
     for (z = 1; z <= ArgCnt; z++)
     {
       if (!as_strcasecmp(ArgStr[z].Str, "VI"))
@@ -2258,13 +2260,13 @@ static void DecodeDI_EI(Word Code)
         WrStrErrorPos(ErrNum_UnknownInt, &ArgStr[z]);
         return;
       }
-      else if (Code & Num)
+      else if (!(Code & Num))
       {
         WrStrErrorPos(ErrNum_DuplicateInt, &ArgStr[z]);
         return;
       }
       else
-        Code |= Num;
+        Code &= ~Num;
     }
     AppendCode(Code);
   }

@@ -1,4 +1,4 @@
-	cpu	mk3870
+	cpu	f3850
 	page	0
 
 	adc
