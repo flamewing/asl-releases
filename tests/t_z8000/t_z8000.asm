@@ -1300,14 +1300,14 @@ reg_r13	equ	r13
 reg_r14	equ	r14
 reg_r15	equ	r15
 
-reg_rr0	equ	rr0
-reg_rr2	equ	rr2
-reg_rr4	equ	rr4
-reg_rr6	equ	rr6
-reg_rr8	equ	rr8
-reg_rr10 equ	rr10
-reg_rr12 equ	rr12
-reg_rr14 equ	rr14
+reg_rr0	reg	rr0
+reg_rr2	reg	rr2
+reg_rr4	reg	rr4
+reg_rr6	reg	rr6
+reg_rr8	reg	rr8
+reg_rr10 reg	rr10
+reg_rr12 reg	rr12
+reg_rr14 reg	rr14
 
 reg_rq0	equ	rq0
 reg_rq4	equ	rq4

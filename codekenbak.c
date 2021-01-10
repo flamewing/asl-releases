@@ -425,10 +425,22 @@ static void ExpandBit_KENBAK(const tStrComp *pVarName, const struct sStructElem 
 {
   LongWord Address = Base + pStructElem->Offset;
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
+
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -764,7 +776,9 @@ static void CodeBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[1], &OK);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[2].Str);
     pElement->OpSize = eSymbolSize8Bit;
     pElement->BitPos = BitPos;

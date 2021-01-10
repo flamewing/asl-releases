@@ -1033,17 +1033,30 @@ static void DissectBit_Z8000(char *pDest, size_t DestSize, LargeWord Inp)
 
 static void ExpandZ8000Bit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  tSymbolSize OpSize = (pStructElem->OpSize == eSymbolSizeUnknown) ? eSymbolSize8Bit : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
 
-  if (!ChkRange(Address, 0, 0x7fffff)
-   || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
-    return;
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address, False), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    tSymbolSize OpSize = (pStructElem->OpSize == eSymbolSizeUnknown) ? eSymbolSize8Bit : pStructElem->OpSize;
+
+    if (!ChkRange(Address, 0, 0x7fffff)
+     || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
+      return;
+
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address, False), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*!------------------------------------------------------------------------
@@ -1863,14 +1876,15 @@ static void DecodeCALL_JP(Word Code)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBranch(Word Code)
+ * \fn     DecodeBranch(Word CodeWord MaxDist, Boolean Inverse, const tStrComp *pArg)
  * \brief  relative branch core decode
  * \param  Code instruction code (upper bits)
  * \param  MaxDist maximum positive distance (in bytes, e.g. even value)
+ * \param  Inverse Displacement is subtraced and not added by CPU
  * \param  pArg source argument
  * ------------------------------------------------------------------------ */
 
-static void DecodeBranch(Word Code, Word MaxDist, const tStrComp *pArg)
+static void DecodeBranch(Word Code, Word MaxDist, Boolean Inverse, const tStrComp *pArg)
 {
   tEvalResult EvalResult;
   LongWord Addr = EvalStrIntExpressionWithResult(pArg, MemIntType, &EvalResult);
@@ -1885,6 +1899,8 @@ static void DecodeBranch(Word Code, Word MaxDist, const tStrComp *pArg)
       WrStrErrorPos(ErrNum_InAccSegment, pArg);
 
     Delta = (Addr & 0xffff) - ((EProgCounter() + 2) & 0xffff);
+    if (Inverse)
+      Delta = (~Delta) + 1;
     if ((Delta & 1) && !mFirstPassUnknownOrQuestionable(EvalResult.Flags)) WrStrErrorPos(ErrNum_AddrMustBeEven, pArg);
     else if ((Delta > MaxDist) && (Delta < (0xfffe - MaxDist)) && !mFirstPassUnknownOrQuestionable(EvalResult.Flags)) WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
     else
@@ -1901,7 +1917,7 @@ static void DecodeBranch(Word Code, Word MaxDist, const tStrComp *pArg)
 static void DecodeCALR(Word Code)
 {
   if (ChkArgCnt(1, 1))
-    DecodeBranch(Code, 4094, &ArgStr[1]);
+    DecodeBranch(Code, 4094, True, &ArgStr[1]);
 }
 
 /*!------------------------------------------------------------------------
@@ -1916,7 +1932,7 @@ static void DecodeJR(Word Code)
 
   if (ChkArgCnt(1, 2)
    && DecodeCondition(ArgCnt == 2 ? &ArgStr[1] : NULL, &Condition))
-    DecodeBranch(Code | (Condition << 8), 254, &ArgStr[ArgCnt]);
+    DecodeBranch(Code | (Condition << 8), 254, False, &ArgStr[ArgCnt]);
 }
 
 /*!------------------------------------------------------------------------
@@ -2916,7 +2932,9 @@ static void DecodeDEFBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[2], &OK, OpSize);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[1].Str);
     pElement->OpSize = OpSize;
     pElement->BitPos = BitPos;
@@ -3181,7 +3199,8 @@ static void InternSymbol_Z8000(char *pArg, TempResult *pResult)
 
 static Boolean IsDef_Z8000(void)
 {
-  return Memo("PORT")
+  return Memo("REG")
+      || Memo("PORT")
       || Memo("DEFBIT")
       || Memo("DEFBITB");
 }

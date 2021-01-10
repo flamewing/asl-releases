@@ -139,7 +139,11 @@ int SysString(char *pDest, size_t DestSize, LargeWord Num, int System, int Stell
 
 char *as_strdup(const char *s)
 {
-  char *ptr = (char *) malloc(strlen(s) + 1);
+  char *ptr;
+
+  if (!s)
+    return NULL;
+  ptr = (char *) malloc(strlen(s) + 1);
 #ifdef CKMALLOC
   if (!ptr)
   {

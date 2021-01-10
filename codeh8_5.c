@@ -790,17 +790,30 @@ static void DissectBit_H8_5(char *pDest, size_t DestSize, LargeWord Inp)
 
 static void ExpandBit_H8_5(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  tSymbolSize OpSize = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
 
-  if (!ChkRange(Address, 0, 0xffffff)
-   || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
-    return;
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address, OpSize, eSymbolSizeUnknown), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    tSymbolSize OpSize = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
+
+    if (!ChkRange(Address, 0, 0xffffff)
+     || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
+      return;
+
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address, OpSize, eSymbolSizeUnknown), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1776,7 +1789,9 @@ static void DecodeBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[1], OpSize, &OK);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[2].Str);
     pElement->OpSize = OpSize;
     pElement->BitPos = BitPos;

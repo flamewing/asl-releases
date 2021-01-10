@@ -1,3 +1,12 @@
+2021-01-10 [1.42 Bld 189]
+
+- Bugfix      : correct encoding of Z8000 CALR instruction
+- Bugfix      : string expansion was not done for names of structure
+                elements
+- Bugfix      : correct inclusion of bit symbols in nested structures
+- Addition    : extend list of supported F8 variants
+- Addition    : add option to define arrays of structures
+
 2020-12-27 [1.42 Bld 188]
 
 - Bugfix      : correct encoding of Z8000 EI/DI instruction

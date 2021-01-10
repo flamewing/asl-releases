@@ -51,13 +51,17 @@ extern int StructSaveSeg;
 
 extern PStructRec CreateStructRec(void);
 
+extern void DestroyStructElem(PStructElem pStructElem);
+
 extern void DestroyStructRec(PStructRec StructRec);
 
 extern void BuildStructName(char *pResult, unsigned ResultLen, const char *pName);
 
-extern PStructElem CreateStructElem(const char *pElemName);
+extern PStructElem CreateStructElem(const struct sStrComp *pElemName);
 
-extern void AddStructElem(PStructRec pStructRec, PStructElem pElement);
+extern PStructElem CloneStructElem(const struct sStrComp *pCloneElemName, const struct sStructElem *pSrc);
+
+extern Boolean AddStructElem(PStructRec pStructRec, PStructElem pElement);
 
 extern void SetStructElemSize(PStructRec pStructRec, const char *pElemName, tSymbolSize Size);
 

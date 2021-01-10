@@ -1724,7 +1724,9 @@ static void CodeSTRUCT(Word IsUnion)
   {
     PStructStack pRun;
     LargeWord Offset = ProgCounter();
-    PStructElem pElement = CreateStructElem(LabPart.Str);
+    PStructElem pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
 
     for (pRun = StructStack; pRun && pRun != pInnermostNamedStruct; pRun = pRun->Next)
       Offset += pRun->SaveCurrPC;

@@ -32,10 +32,8 @@
 #define Flg_Code (1 << 9)
 #define Flg_CMOS (1 << 10)
 
-static CPUVar CPU3850,
-              CPU3870, CPU3872, CPU3873, CPU3874, CPU3875, CPU3876,
-              CPU38C70;
 static IntType CodeIntType;
+static Word MomCPUFlags;
 
 /*---------------------------------------------------------------------------*/
 
@@ -82,10 +80,8 @@ static Boolean ArgPair(const char *pArg1, const char *pArg2)
 
 static void DecodeFixed(Word Code)
 {
-  Boolean NeedCMOS = !!(Code & Flg_CMOS);
-
   if (!ChkArgCnt(0, 0));
-  else if (NeedCMOS && (MomCPU != CPU38C70)) WrError(ErrNum_InstructionNotSupported);
+  else if ((Code & Flg_CMOS) && (!(MomCPUFlags & Flg_CMOS))) WrError(ErrNum_InstructionNotSupported);
   else
   {
     BAsmCode[0] = Code;
@@ -470,7 +466,6 @@ static void SwitchTo_F8(void)
   DivideChars = ",";
   HasAttrs = False;
 
-  CodeIntType = (MomCPU == CPU3850) ? UInt16 : UInt12;
   ValidSegs = (1 << SegCode) | (1 << SegData) | (1 << SegIO);
   Grans[SegCode] = 1; ListGrans[SegCode] = 1; SegLimits[SegCode] = IntTypeDefs[CodeIntType].Max;
   Grans[SegData] = 1; ListGrans[SegData] = 1; SegLimits[SegData] = 0x3f;
@@ -482,14 +477,59 @@ static void SwitchTo_F8(void)
   InitFields();
 }
 
+static void SwitchTo_F8_12(void)
+{
+  CodeIntType = UInt12;
+  MomCPUFlags = 0;
+  SwitchTo_F8();
+}
+
+static void SwitchTo_F8_16(void)
+{
+  CodeIntType = UInt16;
+  MomCPUFlags = 0;
+  SwitchTo_F8();
+}
+
+static void SwitchTo_F8_12_CMOS(void)
+{
+  CodeIntType = UInt12;
+  MomCPUFlags = Flg_CMOS;
+  SwitchTo_F8();
+}
+
 void codef8_init(void)
 {
-  CPU3850 = AddCPU("F3850", SwitchTo_F8);
-  CPU3870 = AddCPU("MK3870", SwitchTo_F8);
-  CPU3872 = AddCPU("MK3872", SwitchTo_F8);
-  CPU3873 = AddCPU("MK3873", SwitchTo_F8);
-  CPU3874 = AddCPU("MK3874", SwitchTo_F8);
-  CPU3875 = AddCPU("MK3875", SwitchTo_F8);
-  CPU3876 = AddCPU("MK3876", SwitchTo_F8);
-  CPU38C70 = AddCPU("MK38C70", SwitchTo_F8);
+  (void)AddCPU("F3850"    , SwitchTo_F8_16);
+  (void)AddCPU("MK3850"   , SwitchTo_F8_16);
+  (void)AddCPU("MK3870"   , SwitchTo_F8_12);
+  (void)AddCPU("MK3870/10", SwitchTo_F8_12);
+  (void)AddCPU("MK3870/12", SwitchTo_F8_12);
+  (void)AddCPU("MK3870/20", SwitchTo_F8_12); /* == MK3870 */
+  (void)AddCPU("MK3870/22", SwitchTo_F8_12); /* == MK3876 */
+  (void)AddCPU("MK3870/30", SwitchTo_F8_12);
+  (void)AddCPU("MK3870/32", SwitchTo_F8_12);
+  (void)AddCPU("MK3870/40", SwitchTo_F8_12);
+  (void)AddCPU("MK3870/42", SwitchTo_F8_12); /* == MK3872 */
+  (void)AddCPU("MK3872"   , SwitchTo_F8_12);
+  (void)AddCPU("MK3873"   , SwitchTo_F8_12);
+  (void)AddCPU("MK3873/10", SwitchTo_F8_12);
+  (void)AddCPU("MK3873/12", SwitchTo_F8_12);
+  (void)AddCPU("MK3873/20", SwitchTo_F8_12); /* == MK3873 */
+  (void)AddCPU("MK3873/22", SwitchTo_F8_12);
+  (void)AddCPU("MK3874"   , SwitchTo_F8_12);
+  (void)AddCPU("MK3875"   , SwitchTo_F8_12);
+  (void)AddCPU("MK3875/22", SwitchTo_F8_12); /* == MK3876 with standby */
+  (void)AddCPU("MK3875/42", SwitchTo_F8_12); /* == MK3872 with standby */
+  (void)AddCPU("MK3876"   , SwitchTo_F8_12);
+  (void)AddCPU("MK38P70/02",SwitchTo_F8_12); /* == MK3874, MK974xx */
+  (void)AddCPU("MK38CP70/02", SwitchTo_F8_12_CMOS);
+  (void)AddCPU("MK38C70"  , SwitchTo_F8_12_CMOS);
+  (void)AddCPU("MK38C70/10",SwitchTo_F8_12);
+  (void)AddCPU("MK38C70/20",SwitchTo_F8_12); /* == MK38C70 */
+  (void)AddCPU("MK97400"  , SwitchTo_F8_12);
+  (void)AddCPU("MK97410"  , SwitchTo_F8_12);
+  (void)AddCPU("MK97500"  , SwitchTo_F8_16);
+  (void)AddCPU("MK97501"  , SwitchTo_F8_16);
+  (void)AddCPU("MK97503"  , SwitchTo_F8_16);
 }

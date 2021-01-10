@@ -16,48 +16,112 @@ __regf8inc	equ     1
 ; include proper CPU-specific register definitions
 
 		switch	MOMCPUNAME
-		case    "F3850"
+		; no ROM, no XRAM, no Serial I/O
+		case    "F3850","MK3850"
 __hasserial       equ	0
 
-		case	"MK3870","MK38C70"
+		; no ROM, 64b XRAM @ 4KB, no Serial I/O
+		case	"MK3874","MK38P70/02","MK38CP70/02","MK97400","MK97410"
+XRAMSTART	  label 0fc0h
+XRAMEND		  label	0fffh
+__hasserial	  equ	0
+
+		; no ROM, 64b XRAM @ 64KB, no Serial I/O
+		case	"MK97500","MK97501","MK97503"
+XRAMSTART	  label 0ffc0h
+XRAMEND		  label	0ffffh
+__hasserial	  equ	0
+
+		; 1K ROM, no XRAM, no Serial I/O
+		case	"MK3870/10","MK38C70/10"
+ROMSTART	  label	0
+ROMEND		  label 3ffh
+__hasserial	  equ	0
+
+		; 1K ROM, 64b XRAM, no Serial I/O
+		case	"MK3870/12"
+ROMSTART	  label	0
+ROMEND		  label 3ffh
+XRAMSTART	  label 0fc0h
+XRAMEND		  label	0fffh
+__hasserial	  equ	0
+
+		; 2K ROM, no XRAM, no Serial I/O
+		case	"MK3870","MK38C70","MK3870/20","MK38C70/20"
 ROMSTART	  label	0
 ROMEND		  label	7ffh
 __hasserial	  equ	0
 
-		case	"MK3872"
+		; 2K ROM, 64b XRAM, no Serial I/O
+		case	"MK3870/22","MK3875/22","MK3876"
 ROMSTART	  label	0
-ROMEND		  label 0fbfh
+ROMEND		  label	7ffh
 XRAMSTART	  label 0fc0h
 XRAMEND		  label	0fffh
 __hasserial	  equ	0
 
-		case	"MK3873"
+		; 3K ROM, no XRAM, no Serial I/O
+		case	"MK3870/30"
+ROMSTART	  label	0
+ROMEND		  label	0bffh
+__hasserial	  equ	0
+
+		; 3K ROM, 64b XRAM, no Serial I/O
+		case	"MK3870/32"
+ROMSTART	  label	0
+ROMEND		  label	0bffh
+XRAMSTART	  label 0fc0h
+XRAMEND		  label	0fffh
+__hasserial	  equ	0
+
+		; 4K ROM, no XRAM, no Serial I/O
+		case	"MK3870/40"
+ROMSTART	  label	0
+ROMEND		  label	0fffh
+__hasserial	  equ	0
+
+		; 4K ROM, 64b XRAM, no Serial I/O
+		case	"MK3870/42","MK3872","MK3875","MK3875/42"
+ROMSTART	  label	0
+ROMEND		  label	0fbfh
+XRAMSTART	  label 0fc0h
+XRAMEND		  label	0fffh
+__hasserial	  equ	0
+
+		; 1K ROM, no XRAM, Serial I/O
+		case	"MK3873/10"
+ROMSTART	  label	0
+ROMEND		  label 3ffh
+__hasserial	  equ	1
+
+		; 1K ROM, 64b XRAM, Serial I/O
+		case	"MK3873/12"
+ROMSTART	  label	0
+ROMEND		  label 3ffh
+XRAMSTART	  label 0fc0h
+XRAMEND		  label	0fffh
+__hasserial	  equ	1
+
+		; 2K ROM, no XRAM, Serial I/O
+		case	"MK3873","MK3873/20"
 ROMSTART	  label	0
 ROMEND		  label 7ffh
 __hasserial	  equ	1
 
-		case	"MK3874"
-		  ; external ROM 
-XRAMSTART	  label 0fc0h
-XRAMEND		  label	0fffh
-__hasserial	  equ	0
-
-		case	"MK3875"
-ROMSTART	  label	0
-ROMEND		  label 0fbfh
-XRAMSTART	  label 0fc0h
-XRAMEND		  label	0fffh
-__hasserial	  equ	0
-
-		case	"MK3876"
+		; 2K ROM, 64b XRAM, Serial I/O
+		case	"MK3873/22"
 ROMSTART	  label	0
 ROMEND		  label 7ffh
 XRAMSTART	  label 0fc0h
 XRAMEND		  label	0fffh
-__hasserial	  equ	0
+__hasserial	  equ	1
 
 		elsecase
-		  error  "wrong processor type set: only F3850, MK38(C)70, MK3872, MK3873, MK3874, MK3875, or MK3876 allowed!"
+		  error  "wrong processor target set: only F3850, MK3850, MK3870, MK3870/10, MK3870/12,"
+		  error  "MK3870/20, MK3870/22, MK3870/30, MK3870/32, MK3870/40, MK3870/42, MK3872,"
+		  error	 "MK3873, MK3873/10, MK3873/12, MK3873/20, MK3873/22, MK3874, MK3875, MK3875/22,"
+		  error	 "MK3875/42, MK3876, MK38P70/02, MK38C70, MK38C70/10, MK38C70/20, MK97400,"
+		  fatal	 "MK97410, MK97500, MK97501, or MK97503 allowed!"
                 endcase
 
                 if      MOMPASS=1

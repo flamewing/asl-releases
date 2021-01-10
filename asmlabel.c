@@ -86,13 +86,14 @@ Boolean LabelPresent(void)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     LabelHandle(const tStrComp *pName, LargeWord Value)
+ * \fn     LabelHandle(const tStrComp *pName, LargeWord Value, Boolean ForceGlobal)
  * \brief  process new label
  * \param  pName label's name
  * \param  Value label's value
+ * \param  ForceGlobal force visibility outside macro body
  * ------------------------------------------------------------------------ */
 
-void LabelHandle(const tStrComp *pName, LargeWord Value)
+void LabelHandle(const tStrComp *pName, LargeWord Value, Boolean ForceGlobal)
 {
   pLabelElement = NULL;
   pLabelEntry = NULL;
@@ -101,20 +102,29 @@ void LabelHandle(const tStrComp *pName, LargeWord Value)
 
   if (pInnermostNamedStruct)
   {
-    pLabelElement = CreateStructElem(pName->Str);
+    pLabelElement = CreateStructElem(pName);
+    if (!pLabelElement)
+      return;
 
     pLabelElement->Offset = Value;
-    AddStructElem(pInnermostNamedStruct->StructRec, pLabelElement);
-    AddStructSymbol(pName->Str, Value);
+    if (AddStructElem(pInnermostNamedStruct->StructRec, pLabelElement))
+      AddStructSymbol(pLabelElement->pElemName, Value);
   }
 
   /* normal label */
 
-  else if (RelSegs)
-    pLabelEntry = EnterRelSymbol(pName, Value, ActPC, False);
   else
-    pLabelEntry = EnterIntSymbolWithFlags(pName, Value, ActPC, False,
-                            Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR : eSymbolFlag_None);
+  {
+    if (ForceGlobal)
+      PushLocHandle(-1);
+    if (RelSegs)
+      pLabelEntry = EnterRelSymbol(pName, Value, ActPC, False);
+    else
+      pLabelEntry = EnterIntSymbolWithFlags(pName, Value, ActPC, False,
+                              Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR : eSymbolFlag_None);
+    if (ForceGlobal)
+      PopLocHandle();
+  }
   LabelValue = Value;
 }
 

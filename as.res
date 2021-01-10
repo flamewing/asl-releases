@@ -577,6 +577,10 @@ Message ErrMsgUnresolvedStructRef
  "nicht aufl&ouml;sbare Strukturelement-Referenz"
  "unresolvable structure element reference"
 
+Message ErrMsgDuplicateStructElem
+ "Strukturelement doppelt"
+ "duplicate structure element"
+
 Message ErrMsgNotRepeatable
  "Anweisung nicht wiederholbar"
  "instruction is not repeatable"
@@ -904,6 +908,14 @@ Message ErrMsgSegAddrRegMustBe32Bit
 Message ErrMsgNonSegAddrRegMustBe16Bit
  "Adressregister im nicht-segmentierten Modus muss 16 Bit sein"
  "address register in non-segmented mode must be 16 bit"
+
+Message ErrMsgInvStructArgument
+ "ung&uuml;ltiges Strukturargument"
+ "invalid structure argument"
+
+Message ErrMsgTooManyArrayDimensions
+ "zu viele Array-Dimensionen"
+ "too many array dimensions"
 
 Message ErrMsgInternalError
  "interner Fehler"

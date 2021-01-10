@@ -1028,17 +1028,30 @@ static void DissectBit_S12Z(char *pDest, size_t DestSize, LargeWord Inp)
 
 static void ExpandS12ZBit(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
 
-  if (!ChkRange(Address, 0, 0xfff)
-   || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
-    return;
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
+
+    if (!ChkRange(Address, 0, 0xfff)
+     || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1))
+      return;
+
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*!------------------------------------------------------------------------
@@ -1051,18 +1064,31 @@ static void ExpandS12ZBit(const tStrComp *pVarName, const struct sStructElem *pS
 
 static void ExpandS12ZBitfield(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
   LongWord Address = Base + pStructElem->Offset;
   
-  if (!ChkRange(Address, 0, 0xfff)
-   || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)
-   || !ChkRange(pStructElem->BitPos + pStructElem->BitWidthM1, 0, (8 << OpSize) - 1))
-    return;
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitfieldSymbol(pStructElem->BitPos, pStructElem->BitWidthM1 + 1, OpSize, Address), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    ShortInt OpSize = (pStructElem->OpSize < 0) ? 0 : pStructElem->OpSize;
+
+    if (!ChkRange(Address, 0, 0xfff)
+     || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)
+     || !ChkRange(pStructElem->BitPos + pStructElem->BitWidthM1, 0, (8 << OpSize) - 1))
+      return;
+
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitfieldSymbol(pStructElem->BitPos, pStructElem->BitWidthM1 + 1, OpSize, Address), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2368,7 +2394,9 @@ static void DecodeDEFBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[2], &OK, (OpSize == eSymbolSizeUnknown) ? eSymbolSize32Bit : OpSize);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[1].Str);
     pElement->OpSize = OpSize;
     pElement->BitPos = BitPos;
@@ -2412,7 +2440,9 @@ static void DecodeDEFBITFIELD(Word Code)
       return;
     if (!DecodeImmBitField(&ArgStr[2], &BitField))
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[1].Str);
     pElement->OpSize = OpSize;
     pElement->BitPos = BitField & 31;

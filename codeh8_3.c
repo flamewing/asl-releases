@@ -762,14 +762,26 @@ static void ExpandBit_H8_3(const tStrComp *pVarName, const struct sStructElem *p
 {
   LongWord Address = Base + pStructElem->Offset;
 
-  if (!ChkRange(Address, SegLimits[SegCode] - 0xff, SegLimits[SegCode])
-   || !ChkRange(pStructElem->BitPos, 0, 7))
-    return;
+  if (pInnermostNamedStruct)
+  {
+    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-  PushLocHandle(-1);
-  EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
-  PopLocHandle();
-  /* TODO: MakeUseList? */
+    if (!pElem)
+      return;
+    pElem->Offset = Address;
+    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+  }
+  else
+  {
+    if (!ChkRange(Address, SegLimits[SegCode] - 0xff, SegLimits[SegCode])
+     || !ChkRange(pStructElem->BitPos, 0, 7))
+      return;
+
+    PushLocHandle(-1);
+    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
+    PopLocHandle();
+    /* TODO: MakeUseList? */
+  }
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2075,7 +2087,9 @@ static void DecodeBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[1], &OK);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[2].Str);
     pElement->OpSize = eSymbolSize8Bit;
     pElement->BitPos = BitPos;

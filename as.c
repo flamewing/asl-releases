@@ -2267,7 +2267,7 @@ static void Produce_Code(void)
   if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel)))
   {
     if (LabelPresent())
-      LabelHandle(&LabPart, EProgCounter());
+      LabelHandle(&LabPart, EProgCounter(), False);
   }
 
   Found = False;

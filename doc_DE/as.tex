@@ -3788,16 +3788,26 @@ bq) ACE1101, ACE1202
 \end{quote}
 %%-----------
 \begin{quote}
-br) F3850, MK3870, MK3872, MK3873, MK3874, MK3875, \\
-    MK3876, MK38C70
+br) F3850, MK3850, \\
+    MK3870, MK3870/10, MK3870/12, "MK3870/20, MK3870/22, \\
+    MK3870/30, MK3870/32, MK3870/40, MK3870/42, \\
+    MK3872, MK3873, MK3873/10, MK3873/12, MK3873/20, MK3873/22, \\
+    MK3874, MK3875, MK3875/22, MK3875/42, MK3876, MK38P70/02, \\
+    MK38C70, MK38C70/10, \\
+    MK38C70/20, MK97400, MK97410, MK97500, MK97501, MK97503
 \end{quote}
-Der Befehlssatz aller F8-Varianten ist identisch, mit Ausnahme
-der CMOS-Version, die zwei neue Befehle (HET und HAL) kennt.
-Ansonsten unterscheiden sie sich nur in der Gr"o"se des Adre"sraumes
-(64K f"ur F3850, 4K f"ur den Rest), der Menge des eingebauten
-Speichers (2 oder 4 KByte ROM, 64 Byte Executable RAM oder nicht)
-und in der eingebauten Peripherie (mit serieller Schnittstelle
-oder ohne).
+Die gro"se Menge an Varianten ergibt sich zum Teil daraus, da"s
+Mostek Anfang der 80er-Jahre diversen Varianten neue Namen gegeben
+hat. Am neuen Benamungsschema kann man am Suffix die Menge internen
+ROMs (0 bis 4 f"ur 0..4 KByte) bzw. die Menge des eingebauten 
+Executable RAM (0 oder 2 f"ur 0 oder 64 Byte) ablesen.  3850 und
+MK975xx unterst"utzen einen 64 KByte gro"sen Adre"sraum, beim Rest ist
+er 4 KByte gro"s. P-Varianten haben einen Piggyback-Sockel f"ur ein
+EPROM, C-Varianten sind in CMOS ausgef"uhrt und kennen zwei
+neue Maschinenbefehle (HET und HAL).  Der MK3873 enth"alt als
+,,Spezialit"at'' eine eingebaute serielle Schnittstelle, der
+MK3875 bietet einen zweiten Betriebsspannungsanschlu"s, um den
+internen RAM-Inhalt im Standby halten zu k"onnen.
 %%-----------
 \begin{quote}
 bs) 7810 $\rightarrow$ 78C10
@@ -6321,10 +6331,14 @@ THISREC\_PAD} und {\tt THISREC\_POINTER}.  Das Label darf bei dem Aufruf
 einer Struktur naturgem"a"s nicht fehlen; wenn doch, gibt's eine
 Fehlermeldung.
 
-{\bf ACHTUNG!} Obwohl AS keine Argumente bei der Definition einer Struktur
-erwartet, werden gegebene Argumente nicht als Fehler gemeldet, sondern
-schlicht ignoriert.  Dies ist vorgesehen, um in Zukunft einer deklarierten
-Struktur direkt Werte zuweisen zu k"onnen.
+"Uber zus"atzliche Argumente ist es m"oglich, nicht nur Speicher f"ur eine
+einzelne Struktur, sondern ein ganzes Feld davon zu reservieren.  Die (bis zu
+drei) Dimensionen werden "uber in eckige Klammern gesetzte Argumente definiert:
+\begin{verbatim}
+thisarray Rec [10],[2]
+\end{verbatim}
+In diesem Beispiel wird Platz f"ur $2*10=20$ Strukturen reserviert, und f"ur
+jede Einzelstruktur werden Symbole erzeugt, die die Indizes im Namen enthalten.
 
 \subsection{geschachtelte Strukturen}
 
@@ -11963,6 +11977,11 @@ Angaben:
                 definiert oder dessen Referenz selber is nicht
                 aufl"osbar.}
                {Name des Elements und seine Referenz}
+\errentry{1557}{Strukturelement doppelt}
+               {Fehler}
+               {Ein Element dieses Namens ist bereits in der Struktur
+                enthalten.}
+               {Name des Elements}
 \errentry{1560}{Anweisung nicht wiederholbar}
                {Fehler}
                {Diese Maschinenanweisung kann nicht mit Hilfe eines
@@ -12374,6 +12393,15 @@ Angaben:
                {Z8000-Register, um Speicheradressen im nicht-segmentierten Modus zu adressieren, m"ussen
                 eine L"ange von 16 Bit (Rn) haben.}
                {das fragliche Argument}
+\errentry{2220}{ung"ultiges Strukturargument}
+               {Fehler}
+               {Das Argument entspricht keinem der Argumente, die bei der Expansion einer
+                Struktur erlaubt sind.}
+               {das fragliche Argument}
+\errentry{2221}{zu viele Array-Dimensionen}
+               {Fehler}
+               {Arrays von Strukturen d"urfen maximal drei Dimensionen haben.}
+               {die Dimension, die zu viel ist}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein

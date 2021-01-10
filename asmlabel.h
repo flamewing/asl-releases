@@ -16,7 +16,7 @@ extern Boolean LabelPresent(void);
 
 extern void LabelReset(void);
 
-extern void LabelHandle(const struct sStrComp *pName, LargeWord Value);
+extern void LabelHandle(const struct sStrComp *pName, LargeWord Value, Boolean ForceGlobal);
 
 extern void LabelModify(LargeWord OldValue, LargeWord NewValue);
 

@@ -447,6 +447,8 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgDoubleStruct; break;
     case ErrNum_UnresolvedStructRef:
       msgno = Num_ErrMsgUnresolvedStructRef; break;
+    case ErrNum_DuplicateStructElem:
+      msgno = Num_ErrMsgDuplicateStructElem; break;
     case ErrNum_NotRepeatable:
       msgno = Num_ErrMsgNotRepeatable; break;
     case ErrNum_ShortRead:
@@ -611,6 +613,10 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgSegAddrRegMustBe32Bit; break;
     case ErrNum_NonSegAddrRegMustBe16Bit:
       msgno = Num_ErrMsgNonSegAddrRegMustBe16Bit; break;
+    case ErrNum_InvStructArgument:
+      msgno = Num_ErrMsgInvStructArgument; break;
+    case ErrNum_TooManyArrayDimensions:
+      msgno = Num_ErrMsgTooManyArrayDimensions; break;
     case ErrNum_InternalError:
       msgno = Num_ErrMsgInternalError; break;
     case ErrNum_OpeningFile:

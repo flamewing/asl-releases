@@ -2877,7 +2877,9 @@ static void DecodeBIT(Word Code)
     BitPos = EvalBitPosition(&ArgStr[1], &OK, (OpSize == eSymbolSizeUnknown) ? eSymbolSize32Bit : OpSize);
     if (!OK)
       return;
-    pElement = CreateStructElem(LabPart.Str);
+    pElement = CreateStructElem(&LabPart);
+    if (!pElement)
+      return;
     pElement->pRefElemName = as_strdup(ArgStr[2].Str);
     /* undefined op size -> take over from ref elem */
     pElement->OpSize = OpSize;

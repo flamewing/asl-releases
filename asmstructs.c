@@ -26,6 +26,7 @@
 #include "asmlabel.h"
 #include "asmstructs.h"
 #include "errmsg.h"
+#include "codepseudo.h"
 
 #include "as.rsc"
 
@@ -62,6 +63,19 @@ PStructRec CreateStructRec(void)
   return Neu;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DestroyStructElem(PStructElem pStructElem)
+ * \brief  destroy/free struct element
+ * \param  pStructElem element to destroy
+ * ------------------------------------------------------------------------ */
+
+void DestroyStructElem(PStructElem pStructElem)
+{
+  if (pStructElem->pElemName) free(pStructElem->pElemName);
+  if (pStructElem->pRefElemName) free(pStructElem->pRefElemName);
+  free(pStructElem);
+}
+
 void DestroyStructRec(PStructRec StructRec)
 {
   PStructElem Old;
@@ -70,9 +84,7 @@ void DestroyStructRec(PStructRec StructRec)
   {
     Old = StructRec->Elems;
     StructRec->Elems = Old->Next;
-    if (Old->pElemName) free(Old->pElemName);
-    if (Old->pRefElemName) free(Old->pRefElemName);
-    free(Old);
+    DestroyStructElem(Old);
   }
   free(StructRec);
 }
@@ -86,17 +98,30 @@ void DestroyStructRec(PStructRec StructRec)
 
 void ExpandStructStd(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
 {
-  LabelHandle(pVarName, Base + pStructElem->Offset);
+  LabelHandle(pVarName, Base + pStructElem->Offset, True);
+  if (pStructElem->OpSize != eSymbolSizeUnknown)
+  {
+    String ExtName;
+    tStrComp ExtComp;
+
+    StrCompMkTemp(&ExtComp, ExtName);
+    if (ExpandStrSymbol(ExtName, sizeof(ExtName), pVarName))
+      SetSymbolOrStructElemSize(&ExtComp, pStructElem->OpSize);
+  }
 }
 
-PStructElem CreateStructElem(const char *pElemName)
+PStructElem CreateStructElem(const tStrComp *pElemName)
 {
+  String ExtName;
   PStructElem pNeu;
+
+  if (!ExpandStrSymbol(ExtName, sizeof(ExtName), pElemName))
+    return NULL;
 
   pNeu = (PStructElem) calloc(1, sizeof(TStructElem));
   if (pNeu)
   {
-    pNeu->pElemName = as_strdup(pElemName);
+    pNeu->pElemName = as_strdup(ExtName);
     if (!CaseSensitive)
       NLS_UpString(pNeu->pElemName);
     pNeu->pRefElemName = NULL;
@@ -110,27 +135,64 @@ PStructElem CreateStructElem(const char *pElemName)
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     CloneStructElem(const struct sStrComp *pCloneElemName, const struct sStructElem *pSrc)
+ * \brief  generate copy of struct element, with different name
+ * \param  pCloneElemName new element's name
+ * \param  pSrc source to clone from
+ * \return * to new element or NULL
+ * ------------------------------------------------------------------------ */
+
+PStructElem CloneStructElem(const struct sStrComp *pCloneElemName, const struct sStructElem *pSrc)
+{
+  PStructElem pResult = CreateStructElem(pCloneElemName);
+  if (!pResult)
+    return pResult;
+
+  pResult->Offset = pSrc->Offset;
+  pResult->OpSize = pSrc->OpSize;
+  pResult->BitPos = pSrc->BitPos;
+  pResult->ExpandFnc = pSrc->ExpandFnc;
+  pResult->pRefElemName = as_strdup(pSrc->pRefElemName);
+  return pResult;
+}
+
+/*!------------------------------------------------------------------------
  * \fn     AddStructElem(PStructRec pStructRec, PStructElem pElement)
  * \brief  add a new element to a structure definition
  * \param  pStructRec structure to extend
  * \param  pElement new element
+ * \return True if element was added
  * ------------------------------------------------------------------------ */
 
-void AddStructElem(PStructRec pStructRec, PStructElem pElement)
+Boolean AddStructElem(PStructRec pStructRec, PStructElem pElement)
 {
-  PStructElem pRun;
+  PStructElem pRun, pPrev;
+  Boolean Duplicate = False;
 
   if (!CaseSensitive && pElement->pRefElemName)
     NLS_UpString(pElement->pRefElemName);
 
-  if (!pStructRec->Elems)
-    pStructRec->Elems = pElement;
-  else
+  for (pPrev = NULL, pRun = pStructRec->Elems; pRun; pPrev = pRun, pRun = pRun->Next)
   {
-    for (pRun = pStructRec->Elems; pRun->Next; pRun = pRun->Next);
-    pRun->Next = pElement;
+    Duplicate = CaseSensitive ? !strcmp(pElement->pElemName, pRun->pElemName) : !as_strcasecmp(pElement->pElemName, pRun->pElemName);
+    if (Duplicate)
+    {
+      WrXError(ErrNum_DuplicateStructElem, pElement->pElemName);
+      break;
+    }
+  }
+
+  if (!Duplicate)
+  {
+    if (pPrev)
+      pPrev->Next = pElement;
+    else
+      pStructRec->Elems = pElement;
   }
   BumpStructLength(pStructRec, pElement->Offset);
+  if (Duplicate)
+    DestroyStructElem(pElement);
+  return !Duplicate;
 }
 
 /*!------------------------------------------------------------------------
@@ -365,6 +427,7 @@ static void PrintDef(PTree Tree, void *pData)
   TPrintContext *pContext = (TPrintContext*)pData;
   String s;
   char NumStr[30];
+  TempResult t;
   UNUSED(pData);
 
   WrLstLine("");
@@ -377,9 +440,12 @@ static void PrintDef(PTree Tree, void *pData)
     strmaxcat(s, "]", STRINGSIZE);
   }
   WrLstLine(s);
+  t.Typ = TempInt;
   for (Elem = Node->StructRec->Elems; Elem; Elem = Elem->Next)
   {
-    as_snprintf(s, sizeof(s), "%3" PRILongInt, Elem->Offset);
+    t.Contents.Int = Elem->Offset;
+    StrSym(&t, False, NumStr, sizeof(NumStr), ListRadixBase);
+    as_snprintf(s, sizeof(s), "%3s", NumStr);
     if (Elem->BitPos >= 0)
     {
       if (Elem->BitWidthM1 >= 0)
@@ -473,20 +539,117 @@ static void ExpandStruct_One(PStructRec StructRec, char *pVarPrefix, char *pStru
   pStructPrefix[StructLen] = '\0';
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     ExpandStruct(PStructRec StructRec)
+ * \brief  expand a defined structure
+ * \param  StructRec structure to expand
+ * ------------------------------------------------------------------------ */
+
+#define DIMENSION_MAX 3
+
 void ExpandStruct(PStructRec StructRec)
 {
-  if (!LabPart.Str[0]) WrError(ErrNum_StructNameMissing);
+  String CompVarName, CompStructName;
+  int z;
+  unsigned DimensionCnt = 0, Dim;
+  LargeInt Dimensions[DIMENSION_MAX];
+  tStrComp Arg;
+  tEvalResult EvalResult;
+
+  if (!LabPart.Str[0])
+  {
+    WrError(ErrNum_StructNameMissing);
+    return;
+  }
+
+  /* currently, we only support array dimensions as arguments */
+
+  for (z = 1; z <= ArgCnt; z++)
+    if (IsIndirectGen(ArgStr[z].Str, "[]"))
+    {
+      if (DimensionCnt >= DIMENSION_MAX)
+      {
+        WrStrErrorPos(ErrNum_TooManyArrayDimensions, &ArgStr[z]);
+        return;
+      }
+      StrCompRefRight(&Arg, &ArgStr[z], 1);
+      StrCompShorten(&Arg, 1);
+      Dimensions[DimensionCnt++] = EvalStrIntExpressionWithResult(&Arg, UInt32, &EvalResult);
+      if (!EvalResult.OK)
+        return;
+      if (EvalResult.Flags & eSymbolFlag_FirstPassUnknown)
+      {
+        WrStrErrorPos(ErrNum_FirstPassCalc, &Arg);
+        return;
+      }
+      if (Dimensions[DimensionCnt - 1] <= 0)
+      {
+        WrStrErrorPos(ErrNum_UnderRange, &Arg);
+        return;
+      }
+    }
+    else
+    {
+      WrStrErrorPos(ErrNum_InvStructArgument, &ArgStr[z]);
+      return;
+    }
+
+  strmaxcpy(CompStructName, pLOpPart, sizeof(CompStructName));
+  strmaxcpy(CompVarName, LabPart.Str, sizeof(CompVarName));
+  if (!DimensionCnt)
+  {
+    ExpandStruct_One(StructRec, CompVarName, CompStructName, EProgCounter());
+    CodeLen = StructRec->TotLen;
+  }
   else
   {
-    String CompVarName, CompStructName;
+    LargeInt Indices[DIMENSION_MAX];
+    int CompVarNameLens[DIMENSION_MAX];
+    tStrComp LabelComp;
 
-    strmaxcpy(CompVarName, LabPart.Str, sizeof(CompVarName));
-    strmaxcpy(CompStructName, pLOpPart, sizeof(CompStructName));
-    ExpandStruct_One(StructRec, LabPart.Str, pLOpPart, EProgCounter());
-    CodeLen = StructRec->TotLen;
-    BookKeeping();
-    DontPrint = True;
+    /* Start with element [0,...,0] and build associated names.
+       Store length of names up to given dimension so we don't
+       have to rebuild the name with all indices upon every elemnt: */
+
+    for (Dim = 0; Dim < DimensionCnt; Dim++)
+    {
+      Indices[Dim] = 0;
+      CompVarNameLens[Dim] = strlen(CompVarName);
+      as_snprcatf(CompVarName, sizeof(CompVarName), "_%llu", (LargeWord)Indices[Dim]);
+    }
+    while (Indices[0] < Dimensions[0])
+    {
+      StrCompMkTemp(&LabelComp, CompVarName);
+      LabelHandle(&LabelComp, EProgCounter() + CodeLen, True);
+      ExpandStruct_One(StructRec, CompVarName, CompStructName, EProgCounter() + CodeLen);
+      CodeLen += StructRec->TotLen;
+
+      /* increase indices, ripple through 'carry' from minor to major indices */
+
+      Indices[DimensionCnt - 1]++;
+      for (Dim = DimensionCnt - 1; Dim > 0; Dim--)
+        if (Indices[Dim] >= Dimensions[Dim])
+        {
+          Indices[Dim] = 0;
+          Indices[Dim - 1]++;
+        }
+        else
+          break;
+
+      /* Dim now holds the most major (leftmost) index that changed.  Build up new element
+         name, starting from that: */
+
+      CompVarName[CompVarNameLens[Dim]] = '\0';
+      for (; Dim < DimensionCnt; Dim++)
+      {
+        as_snprcatf(CompVarName, sizeof(CompVarName), "_%llu", (LargeWord)Indices[Dim]);
+        if (Dim + 1 < DimensionCnt)
+          CompVarNameLens[Dim + 1] = strlen(CompVarName);
+      }
+    }
   }
+  BookKeeping();
+  DontPrint = True;
 }
 
 void asmstruct_init(void)
