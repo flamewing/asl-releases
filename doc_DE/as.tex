@@ -47,7 +47,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Dezember 2020}
+{\large Stand Januar 2021}
 \end{raggedright}
 
 \clearpage
@@ -1011,6 +1011,9 @@ bzw. \ref{ChapShareOrder}.
       vom Beginn des Programms an, der ansonsten erst durch die gleichnamige
       Pseudoanweisung (siehe Abschnitt \ref{SectRELAXED}) eingeschaltet
       werden mu"s.}
+\item{\tty{supmode}: Mit diesem Schalter erlaubt man Beginn des Programms
+      an die Verwendung von Maschinenbefehlen, die nur im Supervisor-Modus
+      des Prozessors verwendet werden d"urfen (siehe Abschnitt \ref{SectSUPMODE}).}
 \item{\tty{Y}: Mit diesem Schalter weist man AS an, alle Fehlermeldungen
       wegen zu langer Sprungdistanzen zu verwerfen, sobald die Notwendigkeit
       eines neuen Durchlaufs feststeht.  In welchen (seltenen) Situationen
@@ -4011,6 +4014,7 @@ jeweils zugeh"origen Unterkapitel mit prozessorspezifischen Hinweisen beschriebe
 
 \subsection{SUPMODE, FPU, PMMU}
 \ttindex{SUPMODE}\ttindex{FPU}\ttindex{PMMU}
+\label{SectSUPMODE}
 
 {\em\begin{tabbing}
 G"ultigkeit: \= 680x0, FPU auch 80x86, i960, SUPMODE auch TLCS-900, \\
@@ -9179,6 +9183,62 @@ Modus wird die Segmentnummer einfach als die oberen sieben Adre"sbits
 eines gedacht linearen 8MB-Adre"sraums behandelt.  Dies ist eigentlich
 nicht im Sinne des Erfinders, aber es entspricht der Art und Weise, wie
 der Z8001 in Systemen ohne MMU effektiv betrieben wurde.
+
+Generell implementiert AS die Assembler-Syntax der Z8000-Maschinenbefehle
+so, wie es von Zilog in der Dokumentation vorgesehen ist.  Es existieren
+jedoch Assembler, die Erweiterungen bzw. Variationen unterst"utzen.  AS
+implementiert davon folgendes:
+
+\subsection{Bedingungen}
+
+Zus"atzlich zu den von Zilog definierten Bedingungen sind folgende alternative
+Namen definiert:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Alternativ & Zilog & Bedeutung \\
+\hline
+\hline
+ZR         & Z     & Z = 1 \\
+CY         & C     & C = 1 \\
+LLE        & ULE   & (C OR Z) = 1 \\
+LGE        & UGE   & C = 0 \\
+LGT        & UGT   & ((C = 0) AND (Z = 0)) = 1 \\
+LLT        & ULT   & C = 1 \\
+\hline
+\end{tabular}\end{center}
+
+\subsection{Flags}
+
+Als Argument f"ur die Befehle \tty{SETFLG}, \tty{COMFLG} und \tty{RESFLG} werden
+auch die folgenden alternativen Namen akzeptiert:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Alternativ & Zilog & Bedeutung \\
+\hline
+\hline
+ZR         & Z     & Zero-Flag \\
+CY         & C     & Carry-Flag \\
+\hline
+\end{tabular}\end{center}
+
+\subsection{Indirekte Adressierung}
+
+Anstelle \verb!@Rn! darf auch \verb!Rn^! geschrieben werden, falls beim \tty{CPU}-
+Statement die Option \tty{AMDSyntax=1} gesetzt wurde.  Wird eine I/O-Adresse
+indirekt adressiert, so reicht es mit dieser Option auch aus, {\em nur} \verb!Rn!
+zu schreiben.
+
+\subsection{Direkte versus unmittelbare Adressierung}
+
+Bei der von Zilog vorgegebenen Assembler-Syntax mu"s unmittelbare Adressierung
+durch ein vorangestelltes Doppelkreuz kenntlich gemacht werden.  Wurde dem
+\tty{CPU}-Statement jedoch die Option \tty{AMDSyntax=1} mitgegeben, wird anhand
+des Arguments (Label oder Konstante) entschieden, ob direkte oder unmittelbare
+Adressierung verwendet werden soll.  Unmittelbare Adressierung kann erzwungen
+werden, indem dem Argument ein Circumflex vorangestellt wird, z.B. um die
+Adresse eines Labels in ein Register zu laden.
 
 %%---------------------------------------------------------------------------
 

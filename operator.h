@@ -26,6 +26,6 @@ typedef struct
   void (*pFunc)(TempResult *pErg, TempResult *pLVal, TempResult *pRVal);
 } Operator;
 
-extern const Operator Operators[], MinusMonadicOperator;
+extern const Operator Operators[], MinusMonadicOperator, *pPotMonadicOperator;
 
 #endif /* _OPERATOR_H */

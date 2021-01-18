@@ -2139,7 +2139,7 @@ static void SwitchTo_601(void)
   SwitchFrom = SwitchFrom_601;
   InternSymbol = InternSymbol_601;
   DissectReg = DissectReg_601;
-  AddONOFF("SUPMODE",   &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
   AddONOFF("BIGENDIAN", &BigEnd,     BigEndianName,  False);
 
   InitFields();

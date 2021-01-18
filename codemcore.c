@@ -895,7 +895,7 @@ static void SwitchTo_MCORE(void)
    DissectReg = DissectReg_MCORE;
 
    SwitchFrom = SwitchFrom_MCORE; InitFields();
-   AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+   AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
    AddMoto16PseudoONOFF();
 
    SetFlag(&DoPadding, DoPaddingName, True);

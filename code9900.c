@@ -1413,7 +1413,7 @@ static void SwitchTo_9900(void *pUser)
   SwitchFrom = SwitchFrom_9900;
   InternSymbol = InternSymbol_9900;
   AddONOFF("PADDING", &DoPadding , DoPaddingName , False);
-  AddONOFF("SUPMODE", &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 
   InitFields();
 }

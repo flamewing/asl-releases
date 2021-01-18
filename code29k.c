@@ -1067,7 +1067,7 @@ static void SwitchTo_29K(void)
   IsDef = IsDef_29K;
   InternSymbol = InternSymbol_29K;
   DissectReg = DissectReg_29K;
-  AddONOFF("SUPMODE", &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 
   pASSUMERecs = ASSUME29Ks;
   ASSUMERecCnt = ASSUME29KCount;

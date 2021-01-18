@@ -2190,7 +2190,7 @@ static void SwitchTo_XA(void)
   InternSymbol = InternSymbol_XA;
   DissectReg = DissectReg_XA;
   SwitchFrom = SwitchFrom_XA; InitFields();
-  AddONOFF("SUPMODE",   &SupAllowed,  SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed,  SupAllowedSymName, False);
   AddONOFF("BRANCHEXT", &DoBranchExt, BranchExtName , False);
   AddMoto16PseudoONOFF();
 

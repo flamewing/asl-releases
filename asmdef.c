@@ -169,7 +169,7 @@ char MomCPUIdent[20];                   /* dessen Name in ASCII */
 Boolean FPUAvail;                       /* Koprozessor erlaubt ? */
 Boolean DoPadding;                      /* auf gerade Byte-Zahl ausrichten ? */
 Boolean Packing;                        /* gepackte Ablage ? */
-Boolean SupAllowed;                     /* Supervisormode freigegeben */
+Boolean DefSupAllowed, SupAllowed;      /* Supervisormode freigegeben */
 Boolean Maximum;                        /* CPU nicht kastriert */
 Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 

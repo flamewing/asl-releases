@@ -2350,7 +2350,7 @@ static void SwitchTo_F2MC16(void)
   SwitchFrom = SwitchFrom_F2MC16;
   InitFields();
 
-  AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 
   pASSUMERecs = ASSUMEF2MC16s;
   ASSUMERecCnt = ASSUMEF2MC16Count;

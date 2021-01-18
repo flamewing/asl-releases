@@ -1604,7 +1604,7 @@ static void InitCode_7000(void)
 
 /*!------------------------------------------------------------------------
  * \fn     InternSymbol_7000(char *pArg, TempResult *pResult)
- * \brief  handle built.in symbols in SH7x00
+ * \brief  handle built-in symbols in SH7x00
  * \param  pArg source argument
  * \param  pResult result buffer
  * ------------------------------------------------------------------------ */
@@ -1658,7 +1658,7 @@ static void SwitchTo_7000(void)
   DissectReg = DissectReg_7000;
   SwitchFrom = SwitchFrom_7000;
   InitFields();
-  AddONOFF("SUPMODE",      &SupAllowed,   SupAllowedName  , False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
   AddONOFF("COMPLITERALS", &CompLiterals, CompLiteralsName, False);
   AddMoto16PseudoONOFF();
 

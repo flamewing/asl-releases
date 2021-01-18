@@ -163,7 +163,7 @@ typedef enum { eNotSet, eSet, eFinished } tArgState;
 typedef struct
 {
   tArgState ArgState[3];
-  Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero;
+  Boolean InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero, ForceUpper;
   int Arg[3], CurrArg, IntSize;
 } tFormatContext;
 
@@ -183,7 +183,8 @@ static void ResetFormatContext(tFormatContext *pContext)
   pContext->ForceLeadZero =
   pContext->Signed =
   pContext->LeftAlign =
-  pContext->AddPlus = False;
+  pContext->AddPlus = 
+  pContext->ForceUpper = False;
 }
 
 static size_t LimitMinusOne(size_t Cnt, size_t Limit)
@@ -390,6 +391,7 @@ int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
           goto IntCommon;
         }
         case 'x':
+        case 'X':
         {
           if (FormatContext.IntSize >= 3)
             IntArg = va_arg(ap, LargeWord);
@@ -404,6 +406,7 @@ int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
           else
             IntArg = va_arg(ap, unsigned);
           FormatContext.Arg[1] = 16;
+          FormatContext.ForceUpper = as_isupper(*pFormat);
           goto IntCommon;
         }
         IntCommon:
@@ -430,7 +433,9 @@ int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap)
           Cnt = (pStr - Str)
               + SysString(pStr, sizeof(Str) - (pStr - Str), IntArg,
                           FormatContext.Arg[1] ? FormatContext.Arg[1] : 10,
-                          NumPadZeros, FormatContext.ForceLeadZero, HexStartCharacter, SplitByteCharacter);
+                          NumPadZeros, FormatContext.ForceLeadZero,
+                          FormatContext.ForceUpper ? 'A' : HexStartCharacter,
+                          SplitByteCharacter);
           if (Cnt > (int)sizeof(Str))
             Cnt = sizeof(Str);
           Result += Append(&pDest, &DestSize, Str, Cnt, &FormatContext);

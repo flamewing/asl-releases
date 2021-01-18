@@ -26,6 +26,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "intpseudo.h"
+#include "operator.h"
 
 #include "codez8000.h"
 
@@ -101,30 +102,32 @@ typedef struct
   tSymbolSize Size;
 } tCtlReg;
 
+typedef struct
+{
+  char Name[4];
+  Word Code;
+} tCondition;
+
 #define FixedOrderCnt 6
 #define CtlRegCnt 9
+#define ConditionCnt 28
 
 /* Auto-optimization of LD #imm4,Rn -> LDK disabled for the moment,
    until we find a syntax to control it: */
 
 #define OPT_LD_LDK 0
 
-static const char Conditions[][4] =
-{
-  "F"  , "LT" , "LE" , "ULE", "PE" , "MI" , "Z"  , "ULT",
-  ""   , "GE" , "GT" , "UGT", "PO" , "PL" , "NZ" , "UGE",
-  "F"  , "LT" , "LE" , "ULE", "OV" , "MI" , "EQ" , "C"  ,
-  ""   , "GE" , "GT" , "UGT", "NOV", "PL" , "NE" , "NC"
-};
-
 static const tCPUProps *pCurrCPUProps;
 
 static FixedOrder *FixedOrders;
 static tCtlReg *CtlRegs;
+static tCondition *Conditions;
 
 static tSymbolSize OpSize;
 static ShortInt ImmOpSize;
 static IntType MemIntType;
+
+static LongInt AMDSyntax;
 
 #ifdef __cplusplus
 #include "codez8000.hpp"
@@ -135,7 +138,7 @@ static IntType MemIntType;
 
 /*!------------------------------------------------------------------------
  * \fn     CheckSup(Boolean Required)
- * \brief  check whether supervisor mode requirement id violated
+ * \brief  check whether supervisor mode requirement and complain if violated
  * \param  Required is supervisor mode required?
  * \return False if violated
  * ------------------------------------------------------------------------ */
@@ -503,21 +506,51 @@ static Boolean SetOpSize(tSymbolSize Size, const tStrComp *pArg)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeAddrPart(const tStrComp *pArg, tAdrVals *pAdrVals, Boolean IsIO, Boolean *pForceShort)
- * \brief  decode address part, for direct or indexed mode
+ * \fn     GetImmIntType(tSymbolSize Size)
+ * \brief  retrieve immediate int type fitting to operand size
+ * \param  Size operand size
+ * \return int type
+ * ------------------------------------------------------------------------ */
+
+static IntType GetImmIntType(tSymbolSize Size)
+{
+  switch ((int)Size)
+  {
+    case eSymbolSize3Bit:
+      return UInt3;
+    case eSymbolSize4Bit:
+      return UInt4;
+    case eSymbolSize8Bit:
+      return Int8;
+    case eSymbolSize16Bit:
+      return Int16;
+    case eSymbolSize32Bit:
+      return Int32;
+    default:
+      return IntTypeCnt;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdrVals, Boolean IsIO, Boolean *pForceShort)
+ * \brief  decode address part, for direct/immediate or indexed mode
  * \param  pArg source argument
+ * \param  Disp displacement to add to value
  * \param  pAdrVals binary coding of addressing mode
+ * \param  IsDirect force treatment as direct address mode
  * \param  IsIO I/O space instead of memory space
  * \param  pForceShort short coding required?
+ * \param  pIsDirect classified as direct addressing?
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static LongWord DecodeAddrPartNum(const tStrComp *pArg, tEvalResult *pEvalResult, Boolean IsIO, Boolean *pForceShort)
+static LongWord DecodeAddrPartNum(const tStrComp *pArg, LongInt Disp, tEvalResult *pEvalResult, Boolean IsDirect, Boolean IsIO, Boolean *pForceShort, Boolean *pIsDirect)
 {
   tStrComp CopyComp;
   String Copy;
   Boolean HasSeg = False;
   LongWord Result, SegNum = 0;
+  IntType ThisIntType;
 
   StrCompMkTemp(&CopyComp, Copy);
   StrCompCopy(&CopyComp, pArg);
@@ -536,6 +569,7 @@ static LongWord DecodeAddrPartNum(const tStrComp *pArg, tEvalResult *pEvalResult
       KillPrefBlanksStrCompRef(&CopyComp);
       KillPostBlanksStrComp(&CopyComp);
       *pForceShort = True;
+      IsDirect = True;
       Len -= 2;
     }
     if (!strncmp(CopyComp.Str, "<<", 2))
@@ -585,30 +619,60 @@ static LongWord DecodeAddrPartNum(const tStrComp *pArg, tEvalResult *pEvalResult
         if (!pEvalResult->OK)
           return 0;
         HasSeg = True;
+        IsDirect = True;
       }
     }
   }
 
-  Result = EvalStrIntExpressionWithResult(&CopyComp, (IsIO || HasSeg) ? UInt16 : MemIntType, pEvalResult)
-         | (SegNum << 16);
-  if (pEvalResult->OK
-   && !mFirstPassUnknownOrQuestionable(pEvalResult->Flags)
-   && *pForceShort
-   && (Result & 0x00ff00ul))
+  /* If we know it's direct, right away limit to the correct address range.  Otherwise, it might
+     be immediate up to 32 bits: */
+
+  if (IsDirect)
+    ThisIntType = (IsIO || HasSeg) ? UInt16 : MemIntType;
+  else
+    ThisIntType = Int32;
+  Result = EvalStrIntExpressionWithResult(&CopyComp, ThisIntType, pEvalResult) + Disp;
+
+  /* For AMD syntax, treat as direct if no untyped constant */
+
+  if (AMDSyntax && !IsDirect && pEvalResult->AddrSpaceMask)
+    IsDirect = True;
+
+  /* for forwards, truncate to allowed range */
+
+  if (IsDirect)
+    ThisIntType = (IsIO || HasSeg) ? UInt16 : MemIntType;
+  else
+    ThisIntType = GetImmIntType(OpSize);
+  if (mFirstPassUnknown(pEvalResult->Flags))
+    Result &= IntTypeDefs[(int)ThisIntType].Mask;
+
+  if (IsDirect)
   {
-    WrStrErrorPos(ErrNum_NoShortAddr, pArg);
-    pEvalResult->OK = False;
+    Result |= (SegNum << 16);
+    if (pEvalResult->OK
+     && !mFirstPassUnknownOrQuestionable(pEvalResult->Flags)
+     && *pForceShort
+     && (Result & 0x00ff00ul))
+    {
+      WrStrErrorPos(ErrNum_NoShortAddr, pArg);
+      pEvalResult->OK = False;
+    }
   }
+  if (pIsDirect)
+    *pIsDirect = IsDirect;
   return Result;
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FillAbsAddr(tAdrVals *pAdrVals, LongWord Address, Boolean IsIO, Boolean ForceShort)
+ * \fn     FillAbsAddr(tAdrVals *pAdrVals, LongWord Address, Boolean IsDirect, Boolean IsIO, Boolean ForceShort, Boolean *pIsDirect)
  * \brief  pack absolute addess into instruction extension word(s)
  * \param  pAdrVals destination buffer
  * \param  Address address to pack
+ * \param  IsDirect force treatment as direct address mode
  * \param  IsIO I/O (16b) or memory (23/16b) address?
  * \param  ForceShort force short encoding
+ * \param  pIsDirect classified as direct addressing?
  * ------------------------------------------------------------------------ */
 
 static void FillAbsAddr(tAdrVals *pAdrVals, LongWord Address, Boolean IsIO, Boolean ForceShort)
@@ -630,17 +694,61 @@ static void FillAbsAddr(tAdrVals *pAdrVals, LongWord Address, Boolean IsIO, Bool
     pAdrVals->Vals[pAdrVals->Cnt++] = Offset;
 }
 
-static Boolean DecodeAddrPart(const tStrComp *pArg, tAdrVals *pAdrVals, Boolean IsIO)
+/*!------------------------------------------------------------------------
+ * \fn     FillImmVal(tAdrVals *pAdrVals, LongWord Value, tSymbolSize OpSize)
+ * \brief  fill address values from immediate value
+ * \param  pAdrVals dest buffer
+ * \param  Value value to fill in
+ * \param  OpSize used operand size
+ * ------------------------------------------------------------------------ */
+
+static void FillImmVal(tAdrVals *pAdrVals, LongWord Value, tSymbolSize OpSize)
+{
+  switch ((int)OpSize)
+  {
+    case eSymbolSize3Bit:
+      pAdrVals->Val = Value & 7;
+      break;
+    case eSymbolSize4Bit:
+      pAdrVals->Val = Value & 15;
+      break;
+    case eSymbolSize8Bit:
+      pAdrVals->Vals[pAdrVals->Cnt++] = (Value & 0xff) | ((Value & 0xff) << 8);
+      break;
+    case eSymbolSize16Bit:
+      pAdrVals->Vals[pAdrVals->Cnt++] = Value & 0xffff;
+      break;
+    case eSymbolSize32Bit:
+      pAdrVals->Vals[pAdrVals->Cnt++] = (Value >> 16) & 0xffff;
+      pAdrVals->Vals[pAdrVals->Cnt++] = Value & 0xffff;
+      break;
+    default:
+      break;
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     
+ * \brief  
+ * \param  
+ * \param  
+ * \return 
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdrVals, Boolean IsDirect, Boolean IsIO, Boolean *pIsDirect)
 {
   LongWord Address;
   tEvalResult EvalResult;
   Boolean ForceLong;
 
-  Address = DecodeAddrPartNum(pArg, &EvalResult, IsIO, &ForceLong);
+  Address = DecodeAddrPartNum(pArg, Disp, &EvalResult, IsDirect, IsIO, &ForceLong, pIsDirect);
   if (EvalResult.OK)
   {
     ChkSpace(IsIO ? SegIO : SegCode, EvalResult.AddrSpaceMask);
-    FillAbsAddr(pAdrVals, Address, IsIO, ForceLong);
+    if (!pIsDirect || *pIsDirect)
+      FillAbsAddr(pAdrVals, Address, IsIO, ForceLong);
+    else
+      FillImmVal(pAdrVals, Address, OpSize);
     return True;
   }
   else
@@ -660,7 +768,9 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
 {
   tSymbolSize ArgSize;
   int ArgLen, SplitPos, z;
-  tChkRegSize ChkRegSize_Addr = (ModeMask & MModIO) ? ChkRegSize_IOAddr : ChkRegSize_MemAddr;
+  Boolean IsIO = !!(ModeMask & MModIO);
+  tChkRegSize ChkRegSize_Addr = IsIO ? ChkRegSize_IOAddr : ChkRegSize_MemAddr, ChkRegSizeForIOIndir;
+  Boolean IsDirect;
 
   ClearAdrVals(pAdrVals);
 
@@ -716,17 +826,24 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
     goto chk;
   }
 
-  /* Register (R): */
+  /* Register (R): For AMD syntax, Rn is equivalent to Rn^ resp. @Rn, if I/O ports
+     are addressed indirectly: */
 
-  switch (DecodeReg(pArg, &pAdrVals->Val, &ArgSize, NULL, False))
+  ChkRegSizeForIOIndir = (AMDSyntax && !(ModeMask & MModReg) && (ModeMask & MModIReg) && IsIO) ? ChkRegSize_Addr : NULL;
+  switch (DecodeReg(pArg, &pAdrVals->Val, &ArgSize, ChkRegSizeForIOIndir, False))
   {
     case eRegAbort:
       return pAdrVals->Mode;
     case eIsReg:
     {
-      if (!SetOpSize(ArgSize, pArg))
-        return pAdrVals->Mode;
-      pAdrVals->Mode = eModReg;
+      if (ChkRegSizeForIOIndir)
+        pAdrVals->Mode = eModIReg;
+      else
+      {
+        if (!SetOpSize(ArgSize, pArg))
+          return pAdrVals->Mode;
+        pAdrVals->Mode = eModReg;
+      }
       goto chk;
     }
     default:
@@ -767,6 +884,28 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
     }
     goto chk;
   }
+  if (AMDSyntax
+   && ((ArgLen = strlen(pArg->Str))> 1)
+   && (pArg->Str[ArgLen - 1] == '^'))
+  {
+    String Reg;
+    tStrComp RegComp;
+
+    StrCompMkTemp(&RegComp, Reg);
+    StrCompCopySub(&RegComp, pArg, 0, ArgLen - 1);
+    switch (DecodeReg(&RegComp, &pAdrVals->Val, &ArgSize, ChkRegSize_Addr, False))
+    {
+      case eRegAbort:
+        return pAdrVals->Mode;
+      case eIsReg:
+        if (!pAdrVals->Val) WrStrErrorPos(ErrNum_InvAddrMode, &RegComp);
+        else
+          pAdrVals->Mode = eModIReg;
+        goto chk;
+      default:
+        break;
+    }
+  }
 
   /* Indexed, base... */
 
@@ -801,27 +940,46 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
           pAdrVals->Mode = eModBaseIndexed;
         }
         goto chk;
-      case eIsNoReg: /* abs(Rx) */
-        if (DecodeAddrPart(&OutArg, pAdrVals, !!(ModeMask & MModIO))
-         && (DecodeReg(&InArg, &pAdrVals->Val, &ArgSize, ChkRegSize_Idx, True) == eIsReg))
+      case eIsNoReg: /* abs(...) */
+      {
+        switch (DecodeReg(&InArg, &pAdrVals->Val, &ArgSize, ChkRegSize_Idx, False))
         {
-          if (!pAdrVals->Val) WrStrErrorPos(ErrNum_InvAddrMode, &OutArg);
-          else
-            pAdrVals->Mode = eModIndexed;
+          case eIsReg: /* abs(Rx) */
+            if (DecodeAddrPart(&OutArg, 0, pAdrVals, True, IsIO, NULL))
+              pAdrVals->Mode = eModIndexed;
+            break;
+          case eIsNoReg: /* abs/imm(delta) -> direct/imm*/
+          {
+            Boolean OK;
+            LongInt Disp = EvalStrIntExpression(&InArg, Int16, &OK);
+
+            if (OK && DecodeAddrPart(&OutArg, Disp, pAdrVals, !AMDSyntax || !(ModeMask & MModImm), IsIO, &IsDirect))
+              goto DirectOrImmediate;
+            break;
+          }
+          default:
+            return pAdrVals->Mode;
         }
         goto chk;
+      }
       case eRegAbort:
         return pAdrVals->Mode;
     }
   }
 
   /* Absolute: is the same coding as indexed, however with index register field = 0.
-     This why register 0 is not allowed for indexed mode. */
+     This is why register 0 is not allowed for indexed mode. */
 
-  if (DecodeAddrPart(pArg, pAdrVals, !!(ModeMask & MModIO)))
+  if (DecodeAddrPart(pArg, 0, pAdrVals, !AMDSyntax || !(ModeMask & MModImm), IsIO, &IsDirect))
   {
-    pAdrVals->Val = 0;
-    pAdrVals->Mode = eModDirect;
+DirectOrImmediate:
+    if (IsDirect)
+    {
+      pAdrVals->Val = 0;
+      pAdrVals->Mode = eModDirect;
+    }
+    else
+      pAdrVals->Mode = eModImm;
   }
 
 chk:
@@ -916,7 +1074,7 @@ static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pMemArg, const t
   if (!EvalResult.OK)
     return False;
 
-  Addr = DecodeAddrPartNum(pMemArg, &EvalResult, False, &ForceShort);
+  Addr = DecodeAddrPartNum(pMemArg, 0, &EvalResult, True, False, &ForceShort, NULL);
   if (!EvalResult.OK)
     return False;
 
@@ -1106,10 +1264,12 @@ static void AppendAdrVals(const tAdrVals *pVals)
 
 static Boolean DecodeCondition(const tStrComp *pArg, Word *pCondition)
 {
-  for (*pCondition = 0; *pCondition < sizeof(Conditions) / sizeof(*Conditions); (*pCondition)++)
-    if (!as_strcasecmp(pArg ? pArg->Str : "", Conditions[*pCondition]))
+  int z;
+
+  for (z = 0; z < ConditionCnt; z++)
+    if (!as_strcasecmp(pArg ? pArg->Str : "", Conditions[z].Name))
     {
-      *pCondition &= 0xf;
+      *pCondition = Conditions[z].Code;
       return True;
     }
   WrStrErrorPos(ErrNum_UndefCond, pArg);
@@ -2222,6 +2382,10 @@ static void DecodeFLG(Word Code)
     {
       if (!as_strcasecmp(ArgStr[z].Str, "P/V"))
         Num = 1 << 0;
+      else if (!as_strcasecmp(ArgStr[z].Str, "ZR"))
+        Num = 1 << 2;
+      else if (!as_strcasecmp(ArgStr[z].Str, "CY"))
+        Num = 1 << 3;
       else if (1 == strlen(ArgStr[z].Str))
       {
         const char *pPos = strchr(FlagNames, as_toupper(*ArgStr[z].Str));
@@ -2982,6 +3146,14 @@ static void AddCtl(const char *pName, Word Code, tCtlFlags Flags, tSymbolSize Si
   CtlRegs[InstrZ++].Size  = Size;
 }
 
+static void AddCondition(const char *pName, Word Code)
+{
+  if (InstrZ >= ConditionCnt)
+    exit(255);
+  strmaxcpy(Conditions[InstrZ].Name, pName, sizeof(Conditions[InstrZ].Name));
+  Conditions[InstrZ++].Code = Code;
+}
+
 static void AddSizeInstTable(const char *pName, unsigned SizeMask, Word Code, InstProc Proc)
 {
   char Name[20];
@@ -3018,12 +3190,47 @@ static void InitFields(void)
   AddCtl("FCW"     , 2, ePrivileged | eSegMode | eNonSegMode , eSymbolSize16Bit);
   AddCtl("REFRESH" , 3, ePrivileged | eSegMode | eNonSegMode , eSymbolSize16Bit);
   AddCtl("PSAPSEG" , 4, ePrivileged | eSegMode               , eSymbolSize16Bit);
-  AddCtl("PSAPOFF" , 5, ePrivileged | eSegMode               , eSymbolSize16Bit);
+  AddCtl("PSAPOFF" , 5, ePrivileged | eSegMode | eNonSegMode , eSymbolSize16Bit);
   AddCtl("PSAP"    , 5, ePrivileged            | eNonSegMode , eSymbolSize16Bit);
   AddCtl("NSPSEG"  , 6, ePrivileged | eSegMode               , eSymbolSize16Bit);
-  AddCtl("NSPOFF"  , 7, ePrivileged | eSegMode               , eSymbolSize16Bit);
+  AddCtl("NSPOFF"  , 7, ePrivileged | eSegMode | eNonSegMode , eSymbolSize16Bit);
   AddCtl("NSP"     , 7, ePrivileged            | eNonSegMode , eSymbolSize16Bit);
   AddCtl("FLAGS"   , 1,               eSegMode | eNonSegMode , eSymbolSize8Bit );
+
+  Conditions = (tCondition*)malloc(sizeof(*Conditions) * ConditionCnt);
+  InstrZ = 0;
+  AddCondition(""   , 0x08);
+  AddCondition("F"  , 0x00);
+  AddCondition("LT" , 0x01);
+  AddCondition("LE" , 0x02);
+  AddCondition("ULE", 0x03);
+  AddCondition("PE" , 0x04);
+  AddCondition("MI" , 0x05);
+  AddCondition("Z"  , 0x06);
+  AddCondition("ULT", 0x07);
+  AddCondition("GE" , 0x09);
+  AddCondition("GT" , 0x0a);
+  AddCondition("UGT", 0x0b);
+  AddCondition("PO" , 0x0c);
+  AddCondition("PL" , 0x0d);
+  AddCondition("NZ" , 0x0e);
+  AddCondition("UGE", 0x0f);
+  AddCondition("OV" , 0x04);
+  AddCondition("EQ" , 0x06);
+  AddCondition("C"  , 0x07);
+  AddCondition("NOV", 0x0c);
+  AddCondition("NE" , 0x0e);
+  AddCondition("NC" , 0x0f);
+
+  /* non-Zilog conditions */
+
+  AddCondition("ZR" , 0x06);
+  AddCondition("CY" , 0x07);
+  AddCondition("LLE", 0x03);
+  AddCondition("LLT", 0x07);
+  AddCondition("LGT", 0x0b);
+  AddCondition("LGE", 0x0f);
+
 
   AddSizeInstTable("LD"  , (1 << eSymbolSize8Bit) | (1 << eSymbolSize32Bit), 0, DecodeLD);
   AddInstTable(InstTable, "LDA" , 0, DecodeLDA);
@@ -3141,6 +3348,7 @@ static void DeinitFields(void)
 {
   free(CtlRegs);
   free(FixedOrders);
+  free(Conditions);
 
   DestroyInstTable(InstTable);
 }
@@ -3206,6 +3414,42 @@ static Boolean IsDef_Z8000(void)
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     PotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
+ * \brief  special ^ operator for AMD syntax
+ * \param  pErg operator result
+ * \param  pRVal input argument
+ * ------------------------------------------------------------------------ */
+
+static void PotOp(TempResult *pErg, TempResult *pLVal, TempResult *pRVal)
+{
+  UNUSED(pLVal);
+
+  /* If in front of a label, takes the address as an 'untyped' value.  This
+     will instruct the address decode to use immediate instead of direct
+     addressing: */
+
+  if (pRVal->AddrSpaceMask)
+    pErg->AddrSpaceMask = 0;
+
+  /* Vice-versa, for a constant, this makes an address of it: */
+
+  else
+    pErg->AddrSpaceMask |= (1 << SegCode);
+
+  /* clone remainder as-is */
+
+  pErg->Typ = pRVal->Typ;
+  pErg->Contents = pRVal->Contents;
+  pErg->Flags |= (pLVal->Flags & eSymbolFlags_Promotable);
+  if (pErg->DataSize == eSymbolSizeUnknown) pErg->DataSize = pLVal->DataSize;
+}
+
+static const Operator PotMonadicOperator =
+{
+  "^" ,1 , False, 8, { TempInt | (TempInt << 4), 0, 0, 0 }, PotOp
+};
+
+/*!------------------------------------------------------------------------
  * \fn     SwitchFrom_Z8000(void)
  * \brief  deinitialize as target
  * ------------------------------------------------------------------------ */
@@ -3254,7 +3498,9 @@ static void SwitchTo_Z8000(void *pUser)
   SwitchFrom = SwitchFrom_Z8000;
   InitFields();
   SetIsOccupiedFnc = TrueFnc;
-  AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+  if (AMDSyntax)
+    pPotMonadicOperator = &PotMonadicOperator;
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 }
 
 /*!------------------------------------------------------------------------
@@ -3274,7 +3520,12 @@ static const tCPUProps CPUProps[] =
 void codez8000_init(void)
 {
   const tCPUProps *pRun;
+  static const tCPUArg Z8000Args[] =
+  {
+    { "AMDSYNTAX", 0, 1, 0, &AMDSyntax },
+    { NULL       , 0, 0, 0, NULL       }
+  };
 
   for (pRun = CPUProps; pRun->pName; pRun++)
-    (void)AddCPUUser(pRun->pName, SwitchTo_Z8000, (void*)pRun, NULL);
+    (void)AddCPUUserWithArgs(pRun->pName, SwitchTo_Z8000, (void*)pRun, NULL, Z8000Args);
 }

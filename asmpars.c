@@ -1550,6 +1550,12 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
         pOp = &MinusMonadicOperator;
     }
 
+    else if (!strcmp(pOp->Id, "^"))
+    {
+      if (!OpPos && pPotMonadicOperator)
+        pOp = pPotMonadicOperator;
+    }
+
     /* Operandenzahl pruefen */
 
     CompLen = strlen(CopyComp.Str);
@@ -1947,6 +1953,12 @@ LargeInt EvalStrIntExpressionWithResult(const tStrComp *pComp, IntType Type, tEv
         pResult->AddrSpaceMask = t.AddrSpaceMask;
         pResult->DataSize = t.DataSize;
         break;
+      }
+      else
+      {
+        WrStrErrorPos(ErrNum_IntButString, pComp);
+        FreeRelocs(&LastRelocs);
+        return -1;
       }
     }
     /* else fall-through */

@@ -103,7 +103,8 @@ extern char SrcSuffix[],IncSuffix[],PrgSuffix[],LstSuffix[],
 
 #define MomCPUName       "MOMCPU"     /* mom. Prozessortyp */
 #define MomCPUIdentName  "MOMCPUNAME" /* mom. Prozessortyp */
-#define SupAllowedName   "INSUPMODE"  /* privilegierte Befehle erlaubt */
+#define SupAllowedCmdName "SUPMODE"   /* privilegierte Befehle erlaubt */
+#define SupAllowedSymName "INSUPMODE"
 #define DoPaddingName    "PADDING"    /* Padding an */
 #define PackingName      "PACKING"    /* gepackte Ablage an */
 #define MaximumName      "INMAXMODE"  /* CPU im Maximum-Modus */
@@ -361,7 +362,7 @@ extern char MomCPUIdent[20];
 extern Boolean FPUAvail;
 extern Boolean DoPadding;
 extern Boolean Packing;
-extern Boolean SupAllowed;
+extern Boolean DefSupAllowed, SupAllowed;
 extern Boolean Maximum;
 extern Boolean DoBranchExt;
 

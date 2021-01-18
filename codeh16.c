@@ -3219,7 +3219,7 @@ static void SwitchTo_H16(void)
   InternSymbol = InternSymbol_H16;
   InitFields();
 
-  AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
   AddMoto16PseudoONOFF();
 
   /* H16 code is byte-oriented, so no padding by default */

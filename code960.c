@@ -992,7 +992,7 @@ static void SwitchTo_960(void)
   DissectReg = DissectReg_960;
   SwitchFrom=SwitchFrom_960;
   AddONOFF("FPU"     , &FPUAvail  , FPUAvailName  , False);
-  AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 
   InitFields();
 }

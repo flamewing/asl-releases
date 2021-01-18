@@ -2832,7 +2832,7 @@ static void AssembleFile_InitPass(void)
       SetCPUByType(0, NULL);
   }
 
-  SetFlag(&SupAllowed, SupAllowedName, False);
+  SetFlag(&SupAllowed, SupAllowedSymName, DefSupAllowed);
   SetFlag(&FPUAvail, FPUAvailName, False);
   SetFlag(&Maximum, MaximumName, False);
   SetFlag(&DoBranchExt, BranchExtName, False);
@@ -3607,6 +3607,14 @@ static CMDResult CMD_Relaxed(Boolean Negate, const char *pArg)
   return CMDOK;
 }
 
+static CMDResult CMD_SupAllowed(Boolean Negate, const char *pArg)
+{
+  UNUSED(pArg);
+
+  DefSupAllowed = !Negate;
+  return CMDOK;
+}
+
 static CMDResult CMD_ExtendErrors(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
@@ -4096,6 +4104,7 @@ static CMDRec ASParams[] =
   { RelaxedName     , CMD_Relaxed         },
   { "s"             , CMD_SectionList     },
   { "SHAREOUT"      , CMD_ShareOutFile    },
+  { SupAllowedCmdName,CMD_SupAllowed      },
   { "OLIST"         , CMD_ListOutFile     },
   { "t"             , CMD_ListMask        },
   { "u"             , CMD_UseList         },
@@ -4349,6 +4358,7 @@ int main(int argc, char **argv)
   MakeDebug = False;
   ExtendErrors = 0;
   DefRelaxedMode = False;
+  DefSupAllowed = False;
   DefCompMode = False;
   MacroOutput = False;
   MacProOutput = False;

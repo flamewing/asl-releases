@@ -6298,7 +6298,7 @@ static void SwitchTo_68K(void *pUser)
   AddONOFF("PMMU"    , &PMMUAvail , PMMUAvailName , False);
   AddONOFF("FULLPMMU", &FullPMMU  , FullPMMUName  , False);
   AddONOFF("FPU"     , &FPUAvail  , FPUAvailName  , False);
-  AddONOFF("SUPMODE" , &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName , &SupAllowed, SupAllowedSymName, False);
   AddMoto16PseudoONOFF();
 
   SetFlag(&FullPMMU, FullPMMUName, !(pCurrCPUProps->SuppFlags & eFlagIntPMMU));

@@ -664,26 +664,22 @@
 
 	ldctl	fcw,r9
 	ldctl	refresh,r9
-	expect	1440,1440
+	expect	1440
 	ldctl	psapseg,r9
-	ldctl	psapoff,r9
 	endexpect
 	ldctl	psap,r9
-	expect	1440,1440
+	expect	1440
 	ldctl	nspseg,r9
-	ldctl	nspoff,r9
 	endexpect
 	ldctl	nsp,r9
 	ldctl	r9,fcw
 	ldctl	r9,refresh
-	expect	1440,1440
+	expect	1440
 	ldctl	r9,psapseg
-	ldctl	r9,psapoff
 	endexpect
 	ldctl	r9,psap
-	expect	1440,1440
+	expect	1440
 	ldctl	r9,nspseg
-	ldctl	r9,nspoff
 	endexpect
 	ldctl	r9,nsp
 

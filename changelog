@@ -1,3 +1,18 @@
+2021-01-18 [1.42 Bld 190]
+
+- Bugfix      : emit more reasonable error message when trying to
+                convert multi-character constant resp. string of
+                excessive length to integer
+- Addition    : Z8000 Syntax extensions:
+                - Add a few aliases for conditions
+                - Add a few aliases for flag names
+                - Allow Rn^ instead of @Rn for indirect addressing
+                - for alternate (AMD) syntax, allow leaving away
+                  indirection character for indirectly addressed I/O
+- Bugfix      : repair NoICE debug output
+- Addition    : add -supmode switch to enable supervisor mode
+                right from the beginning
+
 2021-01-10 [1.42 Bld 189]
 
 - Bugfix      : correct encoding of Z8000 CALR instruction

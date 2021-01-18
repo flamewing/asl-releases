@@ -484,3 +484,5 @@ MinusMonadicOperator =
 {
   "-" ,1 , False, 13, { TempInt << 4, TempFloat << 4, 0, 0, 0 }, SubOp
 };
+
+const Operator *pPotMonadicOperator = NULL;

@@ -29,6 +29,7 @@
 #include "asmcode.h"
 #include "asmrelocs.h"
 #include "asmitree.h"
+#include "operator.h"
 #include "codepseudo.h"
 #include "nlmessages.h"
 #include "asmallg.h"
@@ -137,6 +138,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   DissectBit = Default_DissectBit;
   DissectReg = NULL;
   QualifyQuote = NULL;
+  pPotMonadicOperator = NULL;
   SetIsOccupiedFnc = NULL;
   DecodeAttrPart = NULL;
   SwitchIsOccupied =

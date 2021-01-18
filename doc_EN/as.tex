@@ -66,7 +66,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition Dezember 2020}
+{\large Edition Januar 2021}
 \end{raggedright}
 
 \clearpage
@@ -998,6 +998,9 @@ chapters \ref{ChapShareMain} resp. \ref{ChapShareOrder}.
 \item{\tty{relaxed}: this switch enables the RELAXED mode right from the
       beginning of the program, which otherwise has to be enabled by the
       pseudo instruction of sane name(see section \ref{SectRELAXED}).}
+\item{\tty{supmode}: this switch enables right from the beginning of the
+      program usage of machine instructions that may only be used in the
+      processor's supervisor mode (see section \ref{SectSUPMODE}).}
 \item{\tty{Y}: This switch instructs AS to to suppress all messages about
       out-of-branch conditions, once the necessity for another pass is given.
       See section \ref{ForwRefs} for the (rare) situations that might make
@@ -3912,6 +3915,7 @@ certain target supports such options.
 
 \subsection{SUPMODE, FPU, PMMU}
 \ttindex{SUPMODE}\ttindex{FPU}\ttindex{PMMU}
+\label{SectSUPMODE}
 
 {\em\begin{tabbing}
  valid for: \= 680x0, FPU also for 80x86, i960, SUPMODE also for \\
@@ -8997,6 +9001,59 @@ memory model in AS. In segmented mode, the segment number is simply interpreted
 as the upper seven bits of a virtually linear address space.  Though this is
 not what Zilog intended, it is the way the segment number was used on the
 Z8001 if the system had no MMU.
+
+AS in general implements the Z8000 machine instruction syntax as it is specified
+by Zilog in its manuals.  However, there are assemblers that support extensions
+or variations of the syntax.  AS implements a few of them as well:
+
+\subsection{Conditions}
+
+In addition to the conditions defined by Zilog, the following alternative names
+are defined:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Alternate & Zilog & Meaning \\
+\hline
+\hline
+ZR         & Z     & Z = 1 \\
+CY         & C     & C = 1 \\
+LLE        & ULE   & (C OR Z) = 1 \\
+LGE        & UGE   & C = 0 \\
+LGT        & UGT   & ((C = 0) AND (Z = 0)) = 1 \\
+LLT        & ULT   & C = 1 \\
+\hline
+\end{tabular}\end{center}
+
+\subsection{Conditions}
+
+\tty{SETFLG}, \tty{COMFLG} und \tty{RESFLG} accept the following alternate names
+as arguments:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Alternate & Zilog & Meaning \\
+\hline
+\hline
+ZR         & Z     & Zero Flag \\
+CY         & C     & Carry Flag \\
+\hline
+\end{tabular}\end{center}
+
+\subsection{Indirect Addressing}
+
+It is valid to write \verb!Rn^! instead of \verb!@Rn!, if the option
+\tty{AMDSyntax=1} was given to the \tty{CPU} statement.  If an I/O address
+is addressed indirectly, this option even allows to write just \verb!Rn!.
+
+\subsection{Direct versus Immediate Addressing}
+
+The Zilog syntax mandates that immediate addressing has to be done by prefixing
+the argument with a hash character.  However, if the \tty{AMDSyntax=1} option
+was given to the \tty{CPU} statement, the type of argument (label or constant)
+decides whether immediate or direct addressing is to be used.  Immediate addressing
+may be forced by prefixing the argument with a circumflex, i.e. to load the address
+of a label into a register.
 
 %%---------------------------------------------------------------------------
 

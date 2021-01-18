@@ -2805,7 +2805,7 @@ static void SwitchTo_96C141(void)
   IsDef = IsDef_96C141;
   SwitchFrom = SwitchFrom_96C141;
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);
-  AddONOFF("SUPMODE", &SupAllowed, SupAllowedName, False);
+  AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
 
   InitFields();
 }
