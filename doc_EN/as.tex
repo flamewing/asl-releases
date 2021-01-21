@@ -2609,8 +2609,8 @@ register and bit position:
 
 The Z8000 features instructions to set and clear bits, however they cannot access
 addresses in I/O space.  For this reason, both {\tt DEFBIT} and {\tt DEFBITB}
-only allow to define bit objects in memory space.  The differentiation im operand
-size os important because the Z8000 is a big endian processor: bit {\em n} of a
+only allow to define bit objects in memory space.  The differentiation in operand
+size is important because the Z8000 is a big endian processor: bit {\em n} of a
 16 bit word at address {\em m} corresponds to bit {\em n} of an 8-bit byte at
 address {\em m+1}.
 

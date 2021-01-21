@@ -332,7 +332,7 @@ static void DumpDebugInfo_NOICE(void)
     if (HadLines)
     {
       as_snprintf(Tmp1, sizeof(Tmp1), "%X", End);
-      errno = 0; fprintf(MAPFile, "}FILE 0x%s\n", Tmp1); ChkIO(ErrNum_FileWriteError);
+      errno = 0; fprintf(MAPFile, "ENDFILE 0x%s\n", Tmp1); ChkIO(ErrNum_FileWriteError);
     }
   }
 

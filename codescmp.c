@@ -21,6 +21,7 @@
 #include "asmitree.h"  
 #include "intpseudo.h"
 #include "codevars.h"
+#include "codepseudo.h"
 #include "errmsg.h"
 
 #include "codescmp.h"
@@ -31,39 +32,54 @@ static CPUVar CPUSCMP;
 
 /*---------------------------------------------------------------------------*/
 
-static Boolean DecodeReg(const char *pAsc, Byte *pErg)
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(const char *pArg, Byte *pResult)
+ * \brief  check whether argument is a CPU register
+ * \param  pArg source argument
+ * \param  pResult resulting register # if yes
+ * \return True if argument is a register
+ * ------------------------------------------------------------------------ */
+
+static Boolean DecodeReg(const char *pArg, Byte *pResult)
 {
-  if ((strlen(pAsc) != 2) || (as_toupper(*pAsc) != 'P'))
-    return False;
+  int l = strlen(pArg);
 
-  switch (as_toupper(pAsc[1]))
+  switch (l)
   {
-    case 'C':
-      *pErg = 0; break;
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-      *pErg = pAsc[1] - '0'; break;
-    default:
-      return False;
+    case 2:
+      if (as_toupper(*pArg) != 'P')
+        return False;
+      pArg++;
+      /* fall-through */
+    case 1:
+      switch (as_toupper(*pArg))
+      {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+          *pResult = *pArg - '0';
+          return True;
+        case 'C':
+          *pResult = 0;
+          return (l == 2);
+      }
   }
-
-  return True;
+  return False;
 }
 
 static Boolean DecodeAdr(const tStrComp *pArg, Boolean MayInc, Byte PCDisp, Byte *Arg)
 {
   Word Target;
   Boolean OK;
-  int l = strlen(pArg->Str);
+  int l, SplitPos;
   tSymbolFlags Flags;
 
-  if ((l >= 4) && (pArg->Str[l - 1] == ')') && (pArg->Str[l - 4] == '('))
+  if (((SplitPos = FindDispBaseSplit(pArg->Str, &l)) >= 0) && (l >= 4))
   {
     tStrComp Left, Right;
 
-    StrCompSplitRef(&Left, &Right, pArg, pArg->Str + l - 4);
+    StrCompSplitRef(&Left, &Right, pArg, pArg->Str + SplitPos);
     StrCompShorten(&Right, 1);
     if (DecodeReg(Right.Str, Arg))
     {
@@ -287,6 +303,9 @@ static void SwitchTo_SCMP(void)
 
   MakeCode = MakeCode_SCMP; IsDef = IsDef_SCMP;
   SwitchFrom = SwitchFrom_SCMP; InitFields();
+
+  QualifyQuote = QualifyQuote_SingleQuoteConstant;
+  ConstModeWeirdNoTerm = True;
 }
 
 void codescmp_init(void)

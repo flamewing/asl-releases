@@ -3996,15 +3996,24 @@ void ClearSectionList(void)
 
 /*---------------------------------------------------------------------------------*/
 
+/*!------------------------------------------------------------------------
+ * \fn     PrintCrossList_PNode(PTree Node, void *pData)
+ * \brief  printf cross refence list of a single symbol table entry
+ * \param  Node node base object
+ * \param  pData actual symbol entry
+ * \return 
+ * ------------------------------------------------------------------------ */
+
 static void PrintCrossList_PNode(PTree Node, void *pData)
 {
   int FileZ;
-  PCrossRef Lauf;
-  String LinePart, LineAcc;
+  PCrossRef pCross;
+  String LineAcc;
   String h, ValStr;
   char LineStr[30];
   TempResult t;
   PSymbolEntry SymbolEntry = (PSymbolEntry) Node;
+  Boolean First;
   UNUSED(pData);
 
   if (!SymbolEntry->RefList)
@@ -4026,39 +4035,33 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
 
   for (FileZ = 0; FileZ < GetFileCount(); FileZ++)
   {
-    Lauf = SymbolEntry->RefList;
-
-    while ((Lauf) && (Lauf->FileNum != FileZ))
-      Lauf = Lauf->Next;
-
-    if (Lauf)
-    {
-      strcpy(h, " ");
-      strmaxcat(h, getmessage(Num_ListCrossFileName), STRINGSIZE);
-      strmaxcat(h, GetFileName(FileZ), STRINGSIZE);
-      strmaxcat(h, " :", STRINGSIZE);
-      WrLstLine(h);
-      strcpy(LineAcc, "   ");
-      while (Lauf)
+    First = True;
+    strcpy(LineAcc, "  ");
+    for (pCross = SymbolEntry->RefList; pCross; pCross = pCross->Next)
+      if (pCross->FileNum == FileZ)
       {
-        as_snprintf(LinePart, sizeof(LinePart), "%5ld", (long)Lauf->LineNum);
-        strmaxcat(LineAcc, LinePart, STRINGSIZE);
-        if (Lauf->OccNum != 1)
+        if (First)
         {
-          as_snprintf(LinePart, sizeof(LinePart), "(%2ld)", (long)Lauf->OccNum);
-          strmaxcat(LineAcc, LinePart, STRINGSIZE);
+          strcpy(h, " ");
+          strmaxcat(h, getmessage(Num_ListCrossFileName), STRINGSIZE);
+          strmaxcat(h, GetFileName(FileZ), STRINGSIZE);
+          strmaxcat(h, " :", STRINGSIZE);
+          WrLstLine(h);
+          First = False;
         }
-        else strmaxcat(LineAcc, "    ", STRINGSIZE);
+        as_snprcatf(LineAcc, sizeof(LineAcc), "%5ld", (long)pCross->LineNum);
+        if (pCross->OccNum != 1)
+          as_snprcatf(LineAcc, sizeof(LineAcc), "(%2ld)", (long)pCross->OccNum);
+        else
+          strmaxcat(LineAcc, "    ", STRINGSIZE);
         if (strlen(LineAcc) >= 72)
         {
           WrLstLine(LineAcc);
           strcpy(LineAcc, "  ");
         }
-        Lauf = Lauf->Next;
       }
-      if (strcmp(LineAcc, "  "))
-        WrLstLine(LineAcc);
-    }
+    if (strcmp(LineAcc, "  "))
+      WrLstLine(LineAcc);
   }
   WrLstLine("");
 }

@@ -323,63 +323,6 @@ static int ChkRegOverlap(Word FirstReg, int FirstSize, ...)
   return -1;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     FindSplit(const char *pArg, int *pArgLen)
- * \brief  check for argument of type xxx(yyyy)
- * \param  pArg argument to check
- * \param  pArgLen returns argument length
- * \return index to opening parenthese or -1 if not like pattern
- * ------------------------------------------------------------------------ */
-
-static int FindSplit(const char *pArg, int *pArgLen)
-{
-  int Nest = 0, Start, SplitPos = -1;
-  Boolean InSgl = False, InDbl = False;
-
-  *pArgLen = strlen(pArg);
-
-  if (!*pArgLen || (pArg[*pArgLen - 1] != ')'))
-    return -1;
-
-  /* We are looking for expressions of the form xxx(yyy),
-     but we want to avoid false positives on things like
-     xxx+(yyy*zzz).  So we look at the (non-blank) character
-     right before opening parenthese in question.  If it is
-     something that might be the last letter of an identifier,
-     or another parenthized expression, and not an operator,
-     it might be OK... */
-
-  for (Start = *pArgLen - 1; Start > 0; Start--)
-  {
-    switch (pArg[Start])
-    {
-      case '\'':
-        if (!InDbl) InSgl = !InSgl;
-        break;
-      case '"':
-        if (!InSgl) InDbl = !InDbl;
-        break;
-      case ')':
-        if (!InSgl && !InDbl) Nest++;
-        break;
-      case '(':
-        if (!InSgl && !InDbl) Nest--;
-        break;
-      default:
-        break;
-    }
-    if (!Nest && (Start > 0) && (SplitPos < 0))
-      SplitPos = Start;
-    else if (SplitPos >= 0)
-    {
-      if (as_isspace(pArg[Start])); /* delay decision to to next non-blank */
-      else
-        return (as_isalnum(pArg[Start]) || (pArg[Start] == ')')) ? SplitPos : -1;
-    }
-  }
-  return -1;
-}
-
 /*--------------------------------------------------------------------------*/
 /* Address Parsing */
 
@@ -909,7 +852,7 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
 
   /* Indexed, base... */
 
-  SplitPos = FindSplit(pArg->Str, &ArgLen);
+  SplitPos = FindDispBaseSplit(pArg->Str, &ArgLen);
   if (SplitPos > 0)
   {
     String OutStr, InStr;
