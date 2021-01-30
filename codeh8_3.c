@@ -2323,7 +2323,7 @@ static void SwitchTo_H8_3(void)
   DissectReg = DissectReg_H8_3;
   DissectBit = DissectBit_H8_3;
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeWeirdNoTerm = True;
+  ConstModeIBMNoTerm = True;
   SwitchFrom = SwitchFrom_H8_3;
   InitFields();
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);

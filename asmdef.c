@@ -124,7 +124,7 @@ Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
 const char *PCSymbol;	                 /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
 TConstMode ConstMode;
-Boolean ConstModeWeirdNoTerm;
+Boolean ConstModeIBMNoTerm;
 Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
 Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE/SHIFT ist Prozessorbefehl */
         PageIsOccupied,
@@ -176,6 +176,7 @@ Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 int RadixBase;                          /* Default-Zahlensystem im Formelparser*/
 int OutRadixBase;                       /* dito fuer Ausgabe */
 int ListRadixBase;                      /* ditto for listing */
+const char *pCommentLeadIn;             /* list of comment lead-in sequences */
 
 tStrComp *ArgStr;                       /* Komponenten der Zeile */
 StringPtr pLOpPart;

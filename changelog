@@ -1,4 +1,9 @@
-2021-01-21 [1.42 Bld 192]
+2021-01-30 [1.42 Bld 192]
+
+- Addition    : Initial support for Padauk controllers
+- Bugfix      : fix ST6 ASCII/ASCIZ instructions
+
+2021-01-21 [1.42 Bld 191]
 
 - Addition    : SC/MP: allow writing registers as 0..3 instead of P0..P3
 - Addition    : SC/MP: add x'... notation option for integer literals

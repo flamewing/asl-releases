@@ -141,6 +141,10 @@ Word Granularity(Byte Header, Byte Segment)
     case 0x6d:
       return 2;
     case 0x3b: /* AVR */
+    case 0x1a: /* PDK13..16 */
+    case 0x1b:
+    case 0x1c:
+    case 0x1d:
       return (Segment == SegCode) ? 2 : 1;
     default:
       return 1;

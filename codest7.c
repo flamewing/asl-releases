@@ -901,7 +901,7 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
 
 /*!------------------------------------------------------------------------
  * \fn     DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos)
- * \brief  transform compact represenation of bit (field) symbol into components
+ * \brief  transform compact representation of bit (field) symbol into components
  * \param  BitSymbol compact storage
  * \param  pAddress (I/O) register address
  * \param  pBitPos (start) bit position
@@ -969,7 +969,7 @@ static void ExpandST7Bit(const tStrComp *pVarName, const struct sStructElem *pSt
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeBitAdrWithIndir(int Start, int Stop, Byte *pBitPos, tAdrVals *pAdrVals)
- * \brief  decide bit expression, regarding indirect mode on ST7
+ * \brief  decode bit expression, regarding indirect mode on ST7
  * \param  Start 1st argument of bit expression
  * \param  Stop 2nd argument of bit expression
  * \param  pAdrVals result to fill

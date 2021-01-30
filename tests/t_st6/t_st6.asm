@@ -88,6 +88,14 @@ membit	bit	5,12h
         jrr     5,12h,pc+1
 	jrr	membit,pc+1
 
+	expect	1110,1110
+	ascii
+	asciz
+	endexpect
+
+	ascii	"This has no",' NUL termination.'
+	asciz	"This has ",' NUL termination.'
+
 	; if we are on page 0, we may jump anywhere in page 0 (dynamic) or 1 (static)
 
 	assume	prpr:0

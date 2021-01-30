@@ -282,6 +282,20 @@ IntType GetSmallestUIntType(LargeWord MaxValue)
   return UInt32;
 }
 
+IntType GetUIntTypeByBits(unsigned Bits)
+{
+  IntType Result;
+  for (Result = (IntType) 0; Result < IntTypeCnt; Result++)
+  {
+    if (IntTypeDefs[Result].SignAndWidth & 0x8000)
+      continue;
+    if (Lo(IntTypeDefs[Result].SignAndWidth) == Bits)
+      return Result;
+  }
+  fprintf(stderr, "define unsigned int type with %u bits\n", Bits);
+  exit(255);
+}
+
 static Boolean ProcessBk(char **Start, char *Erg)
 {
   LongInt System = 0, Acc = 0, Digit = 0;
@@ -831,7 +845,6 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   char ch;
   Boolean Found;
 
-
   /* empty string is interpreted as 0 */
 
   if (!*pExpr)
@@ -897,7 +910,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
     if (!Found
      && (l >= 3)
      && (pExpr[1] == '\'')
-     && ((pExpr[l - 1] == '\'') || ConstModeWeirdNoTerm))
+     && ((pExpr[l - 1] == '\'') || ConstModeIBMNoTerm))
     {
       switch (as_toupper(*pExpr))
       {
@@ -905,7 +918,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
         case 'X':
         case 'B':
         case 'O':
-          ActMode = ConstModeWeird;
+          ActMode = ConstModeIBM;
           Found = True;
           break;
       }
@@ -986,7 +999,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
           }
       }
       break;
-    case ConstModeWeird:
+    case ConstModeIBM:
       if (isdigit(*pExpr)) break;
       if ((l < 2) || (pExpr[1] != '\''))
         return -1;
@@ -1007,7 +1020,7 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       }
       if ((pExpr[l - 1] == '\'') && (l >= 3))
         l -= 3;
-      else if (ConstModeWeirdNoTerm)
+      else if (ConstModeIBMNoTerm)
         l -= 2;
       else
         return -1;

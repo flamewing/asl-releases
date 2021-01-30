@@ -292,6 +292,7 @@ following processor families have been implemented:
 \item{OKI OLMS-40}
 \item{OKI OLMS-50}
 \item{Panafacom MN1610/MN1613}
+\item{Padauk PMS/PMC/PFSxxx}
 \item{Symbios Logic SYM53C8xx (yes, they are programmable!)}
 \item{Intersil CDP1802/1804/1805(A)}
 \item{XMOS XS1}
@@ -557,6 +558,7 @@ REGH16.INC        & register addresses H16\\
 REGHC12.INC       & register addresses 68HC12 \\
 REGM16C.INC       & register addresses Mitsubishi M16C \\
 REGMSP.INC        & register addresses TI MSP430 \\
+REGPDK.INC        & register and bit addresses PMC/PMS/PFSxxx \\
 REGS12Z.INC       & register and bit addresses S12Z family \\
 REGST6.INC        & register and macro definitions ST6 \\
 REGST7.INC        & register and macro definitions ST7 \\
@@ -582,8 +584,10 @@ STDDEF60.INC      & instruction macros and register addresses \\
 REGSX20.INC       & register and bit addresses Parallax SX20/28 \\
 AVR/\*.INC        & register and bit addresses AVR family \\
                   & (do not include directly, use REGAVR.INC) \\
-COLDFIRE/\*.INC   & register and bit addresses ColDfire family \\
+COLDFIRE/\*.INC   & register and bit addresses ColdFire family \\
                   & (do not include directly, use REGCOLD.INC) \\
+PDK/\*.INC        & register and bit addresses PMC/PMS/PFSxxx \\
+                  & (do not include directly, use REGPDK.INC) \\
 S12Z/\*.INC       & register and bit addresses S12Z family \\
                   & (do not include directly, use REGS12Z.INC) \\
 ST6/\*.INC        & register and bit addresses ST6 family \\
@@ -1641,22 +1645,26 @@ sequence of digits.  This may be done in different numbering systems (see
 table \ref{TabSystems}).
 \par
 \begin{table*}[htb]
-\begin{center}\begin{tabular}{|l|c|c|c|}
+\begin{center}\begin{tabular}{|l|c|c|c|c|}
 \hline
-                & Intel mode        &  Motorola mode       &  C mode    \\
-                & (Intel, Zilog,    & (Rockwell, Motorola, &  (PowerPC, \\
-                &  Thomson Texas,   & Microchip, Thomson,  &  AMD 29K,  \\
-                &  Toshiba, NEC,    & Hitachi)             &  National, \\
-                &  Siemens, Philips, &                     &  Symbios,  \\
-                & Fujitsu, Fairchild, &                    &  Atmel)    \\
-                & Intersil)         &                      &            \\
+         & Intel Mode    &  Motorola Mode &  C Mode     & IBM Mode \\
+         & (Intel,       & (Rockwell,     &  (PowerPC,  & (Panafacom) \\
+         & Zilog,        &  Motorola,     &   AMD29K,   & \\
+         & Thomson,      &  Microchip,    &   National, & \\
+         & Texas,        &  Thomson,      &   Symbios,  & \\
+         & Toshiba,      &  Hitachi)      &   Atmel)    & \\
+         & NEC,          &                &             & \\
+         & Siemens,      &                &             & \\
+         & Philips,      &                &             & \\
+         & Fujitsu,      &                &             & \\
+         & Fairchild,    &                &             & \\
+         & Intersil)     &                &             & \\
 \hline
 \hline
-decimal         & direct              & direct         &   direct \\
-hexadecimal     & followed by H       & prepended \$   & prepended 0x \\
-binary          & followed by B       & prepended \%   & prepended 0b \\
-octal           & followed by O       & prepended @    & prepended 0 \\
-                & followed by Q       &                &         \\
+Decimal  & Direct        & Direct         & Direct      & Direct \\
+Hex      & Suffix H      & Prefix \$      & Prefix 0x   & X'..' or H'..' \\
+Binary   & Suffix B      & Prefix \%      & Prefix 0b   & O'..' \\
+Octal    & Suffix O or Q & Prefix @       & Prefix 0    & B'..' \\
 \hline
 \end{tabular}\end{center}
 \caption{Possible Numbering Systems\label{TabSystems}}
@@ -1691,10 +1699,11 @@ constants any more.  Therefore {\bf CAUTION!}
 With the help of the \tty{RELAXED} instruction (see section \ref{SectRELAXED}),
 the strict assignment of a syntax to a certain target processor can be
 removed.  The result is that an arbitrary syntax may be used (loosing
-compatibility to standard assemblers).  This option is however turned off
-by default.  This option also opens the opportunity for a fourth way of
-writing integer constants, a way that is sometimes found on other
-assemblers: This way puts the actual value into apostrophes and prepends
+compatibility to standard assemblers).  This option specifically enabled
+the 'IBM notation', a syntac that is sometimes found on other assemblers,
+for all targets:
+
+This notation puts the actual value into apostrophes and prepends
 the numbering system ('x' or 'h' for hexadecimal, 'o' for octal and 'b'
 for binary).  So, the integer constant 305419896 can be written in the
 following ways:
@@ -1704,9 +1713,9 @@ following ways:
  o'2215053170'
  b'00010010001101000101011001111000'
 \end{verbatim}
-This syntax is not the default for any processor architecture and only
-available in \tty{RELAXED} mode.  Its main purpose is the easier porting
-of existing sources and is not recommended for new programs.
+Another variant of this notation for some targets is to leave away the
+closing apostrophe, to allow simpler porting of existing code.  It is
+not recommended for new programs.
 
 \subsection{Floating Point Constants}
 
@@ -2407,9 +2416,9 @@ the symbol table.  Its use is architecture-dependant.
 {\em valid for: various, \tty{SFRB} only MCS-51}
 
 These instructions act like \tty{EQU}, but symbols defined with them are
-assigned to the directly addressable data segment, i.e. they serve
-preferential for the definition of RAM-cells and (as the name lets guess)
-hardware registers mapped into the data area.  The allowed range of values
+assigned to the directly addressable data resp. I/O segment, i.e. they are
+preferrably used for the definition of (as the name lets guess) hardware
+registers mapped into the data res. I/O area.  The allowed range of values
 is equal to the range allowed for \tty{ORG} in the data segment (see
 section \ref{SectORG}).  The difference between \tty{SFR} and \tty{SFRB}
 is that \tty{SFRB} marks the register as bit addressable, which is why AS
@@ -2469,7 +2478,7 @@ generates a symbol with correct attributes.
 \ttindex{BIT}
 
 {\em valid for: MCS/(2)51, XA, 80C166, 75K0, ST9, AVR, S12Z, SX20/28, H16,
-                H8/300, H8/500, KENBAK}
+                H8/300, H8/500, KENBAK, Padauk}
 
 \tty{BIT} serves to equate a single bit of a memory cell with a symbolic
 name.  This instruction varies from target platform to target platform due
@@ -2923,7 +2932,7 @@ the {\em execution address} of the code and do not yield the
 desired result when used as argument for \tty{ORG}.  The
 \tty{RORG} statement (\ref{SectRORG}) should be used in such cases.
 
-\hfuzz=25pt
+\hfuzz=60pt
 \small
 \begin{longtable}{|l|c|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -2952,6 +2961,8 @@ desired result when used as argument for \tty{ORG}.  The
 \multicolumn{11}{|l|}{$^{7}$ size and availibility depend on target processor} \\
 \hline
 \multicolumn{11}{|l|}{$^{8}$ only on variants supporting the \tty{MOVX} instruction} \\
+\hline
+\multicolumn{11}{|l|}{$^{9}$ device dependant} \\
 \hline
 \caption{Address Ranges for \tty{ORG}}
 \label{TabORG}
@@ -3140,7 +3151,6 @@ These three variants of the HMCS400 series differ by the size of
 the internal ROM and RAM.
 %%-----------
 \begin{quote}
-<<<<<<< HEAD
 o) HD641016
 \end{quote}
 This is currently the only target with H16 core.
@@ -3822,7 +3832,18 @@ address space, a floating point unit and a couple of new machine
 instructions.
 %%-----------
 \begin{quote}
-ch) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
+ch) PMC150, PMS150, PFS154, PMC131, PMS130, PMS131 \\
+PMS132, PMS132B, PMS152, PMS154B, PMS154C, PFS173 \\
+PMS133, PMS134, DF69, MCS11, PMC232, PMC234, PMC251 \\
+PMC271,PMC884, PMS232, PMS234, PMS271
+\end{quote}
+The Padauk controllers differ in the size of the internal
+(ROM/RAM) memory, the type of internal ROM (erasable or OTP),
+the built-in peripherals, and their instruction set (both
+extent and binary coding).
+%%-----------
+\begin{quote}
+ci) 1802 $\rightarrow$ 1804, 1805, 1806 $\rightarrow$ 1804A,
 1805A, 1806A
 \end{quote}
 1804, 1805, and 1806 feature an instruction set that is slightly
@@ -3832,18 +3853,18 @@ an integrated timer.  The A variants extend the instruction set by
 subtraction in BCD format.
 %%-----------
 \begin{quote}
-ci) XS1
+cj) XS1
 \end{quote}
 This type represents the XCore-"family".
 %%-----------
 \begin{quote}
-cj) 1750
+ck) 1750
 \end{quote}
 MIL STD 1750 is a standard, therefore there is only one
 (standard) variant...
 %%-----------
 \begin{quote}
-ck) KENBAK
+cl) KENBAK
 \end{quote}
 Since there has never been a KENBAK-2, the target is simply KENBAK...
 
@@ -5264,8 +5285,8 @@ HP28...
 \subsection{DATA}
 \ttindex{DATA}
 
-{\em valid for: PIC, 320xx, AVR, MELPS-4500, H8/500 \\
-     HMCS400, 4004/4040, $\mu$PD772x, OLMS-40/50}
+{\em valid for: PIC, 320xx, AVR, MELPS-4500, H8/500,
+     HMCS400, 4004/4040, $\mu$PD772x, OLMS-40/50, Padauk}
 
 This command stores data in the current segment.  Both integer
 values as well as character strings are supported.  On
@@ -5379,7 +5400,7 @@ Ditto.
 \ttindex{RES}
 
 {\em valid for: PIC, MELPS-4500, HMCS400, 3201x, 320C2(0)x, 320C5x, AVR,
- $\mu$PD772x, OLMS-40/50}
+ $\mu$PD772x, OLMS-40/50, Padauk}
 
 This command allocates memory.  When used in code segments the
 argument counts words (10/12/14/16 bit).  In data segments it counts
@@ -12676,12 +12697,14 @@ documentation.  I received information from an enormous amount of
 people, ranging from tips up to complete data books.  An enumeration
 follows (as stated before, without guarantee for completelessness!):
 
-Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch, Rolf Buchholz,
-Bernd Casimir, Nils Eilers, Gunther Ewald, Stephan Hruschka, Peter Kliegelh\"ofer, Ulf
-Meinke, Matthias Paul, Norbert Rosch, Steffen Schmid, Leonhard Schneider,
-Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter,
-Patrik Str\"omdahl, Oliver Thamm, Thorsten Thiele, Andreas Wassatsch,
-John Weinrich.
+Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles,
+Andreas Bolsch, Rolf Buchholz, Bernd Casimir, Nils Eilers,
+Gunther Ewald, Michael Haardt, Stephan Hruschka, Peter Kliegelh\"ofer,
+Ulf Meinke, Matthias Paul, Norbert Rosch, Curt J. Sampson,
+Steffen Schmid, Leonhard Schneider, Ernst Schwab, Michael Schwingen,
+Oliver Sellke, Christian Stelter, Patrik Str\"omdahl,
+Tadashi G. Takaoka, Oliver Thamm, Thorsten Thiele, Leszek Ulman,
+Rob Warmelink, Andreas Wassatsch, John Weinrich.
 
 ...and an ironic ''thank you'' to Rolf-Dieter-Klein and Tobias Thiel who
 demonstrated with their ASM68K how one should \bb{not} do it and thereby

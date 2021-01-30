@@ -91,7 +91,7 @@ void WriteCopyrights(TSwitchProc NxtProc)
 /* ermittelt das erste/letzte Auftauchen eines Zeichens ausserhalb */
 /* "geschuetzten" Bereichen */
 
-char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc)
+static char *QuotPosCore(const char *s, int (*SearchFnc)(const char*, const char*), const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc)
 {
   register ShortInt Brack = 0, AngBrack = 0;
   register const char *i;
@@ -100,7 +100,7 @@ char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc Qu
   for (i = s; *i; i++, ThisEscaped = NextEscaped)
   {
     NextEscaped = False;
-    if (strchr(pSearch, *i))
+    if (!SearchFnc(i, pSearch))
     {
       if (!AngBrack && !Brack && !InSglQuot && !InDblQuot)
         return (char*)i;
@@ -144,13 +144,44 @@ char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc Qu
   return NULL;
 }
 
+static int SearchSingleChar(const char *pPos, const char *pSearch)
+{
+  return ((int)*pSearch) - ((int)*pPos);
+}
+
+static int SearchMultChar(const char *pPos, const char *pSearch)
+{
+  return !strchr(pSearch, *pPos);
+}
+
+static int SearchMultString(const char *pPos, const char *pSearch)
+{
+  int len;
+
+  while (True)
+  {
+    if (!(len = strlen(pSearch)))
+      return 1;
+    if (!strncmp(pPos, pSearch, len))
+      return 0;
+    pSearch += len + 1;
+  }
+  return !strchr(pSearch, *pPos);
+}
+
+char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc)
+{
+  return QuotPosCore(s, SearchMultChar, pSearch, QualifyQuoteFnc);
+}
+
 char *QuotPosQualify(const char *s, char Zeichen, tQualifyQuoteFnc QualifyQuoteFnc)
 {
-  char Tmp[2];
+  return QuotPosCore(s, SearchSingleChar, &Zeichen, QualifyQuoteFnc);
+}
 
-  Tmp[0] = Zeichen;
-  Tmp[1] = '\0';
-  return QuotMultPosQualify(s, Tmp, QualifyQuoteFnc);
+char *QuotSMultPosQualify(const char *s, const char *pStrs, tQualifyQuoteFnc QualifyQuoteFnc)
+{
+  return QuotPosCore(s, SearchMultString, pStrs, QualifyQuoteFnc);
 }
 
 char *RQuotPos(char *s, char Zeichen)
@@ -569,7 +600,7 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsig
                 break;
             }
             break;
-          case ConstModeWeird :
+          case ConstModeIBM :
             switch (Radix)
             {
               case 16:

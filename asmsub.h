@@ -36,6 +36,8 @@ extern char *QuotPosQualify(const char *s, char Zeichen, tQualifyQuoteFnc Qualif
 #define QuotPos(s, Zeichen) QuotPosQualify(s, Zeichen, NULL)
 extern char *QuotMultPosQualify(const char *s, const char *pSearch, tQualifyQuoteFnc QualifyQuoteFnc);
 #define QuotMultPos(s, pSearch) QuotMultPosQualify(s, pSearch, NULL)
+extern char *QuotSMultPosQualify(const char *s, const char *pStrs, tQualifyQuoteFnc QualifyQuoteFnc);
+#define QuotSMultPos(s, pStrs) QuotSMultPosQualify(s, pStrs, NULL)
 
 extern char *RQuotPos(char *s, char Zeichen);
 

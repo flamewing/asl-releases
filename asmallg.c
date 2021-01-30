@@ -88,7 +88,7 @@ static void ParseCPUArgs(const tStrComp *pArgs, const tCPUArg *pCPUArgs)
       StrCompSplitRef(&NameComp, &ValueComp, &Args, pSep);
       KillPrefBlanksStrCompRef(&NameComp); KillPostBlanksStrComp(&NameComp);
       KillPrefBlanksStrCompRef(&ValueComp); KillPostBlanksStrComp(&ValueComp);
-    
+
       VarValue = EvalStrIntExpression(&ValueComp, Int32, &OK);
       if (OK)
       {
@@ -113,6 +113,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   const char *pRun;
   
   tStrComp TmpComp;
+  static const char Default_CommentLeadIn[] = { ';', '\0', '\0' };
   String TmpCompStr;
   StrCompMkTemp(&TmpComp, TmpCompStr);
 
@@ -134,7 +135,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   strmaxcpy(TmpCompStr, MomCPUIdentName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
-  ConstModeWeirdNoTerm = False;
+  ConstModeIBMNoTerm = False;
   DissectBit = Default_DissectBit;
   DissectReg = NULL;
   QualifyQuote = NULL;
@@ -148,6 +149,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   ASSUMERecCnt = 0;
   pASSUMERecs = NULL;
   pASSUMEOverride = NULL;
+  pCommentLeadIn = Default_CommentLeadIn;
   if (SwitchFrom)
   {
     SwitchFrom();
@@ -220,7 +222,7 @@ static void IntLine(char *pDest, size_t DestSize, LargeWord Inp, TConstMode This
     case ConstModeC:
       as_snprintf(pDest, DestSize, "0x%lllx", Inp);
       break;
-    case ConstModeWeird:
+    case ConstModeIBM:
       as_snprintf(pDest, DestSize, "x'%lllx'", Inp);
       break;
   }
@@ -1434,7 +1436,7 @@ static void CodeENUM(Word IsNext)
   if (ArgCnt != 1)
   {
     int l;
-    
+
     strmaxcat(ListLine, "..", STRINGSIZE);
     l = strlen(ListLine);
     IntLine(ListLine + l, STRINGSIZE - l, Last, ConstMode);

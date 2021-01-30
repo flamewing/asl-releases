@@ -116,6 +116,10 @@ static TFamilyDescr Descrs[] =
   { "KENBAK"       , 0x0027, eHexFormatIntel   },
   { "ATARI_VECTOR" , 0x0002, eHexFormatIntel   },
   { "XCore"        , 0x0006, eHexFormatMotoS   },
+  { "PDK13"        , 0x001a, eHexFormatIntel   },
+  { "PDK14"        , 0x001b, eHexFormatIntel   },
+  { "PDK15"        , 0x001c, eHexFormatIntel   },
+  { "PDK16"        , 0x001d, eHexFormatIntel   },
   { "1750"         , 0x004f, eHexFormatIntel   },
   { NULL           , 0xffff, eHexFormatDefault }
 };

@@ -118,6 +118,7 @@ extern Boolean SingleBit(LargeInt Inp, LargeInt *Erg);
 
 extern IntType GetSmallestUIntType(LargeWord MaxValue);
 
+extern IntType GetUIntTypeByBits(unsigned Bits);
 
 struct sDynString;
 extern LargeInt DynString2Int(const struct sDynString *pDynString);

@@ -2098,7 +2098,7 @@ static void SwitchTo_H8_5(void)
   DissectReg = DissectReg_H8_5;
   DissectBit = DissectBit_H8_5;
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeWeirdNoTerm = True;
+  ConstModeIBMNoTerm = True;
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);
   AddMoto16PseudoONOFF();

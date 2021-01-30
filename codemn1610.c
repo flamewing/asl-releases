@@ -1758,7 +1758,7 @@ static void SwitchFrom_MN1610(void)
 static void SwitchTo_MN1610(void)
 {
 	TurnWords = True;
-	ConstMode = ConstModeWeird; /*ConstModeC;*/
+	ConstMode = ConstModeIBM; /*ConstModeC;*/
 
 	PCSymbol = "*";
 	HeaderID = 0x36;

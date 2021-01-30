@@ -620,13 +620,19 @@ static void DecodeSFR(Word Code)
   CodeEquate(SegData, 0, 0xff);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeASCII_ASCIZ(Word IsZ)
+ * \brief  handle ASCII/ASCIZ instructions
+ * \param  IsZ 1 if it's ASCIZ
+ * ------------------------------------------------------------------------ */
+
 static void DecodeASCII_ASCIZ(Word IsZ)
 {
   int z, l;
   Boolean OK;
   String s;
 
-  if (ChkArgCnt(0, 0))
+  if (ChkArgCnt(1, ArgCntMax))
   {
     z = 1;
     do

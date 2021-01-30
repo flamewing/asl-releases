@@ -305,7 +305,7 @@ static void SwitchTo_SCMP(void)
   SwitchFrom = SwitchFrom_SCMP; InitFields();
 
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeWeirdNoTerm = True;
+  ConstModeIBMNoTerm = True;
 }
 
 void codescmp_init(void)

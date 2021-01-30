@@ -173,8 +173,8 @@ typedef enum
 {
   ConstModeIntel,     /* Hex xxxxh, Oct xxxxo, Bin xxxxb */
   ConstModeMoto,      /* Hex $xxxx, Oct @xxxx, Bin %xxxx */
-  ConstModeC,         /* Hex 0x..., Oct 0...., Bin ----- */
-  ConstModeWeird      /* Hex [xh]'xxxx', Oct o'xxxx', Bin b'xxxx' */
+  ConstModeC,         /* Hex 0x..., Oct 0...., Bin 0b... */
+  ConstModeIBM        /* Hex <xh>'xxxx['], Oct o'xxxx['], Bin b'xxxx['] */
 } TConstMode;
 
 typedef struct _TTransTable
@@ -330,7 +330,7 @@ extern Boolean TurnWords;
 extern Byte HeaderID;
 extern const char *PCSymbol;
 extern TConstMode ConstMode;
-extern Boolean ConstModeWeirdNoTerm;
+extern Boolean ConstModeIBMNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied, ShiftIsOccupied;
 extern Boolean (*DecodeAttrPart)(void);
@@ -367,6 +367,7 @@ extern Boolean Maximum;
 extern Boolean DoBranchExt;
 
 extern int RadixBase, OutRadixBase, ListRadixBase;
+extern const char *pCommentLeadIn;
 
 extern tStrComp *ArgStr;
 extern StringPtr pLOpPart;
