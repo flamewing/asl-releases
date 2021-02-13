@@ -1411,7 +1411,7 @@ static void SwitchTo_870C(void)
   FoundDescr = FindFamilyByName("TLCS-870/C");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";

@@ -2563,7 +2563,7 @@ static void SwitchFrom_97C241(void)
 static void SwitchTo_97C241(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x56;

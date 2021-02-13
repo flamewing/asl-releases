@@ -3197,7 +3197,7 @@ static void SwitchTo_H16(void)
   const PFamilyDescr pDescr = FindFamilyByName("H16");
 
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

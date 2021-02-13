@@ -545,7 +545,8 @@ static void SwitchTo_2650(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeMoto;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeMoto);
 
   pDescr = FindFamilyByName("2650");
   PCSymbol = "$"; HeaderID = pDescr->Id; NOPCode = 0xc0;

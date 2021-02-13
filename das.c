@@ -10,10 +10,12 @@
 #include "dasmdef.h"
 #include "cpulist.h"
 #include "console.h"
+#include "nls.h"
 #include "das.rsc"
 
 #include "deco68.h"
 #include "deco87c800.h"
+#include "deco4004.h"
 
 #define TABSIZE 8
 
@@ -184,6 +186,134 @@ static CMDResult CMD_BinFile(Boolean Negate, const char *pArg)
   return CMDArg;
 }
 
+static void ResizeBuffer(Byte* *ppBuffer, LargeWord *pAllocLen, LargeWord ReqLen)
+{
+  if (ReqLen > *pAllocLen)
+  {
+    Byte *pNew = *ppBuffer ? realloc(*ppBuffer, ReqLen) : malloc(ReqLen);
+    if (pNew)
+    {
+      *ppBuffer = pNew;
+      *pAllocLen = ReqLen;
+    }
+  }
+}
+
+static Boolean GetByte(char* *ppLine, Byte *pResult)
+{
+  if (!as_isxdigit(**ppLine))
+    return False;
+  *pResult = isdigit(**ppLine) ? (**ppLine - '0') : (as_toupper(**ppLine) - 'A' + 10);
+  (*ppLine)++;
+  if (!as_isxdigit(**ppLine))
+    return False;
+  *pResult = (*pResult << 4) | (isdigit(**ppLine) ? (**ppLine - '0') : (as_toupper(**ppLine) - 'A' + 10));
+  (*ppLine)++;
+  return True;
+}
+
+static void FlushChunk(tCodeChunk *pChunk)
+{
+  pChunk->Granularity = 1;
+  pChunk->pLongCode = (LongWord*)pChunk->pCode;
+  pChunk->pWordCode = (Word*)pChunk->pCode;
+  MoveCodeChunkToList(&CodeChunks, pChunk, TRUE);
+  InitCodeChunk(pChunk);
+}
+
+static CMDResult CMD_HexFile(Boolean Negate, const char *pArg)
+{
+  FILE *pFile;
+  char Line[300], *pLine;
+  size_t Len;
+  Byte *pLineBuffer = NULL, *pDataBuffer = 0, RecordType, Tmp;
+  LargeWord LineBufferStart = 0, LineBufferAllocLen = 0, LineBufferLen = 0,
+            Sum;
+  tCodeChunk Chunk;
+  unsigned z;
+
+  if (Negate || !*pArg)
+    return ArgError(Num_ErrMsgFileArgumentMissing, NULL);
+
+  pFile = fopen(pArg, "r");
+  if (!pFile)
+  {
+    return ArgError(Num_ErrMsgCannotReadHexFile, pArg);
+  }
+
+  InitCodeChunk(&Chunk);
+  while (!feof(pFile))
+  {
+    fgets(Line, sizeof(Line), pFile);
+    Len = strlen(Line);
+    if ((Len > 0) && (Line[Len -1] == '\n'))
+      Line[--Len] = '\0';
+    if ((Len > 0) && (Line[Len -1] == '\r'))
+      Line[--Len] = '\0';
+    if (*Line != ':')
+      continue;
+
+    Sum = 0;
+    pLine = Line + 1;
+    if (!GetByte(&pLine, &Tmp))
+      return ArgError(Num_ErrMsgInvalidHexData, pArg);
+    ResizeBuffer(&pLineBuffer, &LineBufferAllocLen, Tmp);
+    LineBufferLen = Tmp;
+    Sum += Tmp;
+
+    LineBufferStart = 0;
+    for (z = 0; z < 2; z++)
+    {
+      if (!GetByte(&pLine, &Tmp))
+        return ArgError(Num_ErrMsgInvalidHexData, pArg);
+      LineBufferStart = (LineBufferStart << 8) | Tmp;
+      Sum += Tmp;
+    }
+
+    if (!GetByte(&pLine, &RecordType))
+      return ArgError(Num_ErrMsgInvalidHexData, pArg);
+    Sum += RecordType;
+    if (RecordType != 0)
+      continue;
+
+    for (z = 0; z < LineBufferLen; z++)
+    {
+      if (!GetByte(&pLine, &pLineBuffer[z]))
+        return ArgError(Num_ErrMsgInvalidHexData, pArg);
+      Sum += pLineBuffer[z];
+    }
+
+    if (!GetByte(&pLine, &Tmp))
+      return ArgError(Num_ErrMsgInvalidHexData, pArg);
+    Sum += Tmp;
+    if (Sum & 0xff)
+      return ArgError(Num_ErrMsgHexDataChecksumError, pArg);
+
+    if (Chunk.Start + Chunk.Length == LineBufferStart)
+    {
+      ResizeBuffer(&Chunk.pCode, &Chunk.Length, Chunk.Length + LineBufferLen);
+      memcpy(&Chunk.pCode[Chunk.Length - LineBufferLen], pLineBuffer, LineBufferLen);
+    }
+    else
+    {
+      if (Chunk.Length)
+        FlushChunk(&Chunk);
+      ResizeBuffer(&Chunk.pCode, &Chunk.Length, LineBufferLen);
+      memcpy(Chunk.pCode, pLineBuffer, LineBufferLen);
+      Chunk.Start = LineBufferStart;
+    }
+  }
+  if (Chunk.Length)
+    FlushChunk(&Chunk);
+
+  if (pLineBuffer)
+    free(pLineBuffer);
+  if (pDataBuffer)
+    free(pDataBuffer);
+  fclose(pFile);
+  return CMDOK;
+}
+
 static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
 {
   LargeWord Address;
@@ -348,6 +478,7 @@ static CMDRec DASParams[] =
 {
   { "CPU"             , CMD_CPU             },
   { "BINFILE"         , CMD_BinFile         },
+  { "HEXFILE"         , CMD_HexFile         },
   { "ENTRYADDRESS"    , CMD_EntryAddress    },
   { "SYMBOL"          , CMD_Symbol          },
   { "h"               , CMD_HexLowerCase    },
@@ -455,11 +586,15 @@ int main(int argc, char **argv)
   tDisasmData Data;
   int ThisSrcLineLen;
 
+  strutil_init();
+  nls_init();
+  NLS_Initialize(&argc, argv);
   dasmdef_init();
   cpulist_init();
   nlmessages_init("das.msg", *argv, MsgId1, MsgId2);
   deco68_init();
   deco87c800_init();
+  deco4004_init();
 
   if (argc <= 1)
   {

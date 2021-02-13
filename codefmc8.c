@@ -973,7 +973,7 @@ static void SwitchTo_F2MC8(void)
   FoundDescr = FindFamilyByName("F2MC8");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

@@ -917,6 +917,14 @@ Message ErrMsgTooManyArrayDimensions
  "zu viele Array-Dimensionen"
  "too many array dimensions"
 
+Message ErrMsgInvIntFormat
+ "unbekannte Integer-Notation"
+ "unknown integer notation"
+
+Message ErrMsgInvIntFormatList
+ "ung&uuml;ltige Liste an Integer-Schreibweisen"
+ "invalid list of integer notations"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"

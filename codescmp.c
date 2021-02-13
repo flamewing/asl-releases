@@ -292,7 +292,8 @@ static void SwitchFrom_SCMP(void)
 
 static void SwitchTo_SCMP(void)
 {
-  TurnWords = False; ConstMode = ConstModeC;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeC);
 
   PCSymbol = "$"; HeaderID = 0x6e; NOPCode = 0x08;
   DivideChars = ","; HasAttrs = False;
@@ -305,7 +306,7 @@ static void SwitchTo_SCMP(void)
   SwitchFrom = SwitchFrom_SCMP; InitFields();
 
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeIBMNoTerm = True;
+  IntConstModeIBMNoTerm = True;
 }
 
 void codescmp_init(void)

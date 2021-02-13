@@ -2459,7 +2459,7 @@ static Boolean ChkZeroArgs(void)
 static void SwitchTo_65(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x11;

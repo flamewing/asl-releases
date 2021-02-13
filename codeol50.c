@@ -16,6 +16,7 @@
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "asmallg.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codepseudo.h"
@@ -532,21 +533,15 @@ static void DecodeINTENDSAB(Word Code)
 static void DecodeONOFF(Word Index)
 {
   const tONOFFOrder *pOrder = ONOFFOrders + Index;
+  Boolean IsON;
 
   if (!ChkArgCnt(1, 1));
   else if (ChkExactCPUMask(pOrder->CPUMask, CPU5054) < 0);
-  else if (!as_strcasecmp(ArgStr[1].Str, "OFF"))
+  else if (CheckONOFFArg(&ArgStr[1], &IsON))
   {
-    WAsmCode[0] = pOrder->Code | (2 << pOrder->Shift);
+    WAsmCode[0] = pOrder->Code | ((IsON ? 3 : 2) << pOrder->Shift);
     CodeLen = 1;
   }
-  else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
-  {
-    WAsmCode[0] = pOrder->Code | (3 << pOrder->Shift);
-    CodeLen = 1;
-  }
-  else
-    WrError(ErrNum_OnlyOnOff);
 }
 
 static void DecodeImm(Word Index)
@@ -798,7 +793,7 @@ static void AddDSP(const char *pName, Word Code, Word CPUMask)
   AddInstTable(InstTable, pName, InstrZ++, DecodeDSP);
 }
 
-static void AddONOFF(const char *pName, Word Code, Word Shift, Word CPUMask)
+static void AddONOFFInstr(const char *pName, Word Code, Word Shift, Word CPUMask)
 {
   if (InstrZ >= ONOFFOrderCnt) exit(255);
   ONOFFOrders[InstrZ].Code = Code;
@@ -878,9 +873,9 @@ static void InitFields(void)
 
   ONOFFOrders = (tONOFFOrder*) calloc(ONOFFOrderCnt, sizeof(*ONOFFOrders));
   InstrZ = 0;
-  AddONOFF("LAMP",   0x0410, 0, M_5054 | M_5055 | M_6051);
-  AddONOFF("BACKUP", 0x0410, 2, M_5054 | M_5055 | M_6051);
-  AddONOFF("XTCP",   0x0480, 0, M_5055 | M_6051);
+  AddONOFFInstr("LAMP",   0x0410, 0, M_5054 | M_5055 | M_6051);
+  AddONOFFInstr("BACKUP", 0x0410, 2, M_5054 | M_5055 | M_6051);
+  AddONOFFInstr("XTCP",   0x0480, 0, M_5055 | M_6051);
 
   APOrders = (tAPOrder*) calloc(APOrderCnt, sizeof(*APOrders));
   InstrZ = 0;
@@ -1035,7 +1030,7 @@ static void SwitchTo_OLMS50(void)
   pDescr = FindFamilyByName("OLMS-50");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SwitchIsOccupied = True;
   PageIsOccupied = True;
 

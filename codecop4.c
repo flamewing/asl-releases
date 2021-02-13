@@ -493,7 +493,8 @@ static void SwitchTo_COP4(void)
 
   pDescr = FindFamilyByName("COP4");
 
-  TurnWords = False; ConstMode = ConstModeC;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeC);
 
   PCSymbol = "."; HeaderID = pDescr->Id;
   NOPCode = 0x44;

@@ -38,6 +38,18 @@ Message ErrMsgCannotReadBinaryFile
  "Bin&auml;rdatei nicht lesbar"
  "cannot read binary file"
 
+Message ErrMsgCannotReadHexFile
+ "HEX-Datei nicht lesbar"
+ "cannot read HEX file"
+
+Message ErrMsgInvalidHexData
+ "ung&uuml;tige HEX-Daten"
+ "invalid HEX data"
+
+Message ErrMsgHexDataChecksumError
+ "Hex-File Pr&uuml;fsummenfehler"
+ "HEX file checksum error"
+
 Message ErrMsgAddressArgumentMissing
  "Adressargument fehlt"
  "address argument missing"
@@ -87,6 +99,7 @@ Message InfoMessHelp
  "\n" \
  "-cpu <Name> : setze Zielprozessor\n" \
  "-binfile <Name>[@Start[,L&auml;nge[,Granularit&auml;t]]] : lade Bin&auml;rdatei\n" \
+ "-hexfile <Name> : lade HEX-Datei\n" \
  "-entryaddress (<Adresse>[,L&auml;nge[,MSB|LSB]]),<Name> : definiere indirekte Startadresse\n" \
  "-entryaddress <Adresse>,<Name> : definiere direkte Startadresse\n" \
  "-symbol <Adresse>=<Name> : definiere Symbol\n" \
@@ -100,6 +113,7 @@ Message InfoMessHelp
  "\n" \
  "-cpu <name> : set target processor\n" \
  "-binfile <name>[@start[,length[,granularity]]] : load binary file\n" \
+ "-hexfile <name> : load HEX file\n" \
  "-entryaddress (<address>[length[,MSB|LSB]]),<name> : define indirect start address\n" \
  "-entryaddress <address>,<name> : define direct start address\n" \
  "-symbol <address>=<name> : define symbol\n" \

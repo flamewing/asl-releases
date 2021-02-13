@@ -1394,7 +1394,7 @@ static void InternSymbol_9900(char *Asc, TempResult*Erg)
 static void SwitchTo_9900(void *pUser)
 {
   TurnWords = True;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x48;

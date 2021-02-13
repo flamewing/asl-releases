@@ -523,7 +523,7 @@ static void SwitchTo_4004(void)
   FoundDescr = FindFamilyByName("4004/4040");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

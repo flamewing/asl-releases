@@ -519,7 +519,7 @@ static void SwitchTo_1802(void)
   FoundDescr = FindFamilyByName("1802");
 
   TurnWords = FALSE;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

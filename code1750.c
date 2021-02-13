@@ -931,7 +931,7 @@ static void SwitchTo_1750(void)
   pDescr = FindFamilyByName("1750");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

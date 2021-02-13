@@ -1638,7 +1638,7 @@ static void SwitchFrom_7000(void)
 static void SwitchTo_7000(void)
 {
   TurnWords = True;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x6c;

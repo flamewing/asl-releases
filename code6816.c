@@ -1128,7 +1128,7 @@ static void SwitchTo_6816(void)
   };
 
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x65;

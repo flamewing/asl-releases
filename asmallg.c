@@ -135,7 +135,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
   strmaxcpy(TmpCompStr, MomCPUIdentName, sizeof(TmpCompStr)); EnterStringSymbol(&TmpComp, MomCPUIdent, True);
 
   InternSymbol = Default_InternSymbol;
-  ConstModeIBMNoTerm = False;
+  IntConstModeIBMNoTerm = False;
   DissectBit = Default_DissectBit;
   DissectReg = NULL;
   QualifyQuote = NULL;
@@ -207,22 +207,22 @@ static void SetNSeg(Byte NSeg)
   }
 }
 
-static void IntLine(char *pDest, size_t DestSize, LargeWord Inp, TConstMode ThisConstMode)
+static void IntLine(char *pDest, size_t DestSize, LargeWord Inp, tIntConstMode ThisConstMode)
 {
   switch (ThisConstMode)
   {
-    case ConstModeIntel:
-      as_snprintf(pDest, DestSize, "%lllx%s", Inp, GetIntelSuffix(16));
+    case eIntConstModeIntel:
+      as_snprintf(pDest, DestSize, "%lllx%s", Inp, GetIntConstIntelSuffix(16));
       if (*pDest > '9')
         strmaxprep(pDest, "0", DestSize);
       break;
-    case ConstModeMoto:
-      as_snprintf(pDest, DestSize, "$%lllx", Inp);
+    case eIntConstModeMoto:
+      as_snprintf(pDest, DestSize, "%s%lllx", GetIntConstMotoPrefix(16), Inp);
       break;
-    case ConstModeC:
+    case eIntConstModeC:
       as_snprintf(pDest, DestSize, "0x%lllx", Inp);
       break;
-    case ConstModeIBM:
+    case eIntConstModeIBM:
       as_snprintf(pDest, DestSize, "x'%lllx'", Inp);
       break;
   }
@@ -538,13 +538,13 @@ static void CodeSHARED(Word Index)
          switch (ShareMode)
          {
            case 1:
-             IntLine(s, sizeof(s), t.Contents.Int, ConstModeMoto);
+             IntLine(s, sizeof(s), t.Contents.Int, eIntConstModeMoto);
              break;
            case 2:
-             IntLine(s, sizeof(s), t.Contents.Int, ConstModeC);
+             IntLine(s, sizeof(s), t.Contents.Int, eIntConstModeC);
              break;
            case 3:
-             IntLine(s, sizeof(s), t.Contents.Int, ConstMode);
+             IntLine(s, sizeof(s), t.Contents.Int, IntConstMode);
              break;
          }
          break;
@@ -1203,7 +1203,7 @@ static void CodeLABEL(Word Index)
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, Erg, SegCode, False);
       *ListLine = '=';
-      IntLine(ListLine + 1, STRINGSIZE - 1, Erg, ConstMode);
+      IntLine(ListLine + 1, STRINGSIZE - 1, Erg, IntConstMode);
       PopLocHandle();
     }
   }
@@ -1432,14 +1432,14 @@ static void CodeENUM(Word IsNext)
     }
   }
   *ListLine = '=';
-  IntLine(ListLine + 1, STRINGSIZE - 1, First, ConstMode);
+  IntLine(ListLine + 1, STRINGSIZE - 1, First, IntConstMode);
   if (ArgCnt != 1)
   {
     int l;
 
     strmaxcat(ListLine, "..", STRINGSIZE);
     l = strlen(ListLine);
-    IntLine(ListLine + l, STRINGSIZE - l, Last, ConstMode);
+    IntLine(ListLine + l, STRINGSIZE - l, Last, IntConstMode);
   }
 }
 
@@ -2015,21 +2015,28 @@ typedef struct
 } ONOFFTab;
 static ONOFFTab *ONOFFList;
 
+Boolean CheckONOFFArg(const tStrComp *pArg, Boolean *pResult)
+{
+  *pResult = !as_strcasecmp(ArgStr[1].Str, "ON");
+  if (!*pResult && as_strcasecmp(ArgStr[1].Str, "OFF"))
+  {
+    WrStrErrorPos(ErrNum_OnlyOnOff, pArg);
+    return False;
+  }
+  return True;
+}
+
 static void DecodeONOFF(Word Index)
 {
   ONOFFTab *Tab = ONOFFList + Index;
 
   if (ChkArgCnt(1, 1))
   {
-    NLS_UpString(ArgStr[1].Str);
+    Boolean IsON;
+
     if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
-    else
-    {
-      Boolean IsON = !as_strcasecmp(ArgStr[1].Str, "ON");
-      if ((!IsON) && (as_strcasecmp(ArgStr[1].Str, "OFF"))) WrStrErrorPos(ErrNum_OnlyOnOff, &ArgStr[1]);
-      else
-        SetFlag(Tab->FlagAddr, Tab->FlagName, IsON);
-    }
+    else if (CheckONOFFArg(&ArgStr[1], &IsON))
+      SetFlag(Tab->FlagAddr, Tab->FlagName, IsON);
   }
 }
 
@@ -2055,6 +2062,70 @@ void ClearONOFF(void)
     RemoveInstTable(ONOFFTable, ONOFFList[z2].InstName);
 
   ONOFFCnt = z;
+}
+
+static void CodeRELAXED(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(1, 1))
+  {
+    Boolean NewRelaxed;
+
+    NLS_UpString(ArgStr[1].Str);
+    if (*AttrPart.Str != '\0') WrError(ErrNum_UseLessAttr);
+    else if (CheckONOFFArg(&ArgStr[1], &NewRelaxed))
+    {
+      SetFlag(&RelaxedMode, RelaxedName, NewRelaxed);
+      SetIntConstRelaxedMode(NewRelaxed);
+    }
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     CodeINTSYNTAX(Word Index)
+ * \brief  process INTSYNTAX statement
+ * ------------------------------------------------------------------------ */
+
+static void CodeINTSYNTAX(Word Index)
+{
+  UNUSED(Index);
+
+  if (ChkArgCnt(1, ArgCntMax))
+  {
+    LongWord ANDMask = 0, ORMask = 0;
+    tStrComp Ident, *pArg;
+    tIntFormatId Id;
+    Boolean OK = True;
+
+    forallargs(pArg, OK)
+    {
+      StrCompRefRight(&Ident, pArg, 1);
+      Id = GetIntFormatId(Ident.Str);
+      if (!Id)
+      {
+        WrStrErrorPos(ErrNum_InvIntFormat, &Ident);
+        OK = False;
+      }
+      else switch (pArg->Str[0])
+      {
+        case '+':
+          ORMask |= 1ul << Id;
+          break;
+        case '-':
+          ANDMask |= 1ul << Id;
+          break;
+        default:
+          WrStrErrorPos(ErrNum_InvIntFormat, pArg);
+        OK = False;
+      }
+    }
+    if (OK)
+    {
+      if (!ModifyIntConstModeByMask(ANDMask, ORMask))
+        WrError(ErrNum_InvIntFormatList);
+    }
+  }
 }
 
 /*------------------------------------------------------------------------*/
@@ -2091,6 +2162,7 @@ static const PseudoOrder Pseudos[] =
   {"EXTERN_SYM", CodeEXTERN     , 0 },
   {"FATAL",      CodeFATAL      , 0 },
   {"FUNCTION",   CodeFUNCTION   , 0 },
+  {"INTSYNTAX",  CodeINTSYNTAX  , 0 },
   {"LABEL",      CodeLABEL      , 0 },
   {"LISTING",    CodeLISTING    , 0 },
   {"MESSAGE",    CodeMESSAGE    , 0 },
@@ -2109,6 +2181,7 @@ static const PseudoOrder Pseudos[] =
   {"RADIX",      CodeRADIX      , 0 },
   {"READ",       CodeREAD       , 0 },
   {"RESTORE",    CodeRESTORE    , 0 },
+  {"RELAXED",    CodeRELAXED    , 0 },
   {"MACEXP",     CodeMACEXP     , 0x10 },
   {"MACEXP_DFT", CodeMACEXP     , 0 },
   {"MACEXP_OVR", CodeMACEXP     , 1 },
@@ -2201,6 +2274,5 @@ void codeallg_init(void)
   for (POrder = Pseudos; POrder->Proc; POrder++)
     AddInstTable(PseudoTable, POrder->Name, POrder->Index, POrder->Proc);
   ONOFFTable = CreateInstTable(47);
-  AddONOFF("RELAXED", &RelaxedMode, RelaxedName, True);
   AddONOFF("DOTTEDSTRUCTS", &DottedStructs, DottedStructsName, True);
 }

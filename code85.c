@@ -47,25 +47,15 @@ typedef enum
 #define MModImm (1 << ModImm)
 #define MModIM (1 << ModIM)
 
-typedef enum
-{
-  eSyntax808x = 1,
-  eSyntaxZ80 = 2,
-  eSyntaxBoth = 3
-} tSyntax;
-
 static CPUVar CPU8080, CPU8085, CPU8085U;
 static tAdrMode AdrMode;
 static Byte AdrVals[2], OpSize;
-
-static char Z80SyntaxName[] = "Z80SYNTAX";
-static tSyntax CurrSyntax;
 
 /*---------------------------------------------------------------------------*/
 
 static const Byte AccReg = 7;
 
-static Boolean DecodeReg8(const char *Asc, tSyntax Syntax, Byte *Erg)
+static Boolean DecodeReg8(const char *Asc, tZ80Syntax Syntax, Byte *Erg)
 {
   static const char RegNames[] = "BCDEHLMA";
   const char *p;
@@ -90,7 +80,7 @@ static const Byte DEReg = 1;
 static const Byte HLReg = 2;
 static const Byte SPReg = 3;
 
-static Boolean DecodeReg16(char *pAsc, tSyntax Syntax, Byte *pResult)
+static Boolean DecodeReg16(char *pAsc, tZ80Syntax Syntax, Byte *pResult)
 {
   static const char RegNames[8][3] = { "B", "D", "H", "SP", "BC", "DE", "HL", "SP" };
 
@@ -203,29 +193,6 @@ AdrFound:
   }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     Boolean ChkSyntax(tSyntax InstrSyntax)
- * \brief  check whether instruction's syntax (808x/Z80) fits to selected one
- * \param  InstrSyntax instruction syntax
- * \return True if all fine
- * ------------------------------------------------------------------------ */
-
-static Boolean ChkSyntax(tSyntax InstrSyntax)
-{
-  if ((InstrSyntax == eSyntax808x) && (!(CurrSyntax & eSyntax808x)))
-  {
-    WrStrErrorPos(ErrNum_Z80SyntaxExclusive, &OpPart);
-    return False;
-  }
-  else if ((InstrSyntax == eSyntaxZ80) && (!(CurrSyntax & eSyntaxZ80)))
-  {
-    WrStrErrorPos(ErrNum_Z80SyntaxNotEnabled, &OpPart);
-    return False;
-  }
-  else
-    return True;
-}
-
 /*---------------------------------------------------------------------------*/
 
 /* Anweisungen ohne Operanden */
@@ -233,7 +200,7 @@ static Boolean ChkSyntax(tSyntax InstrSyntax)
 static void DecodeFixed(Word Code)
 {
   if (ChkArgCnt(0, 0)
-   && ChkSyntax((tSyntax)Hi(Code)))
+   && ChkZ80Syntax((tZ80Syntax)Hi(Code)))
   {
     CodeLen = 1;
     BAsmCode[0] = Lo(Code);
@@ -245,7 +212,7 @@ static void DecodeFixed(Word Code)
 static void DecodeOp16(Word Code)
 {
   if (ChkArgCnt(1, 1)
-   && ChkSyntax((tSyntax)Hi(Code)))
+   && ChkZ80Syntax((tZ80Syntax)Hi(Code)))
   {
     tEvalResult EvalResult;
     Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
@@ -267,7 +234,7 @@ static void DecodeOp8(Word Code)
   Byte AdrByte;
 
   if (ChkArgCnt(1, 1)
-   && ChkSyntax((tSyntax)Hi(Code)))
+   && ChkZ80Syntax((tZ80Syntax)Hi(Code)))
   {
     AdrByte = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK)
@@ -284,8 +251,8 @@ static void DecodeALU(Word Code)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax((tSyntax)Hi(Code)));
-  else if (!DecodeReg8(ArgStr[1].Str, (tSyntax)Hi(Code), &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+  else if (!ChkZ80Syntax((tZ80Syntax)Hi(Code)));
+  else if (!DecodeReg8(ArgStr[1].Str, (tZ80Syntax)Hi(Code), &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -300,7 +267,7 @@ static void DecodeMOV(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(2,  2));
-  else if (!ChkSyntax(eSyntax808x));
+  else if (!ChkZ80Syntax(eSyntax808x));
   else if (!DecodeReg8(ArgStr[1].Str, eSyntax808x, &Dest)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else if (!DecodeReg8(ArgStr[2].Str, eSyntax808x, BAsmCode + 0)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
   else
@@ -321,7 +288,7 @@ static void DecodeMVI(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && ChkSyntax(eSyntax808x))
+   && ChkZ80Syntax(eSyntax808x))
   {
     BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
     if (OK)
@@ -345,12 +312,12 @@ static void DecodeLXI(Word Index)
   UNUSED(Index);
 
   if (ChkArgCnt(2, 2)
-   && ChkSyntax(eSyntax808x))
+   && ChkZ80Syntax(eSyntax808x))
   {
     AdrWord = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
     if (OK)
     {
-      if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+      if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
       else
       {
         BAsmCode[0] = 0x01 + (Reg << 4);
@@ -367,8 +334,8 @@ static void DecodeLDAX_STAX(Word Index)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax(eSyntax808x));
-  else if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+  else if (!ChkZ80Syntax(eSyntax808x));
+  else if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else 
   {
     switch (Reg)
@@ -397,7 +364,7 @@ static void DecodePUSH_POP(Word Index)
   {
     if (!as_strcasecmp(ArgStr[1].Str, "PSW"))
     {
-      if (ChkSyntax(eSyntax808x))
+      if (ChkZ80Syntax(eSyntax808x))
       {
         Reg = 3;
         OK = True;
@@ -405,13 +372,13 @@ static void DecodePUSH_POP(Word Index)
     }
     else if (!as_strcasecmp(ArgStr[1].Str, "AF"))
     {
-      if (ChkSyntax(eSyntaxZ80))
+      if (ChkZ80Syntax(eSyntaxZ80))
       {
         Reg = 3;
         OK = True;
       }
     }
-    else if (DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg))
+    else if (DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg))
       OK = (Reg != 3);
     else
       OK = False;
@@ -434,7 +401,7 @@ static void DecodeRST(Word Index)
   if (!ChkArgCnt(1, 1));
   else if ((MomCPU >= CPU8085U) && (!as_strcasecmp(ArgStr[1].Str, "V")))
   {
-    if (ChkSyntax(eSyntaxZ80))
+    if (ChkZ80Syntax(eSyntaxZ80))
     {
       CodeLen = 1;
       BAsmCode[0] = 0xcb; 
@@ -444,12 +411,12 @@ static void DecodeRST(Word Index)
   {
     tSymbolFlags Flags;
 
-    AdrByte = EvalStrIntExpressionWithFlags(&ArgStr[1], (CurrSyntax & eSyntaxZ80) ? UInt6 : UInt3, &OK, &Flags);
+    AdrByte = EvalStrIntExpressionWithFlags(&ArgStr[1], (CurrZ80Syntax & eSyntaxZ80) ? UInt6 : UInt3, &OK, &Flags);
     if (mFirstPassUnknown(Flags))
       AdrByte = 0;
     if (OK)
     {
-      tSyntax Syntax = (CurrSyntax == eSyntaxBoth) ? ((AdrByte < 8) ? eSyntax808x : eSyntaxZ80): CurrSyntax;
+      tZ80Syntax Syntax = (CurrZ80Syntax == eSyntaxBoth) ? ((AdrByte < 8) ? eSyntax808x : eSyntaxZ80): CurrZ80Syntax;
       
       if (Syntax == eSyntax808x)
         BAsmCode[CodeLen++] = 0xc7 + (AdrByte << 3);
@@ -466,7 +433,7 @@ static void DecodeINR_DCR(Word Index)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax(eSyntax808x));
+  else if (!ChkZ80Syntax(eSyntax808x));
   else if (!DecodeReg8(ArgStr[1].Str, eSyntax808x, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else
   {
@@ -480,8 +447,8 @@ static void DecodeINX_DCX(Word Index)
   Byte Reg;
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax(eSyntax808x));
-  else if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+  else if (!ChkZ80Syntax(eSyntax808x));
+  else if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -496,8 +463,8 @@ static void DecodeDAD(Word Index)
   UNUSED(Index);
 
   if (!ChkArgCnt(1, 1));
-  else if (!ChkSyntax(eSyntax808x));
-  else if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+  else if (!ChkZ80Syntax(eSyntax808x));
+  else if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg)) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
   else
   {
     CodeLen = 1;
@@ -509,12 +476,12 @@ static void DecodeDSUB(Word Index)
 {
   UNUSED(Index);
 
-  if (ChkArgCnt(0, 1) && ChkMinCPU(CPU8085U) && ChkSyntax(eSyntax808x))
+  if (ChkArgCnt(0, 1) && ChkMinCPU(CPU8085U) && ChkZ80Syntax(eSyntax808x))
   {
     Byte Reg;
 
     if ((ArgCnt == 1)
-     && (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg) || (Reg != BCReg))) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+     && (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg) || (Reg != BCReg))) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
     else
     {   
       CodeLen = 1;
@@ -527,12 +494,12 @@ static void DecodeLHLX_SHLX(Word Index)
 {
   UNUSED(Index);
 
-  if (ChkArgCnt(0, 1) && ChkMinCPU(CPU8085U) && ChkSyntax(eSyntax808x))
+  if (ChkArgCnt(0, 1) && ChkMinCPU(CPU8085U) && ChkZ80Syntax(eSyntax808x))
   {
     Byte Reg;
 
     if ((ArgCnt == 1)
-     && (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg) || (Reg != DEReg))) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+     && (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg) || (Reg != DEReg))) WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
     else
     {   
       CodeLen = 1;
@@ -548,7 +515,7 @@ static void DecodeLD(Word Code)
   UNUSED(Code);
 
   if (ChkArgCnt(2, 2)
-   && ChkSyntax(eSyntaxZ80))
+   && ChkZ80Syntax(eSyntaxZ80))
   {
     Mask = MModReg8 | MModIReg16 | MModAbs | MModReg16;
     if (MomCPU >= CPU8085)
@@ -727,7 +694,7 @@ static void DecodeEX(Word Code)
   UNUSED(Code);   
 
   if (ChkArgCnt(2, 2)
-   && ChkSyntax(eSyntaxZ80))
+   && ChkZ80Syntax(eSyntaxZ80))
   {
     DecodeAdr_Z80(&ArgStr[1], MModReg16 | MModIReg16);
     switch (AdrMode)
@@ -781,8 +748,8 @@ static void DecodeADD(Word Code)
   
   UNUSED(Code);
 
-  MinArg = (CurrSyntax & eSyntax808x) ? 1 : 2;
-  if (CurrSyntax & eSyntaxZ80)
+  MinArg = (CurrZ80Syntax & eSyntax808x) ? 1 : 2;
+  if (CurrZ80Syntax & eSyntaxZ80)
     MaxArg = (MomCPU == CPU8085U) ? 3 : 2;
   else
     MaxArg = 1;
@@ -853,8 +820,8 @@ static void DecodeADD(Word Code)
     {
       Byte Reg;
        
-      if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg) || (Reg != DEReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
-      else if (!DecodeReg16(ArgStr[2].Str, CurrSyntax, &Reg) || (Reg < 2)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+      if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg) || (Reg != DEReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+      else if (!DecodeReg16(ArgStr[2].Str, CurrZ80Syntax, &Reg) || (Reg < 2)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
       else
       {
         Boolean OK;
@@ -875,7 +842,7 @@ static void DecodeADC(Word Code)
 {
   UNUSED(Code);
 
-  if (!ChkArgCnt((CurrSyntax & eSyntax808x) ? 1 : 2, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt((CurrZ80Syntax & eSyntax808x) ? 1 : 2, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
       return;
       
   switch (ArgCnt)
@@ -934,7 +901,7 @@ static void DecodeSUB(Word Code)
 
   /* dest operand is always A and also optional for Z80 mode, so min arg cnt is always 1! */
 
-  if (!ChkArgCnt(1, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt(1, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
     return;
 
   /* For Z80, optionally allow A as dest */
@@ -964,7 +931,7 @@ static void DecodeSUB(Word Code)
   else
     AdrMode = ModReg8;
 
-  if (DecodeReg8(ArgStr[ArgCnt].Str, CurrSyntax, &Reg)) /* 808x style incl. M, Z80 style excl. (HL) */
+  if (DecodeReg8(ArgStr[ArgCnt].Str, CurrZ80Syntax, &Reg)) /* 808x style incl. M, Z80 style excl. (HL) */
   {
     BAsmCode[CodeLen++] = 0x90 | Reg;
     return;
@@ -972,7 +939,7 @@ static void DecodeSUB(Word Code)
 
   /* rest is Z80 style ( (HL) or immediate) */
 
-  if (!(CurrSyntax & eSyntaxZ80))
+  if (!(CurrZ80Syntax & eSyntaxZ80))
   {
     WrError(ErrNum_InvAddrMode);
     return;
@@ -1002,7 +969,7 @@ static void DecodeSUB(Word Code)
 
 static void DecodeALU8_Z80(Word Code)
 {
-  if (!ChkSyntax(eSyntaxZ80)
+  if (!ChkZ80Syntax(eSyntaxZ80)
    || !ChkArgCnt(1, 2))
     return;
 
@@ -1046,7 +1013,7 @@ static void DecodeALU8_Z80(Word Code)
 
 static void DecodeINCDEC(Word Code)
 {
-  if (ChkSyntax(eSyntaxZ80)
+  if (ChkZ80Syntax(eSyntaxZ80)
    && ChkArgCnt(1, 1))
   {
     DecodeAdr_Z80(&ArgStr[1], MModReg8 | MModReg16 | MModIReg16);
@@ -1072,7 +1039,7 @@ static void DecodeCP(Word Code)
 {
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt(1, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
     return;
 
   /* 2 arguments -> check for A as dest, and compare is meant
@@ -1100,9 +1067,9 @@ static void DecodeCP(Word Code)
   /* 1 argument -> must be compare anyway in pure Z80 syntax mode, otherwise assume 808x call-on-positive */
 
   else
-    OpSize = (CurrSyntax == eSyntaxZ80) ? 0 : 1;
+    OpSize = (CurrZ80Syntax == eSyntaxZ80) ? 0 : 1;
 
-  DecodeAdr_Z80(&ArgStr[ArgCnt], MModImm | ((CurrSyntax & eSyntaxZ80) ? (MModIReg16 | MModReg8) : 0));
+  DecodeAdr_Z80(&ArgStr[ArgCnt], MModImm | ((CurrZ80Syntax & eSyntaxZ80) ? (MModIReg16 | MModReg8) : 0));
   switch (AdrMode)
   {
     case ModReg8:
@@ -1136,7 +1103,7 @@ static void DecodeJP(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt(1, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
     return;
 
   /* if two arguments, first one is (Z80) condition */
@@ -1153,10 +1120,10 @@ static void DecodeJP(Word Code)
   /* if one argument, it's unconditional JP in Z80 mode, or jump-if positive */
   
   else
-    Condition = (CurrSyntax == eSyntaxZ80) ? 0xff : 6 << 3;
+    Condition = (CurrZ80Syntax == eSyntaxZ80) ? 0xff : 6 << 3;
 
   OpSize = 1;
-  DecodeAdr_Z80(&ArgStr[ArgCnt], MModImm | (((ArgCnt == 1) && (CurrSyntax & eSyntaxZ80)) ? MModIReg16 : 0));
+  DecodeAdr_Z80(&ArgStr[ArgCnt], MModImm | (((ArgCnt == 1) && (CurrZ80Syntax & eSyntaxZ80)) ? MModIReg16 : 0));
   switch (AdrMode)
   {
     case ModIReg16:
@@ -1178,7 +1145,7 @@ static void DecodeCALL(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if (!ChkArgCnt(1, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt(1, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
     return;
 
   if (ArgCnt == 2) /* Z80-style with condition */
@@ -1210,7 +1177,7 @@ static void DecodeRET(Word Code)
   Byte Condition;
   UNUSED(Code);
 
-  if (!ChkArgCnt(0, (CurrSyntax & eSyntaxZ80) ? 1 : 0))
+  if (!ChkArgCnt(0, (CurrZ80Syntax & eSyntaxZ80) ? 1 : 0))
     return;
 
   if (ArgCnt == 1) /* Z80-style with condition */
@@ -1227,7 +1194,7 @@ static void DecodeINOUT(Word Code)
 {
   tEvalResult EvalResult;
 
-  if (!ChkArgCnt((CurrSyntax & eSyntax808x) ? 1 : 2, (CurrSyntax & eSyntaxZ80) ? 2 : 1))
+  if (!ChkArgCnt((CurrZ80Syntax & eSyntax808x) ? 1 : 2, (CurrZ80Syntax & eSyntaxZ80) ? 2 : 1))
     return;
 
   if (ArgCnt == 2) /* Z80-style with A */
@@ -1256,15 +1223,15 @@ static void DecodeSRA(Word Code)
 
   if (!ChkArgCnt(1, 1));
   else if (!ChkMinCPU(CPU8085U));
-  else if (!ChkSyntax(eSyntaxZ80));
-  else if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg) || (Reg != HLReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+  else if (!ChkZ80Syntax(eSyntaxZ80));
+  else if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg) || (Reg != HLReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
   else
    BAsmCode[CodeLen++] = Lo(Code);
 }
 
 static void DecodeRLC(Word Code)
 {
-  if (!ChkArgCnt((CurrSyntax & eSyntax808x) ? 0 : 1, (CurrSyntax & eSyntaxZ80) ? 1 : 0))
+  if (!ChkArgCnt((CurrZ80Syntax & eSyntax808x) ? 0 : 1, (CurrZ80Syntax & eSyntaxZ80) ? 1 : 0))
     return;
 
   switch (ArgCnt)
@@ -1276,7 +1243,7 @@ static void DecodeRLC(Word Code)
     {
       Byte Reg;
       
-      if (!DecodeReg16(ArgStr[1].Str, CurrSyntax, &Reg) || (Reg != DEReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+      if (!DecodeReg16(ArgStr[1].Str, CurrZ80Syntax, &Reg) || (Reg != DEReg)) WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
       else
         BAsmCode[CodeLen++] = 0x18;
       break;
@@ -1289,36 +1256,6 @@ static void DecodePORT(Word Index)
   UNUSED(Index);
               
   CodeEquate(SegIO, 0, 0xff);
-}
-
-static void DecodeZ80SYNTAX(Word Code)
-{
-  UNUSED(Code);
-
-  if (ChkArgCnt(1, 1))
-  {
-    tStrComp TmpComp;
-
-    StrCompMkTemp(&TmpComp, Z80SyntaxName);
-    NLS_UpString(ArgStr[1].Str);
-    if (!as_strcasecmp(ArgStr[1].Str, "OFF"))
-    {
-      CurrSyntax = eSyntax808x;
-      EnterIntSymbol(&TmpComp, 0, 0, True);
-    }
-    else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
-    {
-      CurrSyntax = eSyntaxBoth;
-      EnterIntSymbol(&TmpComp, 1, 0, True);
-    }
-    else if (!as_strcasecmp(ArgStr[1].Str, "EXCLUSIVE"))
-    {
-      CurrSyntax = eSyntaxZ80;
-      EnterIntSymbol(&TmpComp, 2, 0, True);
-    }
-    else
-      WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
-  }
 }
 
 /*--------------------------------------------------------------------------------------------------------*/
@@ -1501,7 +1438,7 @@ static void MakeCode_85(void)
 
 static Boolean IsDef_85(void)
 {
-  return (Memo("PORT"));
+  return Memo("PORT");
 }
 
 static void SwitchFrom_85(void)
@@ -1509,18 +1446,10 @@ static void SwitchFrom_85(void)
   DeinitFields();
 }
 
-static void InitCode_85(void)
-{
-  tStrComp TmpComp;
-
-  StrCompMkTemp(&TmpComp, Z80SyntaxName);
-  EnterIntSymbol(&TmpComp, 0, 0, True);
-}
-
 static void SwitchTo_85(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x41;
@@ -1535,9 +1464,8 @@ static void SwitchTo_85(void)
   SegLimits[SegIO  ] = 0xff;
 
   MakeCode = MakeCode_85;
-   IsDef = IsDef_85;
+  IsDef = IsDef_85;
   SwitchFrom = SwitchFrom_85;
-  CurrSyntax = eSyntax808x;
   InitFields();
 }
 
@@ -1546,6 +1474,4 @@ void code85_init(void)
   CPU8080 = AddCPU("8080", SwitchTo_85);
   CPU8085 = AddCPU("8085", SwitchTo_85);
   CPU8085U = AddCPU("8085UNDOC", SwitchTo_85);
-
-  AddInitPassProc(InitCode_85);
 }

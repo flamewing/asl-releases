@@ -86,7 +86,7 @@ Boolean MakeUseList;                     /* Belegungsliste ? */
 Boolean MakeCrossList;	                 /* Querverweisliste ? */
 Boolean MakeSectionList;                 /* Sektionsliste ? */
 Boolean MakeIncludeList;                 /* Includeliste ? */
-Boolean RelaxedMode, DefRelaxedMode;     /* alle Integer-Syntaxen zulassen ? */
+Boolean DefRelaxedMode;                  /* alle Integer-Syntaxen zulassen ? */
 Boolean DefCompMode, CompMode;           /* enable compatibility mode */
 Word ListMask;                           /* Listingmaske */
 ShortInt ExtendErrors;	                 /* erweiterte Fehlermeldungen */
@@ -123,8 +123,6 @@ Boolean TurnWords;                       /* TRUE  = Motorola-Wortformat */
                                          /* FALSE = Intel-Wortformat */
 Byte HeaderID;	                         /* Kennbyte des Codeheaders */
 const char *PCSymbol;	                 /* Symbol, womit Programmzaehler erreicht wird. Inhalt Read Only! */
-TConstMode ConstMode;
-Boolean ConstModeIBMNoTerm;
 Boolean (*SetIsOccupiedFnc)(void);       /* TRUE: SET instr, to be parsed by code generator */
 Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE/SHIFT ist Prozessorbefehl */
         PageIsOccupied,
@@ -173,7 +171,6 @@ Boolean DefSupAllowed, SupAllowed;      /* Supervisormode freigegeben */
 Boolean Maximum;                        /* CPU nicht kastriert */
 Boolean DoBranchExt;                    /* Spruenge automatisch verlaengern */
 
-int RadixBase;                          /* Default-Zahlensystem im Formelparser*/
 int OutRadixBase;                       /* dito fuer Ausgabe */
 int ListRadixBase;                      /* ditto for listing */
 const char *pCommentLeadIn;             /* list of comment lead-in sequences */
@@ -336,7 +333,6 @@ void asmdef_init(void)
   SetMaxCodeLen(MaxCodeLen_Ini);
 
   RelaxedMode = True;
-  ConstMode = ConstModeC;
 
   /* auf diese Weise wird PCSymbol defaultmaessig nicht erreichbar
      da das schon von den Konstantenparsern im Formelparser abgefangen

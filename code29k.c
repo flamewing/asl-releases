@@ -1051,7 +1051,7 @@ static void SwitchTo_29K(void)
   };
   static const int ASSUME29KCount = sizeof(ASSUME29Ks) / sizeof(*ASSUME29Ks);
   TurnWords = True;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
 
   PCSymbol = "$";
   HeaderID = 0x29;

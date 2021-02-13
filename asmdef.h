@@ -16,6 +16,7 @@
 #include "chunks.h"
 #include "fileformat.h"
 #include "dynstring.h"
+#include "intformat.h"
 #include "strcomp.h"
 #include "lstmacroexp.h"
 #include "cpulist.h"
@@ -169,14 +170,6 @@ char *pDest, size_t DestSize, LargeWord Inp
 typedef Boolean (*tQualifyQuoteFnc)(const char *pStart, const char *pQuotePos);
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef enum
-{
-  ConstModeIntel,     /* Hex xxxxh, Oct xxxxo, Bin xxxxb */
-  ConstModeMoto,      /* Hex $xxxx, Oct @xxxx, Bin %xxxx */
-  ConstModeC,         /* Hex 0x..., Oct 0...., Bin 0b... */
-  ConstModeIBM        /* Hex <xh>'xxxx['], Oct o'xxxx['], Bin b'xxxx['] */
-} TConstMode;
-
 typedef struct _TTransTable
 {
   struct _TTransTable *Next;
@@ -277,7 +270,7 @@ extern Boolean MakeUseList;
 extern Boolean MakeCrossList;
 extern Boolean MakeSectionList;
 extern Boolean MakeIncludeList;
-extern Boolean RelaxedMode, DefRelaxedMode;
+extern Boolean DefRelaxedMode;
 extern Boolean CompMode, DefCompMode;
 extern Word ListMask;
 extern ShortInt ExtendErrors;
@@ -329,8 +322,8 @@ extern LongInt NOPCode;
 extern Boolean TurnWords;
 extern Byte HeaderID;
 extern const char *PCSymbol;
-extern TConstMode ConstMode;
-extern Boolean ConstModeIBMNoTerm;
+extern tIntConstMode IntConstMode;
+extern Boolean IntConstModeIBMNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied, ShiftIsOccupied;
 extern Boolean (*DecodeAttrPart)(void);
@@ -366,7 +359,7 @@ extern Boolean DefSupAllowed, SupAllowed;
 extern Boolean Maximum;
 extern Boolean DoBranchExt;
 
-extern int RadixBase, OutRadixBase, ListRadixBase;
+extern int OutRadixBase, ListRadixBase;
 extern const char *pCommentLeadIn;
 
 extern tStrComp *ArgStr;

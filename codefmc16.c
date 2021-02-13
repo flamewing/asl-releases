@@ -2331,7 +2331,7 @@ static void SwitchTo_F2MC16(void)
   FoundDescr = FindFamilyByName("F2MC16");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

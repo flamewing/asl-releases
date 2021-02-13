@@ -1360,7 +1360,7 @@ static ASSUMERec ASSUME96s[] =
 static void SwitchTo_96(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x39;

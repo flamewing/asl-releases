@@ -496,7 +496,8 @@ static void SwitchFrom_75xx(void)
 
 static void SwitchTo_75xx(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "PC"; HeaderID = FindFamilyByName("75xx")->Id; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

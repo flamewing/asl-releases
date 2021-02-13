@@ -734,7 +734,7 @@ static void SwitchTo_ACE(void)
   PFamilyDescr Descr;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   Descr = FindFamilyByName("ACE");
   PCSymbol = "$";

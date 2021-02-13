@@ -16,6 +16,7 @@
 #include "cpulist.h"
 #include "headids.h"
 #include "strutil.h"
+#include "intformat.h"
 #include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -1119,7 +1120,7 @@ static void DissectBit_Z8000(char *pDest, size_t DestSize, LargeWord Inp)
     Attribute = as_toupper(Attribute);
   as_snprintf(pDest, DestSize, "%s%~.*u%s%s(%c).%u",
               ForceShort ? "|" : "",
-              ListRadixBase, (unsigned)Address, GetIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix(ListRadixBase),
               ForceShort ? "|" : "",
               Attribute, (unsigned)BitPos);
 }
@@ -3418,7 +3419,8 @@ static void SwitchTo_Z8000(void *pUser)
 {
   PFamilyDescr pDescr = FindFamilyByName("Z8000");
 
-  TurnWords = True; ConstMode = ConstModeIntel;
+  TurnWords = True;
+  SetIntConstMode(eIntConstModeIntel);
 
   pCurrCPUProps = (const tCPUProps*)pUser;
 

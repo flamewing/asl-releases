@@ -26,6 +26,7 @@
 #include "codevars.h"
 #include "fileformat.h"
 #include "errmsg.h"
+#include "intformat.h"
 
 #include "code51.h"
 
@@ -564,7 +565,7 @@ chk:
 static void DissectBit_251(char *pDest, size_t DestSize, LargeWord Inp)
 {
   as_snprintf(pDest, DestSize, "%~02.*u%s.%u",
-              ListRadixBase, (unsigned)(Inp & 0xff), GetIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)(Inp & 0xff), GetIntConstIntelSuffix(ListRadixBase),
               (unsigned)(Inp >> 24));
 }
 
@@ -2409,12 +2410,12 @@ static void DecodeSFR(Word Index)
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
         as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s-%~02.*u%s",
-                    ListRadixBase, (unsigned)BitStart, GetIntelSuffix(ListRadixBase),
-                    ListRadixBase, (unsigned)BitStart + 7, GetIntelSuffix(ListRadixBase));
+                    ListRadixBase, (unsigned)BitStart, GetIntConstIntelSuffix(ListRadixBase),
+                    ListRadixBase, (unsigned)BitStart + 7, GetIntConstIntelSuffix(ListRadixBase));
       }
       else
         as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
-                    ListRadixBase, (unsigned)AdrByte, GetIntelSuffix(ListRadixBase));
+                    ListRadixBase, (unsigned)AdrByte, GetIntConstIntelSuffix(ListRadixBase));
       LimitListLine();
       PopLocHandle();
     }
@@ -2447,7 +2448,7 @@ static void DecodeBIT(Word Index)
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
       as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
-                  ListRadixBase, (unsigned)AdrLong, GetIntelSuffix(ListRadixBase));
+                  ListRadixBase, (unsigned)AdrLong, GetIntConstIntelSuffix(ListRadixBase));
       LimitListLine();
     }
   }
@@ -2674,7 +2675,7 @@ static void SwitchFrom_51(void)
 static void SwitchTo_51(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x31;

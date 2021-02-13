@@ -15,6 +15,7 @@
 #include "symbolsize.h"
 #include "symflags.h"
 #include "tempresult.h"
+#include "intformat.h"
 #include "lstmacroexp.h"
 #include "errmsg.h"
 
@@ -196,6 +197,10 @@ extern void EvalExpression(const char *pExpr, TempResult *Erg);
 
 extern void EvalStrExpression(const struct sStrComp *pExpr, TempResult *pErg);
 
+extern void SetIntConstModeByMask(LongWord Mask);
+extern void SetIntConstMode(tIntConstMode Mode);
+extern void SetIntConstRelaxedMode(Boolean NewRelaxedMode);
+
 extern LargeInt EvalStrIntExpression(const struct sStrComp *pExpr, IntType Type, Boolean *pResult);
 extern LargeInt EvalStrIntExpressionWithFlags(const struct sStrComp *pExpr, IntType Type, Boolean *pResult, tSymbolFlags *pFlags);
 extern LargeInt EvalStrIntExpressionWithResult(const struct sStrComp *pExpr, IntType Type, struct sEvalResult *pResult);
@@ -212,8 +217,6 @@ extern void EvalStrStringExpression(const struct sStrComp *pExpr, Boolean *pResu
 extern tErrorNum EvalStrRegExpressionWithResult(const struct sStrComp *pExpr, struct sRegDescr *pResult, struct sEvalResult *pEvalResult);
 typedef enum { eIsNoReg, eIsReg, eRegAbort } tRegEvalResult;
 extern tRegEvalResult EvalStrRegExpressionAsOperand(const struct sStrComp *pArg, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, tSymbolSize ReqSize, Boolean MustBeReg);
-
-extern const char *GetIntelSuffix(unsigned Radix);
 
 
 extern Boolean PushSymbol(const struct sStrComp *pSymName, const struct sStrComp *pStackName);

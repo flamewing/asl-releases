@@ -734,7 +734,7 @@ static void SwitchTo_9331(void)
   pDescr = FindFamilyByName("TC9331");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

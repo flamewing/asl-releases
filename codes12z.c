@@ -2701,7 +2701,7 @@ static void SwitchTo_S12Z(void)
 {
   const PFamilyDescr pDescr = FindFamilyByName("S12Z");
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

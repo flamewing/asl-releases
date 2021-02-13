@@ -729,7 +729,8 @@ static void SwitchTo_XGATE(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = True; ConstMode = ConstModeMoto;
+  TurnWords = True;
+  SetIntConstMode(eIntConstModeMoto);
 
   pDescr = FindFamilyByName("XGATE");
   PCSymbol = "*"; HeaderID = pDescr->Id; NOPCode = 0x0100;

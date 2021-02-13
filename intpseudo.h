@@ -9,7 +9,19 @@
 /* Commonly used 'Intel Style' Pseudo Instructions                           */
 /*                                                                           */
 /*****************************************************************************/
+
+#include "datatypes.h"
   
+typedef enum
+{
+  eSyntaxNeither = 0,
+  eSyntax808x = 1,
+  eSyntaxZ80 = 2,
+  eSyntaxBoth = 3
+} tZ80Syntax;
+
+extern tZ80Syntax CurrZ80Syntax;
+
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
@@ -22,5 +34,11 @@ extern void DecodeIntelDQ(Word BigEndian);
 extern void DecodeIntelDT(Word BigEndian);
    
 extern Boolean DecodeIntelPseudo(Boolean BigEndian);
+
+extern void DecodeZ80SYNTAX(Word Code);
+
+extern Boolean ChkZ80Syntax(tZ80Syntax InstrSyntax);
+
+extern void intpseudo_init(void);
 
 #endif /* _INTPSEUDO_H */

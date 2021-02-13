@@ -984,7 +984,7 @@ static void DissectBit_Z8(char *pDest, size_t DestSize, LargeWord Inp)
     as_snprintf(pDest, DestSize, "%c%u", HexStartCharacter + ('r' - 'a'), (unsigned)(Address & 15));
   else
     SysString(pDest, DestSize, Address, ListRadixBase,
-              mIsZ8Encore() ? 3 : 2, (16 == ListRadixBase) && (ConstMode == ConstModeIntel),
+              mIsZ8Encore() ? 3 : 2, (16 == ListRadixBase) && (IntConstMode == eIntConstModeIntel),
               HexStartCharacter, SplitByteCharacter);
   as_snprcatf(pDest, DestSize, ".%u", (unsigned)BitPos);
 }
@@ -2748,7 +2748,8 @@ static void SwitchTo_Z8(void *pUser)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
 
   pCurrCPUProps = (const tCPUProps*)pUser;
 

@@ -879,7 +879,8 @@ static void SwitchFrom_MCORE(void)
 
 static void SwitchTo_MCORE(void)
 {
-  TurnWords = True; ConstMode = ConstModeMoto;
+  TurnWords = True;
+  SetIntConstMode(eIntConstModeMoto);
 
    PCSymbol = "*"; HeaderID = 0x03; NOPCode = 0x1200; /* ==MOV r0,r0 */
    DivideChars = ","; HasAttrs = True; AttrChars = ".";

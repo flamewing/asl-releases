@@ -859,7 +859,8 @@ static void SwitchTo_XCore(void)
 {
   PFamilyDescr pDescr;
 
-  TurnWords = False; ConstMode = ConstModeMoto;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeMoto);
 
   pDescr = FindFamilyByName("XCore");
   PCSymbol = "$"; HeaderID = pDescr->Id; NOPCode = 0x0000;

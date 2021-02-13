@@ -563,7 +563,8 @@ static void SwitchTo_Mico8(void)
 
    FoundDescr = FindFamilyByName("Mico8");
 
-   TurnWords = True; ConstMode = ConstModeC;
+   TurnWords = True;
+   SetIntConstMode(eIntConstModeC);
 
    PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

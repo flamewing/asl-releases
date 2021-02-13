@@ -1533,7 +1533,7 @@ static Boolean TrueFnc(void)
 static void SwitchTo_87C800(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "$";

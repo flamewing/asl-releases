@@ -3309,7 +3309,7 @@ static Boolean ChkMoreOneArg(void)
 static void SwitchTo_Z80(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$"; HeaderID = 0x51; NOPCode = 0x00;

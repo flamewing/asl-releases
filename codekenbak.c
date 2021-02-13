@@ -13,6 +13,7 @@
 #include <string.h>
 #include "stdinc.h"
 #include "strutil.h"
+#include "intformat.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -409,7 +410,7 @@ static void DissectBit_KENBAK(char *pDest, size_t DestSize, LargeWord Inp)
   DissectBitSymbol(Inp, &Address, &BitPos);
 
   as_snprintf(pDest, DestSize, "%~02.*u%s,%u",
-              ListRadixBase, (unsigned)Address, GetIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix(ListRadixBase),
               (unsigned)BitPos);
 }
 
@@ -916,7 +917,7 @@ static void SwitchTo_KENBAK(void)
   PFamilyDescr Descr;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   Descr = FindFamilyByName("KENBAK");
   PCSymbol = "$";

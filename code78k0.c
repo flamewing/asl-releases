@@ -1396,7 +1396,7 @@ static void SwitchFrom_78K0(void)
 static void SwitchTo_78K0(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "PC";
   HeaderID = 0x7c;

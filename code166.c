@@ -2126,7 +2126,7 @@ static void SwitchTo_166(void)
   Byte z;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   OpSize = eSymbolSize16Bit;
 
   PCSymbol = "$";

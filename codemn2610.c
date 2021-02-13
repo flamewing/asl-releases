@@ -1314,7 +1314,7 @@ static void SwitchTo_MN1610_Alt(void)
   FoundDescr = FindFamilyByName("MN161x");
 
   TurnWords = True;
-  ConstMode = ConstModeIBM;
+  SetIntConstMode(eIntConstModeIBM);
 
   PCSymbol = "*";
   HeaderID = FoundDescr->Id;

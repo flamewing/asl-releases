@@ -1404,7 +1404,7 @@ static void SwitchTo_48(void *pUser)
   ASSUME48s[0].Max = (pCurrCPUProps->CodeSize >> 11) & 3;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x21;

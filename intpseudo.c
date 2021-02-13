@@ -21,6 +21,7 @@
 #include "bpemu.h"
 #include "endian.h"
 #include "strutil.h"
+#include "nls.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -74,6 +75,13 @@ struct sLayoutCtx
   int LoHiMap;
 };
 typedef struct sLayoutCtx tLayoutCtx;
+
+/*****************************************************************************
+ * Global Variables
+ *****************************************************************************/
+
+static char Z80SyntaxName[] = "Z80SYNTAX";
+tZ80Syntax CurrZ80Syntax;
 
 /*****************************************************************************
  * Local Functions
@@ -1420,3 +1428,79 @@ Boolean DecodeIntelPseudo(Boolean BigEndian)
   return LookupInstTable(InstTables[Idx], OpPart.Str);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeZ80SYNTAX(Word Code)
+ * \brief  change Z80 syntax support for target
+ * ------------------------------------------------------------------------ */
+
+void DecodeZ80SYNTAX(Word Code)
+{
+  UNUSED(Code);
+
+  if (ChkArgCnt(1, 1))
+  {
+    tStrComp TmpComp;
+
+    StrCompMkTemp(&TmpComp, Z80SyntaxName);
+    NLS_UpString(ArgStr[1].Str);
+    if (!as_strcasecmp(ArgStr[1].Str, "OFF"))
+    {
+      CurrZ80Syntax = eSyntax808x;
+      EnterIntSymbol(&TmpComp, 0, 0, True);
+    }
+    else if (!as_strcasecmp(ArgStr[1].Str, "ON"))
+    {
+      CurrZ80Syntax = eSyntaxBoth;
+      EnterIntSymbol(&TmpComp, 1, 0, True);
+    }
+    else if (!as_strcasecmp(ArgStr[1].Str, "EXCLUSIVE"))
+    {
+      CurrZ80Syntax = eSyntaxZ80;
+      EnterIntSymbol(&TmpComp, 2, 0, True);
+    }
+    else
+      WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
+  }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ChkZ80Syntax(tZ80Syntax InstrSyntax)
+ * \brief  check whether instruction's syntax (808x/Z80) fits to selected one
+ * \param  InstrSyntax instruction syntax
+ * \return True if all fine
+ * ------------------------------------------------------------------------ */
+
+Boolean ChkZ80Syntax(tZ80Syntax InstrSyntax)
+{
+  if ((InstrSyntax == eSyntax808x) && (!(CurrZ80Syntax & eSyntax808x)))
+  {
+    WrStrErrorPos(ErrNum_Z80SyntaxExclusive, &OpPart);
+    return False;
+  }
+  else if ((InstrSyntax == eSyntaxZ80) && (!(CurrZ80Syntax & eSyntaxZ80)))
+  {
+    WrStrErrorPos(ErrNum_Z80SyntaxNotEnabled, &OpPart);
+    return False;
+  }
+  else
+    return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     intpseudo_init(void)
+ * \brief  module-specific startup initializations
+ * ------------------------------------------------------------------------ */
+
+static void InitCode(void)
+{
+  tStrComp TmpComp;
+
+  CurrZ80Syntax = eSyntax808x;
+  StrCompMkTemp(&TmpComp, Z80SyntaxName);
+  EnterIntSymbol(&TmpComp, 0, 0, True);
+}
+
+void intpseudo_init(void)
+{
+  AddInitPassProc(InitCode);
+}

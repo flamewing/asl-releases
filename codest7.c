@@ -2411,7 +2411,8 @@ static void SwitchFrom_ST7(void)
 static void SwitchTo_ST7(void *pUser)
 {
   pCurrCPUProps = (const tCPUProps*)pUser;
-  TurnWords = False; ConstMode = ConstModeMoto;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "PC"; HeaderID = 0x33; NOPCode = 0x9d;
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

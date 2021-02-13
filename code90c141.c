@@ -1430,7 +1430,7 @@ static Boolean ChkMoreOneArg(void)
 static void SwitchTo_90C141(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$";

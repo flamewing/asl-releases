@@ -278,7 +278,7 @@ static void SwitchTo_TMS1(void)
   const TFamilyDescr *pFoundDescr = FindFamilyByName("TMS1000");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = pFoundDescr->Id;

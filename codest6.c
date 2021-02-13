@@ -22,6 +22,7 @@
 #include "motpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "intformat.h"
 
 #include "codest6.h"
 
@@ -265,7 +266,7 @@ static void DissectBit_ST6(char *pDest, size_t DestSize, LargeWord Inp)
   DissectBitSymbol(Inp, &Address, &BitPos);
 
   as_snprintf(pDest, DestSize, "%02.*u%s.%u",
-              ListRadixBase, (unsigned)Address, GetIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix(ListRadixBase),
               (unsigned)BitPos);
 }
 
@@ -868,7 +869,9 @@ static void SwitchTo_ST6(void *pUser)
   int ASSUMEOffset;
 
   pCurrCPUProps = (const tCPUProps*)pUser;
-  TurnWords = False; ConstMode = ConstModeIntel; SetIsOccupiedFnc = TrueFnc;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
+  SetIsOccupiedFnc = TrueFnc;
 
   PCSymbol = "PC"; HeaderID = 0x78; NOPCode = 0x04;
   DivideChars = ","; HasAttrs = False;

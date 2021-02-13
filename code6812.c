@@ -1662,7 +1662,7 @@ static Boolean ChkPC_6812X(LargeWord Addr)
 static void SwitchTo_6812(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x66;

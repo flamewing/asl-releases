@@ -1049,7 +1049,7 @@ static void SwitchFrom_6805(void)
 static void SwitchTo_6805(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x62;

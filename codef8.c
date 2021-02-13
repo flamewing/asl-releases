@@ -457,7 +457,7 @@ static void SwitchTo_F8(void)
   PFamilyDescr Descr;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   Descr = FindFamilyByName("F8");
   PCSymbol = "$";

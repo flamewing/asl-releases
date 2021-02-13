@@ -1686,40 +1686,34 @@ Stringkonstanten sein.
 
 Integerkonstanten bezeichnen ganze Zahlen.  Sie werden als eine
 Folge von Ziffern geschrieben.  Dies kann in verschiedenen
-Zahlensystemen erfolgen, deren Kennzeichnung von verwendeten
+Zahlensystemen erfolgen, deren Notation von verwendeten
 Zielprozessor abh"angt (Tabelle
 \ref{TabSystems}).
 \par
 \begin{table*}[htbp]
 \begin{center}\begin{tabular}{|l|c|c|c|c|}
 \hline
-            & Intel-Modus & Motorola-Modus &   C-Modus   & IBM-Modus  \\
-            & (Intel,     & (Rockwell,     &  (PowerPC,  & (Panafacom) \\
-            & Zilog,      &  Motorola,     &   AMD29K,   & \\
-            & Thomson,    &  Microchip,    &   National, & \\
-            & Texas,      & Thomson,       &   Symbios,  & \\
-            & Toshiba,    & Hitachi)       &   Atmel)    & \\
-            & NEC,        &                &             & \\
-            & Siemens,    &                &             & \\
-            & Philips,    &                &             & \\
-            & Fujitsu,    &                &             & \\
-            & Fairchild,  &                &             & \\
-            & Intersil)   &                &             & \\
+            & Intel-Modus     & Motorola-Modus & C-Modus  & IBM-Modus  \\
 \hline
 \hline
-dezimal     & direkt          & direkt     & direkt     & direkt \\
-hexadezimal & Suffix H        & Pr"afix \$ & Pr"afix 0x & X'..' oder H'..' \\
-bin"ar      & Suffix B        & Pr"afix \% & Pr"afix 0b & O'..' \\
-oktal       & Suffix O oder Q & Pr"afix @  & Pr"afix 0  & B'..' \\
+dezimal     & direkt          & direkt      & direkt      & direkt \\
+hexadezimal & Suffix H        & Pr"afix \$  & Pr"afix 0x  & X'..' oder H'..' \\
+\ii{Kennung}& \tty{hexh}      & \tty{\$hex} & \tty{0xhex} & \tty{x'hex'} \\
+            &                 &             &             & \tty{h'hex'} \\
+bin"ar      & Suffix B        & Pr"afix \%  & Pr"afix 0b  & B'..' \\
+\ii{Kennung}& \tty{binb}      & \tty{\%bin} & \tty{0bbin} & \tty{b'bin'} \\
+oktal       & Suffix O oder Q & Pr"afix @   & Pr"afix 0   & O'..' \\
+\ii{Kennung}& \tty{octo}      & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\  
+            & \tty{octq}      &             &             & \\
 \hline
 \end{tabular}\end{center}
-\caption{m"ogliche Zahlensysteme\label{TabSystems}}
+\caption{definierte Zahlensysteme und Schreibweisen\label{TabSystems}}
 \end{table*}
 Falls das Zahlensystem nicht explizit durch vor-oder nachgestellte Zeichen
 vorgegeben wird, nimmt AS die Basis an, die mit dem {\tt RADIX}-Befehl
-vorgegeben wurde (der Default dieser Einstellung ist wiederum 10).  Mit
-diesem Befehl lassen sich auch ,,ungew"ohnliche" Zahlensysteme, d.h.
-andere als 2, 8, 10 oder 16 einstellen.
+vorgegeben wurde (deren Default ist wiederum 10).  Mit diesem Befehl lassen
+sich auch ,,ungew"ohnliche'' Zahlensysteme, d.h. andere als 2, 8, 10 oder 16
+einstellen.
 
 G"ultige Ziffern sind die Zahlen 0 bis 9 sowie die Buchstaben A bis Z
 (Wert 10 bis 35) bis zur Basis des Zahlensystems minus eins.  Die
@@ -1743,12 +1737,21 @@ kann man z.B. nach {\tt RADIX 16} keine bin"aren Konstanten mehr
 schreiben, und ab {\tt RADIX 18} in Intel-Syntax auch keine hexadezimalen
 Konstanten mehr.  Also {\bf VORSICHT!}
 
-Mit Hilfe des \tty{RELAXED}-Befehls (siehe Abschnitt \ref{SectRELAXED})
-kann die starre Zuordnung einer Schreibweise zu einem Zielprozessor
-aufgehoben werden, so da"s man eine beliebige Schreibweise verwenden
-kann (auf Kosten der Kompatibilit"at zu Standard-Assemblern). Insbesondere
-er"offnet sich mit dieser Option die 'IBM-Schreibweise', wie man sie bei manchen
-Fremdassemblern antrifft, f"ur alle Ziele:
+Welche Syntax f"ur welchen Zielprozessor im Default verwendet wird, ist
+im Anhang \ref{SectPseudoInst} gesammelt.  Unabh"angig von diesem Default
+ist es m"oglich, einzelne Schreibweisen mit dem \tty{INTSYNTAX}-Befehl
+(siehe Abschnitt \ref{SectINTSYNTAX}) weg- oder dazuzuschalten.  Die unter
+\ii{Ident} aufgef"uhrten Namen, mit einem vorangestellten Plus- oder
+Minuszeichen, dienen bei diesem Befehl als Argumente.
+
+Eine Art ''Generalschalter' f"ur Integer-Schreibweisen ist der
+\tty{RELAXED}-Befehl (siehe Abschnitt \ref{SectRELAXED}): Unabh"angig
+vom Zielprozessor k"onnen beliebige Schreibweisen verwendet werden
+kann (auf Kosten der Kompatibilit"at zu Standard-Assemblern).
+
+Mit \tty{INTSYNTAX} bzw. \tty{RELAXED} er"offnet sich insbesondere die
+'IBM-Schreibweise', wie man sie bei manchen Fremdassemblern antrifft,
+f"ur alle Ziele:
 
 Bei dieser Schreibweise wird der eigentliche Wert in Hochkommas geschrieben
 und das Zahlensystem ('x' oder 'h' f"ur hexadezimal, 'o' f"ur oktal und 'b'
@@ -2743,10 +2746,10 @@ f"ur \tty{BFINS} und \tty{BFEXT} verwendet werden.
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em G"ultigkeit: 8080/8085/8086, XA, Z80, Z8000, 320C2x/5x, TLCS-47, AVR, F8}
+{\em G"ultigkeit: 8008/8080/8085/8086, XA, Z80, Z8000, 320C2x/5x, TLCS-47, AVR, F8}
 
 \tty{PORT} arbeitet analog zu \tty{SFR}, nur wird das Symbol dem I/O-Adre"sbereich
-zugeordnet.  Erlaubte Werte sind 0..7 beim 3201x, 0..15 beim 320C2x,
+zugeordnet.  Erlaubte Werte sind 0..7 beim 3201x unsd 8008, 0..15 beim 320C2x,
 0..65535 beim 8086, Z8000 und 320C5x, 0..63 beim AVR und 0..255 beim Rest.
 \par
 Beispiel: eine PIO 8255 liege auf Adresse 20H:
@@ -4996,16 +4999,16 @@ Feature daher mit Vorsicht einsetzen!
 \subsection{Z80SYNTAX}
 \ttindex{Z80SYNTAX}
 
-{\em G"ultigkeit: 8080/8085}
+{\em G"ultigkeit: 8008, 8080/8085}
 
-Mit \tty{ON} als Argument kann man (fast) alle 8080-Befehle wahlweise
+Mit \tty{ON} als Argument kann man (fast) alle 8008/8080-Befehle wahlweise
 auch in der Form schreiben, wie sie Zilog f"ur den Z80 definiert hat.
 Zum Beispiel benutzt man einfach nur noch \tty{LD} mit sich selbst
-erkl"arenden Operanden, wo man in der originalen 8080-Syntax je nach
-Operanden \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD, LDAX, STAX} oder
-\tty{SPHL} schreiben mu"s.
+erkl"arenden Operanden, wo man in der originalen 8080-Syntax (bzw.
+neueren 8008-Syntax) je nach Operanden \tty{MVI, LXI, MOV, STA, LDA,
+SHLD, LHLD, LDAX, STAX} oder \tty{SPHL} schreiben mu"s.
 
-Weil einige Mnemonics in der 8080- und Z80-Syntax unterschiedliche
+Weil einige Mnemonics in der 8008/8080- und Z80-Syntax unterschiedliche
 Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
 Alternativ schaltet man mit einem \tty{EXCLUSIVE} als Argument die
 ''8080-Syntax'' ganz ab.  Details zu dieser Betriebsart kann man 
@@ -7391,6 +7394,31 @@ k"onnen.
 \tty{READ} darf entweder nur einen Parameter oder zwei Parameter
 haben, denn die Meldung zur Eingabeaufforderung ist optional.  Fehlt
 sie, so gibt AS eine aus dem Symbolnamen konstruierte Meldung aus.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{INTSYNTAX}
+\label{SectINTSYNTAX}
+\ttindex{INTSYNTAX}
+
+{\em G"ultigkeit: alle Prozessoren}
+
+Mit diesem Befehl kann die Menge der Schreibweisen, die f"ur Integer-Konstanten
+in verschiedenen Zahlensystemen zul"assig sind, ver"andert werden.  Nach Auswahl
+eines bestimmten Zieles gilt ein bestimmter Default-Satz (siehe Abschnitt
+\ref{SectPseudoInst}), der um einzelne Schreibweisen erg"anzt oder bereinigt werden
+kann. \tty{INTSYNTAX} akzeptiert eine beliebige Liste von Argumenten, von denen
+jedes mit einem Plus- oder Minuszeichen beginnt, direkt gefolgt von der Kennung
+der jeweiligen Schreibweise.  So stellt man z.B. mit folgendem Befehl
+\begin{verbatim}
+       intsyntax    -0oct,+0hex
+\end{verbatim}
+ein, da"s eine f"uhrende Null keine Oktal-, sondern eine Hexadezimalzahl
+kennzeichnet, was bei manchen Assemblern f"ur den SC/MP gebr"auchlich ist.  Die
+Kennungen f"ur die einzelnen Schreibweisen finden sich in Tabelle \ref{TabSystems}.
+Den Kombinationsm"oglichkeiten sind keine Grenzen gesetzt, au"ser wenn sich zwei
+Schreibweisen direkt widersprechen.  Im obigen Beispiel w"are es z.B. nicht
+erlaubt, gleichzeitig \tty{0oct} und \tty{0hex} einzuschalten.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12487,6 +12515,18 @@ Angaben:
                {Fehler}
                {Arrays von Strukturen d"urfen maximal drei Dimensionen haben.}
                {die Dimension, die zu viel ist}
+\errentry{2230}{unbekannte Integer-Notation}
+               {Fehler}
+               {Die angegebene Integer-Notation existiert nicht, oder es fehlt das
+                f"uhrende Plus/Minuszeichen.}
+               {das fehlerhafte Argument}
+\errentry{2231}{ung"ultige Liste an Integer-Schreibweisen}
+               {Fehler}
+               {Die geforderte "Anderung der Liste von benutzbaren Integer-Schreibweisen
+                kann nicht vorgenommen werden, weil sie zu einem Widerspruch f"uhren
+                w"urde.  Aktuell betrifft dies lediglich 0hex und 0oct, die nicht
+                gleichzeitig verwendet werden d"urfen.}
+               {}
 \errentry{10001}{Fehler bein "Offnen der Datei}
                {fatal}
                {Beim Versuch, eine Datei zu "offnen, ist ein
@@ -12785,7 +12825,8 @@ den ersten Blick...
 %%===========================================================================
 
 \cleardoublepage
-\chapter{Pseudobefehle gesammelt}
+\chapter{Pseudobefehle und Integer-Syntax, gesammelt}
+\label{SectPseudoInst}
 
 In diesem Anhang finden sich noch einmal als schnelle Referenz alle
 von AS zur Verf"ugung gestellten Pseudobefehle.  Die Liste ist in zwei

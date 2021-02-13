@@ -1604,7 +1604,7 @@ static void SwitchFrom_MSP(void)
 
 static void SwitchTo_MSP(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False; SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$"; HeaderID = 0x4a; NOPCode = 0x4303; /* = MOV #0,#0 */
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

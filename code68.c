@@ -991,7 +991,7 @@ static void SwitchTo_68(void)
     {"MM2CR", &Reg_MM2CR, 0, 0xff, 0, SetK4Ranges}
   };
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x61;

@@ -31,6 +31,7 @@
 #include "trees.h"
 #include "operator.h"
 #include "function.h"
+#include "intformat.h"
 #include "ieeefloat.h"
 
 #include "asmpars.h"
@@ -109,19 +110,6 @@ TTmpSymLog TmpSymLog[LOCSYMSIGHT];
 LongInt TmpSymLogDepth;
 
 LongInt LocHandleCnt;          /* mom. verwendeter lokaler Handle            */
-
-static char BaseIds[3] =
-{
-  '%', '@', '$'
-};
-static char BaseLetters[4] =
-{
-  'B', 'O', 'H', 'Q'
-};
-static Byte BaseVals[4] =
-{
-  2, 8, 16, 8
-};
 
 typedef struct sSymbolEntry
 {
@@ -836,14 +824,10 @@ static Boolean GetSymSection(char *Name, LongInt *Erg, const tStrComp *pUnexpCom
 static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
 {
   LargeInt Wert;
-  int l;
   Boolean NegFlag = False;
-  TConstMode ActMode = ConstModeC;
-  unsigned BaseIdx;
   int Digit;
-  int Base;
-  char ch;
-  Boolean Found;
+  tIntCheckCtx Ctx;
+  const tIntFormatList *pIntFormat;
 
   /* empty string is interpreted as 0 */
 
@@ -854,7 +838,6 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
   }
 
   *pResult = False;
-  Wert = 0;
 
   /* sign: */
 
@@ -867,185 +850,29 @@ static LargeInt ConstIntVal(const char *pExpr, IntType Typ, Boolean *pResult)
       pExpr++;
       break;
   }
-  l = strlen(pExpr);
+  Ctx.pExpr = pExpr;
+  Ctx.ExprLen = strlen(pExpr);
+  Ctx.Base = -1;
 
-  /* automatic syntax determination: */
-
-  if (RelaxedMode)
-  {
-    Found = False;
-
-    if ((l >= 2) && (*pExpr == '0') && (as_toupper(pExpr[1]) == 'X'))
+  for (pIntFormat = IntFormatList; pIntFormat->Check; pIntFormat++)
+    if (pIntFormat->Check(&Ctx, pIntFormat->Ch))
     {
-      ActMode = ConstModeC;
-      Found = True;
-    }
-
-    if ((!Found) && (l >= 2))
-    {
-      for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
-        if (*pExpr == BaseIds[BaseIdx])
-        {
-          ActMode = ConstModeMoto;
-          Found = True;
-          break;
-        }
-    }
-
-    if ((!Found) && (l >= 2) && (*pExpr >= '0') && (*pExpr <= '9'))
-    {
-      ch = as_toupper(pExpr[l - 1]);
-      if (DigitVal(ch, RadixBase) == -1)
-      {
-        for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
-          if (ch == BaseLetters[BaseIdx])
-          {
-            ActMode = ConstModeIntel;
-            Found = True;
-            break;
-          }
-      }
-    }
-
-    if (!Found
-     && (l >= 3)
-     && (pExpr[1] == '\'')
-     && ((pExpr[l - 1] == '\'') || ConstModeIBMNoTerm))
-    {
-      switch (as_toupper(*pExpr))
-      {
-        case 'H':
-        case 'X':
-        case 'B':
-        case 'O':
-          ActMode = ConstModeIBM;
-          Found = True;
-          break;
-      }
-    }
-
-    if (!Found)
-      ActMode = ConstModeC;
-  }
-  else /* !RelaxedMode */
-    ActMode = ConstMode;
-
-  /* Zahlensystem ermitteln/pruefen */
-
-  Base = RadixBase;
-  switch (ActMode)
-  {
-    case ConstModeIntel:
-      ch = as_toupper(pExpr[l - 1]);
-      if (DigitVal(ch, RadixBase) == -1)
-      {
-        for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
-          if (ch == BaseLetters[BaseIdx])
-          {
-            Base = BaseVals[BaseIdx];
-            l--;
-            break;
-          }
-      }
+      Ctx.Base = (pIntFormat->Base > 0) ? pIntFormat->Base : RadixBase;
       break;
-    case ConstModeMoto:
-      for (BaseIdx = 0; BaseIdx < 3; BaseIdx++)
-        if (*pExpr == BaseIds[BaseIdx])
-        {
-          Base = BaseVals[BaseIdx];
-          pExpr++; l--;
-          break;
-        }
-      break;
-    case ConstModeC:
-      if (!strcmp(pExpr, "0"))
-      {
-        *pResult = True;
-        return 0;
-      }
-      if (*pExpr != '0') Base = RadixBase;
-      else if (l < 2) return -1;
-      else
-      {
-        pExpr++; l--;
-        ch = as_toupper(*pExpr);
-        if ((RadixBase != 10) && (DigitVal(ch, RadixBase) != -1))
-          Base = RadixBase;
-        else
-          switch (as_toupper(*pExpr))
-          {
-            case 'X':
-              pExpr++;
-              l--;
-              Base = 16;
-              break;
-            case 'B':
-              pExpr++;
-              l--;
-              Base = 2;
-              break;
-
-            /* in relaxed mode, treat pseudo octal constants like decimal: */
-
-            default:
-            {
-              const char *pRun;
-
-              for (pRun = pExpr; *pRun; pRun++)
-                if ((*pRun == '8') || (*pRun == '9'))
-                  break;
-              Base = (RelaxedMode && *pRun) ? 10 : 8;
-            }
-          }
-      }
-      break;
-    case ConstModeIBM:
-      if (isdigit(*pExpr)) break;
-      if ((l < 2) || (pExpr[1] != '\''))
-        return -1;
-      switch (as_toupper(*pExpr))
-      {
-        case 'X':
-        case 'H':
-          Base = 16;
-          break;
-        case 'B':
-          Base = 2;
-          break;
-        case 'O':
-          Base = 8;
-          break;
-        default:
-          return -1;
-      }
-      if ((pExpr[l - 1] == '\'') && (l >= 3))
-        l -= 3;
-      else if (ConstModeIBMNoTerm)
-        l -= 2;
-      else
-        return -1;
-      pExpr += 2;
-      break;
-  }
-
-  if (!*pExpr)
+    }
+  if (Ctx.Base <= 0)
     return -1;
 
-  if (ActMode == ConstModeIntel)
-  {
-    if ((*pExpr < '0') || (*pExpr > '9'))
-      return -1;
-  }
+  /* we may have decremented Ctx.ExprLen, so do not run until string end */
 
-  /* we may have decremented l, so do not run until string end */
-
-  while (l > 0)
+  Wert = 0;
+  while (Ctx.ExprLen > 0)
   {
-    Digit = DigitVal(as_toupper(*pExpr), Base);
+    Digit = DigitVal(as_toupper(*Ctx.pExpr), Ctx.Base);
     if (Digit == -1)
       return -1;
-    Wert = Wert * Base + Digit;
-    pExpr++; l--;
+    Wert = Wert * Ctx.Base + Digit;
+    Ctx.pExpr++; Ctx.ExprLen--;
   }
 
   if (NegFlag)
@@ -2256,30 +2083,6 @@ tRegEvalResult EvalStrRegExpressionAsOperand(const tStrComp *pArg, struct sRegDe
       return MustBeReg ? eIsNoReg : eRegAbort;
   }
 }
-
-
-/*!------------------------------------------------------------------------
- * \fn     GetIntelSuffix(unsigned Radix)
- * \brief  return Intel-style suffix letter fitting to number system
- * \param  Radix req'd number system
- * \return * to suffix string (may be empty)
- * ------------------------------------------------------------------------ */
-
-const char *GetIntelSuffix(unsigned Radix)
-{
-  unsigned BaseIdx;
-
-  for (BaseIdx = 0; BaseIdx < sizeof(BaseLetters) / sizeof(*BaseLetters); BaseIdx++)
-    if (Radix == BaseVals[BaseIdx])
-    {
-      static char Result[2] = { '\0', '\0' };
-
-      Result[0] = BaseLetters[BaseIdx] + (HexStartCharacter - 'A');
-      return Result;
-    }
-  return "";
-}
-
 
 static void FreeSymbolEntry(PSymbolEntry *Node, Boolean Destroy)
 {

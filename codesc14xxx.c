@@ -428,7 +428,7 @@ static void SwitchTo_sc14xxx(void)
 
   FoundDescr = FindFamilyByName("SC14XXX");
 
-  TurnWords = False; ConstMode = ConstModeC;
+  TurnWords = False; SetIntConstMode(eIntConstModeC);
   PCSymbol = "$"; HeaderID = FoundDescr->Id; NOPCode = 0x0000;
   DivideChars = ","; HasAttrs = False;
 

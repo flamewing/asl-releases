@@ -590,7 +590,7 @@ static void SwitchFrom_8x30X(void)
 static void SwitchTo_8x30X(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x3a;

@@ -1164,7 +1164,7 @@ static void SwitchTo_AVR(void *pUser)
   pCurrCPUProps = (const tCPUProps*)pUser;
 
   TurnWords = False;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
   SetIsOccupiedFnc = ChkZeroArg;
 
   PCSymbol = "*";

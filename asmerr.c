@@ -617,6 +617,10 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgInvStructArgument; break;
     case ErrNum_TooManyArrayDimensions:
       msgno = Num_ErrMsgTooManyArrayDimensions; break;
+    case ErrNum_InvIntFormat:
+      msgno = Num_ErrMsgInvIntFormat; break;
+    case ErrNum_InvIntFormatList:
+      msgno = Num_ErrMsgInvIntFormatList; break;
     case ErrNum_InternalError:
       msgno = Num_ErrMsgInternalError; break;
     case ErrNum_OpeningFile:

@@ -2069,7 +2069,7 @@ static void SwitchTo_78K3(void)
   pDescr = FindFamilyByName("78K3");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "PC";
   HeaderID = pDescr->Id;

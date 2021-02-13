@@ -615,7 +615,7 @@ static void SwitchTo_KCPSM(void)
   FoundDescr = FindFamilyByName("KCPSM");
 
   TurnWords = True;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

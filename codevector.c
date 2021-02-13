@@ -278,7 +278,8 @@ static void SwitchTo_Vector(void)
 
   FoundDescr = FindFamilyByName("ATARI_VECTOR");
 
-  TurnWords = False; ConstMode = ConstModeMoto;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "$"; HeaderID = FoundDescr->Id;
 

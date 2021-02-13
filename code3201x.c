@@ -483,7 +483,7 @@ static void SwitchFrom_3201X(void)
 static void SwitchTo_3201X(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x74;

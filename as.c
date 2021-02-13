@@ -47,6 +47,7 @@
 #include "asmrelocs.h"
 #include "asmallg.h"
 #include "codepseudo.h"
+#include "intpseudo.h"
 #include "as.h"
 
 #include "code68k.h"
@@ -2842,6 +2843,7 @@ static void AssembleFile_InitPass(void)
   InitLstMacroExpMod(&LstMacroExpModOverride);
   InitLstMacroExpMod(&LstMacroExpModDefault);
   SetFlag(&RelaxedMode, RelaxedName, DefRelaxedMode);
+  SetIntConstRelaxedMode(DefRelaxedMode);
   SetFlag(&CompMode, CompModeName, DefCompMode);
   strmaxcpy(TmpCompStr, NestMaxName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NestMax = DEF_NESTMAX, SegNone, True);
   CopyDefSymbols();
@@ -4219,6 +4221,7 @@ int main(int argc, char **argv)
     asmdebug_init();
 
     codeallg_init();
+    intpseudo_init();
 
     code68k_init();
     code56k_init();

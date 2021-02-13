@@ -697,7 +697,7 @@ static void SwitchFrom_COP8(void)
 static void SwitchTo_COP8(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
 
   PCSymbol = ".";
   HeaderID = 0x6f;

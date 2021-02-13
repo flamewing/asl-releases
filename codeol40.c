@@ -597,7 +597,7 @@ static void SwitchTo_OLMS40(void)
   pDescr = FindFamilyByName("OLMS-40");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

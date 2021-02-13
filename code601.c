@@ -2118,7 +2118,7 @@ static void SwitchTo_601(void)
   PFamilyDescr FoundDscr;
 
   TurnWords = True;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
 
   FoundDscr = FindFamilyByName("MPC601");
   if (!FoundDscr)

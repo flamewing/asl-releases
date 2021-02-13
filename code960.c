@@ -969,7 +969,7 @@ static void SwitchTo_960(void)
   PFamilyDescr FoundId;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   FoundId = FindFamilyByName("i960");
   if (!FoundId)

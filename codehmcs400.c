@@ -1102,7 +1102,7 @@ static void SwitchTo_HMCS400(void)
   pDescr = FindFamilyByName("HMCS400");
 
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = pDescr->Id;

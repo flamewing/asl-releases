@@ -1874,7 +1874,7 @@ static void SwitchTo_3203X(void)
   pDescr = FindFamilyByName("TMS320C3x/C4x");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = pDescr->Id;

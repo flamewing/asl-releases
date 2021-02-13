@@ -25,6 +25,7 @@
 #include "stringlists.h"
 #include "chunks.h"
 #include "ioerrs.h"
+#include "intformat.h"
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmpars.h"
@@ -552,6 +553,7 @@ void FloatString(char *pDest, size_t DestSize, Double f)
 
 void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsigned Radix)
 {
+  size_t Len;
   LargeInt IntVal;
   
   switch (t->Typ)
@@ -559,57 +561,42 @@ void StrSym(TempResult *t, Boolean WithSystem, char *Dest, size_t DestLen, unsig
     case TempInt:
       IntVal = t->Contents.Int;
     IsInt:
-      SysString(Dest, DestLen - 3, IntVal, Radix,
-                1, (16 == Radix) && (ConstMode == ConstModeIntel),
+      if (WithSystem)
+      {
+        switch (IntConstMode)
+        {
+          case eIntConstModeMoto:
+            Len = strmaxcpy(Dest, GetIntConstMotoPrefix(Radix), DestLen);
+            break;
+          case eIntConstModeC:
+            Len = strmaxcpy(Dest, GetIntConstCPrefix(Radix), DestLen);
+            break;
+          case eIntConstModeIBM:
+            Len = strmaxcpy(Dest, GetIntConstIBMPrefix(Radix), DestLen);
+            break;
+          default:
+            Len = 0;
+        }
+        DestLen -= Len;
+        Dest += Len;
+      }
+      SysString(Dest, DestLen, IntVal, Radix,
+                1, (16 == Radix) && (IntConstMode == eIntConstModeIntel),
                 HexStartCharacter, SplitByteCharacter);
       if (WithSystem)
-        switch (ConstMode)
+      {
+        switch (IntConstMode)
         {
-          case ConstModeIntel:
-            switch (Radix)
-            {
-              case 16:
-              case 8:
-              case 2:
-                as_snprcatf(Dest, DestLen, GetIntelSuffix(Radix));
-                break;
-            }
+          case eIntConstModeIntel:
+            as_snprcatf(Dest, DestLen, GetIntConstIntelSuffix(Radix));
             break;
-          case ConstModeMoto:
-            switch (Radix)
-            {
-              case 16:
-                strprep(Dest, "$");
-                break;
-              case 8:
-                strprep(Dest, "@");
-                break;
-              case 2:
-                strprep(Dest, "%");
-                break;
-            }
+          case eIntConstModeIBM:
+            as_snprcatf(Dest, DestLen, GetIntConstIBMSuffix(Radix));
             break;
-          case ConstModeC:
-            switch (Radix)
-            {
-              case 16:
-                strprep(Dest, "0x");
-                break;
-              case 8:
-                strprep(Dest, "0");
-                break;
-            }
-            break;
-          case ConstModeIBM :
-            switch (Radix)
-            {
-              case 16:
-                strprep(Dest, "x'");
-                strcat(Dest, "'");
-                break;
-            }
+          default:
             break;
         }
+      }
       break;
     case TempFloat:
       FloatString(Dest, DestLen, t->Contents.Float);

@@ -1189,7 +1189,7 @@ static void SwitchTo_Padauk(void *pUser)
   pCurrCPUProps = (const tCPUProps*)pUser;
 
   TurnWords = False;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
 
   PCSymbol = "*";
   HeaderID = 0x3b;

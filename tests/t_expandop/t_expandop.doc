@@ -1,0 +1,6 @@
++---------------------- Test Application EXPANDOP ---------------------------+
+|                                                                            |
+| This is a small demo about how construct instructions in macros.  String   |
+| expression replacement via { } also works in the mnemonic/opcode field.    |
+|                                                                            |
++----------------------------------------------------------------------------+

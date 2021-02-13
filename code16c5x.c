@@ -316,7 +316,7 @@ static void SwitchFrom_16C5X(void)
 static void SwitchTo_16C5X(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x71;

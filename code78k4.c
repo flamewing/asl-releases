@@ -3494,7 +3494,7 @@ static void SwitchTo_78K4(void)
   pDescr = FindFamilyByName("78K4");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "PC";
   HeaderID = pDescr->Id;

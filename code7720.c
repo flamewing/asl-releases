@@ -563,7 +563,7 @@ static void SwitchTo_7720(void)
   PFamilyDescr FoundDescr;
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   if (MomCPU == CPU7725)
   {

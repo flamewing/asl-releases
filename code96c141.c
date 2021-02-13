@@ -2786,7 +2786,7 @@ static Boolean ChkMoreOneArg(void)
 static void SwitchTo_96C141(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = ChkMoreOneArg;
 
   PCSymbol = "$";

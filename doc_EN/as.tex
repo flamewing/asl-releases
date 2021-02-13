@@ -1647,27 +1647,21 @@ table \ref{TabSystems}).
 \begin{table*}[htb]
 \begin{center}\begin{tabular}{|l|c|c|c|c|}
 \hline
-         & Intel Mode    &  Motorola Mode &  C Mode     & IBM Mode \\
-         & (Intel,       & (Rockwell,     &  (PowerPC,  & (Panafacom) \\
-         & Zilog,        &  Motorola,     &   AMD29K,   & \\
-         & Thomson,      &  Microchip,    &   National, & \\
-         & Texas,        &  Thomson,      &   Symbios,  & \\
-         & Toshiba,      &  Hitachi)      &   Atmel)    & \\
-         & NEC,          &                &             & \\
-         & Siemens,      &                &             & \\
-         & Philips,      &                &             & \\
-         & Fujitsu,      &                &             & \\
-         & Fairchild,    &                &             & \\
-         & Intersil)     &                &             & \\
+          & Intel Mode    & Motorola Mode & C Mode    & IBM Mode \\
 \hline
 \hline
-Decimal  & Direct        & Direct         & Direct      & Direct \\
-Hex      & Suffix H      & Prefix \$      & Prefix 0x   & X'..' or H'..' \\
-Binary   & Suffix B      & Prefix \%      & Prefix 0b   & O'..' \\
-Octal    & Suffix O or Q & Prefix @       & Prefix 0    & B'..' \\
+Decimal   & Direct        & Direct      & Direct      & Direct \\
+Hex       & Suffix H      & Prefix \$   & Prefix 0x   & X'..' or H'..' \\
+\ii{Ident}& \tty{hexh}    & \tty{\$hex} & \tty{0xhex} & \tty{x'hex'} \\
+          &               &             &             & \tty{h'hex'} \\
+Binary    & Suffix B      & Prefix \%   & Prefix 0b   & O'..' \\
+\ii{Ident}& \tty{binb}    & \tty{\%bin} & \tty{0bbin} & \tty{b'bin'} \\
+Octal     & Suffix O or Q & Prefix @    & Prefix 0    & B'..' \\
+\ii{Ident}& \tty{octo}    & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\  
+          & \tty{octq}    &             &             & \\
 \hline
 \end{tabular}\end{center}
-\caption{Possible Numbering Systems\label{TabSystems}}
+\caption{Defined Numbering Systems and Notations\label{TabSystems}}
 \end{table*}
 In case the numbering system has not been explicitly stated by adding the
 special control characters listed in the table, AS assumes the base given
@@ -1696,12 +1690,19 @@ write binary constants anymore after a {\tt RADIX 16}, and starting at
 {\tt RADIX 18}, the Intel syntax even doesn't allow to write hexadecimal
 constants any more.  Therefore {\bf CAUTION!}
 
-With the help of the \tty{RELAXED} instruction (see section \ref{SectRELAXED}),
-the strict assignment of a syntax to a certain target processor can be
-removed.  The result is that an arbitrary syntax may be used (loosing
-compatibility to standard assemblers).  This option specifically enabled
-the 'IBM notation', a syntac that is sometimes found on other assemblers,
-for all targets:
+Appendix \ref{SectPseudoInst} lists which syntax is used by which target
+by default.  Independent of this default, there is always the option to
+add or delete individual syntax variants via the \tty{INTSYNTAX} instruction
+(see section \ref{SectINTSYNTAX}).  The names listed as \ii{Ident},
+prefixed with a plus or minus sign, serve as arguments to this instruction.
+
+The \tty{RELAXED} instruction (see section \ref{SectRELAXED}) serves as
+a sort 'global enable switch': in relaxed mode, all notations may be used,
+independent of the selected target processor.  The result is that an arbitrary
+syntax may be used (possibly loosing compatibility to standard assemblers).
+
+Both \tty{INTSYNTAX} and \tty{RELAXED} specifically enable usage of the
+'IBM syntax' for all targets, which is sometimes found on other assemblers:
 
 This notation puts the actual value into apostrophes and prepends
 the numbering system ('x' or 'h' for hexadecimal, 'o' for octal and 'b'
@@ -2665,10 +2666,10 @@ symbolically defined bit may also be used as argument for
 \subsection{PORT}
 \ttindex{PORT}
 
-{\em valid for: 8080/8085/8086, XA, Z80, Z8000, 320C2x/5x, TLCS-47, AVR, F8}
+{\em valid for: 8008/8080/8085/8086, XA, Z80, Z8000, 320C2x/5x, TLCS-47, AVR, F8}
 
 \tty{PORT} works similar to \tty{EQU}, just the symbol becomes assigned to the
-I/O-address range.  Allowed values are 0..7 for the 3201x, 0..15 for the
+I/O-address range.  Allowed values are 0..7 for the 3201x and 8008, 0..15 for the
 320C2x, 0..65535 for the 8086, Z8000, and 320C5x, 0..63 for the AVR, and 0..255
 for the rest.
 
@@ -4868,15 +4869,15 @@ should therefore use this feature with caution!
 \subsection{Z80SYNTAX}
 \ttindex{Z80SYNTAX}
 
-{\em G"ultigkeit: 8080/8085}
+{\em G"ultigkeit: 8008, 8080/8085}
 
 With \tty{ON} as argument, one can optionally write (almost) all
-8080 instructions in the form Zilog defined them for the Z80.
+8008/8080 instructions in the form Zilog defined them for the Z80.
 For instance, you simply use \tty{LD} with self-explaining
 operands instead of \tty{MVI, LXI, MOV, STA, LDA, SHLD, LHLD,
 LDAX, STAX} or \tty{SPHL}.
 
-Since some mnemonics have a different meaning in 8080 and Z80
+Since some mnemonics have a different meaning in 8008/8080 and Z80
 syntax, it is not possible to program in 'Z80 style' all the
 time, unless the '8080 syntax' is turned off entirely by using
  \tty{EXCLUSIVE} as argument.  The details of this operation mode
@@ -7218,6 +7219,30 @@ expressions instead of a simple constant.
 \tty{READ} may either have one or two parameters because the prompting
 message is optional.  AS will print a message constructed from the
 symbol's name if it is omitted.
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\subsection{INTSYNTAX}
+\label{SectINTSYNTAX}
+\ttindex{INTSYNTAX}
+
+{\em valid for: all processors}
+
+This instruction allows to modify the set of notations for integer constants
+in various number systems. - After selection of a CPU target, a certain default
+set is instelled (see section \ref{SectPseudoInst}).  This set may be augmented
+with other notations, or notations may be removeved from it.  \tty{INTSYNTAX}
+takes an arbitrary list of arguments which either begin with aplus or minus
+character, followed by the notation's identifier.  For instance, the following
+statement
+\begin{verbatim}
+       intsyntax    -0oct,+0hex
+\end{verbatim}
+has the result that a leading zero marks a hexadecimal instead of an octal
+constant, a common usage on some assemblers for the SC/MP.  The notations'
+identifiers can be found in table \ref{TabSystems}.  There is no limit on
+combining notations, except when they contradict each other.  For instance, it
+would not be allowed to enable \tty{0oct} and \tty{0hex} at the same time.
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12184,6 +12209,18 @@ described by:
                {error}
                {Arrays of structures are limited to being three-dimensional.}
                {the dimension argument that was 'too much'}
+\errentry{2230}{unknown integer notation}
+               {error}
+               {The given integer notation does not exist, or the leading plus/minus
+                sign is missing.}
+               {the argument in question}
+\errentry{2231}{invalid list of integer notations}
+               {error}
+               {The requested changes to the list of usable integer notations cannot
+                be applied, because they would result in a contradiction.  Currently,
+                the only such case are 0hex und 0oct which cannot be used at the same
+                time.}
+               {}
 \errentry{10001}{error in opening file}
                {fatal}
                {An error was detected while trying to open a file for input.}
@@ -12431,7 +12468,8 @@ one maybe does not find them immediately...
 %%===========================================================================
 
 \cleardoublepage
-\chapter{Pseudo-Instructions Collected}
+\chapter{Pseudo-Instructions and Integer Syntax, Collected}
+\label{SectPseudoInst}
 
 This appendix is designed as a quick reference to look up all pseudo
 instructions provided by AS.  The list is ordered in two parts: The

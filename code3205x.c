@@ -1300,7 +1300,7 @@ static void SwitchFrom_3205x(void)
 static void SwitchTo_3205x(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel; 
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x77; 

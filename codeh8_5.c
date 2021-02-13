@@ -2081,7 +2081,8 @@ static void InitCode_H8_5(void)
 
 static void SwitchTo_H8_5(void)
 {
-  TurnWords = True; ConstMode = ConstModeMoto;
+  TurnWords = True;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*"; HeaderID = 0x69; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = True; AttrChars = ".:";
@@ -2098,7 +2099,7 @@ static void SwitchTo_H8_5(void)
   DissectReg = DissectReg_H8_5;
   DissectBit = DissectBit_H8_5;
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeIBMNoTerm = True;
+  IntConstModeIBMNoTerm = True;
   InitFields();
   AddONOFF("MAXMODE", &Maximum, MaximumName, False);
   AddMoto16PseudoONOFF();

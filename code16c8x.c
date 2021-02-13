@@ -384,7 +384,7 @@ static void SwitchTo_16c8x(void)
   PFamilyDescr pDescr;
 
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   pDescr = FindFamilyByName("16C8x");
   PCSymbol = "*";

@@ -468,7 +468,7 @@ static void SwitchFrom_6804(void)
 static void SwitchTo_6804(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "PC";
   HeaderID = 0x64;

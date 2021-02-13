@@ -2964,7 +2964,7 @@ static void SwitchFrom_56K(void)
 static void SwitchTo_56K(void)
 {
   TurnWords = True;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x09;

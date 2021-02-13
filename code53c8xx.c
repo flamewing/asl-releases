@@ -1115,7 +1115,7 @@ static void SwitchTo_53c8xx(void)
   FoundDescr = FindFamilyByName("SYM53C8xx");
 
   TurnWords = False;
-  ConstMode = ConstModeC;
+  SetIntConstMode(eIntConstModeC);
   SetIsOccupiedFnc = TrueFnc;
   PCSymbol="$";
   HeaderID = FoundDescr->Id;

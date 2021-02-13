@@ -2301,7 +2301,7 @@ static void SwitchFrom_H8_3(void)
 static void SwitchTo_H8_3(void)
 {
   TurnWords = True;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x68;
@@ -2323,7 +2323,7 @@ static void SwitchTo_H8_3(void)
   DissectReg = DissectReg_H8_3;
   DissectBit = DissectBit_H8_3;
   QualifyQuote = QualifyQuote_SingleQuoteConstant;
-  ConstModeIBMNoTerm = True;
+  IntConstModeIBMNoTerm = True;
   SwitchFrom = SwitchFrom_H8_3;
   InitFields();
   AddONOFF("MAXMODE", &Maximum   , MaximumName   , False);

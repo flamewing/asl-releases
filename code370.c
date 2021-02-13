@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
+#include "intformat.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -352,7 +353,7 @@ static void DissectBit_370(char *pDest, size_t DestSize, LargeWord Symbol)
     as_snprintf(pDest, DestSize, "%c", HexStartCharacter + Addr);
   else
     as_snprintf(pDest, DestSize, "%~0.*u%s",
-                ListRadixBase, (unsigned)Addr, GetIntelSuffix(ListRadixBase));
+                ListRadixBase, (unsigned)Addr, GetIntConstIntelSuffix(ListRadixBase));
   as_snprcatf(pDest, DestSize, ".%c", Bit + '0');
 }
 
@@ -1323,7 +1324,7 @@ static void SwitchFrom_370(void)
 static void SwitchTo_370(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x49;

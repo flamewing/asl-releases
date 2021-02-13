@@ -320,7 +320,7 @@ static void SwitchFrom_4500(void)
 static void SwitchTo_4500(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x12;

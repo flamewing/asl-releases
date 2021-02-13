@@ -2950,7 +2950,7 @@ static Boolean Chk34Arg(void)
 static void SwitchTo_3206X(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   SetIsOccupiedFnc = Chk34Arg;
 
   PCSymbol = "$";

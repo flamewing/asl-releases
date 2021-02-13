@@ -1,3 +1,9 @@
+2021-02-13 [1.42 Bld 193]
+
+- Addition    : add more flexible integer format configuration
+- Addition    : add PORT statement for 8008
+- Addition    : add Z80SYNTAX for 8008
+
 2021-01-30 [1.42 Bld 192]
 
 - Addition    : Initial support for Padauk controllers

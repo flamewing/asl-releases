@@ -1122,7 +1122,7 @@ static void SwitchTo_77230(void)
   FoundDescr = FindFamilyByName("77230");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;
   NOPCode = 0x00000000;

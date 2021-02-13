@@ -398,7 +398,7 @@ static void SwitchFrom_17c4x(void)
 static void SwitchTo_17c4x(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x72;

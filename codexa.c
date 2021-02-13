@@ -2173,7 +2173,8 @@ static void SwitchFrom_XA(void)
 
 static void SwitchTo_XA(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$"; HeaderID = 0x3c; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = True; AttrChars = ".";

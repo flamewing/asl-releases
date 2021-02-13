@@ -2745,7 +2745,7 @@ static void SwitchTo_32054x(void)
   FoundDescr = FindFamilyByName("TMS320C54x");
 
   TurnWords = False;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = FoundDescr->Id;

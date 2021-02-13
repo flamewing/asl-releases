@@ -774,7 +774,8 @@ static void SwitchTo_807x(void)
 
    FoundDescr = FindFamilyByName("807x");
 
-   TurnWords = False; ConstMode = ConstModeC;
+   TurnWords = False;
+   SetIntConstMode(eIntConstModeC);
 
    PCSymbol="$"; HeaderID = FoundDescr->Id; NOPCode = 0x00;
    DivideChars = ","; HasAttrs = False;

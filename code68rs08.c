@@ -903,7 +903,7 @@ static void SwitchFrom_68rs08(void)
 static void SwitchTo_68rs08(void)
 {
   TurnWords = False;
-  ConstMode = ConstModeMoto;
+  SetIntConstMode(eIntConstModeMoto);
 
   PCSymbol = "*";
   HeaderID = 0x5e;

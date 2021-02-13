@@ -23,6 +23,7 @@
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "intformat.h"
 
 #include "code75k0.h"
 
@@ -286,29 +287,29 @@ static void DissectBit_75K0(char *pDest, size_t DestSize, LargeWord Inp)
 {
   if (Hi(Inp))
     as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
-                ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntelSuffix(ListRadixBase),
+                ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntConstIntelSuffix(ListRadixBase),
                 '0' + (Hi(Inp) & 3));
   else switch ((Inp >> 6) & 3)
   {
     case 0:
       as_snprintf(pDest, DestSize, "@%c+%0.*u%s.%c",
                   HexStartCharacter + ('H' - 'A'),
-                  ListRadixBase, (unsigned)(Inp & 0x0f), GetIntelSuffix(ListRadixBase),
+                  ListRadixBase, (unsigned)(Inp & 0x0f), GetIntConstIntelSuffix(ListRadixBase),
                   '0' + ((Inp >> 4) & 3));
       break;
     case 1:
       as_snprintf(pDest, DestSize, "%~03.*u%s.@%c",
-                  ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntelSuffix(ListRadixBase),
+                  ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntConstIntelSuffix(ListRadixBase),
                   HexStartCharacter + ('L' - 'A'));
       break;
     case 2:
       as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
-                  ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
                   '0' + ((Inp >> 4) & 3));
       break;
     case 3:
       as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
-                  ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntelSuffix(ListRadixBase),
+                  ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
                   '0' + ((Inp >> 4) & 3));
       break;
   }
@@ -1641,7 +1642,8 @@ static void SwitchTo_75K0(void *pUser)
   Word ROMEnd;
 
   pCurrCPUProps = (const tCPUProps*)pUser;
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "PC"; HeaderID = 0x7b; NOPCode = 0x60;
   DivideChars = ","; HasAttrs = False;

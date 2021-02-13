@@ -1154,7 +1154,8 @@ static void SwitchFrom_78C10(void)
 
 static void SwitchTo_78C10(void)
 {
-  TurnWords = False; ConstMode = ConstModeIntel;
+  TurnWords = False;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$"; HeaderID = 0x7a; NOPCode = 0x00;
   DivideChars = ","; HasAttrs = False;

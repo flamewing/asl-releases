@@ -242,6 +242,8 @@ typedef enum
   ErrNum_NonSegAddrRegMustBe16Bit = 2213,
   ErrNum_InvStructArgument = 2220,
   ErrNum_TooManyArrayDimensions = 2221,
+  ErrNum_InvIntFormat = 2230,
+  ErrNum_InvIntFormatList = 2231,
   ErrNum_InternalError = 10000,
   ErrNum_OpeningFile = 10001,
   ErrNum_ListWrError = 10002,

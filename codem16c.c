@@ -2757,7 +2757,7 @@ static void SwitchFrom_M16C(void)
 static void SwitchTo_M16C(void)
 {
   TurnWords = True;
-  ConstMode = ConstModeIntel;
+  SetIntConstMode(eIntConstModeIntel);
 
   PCSymbol = "$";
   HeaderID = 0x14;
