@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "bpemu.h"
+#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -33,7 +34,7 @@
 #define RegLBranchOrderCnt 2
 #define ImmOrderCnt 14
 #define SBranchOrderCnt 22
-#define LBranchOrderCnt 8
+#define LBranchOrderCnt 12
 #define IOOrderCnt 2
 
 typedef struct
@@ -224,6 +225,30 @@ static void DecodeLBranch(Word Index)
   }
 }
 
+static void DecodeJump(Word Index)
+{
+  const tOrder *pOrder = LBranchOrders + Index;
+
+  if (ChkArgCnt(1, 1) && ChkMinCPU(pOrder->MinCPU))
+  {
+    tEvalResult EvalResult;
+    Word Addr = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &EvalResult);
+
+    if (EvalResult.OK)
+    {
+      ChkSpace(SegCode, EvalResult.AddrSpaceMask);
+      if (Hi(EProgCounter() + 1) == Hi(Addr))
+        BAsmCode[CodeLen++] = pOrder->Code ^ 0xf0;
+      else
+      {
+        BAsmCode[CodeLen++] = pOrder->Code;
+        BAsmCode[CodeLen++] = Hi(Addr);
+      }
+      BAsmCode[CodeLen++] = Lo(Addr);
+    }
+  }
+}
+
 static void DecodeIO(Word Index)
 {
   const tOrder *pOrder = IOOrders + Index;
@@ -303,7 +328,18 @@ static void AddLBranch(const char *pName, Word Code, CPUVar MinCPU)
   if (InstrZ >= LBranchOrderCnt) exit(255);
   LBranchOrders[InstrZ].Code = Code;
   LBranchOrders[InstrZ].MinCPU = MinCPU;
-  AddInstTable(InstTable, pName, InstrZ++, DecodeLBranch);
+  AddInstTable(InstTable, pName, InstrZ, DecodeLBranch);
+  if (!strcmp(pName, "LBR"))
+    AddInstTable(InstTable, "JMP", InstrZ, DecodeJump);
+  else if (!strcmp(pName, "NLBR"));
+  else
+  {
+    char JName[10];
+
+    as_snprintf(JName, sizeof(JName), "J%s", pName + 2);
+    AddInstTable(InstTable, JName, InstrZ, DecodeJump);
+  }
+  InstrZ++;
 }
 
 static void AddSBranch(const char *pName, Word Code, CPUVar MinCPU)
@@ -324,7 +360,7 @@ static void AddIO(const char *pName, Word Code, CPUVar MinCPU)
 
 static void InitFields(void)
 {
-  InstTable = CreateInstTable(203);
+  SetDynamicInstTable((InstTable = CreateInstTable(203)));
 
   AddInstTable(InstTable, "PORT", 0, DecodePORT);
 
@@ -433,7 +469,11 @@ static void InitFields(void)
   AddLBranch("LBZ"  , 0x00c2, CPU1802);
   AddLBranch("LBNZ" , 0x00ca, CPU1802);
   AddLBranch("LBDF" , 0x00c3, CPU1802);
+  AddLBranch("LBPZ" , 0x00c3, CPU1802);
+  AddLBranch("LBGE" , 0x00c3, CPU1802);
   AddLBranch("LBNF" , 0x00cb, CPU1802);
+  AddLBranch("LBM"  , 0x00cb, CPU1802);
+  AddLBranch("LBL"  , 0x00cb, CPU1802);
   AddLBranch("LBQ"  , 0x00c1, CPU1802);
   AddLBranch("LBNQ" , 0x00c9, CPU1802);
 

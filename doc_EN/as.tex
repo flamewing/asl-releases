@@ -66,7 +66,7 @@
 
 \vspace{1cm}\par
 
-{\large Edition Januar 2021}
+{\large Edition Februar 2021}
 \end{raggedright}
 
 \clearpage
@@ -10249,6 +10249,31 @@ formant, you have to use the \tty{ALT} target.
 
 %%---------------------------------------------------------------------------
 
+\section{CDP180x}
+
+This family of processors supports both long and short branches: a short
+branch is only possible within the same 256 byte memory page, and a long branch
+is possible to any target in the 64K address space.  The assembly syntax provides
+different mnemonics for both variants (the long variant with a leading 'L'), but
+there is no variant that would let the assembler decide itself between long
+or short.  AS supports such 'pseudo instructions' as an extension:
+\begin{itemize}
+\item{\tty{JMP} becomes \tty{BR} oder \tty{LBR}.}
+\item{\tty{JZ} becomes \tty{BZ} oder \tty{LBZ}.}
+\item{\tty{JNZ} becomes \tty{BNZ} oder \tty{LBNZ}.}
+\item{\tty{JDF} becomes \tty{BDF} oder \tty{LBDF}.}
+\item{\tty{JPZ} becomes \tty{BPZ} oder \tty{LBPZ}.}
+\item{\tty{JGE} becomes \tty{BGE} oder \tty{LBGE}.}
+\item{\tty{JNF} becomes \tty{BNF} oder \tty{LBNF}.}
+\item{\tty{JM} becomes \tty{BM} oder \tty{LBM}.}
+\item{\tty{JL} becomes \tty{BL} oder \tty{LBL}.}
+\item{\tty{JQ} becomes \tty{BQ} oder \tty{LBQ}.}
+\item{\tty{JNQ} becomes \tty{BNQ} oder \tty{LBNQ}.}
+\end{itemize}
+
+
+%%---------------------------------------------------------------------------
+
 \section{KENBAK}
 
 The KENBAK-1 was developed in 1970, at a time when the first microprocessor
@@ -12468,7 +12493,7 @@ one maybe does not find them immediately...
 %%===========================================================================
 
 \cleardoublepage
-\chapter{Pseudo-Instructions and Integer Syntax, Collected}
+\chapter{Pseudo-Instructions and Integer Syntax}
 \label{SectPseudoInst}
 
 This appendix is designed as a quick reference to look up all pseudo

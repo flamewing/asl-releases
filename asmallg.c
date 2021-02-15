@@ -72,7 +72,7 @@ static void ParseCPUArgs(const tStrComp *pArgs, const tCPUArg *pCPUArgs)
   for (pCPUArg = pCPUArgs; pCPUArg->pName; pCPUArg++)
     *pCPUArg->pValue = pCPUArg->DefValue;
 
-  if (!pArgs)
+  if (!pArgs || !*pArgs->Str)
     return;
   StrCompMkTemp(&Args, ArgStr);
   StrCompCopy(&Args, pArgs);
@@ -155,7 +155,7 @@ static void SetCPUCore(const tCPUDef *pCPUDef, const tStrComp *pCPUArgs)
     SwitchFrom();
     SwitchFrom = NULL;
   }
-  strmaxcpy(MomCPUArgs, pCPUArgs ? pCPUArgs->Str : "", sizeof(MomCPUArgs));
+  strmaxcpy(MomCPUArgs, pCPUArgs ? pCPUArgs->Str : "", STRINGSIZE);
   ParseCPUArgs(pCPUArgs, pCPUDef->pArgs);
   pCPUDef->SwitchProc(pCPUDef->pUserData);
 
@@ -1049,7 +1049,6 @@ static void CodeRESTORE(Word Index)
   {
     tStrComp TmpComp;
     String TmpCompStr;
-    StrCompMkTemp(&TmpComp, TmpCompStr);
 
     Old = FirstSaveState; FirstSaveState = Old->Next;
     if (Old->SavePC != ActPC)
@@ -1062,6 +1061,7 @@ static void CodeRESTORE(Word Index)
       StrCompMkTemp(&TmpComp, Old->pSaveCPUArgs);
       SetCPUByType(Old->SaveCPU, &TmpComp);
     }
+    StrCompMkTemp(&TmpComp, TmpCompStr);
     strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, ListOn = Old->SaveListOn, 0, True);
     SetLstMacroExp(Old->SaveLstMacroExp);
     LstMacroExpModDefault = Old->SaveLstMacroExpModDefault;

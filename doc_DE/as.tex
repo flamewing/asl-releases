@@ -47,7 +47,7 @@
 
 \vspace{1cm}\par
 
-{\large Stand Januar 2021}
+{\large Stand Februar 2021}
 \end{raggedright}
 
 \clearpage
@@ -10473,6 +10473,31 @@ erreichbar; der andere wurde von mir erstellt und ist "uber die Namen
 Adre"sraum von 256 KWorten des MN1613 verwenden will, oder mit dem
 Gleitkommaformat des MN1613 experimentieren will, mu"s das \tty{ALT}-
 Target verwenden.
+
+%%---------------------------------------------------------------------------
+
+\section{CDP180x}
+
+Prozessoren dieser Reihe kennen sowohl kurze als auch lange Sprungbefehle:
+W"ahrend ein kurzer Sprung nur innerhalb der gleichen Speicherseite von 256 Byte
+m"oglich ist, kann man mit einem langen Sprung jedes beliebige Ziel im
+Adre"sraum von 64 KByte erreichen.  Die Assembler-Syntax sieht f"ur beide
+Varianten unterschiedliche Mnemonics vor (die lange Variante mit vorangestelltem
+'L'), aber keine, die dem Assembler gestatten w"urde, automatisch einen langen
+oder kurzen Befehl einzusetzen.  AS kennt solche 'Pseudobehle' als Erweiterung:
+\begin{itemize}
+\item{\tty{JMP} wird zu \tty{BR} oder \tty{LBR}.}
+\item{\tty{JZ} wird zu \tty{BZ} oder \tty{LBZ}.}
+\item{\tty{JNZ} wird zu \tty{BNZ} oder \tty{LBNZ}.}
+\item{\tty{JDF} wird zu \tty{BDF} oder \tty{LBDF}.}
+\item{\tty{JPZ} wird zu \tty{BPZ} oder \tty{LBPZ}.}
+\item{\tty{JGE} wird zu \tty{BGE} oder \tty{LBGE}.}
+\item{\tty{JNF} wird zu \tty{BNF} oder \tty{LBNF}.}
+\item{\tty{JM} wird zu \tty{BM} oder \tty{LBM}.}
+\item{\tty{JL} wird zu \tty{BL} oder \tty{LBL}.}
+\item{\tty{JQ} wird zu \tty{BQ} oder \tty{LBQ}.}
+\item{\tty{JNQ} wird zu \tty{BNQ} oder \tty{LBNQ}.}
+\end{itemize}
 
 %%---------------------------------------------------------------------------
 

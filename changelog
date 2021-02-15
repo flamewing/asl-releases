@@ -1,3 +1,8 @@
+2021-02-15 [1.42 Bld 194]
+
+- Bugfix      : fix SAVE/RESTORE instructions
+- Addition    : add J... variable branch instructions for 180x
+
 2021-02-13 [1.42 Bld 193]
 
 - Addition    : add more flexible integer format configuration
