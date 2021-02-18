@@ -476,7 +476,7 @@ static IntType GetImmIntType(tSymbolSize Size)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdrVals, Boolean IsIO, Boolean *pForceShort)
+ * \fn     DecodeAddrPartNum(const tStrComp *pArg, LongInt Disp, tEvalResult *pEvalResult, Boolean IsDirect, Boolean IsIO, Boolean *pForceShortt, Boolean *pIsDirect)
  * \brief  decode address part, for direct/immediate or indexed mode
  * \param  pArg source argument
  * \param  Disp displacement to add to value
@@ -672,11 +672,15 @@ static void FillImmVal(tAdrVals *pAdrVals, LongWord Value, tSymbolSize OpSize)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     
- * \brief  
- * \param  
- * \param  
- * \return 
+ * \fn     DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdrVals, Boolean IsDirect, Boolean IsIO, Boolean *pIsDirect)
+ * \brief  decode address part, for direct/immediate or indexed mode
+ * \param  pArg source argument
+ * \param  Disp displacement to add to value
+ * \param  pAdrVals binary coding of addressing mode
+ * \param  IsDirect force treatment as direct address mode
+ * \param  IsIO I/O space instead of memory space
+ * \param  pIsDirect classified as direct addressing?
+ * \return True if success
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdrVals, Boolean IsDirect, Boolean IsIO, Boolean *pIsDirect)
@@ -707,6 +711,20 @@ static Boolean DecodeAddrPart(const tStrComp *pArg, LongInt Disp, tAdrVals *pAdr
  * \param  pAdrVals binary coding of addressing mode
  * \return decoded mode
  * ------------------------------------------------------------------------ */
+
+/* This is necessary to find the split position when a short address is used as
+   base, i.e. |addr|(rn).  | is also the OR operator, and I don't want to get
+   false positives on other targets on stuff like (...)|(...): */
+
+static int ShortQualifier(const char *pArg, int NextNonBlankPos, int SplitPos)
+{
+  int FirstNonBlankPos;
+
+  for (FirstNonBlankPos = 0; FirstNonBlankPos < NextNonBlankPos; FirstNonBlankPos++)
+    if (!as_isspace(pArg[FirstNonBlankPos]))
+      break;
+  return ((FirstNonBlankPos < NextNonBlankPos) && (pArg[FirstNonBlankPos] == '|') && (pArg[NextNonBlankPos] == '|')) ? SplitPos : -1;
+}
 
 static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAdrVals)
 {
@@ -853,7 +871,7 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
 
   /* Indexed, base... */
 
-  SplitPos = FindDispBaseSplit(pArg->Str, &ArgLen);
+  SplitPos = FindDispBaseSplitWithQualifier(pArg->Str, &ArgLen, ShortQualifier);
   if (SplitPos > 0)
   {
     String OutStr, InStr;
@@ -864,6 +882,7 @@ static tAdrMode DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAd
     StrCompMkTemp(&OutArg, OutStr);
     StrCompMkTemp(&InArg, InStr);
     StrCompCopySub(&OutArg, pArg, 0, SplitPos);
+    KillPostBlanksStrComp(&OutArg);
     StrCompCopySub(&InArg, pArg, SplitPos + 1, ArgLen - SplitPos - 2);
     switch (DecodeReg(&OutArg, &pAdrVals->Val, &ArgSize, ChkRegSize_Addr, False))
     {

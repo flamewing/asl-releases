@@ -1327,26 +1327,34 @@ reg_rq12 equ	rq12
 	; long addresses: may be just 'linear 23 bit':
 
 	ld	r3,45678h
+	ld	r3,45678h(r3)
 
 	; short addresses (offset < 256) currently must be forced:
 
 	ld	r3,40078h
+	ld	r3,40078h(r3)
 	ld	r3,|40078h|
+	ld	r3,|40078h|(r3)
 
 	; <<segment>>offset syntax
 
 	ld	r3,<<4>>5678h
 	ld	r3,<<4>>78h
 	ld	r3,|<<4>>78h|
+	ld	r3,|<<4>>78h|(r4)
 
 	; robust enough against spaces?
 
 	ld	r3, << 4 >> 5678h
 	ld	r3, << 4 >> 78h
 	ld	r3, | << 4 >> 78h |
+	ld	r3, | << 4 >> 78h | (r4)
 
 	; a << or >> operator in the segment part makes things even
 	; more interesting.  Use parentheses to clarify:
 
 	ld	r3,<<10h>>2>>5678h	; results in segment 10h, offset 0
 	ld	r3,<<(10h>>2)>>5678h	; results in segment 4h, offset 5678h
+	ld	r3,<<(10h>>2)>>78h
+	ld	r3,<<(10h>>2)>>78h(r4)
+	ld	r3,|<<(10h>>2)>>78h|(r4)

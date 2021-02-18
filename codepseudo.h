@@ -17,7 +17,9 @@ extern int FindInst(void *Field, int Size, int Count);
 extern Boolean IsIndirectGen(const char *Asc, const char *pBeginEnd);
 extern Boolean IsIndirect(const char *Asc);
 
-extern int FindDispBaseSplit(const char *pArg, int *pArgLen);
+typedef int (*tDispBaseSplitQualifier)(const char *pArg, int StartPos, int SplitPos);
+extern int FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier);
+#define FindDispBaseSplit(pArg, pArgLen) FindDispBaseSplitWithQualifier(pArg, pArgLen, NULL)
 
 extern void CodeEquate(ShortInt DestSeg, LargeInt Min, LargeInt Max);
 

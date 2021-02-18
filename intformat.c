@@ -26,13 +26,32 @@ tIntConstMode IntConstMode;
 Boolean IntConstModeIBMNoTerm, RelaxedMode;
 int RadixBase;
 
-static Boolean ChkIntFormatC(tIntCheckCtx *pCtx, char Ch)
+static Boolean ChkIntFormatCHex(tIntCheckCtx *pCtx, char Ch)
 {
   if ((pCtx->ExprLen > 2)
    && (*pCtx->pExpr == '0')
    && (RadixBase <= Ch - 'A' + 10)
    && (as_toupper(pCtx->pExpr[1]) == Ch))
   {
+    pCtx->pExpr += 2;
+    pCtx->ExprLen -= 2;
+    return True;
+  }
+  return False;
+}
+
+static Boolean ChkIntFormatCBin(tIntCheckCtx *pCtx, char Ch)
+{
+  if ((pCtx->ExprLen > 2)
+   && (*pCtx->pExpr == '0')
+   && (RadixBase <= Ch - 'A' + 10)
+   && (as_toupper(pCtx->pExpr[1]) == Ch))
+  {
+    const char *pRun;
+
+    for (pRun = pCtx->pExpr + 2; pRun < pCtx->pExpr + pCtx->ExprLen; pRun++)
+      if (DigitVal(*pRun, 2) < 0)
+        return False;
     pCtx->pExpr += 2;
     pCtx->ExprLen -= 2;
     return True;
@@ -95,7 +114,7 @@ static Boolean ChkIntFormatCOct(tIntCheckCtx *pCtx, char Ch)
    || (*pCtx->pExpr != '0'))
     return False;
   for (pRun = pCtx->pExpr + 1; pRun < pCtx->pExpr + pCtx->ExprLen; pRun++)
-    if ((*pRun == '8') || (*pRun == '9'))
+    if (DigitVal(*pRun, 8) < 0)
       return False;
   return True;
 }
@@ -123,8 +142,8 @@ static Boolean ChkIntFormatDef(tIntCheckCtx *pCtx, char Ch)
 
 static const tIntFormatList IntFormatList_All[] =
 {
-  { ChkIntFormatC     , eIntFormatCHex,    16, 'X', "0xhex"  },
-  { ChkIntFormatC     , eIntFormatCBin,     2, 'B', "0bbin"  },
+  { ChkIntFormatCHex  , eIntFormatCHex,    16, 'X', "0xhex"  },
+  { ChkIntFormatCBin  , eIntFormatCBin,     2, 'B', "0bbin"  },
   { ChkIntFormatMot   , eIntFormatMotHex,  16, '$', "$hex"   },
   { ChkIntFormatMot   , eIntFormatMotBin,   2, '%', "%bin"   },
   { ChkIntFormatMot   , eIntFormatMotOct,   8, '@', "@oct"   },
@@ -366,6 +385,6 @@ tIntFormatId GetIntFormatId(const char *pIdent)
   const tIntFormatList *pList;
   for (pList = IntFormatList_All; pList->Check; pList++)
    if (!as_strcasecmp(pIdent, pList->Ident))
-     return pList->Id;
+     return (tIntFormatId)pList->Id;
   return eIntFormatNone;
 }

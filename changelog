@@ -1,3 +1,8 @@
+2021-02-18 [1.42 Bld 195]
+
+- Bugfix      : Avoid identifying 0B....H as C-style binary in relaxed mode
+- Bugfix      : correct indexed addressing mode with short base for Z8000
+
 2021-02-15 [1.42 Bld 194]
 
 - Bugfix      : fix SAVE/RESTORE instructions

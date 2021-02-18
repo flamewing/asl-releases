@@ -69,14 +69,15 @@ Boolean IsIndirect(const char *Asc)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FindDispBaseSplit(const char *pArg, int *pArgLen)
+ * \fn     FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier)
  * \brief  check for argument of type xxx(yyyy)
  * \param  pArg argument to check
  * \param  pArgLen returns argument length
+ * \param  Qualifier possible qualifier to allow more positive decisions
  * \return index to opening parenthese or -1 if not like pattern
  * ------------------------------------------------------------------------ */
 
-int FindDispBaseSplit(const char *pArg, int *pArgLen)
+int FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier)
 {
   int Nest = 0, Start, SplitPos = -1;
   Boolean InSgl = False, InDbl = False;
@@ -118,8 +119,10 @@ int FindDispBaseSplit(const char *pArg, int *pArgLen)
     else if (SplitPos >= 0)
     {
       if (as_isspace(pArg[Start])); /* delay decision to to next non-blank */
+      else if (as_isalnum(pArg[Start]) || (pArg[Start] == ')') || (pArg[Start] == '\'') || (pArg[Start] == '"'))
+        return SplitPos;
       else
-        return (as_isalnum(pArg[Start]) || (pArg[Start] == ')') || (pArg[Start] == '\'') || (pArg[Start] == '"')) ? SplitPos : -1;
+        return Qualifier ? Qualifier(pArg, Start, SplitPos) : -1;
     }
   }
   return -1;
