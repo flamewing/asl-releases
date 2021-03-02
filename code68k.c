@@ -2329,11 +2329,15 @@ static void DecodeShift(Word Index)
   }
 }
 
-/* ADDQ=0 SUBQ=1 */
+/*!------------------------------------------------------------------------
+ * \fn     DecodeADDQSUBQ(Word Index)
+ * \brief  Handle ADDQ/SUBQ Instructions
+ * \param  Index ADDQ=0 SUBQ=1
+ * ------------------------------------------------------------------------ */
 
 static void DecodeADDQSUBQ(Word Index)
 {
-  Byte HVal8;
+  LongWord ImmVal;
   Boolean ValOK;
   tSymbolFlags Flags;
   tAdrResult AdrResult;
@@ -2355,16 +2359,19 @@ static void DecodeADDQSUBQ(Word Index)
 
   WAsmCode[0] = 0x5000 | AdrResult.Mode | (OpSize << 6) | (Index << 8);
   CopyAdrVals(WAsmCode + 1, &AdrResult);
-  HVal8 = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '#'), UInt4, &ValOK, &Flags);
-  if (mFirstPassUnknown(Flags)) HVal8 = 1;
-  if (!ValOK && ((HVal8 < 1) | (HVal8 > 8)))
+  ImmVal = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], !!(*ArgStr[1].Str == '#'), UInt32, &ValOK, &Flags);
+  if (mFirstPassUnknownOrQuestionable(Flags))
+    ImmVal = 1;
+  if (ValOK && ((ImmVal < 1) || (ImmVal > 8)))
   {
     WrError(ErrNum_Range18);
-    return;
+    ValOK = False;
   }
-
-  CodeLen = 2 + AdrResult.Cnt;
-  WAsmCode[0] |= (((Word) HVal8 & 7) << 9);
+  if (ValOK)
+  {
+    CodeLen = 2 + AdrResult.Cnt;
+    WAsmCode[0] |= (ImmVal & 7) << 9;
+  }
 }
 
 /* 0=SUBX 1=ADDX */
