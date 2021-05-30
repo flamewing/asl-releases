@@ -1,0 +1,48 @@
+# -------------------------------------------------------------------------
+# autodetect 32- vs 64-bit prefixes and set flags for compiler
+
+ifneq (,$(findstring /mingw64,$(MSYSTEM_PREFIX)))
+	ARCHFLAGS:=-m64
+else
+	ARCHFLAGS:=-m32
+endif
+
+# -------------------------------------------------------------------------
+# We can freely use -O3 in msys2
+CC = gcc
+OBJDIR =
+CFLAGS = -O3 -Wall -Wno-parentheses -Wno-sign-compare $(ARCHFLAGS) -mconsole
+HOST_OBJEXTENSION = .o
+LD = $(CC)
+LDFLAGS =$(ARCHFLAGS) -mconsole
+HOST_EXEXTENSION = .exe
+
+TARG_CC = $(CC)
+TARG_OBJDIR = $(OBJDIR)
+TARG_CFLAGS = $(CFLAGS)
+TARG_OBJEXTENSION = .o
+TARG_LD = $(LD)
+TARG_LDFLAGS = $(LDFLAGS)
+TARG_EXEXTENSION = $(HOST_EXEXTENSION)
+
+# -------------------------------------------------------------------------
+# directories where binaries, includes, and manpages should go during
+# installation
+
+BINDIR = $(MSYSTEM_PREFIX)/bin
+INCDIR = $(MSYSTEM_PREFIX)/include/asl
+MANDIR = $(MSYSTEM_PREFIX)/man
+LIBDIR = $(MSYSTEM_PREFIX)/lib/asl
+DOCDIR = $(MSYSTEM_PREFIX)/doc/asl
+
+asw.exe: asl.exe
+	cp asl.exe asw.exe
+
+# -------------------------------------------------------------------------
+# character encoding to use (choose one of them)
+
+# CHARSET = CHARSET_ASCII7
+# CHARSET = CHARSET_IBM437
+#CHARSET = CHARSET_IBM850
+ CHARSET = CHARSET_ISO8859_1
+
