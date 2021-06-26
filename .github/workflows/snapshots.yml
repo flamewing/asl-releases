@@ -147,7 +147,7 @@ jobs:
           make binaries -j2
       - name: Create package
         run: |
-          "${{ matrix.p7zip }}" -tzip a ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,asl,asw,mkdepend,p2bin,p2hex,pbind,plist,rescomp}.${{ matrix.exe_ext }}
+          "${{ matrix.p7zip }}" -tzip a ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,asl,asw,mkdepend,p2bin,p2hex,pbind,plist,rescomp}${{ matrix.exe_ext }}
       - name: VirusTotal Scan
         id: scan_files
         uses: crazy-max/ghaction-virustotal@v2
