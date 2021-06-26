@@ -949,9 +949,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
   /* some insns decode the same arg twice, so we must keep the original string intact. */
 
   StrCompMkTemp(&Arg, ArgStr);
-  StrCompCopy(&Arg, pArg);
-  KillPrefBlanksStrComp(&Arg);
-  KillPostBlanksStrComp(&Arg);
+  StrCompCopyNoBlanks(&Arg, pArg);
   ArgLen = strlen(Arg.Str);
   ClrAdrVals(pResult);
 

@@ -106,6 +106,32 @@ void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, unsigned Start, unsig
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     StrCompCopyNoBlanks(tStrComp *pDest, tStrComp *pSrc)
+ * \brief  copy string component without any blanks
+ * \param  pDest destination component
+ * \param  pSrc source component
+ * ------------------------------------------------------------------------ */
+
+void StrCompCopyNoBlanks(tStrComp *pDest, const tStrComp *pSrc)
+{
+  char ch;
+  char *src = pSrc->Str;
+  char *dst = pDest->Str;
+  while ((ch = *src) != '\0')
+  {
+    if (isspace((unsigned char)ch))
+    {
+      src++;
+    }
+    else
+    {
+      *dst++ = *src++;
+    }
+  }
+  *dst = '\0';
+}
+
+/*!------------------------------------------------------------------------
  * \fn     StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
  * \brief  split off another component at the right of the source
  * \param  pSrc source to split off
