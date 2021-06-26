@@ -33,9 +33,9 @@ jobs:
             fi
           fi
           build_id="v1.4.2.$(date --utc +'%Y%m%d')"
-          tag_name="snapshot-${{ steps.activity.output.build_id }}"
+          tag_name="snapshot-${build_id}"
           echo "::set-output name=build_id::${build_id}"
-          echo "::set-output name=tag_name::snapshot-${tag_name}"
+          echo "::set-output name=tag_name::${tag_name}"
       - name: Create release
         if: ${{ steps.activity.output.REPO_ALIVE == 'true' }}
         id: create_release
@@ -65,7 +65,7 @@ jobs:
         include:
           - architecture: linux32
             os: ubuntu-latest
-            deffile: Makefile.def-samples/Makefile.def-unknown-linux
+            deffile: Makefile.def-unknown-linux
             shell: bash
             arch: i686
             package: asl-ubuntu-i686
@@ -73,7 +73,7 @@ jobs:
             exe_ext: ""
           - architecture: linux64
             os: ubuntu-latest
-            deffile: Makefile.def-samples/Makefile.def-x86_64-unknown-linux
+            deffile: Makefile.def-x86_64-unknown-linux
             shell: bash
             arch: x86_64
             package: asl-ubuntu-x86_64
@@ -81,7 +81,7 @@ jobs:
             exe_ext: ""
           - architecture: macos32
             os: macos-latest
-            deffile: Makefile.def-samples/Makefile.def-i386-osx
+            deffile: Makefile.def-i386-osx
             shell: bash
             arch: i686
             package: asl-osx-i686
@@ -89,7 +89,7 @@ jobs:
             exe_ext: ""
           - architecture: macos64
             os: macos-latest
-            deffile: Makefile.def-samples/Makefile.def-x86_64-osx
+            deffile: Makefile.def-x86_64-osx
             shell: bash
             arch: x86_64
             package: asl-osx-x86_64
@@ -97,7 +97,7 @@ jobs:
             exe_ext: ""
           - architecture: win32
             os: windows-latest
-            deffile: Makefile.def-samples/Makefile.def-multiarch-msys2-win32
+            deffile: Makefile.def-multiarch-msys2-win32
             shell: msys2
             msystem: MINGW32
             arch: i686
@@ -106,7 +106,7 @@ jobs:
             exe_ext: ".exe"
           - architecture: win64
             os: windows-latest
-            deffile: Makefile.def-samples/Makefile.def-multiarch-msys2-win32
+            deffile: Makefile.def-multiarch-msys2-win32
             shell: msys2
             msystem: MINGW64
             arch: x86_64
