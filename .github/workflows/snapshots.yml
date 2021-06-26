@@ -125,6 +125,7 @@ jobs:
           # sudo apt-fast install -y
       - name: Install dependencies (Mac OS)
         if: ${{ matrix.architecture.os == macos32 || matrix.architecture.os == macos64 }}
+        run: |
           brew install make
           # TODO: Figure out packages for building documentation.
       - name: Install dependencies (Windows)
