@@ -1,0 +1,58 @@
+name: ci-macos
+
+on:
+  push:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-macos.yml'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-macos.yml'
+
+jobs:
+  ci-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install make
+          # TODO: Figure out packages for building documentation.
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Configure
+        run: |
+          cp Makefile.def-samples/Makefile.def-x86_64-osx ./Makefile.def
+      - name: Build
+        run: |
+          make binaries -j2

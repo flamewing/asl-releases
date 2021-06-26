@@ -1,0 +1,76 @@
+name: ci-windows
+
+on:
+  push:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-windows.yml'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-windows.yml'
+
+jobs:
+  ci-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        # generator: [make, msys, vs2019]
+        architecture: [i686, x86_64]
+        include:
+          - architecture: i686
+            msystem: MINGW32
+            arch: i686
+          - architecture: x86_64
+            msystem: MINGW64
+            arch: x86_64
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Install dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          install:
+            base-devel git
+            mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
+            # TODO: Figure out packages for building documentation.
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Configure
+        run: |
+          cp Makefile.def-samples/Makefile.def-multiarch-msys2-win32 ./Makefile.def
+      - name: Build
+        run: |
+          make binaries -j2

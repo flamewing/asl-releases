@@ -1,0 +1,59 @@
+name: ci-linux
+
+on:
+  push:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-linux.yml'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-linux.yml'
+
+jobs:
+  ci-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-fast update
+          # TODO: Figure out packages for building documentation.
+          # sudo apt-fast install -y
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Configure
+        run: |
+          cp Makefile.def-samples/Makefile.def-x86_64-unknown-linux ./Makefile.def
+      - name: Build
+        run: |
+          make binaries -j2
