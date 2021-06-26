@@ -74,3 +74,6 @@ jobs:
       - name: Build
         run: |
           make binaries -j2
+      - name: Test
+        run: |
+          make test -j2
