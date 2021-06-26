@@ -4,10 +4,10 @@
 
 OBJDIR =
 CC = gcc
-CFLAGS = -O3 -fomit-frame-pointer -Wall -arch x86_64
+CFLAGS = -O3 -fomit-frame-pointer -Wall -m64
 HOST_OBJEXTENSION = .o
 LD = gcc
-LDFLAGS = -arch x86_64
+LDFLAGS =
 HOST_EXEXTENSION =
 
 # no cross build
