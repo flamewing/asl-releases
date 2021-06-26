@@ -156,15 +156,6 @@ jobs:
             cp asl${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
           fi
           "${{ matrix.p7zip }}" -tzip a ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,mkdepend,p2bin,p2hex,pbind,plist,rescomp}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
-      - name: VirusTotal Scan
-        id: scan_files
-        uses: crazy-max/ghaction-virustotal@v2
-        with:
-          vt_api_key: ${{ secrets.VT_API_KEY }}
-          github_token: ${{ github.token }}
-          update_release_body: true
-          files: |
-            ${{ env.SNAPSHOT_PATH }}/${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
       - name: Upload snapshot
         uses: actions/upload-release-asset@v1
         env:
