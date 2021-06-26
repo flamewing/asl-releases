@@ -118,18 +118,18 @@ jobs:
         shell: ${{ matrix.architecture.shell }} {0}
     steps:
       - name: Install dependencies (Linux)
-        if: ${{ matrix.architecture.os == linux32 || matrix.architecture.os == linux64 }}
+        if: ${{ matrix.architecture.os == "linux32" || matrix.architecture.os == "linux64" }}
         run: |
           sudo apt-fast update
           # TODO: Figure out packages for building documentation.
           # sudo apt-fast install -y
       - name: Install dependencies (Mac OS)
-        if: ${{ matrix.architecture.os == macos32 || matrix.architecture.os == macos64 }}
+        if: ${{ matrix.architecture.os == "macos32" || matrix.architecture.os == "macos64" }}
         run: |
           brew install make
           # TODO: Figure out packages for building documentation.
       - name: Install dependencies (Windows)
-        if: ${{ matrix.architecture.os == win32 || matrix.architecture.os == win64 }}
+        if: ${{ matrix.architecture.os == "win32" || matrix.architecture.os == "win64" }}
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW32
