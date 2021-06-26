@@ -52,7 +52,7 @@ jobs:
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
-    runs-on: ${{ matrix.arch.os }}
+    runs-on: ${{ matrix.architecture.os }}
     strategy:
       matrix:
         architecture:
@@ -187,5 +187,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          id: ${{ needs.activity-check.outputs.release_id }}
+          release_id: ${{ needs.activity-check.outputs.release_id }}
           tag: ${{ needs.activity-check.outputs.tag_name }}
