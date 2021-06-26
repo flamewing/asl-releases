@@ -56,21 +56,21 @@ jobs:
     strategy:
       matrix:
         architecture:
-          - linux32
+          # - linux32
           - linux64
-          - macos32
+          # - macos32
           - macos64
           - win32
           - win64
         include:
-          - architecture: linux32
-            os: ubuntu-latest
-            deffile: Makefile.def-unknown-linux
-            shell: bash
-            arch: i686
-            package: asl-ubuntu-i686
-            p7zip: 7z
-            exe_ext: ""
+          # - architecture: linux32
+          #   os: ubuntu-latest
+          #   deffile: Makefile.def-unknown-linux
+          #   shell: bash
+          #   arch: i686
+          #   package: asl-ubuntu-i686
+          #   p7zip: 7z
+          #   exe_ext: ""
           - architecture: linux64
             os: ubuntu-latest
             deffile: Makefile.def-x86_64-unknown-linux
@@ -79,14 +79,14 @@ jobs:
             package: asl-ubuntu-x86_64
             p7zip: 7z
             exe_ext: ""
-          - architecture: macos32
-            os: macos-latest
-            deffile: Makefile.def-i386-osx
-            shell: bash
-            arch: i686
-            package: asl-osx-i686
-            p7zip: 7z
-            exe_ext: ""
+          # - architecture: macos32
+          #   os: macos-latest
+          #   deffile: Makefile.def-i386-osx
+          #   shell: bash
+          #   arch: i686
+          #   package: asl-osx-i686
+          #   p7zip: 7z
+          #   exe_ext: ""
           - architecture: macos64
             os: macos-latest
             deffile: Makefile.def-x86_64-osx
