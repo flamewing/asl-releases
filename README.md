@@ -20,11 +20,9 @@ derived from imported vendor commits on `upstream`.
 
 - `master`: The import script and its documentation.
 - `upstream`: Imported ASL source code for each release.
-- `dev/cjs/current`: A recent version tested to build on Linux and
-  assemble a small amount of 6502 and 6909 code. The build and test
-  framework is in cjs's [8bitdev] repo.
-- `dev/NAME/...`: Branches for development, testing, and patches for
-  particular versions of ASL.
+- `dev/flamweing/current`: A recent version tested to build on msys2 and
+  assemble [S2 Disassembly (slightly tweaked)](https://github.com/sonicretro/s2disasm), Sonic Classic Heroes, and Big's Fishing Derby.
+- `dev/NAME/...`: Branches from [Macroassembler-AS/asl-releases](https://github.com/Macroassembler-AS/asl-releases)
 
 
 Importing New ASL Releases
