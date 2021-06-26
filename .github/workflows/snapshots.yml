@@ -32,12 +32,14 @@ jobs:
               REPO_ALIVE=true
             fi
           fi
-          echo REPO_ALIVE=true >> $GITHUB_ENV
-          echo "::set-output name=REPO_ALIVE::${REPO_ALIVE}"
           build_id="v1.4.2.$(date --utc +'%Y%m%d')"
           tag_name="snapshot-${build_id}"
+          echo "::set-output name=REPO_ALIVE::${REPO_ALIVE}"
           echo "::set-output name=build_id::${build_id}"
           echo "::set-output name=tag_name::${tag_name}"
+          echo REPO_ALIVE=true >> $GITHUB_ENV
+          echo BUILD_ID="${build_id}" >> $GITHUB_ENV
+          echo TAG_NAME="${tag_name}" >> $GITHUB_ENV
       - name: Create release
         if: ${{ env.REPO_ALIVE == 'true' }}
         id: create_release
@@ -45,8 +47,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: snapshot-${{ steps.activity.output.tag_name }}
-          release_name: Snapshot ${{ steps.activity.output.build_id }}
+          tag_name: snapshot-${{ env.TAG_NAME }}
+          release_name: Snapshot ${{ env.BUILD_ID }}
           draft: true
           prerelease: false
 
