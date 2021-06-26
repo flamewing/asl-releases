@@ -24,20 +24,22 @@ jobs:
           TIMESTAMP=$(date --utc -d "$DATEUTC" +%s)
           DAYS=$(( ($(date --utc +%s) - $TIMESTAMP) / 86400 ))
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "::set-output name=REPO_ALIVE::true"
+            REPO_ALIVE=true
           else
             if [ $DAYS -gt 0 ]; then
-              echo "::set-output name=REPO_ALIVE::false"
+              REPO_ALIVE=false
             else
-              echo "::set-output name=REPO_ALIVE::true"
+              REPO_ALIVE=true
             fi
           fi
+          echo REPO_ALIVE=true >> $GITHUB_ENV
+          echo "::set-output name=REPO_ALIVE::${REPO_ALIVE}"
           build_id="v1.4.2.$(date --utc +'%Y%m%d')"
           tag_name="snapshot-${build_id}"
           echo "::set-output name=build_id::${build_id}"
           echo "::set-output name=tag_name::${tag_name}"
       - name: Create release
-        if: ${{ steps.activity.output.REPO_ALIVE == 'true' }}
+        if: ${{ env.REPO_ALIVE == 'true' }}
         id: create_release
         uses: actions/create-release@v1
         env:
