@@ -12,9 +12,9 @@ jobs:
     outputs:
       REPO_ALIVE: ${{ steps.activity.outputs.REPO_ALIVE }}
       build_id: ${{ steps.activity.outputs.build_id }}
+      tag_name: ${{ steps.activity.outputs.tag_name }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       release_id: ${{ steps.create_release.outputs.id }}
-      tag_name: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Activity check
         id: activity
@@ -52,7 +52,7 @@ jobs:
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
-    runs-on: ${{ matrix.architecture.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         architecture:
@@ -115,7 +115,7 @@ jobs:
             exe_ext: ".exe"
     defaults:
       run:
-        shell: ${{ matrix.architecture.shell }} {0}
+        shell: ${{ matrix.shell }} {0}
     steps:
       - name: Install dependencies (Linux)
         if: ${{ matrix.architecture == 'linux32' || matrix.architecture == 'linux64' }}
@@ -135,19 +135,19 @@ jobs:
           msystem: MINGW32
           install:
             base-devel git
-            mingw-w64-${{ matrix.architecture.arch }}-toolchain mingw-w64-${{ matrix.architecture.arch }}-binutils
+            mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
             # TODO: Figure out packages for building documentation.
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cp Makefile.def-samples/${{ matrix.architecture.deffile }} ./Makefile.def
+          cp Makefile.def-samples/${{ matrix.deffile }} ./Makefile.def
       - name: Build
         run: |
           make binaries -j2
       - name: Create package
         run: |
-          "${{ matrix.architecture.p7zip }}" -tzip a ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,asl,asw,mkdepend,p2bin,p2hex,pbind,plist,rescomp}.${{ matrix.architecture.exe_ext }}
+          "${{ matrix.p7zip }}" -tzip a ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,asl,asw,mkdepend,p2bin,p2hex,pbind,plist,rescomp}.${{ matrix.exe_ext }}
       - name: VirusTotal Scan
         id: scan_files
         uses: crazy-max/ghaction-virustotal@v2
@@ -156,15 +156,15 @@ jobs:
           github_token: ${{ github.token }}
           update_release_body: true
           files: |
-            ${{ env.SNAPSHOT_PATH }}/${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+            ${{ env.SNAPSHOT_PATH }}/${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
       - name: Upload snapshot
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.activity-check.outputs.upload_url }}
-          asset_path: ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
-          asset_name: ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_name: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
           asset_content_type: application/zip
 
   finish-release:
