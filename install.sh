@@ -36,13 +36,17 @@ if [ "${BINPATH}" != "" ]; then
    chmod 755 ${BINPATH}/$i${TARG_EXEXTENSION}
   fi
  done
- if test "${TARG_EXEXTENSION}" = ".exe"; then
-  mv ${BINPATH}/asl${TARG_EXEXTENSION} ${BINPATH}/asw${TARG_EXEXTENSION}
+ if test "${MSYSTEM_PREFIX}" == ""; then
+  if test "${TARG_EXEXTENSION}" = ".exe"; then
+   mv ${BINPATH}/asl${TARG_EXEXTENSION} ${BINPATH}/asw${TARG_EXEXTENSION}
+  fi
  fi
 fi
 
 if test "${TARG_EXEXTENSION}" = ".exe"; then
-  if test "${OBJDIR}" = ""; then
+  if test "${MSYSTEM_PREFIX}" != ""; then
+    CPINC=cp
+  elif test "${OBJDIR}" = ""; then
     CPINC=./unumlaut
   else
     CPINC=${OBJDIR}unumlaut
