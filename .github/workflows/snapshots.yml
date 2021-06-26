@@ -1,0 +1,190 @@
+name: snapshots
+
+on:
+  schedule:
+    - cron: "0 01 * * *" # Daily at 01:00 UTC
+  workflow_dispatch:
+
+jobs:
+  activity-check:
+    if: ${{ github.repository_owner == 'flamewing' }}
+    runs-on: "ubuntu-latest"
+    outputs:
+      REPO_ALIVE: ${{ steps.activity.outputs.REPO_ALIVE }}
+      build_id: ${{ steps.activity.outputs.build_id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+      tag_name: ${{ steps.create_release.outputs.id }}
+    steps:
+      - name: Activity check
+        id: activity
+        shell: bash
+        run: |
+          DATEUTC=$(curl -sL https://api.github.com/repos/flamewing/asl-releases/commits | jq -r '[.[]][0]' | jq -r '.commit.committer.date')
+          TIMESTAMP=$(date --utc -d "$DATEUTC" +%s)
+          DAYS=$(( ($(date --utc +%s) - $TIMESTAMP) / 86400 ))
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "::set-output name=REPO_ALIVE::true"
+          else
+            if [ $DAYS -gt 0 ]; then
+              echo "::set-output name=REPO_ALIVE::false"
+            else
+              echo "::set-output name=REPO_ALIVE::true"
+            fi
+          fi
+          build_id="v1.4.2.$(date --utc +'%Y%m%d')"
+          tag_name="snapshot-${{ steps.activity.output.build_id }}"
+          echo "::set-output name=build_id::${build_id}"
+          echo "::set-output name=tag_name::snapshot-${tag_name}"
+      - name: Create release
+        if: ${{ steps.activity.output.REPO_ALIVE == 'true' }}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: snapshot-${{ steps.activity.output.tag_name }}
+          release_name: Snapshot ${{ steps.activity.output.build_id }}
+          draft: true
+          prerelease: false
+
+  snapshots:
+    needs:
+      - activity-check
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    runs-on: ${{ matrix.arch.os }}
+    strategy:
+      matrix:
+        architecture:
+          - linux32
+          - linux64
+          - macos32
+          - macos64
+          - win32
+          - win64
+        include:
+          - architecture: linux32
+            os: ubuntu-latest
+            deffile: Makefile.def-samples/Makefile.def-unknown-linux
+            shell: bash
+            arch: i686
+            package: asl-ubuntu-i686
+            p7zip: 7z
+            exe_ext: ""
+          - architecture: linux64
+            os: ubuntu-latest
+            deffile: Makefile.def-samples/Makefile.def-x86_64-unknown-linux
+            shell: bash
+            arch: x86_64
+            package: asl-ubuntu-x86_64
+            p7zip: 7z
+            exe_ext: ""
+          - architecture: macos32
+            os: macos-latest
+            deffile: Makefile.def-samples/Makefile.def-i386-osx
+            shell: bash
+            arch: i686
+            package: asl-osx-i686
+            p7zip: 7z
+            exe_ext: ""
+          - architecture: macos64
+            os: macos-latest
+            deffile: Makefile.def-samples/Makefile.def-x86_64-osx
+            shell: bash
+            arch: x86_64
+            package: asl-osx-x86_64
+            p7zip: 7z
+            exe_ext: ""
+          - architecture: win32
+            os: windows-latest
+            deffile: Makefile.def-samples/Makefile.def-multiarch-msys2-win32
+            shell: msys2
+            msystem: MINGW32
+            arch: i686
+            package: asl-windows-i686
+            p7zip: "/c/Program Files/7-Zip/7z.exe"
+            exe_ext: ".exe"
+          - architecture: win64
+            os: windows-latest
+            deffile: Makefile.def-samples/Makefile.def-multiarch-msys2-win32
+            shell: msys2
+            msystem: MINGW64
+            arch: x86_64
+            package: asl-windows-x86_64
+            p7zip: "/c/Program Files/7-Zip/7z.exe"
+            exe_ext: ".exe"
+    defaults:
+      run:
+        shell: ${{ matrix.architecture.shell }} {0}
+    steps:
+      - name: Install dependencies (Linux)
+        if: ${{ matrix.architecture.os == linux32 || matrix.architecture.os == linux64 }}
+        run: |
+          sudo apt-fast update
+          # TODO: Figure out packages for building documentation.
+          # sudo apt-fast install -y
+      - name: Install dependencies (Mac OS)
+        if: ${{ matrix.architecture.os == macos32 || matrix.architecture.os == macos64 }}
+          brew install make
+          # TODO: Figure out packages for building documentation.
+      - name: Install dependencies (Windows)
+        if: ${{ matrix.architecture.os == win32 || matrix.architecture.os == win64 }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW32
+          install:
+            base-devel git
+            mingw-w64-${{ matrix.architecture.arch }}-toolchain mingw-w64-${{ matrix.architecture.arch }}-binutils
+            # TODO: Figure out packages for building documentation.
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Configure
+        run: |
+          cp Makefile.def-samples/${{ matrix.architecture.deffile }} ./Makefile.def
+      - name: Build
+        run: |
+          make binaries -j2
+      - name: Create package
+        run: |
+          "${{ matrix.architecture.p7zip }}" -tzip a ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,asl,asw,mkdepend,p2bin,p2hex,pbind,plist,rescomp}.${{ matrix.architecture.exe_ext }}
+      - name: VirusTotal Scan
+        id: scan_files
+        uses: crazy-max/ghaction-virustotal@v2
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          github_token: ${{ github.token }}
+          update_release_body: true
+          files: |
+            ${{ env.SNAPSHOT_PATH }}/${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+      - name: Upload snapshot
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.activity-check.outputs.upload_url }}
+          asset_path: ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_name: ${{ matrix.architecture.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_content_type: application/zip
+
+  finish-release:
+    needs:
+      - activity-check
+      - snapshots
+    if: ${{ always() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Finish release
+        if: needs.snapshots.result == 'success'
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ needs.activity-check.outputs.release_id }}
+      - name: Rollback release
+        if: needs.snapshots.result != 'success'
+        uses: author/action-rollback@stable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          id: ${{ needs.activity-check.outputs.release_id }}
+          tag: ${{ needs.activity-check.outputs.tag_name }}
