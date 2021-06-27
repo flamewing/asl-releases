@@ -16,3 +16,8 @@
 *.ps
 *.rsc
 *.toc
+
+testlog
+Makefile.def
+
+.vscode/*
