@@ -112,22 +112,51 @@ void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, unsigned Start, unsig
  * \param  pSrc source component
  * ------------------------------------------------------------------------ */
 
+static Boolean IsIdentifierFragment(char ch)
+{
+  return (ch == '.'
+       || ch == '_'
+       || isalnum((unsigned char)ch));
+}
+
 void StrCompCopyNoBlanks(tStrComp *pDest, const tStrComp *pSrc)
 {
   char ch;
-  char *src = pSrc->Str;
+  char lastnonblank;
+  const char *src = pSrc->Str;
   char *dst = pDest->Str;
-  while ((ch = *src) != '\0')
-  {
-    if (isspace((unsigned char)ch))
+  // Sane initial value
+  lastnonblank = '\0';
+  do {
+    // Find first nonblank
+    while ((ch = *src++) != '\0' && isspace((unsigned char)ch))
     {
-      src++;
+      // Do nothing
     }
-    else
+    if (ch == '\0')
     {
-      *dst++ = *src++;
+      break;
     }
-  }
+    if (lastnonblank != '\0' && IsIdentifierFragment(ch) && IsIdentifierFragment(lastnonblank))
+    {
+      // Need a blank to prevent merging identifiers
+      *dst++ = ' ';
+    }
+    *dst++ = lastnonblank = ch;
+    // Copy consecutive nonblanks
+    while ((ch = *src++) != '\0' && !isspace((unsigned char)ch))
+    {
+        *dst++ = lastnonblank = ch;
+    }
+    if (ch == '\0')
+    {
+      break;
+    }
+    if (!isspace((unsigned char)ch))
+    {
+      lastnonblank = ch;
+    }
+  } while (1);
   *dst = '\0';
 }
 
