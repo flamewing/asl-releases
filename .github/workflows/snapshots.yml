@@ -60,22 +60,23 @@ jobs:
     strategy:
       matrix:
         architecture:
-          # - linux32
+          - linux32
           - linux64
           # - macos32
           - macos64
           - win32
           - win64
         include:
-          # - architecture: linux32
-          #   os: ubuntu-latest
-          #   deffile: Makefile.def-unknown-linux
-          #   shell: bash
-          #   arch: i686
-          #   package: asl-ubuntu-i686
-          #   p7zip: 7z
-          #   exe_ext: ""
-          #   as: asl
+          - architecture: linux32
+            os: ubuntu-latest
+            deffile: Makefile.def-unknown-linux
+            shell: bash
+            arch: i686
+            package: asl-ubuntu-i686
+            p7zip: 7z
+            exe_ext: ""
+            as: asl
+            depends: "gcc-multilib"
           - architecture: linux64
             os: ubuntu-latest
             deffile: Makefile.def-x86_64-unknown-linux
@@ -85,6 +86,7 @@ jobs:
             p7zip: 7z
             exe_ext: ""
             as: asl
+            depends: ""
           # - architecture: macos32
           #   os: macos-latest
           #   deffile: Makefile.def-i386-osx
@@ -93,6 +95,7 @@ jobs:
           #   package: asl-osx-i686
           #   p7zip: 7z
           #   exe_ext: ""
+          #   depends: ""
           - architecture: macos64
             os: macos-latest
             deffile: Makefile.def-x86_64-osx
@@ -102,6 +105,7 @@ jobs:
             p7zip: 7z
             exe_ext: ""
             as: asl
+            depends: ""
           - architecture: win32
             os: windows-latest
             deffile: Makefile.def-multiarch-msys2-win32
@@ -112,6 +116,7 @@ jobs:
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
             as: asw
+            depends: ""
           - architecture: win64
             os: windows-latest
             deffile: Makefile.def-multiarch-msys2-win32
@@ -122,6 +127,7 @@ jobs:
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
             as: asw
+            depends: ""
     defaults:
       run:
         shell: ${{ matrix.shell }} {0}
@@ -131,7 +137,7 @@ jobs:
         run: |
           sudo apt-fast update
           # TODO: Figure out packages for building documentation.
-          # sudo apt-fast install -y
+          sudo apt-fast install -y ${{ matrix.depends }}
       - name: Install dependencies (Mac OS)
         if: ${{ matrix.architecture == 'macos32' || matrix.architecture == 'macos64' }}
         run: |
