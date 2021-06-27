@@ -38,6 +38,10 @@ for t in $SUBDIRS; do
    echo "Test $t failed!"
    SUMFAIL=`expr $SUMFAIL + 1`
    echo "$t : failed" >> ../../testlog
+   echo "$t : expected" >> ../../testlog
+   od -tx1 -An $t.ori >> ../../testlog
+   echo "$t : obtained" >> ../../testlog
+   od -tx1 -An $t.bin >> ../../testlog
   fi
   grep assembly $t.log >> ../../testlog
   grep Assemblierzeit $t.log >> ../../testlog
