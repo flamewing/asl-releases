@@ -62,7 +62,7 @@ jobs:
         architecture:
           - linux32
           - linux64
-          # - macos32
+          - macos32
           - macos64
           - win32
           - win64
@@ -87,15 +87,15 @@ jobs:
             exe_ext: ""
             as: asl
             depends: ""
-          # - architecture: macos32
-          #   os: macos-latest
-          #   deffile: Makefile.def-i386-osx
-          #   shell: bash
-          #   arch: i686
-          #   package: asl-osx-i686
-          #   p7zip: 7z
-          #   exe_ext: ""
-          #   depends: ""
+          - architecture: macos32
+            os: macos-latest
+            deffile: Makefile.def-i386-osx
+            shell: bash
+            arch: i686
+            package: asl-osx-i686
+            p7zip: 7z
+            exe_ext: ""
+            depends: ""
           - architecture: macos64
             os: macos-latest
             deffile: Makefile.def-x86_64-osx
