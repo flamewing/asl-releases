@@ -44,6 +44,7 @@ jobs:
   ci-windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         # generator: [make, msys, vs2019]
         architecture: [i686, x86_64]
