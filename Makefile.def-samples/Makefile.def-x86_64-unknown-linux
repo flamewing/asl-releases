@@ -7,7 +7,7 @@ CC = gcc
 CFLAGS = -O3 -fomit-frame-pointer -Wall -m64
 HOST_OBJEXTENSION = .o
 LD = $(CC)
-LDFLAGS =
+LDFLAGS = -m64
 HOST_EXEXTENSION =
 
 # no cross build
