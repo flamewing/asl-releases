@@ -93,8 +93,8 @@ static void ParseCPUArgs(const tStrComp *pArgs, const tCPUArg *pCPUArgs)
       if (OK)
       {
         for (pCPUArg = pCPUArgs; pCPUArg->pName; pCPUArg++)
-        if (!as_strcasecmp(NameComp.Str, pCPUArg->pName))
-          break;
+          if (!as_strcasecmp(NameComp.Str, pCPUArg->pName))
+            break;
         if (!pCPUArg->pName) WrStrErrorPos(ErrNum_UnknownArg, &NameComp);
         else if (ChkRange(VarValue, pCPUArg->Min, pCPUArg->Max))
           *pCPUArg->pValue = VarValue;
@@ -876,7 +876,7 @@ static void CodeCHARSET(Word Index)
               TempResultToInt(&t);
             switch (t.Typ)
             {
-              case TempInt: /* Übersetzungsbereich als Character-Angabe */
+              case TempInt: /* ï¿½bersetzungsbereich als Character-Angabe */
                 if (mFirstPassUnknown(t.Flags))
                   t.Contents.Int &= 255;
                 if (ArgCnt == 2)

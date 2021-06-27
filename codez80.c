@@ -522,18 +522,18 @@ static void DecodeAdr(const tStrComp *pArg)
           }
         }
       }
-     else
-     {
-       AdrInt = EvalStrIntExpression(pArg, Int16, &OK);
-       if (OK)
-       {
-         AdrVals[0] = Lo(AdrInt);
-         AdrVals[1] = Hi(AdrInt);
-         AdrMode = ModImm;
-         AdrCnt=2;
-       }
-     }
-     break;
+      else
+      {
+        AdrInt = EvalStrIntExpression(pArg, Int16, &OK);
+        if (OK)
+        {
+          AdrVals[0] = Lo(AdrInt);
+          AdrVals[1] = Hi(AdrInt);
+          AdrMode = ModImm;
+          AdrCnt=2;
+        }
+      }
+      break;
   }
 }
 

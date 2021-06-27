@@ -4737,7 +4737,7 @@ static void DecodeFDBcc(Word CondCode)
           HVal16 = HVal;
           WAsmCode[2] = HVal16;
           if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) WrError(ErrNum_JmpDistTooBig);
-            else CodeLen = 6;
+          else CodeLen = 6;
         }
       }
     }
