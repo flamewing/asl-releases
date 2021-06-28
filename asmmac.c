@@ -341,12 +341,12 @@ static PMacroRec FoundMacro_FNode(LongInt Handle, char *Part)
   return Result;
 }
 
-Boolean FoundMacro(PMacroRec *Erg)
+Boolean FoundMacroByName(PMacroRec *Erg, StringPtr Name)
 {
   PSaveSection Lauf;
   String Part;
 
-  strmaxcpy(Part, pLOpPart, STRINGSIZE);
+  strmaxcpy(Part, Name, STRINGSIZE);
   if (!CaseSensitive)
     NLS_UpString(Part);
 
@@ -362,6 +362,11 @@ Boolean FoundMacro(PMacroRec *Erg)
     Lauf = Lauf->Next;
   }
   return False;
+}
+
+Boolean FoundMacro(PMacroRec *Erg)
+{
+  return FoundMacroByName(Erg, pLOpPart);
 }
 
 static void ClearMacroList_ClearNode(PTree Tree, void *pData)

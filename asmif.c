@@ -15,8 +15,10 @@
 #include "bpemu.h"
 #include "chunks.h"
 #include "strutil.h"
+#include "stringlists.h"
 #include "errmsg.h"
 #include "asmdef.h"
+#include "asmmac.h"
 #include "asmsub.h"
 #include "asmpars.h"
 
@@ -89,6 +91,7 @@ static void CodeIFDEF(Word Negate)
 {
   LongInt IfExpr;
   Boolean Defined;
+  PMacroRec OneMacro;
 
   ActiveIF = IfAsm;
 
@@ -97,7 +100,7 @@ static void CodeIFDEF(Word Negate)
     IfExpr = 1;
   else
   {
-    Defined = IsSymbolDefined(&ArgStr[1]);
+    Defined = IsSymbolDefined(&ArgStr[1]) || FindFunction(ArgStr[1].Str) || FoundMacroByName(&OneMacro, ArgStr[1].Str);
     if (IfAsm)
       strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
     if (!Negate)

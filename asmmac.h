@@ -104,6 +104,8 @@ extern void Preprocess(void);
 
 extern void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest);
 
+extern Boolean FoundMacroByName(PMacroRec *Erg, StringPtr Name);
+
 extern Boolean FoundMacro(PMacroRec *Erg);
 
 extern void ClearMacroList(void);
