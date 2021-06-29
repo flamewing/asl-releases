@@ -1,4 +1,7 @@
+asflags
+*.bin
 *.o
+*.p
 *.aux
 *.daux
 *.doc
