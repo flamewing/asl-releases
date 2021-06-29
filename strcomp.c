@@ -106,61 +106,6 @@ void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, unsigned Start, unsig
 }
 
 /*!------------------------------------------------------------------------
- * \fn     StrCompCopyNoBlanks(tStrComp *pDest, tStrComp *pSrc)
- * \brief  copy string component without any blanks
- * \param  pDest destination component
- * \param  pSrc source component
- * ------------------------------------------------------------------------ */
-
-static Boolean IsIdentifierFragment(char ch)
-{
-  return (ch == '.'
-       || ch == '_'
-       || isalnum((unsigned char)ch));
-}
-
-void StrCompCopyNoBlanks(tStrComp *pDest, const tStrComp *pSrc)
-{
-  char ch;
-  char lastnonblank;
-  const char *src = pSrc->Str;
-  char *dst = pDest->Str;
-  // Sane initial value
-  lastnonblank = '\0';
-  do {
-    // Find first nonblank
-    while ((ch = *src++) != '\0' && isspace((unsigned char)ch))
-    {
-      // Do nothing
-    }
-    if (ch == '\0')
-    {
-      break;
-    }
-    if (lastnonblank != '\0' && IsIdentifierFragment(ch) && IsIdentifierFragment(lastnonblank))
-    {
-      // Need a blank to prevent merging identifiers
-      *dst++ = ' ';
-    }
-    *dst++ = lastnonblank = ch;
-    // Copy consecutive nonblanks
-    while ((ch = *src++) != '\0' && !isspace((unsigned char)ch))
-    {
-        *dst++ = lastnonblank = ch;
-    }
-    if (ch == '\0')
-    {
-      break;
-    }
-    if (!isspace((unsigned char)ch))
-    {
-      lastnonblank = ch;
-    }
-  } while (1);
-  *dst = '\0';
-}
-
-/*!------------------------------------------------------------------------
  * \fn     StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
  * \brief  split off another component at the right of the source
  * \param  pSrc source to split off

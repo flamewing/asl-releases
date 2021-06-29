@@ -682,6 +682,32 @@ static Boolean SplitSize(tStrComp *pArg, ShortInt *DispLen, unsigned OpSizeMask)
   return True;
 }
 
+static LongInt NextNonBlankAfter(const char *pSrc, LongInt tPos)
+{
+  tPos++;
+  for (; pSrc[tPos]; tPos++)
+  {
+    if (!isspace((unsigned char)pSrc[tPos]))
+    {
+      break;
+    }
+  }
+  return tPos;
+}
+
+static LongInt NextNonBlankBefore(const char *pSrc, LongInt tPos)
+{
+  tPos--;
+  for (; tPos >= 0; tPos--)
+  {
+    if (!isspace((unsigned char)pSrc[tPos]))
+    {
+      break;
+    }
+  }
+  return tPos;
+}
+
 static Boolean ClassComp(AdrComp *C)
 {
   int CompLen = strlen(C->Comp.Str);
@@ -748,13 +774,14 @@ static Boolean ClassComp(AdrComp *C)
           default:
             return False;
         }
-        ScaleOffs += 2;
+        ScaleOffs = NextNonBlankAfter(C->Comp.Str, ScaleOffs+1);
       }
       else
         C->Long = (pCurrCPUProps->Family == eColdfire);
       if ((CompLen > ScaleOffs + 1) && (C->Comp.Str[ScaleOffs] == '*'))
       {
-        switch (C->Comp.Str[ScaleOffs + 1])
+        ScaleOffs = NextNonBlankAfter(C->Comp.Str, ScaleOffs);
+        switch (C->Comp.Str[ScaleOffs])
         {
           case '1':
             C->Scale = 0;
@@ -773,7 +800,7 @@ static Boolean ClassComp(AdrComp *C)
           default:
             return False;
         }
-        ScaleOffs += 2;
+        ScaleOffs = NextNonBlankAfter(C->Comp.Str, ScaleOffs);
       }
       else
         C->Scale = 0;
@@ -917,14 +944,36 @@ static void DecodeAbs(const tStrComp *pArg, ShortInt Size, tAdrResult *pResult)
   }
 }
 
+static char GetMatchingBrace(char token)
+{
+  switch (token)
+  {
+    case '(':
+      return ')';
+    case '[':
+      return ']';
+    case '{':
+      return '}';
+    case ')':
+      return '(';
+    case ']':
+      return '[';
+    case '}':
+      return '{';
+    case '"':
+      return '"';
+    case '\'':
+      return '\'';
+  };
+  return '\0';
+}
+
 static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 {
   Byte i;
   int ArgLen;
   char *p;
   Word rerg;
-  Byte lklamm, rklamm, lastrklamm;
-  Boolean doklamm;
 
   AdrComp AdrComps[3], OneComp;
   Byte CompCnt;
@@ -946,10 +995,20 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
   IntType DispIntType;
   tSymbolSize RegSize;
 
+  /* Some variables for proper parsing of effective addresses */
+  String tokenStack;
+  LongInt locStack = -1;
+  LongInt rParenPos = -1;
+  LongInt lParenPos = -1;
+  LongInt tPos;
+  LongInt wPos;
+
   /* some insns decode the same arg twice, so we must keep the original string intact. */
 
   StrCompMkTemp(&Arg, ArgStr);
-  StrCompCopyNoBlanks(&Arg, pArg);
+  StrCompCopy(&Arg, pArg);
+  KillPrefBlanksStrComp(&Arg);
+  KillPostBlanksStrComp(&Arg);
   ArgLen = strlen(Arg.Str);
   ClrAdrVals(pResult);
 
@@ -1069,7 +1128,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         if (ValOK)
         {
           if (mFirstPassUnknown(pResult->ImmSymFlags))
-           HVal8 = 1;
+            HVal8 = 1;
           ValOK = ChkRange(HVal8, 1, 8);
         }
         if (ValOK)
@@ -1101,11 +1160,87 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
       break;
   }
 
+  /* Address must be one of the following forms:
+    Absolute:
+      addr
+      addr.S
+      (addr)
+      (addr).S
+      (addr.S)
+    Prederement indirect:
+      -(aN)
+    Postincrement indirect:
+      (aN)+
+    Indirect:
+      (aN)
+    Indirect with displacement:
+      expr(aN)
+      (expr,aN)
+    Memory indirect with index:
+      expr(aN,XN.S*SIZE)
+      (expr,aN,XN.S*SIZE)
+    Memory indirect postindexed:
+      ([expr.S,aN],XN.S*SIZE,expr.S)
+    Memory indirect preindexed:
+      ([expr.S,aN,XN.S*SIZE],expr.S)
+    Plus variants with PC instead of aN, and missing some fields
+   */
+
+  Boolean haveBrackets = FALSE;
+  for (tPos = ArgLen - 1; tPos >= 0 && lParenPos == -1; tPos--)
+  {
+    char token = Arg.Str[tPos];
+    switch (token)
+    {
+      case '(':
+      case '[':
+      case '{':
+        if (locStack == -1 || tokenStack[locStack] != GetMatchingBrace(token))
+        {
+          /* Stack underflow or mismatched braces. */
+          goto chk;
+        }
+        /* Pop from stack and store current position */
+        locStack--;
+        if (token == '(' && locStack == -1)
+        {
+          lParenPos = tPos;
+        }
+        break;
+      case ')':
+      case ']':
+      case '}':
+        if (locStack == sizeof(tokenStack)-1)
+        {
+          /* Stack overflow. */
+          goto chk;
+        }
+        /* Push into stack and store current position */
+        if (token == ')' && locStack == -1)
+        {
+          rParenPos = tPos;
+        }
+        haveBrackets = haveBrackets || token == ']';
+        tokenStack[++locStack] = token;
+        break;
+    };
+  }
+
+  if (locStack != -1)
+  {
+    /* Unbalanced parenthesis/square brackets/curly braces */
+    goto chk;
+  }
+
   /* Adressregister indirekt mit Predekrement: */
 
-  if ((ArgLen >= 4) && (*Arg.Str == '-') && (Arg.Str[1] == '(') && (Arg.Str[ArgLen - 1] == ')'))
+  if ((ArgLen >= 4) && (lParenPos != -1) && !haveBrackets
+      && ((tPos = NextNonBlankBefore(Arg.Str, lParenPos)) == 0)
+      && (Arg.Str[tPos] == '-') && (rParenPos == ArgLen - 1))
   {
-    StrCompCopySub(&CRegArg, &Arg, 2, ArgLen - 3);
+    tPos = NextNonBlankAfter(Arg.Str, lParenPos);
+    wPos = NextNonBlankBefore(Arg.Str, rParenPos);
+    StrCompCopySub(&CRegArg, &Arg, tPos, wPos - tPos + 1);
     if ((DecodeReg(&CRegArg, &rerg, False) == eIsReg) && (rerg > 7))
     {
       pResult->Mode = rerg + 24;
@@ -1117,9 +1252,13 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 
   /* Adressregister indirekt mit Postinkrement */
 
-  if ((ArgLen >= 4) && (*Arg.Str == '(') && (Arg.Str[ArgLen - 2] == ')') && (Arg.Str[ArgLen - 1] == '+'))
+  if ((ArgLen >= 4) && (lParenPos == 0) && !haveBrackets
+      && ((tPos = NextNonBlankAfter(Arg.Str, rParenPos)) == ArgLen - 1)
+      && (Arg.Str[tPos] == '+'))
   {
-    StrCompCopySub(&CRegArg, &Arg, 1, ArgLen - 3);
+    tPos = NextNonBlankAfter(Arg.Str, lParenPos);
+    wPos = NextNonBlankBefore(Arg.Str, rParenPos);
+    StrCompCopySub(&CRegArg, &Arg, tPos, wPos - tPos + 1);
     if ((DecodeReg(&CRegArg, &rerg, False) == eIsReg) && (rerg > 7))
     {
       pResult->Mode = rerg + 16;
@@ -1131,59 +1270,80 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 
   /* Unterscheidung direkt<->indirekt: */
 
-  lklamm = 0;
-  rklamm = 0;
-  lastrklamm = 0;
-  doklamm = True;
-  for (p = Arg.Str; *p; p++)
-  {
-    if (*p == '[')
-      doklamm = False;
-    if (*p == ']')
-      doklamm = True;
-    if (doklamm)
-    {
-      if (*p == '(')
-        lklamm++;
-      else if (*p == ')')
-      {
-        rklamm++;
-        lastrklamm = p - Arg.Str;
-      }
-    }
-  }
-
-  if ((lklamm == 1) && (rklamm == 1) && (lastrklamm == ArgLen - 1))
+  if ((lParenPos != -1) && (rParenPos == ArgLen - 1))
   {
     tStrComp OutDisp, IndirComps, Remainder;
     char *pCompSplit;
 
     /* aeusseres Displacement abspalten, Klammern loeschen: */
 
-    p = strchr(Arg.Str, '(');
+    p = Arg.Str + lParenPos;
     *p = '\0';
     StrCompSplitRef(&OutDisp, &IndirComps, &Arg, p);
+    KillPostBlanksStrComp(&OutDisp);
     OutDispLen = -1;
     if (!SplitSize(&OutDisp, &OutDispLen, 7))
       return ModNone;
     StrCompShorten(&IndirComps, 1);
+    KillPostBlanksStrComp(&IndirComps);
+    KillPrefBlanksStrComp(&IndirComps);
+
+    /* Special case for function call without parenthesis */
+    if (FindFunction(OutDisp.Str))
+    {
+      *p = '(';
+      Arg.Str[rParenPos] = ')';
+      Arg.Pos.Len++;
+      if (!SplitSize(&Arg, &OutDispLen, 6))
+        return ModNone;
+      DecodeAbs(&Arg, OutDispLen, pResult);
+      goto chk;
+    }
 
     /* in Komponenten zerteilen: */
+    /* In here, any parenthesis, square brackets, and curly braces found will balance
+      out because they have been checked before.
+      Also, all parnthesis will mean expressions or function calls.
+      So we need to split into comma-separated arguments within square brackets,
+      and comma-separated arguments outside square brackets, but not comma separated
+      arguments within parenthesis or curly braces. */
 
     CompCnt = 0;
     do
     {
-      doklamm = True;
       pCompSplit = IndirComps.Str;
+      locStack = -1;
       do
       {
-        if (*pCompSplit == '[')
-          doklamm = False;
-        else if (*pCompSplit == ']')
-          doklamm = True;
+        char token = *pCompSplit;
+        switch (token)
+        {
+          case ')':
+          case ']':
+          case '}':
+            if (locStack == -1 || tokenStack[locStack] != GetMatchingBrace(token))
+            {
+              /* Stack underflow or mismatched curly braces. */
+              goto chk;
+            }
+            /* Pop from stack */
+            locStack--;
+            break;
+          case '(':
+          case '[':
+          case '{':
+            if (locStack == sizeof(tokenStack)-1)
+            {
+              /* Stack overflow. */
+              goto chk;
+            }
+            /* Push into stack */
+            tokenStack[++locStack] = token;
+            break;
+        };
         pCompSplit++;
       }
-      while (((!doklamm) || (*pCompSplit != ',')) && (*pCompSplit != '\0'));
+      while (((locStack != -1) || (*pCompSplit != ',')) && (*pCompSplit != '\0'));
 
       if (*pCompSplit == '\0')
       {
@@ -1193,6 +1353,8 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
       else
       {
         StrCompSplitRef(&AdrComps[CompCnt].Comp, &Remainder, &IndirComps, pCompSplit);
+        KillPrefBlanksStrComp(&Remainder);
+        KillPostBlanksStrComp(&AdrComps[CompCnt].Comp);
         IndirComps = Remainder;
       }
 
@@ -1569,6 +1731,8 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 
       StrCompRefRight(&IndirComps, &AdrComps[0].Comp, 1);
       StrCompShorten(&IndirComps, 1);
+      KillPrefBlanksStrComp(&IndirComps);
+      KillPostBlanksStrComp(&IndirComps);
 
       /* Felder loeschen: */
 
@@ -1586,6 +1750,8 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         else
         {
           StrCompSplitRef(&OneComp.Comp, &Remainder, &IndirComps, pCompSplit);
+          KillPrefBlanksStrComp(&Remainder);
+          KillPostBlanksStrComp(&OneComp.Comp);
           IndirComps = Remainder;
         }
         if (!ClassComp(&OneComp))
@@ -1664,10 +1830,10 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
           switch (AdrComps[0].Size)
           {
             case -1:
-             if (IsDisp16(HVal))
-               goto PCIs16;
-             else
-               goto PCIs32;
+              if (IsDisp16(HVal))
+                goto PCIs16;
+              else
+                goto PCIs32;
             case 1:
               if (!IsDisp16(HVal))
               {

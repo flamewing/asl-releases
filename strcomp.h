@@ -40,8 +40,6 @@ extern void StrCompCopy(tStrComp *pDest, const tStrComp *pSrc);
 
 extern void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, unsigned Start, unsigned Count);
 
-extern void StrCompCopyNoBlanks(tStrComp *pDest, const tStrComp *pSrc);
-
 extern void StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos);
 
 extern void StrCompSplitLeft(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos);
