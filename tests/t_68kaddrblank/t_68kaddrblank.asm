@@ -78,10 +78,10 @@
 	move.l	( [ 10000.l , a3 ] , d4.l * 4 , 20000.l ) , d7
 
 	; preindexed
-	move.l ( [ 10000 , d4.w * 1 ] ) , d7
-	move.l ( [ 10000.l , d4.l * 4 ] ) , d7
-	move.l ( [ a3 , d4.w * 1 ] ) , d7
-	move.l ( [ a3 , d4.l * 4 ] ) , d7
+	move.l	( [ 10000 , d4.w * 1 ] ) , d7
+	move.l	( [ 10000.l , d4.l * 4 ] ) , d7
+	move.l	( [ a3 , d4.w * 1 ] ) , d7
+	move.l	( [ a3 , d4.l * 4 ] ) , d7
 	move.l	( [ 10000 , a3 , d4.w * 1 ] ) , d7
 	move.l	( [ 10000.l , a3 , d4.l * 4 ] ) , d7
 	move.l	( [ 10000 , d4.w * 1 ] , 20000 ) , d7
@@ -112,8 +112,8 @@
 	move.l	( [ *.l , pc ] , d4.l * 4 , 20000.l ) , d7
 
 	; PC preindexed
-	move.l ( [ pc , d4.w * 1 ] ) , d7
-	move.l ( [ pc , d4.l * 4 ] ) , d7
+	move.l	( [ pc , d4.w * 1 ] ) , d7
+	move.l	( [ pc , d4.l * 4 ] ) , d7
 	move.l	( [ * , pc , d4.w * 1 ] ) , d7
 	move.l	( [ *.l , pc , d4.l * 4 ] ) , d7
 	move.l	( [ pc , d4.w * 1 ] , 20000 ) , d7

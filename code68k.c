@@ -1288,20 +1288,6 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
     KillPostBlanksStrComp(&IndirComps);
     KillPrefBlanksStrComp(&IndirComps);
 
-    /* Special case for absolute addressing function call without parenthesis.
-       TODO: Support full expressions in this special case.
-       It currently fails if it is an expression that ends in a function call. */
-    if (FindFunction(OutDisp.Str))
-    {
-      *p = '(';
-      Arg.Str[rParenPos] = ')';
-      Arg.Pos.Len++;
-      if (!SplitSize(&Arg, &OutDispLen, 6))
-        return ModNone;
-      DecodeAbs(&Arg, OutDispLen, pResult);
-      goto chk;
-    }
-
     /* in Komponenten zerteilen: */
     /* In here, any parenthesis, square brackets, and curly braces found will balance
       out because they have been checked before.
