@@ -53,45 +53,45 @@ mul function x,y,x*y
 	move.l	(mul(100,100).l,d4.w*1),d7
 
 	; no index (post/pre-indexed setting in I/IS irrelevant?)
-	move.l	([10000]),d7
-	move.l	([10000.l]),d7
+	move.l	([mul(100,100)]),d7
+	move.l	([mul(100,100).l]),d7
 	move.l	([a3]),d7
-	move.l	([a3,10000]),d7
-	move.l	([a3,10000.l]),d7
-	move.l	([10000],20000),d7
-	move.l	([10000.l],20000.l),d7
+	move.l	([a3,mul(100,100)]),d7
+	move.l	([a3,mul(100,100).l]),d7
+	move.l	([mul(100,100)],mul(100,200)),d7
+	move.l	([mul(100,100).l],mul(100,200).l),d7
 	move.l	([a3],mul(100,200)),d7
 	move.l	([a3],mul(100,200).l),d7
-	move.l	([10000,a3],20000),d7
-	move.l	([10000.l,a3],20000.l),d7
+	move.l	([mul(100,100),a3],mul(100,200)),d7
+	move.l	([mul(100,100).l,a3],mul(100,200).l),d7
 
 	; postindexed
-	move.l	([10000],d4.w*1),d7
-	move.l	([10000.l],d4.l*4),d7
+	move.l	([mul(100,100)],d4.w*1),d7
+	move.l	([mul(100,100).l],d4.l*4),d7
 	move.l	([a3],d4.w*1),d7
 	move.l	([a3],d4.l*4),d7
-	move.l	([10000,a3],d4.w*1),d7
-	move.l	([10000.l,a3],d4.l*4),d7
-	move.l	([10000],d4.w*1,20000),d7
-	move.l	([10000.l],d4.l*4,20000.l),d7
+	move.l	([mul(100,100),a3],d4.w*1),d7
+	move.l	([mul(100,100).l,a3],d4.l*4),d7
+	move.l	([mul(100,100)],d4.w*1,mul(100,200)),d7
+	move.l	([mul(100,100).l],d4.l*4,mul(100,200).l),d7
 	move.l	([a3],d4.w*1,mul(100,200)),d7
 	move.l	([a3],d4.l*4,mul(100,200).l),d7
-	move.l	([10000,a3],d4.w*1,20000),d7
-	move.l	([10000.l,a3],d4.l*4,20000.l),d7
+	move.l	([mul(100,100),a3],d4.w*1,mul(100,200)),d7
+	move.l	([mul(100,100).l,a3],d4.l*4,mul(100,200).l),d7
 
 	; preindexed
-	move.l  ([10000,d4.w*1]),d7
-	move.l  ([10000.l,d4.l*4]),d7
+	move.l  ([mul(100,100),d4.w*1]),d7
+	move.l  ([mul(100,100).l,d4.l*4]),d7
 	move.l  ([a3,d4.w*1]),d7
 	move.l  ([a3,d4.l*4]),d7
-	move.l	([10000,a3,d4.w*1]),d7
-	move.l	([10000.l,a3,d4.l*4]),d7
-	move.l	([10000,d4.w*1],20000),d7
-	move.l	([10000.l,d4.l*4],20000.l),d7
+	move.l	([mul(100,100),a3,d4.w*1]),d7
+	move.l	([mul(100,100).l,a3,d4.l*4]),d7
+	move.l	([mul(100,100),d4.w*1],mul(100,200)),d7
+	move.l	([mul(100,100).l,d4.l*4],mul(100,200).l),d7
 	move.l	([a3,d4.w*1],mul(100,200)),d7
 	move.l	([a3,d4.l*4],mul(100,200).l),d7
-	move.l	([10000,a3,d4.w*1],20000),d7
-	move.l	([10000.l,a3,d4.l*4],20000.l),d7
+	move.l	([mul(100,100),a3,d4.w*1],mul(100,200)),d7
+	move.l	([mul(100,100).l,a3,d4.l*4],mul(100,200).l),d7
 
 	; PC with base displacement
 	move.l	(*,pc,d4.l*4),d7	; all components

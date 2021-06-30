@@ -1288,7 +1288,9 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
     KillPostBlanksStrComp(&IndirComps);
     KillPrefBlanksStrComp(&IndirComps);
 
-    /* Special case for function call without parenthesis */
+    /* Special case for absolute addressing function call without parenthesis.
+       TODO: Support full expressions in this special case.
+       It currently fails if it is an expression that ends in a function call. */
     if (FindFunction(OutDisp.Str))
     {
       *p = '(';
@@ -1313,7 +1315,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
     {
       pCompSplit = IndirComps.Str;
       locStack = -1;
-      do
+      for (; ((locStack != -1) || (*pCompSplit != ',')) && (*pCompSplit != '\0'); pCompSplit++)
       {
         char token = *pCompSplit;
         switch (token)
@@ -1341,9 +1343,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
             tokenStack[++locStack] = token;
             break;
         };
-        pCompSplit++;
       }
-      while (((locStack != -1) || (*pCompSplit != ',')) && (*pCompSplit != '\0'));
 
       if (*pCompSplit == '\0')
       {
@@ -1740,13 +1740,51 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
 
       /* indirekten Ausdruck auseinanderfieseln: */
 
+      Boolean notDone = TRUE;
+
       do
       {
         /* abschneiden & klassifizieren: */
 
-        pCompSplit = strchr(IndirComps.Str, ',');
-        if (!pCompSplit)
+        // pCompSplit = strchr(IndirComps.Str, ',');
+
+        pCompSplit = IndirComps.Str;
+        locStack = -1;
+        for (; ((locStack != -1) || (*pCompSplit != ',')) && (*pCompSplit != '\0'); pCompSplit++)
+        {
+          char token = *pCompSplit;
+          switch (token)
+          {
+            case ')':
+            case ']':
+            case '}':
+              if (locStack == -1 || tokenStack[locStack] != GetMatchingBrace(token))
+              {
+                /* Stack underflow or mismatched curly braces. */
+                goto chk;
+              }
+              /* Pop from stack */
+              locStack--;
+              break;
+            case '(':
+            case '[':
+            case '{':
+              if (locStack == sizeof(tokenStack)-1)
+              {
+                /* Stack overflow. */
+                goto chk;
+              }
+              /* Push into stack */
+              tokenStack[++locStack] = token;
+              break;
+          };
+        }
+
+        if (*pCompSplit == '\0')
+        {
+          notDone = FALSE;
           OneComp.Comp = IndirComps;
+        }
         else
         {
           StrCompSplitRef(&OneComp.Comp, &Remainder, &IndirComps, pCompSplit);
@@ -1792,7 +1830,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         else
           AdrComps[i] = OneComp;
       }
-      while (pCompSplit);
+      while (notDone);
 
       /* extension word: 68020 format */
 
