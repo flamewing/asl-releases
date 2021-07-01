@@ -3201,7 +3201,8 @@ static void InitFields(void)
   AddShift("RL"  , "RLW"  , 2); AddShift("RR" , "RRW" , 3);
   AddShift("SLA" , "SLAW" , 4); AddShift("SRA", "SRAW", 5);
   AddShift("SLIA", NULL   , 6); AddShift("SRL", "SRLW", 7);
-  AddShift("SLS" , NULL   , 6);
+  AddShift("SLS" , NULL   , 6); AddShift("SLL" , NULL , 6);
+  AddShift("SL1" , NULL   , 6);
 
   AddBit("BIT", 0); AddBit("RES", 1); AddBit("SET", 2);
 }
