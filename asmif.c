@@ -406,8 +406,8 @@ Boolean CodeIFs(void)
       else Result = False;
       break;
     case 'E':
-      if ((Memo("ELSE")) || (Memo("ELSEIF"))) CodeELSEIF();
-      else if (Memo("ENDIF")) CodeENDIF();
+      if ((Memo("ELSE")) || (Memo("ELSEIF")) || (Memo("ELSEC"))) CodeELSEIF();
+      else if ((Memo("ENDIF")) || (Memo("ENDC"))) CodeENDIF();
       else if (Memo("ELSECASE")) CodeELSECASE();
       else if (Memo("ENDCASE")) CodeENDCASE();
       else Result = False;

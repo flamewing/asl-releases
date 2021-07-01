@@ -269,6 +269,17 @@ static Boolean MacroEnd(void)
     return False;
 }
 
+static Boolean ReptEnd(void)
+{
+  if (Memo("ENDM") || Memo("ENDR"))
+  {
+    WasMACRO = True;
+    return True;
+  }
+  else
+    return False;
+}
+
 typedef void (*tMacroArgCallback)(Boolean CtrlArg, const tStrComp *pArg, void *pUser);
 
 static void ProcessMacroArgs(tMacroArgCallback Callback, void *pUser)
@@ -314,11 +325,27 @@ static void WaitENDM_Processor(void)
   }
 }
 
-static void AddWaitENDM_Processor(void)
+static void WaitENDR_Processor(void)
+{
+  POutputTag Tmp;
+
+  if (MacroStart())
+    FirstOutputTag->NestLevel++;
+  else if (ReptEnd())
+    FirstOutputTag->NestLevel--;
+  if (FirstOutputTag->NestLevel <= -1)
+  {
+    Tmp = FirstOutputTag;
+    FirstOutputTag = Tmp->Next;
+    free(Tmp);
+  }
+}
+
+static void AddWaitENDM_Processor(void (*Processor)(void))
 {
   POutputTag Neu;
 
-  Neu = GenerateOUTProcessor(WaitENDM_Processor, ErrNum_OpenMacro);
+  Neu = GenerateOUTProcessor(Processor, ErrNum_OpenMacro);
   Neu->Next = FirstOutputTag;
   FirstOutputTag = Neu;
 }
@@ -700,7 +727,7 @@ static void ReadMacro(void)
     ClearStringList(&(Context.pOutputTag->ParamNames));
     ClearStringList(&(Context.pOutputTag->ParamDefVals));
     free(Context.pOutputTag);
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDM_Processor);
     return;
   }
 
@@ -1144,7 +1171,7 @@ static void IRP_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (MacroEnd())
+  else if (ReptEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */
@@ -1242,7 +1269,7 @@ static Boolean ExpandIRP(void)
 
   if (!IfAsm)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return True;
   }
 
@@ -1267,7 +1294,7 @@ static Boolean ExpandIRP(void)
     ClearStringList(&(Context.pOutputTag->ParamDefVals));
     ClearStringList(&(Context.Params));
     free(Context.pOutputTag);
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return False;
   }
 
@@ -1410,7 +1437,7 @@ static Boolean ExpandIRPC(void)
 
   if (!IfAsm)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return True;
   }
 
@@ -1433,7 +1460,7 @@ static Boolean ExpandIRPC(void)
   if (Context.ErrFlag)
   {
     ClearStringList(&(Context.pOutputTag->ParamNames));
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return False;
   }
 
@@ -1534,7 +1561,7 @@ static void REPT_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (MacroEnd())
+  else if (ReptEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */
@@ -1615,7 +1642,7 @@ static Boolean ExpandREPT(void)
 
   if (!IfAsm)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return True;
   }
 
@@ -1633,7 +1660,7 @@ static Boolean ExpandREPT(void)
     Context.ErrFlag = True;
   if (Context.ErrFlag)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return False;
   }
 
@@ -1756,7 +1783,7 @@ static void WHILE_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (MacroEnd())
+  else if (ReptEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */
@@ -1838,7 +1865,7 @@ static Boolean ExpandWHILE(void)
 
   if (!IfAsm)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return True;
   }
 
@@ -1857,7 +1884,7 @@ static Boolean ExpandWHILE(void)
     Context.ErrFlag = True;
   if (Context.ErrFlag)
   {
-    AddWaitENDM_Processor();
+    AddWaitENDM_Processor(WaitENDR_Processor);
     return False;
   }
 
