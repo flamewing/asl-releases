@@ -1943,7 +1943,15 @@ void EvalStrStringExpressionWithResult(const tStrComp *pExpr, tEvalResult *pResu
   EvalResultClear(pResult);
 
   EvalStrExpression(pExpr, &t);
-  if (t.Typ != TempString)
+  if (t.Typ == TempInt)
+  {
+    TempResultToPlainString(pEvalResult, &t, STRINGSIZE);
+    pResult->Flags = t.Flags;
+    pResult->AddrSpaceMask = t.AddrSpaceMask;
+    pResult->DataSize = t.DataSize;
+    pResult->OK = True;
+  }
+  else if (t.Typ != TempString)
   {
     *pEvalResult = '\0';
     if (t.Typ != TempNone)
