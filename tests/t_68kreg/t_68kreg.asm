@@ -4,7 +4,7 @@
 regd1	equ	d1
 regd2	equ	d2
 regd4	equ	d4
-rega1	equ	a1
+	reg	rega1,a1
 rega2	equ	a2
 regsp	equ	sp
 regfp1	equ	fp1

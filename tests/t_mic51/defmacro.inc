@@ -16,7 +16,7 @@ TabName_Tend:  label   $
 Create_IncTab macro TabName, IncDatei
 TabName_Tab:  label   $
               include IncDatei
-TabName_Tend:  label   $
+              label   TabName_Tend,$
               endm
 
 

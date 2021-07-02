@@ -483,8 +483,11 @@ void CodeREG(Word Index)
 {
   UNUSED(Index);
 
-  if (ChkArgCnt(1, 1))
-    CodeREGCore(&LabPart, &ArgStr[1]);
+  const tStrComp *pName = *LabPart.Str ? &LabPart : &ArgStr[1];
+  int ValIndex = *LabPart.Str ? 1 : 2;
+
+  if (ChkArgCnt(ValIndex, ValIndex))
+    CodeREGCore(pName, &ArgStr[ValIndex]);
 }
 
 void CodeNAMEREG(Word Index)
@@ -1216,14 +1219,16 @@ static void CodeLABEL(Word Index)
   Boolean OK;
   tSymbolFlags Flags;
   UNUSED(Index);
+  const tStrComp *pName = *LabPart.Str ? &LabPart : &ArgStr[1];
+  int ValIndex = *LabPart.Str ? 1 : 2;
 
-  if (ChkArgCnt(1, 1))
+  if (ChkArgCnt(ValIndex, ValIndex))
   {
-    Erg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+    Erg = EvalStrIntExpressionWithFlags(&ArgStr[ValIndex], Int32, &OK, &Flags);
     if (OK && !mFirstPassUnknown(Flags))
     {
       PushLocHandle(-1);
-      EnterIntSymbol(&LabPart, Erg, SegCode, False);
+      EnterIntSymbol(pName, Erg, SegCode, False);
       *ListLine = '=';
       IntLine(ListLine + 1, STRINGSIZE - 1, Erg, IntConstMode);
       PopLocHandle();
