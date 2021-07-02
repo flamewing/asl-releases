@@ -2251,11 +2251,11 @@ void WriteCode(void)
     CodeLen += ActListGran/Granularity();
   }
 
-  if ((ActPC != StructSeg) && (!ChkPC(PCs[ActPC] + CodeLen - 1)) && (CodeLen != 0))
+  if ((ActPC != StructSeg) && (!ChkPC(EProgCounter() + CodeLen - 1)) && (CodeLen != 0))
     WrError(ErrNum_AdrOverflow);
   else
   {
-    LargeWord NewPC = PCs[ActPC] + CodeLen;
+    LargeWord NewPC = ProgCounter() + CodeLen;
 
     if ((!DontPrint) && (ActPC != StructSeg) && (CodeLen > 0))
       BookKeeping();
@@ -2273,7 +2273,7 @@ void WriteCode(void)
     {
       PCsUsed[ActPC] = True;
       if (DontPrint)
-        NewRecord(PCs[ActPC] + CodeLen);
+        NewRecord(NewPC);
       else
         WriteBytes();
     }

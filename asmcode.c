@@ -269,7 +269,7 @@ void OpenFile(void)
   CodeBufferFill = 0;
   RecPos = ftell(PrgFile);
   LenSoFar = 0;
-  NewRecord(PCs[ActPC]);
+  NewRecord(ProgCounter());
 }
 
 /*---- Codedatei schliessen -------------------------------------------------*/
@@ -282,7 +282,7 @@ void CloseFile(void)
 
   as_snprintf(h, sizeof(h), "AS %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
 
-  NewRecord(PCs[ActPC]);
+  NewRecord(ProgCounter());
   fseek(PrgFile, RecPos, SEEK_SET);
 
   if (StartAdrPresent)
@@ -313,7 +313,7 @@ void WriteBytes(void)
   if ((TurnWords != 0) != (HostBigEndian != 0))
     DreheCodes();
   if (((LongInt)LenSoFar) + ((LongInt)ErgLen) > 0xffff)
-    NewRecord(PCs[ActPC]);
+    NewRecord(ProgCounter());
   if (CodeBufferFill + ErgLen < CodeBufferSize)
   {
     memcpy(CodeBuffer + CodeBufferFill, BAsmCode, ErgLen);

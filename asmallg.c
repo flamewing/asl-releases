@@ -334,9 +334,9 @@ static void CodeORG_Core(const tStrComp *pArg)
   if (ValOK)
   {
     if (mFirstPassUnknown(Flags)) WrStrErrorPos(ErrNum_FirstPassCalc, pArg);
-    else if (PCs[ActPC] != HVal)
+    else if (EProgCounter() != HVal)
     {
-      PCs[ActPC] = HVal;
+      PCs[ActPC] = HVal - Phases[ActPC];
       DontPrint = True;
     }
   }
@@ -1636,7 +1636,7 @@ static void CodeBINCLUDE(Word Index)
           fclose(F); WrError(ErrNum_ShortRead); return;
         }
       }
-      if (!ChkPC(PCs[ActPC] + Len - 1)) WrError(ErrNum_AdrOverflow);
+      if (!ChkPC(EProgCounter() + Len - 1)) WrError(ErrNum_AdrOverflow);
       else
       {
         errno = 0; fseek(F, Ofs, SEEK_SET); ChkIO(ErrNum_FileReadError);

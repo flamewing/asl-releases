@@ -1486,7 +1486,7 @@ void BookKeeping(void)
   if (DebugMode != DebugNone)
   {
     AddSectionUsage(ProgCounter(), CodeLen);
-    AddLineInfo(InMacroFlag, CurrLine, CurrFileName, ActPC, PCs[ActPC], CodeLen);
+    AddLineInfo(InMacroFlag, CurrLine, CurrFileName, ActPC, ProgCounter(), CodeLen);
   }
 }
 

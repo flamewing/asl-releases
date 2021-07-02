@@ -6456,6 +6456,21 @@ static Boolean IsDef_68K(void)
   return Memo("REG");
 }
 
+static Boolean ChkPC_68k(LargeWord Addr)
+{
+  if (!((1 << ActPC) & ValidSegs))
+    return False;
+  else
+  {
+    LargeWord ExtAddr = Addr & 0xfffffffful;
+    ExtAddr += 0xffffffff80000000ul;
+    ExtAddr ^= 0xffffffff80000000ul;
+    if (Addr == ExtAddr)
+      Addr &= 0xfffffffful;
+    return (Addr <= SegLimits[ActPC]);
+  }
+}
+
 static void SwitchFrom_68K(void)
 {
   DeinitFields();
@@ -6479,6 +6494,7 @@ static void SwitchTo_68K(void *pUser)
   ListGrans[SegCode] = 2;
   SegInits[SegCode] = 0;
   SegLimits[SegCode] = (LargeWord)IntTypeDefs[UInt32].Max;
+  ChkPC = ChkPC_68k;
 
   pCurrCPUProps = (const tCPUProps*)pUser;
 
