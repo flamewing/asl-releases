@@ -4099,7 +4099,7 @@ static CMDResult CMD_MaxIncludeLevel(Boolean Negate, const char *pArg)
 {
   if (Negate)
   {
-    MaxErrors = DEFAULT_MACINCLUDELEVEL;
+    MaxIncludeLevel = DEFAULT_MACINCLUDELEVEL;
     return CMDOK;
   }
   else if (pArg[0] == '\0')
