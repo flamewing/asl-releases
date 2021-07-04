@@ -107,10 +107,9 @@ struct sSymbolEntry;
 
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern LongInt MomLocHandle;
-extern LongInt TmpSymCounter,
-               FwdSymCounter,
+extern LongInt FwdSymCounter,
                BackSymCounter;
-extern char TmpSymCounterVal[10];
+extern String TmpSymCounterVal;
 extern LongInt LocHandleCnt;
 extern LongInt MomLocHandle;
 

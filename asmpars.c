@@ -33,6 +33,7 @@
 #include "function.h"
 #include "intformat.h"
 #include "ieeefloat.h"
+#include "sha1.h"
 
 #include "asmpars.h"
 
@@ -105,10 +106,9 @@ typedef struct
 } TTmpSymLog;
 
 LongInt MomLocHandle;          /* Merker, den lokale Symbole erhalten        */
-LongInt TmpSymCounter,         /* counters for local symbols                 */
-        FwdSymCounter,
+LongInt FwdSymCounter,
         BackSymCounter;
-char TmpSymCounterVal[10];     /* representation as string                   */
+String TmpSymCounterVal;     /* representation as string                   */
 TTmpSymLog TmpSymLog[LOCSYMSIGHT];
 LongInt TmpSymLogDepth;
 
@@ -542,7 +542,7 @@ Boolean ExpandStrSymbol(char *pDest, size_t DestSize, const tStrComp *pSrc)
 
 void InitTmpSymbols(void)
 {
-  TmpSymCounter = FwdSymCounter = BackSymCounter = 0;
+  FwdSymCounter = BackSymCounter = 0;
   *TmpSymCounterVal = '\0';
   TmpSymLogDepth = 0;
   *LastGlobSymbol = '\0';
@@ -584,7 +584,15 @@ static Boolean ChkTmp1(char *Name, Boolean Define)
     /* append number. only generate the number once */
 
     if (*TmpSymCounterVal == '\0')
-      as_snprintf(TmpSymCounterVal, sizeof(TmpSymCounterVal), "%d", TmpSymCounter);
+    {
+      SHA1_CTX sha;
+      Byte results[20];
+
+      SHA1Init(&sha);
+      SHA1Update(&sha, (unsigned char *)LastGlobSymbol, strlen(LastGlobSymbol));
+      SHA1Final(results, &sha);
+      SHA1ToHexString(results, TmpSymCounterVal);
+    }
     strcpy(Dest, TmpSymCounterVal);
     Result = TRUE;
   }
@@ -593,7 +601,6 @@ static Boolean ChkTmp1(char *Name, Boolean Define)
 
   else if (Define)
   {
-    TmpSymCounter++;
     *TmpSymCounterVal = '\0';
   }
 
