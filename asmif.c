@@ -95,7 +95,8 @@ static void CodeIFDEF(Word Negate)
 
   ActiveIF = IfAsm;
 
-  if (!IfAsm) IfExpr = 1;
+  if (!IfAsm)
+    IfExpr = 1;
   else if (!ChkArgCnt(1, 1))
     IfExpr = 1;
   else
@@ -269,7 +270,7 @@ static void CodeSWITCH(void)
   NewSave->CaseFound = False;
   NewSave->State = IfState_CASESWITCH;
   NewSave->StartLine = CurrLine;
-  if (ArgCnt != 1)
+  if (ArgCnt != 1 || !IfAsm)
   {
     NewSave->SaveExpr.Typ = TempInt;
     NewSave->SaveExpr.Contents.Int = 1;
