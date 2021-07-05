@@ -3732,8 +3732,11 @@ static CMDResult CMD_SplitByte(Boolean Negate, const char *Arg)
 static CMDResult CMD_QuietMode(Boolean Negate, const char *Arg)
 {
   UNUSED(Arg);
+  if ((Negate) && (QuietMode > 0))
+    QuietMode--;
+  else if ((!Negate) && (QuietMode < 2))
+    QuietMode++;
 
-  QuietMode = !Negate;
   return CMDOK;
 }
 

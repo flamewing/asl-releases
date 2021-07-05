@@ -299,7 +299,7 @@ extern Boolean NumericErrors;
 extern Boolean CodeOutput;
 extern Boolean MacProOutput;
 extern Boolean MacroOutput;
-extern Boolean QuietMode;
+extern ShortInt QuietMode;
 extern Boolean HardRanges;
 extern const char *DivideChars;
 extern Boolean HasAttrs;

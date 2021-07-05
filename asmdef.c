@@ -96,7 +96,7 @@ Boolean NumericErrors;                   /* Fehlermeldungen mit Nummer */
 Boolean CodeOutput;		         /* Code erzeugen */
 Boolean MacProOutput;                    /* Makroprozessorausgabe schreiben */
 Boolean MacroOutput;                     /* gelesene Makros schreiben */
-Boolean QuietMode;                       /* keine Meldungen */
+ShortInt QuietMode;                      /* keine Meldungen */
 Boolean HardRanges;                      /* Bereichsfehler echte Fehler ? */
 const char *DivideChars;                 /* Trennzeichen fuer Parameter. Inhalt Read Only! */
 Boolean HasAttrs;                        /* Opcode hat Attribut */

@@ -804,7 +804,7 @@ static void CodeMESSAGE(Word Index)
     if (!OK) WrError(ErrNum_InvString);
     else
     {
-      //if (!QuietMode)
+      if (QuietMode != 2)
         WrConsoleLine(mess, True);
       if (strcmp(LstName, "/dev/null"))
         WrLstLine(mess);
