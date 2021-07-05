@@ -597,13 +597,6 @@ static Boolean ChkTmp1(char *Name, Boolean Define)
     Result = TRUE;
   }
 
-  /* no special local symbol: increment $$-counter */
-
-  else if (Define)
-  {
-    *TmpSymCounterVal = '\0';
-  }
-
   return Result;
 }
 
@@ -713,6 +706,7 @@ static Boolean ChkTmp3(char *Name, Boolean Define)
   else if (Define)
   {
     strmaxcpy(LastGlobSymbol, Name, STRINGSIZE);
+    *TmpSymCounterVal = '\0';
   }
 
   return Result;
@@ -720,12 +714,19 @@ static Boolean ChkTmp3(char *Name, Boolean Define)
 
 static Boolean ChkTmp(char *Name, Boolean Define)
 {
-  Boolean IsTmp1, IsTmp2, IsTmp3;
-
-  IsTmp1 = ChkTmp1(Name, Define);
-  IsTmp2 = ChkTmp2(Name, Name, Define);
-  IsTmp3 = ChkTmp3(Name, Define && !IsTmp2);
-  return IsTmp1 || IsTmp2 || IsTmp3;
+  if (ChkTmp1(Name, Define))
+  {
+    return TRUE;
+  }
+  if (ChkTmp2(Name, Name, Define))
+  {
+    return TRUE;
+  }
+  if (ChkTmp3(Name, Define))
+  {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 Boolean IdentifySection(const tStrComp *pName, LongInt *Erg)
