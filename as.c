@@ -1076,8 +1076,11 @@ Boolean IRP_Processor(PInputTag PInp, char *erg)
 
   /* expand iteration parameter */
 
-  Lauf = PInp->Params; for (z = 1; z <= PInp->ParZ - 1; z++)
+  Lauf = PInp->Params;
+  for (z = 1; z <= PInp->ParZ - 1; z++)
+  {
     Lauf = Lauf->Next;
+  }
   ExpandLine(Lauf->Content, 1, erg, STRINGSIZE);
 
   /* end of body? then reset to line 1 and exit if this was the last iteration */

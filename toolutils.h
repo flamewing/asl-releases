@@ -8,7 +8,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "cmdarg.h"
+#include "datatypes.h"
 #include "fileformat.h"
+#include <stdio.h>
 
 typedef struct
 {

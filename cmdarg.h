@@ -13,6 +13,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+#include "stringlists.h"
+
 typedef enum {CMDErr, CMDFile, CMDOK, CMDArg} CMDResult;
 
 typedef CMDResult (*CMDCallback)(

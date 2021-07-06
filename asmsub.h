@@ -10,7 +10,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "asmdef.h"
+#include "datatypes.h"
 #include <stddef.h>
+#include <stdio.h>
 
 #define LISTLINESPACE 20
 

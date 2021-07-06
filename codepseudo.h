@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 struct _ASSUMERec;
 
 extern int FindInst(void *Field, int Size, int Count);

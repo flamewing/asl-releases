@@ -12,6 +12,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+#include "tempresult.h"
+
 typedef enum
 {
   IfState_IFIF, IfState_IFELSE,

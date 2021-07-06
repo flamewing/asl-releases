@@ -12,6 +12,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 extern void InitFileList(void);
 
 extern void ClearFileList(void);

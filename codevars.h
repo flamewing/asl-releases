@@ -12,6 +12,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "asmitree.h"
+
 extern int InstrZ;
 extern int AdrCnt;
 

@@ -11,6 +11,9 @@
 #ifndef _INTFORMAT_H
 #define _INTFORMAT_H
 
+#include "datatypes.h"
+#include <stddef.h>
+
 typedef enum
 {
   eIntFormatNone,

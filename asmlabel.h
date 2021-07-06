@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 struct sStrComp;
 
 extern Boolean LabelPresent(void);

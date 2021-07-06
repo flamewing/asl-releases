@@ -10,7 +10,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-
+#include "datatypes.h"
 #include "symbolsize.h"
 
 struct sStructElem;

@@ -12,6 +12,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "cpulist.h"
+#include "datatypes.h"
+#include "strcomp.h"
+
 struct sStrComp;
 
 extern void SetCPUByType(CPUVar NewCPU, const struct sStrComp *pCPUArgs);

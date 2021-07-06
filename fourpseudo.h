@@ -14,6 +14,9 @@
  * Global Functions
  *****************************************************************************/
 
+#include "asmpars.h"
+#include "datatypes.h"
+
 extern void DecodeRES(Word Code);
 
 extern void DecodeDATA(IntType CodeIntType, IntType DataIntType);

@@ -14,6 +14,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "asmdef.h"
+#include "datatypes.h"
+
 extern LongInt SectSymbolCounter;
 
 extern PPatchEntry PatchList, PatchLast;

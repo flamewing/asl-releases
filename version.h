@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 extern const char *Version;
 extern LongInt VerNo;
 

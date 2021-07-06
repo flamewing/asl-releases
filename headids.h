@@ -14,6 +14,8 @@
 
 /* Hex-Formate */
 
+#include "datatypes.h"
+
 typedef enum
 {
   eHexFormatDefault,

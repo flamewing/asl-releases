@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 extern Boolean BalanceTrees;
 
 typedef struct _TTree

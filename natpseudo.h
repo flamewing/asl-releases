@@ -14,6 +14,8 @@
  * Global Functions
  *****************************************************************************/
 
+#include "datatypes.h"
+
 extern Boolean DecodeNatPseudo(void);
 
 #endif /* _NATPSEUDO_H */

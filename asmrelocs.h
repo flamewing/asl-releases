@@ -15,6 +15,8 @@
 /*                                                                          */
 /****************************************************************************/
 
+#include "datatypes.h"
+
 struct sRelocEntry
 {
   struct sRelocEntry *Next;

@@ -12,6 +12,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+#include <stdio.h>
+
 typedef void (*charcallback)(
 #ifdef __PROTOS__
 char *Name

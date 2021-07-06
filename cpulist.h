@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 typedef void (*tCPUSwitchProc)(
 #ifdef __PROTOS__
 void

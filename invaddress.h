@@ -10,6 +10,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 extern void AddInvSymbol(const char *pSymbolName, LargeWord Value);
 
 extern const char *LookupInvSymbol(LargeWord Value);

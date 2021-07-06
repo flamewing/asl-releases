@@ -13,6 +13,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+#include <stdio.h>
+
 typedef void (*InstProc)(
 #ifdef __PROTOS__
 Word Index

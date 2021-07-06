@@ -13,6 +13,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "datatypes.h"
+
 typedef struct
 {
   LargeWord Start, Length;

@@ -12,6 +12,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stdio.h>
+
 typedef enum {NoRedir,RedirToDevice,RedirToFile} TRedirected;  /* Umleitung von Handles */
 
 #define NumStdIn 0

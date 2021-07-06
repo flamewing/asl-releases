@@ -16,6 +16,7 @@
 /*****************************************************************************/
 
 #include "datatypes.h"
+#include <stdio.h>
 
 extern Boolean HostBigEndian;
 

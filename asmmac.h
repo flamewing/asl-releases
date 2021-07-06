@@ -15,7 +15,11 @@
 /*****************************************************************************/
 
 #include "errmsg.h"
+#include "lstmacroexp.h"
 #include "strcomp.h"
+#include "stringlists.h"
+#include <stddef.h>
+#include <stdio.h>
 
 typedef struct _MacroRec
 {

@@ -10,14 +10,15 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stddef.h>
-
+#include "errmsg.h"
+#include "intformat.h"
+#include "lstmacroexp.h"
+#include "strcomp.h"
 #include "symbolsize.h"
 #include "symflags.h"
 #include "tempresult.h"
-#include "intformat.h"
-#include "lstmacroexp.h"
-#include "errmsg.h"
+#include <stddef.h>
+#include <stdio.h>
 
 typedef enum
 {
