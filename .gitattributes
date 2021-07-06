@@ -13,6 +13,7 @@
 *.res		text
 *.yml		text
 
+asflags		text
 Makefile*	text
 
 AUTHORS		text
