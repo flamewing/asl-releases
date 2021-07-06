@@ -1,0 +1,6 @@
++----------------------- Test Application 68KADDRBLANK-----------------------+
+|                                                                            |
+|      This test iterates through the 60000/68020 addressing modes           |
+|      with blanks spaces everywhere to test tolerance to spaces             |
+|                                                                            |
++----------------------------------------------------------------------------+

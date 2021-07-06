@@ -3,7 +3,6 @@
 *.p
 *.aux
 *.daux
-*.doc
 *.dvi
 *.dep
 *.dtoc

@@ -1,0 +1,6 @@
++----------------------- Test Application 68KADDRFUN-------------------------+
+|                                                                            |
+|      This test iterates through the 60000/68020 addressing modes           |
+|      with function calls at every place                                    |
+|                                                                            |
++----------------------------------------------------------------------------+
