@@ -1154,12 +1154,20 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 
       for (z = 1; z <= ParZ - 1; z++)
         Lauf = Lauf->Next;
-      strcpy(buffer, Lauf->Content);
-      for (z = 2; z <= ParIter; z++)
+      if (Lauf == NULL)
       {
+        *buffer = '\0';
+      }
+      else
+      {
+        strcpy(buffer, Lauf->Content);
         Lauf = Lauf->Next;
-        strmaxcat(buffer, ",", sizeof(buffer));
-        strmaxcat(buffer, Lauf->Content, sizeof(buffer));
+        for (z = 2; z <= ParIter && Lauf != NULL; z++)
+        {
+          strmaxcat(buffer, ",", sizeof(buffer));
+          strmaxcat(buffer, Lauf->Content, sizeof(buffer));
+          Lauf = Lauf->Next;
+        }
       }
       IRPVal = buffer;
     }
