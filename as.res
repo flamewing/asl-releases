@@ -657,6 +657,14 @@ Message ErrMsgOpenWHILE
  "WHILE ohne ENDM"
  "WHILE without ENDM"
 
+Message ErrMsgOpenIRPN
+ "IRPN ohne ENDM"
+ "IRPN without ENDM"
+
+Message ErrMsgInvalidParamCountIRPN
+ "IRPN kann keine Null-Argumente haben"
+ "IRPN cannot have zero arguments"
+
 Message ErrMsgDoubleMacro
  "doppelte Makrodefinition"
  "macro double defined"

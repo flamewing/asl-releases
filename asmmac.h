@@ -52,7 +52,7 @@ typedef struct _TInputTag
                        struct _TInputTag *P, char *erg
 #endif
                                                       );
-  LongInt ParCnt,ParZ;
+  LongInt ParCnt,ParZ,ParIter;
   StringList Params;
   LongInt LineCnt, LineZ;
   StringRecPtr Lines, LineRun;

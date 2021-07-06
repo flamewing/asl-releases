@@ -490,6 +490,10 @@ static const char *ErrorNum2String(tErrorNum Num, char *Buf, int BufSize)
       msgno = Num_ErrMsgOpenWHILE; break;
     case ErrNum_EXITMOutsideMacro:
       msgno = Num_ErrMsgEXITMOutsideMacro; break;
+    case ErrNum_OpenIRPN:
+      msgno = Num_ErrMsgOpenIRPN; break;
+    case ErrNum_InvalidParamCountIRPN:
+      msgno = Num_ErrMsgInvalidParamCountIRPN; break;
     case ErrNum_TooManyMacParams:
       msgno = Num_ErrMsgTooManyMacParams; break;
     case ErrNum_UndefKeyArg:

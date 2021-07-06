@@ -179,6 +179,8 @@ typedef enum
   ErrNum_OpenREPT = 1803,
   ErrNum_OpenWHILE = 1804,
   ErrNum_EXITMOutsideMacro = 1805,
+  ErrNum_OpenIRPN = 1806,
+  ErrNum_InvalidParamCountIRPN = 1807,
   ErrNum_TooManyMacParams = 1810,
   ErrNum_UndefKeyArg = 1811,
   ErrNum_NoPosArg = 1812,

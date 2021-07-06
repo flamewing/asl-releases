@@ -191,9 +191,12 @@ static PInputTag GenerateProcessor(void)
   PInp->First = True;
   PInp->OrigDoLst = DoLst;
   PInp->StartLine = CurrLine;
-  PInp->ParCnt = 0; PInp->ParZ = 0;
+  PInp->ParCnt = 0;
+  PInp->ParZ = 0;
+  PInp->ParIter = 0;
   InitStringList(&(PInp->Params));
-  PInp->LineCnt = 0; PInp->LineZ = 1;
+  PInp->LineCnt = 0;
+  PInp->LineZ = 1;
   PInp->Lines = PInp->LineRun = NULL;
   StrCompMkTemp(&PInp->SpecName, PInp->SpecNameStr);
   StrCompReset(&PInp->SpecName);
@@ -255,7 +258,7 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
 
 static Boolean MacroStart(void)
 {
-  return ((Memo("MACRO")) || (Memo("IRP")) || (Memo("IRPC")) || (Memo("REPT")) || (Memo("WHILE")));
+  return ((Memo("MACRO")) || (Memo("IRP")) || (Memo("IRPN")) || (Memo("IRPC")) || (Memo("REPT")) || (Memo("WHILE")));
 }
 
 static Boolean MacroEnd(void)
@@ -1081,14 +1084,20 @@ Boolean IRP_Processor(PInputTag PInp, char *erg)
   {
     Lauf = Lauf->Next;
   }
-  ExpandLine(Lauf->Content, 1, erg, STRINGSIZE);
+  int ParIter = PInp->ParIter == 0 ? 1 : PInp->ParIter;
+  for (z = 1; z <= ParIter; z++)
+  {
+    ExpandLine(Lauf->Content, z, erg, STRINGSIZE);
+    Lauf = Lauf->Next;
+  }
 
   /* end of body? then reset to line 1 and exit if this was the last iteration */
 
   if (++(PInp->LineZ) > PInp->LineCnt)
   {
     PInp->LineZ = 1;
-    if (++(PInp->ParZ) > PInp->ParCnt)
+    PInp->ParZ += ParIter;
+    if (PInp->ParZ > PInp->ParCnt)
       Result = False;
   }
 
@@ -1106,7 +1115,8 @@ static void IRP_Cleanup(PInputTag PInp)
      ... SaveAttr ist aber frei */
   if (PInp->Processor == IRP_Processor)
   {
-    for (Lauf = PInp->Params; Lauf->Next; Lauf = Lauf->Next);
+    for (Lauf = PInp->Params; Lauf->Next; Lauf = Lauf->Next)
+    { /* empty */ }
     strmaxcpy(PInp->SaveAttr, Lauf->Content, STRINGSIZE);
   }
 
@@ -1120,7 +1130,9 @@ static void IRP_Cleanup(PInputTag PInp)
 static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 {
   int z, ParZ = PInp->ParZ, LineZ = PInp->LineZ;
+  int ParIter = PInp->ParIter == 0 ? PInp->ParIter : 1;
   const char *IRPType;
+  String buffer;
   char *IRPVal, tmp[20];
 
   /* LineZ/ParZ already hopped to next line - step one back: */
@@ -1128,12 +1140,12 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
   if (--LineZ <= 0)
   {
     LineZ = PInp->LineCnt;
-    ParZ--;
+    ParZ -= ParIter;
   }
 
   if (PInp->Processor == IRP_Processor)
   {
-    IRPType = "IRP";
+    IRPType = PInp->ParIter == 0 ? "IRP" : "IRPN";
     if (*PInp->SaveAttr != '\0')
       IRPVal = PInp->SaveAttr;
     else
@@ -1142,14 +1154,21 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 
       for (z = 1; z <= ParZ - 1; z++)
         Lauf = Lauf->Next;
-      IRPVal = Lauf->Content;
+      strcpy(buffer, Lauf->Content);
+      for (z = 2; z <= ParIter; z++)
+      {
+        Lauf = Lauf->Next;
+        strmaxcat(buffer, ",", sizeof(buffer));
+        strmaxcat(buffer, Lauf->Content, sizeof(buffer));
+      }
+      IRPVal = buffer;
     }
   }
   else
   {
     IRPType = "IRPC";
-    as_snprintf(tmp, sizeof(tmp), "'%c'", PInp->SpecName.Str[ParZ - 1]);
-    IRPVal = tmp;
+    as_snprintf(buffer, sizeof(buffer), "'%c'", PInp->SpecName.Str[ParZ - 1]);
+    IRPVal = buffer;
   }
 
   DecString(tmp, sizeof(tmp), LineZ, 0);
@@ -1165,7 +1184,6 @@ static Boolean IRP_GetPos(PInputTag PInp, char *dest, size_t DestSize)
 static void IRP_OutProcessor(void)
 {
   POutputTag Tmp;
-  StringRecPtr Dummy;
   String s;
 
   WasMACRO = True;
@@ -1181,8 +1199,12 @@ static void IRP_OutProcessor(void)
 
   if (FirstOutputTag->NestLevel > -1)
   {
-    strmaxcpy(s, OneLine, STRINGSIZE); KillCtrl(s);
-    CompressLine(GetStringListFirst(FirstOutputTag->ParamNames, &Dummy), 1, s, sizeof(s), CaseSensitive);
+    strmaxcpy(s, OneLine, STRINGSIZE);
+    KillCtrl(s);
+    StringRecPtr l = FirstOutputTag->ParamNames;
+    int ParIter = FirstOutputTag->Tag->ParIter == 0 ? 1 : FirstOutputTag->Tag->ParIter;
+    for (int z = 1; z <= ParIter; z++)
+      CompressLine(GetStringListNext(&l), z, s, sizeof(s), CaseSensitive);
     AddStringListLast(&(FirstOutputTag->Tag->Lines), s);
     FirstOutputTag->Tag->LineCnt++;
   }
@@ -1312,6 +1334,146 @@ static Boolean ExpandIRP(void)
   Tag->GetPos    = IRP_GetPos;
   Tag->GlobalSymbols = Context.GlobalSymbols;
   Tag->ParZ      = 1;
+  Tag->ParIter   = 0;
+  Tag->IsMacro   = True;
+  *Tag->SaveAttr = '\0';
+  Context.pOutputTag->Tag = Tag;
+
+  /* 4. einbetten */
+
+  FirstOutputTag = Context.pOutputTag;
+
+  return True;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/* Initialization of the IRPN processing */
+
+typedef struct
+{
+  Boolean ErrFlag;
+  Boolean GlobalSymbols;
+  int ArgCnt;
+  int ParamCnt;
+  POutputTag pOutputTag;
+  StringList Params;
+} tExpandIRPNContext;
+
+static void ProcessIRPNArgs(Boolean CtrlArg, const tStrComp *pArg, void *pUser)
+{
+  tExpandIRPNContext *pContext = (tExpandIRPNContext*)pUser;
+
+  if (CtrlArg)
+  {
+    if (ReadMacro_SearchArg(pArg->Str, "GLOBALSYMBOLS", &pContext->GlobalSymbols));
+    else
+    {
+      WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
+      pContext->ErrFlag = True;
+    }
+  }
+  else
+  {
+    /* differentiate count, placeholders, and arguments */
+
+    if (0 == pContext->ArgCnt)
+    {
+      /* count */
+      Boolean ValOK;
+      tSymbolFlags SymbolFlags;
+
+      pContext->ParamCnt = EvalStrIntExpressionWithFlags(pArg, Int32, &ValOK, &SymbolFlags);
+      if (mFirstPassUnknown(SymbolFlags))
+        WrStrErrorPos(ErrNum_FirstPassCalc, pArg);
+      else if (ValOK && pContext->ParamCnt == 0)
+        WrStrErrorPos(ErrNum_InvalidParamCountIRPN, pArg);
+      if (!ValOK || mFirstPassUnknown(SymbolFlags) || pContext->ParamCnt == 0)
+        pContext->ErrFlag = True;
+    }
+    else if (pContext->ArgCnt <= pContext->ParamCnt)
+    {
+      /* placeholders */
+      if (!ChkMacSymbName(pArg->Str))
+      {
+        WrStrErrorPos(ErrNum_InvSymName, pArg);
+        pContext->ErrFlag = True;
+      }
+      else
+        AddStringListLast(&(pContext->pOutputTag->ParamNames), pArg->Str);
+    }
+    else
+    {
+      /* arguments */
+      if (!CaseSensitive)
+        UpString(pArg->Str);
+      AddStringListLast(&(pContext->Params), pArg->Str);
+    }
+    pContext->ArgCnt++;
+  }
+}
+
+static Boolean ExpandIRPN(void)
+{
+  PInputTag Tag;
+  tExpandIRPNContext Context;
+
+  WasMACRO = True;
+
+  /* 0. terminate if conditional assembly bites */
+
+  if (!IfAsm)
+  {
+    AddWaitENDM_Processor(WaitENDR_Processor);
+    return True;
+  }
+
+  /* 1. Parameter pruefen */
+
+  Context.ErrFlag = False;
+  Context.GlobalSymbols = False;
+  Context.ArgCnt = 0;
+  Context.ParamCnt = 0;
+  Context.Params = NULL;
+
+  Context.pOutputTag = GenerateOUTProcessor(IRP_OutProcessor, ErrNum_OpenIRPN);
+  Context.pOutputTag->Next      = FirstOutputTag;
+  ProcessMacroArgs(ProcessIRPNArgs, &Context);
+
+  /* at least count, {count} parameters, and {count} args */
+
+  if (!ChkArgCntExt(Context.ArgCnt, 1 + 2 * Context.ParamCnt, ArgCntMax))
+    Context.ErrFlag = True;
+  if (Context.ErrFlag)
+  {
+    ClearStringList(&(Context.pOutputTag->ParamNames));
+    ClearStringList(&(Context.pOutputTag->ParamDefVals));
+    ClearStringList(&(Context.Params));
+    free(Context.pOutputTag);
+    AddWaitENDM_Processor(WaitENDR_Processor);
+    return False;
+  }
+
+  int ArgCnt = Context.ArgCnt - 1 - Context.ParamCnt;
+
+  int Remainder = (Context.ParamCnt - (ArgCnt % Context.ParamCnt))  % Context.ParamCnt;
+  for (int ParZ = 0; ParZ < Remainder; ParZ++)
+  {
+    AddStringListLast(&(Context.Params), "");
+  }
+  ArgCnt += Remainder;
+
+  /* 2. Tag erzeugen */
+
+  Tag = GenerateProcessor();
+  Tag->ParCnt    = ArgCnt;
+  Tag->Params    = Context.Params;
+  Tag->Processor = IRP_Processor;
+  Tag->Restorer  = MACRO_Restorer;
+  Tag->Cleanup   = IRP_Cleanup;
+  Tag->GetPos    = IRP_GetPos;
+  Tag->GlobalSymbols = Context.GlobalSymbols;
+  Tag->ParZ      = 1;
+  Tag->ParIter   = Context.ParamCnt;
   Tag->IsMacro   = True;
   *Tag->SaveAttr = '\0';
   Context.pOutputTag->Tag = Tag;
@@ -1477,6 +1639,7 @@ static Boolean ExpandIRPC(void)
   Tag->GetPos    = IRP_GetPos;
   Tag->GlobalSymbols = Context.GlobalSymbols;
   Tag->ParZ      = 1;
+  Tag->ParIter   = 0;
   Tag->IsMacro   = True;
   *Tag->SaveAttr = '\0';
   StrCompCopy(&Tag->SpecName, &Context.Parameter);
@@ -1678,6 +1841,7 @@ static Boolean ExpandREPT(void)
   Tag->GlobalSymbols = Context.GlobalSymbols;
   Tag->IsMacro   = True;
   Tag->ParZ      = 1;
+  Tag->ParIter   = 0;
 
   /* 3. einbetten */
 
@@ -1901,6 +2065,7 @@ static Boolean ExpandWHILE(void)
   Tag->GlobalSymbols = Context.GlobalSymbols;
   Tag->IsMacro   = True;
   Tag->ParZ      = 1;
+  Tag->ParIter   = 0;
   StrCompCopy(&Tag->SpecName, &Context.SpecName);
 
   /* 3. einbetten */
@@ -2345,6 +2510,7 @@ static void Produce_Code(void)
       /* Makroliste ? */
       Found = True;
       if (Memo("IRP")) ResetLastLabel = !ExpandIRP();
+      else if (Memo("IRPN")) ResetLastLabel = !ExpandIRPN();
       else if (Memo("IRPC")) ResetLastLabel = !ExpandIRPC();
       else Found = False;
       break;
