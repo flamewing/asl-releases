@@ -1533,7 +1533,14 @@ Boolean IRPC_Processor(PInputTag PInp, char *erg)
   /* extract iteration parameter */
 
   *tmp = PInp->SpecName.Str[PInp->ParZ - 1];
-  tmp[1] = '\0';
+  int term = 1;
+  /* Expand backslash escaped. */
+  /* There are no valid usecases for unescaped backslash expansion. */
+  if (*tmp == '\\')
+  {
+    tmp[term++] = *tmp;
+  }
+  tmp[term] = '\0';
   ExpandLine(tmp, 1, erg, STRINGSIZE);
 
   /* end of body? then reset to line 1 and exit if this was the last iteration */
