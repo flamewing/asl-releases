@@ -22,3 +22,5 @@ testlog
 Makefile.def
 
 .vscode/*
+
+compile_commands.json

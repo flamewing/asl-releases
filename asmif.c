@@ -30,6 +30,44 @@ Boolean IfAsm;       /* FALSE: in einer neg. IF-Sequenz-->kein Code */
 
 static Boolean ActiveIF;
 
+/*!------------------------------------------------------------------------
+ * \fn     ifsave_create(tIfState if_state, Boolean case_found)
+ * \brief  create new IF stack element
+ * \param  if_state initial state of related construct
+ * \param  case_found in block enabled by IF/CASE?
+ * \return * to new element
+ * ------------------------------------------------------------------------ */
+
+static PIfSave ifsave_create(tIfState if_state, Boolean case_found)
+{
+  PIfSave p_save;
+
+  p_save = (PIfSave) malloc(sizeof(TIfSave));
+  if (p_save)
+  {
+    p_save->Next = NULL;
+    p_save->NestLevel = SaveIFs() + 1;
+    p_save->SaveIfAsm = IfAsm;
+    as_tempres_ini(&p_save->SaveExpr);
+    p_save->CaseFound = case_found;
+    p_save->State = if_state;
+    p_save->StartLine = CurrLine;
+  }
+  return p_save;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ifsave_free(PIfSave p_save)
+ * \brief  destroy IF stack element
+ * \param  p_save element to destroy
+ * ------------------------------------------------------------------------ */
+
+static void ifsave_free(PIfSave p_save)
+{
+  as_tempres_free(&p_save->SaveExpr);
+  free(p_save);
+}
+
 static LongInt GetIfVal(const tStrComp *pCond)
 {
   Boolean IfOK;
@@ -55,17 +93,11 @@ static void AddBoolFlag(Boolean Flag)
 
 static void PushIF(LongInt IfExpr)
 {
-  PIfSave NewSave;
+  PIfSave NewSave = ifsave_create(IfState_IFIF, IfExpr != 0);
 
-  NewSave = (PIfSave) malloc(sizeof(TIfSave));
-  NewSave->NestLevel = SaveIFs() + 1;
   NewSave->Next = FirstIfSave;
-  NewSave->SaveIfAsm = IfAsm;
-  NewSave->State = IfState_IFIF;
-  NewSave->CaseFound = (IfExpr != 0);
-  NewSave->StartLine = CurrLine;
   FirstIfSave = NewSave;
-  IfAsm = IfAsm && (IfExpr != 0);
+  IfAsm = IfAsm && NewSave->CaseFound;
 }
 
 
@@ -101,7 +133,8 @@ static void CodeIFDEF(Word Negate)
     IfExpr = 1;
   else
   {
-    Defined = IsSymbolDefined(&ArgStr[1]) || FindFunction(ArgStr[1].Str) || FoundMacroByName(&OneMacro, ArgStr[1].Str);
+    char *Name = ArgStr[1].str.p_str;
+    Defined = IsSymbolDefined(&ArgStr[1]) || FindFunction(Name) || FoundMacroByName(&OneMacro, Name);
     if (IfAsm)
       strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
     if (!Negate)
@@ -154,7 +187,7 @@ void CodeIFEXIST(Word Negate)
   {
     String FileName, Dummy;
 
-    strmaxcpy(FileName, (ArgStr[1].Str[0] == '"') ? ArgStr[1].Str + 1 : ArgStr[1].Str, STRINGSIZE);
+    strmaxcpy(FileName, (ArgStr[1].str.p_str[0] == '"') ? ArgStr[1].str.p_str + 1 : ArgStr[1].str.p_str, STRINGSIZE);
     if (FileName[strlen(FileName) - 1] == '"')
       FileName[strlen(FileName) - 1] = '\0';
     AddSuffix(FileName, IncSuffix);
@@ -183,7 +216,7 @@ static void CodeIFB(Word Negate)
   else
   {
     for (z = 1; z <= ArgCnt; z++)
-      if (strlen(ArgStr[z++].Str) > 0)
+      if (strlen(ArgStr[z++].str.p_str) > 0)
         Blank = False;
     if (IfAsm)
       strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", STRINGSIZE);
@@ -227,17 +260,17 @@ static void CodeELSEIF(void)
 
 static void CodeENDIF(void)
 {
-  PIfSave NewSave;
-
   if (!ChkArgCnt(0, 0));
   else if (!FirstIfSave || ((FirstIfSave->State != IfState_IFIF) && (FirstIfSave->State != IfState_IFELSE))) WrError(ErrNum_MissingIf);
   else
   {
+    PIfSave NewSave;
+
     IfAsm = FirstIfSave->SaveIfAsm;
     NewSave = FirstIfSave;
     FirstIfSave = NewSave->Next;
     as_snprintf(ListLine, STRINGSIZE, "[%u]", (unsigned)NewSave->StartLine);
-    free(NewSave);
+    ifsave_free(NewSave);
   }
 
   ActiveIF = IfAsm;
@@ -249,8 +282,7 @@ static void EvalIfExpression(const tStrComp *pCond, TempResult *erg)
   EvalStrExpression(pCond, erg);
   if ((erg->Typ == TempNone) || mFirstPassUnknown(erg->Flags))
   {
-    erg->Typ = TempInt;
-    erg->Contents.Int = 1;
+    as_tempres_set_int(erg, 1);
     if (mFirstPassUnknown(erg->Flags))
       WrError(ErrNum_FirstPassCalc);
   }
@@ -259,29 +291,22 @@ static void EvalIfExpression(const tStrComp *pCond, TempResult *erg)
 
 static void CodeSWITCH(void)
 {
-  PIfSave NewSave;
+  PIfSave NewSave = ifsave_create(IfState_CASESWITCH, False);
 
   ActiveIF = IfAsm;
 
-  NewSave = (PIfSave) malloc(sizeof(TIfSave));
-  NewSave->NestLevel = SaveIFs() + 1;
-  NewSave->Next = FirstIfSave;
-  NewSave->SaveIfAsm = IfAsm;
-  NewSave->CaseFound = False;
-  NewSave->State = IfState_CASESWITCH;
-  NewSave->StartLine = CurrLine;
   if (ArgCnt != 1 || !IfAsm)
   {
-    NewSave->SaveExpr.Typ = TempInt;
-    NewSave->SaveExpr.Contents.Int = 1;
+    as_tempres_set_int(&NewSave->SaveExpr, 1);
     if (IfAsm)
       (void)ChkArgCnt(1, 1);
   }
   else
   {
-    EvalIfExpression(&ArgStr[1], &(NewSave->SaveExpr));
-    SetListLineVal(&(NewSave->SaveExpr));
+    EvalIfExpression(&ArgStr[1], &NewSave->SaveExpr);
+    SetListLineVal(&NewSave->SaveExpr);
   }
+  NewSave->Next = FirstIfSave;
   FirstIfSave = NewSave;
 }
 
@@ -290,7 +315,6 @@ static void CodeCASE(void)
 {
   Boolean eq;
   int z;
-  TempResult t;
 
   if (!FirstIfSave) WrError(ErrNum_MissingIf);
   else if (ChkArgCnt(1, ArgCntMax))
@@ -304,6 +328,9 @@ static void CodeCASE(void)
         eq = False;
       else
       {
+        TempResult t;
+
+        as_tempres_ini(&t);
         eq = False;
         z = 1;
         do
@@ -320,7 +347,7 @@ static void CodeCASE(void)
                eq = (t.Contents.Float == FirstIfSave->SaveExpr.Contents.Float);
                break;
              case TempString:
-               eq = (DynStringCmp(&t.Contents.Ascii, &FirstIfSave->SaveExpr.Contents.Ascii) == 0);
+               eq = (as_nonz_dynstr_cmp(&t.Contents.str, &FirstIfSave->SaveExpr.Contents.str) == 0);
                break;
              default:
                eq = False;
@@ -328,18 +355,19 @@ static void CodeCASE(void)
            }
           z++;
         }
-        while ((!eq) && (z <= ArgCnt));
+        while (!eq && (z <= ArgCnt));
+        as_tempres_free(&t);
       }
-      IfAsm = ((FirstIfSave->SaveIfAsm) && (eq) & (!FirstIfSave->CaseFound));
+      IfAsm = (FirstIfSave->SaveIfAsm && eq & !FirstIfSave->CaseFound);
       if (FirstIfSave->SaveIfAsm)
-        AddBoolFlag(eq && (!FirstIfSave->CaseFound));
+        AddBoolFlag(eq && !FirstIfSave->CaseFound);
       if (eq)
         FirstIfSave->CaseFound = True;
       FirstIfSave->State = IfState_CASECASE;
     }
   }
 
-  ActiveIF = (!FirstIfSave) || (FirstIfSave->SaveIfAsm);
+  ActiveIF = !FirstIfSave || FirstIfSave->SaveIfAsm;
 }
 
 
@@ -362,8 +390,6 @@ static void CodeELSECASE(void)
 
 static void CodeENDCASE(void)
 {
-  PIfSave NewSave;
-
   if (!ChkArgCnt(0, 0));
   else if (!FirstIfSave) WrError(ErrNum_MissingIf);
   else
@@ -373,12 +399,14 @@ static void CodeENDCASE(void)
     && (FirstIfSave->State != IfState_CASEELSE)) WrError(ErrNum_InvIfConst);
     else
     {
+      PIfSave NewSave;
+
       IfAsm = FirstIfSave->SaveIfAsm;
       if (!FirstIfSave->CaseFound) WrError(ErrNum_NoCaseHit);
       NewSave = FirstIfSave;
       FirstIfSave = NewSave->Next;
       as_snprintf(ListLine, STRINGSIZE, "[%u]", (unsigned)NewSave->StartLine);
-      free(NewSave);
+      ifsave_free(NewSave);
     }
   }
 
@@ -392,7 +420,7 @@ Boolean CodeIFs(void)
 
   ActiveIF = False;
 
-  switch (as_toupper(*OpPart.Str))
+  switch (as_toupper(*OpPart.str.p_str))
   {
     case 'I':
       if (Memo("IF")) CodeIF();
@@ -438,15 +466,14 @@ void RestoreIFs(Integer Level)
 {
   PIfSave OldSave;
 
-  while ((FirstIfSave) && (FirstIfSave->NestLevel != Level))
+  while (FirstIfSave && (FirstIfSave->NestLevel != Level))
   {
     OldSave = FirstIfSave;
     FirstIfSave = OldSave->Next;
     IfAsm = OldSave->SaveIfAsm;
-    free(OldSave);
+    ifsave_free(OldSave);
   }
 }
-
 
 Boolean IFListMask(void)
 {
@@ -464,12 +491,10 @@ Boolean IFListMask(void)
   return True;
 }
 
-
 void AsmIFInit(void)
 {
   IfAsm = True;
 }
-
 
 void asmif_init(void)
 {
