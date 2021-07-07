@@ -10,7 +10,7 @@ env:
   EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
   SHA1: ${{ github.sha }}
   FILE: asl-releases-ubuntu-gcc.tgz
-  PROJ: flamewing/asl-releases
+  PROJ: flamewing%2Fasl-releases
 
 jobs:
   coverity-linux:
