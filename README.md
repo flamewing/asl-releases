@@ -41,6 +41,7 @@ This is only relevant for Sonic disassemblies based on older versions of the Son
 
 More recent versions of AS have made a few changes that impact older disassemblies. Here are the changes and how to deal with them:
 
+- AS by default will look for includes in the directory of the current file being assembled. This has an effect on files being included by other files inside a sibdirectory. In the S2 Git disassembly, this issue was dealt with in [this commit](https://github.com/sonicretro/s2disasm/commit/3357ddcc2b6f5f44fdd09b8014350b76c701ab57), which just adds the disassembly's directory to the command line.
 - `moveq` no longer silently sign-extends a value; instead, it gives an error if you do use a value that cannot be represented as a byte sign-extended to 32-bits. In the S2 Git disassembly, this issue was dealt with in [this commit](https://github.com/sonicretro/s2disasm/commit/dbaa1b934fe04bde42764e34e42b9a1073a4bd4f) in the S2 Git disassembly.
 - `phase`/`dephase` were changed to be a stack: you now need a matching `dephase` for every `phase`. This issue was dealt with in [this commit](https://github.com/sonicretro/s2disasm/commit/dbaa1b934fe04bde42764e34e42b9a1073a4bd4f) in the S2 Git disassembly.
 - Adding a character constant to an integer results in a character constant, which can overflow the limits of a character and give an error. This issue was dealt with in [this commit](https://github.com/sonicretro/s2disasm/commit/0c1ace5c1b6b57157836d83416615285ca95c605) in the S2 Git disassembly.
