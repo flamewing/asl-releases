@@ -570,7 +570,7 @@ static void AddTmpSymLog(Boolean Back, LongInt Counter)
     TmpSymLogDepth++;
 }
 
-static Boolean ChkTmp1(char *Name, Boolean Define)
+static Boolean ChkTmp1(char *Name)
 {
   char *Src, *Dest;
   Boolean Result = FALSE;
@@ -717,7 +717,7 @@ static Boolean ChkTmp3(char *Name, Boolean Define)
 
 static Boolean ChkTmp(char *Name, Boolean Define)
 {
-  if (ChkTmp1(Name, Define))
+  if (ChkTmp1(Name))
   {
     return TRUE;
   }
@@ -1727,7 +1727,7 @@ func_exit2:
   KillPrefBlanksStrComp(&CopyComp);
   KillPostBlanksStrComp(&CopyComp);
 
-  ChkTmp1(CopyComp.str.p_str, FALSE);
+  ChkTmp1(CopyComp.str.p_str);
 
   /* interne Symbole ? */
 
