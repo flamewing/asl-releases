@@ -264,17 +264,6 @@ static Boolean MacroStart(void)
 
 static Boolean MacroEnd(void)
 {
-  if (Memo("ENDM"))
-  {
-    WasMACRO = True;
-    return True;
-  }
-  else
-    return False;
-}
-
-static Boolean ReptEnd(void)
-{
   if (Memo("ENDM") || Memo("ENDR"))
   {
     WasMACRO = True;
@@ -335,7 +324,7 @@ static void WaitENDR_Processor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (ReptEnd())
+  else if (MacroEnd())
     FirstOutputTag->NestLevel--;
   if (FirstOutputTag->NestLevel <= -1)
   {
@@ -1200,7 +1189,7 @@ static void IRP_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (ReptEnd())
+  else if (MacroEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */
@@ -1741,7 +1730,7 @@ static void REPT_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (ReptEnd())
+  else if (MacroEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */
@@ -1961,7 +1950,7 @@ static void WHILE_OutProcessor(void)
 
   if (MacroStart())
     FirstOutputTag->NestLevel++;
-  else if (ReptEnd())
+  else if (MacroEnd())
     FirstOutputTag->NestLevel--;
 
   /* falls noch nicht zuende, weiterzaehlen */

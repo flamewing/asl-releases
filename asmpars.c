@@ -2031,7 +2031,7 @@ void EvalStrStringExpression(const tStrComp *pExpr, Boolean *pResult, char *pEva
  * \param  pResult retrieved register
  * \param  pEvalResult success flag, symbol size & flags
  * \param  IssueErrors print errors at all?
- * \return occured error
+ * \return occurred error
  * ------------------------------------------------------------------------ */
 
 PSymbolEntry ExpandAndFindNode(const struct sStrComp *pComp, TempType SearchType)
