@@ -37,7 +37,7 @@ jobs:
           echo "::set-output name=REPO_ALIVE::${REPO_ALIVE}"
           echo "::set-output name=build_id::${build_id}"
           echo "::set-output name=tag_name::${tag_name}"
-          echo REPO_ALIVE=true >> $GITHUB_ENV
+          echo REPO_ALIVE=${REPO_ALIVE} >> $GITHUB_ENV
           echo BUILD_ID="${build_id}" >> $GITHUB_ENV
           echo TAG_NAME="${tag_name}" >> $GITHUB_ENV
       - name: Create release
