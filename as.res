@@ -707,7 +707,7 @@ Message ErrMsgMissingIf
 
 Message ErrMsgRekMacro
  "zu tief verschachtelter/rekursiver Makroaufruf"
- "too deeply nested/recursive makro call"
+ "too deeply nested/recursive macro call"
 
 Message ErrMsgUnknownFunc
  "unbekannte Funktion"
