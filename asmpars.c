@@ -603,7 +603,7 @@ static Boolean ChkTmp1(char *Name)
   return Result;
 }
 
-static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
+static Boolean ChkTmp2(char *pDest, const char *pSrc, as_symbol_source_t symbol_source)
 {
   const char *pRun, *pBegin, *pEnd;
   int Cnt;
@@ -634,7 +634,7 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
     Cnt = pRun - pBegin;
     if (pRun == pEnd)
     {
-      if ((Define) && (Cnt == 1))
+      if ((symbol_source != e_symbol_source_none) && (Cnt == 1))
       {
         as_snprintf(pDest, STRINGSIZE, "__back%d", (int)BackSymCounter);
         AddTmpSymLog(TRUE, BackSymCounter);
@@ -666,7 +666,7 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
     Cnt = pRun - pBegin;
     if (pRun == pEnd)
     {
-      if ((Define) && (Cnt == 1))
+      if ((symbol_source != e_symbol_source_none) && (Cnt == 1))
       {
         as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter++);
         Result = TRUE;
@@ -681,7 +681,7 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
 
   /* slash: only allowed for definition, but add to log for backward ref. */
 
-  else if ((pEnd - pBegin == 1) && (*pBegin == '/') && Define)
+  else if ((pEnd - pBegin == 1) && (*pBegin == '/') && (symbol_source != e_symbol_source_none))
   {
     AddTmpSymLog(FALSE, FwdSymCounter);
     as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter);
@@ -692,40 +692,32 @@ static Boolean ChkTmp2(char *pDest, const char *pSrc, Boolean Define)
   return Result;
 }
 
-static Boolean ChkTmp3(char *Name, Boolean Define)
+static Boolean ChkTmp3(char *Name, as_symbol_source_t symbol_source)
 {
-  Boolean Result = FALSE;
-
   if ('.' == *Name)
   {
-    String Tmp;
-
-    strmaxcpy(Tmp, LastGlobSymbol, STRINGSIZE);
-    strmaxcat(Tmp, Name, STRINGSIZE);
-    strmaxcpy(Name, Tmp, STRINGSIZE);
-
-    Result = TRUE;
+    strmaxprep2(Name, LastGlobSymbol, STRINGSIZE);
+    return True;
   }
-  else if (Define)
-  {
+
+  if (symbol_source != e_symbol_source_none) {
     strmaxcpy(LastGlobSymbol, Name, STRINGSIZE);
     *TmpSymCounterVal = '\0';
   }
-
-  return Result;
+  return False;
 }
 
-static Boolean ChkTmp(char *Name, Boolean Define)
+static Boolean ChkTmp(char *Name, as_symbol_source_t symbol_source)
 {
   if (ChkTmp1(Name))
   {
     return TRUE;
   }
-  if (ChkTmp2(Name, Name, Define))
+  if (ChkTmp2(Name, Name, symbol_source))
   {
     return TRUE;
   }
-  if (ChkTmp3(Name, Define))
+  if (ChkTmp3(Name, symbol_source))
   {
     return TRUE;
   }
@@ -1270,7 +1262,7 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   /* sort out local symbols like - and +++.  Do it now to get them out of the
      formula parser's way. */
 
-  ChkTmp2(CopyComp.str.p_str, CopyComp.str.p_str, FALSE);
+  ChkTmp2(CopyComp.str.p_str, CopyComp.str.p_str, e_symbol_source_none);
   StrCompCopy(&STempComp, &CopyComp);
 
   /* Programmzaehler ? */
@@ -2387,17 +2379,15 @@ void ChangeSymbol(PSymbolEntry pEntry, LargeInt Value)
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspace, Boolean MayChange, tSymbolFlags Flags)
- * \brief  add integer symbol to symbol table
- * \param  pName unexpanded name
- * \param  Wert integer value
- * \param  addrspace symbol's address space
- * \param  MayChange constant or variable?
- * \param  Flags additional flags
- * \return * to newly created entry in tree
+ * \fn     CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle, tSymbolFlags symbol_flags)
+ * \brief  create empty container for symbol tabl eentry
+ * \param  pName unexpanded symbol name
+ * \param  pDestHandle section handle (out)
+ * \param  symbol_flags symbol flags
+ * \return * to container or NULL
  * ------------------------------------------------------------------------ */
 
-PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
+PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle, tSymbolFlags symbol_flags)
 {
   PSymbolEntry pNeu;
   String ExtName;
@@ -2406,7 +2396,7 @@ PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
     return NULL;
   if (!GetSymSection(ExtName, pDestHandle, pName))
     return NULL;
-  (void)ChkTmp(ExtName, TRUE);
+  (void)ChkTmp(ExtName, (symbol_flags & eSymbolFlag_Label) ? e_symbol_source_label : e_symbol_source_define);
   if (!ChkSymbName(ExtName))
   {
     WrStrErrorPos(ErrNum_InvSymName, pName);
@@ -2418,10 +2408,21 @@ PSymbolEntry CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle)
   return pNeu;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspace, Boolean MayChange, tSymbolFlags Flags)
+ * \brief  add integer symbol to symbol table
+ * \param  pName unexpanded name
+ * \param  Wert integer value
+ * \param  addrspace symbol's address space
+ * \param  MayChange constant or variable?
+ * \param  Flags additional flags
+ * \return * to newly created entry in tree
+ * ------------------------------------------------------------------------ */
+
 PSymbolEntry EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspace, Boolean MayChange, tSymbolFlags Flags)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, Flags);
 
   if (!pNeu)
     return NULL;
@@ -2456,7 +2457,7 @@ PSymbolEntry EnterIntSymbolWithFlags(const tStrComp *pName, LargeInt Wert, as_ad
 void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspace, Boolean MayChange)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, eSymbolFlag_None);
 
   if (!pNeu)
     return;
@@ -2494,7 +2495,7 @@ void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspa
 PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspace, Boolean MayChange)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, eSymbolFlag_None);
 
   if (!pNeu)
     return NULL;
@@ -2532,7 +2533,7 @@ PSymbolEntry EnterRelSymbol(const tStrComp *pName, LargeInt Wert, as_addrspace_t
 void EnterFloatSymbol(const tStrComp *pName, Double Wert, Boolean MayChange)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, eSymbolFlag_None);
 
   if (!pNeu)
     return;
@@ -2566,7 +2567,7 @@ void EnterFloatSymbol(const tStrComp *pName, Double Wert, Boolean MayChange)
 void EnterNonZStringSymbolWithFlags(const tStrComp *pName, const as_nonz_dynstr_t *p_value, Boolean MayChange, tSymbolFlags Flags)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, Flags);
 
   if (!pNeu)
     return;
@@ -2623,7 +2624,7 @@ void EnterStringSymbol(const tStrComp *pName, const char *pValue, Boolean MayCha
 void EnterRegSymbol(const struct sStrComp *pName, const tRegDescr *pDescr, tSymbolSize Size, Boolean MayChange, Boolean AddList)
 {
   LongInt DestHandle;
-  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle);
+  PSymbolEntry pNeu = CreateSymbolEntry(pName, &DestHandle, eSymbolFlag_None);
 
   if (!pNeu)
     return;
@@ -2731,7 +2732,7 @@ static PSymbolEntry FindNode(const char *Name_O, TempType SearchType)
   String Name;
 
   strmaxcpy(Name, Name_O, STRINGSIZE);
-  ChkTmp3(Name, FALSE);
+  ChkTmp3(Name, e_symbol_source_none);
 
   /* TODO: pass StrComp */
   if (!GetSymSection(Name, &DestSection, NULL))
@@ -2786,7 +2787,7 @@ static PSymbolEntry FindLocNode(const char *Name_O, TempType SearchType)
   String Name;
 
   strmaxcpy(Name, Name_O, STRINGSIZE);
-  ChkTmp3(Name, FALSE);
+  ChkTmp3(Name, e_symbol_source_none);
   if (!CaseSensitive)
     NLS_UpString(Name);
 
