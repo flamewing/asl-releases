@@ -1409,34 +1409,85 @@ static Boolean CompressLine_NErl(char ch)
        || ((ch >= '0') && (ch <= '9')));
 }
 
+static Boolean IsValidParameterName(as_dynstr_t *p_str, int Pos, int End, int StrLen)
+{
+  return (Pos == 0 || !CompressLine_NErl(p_str->p_str[Pos - 1]))
+      && (End >= StrLen || !CompressLine_NErl(p_str->p_str[End]));
+}
+
 typedef int (*tCompareFnc)(const char *s1, const char *s2, size_t n);
+
+int ReplaceToken(as_dynstr_t *p_str, const char *pReplace, int Pos, int End, int SearchLen, int ReplaceLen, int DeltaLen, int *StrLen)
+{
+    if (*StrLen + DeltaLen + 1 > (int)p_str->capacity)
+      as_dynstr_realloc(p_str, as_dynstr_roundup_len(p_str->capacity + DeltaLen));
+    int Avail = p_str->capacity - 1 - Pos;
+    int nCopy = ReplaceLen;
+    if (nCopy > Avail) {
+      nCopy = Avail;
+    }
+    Avail -= nCopy;
+    int nMove = *StrLen - End;
+    if (nMove > Avail) {
+      nMove = Avail;
+    }
+    memmove(&p_str->p_str[Pos + nCopy], &p_str->p_str[End], nMove);
+    memcpy(&p_str->p_str[Pos], pReplace, nCopy);
+    p_str->p_str[Pos + nCopy + nMove] = '\0';
+    *StrLen += DeltaLen;
+    return Pos + nCopy;
+}
 
 int ReplaceLine(as_dynstr_t *p_str, const char *pSearch, const char *pReplace, Boolean CaseSensitive)
 {
-  int SearchLen = strlen(pSearch), ReplaceLen = strlen(pReplace), StrLen = strlen(p_str->p_str), DeltaLen = ReplaceLen - SearchLen;
-  int NumReplace = 0, Pos, End, CmpRes, Avail, nCopy, nMove;
+  const int SearchLen = strlen(pSearch);
+  const int ReplaceLen = strlen(pReplace);
+  const int DeltaLen = ReplaceLen - SearchLen;
+  int StrLen = strlen(p_str->p_str);
+  int NumReplace = 0;
   tCompareFnc Compare = CaseSensitive ? strncmp : as_strncasecmp;
 
-  Pos = 0;
+  int Pos = 0;
   while (Pos <= StrLen - SearchLen)
   {
-    End = Pos + SearchLen;
-    CmpRes = Compare(&p_str->p_str[Pos], pSearch, SearchLen);
-    if ((!CmpRes)
-     && ((Pos == 0) || (!CompressLine_NErl(p_str->p_str[Pos - 1])))
-     && ((End >= StrLen) || (!CompressLine_NErl(p_str->p_str[End]))))
+    int Start = Pos;
+    int End = Pos + SearchLen;
+    int extraDeltaLen = 0;
+    Boolean IsSurroundedByBackslashes = FALSE;
+    if (p_str->p_str[Pos] == '\\' && End + 1 < StrLen && p_str->p_str[End + 1] == '\\') {
+      Start++;
+      extraDeltaLen = 2;
+      End += extraDeltaLen;
+      IsSurroundedByBackslashes = TRUE;
+    }
+    const int CmpRes = Compare(&p_str->p_str[Start], pSearch, SearchLen);
+    if (!CmpRes && (IsSurroundedByBackslashes || IsValidParameterName(p_str, Pos, End, StrLen)))
     {
-      if (StrLen + DeltaLen + 1 > (int)p_str->capacity)
-        as_dynstr_realloc(p_str, as_dynstr_roundup_len(p_str->capacity + DeltaLen));
-      Avail = p_str->capacity - 1 - Pos;
-      nCopy = ReplaceLen; if (nCopy > Avail) nCopy = Avail;
-      Avail -= nCopy;
-      nMove = StrLen - (Pos + SearchLen); if (nMove > Avail) nMove = Avail;
-      memmove(&p_str->p_str[Pos + nCopy], &p_str->p_str[Pos + SearchLen], nMove);
-      memcpy(&p_str->p_str[Pos], pReplace, nCopy);
-      p_str->p_str[Pos + nCopy + nMove] = '\0';
-      Pos += nCopy;
-      StrLen += DeltaLen;
+      Pos = ReplaceToken(p_str, pReplace, Pos, End, SearchLen, ReplaceLen, DeltaLen - extraDeltaLen, &StrLen);
+      NumReplace++;
+    }
+    else
+      Pos++;
+  }
+  return NumReplace;
+}
+
+int ReplaceLineUnchecked(as_dynstr_t *p_str, const char *pSearch, const char *pReplace, Boolean CaseSensitive)
+{
+  const int SearchLen = strlen(pSearch);
+  const int ReplaceLen = strlen(pReplace);
+  const int DeltaLen = ReplaceLen - SearchLen;
+  int StrLen = strlen(p_str->p_str);
+  int NumReplace = 0;
+  tCompareFnc Compare = CaseSensitive ? strncmp : as_strncasecmp;
+
+  int Pos = 0;
+  while (Pos <= StrLen - SearchLen)
+  {
+    const int CmpRes = Compare(&p_str->p_str[Pos], pSearch, SearchLen);
+    if (!CmpRes)
+    {
+      Pos = ReplaceToken(p_str, pReplace, Pos, Pos + SearchLen, SearchLen, ReplaceLen, DeltaLen, &StrLen);
       NumReplace++;
     }
     else
@@ -1480,7 +1531,7 @@ void ExpandLine(const char *TokNam, unsigned TokenNum, as_dynstr_t *p_str)
 {
   char Token[3];
   SetToken(Token, TokenNum);
-  (void)ReplaceLine(p_str, Token, TokNam, True);
+  (void)ReplaceLineUnchecked(p_str, Token, TokNam, True);
 }
 
 void KillCtrl(char *Line)
