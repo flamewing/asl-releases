@@ -4509,10 +4509,32 @@ static void DecodeFNOP(Word Code) {
     }
 }
 
-static void DecodeFMOVE(Word Code) {
-    char*    pKSep;
-    tStrComp KArg;
+/* TODO: does a { } suffix to <dest> as k factor conflict
+   with other features, like stringification?  Maybe better
+   check whether this is a valid k factor (register (symbol)
+   or immediate) and only cut off if yes.  We might not be
+   able to use DecodeAdr() for this any more: */
 
+static char* split_k(tStrComp* p_arg, tStrComp* p_k) {
+    int   l = strlen(p_arg->str.p_str);
+    char* p_sep;
+
+    if ((l < 2) || (p_arg->str.p_str[l - 1] != '}')) {
+        return NULL;
+    }
+    p_sep = RQuotPos(p_arg->str.p_str, '{');
+    if (!p_sep) {
+        return NULL;
+    }
+
+    StrCompSplitRef(p_arg, p_k, p_arg, p_sep);
+    StrCompShorten(p_k, 1);
+    KillPostBlanksStrComp(p_arg);
+    KillPrefBlanksStrCompRef(p_k);
+    return p_sep;
+}
+
+static void DecodeFMOVE(Word Code) {
     UNUSED(Code);
 
     if (!ChkArgCnt(2, 2))
@@ -4524,13 +4546,15 @@ static void DecodeFMOVE(Word Code) {
     else {
         Word       DestMask, SrcMask;
         tAdrResult AdrResult;
+        tStrComp   KArg;
 
         /* k-Faktor abspalten */
 
-        pKSep = strchr(AttrPart.str.p_str, '{');
-        if (pKSep) {
-            StrCompSplitRef(&AttrPart, &KArg, &AttrPart, pKSep);
-            StrCompShorten(&KArg, 1);
+        LineCompReset(&KArg.Pos);
+        if (OpSize == eSymbolSizeFloatDec96Bit) {
+            if (!split_k(&AttrPart, &KArg)) {
+                split_k(&ArgStr[2], &KArg);
+            }
         }
 
         DestMask = MModAdrI | MModPost | MModPre | MModDAdrI | MModFPCR | MModFPn;
@@ -4603,7 +4627,7 @@ static void DecodeFMOVE(Word Code) {
                 WAsmCode[1] = 0x6000 | (((Word)FSizeCodes[OpSize]) << 10)
                               | (AdrResult.Mode << 7);
                 if (OpSize == eSymbolSizeFloatDec96Bit) {
-                    if (pKSep && (strlen(KArg.str.p_str) > 0)) {
+                    if (KArg.Pos.Len > 0) {
                         OpSize = eSymbolSize8Bit;
                         switch (DecodeAdr(&KArg, MModData | MModImm, &AdrResult)) {
                         case ModData:
