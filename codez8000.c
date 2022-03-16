@@ -2785,10 +2785,15 @@ static void DecodePUSH_POP(Word Code) {
                         (int)AddrRegSize(), 0, eSymbolSizeUnknown);
                 break;
             case eModIReg:
-            case eModIndexed:
                 Index = ChkRegOverlap(
                         (unsigned)OpAdrVals.Val, AddrRegSize(), (unsigned)RegAdrVals.Val,
                         (int)AddrRegSize(), 0, eSymbolSizeUnknown);
+                break;
+            case eModIndexed:
+                Index = ChkRegOverlap(
+                        (unsigned)OpAdrVals.Val, eSymbolSize16Bit,
+                        (unsigned)RegAdrVals.Val, (int)AddrRegSize(), 0,
+                        eSymbolSizeUnknown);
                 break;
             default:
                 Index = -1;
