@@ -50,7 +50,7 @@ _Default Integer Syntax: Motorola_
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `PRWINS` (68HC11K4) `RMB`
 
 #### Motorola/Freescale 6805/68HC(S)08
 
@@ -236,7 +236,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Intel_
 
-> `DB` `DD` `DEFB` `DEFW` `DN` `DQ` `DS` `DT` `DW` `EXTMODE` `LWORDMODE` `REG`
+> `DB` `DD` `DEFB` `DEFW` `DN` `DQ` `DS` `DT` `DW` `EXTMODE` `LWORDMODE` `PRWINS` (Z180) `REG`
 
 #### Zilog Z8
 
@@ -550,7 +550,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: IBM_
 
-> `DC` `DS`
+> `DC` `DS` `PACKING`
 
 #### Padauk PMC/PMS/PFSxxx
 
@@ -590,7 +590,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: IBM (hex), C (oct)_
 
-> `BYTE` `RES` `TEXT` `WORD` `ZERO`
+> `BYTE` `PACKING` `RES` `TEXT` `WORD` `ZERO`
 
 <!-- markdownlint-enable MD036 -->
 <!-- markdownlint-enable MD030 -->

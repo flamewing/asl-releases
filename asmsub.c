@@ -16,6 +16,7 @@
 #include "asmdebug.h"
 #include "asmdef.h"
 #include "asmpars.h"
+#include "chardefs.h"
 #include "chunks.h"
 #include "console.h"
 #include "errmsg.h"
@@ -1147,7 +1148,8 @@ Boolean ChkMacSymbName(char const* pSym) {
 
 /*!------------------------------------------------------------------------
  * \fn     visible_strlen(const char *pSym)
- * \brief  retrieve 'visible' length of string, regarding multi-by sequences for UTF-8
+ * \brief  retrieve 'visible' length of string, regarding multi-byte
+           sequences for UTF-8
  * \param  pSym symbol name
  * \return visible length in characters
  * ------------------------------------------------------------------------ */
@@ -1157,8 +1159,7 @@ unsigned visible_strlen(char const* pSym) {
         unsigned Result = 0;
 
         while (*pSym) {
-            (void)UTF8ToUnicode(&pSym);
-            Result++;
+            Result += as_wcwidth(UTF8ToUnicode(&pSym));
         }
         return Result;
     } else {

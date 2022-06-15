@@ -826,6 +826,8 @@ In addition to the operators, the assembler defines another line of primarily tr
 | FIRSTBIT    | lowest 1-bit                           | integer                     | integer                            |
 | LASTBIT     | highest 1-bit                          | integer                     | integer                            |
 | BITPOS      | unique 1-bit                           | integer                     | integer                            |
+| PHYS2CPU    | physical to CPU address mapping        | integer                     | integer                            |
+| CPU2PHYS    | CPU to physical address mapping        | integer                     | integer                            |
 | SGN         | sign (0/1/-1)                          | floating point or integer   | integer                            |
 | ABS         | absolute value                         | integer or floating point   | integer or floating point          |
 | TOUPPER     | matching capital                       | integer                     | integer                            |

@@ -25,6 +25,8 @@
 #include "console.h"
 #include "errmsg.h"
 #include "fileformat.h"
+#include "function.h"
+#include "nlmessages.h"
 #include "nls.h"
 #include "operator.h"
 #include "strutil.h"
@@ -1332,12 +1334,14 @@ static void CodeALIGN(Word Index) {
 
 static void CodeASSUME(Word Index) {
     int          z1;
-    unsigned     z2;
+    unsigned     z2, z3;
     Boolean      OK;
     tSymbolFlags Flags;
     LongInt      HVal;
     tStrComp     RegPart, ValPart;
     char *       pSep, EmptyStr[] = "";
+    void (*pPostProcs[5])(void);
+    unsigned PostProcCount = 0;
 
     UNUSED(Index);
 
@@ -1351,7 +1355,7 @@ static void CodeASSUME(Word Index) {
     if (ChkArgCnt(1, ArgCntMax)) {
         z1 = 1;
         OK = True;
-        while ((z1 <= ArgCnt) && (OK)) {
+        while ((z1 <= ArgCnt) && OK) {
             pSep = QuotPos(ArgStr[z1].str.p_str, ':');
             if (pSep) {
                 StrCompSplitRef(&RegPart, &ValPart, &ArgStr[z1], pSep);
@@ -1388,11 +1392,28 @@ static void CodeASSUME(Word Index) {
                         }
                     }
                 }
+                /* collect different post procs so same proc is called only once */
                 if (pASSUMERecs[z2].pPostProc) {
-                    pASSUMERecs[z2].pPostProc();
+                    for (z3 = 0; z3 < PostProcCount; z3++) {
+                        if (pASSUMERecs[z2].pPostProc == pPostProcs[z3]) {
+                            break;
+                        }
+                    }
+                    if (z3 >= PostProcCount) {
+                        if (PostProcCount >= as_array_size(pPostProcs)) {
+                            for (z3 = 0; z3 < PostProcCount; z3++) {
+                                pPostProcs[z3]();
+                            }
+                            PostProcCount = 0;
+                        }
+                        pPostProcs[PostProcCount++] = pASSUMERecs[z2].pPostProc;
+                    }
                 }
             }
             z1++;
+        }
+        for (z3 = 0; z3 < PostProcCount; z3++) {
+            pPostProcs[z3]();
         }
     }
 }

@@ -34,7 +34,8 @@
 #define BranchExtCmdName   "BRANCHEXT"
 #define BranchExtSymName   "BRANCHEXT"
 
-extern Boolean FPUAvail, PMMUAvail, SupAllowed, MaxMode, TargetBigEndian, DoPadding;
+extern Boolean FPUAvail, PMMUAvail, SupAllowed, MaxMode, TargetBigEndian, DoPadding,
+        Packing;
 
 /* NOTE: will have to switch this to #define as soon as
    everything up to 2**15 is used up - 16 bit compilers
@@ -65,6 +66,7 @@ extern void onoff_pmmu_add(void);
 extern void onoff_supmode_add(void);
 extern void onoff_maxmode_add(void);
 extern void onoff_bigendian_add(void);
+extern void onoff_packing_add(Boolean def_value);
 
 extern void onoff_common_init(void);
 

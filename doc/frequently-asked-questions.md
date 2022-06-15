@@ -71,5 +71,11 @@ Windows and Linux systems use slightly different formats for text files (hex fil
     awk '{print $0"\r"}' test.hex >test_cr.hex
 ```
 
+Q:
+How can I load the upper and lower bytes of a 16-bit address into separate CPU registers?
+
+A:
+Use the built-in logical and shift operators, or include `bitfuncs.inc`, which defines `lo()` and `hi()`.
+
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->

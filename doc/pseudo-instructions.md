@@ -1070,7 +1070,7 @@ Similar to the previous instructions, the argument to `PADDING` may be either `O
 
 ### PACKING
 
-_valid for: AVR_
+_valid for: AVR, MN1610, CP1600_
 
 In some way, `PACKING` is similar to `PADDING`, it just has a somewhat opposite effect: While `PADDING` extends the disposed data to get full words and keep a possible alignment, `PACKING` squeezes several values into a single word. This makes sense for the AVR's code segment since the CPU has a special instruction (`LPM`) to access single bytes within a 16-bit word. In case this option is turned on (argument `ON`), two byte values are packed into a single word by `DATA`, similar to the single characters of string arguments. The value range of course reduces to -128...+255. If this option is turned off (argument `OFF`), each integer argument obtains its own word and may take values from -32768...+65535.
 
@@ -1229,7 +1229,13 @@ In contrast to its 'predecessors' like the 6800 and 6502, the position of the di
 
 #### 68HC11K4
 
-Also for the HC11, the designers finally weren't able to avoid the major sin: using a banking scheme to address more than 64 Kbytes with only 16 address lines. The registers `MMSIZ`, `MMWBR`, `MM1CR`, and `MM2CR` control whether and how the additional 512K address ranges are mapped into the physical address space. AS initially assumes the reset state of these registers, i.e. all are set to $00 and windowing is disabled.
+The HC11 uses banking to address more than 64 Kbytes with 16 address lines. The registers `MMSIZ`, `MMWBR`, `MM1CR`, and `MM2CR` control how the additional 512K address ranges are mapped into the CPU's address space. AS initially assumes their reset state: all are `$00` and windowing is disabled.
+
+`ASSUME` also accepts `CONFIG`, `INIT`, and `INIT2`. These describe the mapping of I/O registers, internal RAM, and EEPROM into CPU address space, which takes priority over windowed memory. `PRWINS` displays the current registers and mapping.
+
+#### Z180
+
+The Z180's MMU maps the CPU's 64 Kbyte logical address space into a 512 Kbyte physical space. Set `CBAR`, `CBR`, and `BBR` with `ASSUME` to describe this mapping. AS keeps a mapping table but does not automatically translate physical addresses into logical addresses for this target. Use `phys2cpu()` to query the mapping, and `PRWINS` to display it. The common mapping table also supports `cpu2phys()` for the reverse direction.
 
 #### 68HC12X
 

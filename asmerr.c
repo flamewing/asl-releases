@@ -896,6 +896,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_UnknownBitBltOpt:
         msgno = Num_ErrMsgUnknownBitBltOpt;
         break;
+    case ErrNum_InvCBAR:
+        msgno = Num_ErrMsgInvCBAR;
+        break;
     case ErrNum_InternalError:
         msgno = Num_ErrMsgInternalError;
         break;
