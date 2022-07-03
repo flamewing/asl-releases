@@ -39,8 +39,8 @@ typedef struct sStructNode {
 
 PStructStack StructStack, /* momentan offene Strukturen */
         pInnermostNamedStruct;
-int         StructSaveSeg; /* gesichertes Segment waehrend Strukturdef.*/
-PStructNode StructRoot = NULL;
+as_addrspace_t StructSaveSeg; /* gesichertes Segment waehrend Strukturdef.*/
+PStructNode    StructRoot = NULL;
 
 /*****************************************************************************/
 

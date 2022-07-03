@@ -21,6 +21,7 @@
 #include "errmsg.h"
 #include "ieeefloat.h"
 #include "nls.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -646,20 +647,23 @@ static Boolean DecodePseudo(void) {
                     switch (t.Typ) {
                     case TempString: {
                         unsigned z2;
+                        LongWord Trans;
 
                         if (MultiCharToInt(&t, 4)) {
                             goto ToInt;
                         }
 
                         for (z2 = 0; z2 < t.Contents.str.len; z2++) {
-                            if ((z2 & 3) == 0) {
-                                DAsmCode[cnt++] = 0;
+                            Trans = CharTransTable
+                                    [((usint)t.Contents.str.p_str[z2]) & 0xff];
+                            if (Packing) {
+                                if ((z2 & 3) == 0) {
+                                    DAsmCode[cnt++] = 0;
+                                }
+                                DAsmCode[cnt - 1] += Trans << (8 * (3 - (z2 & 3)));
+                            } else {
+                                DAsmCode[cnt++] = Trans;
                             }
-                            DAsmCode[cnt - 1]
-                                    += (((LongWord)CharTransTable
-                                                 [((usint)t.Contents.str.p_str[z2])
-                                                  & 0xff]))
-                                       << (8 * (3 - (z2 & 3)));
                         }
                         break;
                     }
@@ -2873,6 +2877,8 @@ static void SwitchTo_3206X(void) {
     SwitchFrom = SwitchFrom_3206X;
     ParRecs    = (InstrRec*)malloc(sizeof(InstrRec) * MaxParCnt);
     InitFields();
+
+    onoff_packing_add(True);
 
     ParCnt     = 0;
     PacketAddr = 0;

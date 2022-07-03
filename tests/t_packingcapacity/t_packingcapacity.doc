@@ -1,0 +1,3 @@
+Check packed and unpacked 32-bit string storage beyond the initial
+code-buffer capacity. Expected bytes are independently derived from
+big-endian character packing in little-endian output words.

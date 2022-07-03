@@ -20,9 +20,11 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "codepseudo.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
 #include "ieeefloat.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <math.h>
@@ -733,21 +735,11 @@ static void DecodeDATA_TI34x(Word Code) {
                 }
                 break;
             case TempString: {
-                unsigned z2;
-
                 if (MultiCharToInt(&t, 4)) {
                     goto ToInt;
                 }
 
-                for (z2 = 0; z2 < t.Contents.str.len; z2++) {
-                    if (!(z2 & 3)) {
-                        DAsmCode[CodeLen++] = 0;
-                    }
-                    DAsmCode[CodeLen - 1]
-                            |= (((LongWord)CharTransTable
-                                         [((usint)t.Contents.str.p_str[z2]) & 0xff]))
-                               << (8 * (3 - (z2 & 3)));
-                }
+                string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
                 break;
             }
             default:

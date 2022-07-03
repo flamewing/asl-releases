@@ -1070,7 +1070,7 @@ Similar to the previous instructions, the argument to `PADDING` may be either `O
 
 ### PACKING
 
-_valid for: AVR, MN1610, CP1600_
+_valid for: 56000, AVR, TMS320C3x/C4x, TMS320C6x, MN1610, CP1600, μPD7720/7725, μPD77230_
 
 In some way, `PACKING` is similar to `PADDING`, it just has a somewhat opposite effect: While `PADDING` extends the disposed data to get full words and keep a possible alignment, `PACKING` squeezes several values into a single word. This makes sense for the AVR's code segment since the CPU has a special instruction (`LPM`) to access single bytes within a 16-bit word. In case this option is turned on (argument `ON`), two byte values are packed into a single word by `DATA`, similar to the single characters of string arguments. The value range of course reduces to -128...+255. If this option is turned off (argument `OFF`), each integer argument obtains its own word and may take values from -32768...+65535.
 

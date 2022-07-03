@@ -21,11 +21,13 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
 #include "ieeefloat.h"
 #include "nls.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <ctype.h>
@@ -620,7 +622,6 @@ static Boolean DecodePseudo(void) {
     Boolean  OK;
     LongWord temp;
     LongInt  sign, mant, expo, Size;
-    char *   cp, *cend;
 
     if (Memo("DW")) {
         if (ChkArgCnt(1, ArgCntMax)) {
@@ -629,7 +630,7 @@ static Boolean DecodePseudo(void) {
             as_tempres_ini(&t);
             z  = 1;
             OK = True;
-            while ((OK) && (z <= ArgCnt)) {
+            while (OK && (z <= ArgCnt)) {
                 EvalStrExpression(&ArgStr[z], &t);
                 switch (t.Typ) {
                 case TempString:
@@ -637,19 +638,7 @@ static Boolean DecodePseudo(void) {
                         goto ToInt;
                     }
 
-                    for (z = 0, cp = t.Contents.str.p_str, cend = cp + t.Contents.str.len;
-                         cp < cend; cp++, z++) {
-                        TransTableCheckRead();
-                        DAsmCode[CodeLen] = (DAsmCode[CodeLen] << 8)
-                                            + CharTransTable[((usint)*cp) & 0xff];
-                        if ((z & 3) == 3) {
-                            CodeLen++;
-                        }
-                    }
-                    if ((z & 3) != 0) {
-                        DAsmCode[CodeLen] = (DAsmCode[CodeLen]) << ((4 - (z & 3)) << 3);
-                        CodeLen++;
-                    }
+                    OK = !string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
                     break;
                 case TempInt:
                 ToInt:
@@ -1080,7 +1069,7 @@ static void MakeCode_77230(void) {
             WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
             Error = True;
         }
-    } while ((!Error) && (*OpPart.str.p_str != '\0'));
+    } while (!Error && (*OpPart.str.p_str != '\0'));
 
     /* passende Verknuepfung suchen */
 
@@ -1255,6 +1244,8 @@ static void SwitchTo_77230(void) {
     ListGrans[SegRData] = 4;
     SegInits[SegRData]  = 0;
     SegLimits[SegRData] = 0x3ff;
+
+    onoff_packing_add(True);
 
     MakeCode   = MakeCode_77230;
     IsDef      = IsDef_77230;

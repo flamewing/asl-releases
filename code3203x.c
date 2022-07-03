@@ -21,6 +21,8 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
+#include "nls.h"
+#include "onoff_common.h"
 #include "strutil.h"
 #include "tipseudo.h"
 
@@ -1968,6 +1970,8 @@ static void SwitchTo_3203X(void) {
         SegLimits[SegCode] = 0xfffffful;
         CxxRegs            = C3XRegs;
     }
+
+    onoff_packing_add(True);
 
     pASSUMERecs  = ASSUME3203s;
     ASSUMERecCnt = ASSUME3203Count;

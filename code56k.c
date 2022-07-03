@@ -19,6 +19,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -942,104 +943,6 @@ static Boolean DecodeMOVE(int Start) {
     }
 }
 
-static Boolean DecodePseudo(void) {
-    Boolean      OK;
-    tSymbolFlags Flags;
-    Word         AdrWord;
-    /*   Byte Segment;*/
-    LongInt HInt;
-
-    if (Memo("XSFR")) {
-        CodeEquate(SegXData, 0, MemLimit);
-        return True;
-    }
-
-    if (Memo("YSFR")) {
-        CodeEquate(SegYData, 0, MemLimit);
-        return True;
-    }
-
-    if (Memo("DS")) {
-        if (ChkArgCnt(1, 1)) {
-            AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrInt, &OK, &Flags);
-            if (mFirstPassUnknown(Flags)) {
-                WrError(ErrNum_FirstPassCalc);
-            }
-            if (OK && !mFirstPassUnknown(Flags)) {
-                if (!AdrWord) {
-                    WrError(ErrNum_NullResMem);
-                }
-                CodeLen   = AdrWord;
-                DontPrint = True;
-                BookKeeping();
-            }
-        }
-        return True;
-    }
-
-    if (Memo("DC")) {
-        TempResult t;
-
-        as_tempres_ini(&t);
-        if (ChkArgCnt(1, ArgCntMax)) {
-            OK = True;
-            for (int z = 1; OK && (z <= ArgCnt); z++) {
-                EvalStrExpression(&ArgStr[z], &t);
-                switch (t.Typ) {
-                case TempString: {
-                    int BCount;
-
-                    if (MultiCharToInt(&t, 3)) {
-                        goto ToInt;
-                    }
-
-                    BCount            = 2;
-                    DAsmCode[CodeLen] = 0;
-                    for (size_t z2 = 0; z2 < t.Contents.str.len; z2++) {
-                        HInt = t.Contents.str.p_str[z2];
-                        TransTableCheckRead();
-                        HInt = CharTransTable[((usint)HInt) & 0xff];
-                        HInt <<= (BCount * 8);
-                        DAsmCode[CodeLen] |= HInt;
-                        if (--BCount < 0) {
-                            BCount              = 2;
-                            DAsmCode[++CodeLen] = 0;
-                        }
-                    }
-                    if (BCount != 2) {
-                        CodeLen++;
-                    }
-                    break;
-                }
-                ToInt:
-                case TempInt:
-                    if (mFirstPassUnknown(t.Flags)) {
-                        t.Contents.Int &= 0xffffff;
-                    }
-                    if (!(OK = RangeCheck(t.Contents.Int, Int24))) {
-                        WrError(ErrNum_OverRange);
-                    } else {
-                        DAsmCode[CodeLen++] = t.Contents.Int & 0xffffff;
-                    }
-                    break;
-                case TempFloat:
-                    WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
-                    /* fall-through */
-                default:
-                    OK = False;
-                }
-            }
-            if (!OK) {
-                CodeLen = 0;
-            }
-        }
-        as_tempres_free(&t);
-        return True;
-    }
-
-    return False;
-}
-
 static tErrorNum       ErrCode;
 static tStrComp const* pErrComp;
 
@@ -1062,6 +965,77 @@ static void PrError(void) {
 }
 
 /*----------------------------------------------------------------------------------------------*/
+
+static void DecodeSFR(Word space) {
+    CodeEquate((as_addrspace_t)space, 0, MemLimit);
+}
+
+static void DecodeDS(Word Code) {
+    UNUSED(Code);
+
+    if (ChkArgCnt(1, 1)) {
+        Boolean      OK;
+        tSymbolFlags Flags;
+        Word AdrWord = EvalStrIntExpressionWithFlags(&ArgStr[1], AdrInt, &OK, &Flags);
+
+        if (mFirstPassUnknown(Flags)) {
+            WrError(ErrNum_FirstPassCalc);
+        }
+        if (OK && !mFirstPassUnknown(Flags)) {
+            if (!AdrWord) {
+                WrError(ErrNum_NullResMem);
+            }
+            CodeLen   = AdrWord;
+            DontPrint = True;
+            BookKeeping();
+        }
+    }
+}
+
+static void DecodeDC(Word Code) {
+    TempResult t;
+
+    UNUSED(Code);
+
+    as_tempres_ini(&t);
+    if (ChkArgCnt(1, ArgCntMax)) {
+        Word    z;
+        Boolean OK = True;
+
+        for (z = 1; OK && (z <= ArgCnt); z++) {
+            EvalStrExpression(&ArgStr[z], &t);
+            switch (t.Typ) {
+            case TempString:
+                if (MultiCharToInt(&t, 3)) {
+                    goto ToInt;
+                }
+
+                OK = !string_2_dasm_code(&t.Contents.str, Packing ? 3 : 1, True);
+                break;
+            ToInt:
+            case TempInt:
+                if (mFirstPassUnknown(t.Flags)) {
+                    t.Contents.Int &= 0xffffff;
+                }
+                if (!(OK = RangeCheck(t.Contents.Int, Int24))) {
+                    WrError(ErrNum_OverRange);
+                } else {
+                    DAsmCode[CodeLen++] = t.Contents.Int & 0xffffff;
+                }
+                break;
+            case TempFloat:
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+                /* fall-through */
+            default:
+                OK = False;
+            }
+        }
+        if (!OK) {
+            CodeLen = 0;
+        }
+    }
+    as_tempres_free(&t);
+}
 
 /* ohne Argument */
 
@@ -2772,6 +2746,11 @@ static void InitFields(void) {
     AddCondition("TRAP", DecodeTRAPcc);
     AddCondition("DEBUG", DecodeDEBUGcc);
 
+    AddInstTable(InstTable, "XSFR", SegXData, DecodeSFR);
+    AddInstTable(InstTable, "YSFR", SegYData, DecodeSFR);
+    AddInstTable(InstTable, "DS", 0, DecodeDS);
+    AddInstTable(InstTable, "DC", 0, DecodeDC);
+
     StrCompAlloc(&LeftComp, STRINGSIZE);
     StrCompAlloc(&MidComp, STRINGSIZE);
     StrCompAlloc(&RightComp, STRINGSIZE);
@@ -2802,12 +2781,6 @@ static void MakeCode_56K(void) {
     /* zu ignorierendes */
 
     if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodePseudo()) {
         return;
     }
 
@@ -2855,6 +2828,8 @@ static void SwitchTo_56K(void) {
     ListGrans[SegYData] = 4;
     SegInits[SegYData]  = 0;
     SegLimits[SegYData] = MemLimit;
+
+    onoff_packing_add(True);
 
     MakeCode   = MakeCode_56K;
     IsDef      = IsDef_56K;

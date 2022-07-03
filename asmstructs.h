@@ -10,6 +10,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "addrspace.h"
 #include "datatypes.h"
 #include "symbolsize.h"
 
@@ -46,8 +47,8 @@ typedef struct sStructStack {
     PStructRec           StructRec;
 } TStructStack, *PStructStack;
 
-extern PStructStack StructStack, pInnermostNamedStruct;
-extern int          StructSaveSeg;
+extern PStructStack   StructStack, pInnermostNamedStruct;
+extern as_addrspace_t StructSaveSeg;
 
 extern PStructRec CreateStructRec(void);
 

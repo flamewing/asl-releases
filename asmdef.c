@@ -37,23 +37,23 @@ StringPtr SourceFile; /* Hauptquelldatei */
 
 StringPtr CursUp; /*   "     "  Cursor hoch */
 
-LargeWord* PCs;                           /* Programmzaehler */
-Boolean    RelSegs;                       /* relokatibles Segment ? */
-LargeWord  StartAdr;                      /* Programmstartadresse */
-Boolean    StartAdrPresent;               /*          "           definiert? */
-LargeWord  AfterBSRAddr;                  /* address right behind last BSR */
-LargeWord* Phases;                        /* Verschiebungen */
-Word       Grans[SegCountPlusStruct];     /* Groesse der Adressierungselemente */
-Word       ListGrans[SegCountPlusStruct]; /* Wortgroesse im Listing */
-ChunkList  SegChunks[SegCountPlusStruct]; /* Belegungen */
-Integer    ActPC;                         /* gewaehlter Programmzaehler */
-Boolean    PCsUsed[SegCountPlusStruct];   /* PCs bereits initialisiert ? */
-LargeWord* SegInits;                      /* Segmentstartwerte */
-LargeWord* SegLimits;                     /* Segmentgrenzwerte */
-LongInt    ValidSegs;                     /* erlaubte Segmente */
-Boolean    ENDOccured;                    /* END-Statement aufgetreten ? */
-Boolean    Retracted;                     /* Codes zurueckgenommen ? */
-Boolean    ListToStdout, ListToNull;      /* Listing auf Konsole/Nulldevice ? */
+LargeWord*     PCs;                           /* Programmzaehler */
+Boolean        RelSegs;                       /* relokatibles Segment ? */
+LargeWord      StartAdr;                      /* Programmstartadresse */
+Boolean        StartAdrPresent;               /*          "           definiert? */
+LargeWord      AfterBSRAddr;                  /* address right behind last BSR */
+LargeWord*     Phases;                        /* Verschiebungen */
+Word           Grans[SegCountPlusStruct];     /* Groesse der Adressierungselemente */
+Word           ListGrans[SegCountPlusStruct]; /* Wortgroesse im Listing */
+ChunkList      SegChunks[SegCountPlusStruct]; /* Belegungen */
+as_addrspace_t ActPC;                         /* gewaehlter Programmzaehler */
+Boolean        PCsUsed[SegCountPlusStruct];   /* PCs bereits initialisiert ? */
+LargeWord*     SegInits;                      /* Segmentstartwerte */
+LargeWord*     SegLimits;                     /* Segmentgrenzwerte */
+LongInt        ValidSegs;                     /* erlaubte Segmente */
+Boolean        ENDOccured;                    /* END-Statement aufgetreten ? */
+Boolean        Retracted;                     /* Codes zurueckgenommen ? */
+Boolean        ListToStdout, ListToNull;      /* Listing auf Konsole/Nulldevice ? */
 
 unsigned         ASSUMERecCnt;
 ASSUMERec const* pASSUMERecs;

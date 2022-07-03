@@ -26,7 +26,7 @@ _Default Integer Syntax: Motorola_
 
 _Default Integer Syntax: Motorola_
 
-> `DC` `DS` `XSFR` `YSFR`
+> `DC` `DS` `PACKING` `XSFR` `YSFR`
 
 #### PowerPC
 
@@ -366,7 +366,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Intel_
 
-> `ASSUME` `BSS` `DATA` `EXTENDED` `SINGLE` `WORD`
+> `ASSUME` `BSS` `DATA` `EXTENDED` `PACKING` `SINGLE` `WORD`
 
 #### Texas Instruments TM32C020x/TM32C05x/TM32C054x
 
@@ -378,7 +378,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Intel_
 
-> `BSS` `DATA` `DOUBLE` `SINGLE` `WORD`
+> `BSS` `DATA` `DOUBLE` `PACKING` `SINGLE` `WORD`
 
 #### Texas Instruments TMS99xx
 
@@ -508,13 +508,13 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Intel_
 
-> `DATA` `RES`
+> `DATA` `PACKING` `RES`
 
 #### NEC μPD77230
 
 _Default Integer Syntax: Intel_
 
-> `DS` `DW`
+> `DS` `DW` `PACKING`
 
 #### Symbios Logic SYM53C8xx
 
