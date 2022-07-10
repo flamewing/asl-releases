@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -136,6 +137,9 @@ static void DecodeDATA_7720(Word Index) {
                     goto ToInt;
                 }
 
+                TransTableCheckRead();
+
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
                 if (ActPC == SegCode) {
                     string_2_dasm_code(
                             &t.Contents.str, Packing ? ((MomCPU >= CPU7725) ? 3 : 2) : 1,

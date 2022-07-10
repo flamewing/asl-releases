@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "errmsg.h"
 
 void DecodeRES(Word Code) {
@@ -78,10 +79,12 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
                     goto ToInt;
                 }
 
+                TransTableCheckRead();
+
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
                 for (z2 = 0, cp = (unsigned char*)t.Contents.str.p_str, bpos = 0;
                      z2 < t.Contents.str.len; z2++, cp++) {
-                    TransTableCheckRead();
-                    TransCh = CharTransTable[((usint)*cp) & 0xff];
+                    TransCh = *cp & 0xff;
 
                     /* word width 24..31 bits: pack three characters into one dword */
 

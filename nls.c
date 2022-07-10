@@ -63,17 +63,6 @@ static char const* CodepageNames[eCodepageCnt] = {
 
 /*-------------------------------------------------------------------------------*/
 
-#if 0
-/* einen String anhand einer Tabelle uebersetzen: */
-
-static void TranslateString(char *s, CharTable Table)
-{
-  for (; *s != '\0'; s++) *s = Table[((unsigned int) *s)&0xff];
-}
-#endif
-
-/*-------------------------------------------------------------------------------*/
-
 static void DumpNLSInfo(void) {
 #ifdef DEBUG_NLS
     unsigned z, z2;

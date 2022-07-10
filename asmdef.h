@@ -11,6 +11,7 @@
 /*****************************************************************************/
 
 #include "addrspace.h"
+#include "chartrans.h"
 #include "chunks.h"
 #include "cpulist.h"
 #include "dynstr.h"
@@ -130,7 +131,7 @@ typedef Word WordField[6]; /* fuer Zahlenumwandlung */
 typedef struct tag_TTransTable {
     struct tag_TTransTable* Next;
     char*                   Name;
-    unsigned char*          Table;
+    as_chartrans_table_t    Table;
     Boolean                 CreatedBySingleArg;
     Boolean                 WasModified;
     Boolean                 WarnedReadBeforeModify;
@@ -339,7 +340,6 @@ extern Byte StopfZahl;
 
 extern Boolean SuppWarns;
 
-#define CharTransTable CurrTransTable->Table
 extern PTransTable TransTables, CurrTransTable;
 extern Boolean     SuppressTransTableReadCheck;
 

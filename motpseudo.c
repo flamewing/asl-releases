@@ -24,6 +24,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
 #include "onoff_common.h"
@@ -156,8 +157,11 @@ void DecodeMotoBYT(Word Index) {
                         goto ToInt;
                     }
 
+                    TransTableCheckRead();
+
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &t.Contents.str);
                     l = t.Contents.str.len;
-                    TranslateString(t.Contents.str.p_str, l);
 
                     if (SetMaxCodeLen(CodeLen + (Rep * l))) {
                         WrError(ErrNum_CodeOverflow);
@@ -266,8 +270,10 @@ void DecodeMotoADR(Word Index) {
                     if (MultiCharToInt(&Res, 2)) {
                         goto ToInt;
                     }
+                    TransTableCheckRead();
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &Res.Contents.str);
                     Cnt = Res.Contents.str.len;
-                    TranslateString(Res.Contents.str.p_str, Res.Contents.str.len);
                     break;
                 case TempFloat:
                     WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
@@ -323,17 +329,17 @@ void DecodeMotoADR(Word Index) {
 }
 
 static void DecodeFCC(Word Index) {
-    String    SVal;
-    Boolean   OK;
-    tStrComp *pArg, Arg;
-    int       z3, l;
-    LongInt   Rep, z2;
     UNUSED(Index);
 
     if (ChkArgCnt(1, ArgCntMax)) {
-        OK = True;
+        Boolean    OK = True;
+        tStrComp * pArg, Arg;
+        TempResult t;
 
+        as_tempres_ini(&t);
         forallargs(pArg, OK) {
+            LongInt Rep;
+
             if (!*pArg->str.p_str) {
                 OK = FALSE;
                 WrError(ErrNum_EmptyArgument);
@@ -345,22 +351,39 @@ static void DecodeFCC(Word Index) {
                 break;
             }
 
-            EvalStrStringExpression(&Arg, &OK, SVal);
-            if (OK) {
-                if (SetMaxCodeLen(CodeLen + Rep * strlen(SVal))) {
+            EvalStrExpression(&Arg, &t);
+            switch (t.Typ) {
+            case TempString: {
+                int l;
+
+                TransTableCheckRead();
+
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
+                l = t.Contents.str.len;
+                if (SetMaxCodeLen(CodeLen + Rep * l)) {
                     WrError(ErrNum_CodeOverflow);
                     OK = False;
                 } else {
-                    l = strlen(SVal);
-                    TranslateString(SVal, l);
+                    LongInt z2;
+                    int     z3;
+
                     for (z2 = 0; z2 < Rep; z2++) {
                         for (z3 = 0; z3 < l; z3++) {
-                            PutByte(SVal[z3]);
+                            PutByte(t.Contents.str.p_str[z3]);
                         }
                     }
                 }
+                break;
+            }
+            case TempNone:
+                OK = False;
+                break;
+            default:
+                WrStrErrorPos(ErrNum_ExpectString, &Arg);
+                OK = False;
             }
         }
+        as_tempres_free(&t);
 
         if (!OK) {
             CodeLen = 0;
@@ -923,6 +946,8 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn) {
                 if (MultiCharToInt(&t, (WSize < 8) ? WSize : 8)) {
                     goto ToInt;
                 }
+                TransTableCheckRead();
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
                 if (!EnterInt) {
                     if (ConvertFloat && EnterFloat) {
                         if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.str.len))) {
@@ -937,8 +962,8 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn) {
 
                                     TransTableCheckRead();
                                     ConvertFloat(
-                                            CharTransTable[(usint)(*zp & 0xff)],
-                                            (Byte*)TurnField, HostBigEndian);
+                                            (usint)(*zp & 0xff), (Byte*)TurnField,
+                                            HostBigEndian);
 #if HostBigEndian
                                     if (Swap) {
                                         Swap((void*)TurnField, WSize);
@@ -960,10 +985,9 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn) {
                 } else {
                     for (z2 = 0; z2 < Rep; z2++) {
                         for (zp = t.Contents.str.p_str;
-                             zp < t.Contents.str.p_str + t.Contents.str.len; zp++) {
-                            TransTableCheckRead();
-                            EnterInt(CharTransTable[((usint)*zp) & 0xff]);
-                        }
+                             zp < t.Contents.str.p_str + t.Contents.str.len;
+                             EnterInt(((usint) * (zp++)) & 0xff))
+                            ;
                     }
                 }
                 break;

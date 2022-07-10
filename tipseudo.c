@@ -20,6 +20,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "chartrans.h"
 #include "codepseudo.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
@@ -141,16 +142,19 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
             WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
             LEAVE;
         case TempString: {
-            unsigned char *cp   = (unsigned char*)t.Contents.str.p_str,
-                          *cend = cp + t.Contents.str.len;
+            unsigned char *cp, *cend;
 
             if (MultiCharToInt(&t, MaxMultCharLen)) {
                 goto ToInt;
             }
 
+            TransTableCheckRead();
+
+            as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
+            cp   = (unsigned char*)t.Contents.str.p_str;
+            cend = cp + t.Contents.str.len;
             while (cp < cend) {
-                TransTableCheckRead();
-                callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff], t.Flags);
+                callback(&ok, &adr, *cp++ & 0xff, t.Flags);
             }
             break;
         }
@@ -739,6 +743,9 @@ static void DecodeDATA_TI34x(Word Code) {
                     goto ToInt;
                 }
 
+                TransTableCheckRead();
+
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
                 string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
                 break;
             }

@@ -47,8 +47,6 @@ extern char* FirstBlank(char const* s);
 
 extern void SplitString(char* Source, char* Left, char* Right, char* Trenner);
 
-extern void TranslateString(char* s, int Length);
-
 extern ShortInt StrCaseCmp(char const* s1, char const* s2, LongInt Hand1, LongInt Hand2);
 
 extern char* MatchChars(char const* pStr, char const* pPattern, ...);
@@ -127,9 +125,8 @@ typedef struct sTokenReplacement {
 /* Ordinary replacements followed by four special-parameter slots. Source
    must not alias destination. Sequential preserves control-bearing values. */
 extern void ExpandTokens(
-        char const* Source, tTokenReplacement const* Replacements,
-        unsigned ParamCount, Boolean ExpandAttrs, Boolean Sequential,
-        struct as_dynstr* Dest);
+        char const* Source, tTokenReplacement const* Replacements, unsigned ParamCount,
+        Boolean ExpandAttrs, Boolean Sequential, struct as_dynstr* Dest);
 
 extern void KillCtrl(char* Line);
 

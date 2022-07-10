@@ -21,6 +21,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -638,6 +639,10 @@ static Boolean DecodePseudo(void) {
                         goto ToInt;
                     }
 
+                    TransTableCheckRead();
+
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &t.Contents.str);
                     OK = !string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
                     break;
                 case TempInt:

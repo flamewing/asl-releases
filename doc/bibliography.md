@@ -321,3 +321,6 @@
 [^Zil8000]: Zilog Inc.: _Z8000 Technical Manual_ January 1983
 
 <!-- markdownlint-enable MD053 -->
+
+
+[^HPNano]: Hewlett Packard: _Nano Processor's Users Guide._ Drawing Number A-5955-0331-1. <https://www.hp9845.net/9845/downloads/manuals/Nanoprocessor.pdf>

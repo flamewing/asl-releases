@@ -17,6 +17,8 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "chartrans.h"
+#include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -1530,9 +1532,11 @@ static void DecodeDC(Word Index) {
                     if (MultiCharToInt(&t, 2)) {
                         goto ToInt;
                     }
+                    TransTableCheckRead();
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &t.Contents.str);
                     for (c = 0; c < (int)t.Contents.str.len; c++) {
-                        PutByte(CharTransTable[((usint)t.Contents.str.p_str[c]) & 0xff],
-                                &LowerByte);
+                        PutByte(((usint)t.Contents.str.p_str[c]) & 0xff, &LowerByte);
                     }
                     break;
                 default:

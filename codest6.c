@@ -572,30 +572,43 @@ static void DecodeSFR(Word Code) {
  * ------------------------------------------------------------------------ */
 
 static void DecodeASCII_ASCIZ(Word IsZ) {
-    int     z, l;
-    Boolean OK;
-    String  s;
-
     if (ChkArgCnt(1, ArgCntMax)) {
-        z = 1;
+        int        z, l;
+        Boolean    OK;
+        TempResult t;
+
+        as_tempres_ini(&t);
+        z  = 1;
+        OK = True;
         do {
-            EvalStrStringExpression(&ArgStr[z], &OK, s);
-            if (OK) {
-                l = strlen(s);
-                TranslateString(s, -1);
+            EvalStrExpression(&ArgStr[z], &t);
+            switch (t.Typ) {
+            case TempString: {
+                TransTableCheckRead();
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
+                l = t.Contents.str.len;
                 if (SetMaxCodeLen(CodeLen + l + IsZ)) {
                     WrError(ErrNum_CodeOverflow);
                     OK = False;
                 } else {
-                    memcpy(BAsmCode + CodeLen, s, l);
+                    memcpy(BAsmCode + CodeLen, t.Contents.str.p_str, l);
                     CodeLen += l;
                     if (IsZ) {
                         BAsmCode[CodeLen++] = 0;
                     }
                 }
+                break;
+            }
+            case TempNone:
+                OK = False;
+                break;
+            default:
+                WrStrErrorPos(ErrNum_ExpectString, &ArgStr[z]);
+                OK = False;
             }
             z++;
-        } while ((OK) && (z <= ArgCnt));
+        } while (OK && (z <= ArgCnt));
+        as_tempres_free(&t);
         if (!OK) {
             CodeLen = 0;
         }

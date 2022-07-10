@@ -19,6 +19,7 @@
 #include "asmstructs.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "fileformat.h"
@@ -142,12 +143,13 @@ static int SymbolHashEq(PSymbolEntry pA, PSymbolEntry pB) {
 }
 
 #define SYMBOLHASH_IS_MAP 1
-DEFINE_OPENHASH(symbolhash, PSymbolEntry, PSymbolEntry, SYMBOLHASH_IS_MAP, SymbolHashFn,
-                SymbolHashEq)
+DEFINE_OPENHASH(
+        symbolhash, PSymbolEntry, PSymbolEntry, SYMBOLHASH_IS_MAP, SymbolHashFn,
+        SymbolHashEq)
 #undef SYMBOLHASH_IS_MAP
 
 typedef openhash_t(symbolhash) TSymbolHashTable;
-typedef TSymbolHashTable*      PSymbolHashTable;
+typedef TSymbolHashTable* PSymbolHashTable;
 
 typedef struct sSymbolStackEntry {
     struct sSymbolStackEntry* Next;
@@ -192,9 +194,9 @@ typedef struct sRegDef {
 } TRegDef, *PRegDef;
 
 static PSymbolHashTable FirstSymbol, FirstLocSymbol;
-static PDefSymbol   FirstDefSymbol;
-/*static*/ PCToken  FirstSection;
-static Boolean      DoRefs, /* Querverweise protokollieren */
+static PDefSymbol       FirstDefSymbol;
+/*static*/ PCToken      FirstSection;
+static Boolean          DoRefs, /* Querverweise protokollieren */
         RegistersDefined;
 static PLocHandle   FirstLocHandle;
 static PSymbolStack FirstStack;
@@ -244,9 +246,7 @@ static void GetSymbolHashTableDepth(
             PSymbolEntry pEntry = openhash_value(pHash, It);
             oh_size_t    Mask   = openhash_nbucket(pHash) - 1;
             oh_size_t    Base   = SymbolHashFn(pEntry) & Mask;
-            LongInt      Depth  = (LongInt)(((It + openhash_nbucket(pHash) - Base)
-                                            & Mask)
-                                           + 1);
+            LongInt Depth = (LongInt)(((It + openhash_nbucket(pHash) - Base) & Mask) + 1);
 
             if (Depth < *pMin) {
                 *pMin = Depth;
@@ -273,7 +273,7 @@ static void DumpSymbolHashTable(PSymbolHashTable pHash) {
 }
 
 static PSymbolEntry SearchSymbolHashTable(
-    PSymbolHashTable pHash, char* pName, LongInt Attribute) {
+        PSymbolHashTable pHash, char* pName, LongInt Attribute) {
     TSymbolEntry Key;
     oh_iter_t    It;
 
@@ -352,7 +352,7 @@ void AsmParsInit(void) {
 
     SymbolHashTableInit(&FirstLocSymbol);
     SymbolHashTableClear(FirstLocSymbol);
-    MomLocHandle   = -1;
+    MomLocHandle = -1;
     SetMomSection(-1);
     FirstSection     = NULL;
     FirstLocHandle   = NULL;
@@ -594,44 +594,37 @@ static Boolean ProcessBk(char** Start, char* Erg) {
 
 LargeInt NonZString2Int(const struct as_nonz_dynstr* p_str) {
     if ((p_str->len > 0) && (p_str->len <= 4)) {
-        char const* pRun;
-        Byte        Digit;
-        LargeInt    Result;
+        unsigned Digit;
+        LargeInt Result;
 
         Result = 0;
-        for (pRun = p_str->p_str; pRun < p_str->p_str + p_str->len; pRun++) {
-            Digit = (usint)*pRun;
-            TransTableCheckRead();
-            Result = (Result << 8) | CharTransTable[Digit & 0xff];
-        }
-        return Result;
+        TransTableCheckRead();
+        foreach_as_chartrans(CurrTransTable->Table, *p_str, Digit) Result
+                = (Result << 8) | (Digit & 0xff);
+        foreach_as_chartrans_end return Result;
     }
     return -1;
 }
 
-Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt Src) {
-    int   Search;
-    Byte  Digit;
-    char* pDest;
+Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
+    char* p_dest;
+    int   ret;
 
     if (p_str->capacity < 32) {
         as_nonz_dynstr_realloc(p_str, 32);
     }
     p_str->len = 0;
-    pDest      = &p_str->p_str[p_str->capacity];
-    while (Src && (p_str->len < p_str->capacity)) {
-        Digit = Src & 0xff;
-        Src   = (Src >> 8) & 0xfffffful;
-        for (Search = 0; Search < 256; Search++) {
-            TransTableCheckRead();
-            if (CharTransTable[Search] == Digit) {
-                *(--pDest) = Search;
-                p_str->len++;
-                break;
-            }
+    p_dest     = &p_str->p_str[p_str->capacity];
+    while (src && (p_str->len < p_str->capacity)) {
+        TransTableCheckRead();
+        ret = as_chartrans_xlate_rev(CurrTransTable->Table, src & 0xff);
+        if (ret >= 0) {
+            *(--p_dest) = ret;
+            p_str->len++;
         }
+        src = (src >> 8) & 0xfffffful;
     }
-    memmove(p_str->p_str, pDest, p_str->len);
+    memmove(p_str->p_str, p_dest, p_str->len);
     return True;
 }
 
@@ -1093,9 +1086,19 @@ static Double ConstFloatVal(char const* pExpr, FloatType Typ, Boolean* pResult) 
     unsigned char First = (unsigned char)*pExpr;
     if (First && (First < 0x80) && ((First < '0') || (First > '9'))) {
         switch (First) {
-        case '+': case '-': case '.':
-        case 'n': case 'N': case 'i': case 'I':
-        case ' ': case '\t': case '\n': case '\r': case '\f': case '\v':
+        case '+':
+        case '-':
+        case '.':
+        case 'n':
+        case 'N':
+        case 'i':
+        case 'I':
+        case ' ':
+        case '\t':
+        case '\n':
+        case '\r':
+        case '\f':
+        case '\v':
             break;
         default:
             *pResult = False;
@@ -1380,7 +1383,7 @@ static Byte TryConvert(Byte TypeMask, TempType ActType, int OpIndex) {
 
 typedef struct sExpressionScratch {
     struct sExpressionScratch* Next;
-    tStrComp CopyComp, STempComp;
+    tStrComp                   CopyComp, STempComp;
 } tExpressionScratch;
 
 static tExpressionScratch* FreeExpressionScratch;
@@ -1416,30 +1419,30 @@ static void ClearExpressionScratch(void) {
 void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
     Operator const* pOp;
 
-    Boolean          OK;
-    tStrComp         InArgs[3];
-    TempResult       InVals[3];
-    int              z1, cnt;
-    char             Save = '\0';
-    sint             LKlamm, RKlamm, WKlamm, zop;
-    sint             OpMax, OpPos = -1;
-    Boolean          InSgl, InDbl, NextEscaped, ThisEscaped;
-    PFunction        ValFunc;
-    tStrComp         CopyComp, STempComp;
-    char *           KlPos, *zp;
-    tFunction const* pFunction;
-    PRelocEntry      TReloc;
-    tSymbolFlags     PromotedFlags;
-    unsigned         PromotedAddrSpaceMask;
-    tSymbolSize      PromotedDataSize;
+    Boolean             OK;
+    tStrComp            InArgs[3];
+    TempResult          InVals[3];
+    int                 z1, cnt;
+    char                Save = '\0';
+    sint                LKlamm, RKlamm, WKlamm, zop;
+    sint                OpMax, OpPos = -1;
+    Boolean             InSgl, InDbl, NextEscaped, ThisEscaped;
+    PFunction           ValFunc;
+    tStrComp            CopyComp, STempComp;
+    char *              KlPos, *zp;
+    tFunction const*    pFunction;
+    PRelocEntry         TReloc;
+    tSymbolFlags        PromotedFlags;
+    unsigned            PromotedAddrSpaceMask;
+    tSymbolSize         PromotedDataSize;
     tExpressionScratch* pScratch;
 
     for (z1 = 0; z1 < 3; z1++) {
         as_tempres_ini(&InVals[z1]);
     }
     /* A checked-out pair cannot be reused by an active recursive child. */
-    pScratch = AcquireExpressionScratch();
-    CopyComp = pScratch->CopyComp;
+    pScratch  = AcquireExpressionScratch();
+    CopyComp  = pScratch->CopyComp;
     STempComp = pScratch->STempComp;
 
     if (MakeDebug) {
@@ -1957,9 +1960,9 @@ func_exit:
     }
 
     /* Preserve buffer growth and return the pair only after all cleanup. */
-    pScratch->CopyComp = CopyComp;
-    pScratch->STempComp = STempComp;
-    pScratch->Next = FreeExpressionScratch;
+    pScratch->CopyComp    = CopyComp;
+    pScratch->STempComp   = STempComp;
+    pScratch->Next        = FreeExpressionScratch;
     FreeExpressionScratch = pScratch;
 }
 
@@ -1992,18 +1995,15 @@ LargeInt EvalStrIntExpressionWithResult(
         int l = t.Contents.str.len;
 
         if ((l > 0) && (l <= 4)) {
-            char* pRun;
-            Byte  Digit;
+            unsigned Digit;
 
             Result = 0;
-            for (pRun = t.Contents.str.p_str; pRun < t.Contents.str.p_str + l; pRun++) {
-                Digit = (usint)*pRun;
-                TransTableCheckRead();
-                Result = (Result << 8) | CharTransTable[Digit & 0xff];
-            }
-            pResult->Flags         = t.Flags;
-            pResult->AddrSpaceMask = t.AddrSpaceMask;
-            pResult->DataSize      = t.DataSize;
+            TransTableCheckRead();
+            foreach_as_chartrans(CurrTransTable->Table, t.Contents.str, Digit) Result
+                    = (Result << 8) | Digit;
+            foreach_as_chartrans_end pResult->Flags = t.Flags;
+            pResult->AddrSpaceMask                  = t.AddrSpaceMask;
+            pResult->DataSize                       = t.DataSize;
             break;
         } else {
             WrStrErrorPos(ErrNum_IntButString, pComp);
@@ -4292,7 +4292,7 @@ void PrintCodepages(void) {
 
 void asmpars_init(void) {
     tIntTypeDef* pCurr;
-    int OpCount, OpIndex;
+    int          OpCount, OpIndex;
 
     /* Group operators by their first byte, retaining original table order. */
     memset(FirstOperator, 0, sizeof(FirstOperator));
@@ -4301,9 +4301,9 @@ void asmpars_init(void) {
         assert(OpCount <= OPERATOR_MAXCNT);
     }
     for (OpIndex = OpCount - 1; OpIndex > 0; OpIndex--) {
-        unsigned char Ch = (unsigned char)*Operators[OpIndex].Id;
+        unsigned char Ch      = (unsigned char)*Operators[OpIndex].Id;
         NextOperator[OpIndex] = FirstOperator[Ch];
-        FirstOperator[Ch] = OpIndex;
+        FirstOperator[Ch]     = OpIndex;
     }
 
     serr           = (char*)malloc(sizeof(char) * STRINGSIZE);

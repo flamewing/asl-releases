@@ -111,6 +111,7 @@
 #include "codemn1610.h"
 #include "codemn2610.h"
 #include "codemsp.h"
+#include "codenano.h"
 #include "codens32k.h"
 #include "codeol40.h"
 #include "codeol50.h"
@@ -4427,6 +4428,7 @@ int main(int argc, char** argv) {
         code1750_init();
         codekenbak_init();
         codecp1600_init();
+        codenano_init();
         First = FALSE;
     }
 

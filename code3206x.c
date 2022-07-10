@@ -17,6 +17,8 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
@@ -653,9 +655,12 @@ static Boolean DecodePseudo(void) {
                             goto ToInt;
                         }
 
+                        TransTableCheckRead();
+
+                        as_chartrans_xlate_nonz_dynstr(
+                                CurrTransTable->Table, &t.Contents.str);
                         for (z2 = 0; z2 < t.Contents.str.len; z2++) {
-                            Trans = CharTransTable
-                                    [((usint)t.Contents.str.p_str[z2]) & 0xff];
+                            Trans = t.Contents.str.p_str[z2] & 0xff;
                             if (Packing) {
                                 if ((z2 & 3) == 0) {
                                     DAsmCode[cnt++] = 0;

@@ -1602,3 +1602,8 @@ The target address _\[Dest\]_ that may optionally be added to skip instructions 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-disable MD001 -->
+
+
+## HP Nanoprocessor
+
+The HP Nanoprocessor cannot read data from ROM. `LDR` and `STR` use immediate operands rather than accessing ROM data. Consequently, this target has no pseudo instructions for placing data constants or reserving ROM space.

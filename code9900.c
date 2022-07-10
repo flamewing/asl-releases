@@ -20,6 +20,8 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
+#include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -766,9 +768,13 @@ static void DecodeBYTE(Word Code) {
                     WrError(ErrNum_CodeOverflow);
                     OK = False;
                 } else {
-                    char *p, *pEnd = t.Contents.str.p_str + t.Contents.str.len;
+                    char *p, *pEnd;
 
-                    TranslateString(t.Contents.str.p_str, t.Contents.str.len);
+                    TransTableCheckRead();
+
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &t.Contents.str);
+                    pEnd = t.Contents.str.p_str + t.Contents.str.len;
                     for (p = t.Contents.str.p_str; p < pEnd; PutByte(*(p++)))
                         ;
                 }
@@ -780,7 +786,7 @@ static void DecodeBYTE(Word Code) {
                 OK = False;
             }
             z++;
-        } while ((z <= ArgCnt) && (OK));
+        } while ((z <= ArgCnt) && OK);
         if (!OK) {
             CodeLen = 0;
         }

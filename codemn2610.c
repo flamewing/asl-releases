@@ -16,6 +16,8 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "bpemu.h"
+#include "chartrans.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -954,9 +956,12 @@ static void DecodeDC(Word Code) {
                         goto ToInt;
                     }
 
+                    TransTableCheckRead();
+
+                    as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->Table, &t.Contents.str);
                     for (z2 = 0; z2 < (int)t.Contents.str.len; z2++) {
-                        TransTableCheckRead();
-                        Trans = CharTransTable[((usint)t.Contents.str.p_str[z2]) & 0xff];
+                        Trans = ((usint)t.Contents.str.p_str[z2]) & 0xff;
                         AppendByte(Trans, &HalfFilledWord);
                     }
                     break;

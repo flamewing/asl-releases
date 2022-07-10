@@ -596,3 +596,10 @@ _Default Integer Syntax: IBM (hex), C (oct)_
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-enable MD001 -->
+
+
+#### HP Nanoprocessor
+
+_Default Integer Syntax: C_
+
+No processor-specific data pseudo instructions.

@@ -844,9 +844,7 @@ static void CodeCHARSET(Word Index) {
     if (!ChkArgCnt(0, 3))
         ;
     else if (ArgCnt == 0) {
-        for (z = 0; z < 256; z++) {
-            CharTransTable[z] = z;
-        }
+        as_chartrans_table_reset(CurrTransTable->Table);
         TransTableMarkModified();
     } else {
         TempResult t;
@@ -870,7 +868,7 @@ static void CodeCHARSET(Word Index) {
                         TempResultToInt(&t);
                     }
                     switch (t.Typ) {
-                    case TempInt: /* �bersetzungsbereich als Character-Angabe */
+                    case TempInt: /* Uebersetzungsbereich als Character-Angabe */
                         if (mFirstPassUnknown(t.Flags)) {
                             t.Contents.Int &= 255;
                         }
@@ -888,9 +886,8 @@ static void CodeCHARSET(Word Index) {
                             }
                         }
                         if (OK) {
-                            for (z = Start; z <= Stop; z++) {
-                                CharTransTable[z] = TStart + (z - Start);
-                            }
+                            as_chartrans_table_set_mult(
+                                    CurrTransTable->Table, Start, Stop, TStart);
                             TransTableMarkModified();
                         }
                         break;
@@ -900,7 +897,9 @@ static void CodeCHARSET(Word Index) {
                             WrError(ErrNum_OverRange);
                         } else {
                             for (z = 0; z < l; z++) {
-                                CharTransTable[Start + z] = t.Contents.str.p_str[z];
+                                as_chartrans_table_set(
+                                        CurrTransTable->Table, Start + z,
+                                        t.Contents.str.p_str[z]);
                             }
                             TransTableMarkModified();
                         }
@@ -928,7 +927,9 @@ static void CodeCHARSET(Word Index) {
                     ChkIO(ErrNum_FileReadError);
                 }
                 fclose(f);
-                memcpy(CharTransTable, tfield, sizeof(char) * 256);
+                for (z = 0; z < 256; z++) {
+                    as_chartrans_table_set(CurrTransTable->Table, z, tfield[z]);
+                }
                 TransTableMarkModified();
             }
             break;
@@ -945,20 +946,9 @@ static void CodeCHARSET(Word Index) {
 }
 
 static void CodePRSET(Word Index) {
-    int z, z2;
     UNUSED(Index);
 
-    for (z = 0; z < 16; z++) {
-        for (z2 = 0; z2 < 16; z2++) {
-            printf(" %02x", CharTransTable[z * 16 + z2]);
-        }
-        printf("  ");
-        for (z2 = 0; z2 < 16; z2++) {
-            printf("%c",
-                   CharTransTable[z * 16 + z2] > ' ' ? CharTransTable[z * 16 + z2] : '.');
-        }
-        putchar('\n');
-    }
+    as_chartrans_table_print(CurrTransTable->Table, stdout);
 }
 
 static void CodeCODEPAGE(Word Index) {
@@ -1001,8 +991,7 @@ static void CodeCODEPAGE(Word Index) {
                 New        = (PTransTable)malloc(sizeof(TTransTable));
                 New->Next  = Run;
                 New->Name  = as_strdup(ArgStr[1].str.p_str);
-                New->Table = (unsigned char*)malloc(256 * sizeof(char));
-                memcpy(New->Table, Source->Table, 256 * sizeof(char));
+                New->Table = as_chartrans_table_dup(Source->Table);
                 TransTableInitializeState(New, ArgCnt == 1);
                 if (!Prev) {
                     TransTables = New;

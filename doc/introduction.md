@@ -136,6 +136,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - MIL STD 1750
 - KENBAK-1
 - GI CP-1600
+- HP Nanoprocessor
 
 under work / planned / in consideration :
 

@@ -16,6 +16,8 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "chartrans.h"
+#include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -1010,6 +1012,9 @@ static void DecodeDC(Word Code) {
                     goto ToInt;
                 }
 
+                TransTableCheckRead();
+
+                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
                 OK = !string_2_dasm_code(&t.Contents.str, Packing ? 3 : 1, True);
                 break;
             ToInt:

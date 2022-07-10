@@ -21,6 +21,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
 #include "nls.h"
@@ -441,21 +442,22 @@ static Boolean LayoutByte(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
         break;
     case TempString: {
-        unsigned z;
+        unsigned ch;
 
         if (MultiCharToInt(&t, 1)) {
             goto ToInt;
         }
 
-        TranslateString(t.Contents.str.p_str, t.Contents.str.len);
+        TransTableCheckRead();
 
-        for (z = 0; z < t.Contents.str.len; z++) {
-            if (!pCtx->Put8I(t.Contents.str.p_str[z], pCtx)) {
+        foreach_as_chartrans(CurrTransTable->Table, t.Contents.str, ch) {
+            if (!pCtx->Put8I(ch, pCtx)) {
                 LEAVE;
             }
         }
+        foreach_as_chartrans_end
 
-        Result = True;
+                Result = True;
         break;
     }
     default:
@@ -588,7 +590,9 @@ static Boolean LayoutWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             goto ToInt;
         }
 
-        TranslateString(t.Contents.str.p_str, t.Contents.str.len);
+        TransTableCheckRead();
+
+        as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
 
         for (z = 0; z < t.Contents.str.len; z++) {
             if (!pCtx->Put16I(t.Contents.str.p_str[z], pCtx)) {
@@ -714,7 +718,9 @@ static Boolean LayoutDoubleWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) 
             goto ToInt;
         }
 
-        TranslateString(erg.Contents.str.p_str, erg.Contents.str.len);
+        TransTableCheckRead();
+
+        as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &erg.Contents.str);
 
         for (z = 0; z < erg.Contents.str.len; z++) {
             if (!pCtx->Put32I(erg.Contents.str.p_str[z], pCtx)) {
@@ -859,7 +865,9 @@ static Boolean LayoutQuadWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             goto ToInt;
         }
 
-        TranslateString(erg.Contents.str.p_str, erg.Contents.str.len);
+        TransTableCheckRead();
+
+        as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &erg.Contents.str);
 
         for (z = 0; z < erg.Contents.str.len; z++) {
             if (!pCtx->Put64I(erg.Contents.str.p_str[z], pCtx)) {
@@ -951,7 +959,9 @@ static Boolean LayoutTenBytes(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             goto ToInt;
         }
 
-        TranslateString(erg.Contents.str.p_str, erg.Contents.str.len);
+        TransTableCheckRead();
+
+        as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &erg.Contents.str);
 
         for (z = 0; z < erg.Contents.str.len; z++) {
             if (!pCtx->Put80F(erg.Contents.str.p_str[z], pCtx)) {
