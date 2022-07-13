@@ -103,7 +103,6 @@ StringPtr ErrorPath, ErrorName; /* Ausgabedatei Fehlermeldungen */
 StringPtr OutName;              /* Name Code-Datei */
 Integer   CurrIncludeLevel;     /* current include nesting level */
 StringPtr CurrFileName;         /* mom. bearbeitete Datei */
-LongInt   MomLineCounter;       /* Position in mom. Datei */
 LongInt   CurrLine;             /* virtuelle Position */
 LongInt   LineSum;              /* Gesamtzahl Quellzeilen */
 LongInt   MacLineSum;           /* inkl. Makroexpansion */
@@ -265,7 +264,6 @@ void AsmDefInit(void) {
     PrtTitleString[0] = '\0';
 
     CurrFileName[0] = '\0';
-    MomLineCounter  = 0;
 
     FirstDefine    = NULL;
     FirstSaveState = NULL;

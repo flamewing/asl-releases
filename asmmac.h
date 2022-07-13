@@ -55,7 +55,7 @@ typedef struct tag_TInputTag {
     LongInt      ParCnt, ParZ, ParIter;
     LongInt      MacroArgCnt; /* supplied argument count, excluding defaults */
     StringList   Params;
-    LongInt      LineCnt, LineZ;
+    LongInt      LineCnt, ContLineCnt, LineZ;
     StringRecPtr Lines, LineRun;
     String       SpecNameStr, SaveAttr, SaveLabel, AllArgs;
     tStrComp     SpecName;
@@ -65,10 +65,11 @@ typedef struct tag_TInputTag {
     void*        Buffer;
     void (*Cleanup)(struct tag_TInputTag* P);
     void (*Restorer)(struct tag_TInputTag* P);
-    Boolean (*GetPos)(struct tag_TInputTag* P, char* Dest, size_t DestSize);
-    PMacroRec Macro;
+    Boolean (*GetPos)(
+            struct tag_TInputTag* P, char* Dest, size_t DestSize, Boolean ActGNUErrors);
+    PMacroRec                 Macro;
     struct sTokenReplacement* Replacements;
-    Boolean                  SequentialTokens;
+    Boolean                   SequentialTokens;
 } TInputTag, *PInputTag;
 
 typedef struct tag_TOutputTag {
