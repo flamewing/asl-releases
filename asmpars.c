@@ -346,6 +346,11 @@ static void DestroySymbolHashTable(
     SymbolHashTableClear(pHash);
 }
 
+void InitPass_AsmPars(void) {
+    RadixBase    = 10;
+    OutRadixBase = 16;
+}
+
 void AsmParsInit(void) {
     SymbolHashTableInit(&FirstSymbol);
     SymbolHashTableClear(FirstSymbol);
@@ -354,14 +359,14 @@ void AsmParsInit(void) {
     SymbolHashTableClear(FirstLocSymbol);
     MomLocHandle = -1;
     SetMomSection(-1);
-    FirstSection     = NULL;
-    FirstLocHandle   = NULL;
-    FirstStack       = NULL;
-    FirstFunction    = NULL;
-    DoRefs           = True;
-    RadixBase        = 10;
-    OutRadixBase     = 16;
+    FirstSection   = NULL;
+    FirstLocHandle = NULL;
+    FirstStack     = NULL;
+    FirstFunction  = NULL;
+    DoRefs         = True;
+    InitPass_AsmPars();
     RegistersDefined = False;
+    AddInitPassProc(InitPass_AsmPars);
 }
 
 /*!------------------------------------------------------------------------

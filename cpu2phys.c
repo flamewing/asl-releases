@@ -18,6 +18,7 @@
 #include "tempresult.h"
 
 #include <assert.h>
+#include <string.h>
 
 typedef struct {
     LargeWord cpu_start, cpu_end;

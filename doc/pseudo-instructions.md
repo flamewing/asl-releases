@@ -679,9 +679,12 @@ The processors can roughly be distinguished in families, inside the families dif
 
     Apart from a different set of SFRs (which however strongly vary from version to version), the 80196 knows several new instructions and supports a 'windowing' mechanism to access the larger internal RAM. The 80196N family extends the address space to 16 Mbytes and introduces a set of instructions to access addresses beyond 64Kbytes. The 80296 extends the CPU core by instructions for signal processing and a second windowing register, however removes the Peripheral Transaction Server (PTS) and therefore looses again two machine instructions.
 
-26. 8080 → 8085 → 8085UNDOC
+26. 8080 → V30EMU → 8085 → 8085UNDOC
 
     The 8085 knows the additional commands `RIM` and `SIM` for controlling the interrupt mask and the two I/O-pins. The type `8085UNDOC` enables additional instructions that are not documented by Intel. These instructions are documented in section [8085UNDOC](processor-specific-hints.md#8085undoc).
+
+
+    `V30EMU` extends 8080 with `RETEM` and `CALLN`, which end or interrupt 8080 emulation on a V20/V30.
 
 27. 8086 → 80186 → V30 → V35
 

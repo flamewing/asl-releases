@@ -353,6 +353,10 @@ Message ErrMsgDistTooBig
  "Distanz zu gro&szlig;"
  "distance too big"
 
+Message ErrMsgTargOnDiffPage
+ "Ziel nicht auf gleicher Seite"
+ "target not on same page"
+
 Message ErrMsgInAccReg
  "Register nicht zugreifbar"
  "register not accessible"
@@ -741,7 +745,7 @@ Message ErrMsgNotFromThisAddress
  "ung&uuml;ltiges Sprungziel"
  "invalid jump target"
 
-Message ErrMsgTargOnDiffPage
+Message ErrMsgJmpTargOnDiffPage
  "Sprungziel nicht auf gleicher Seite"
  "jump target not on same page"
 

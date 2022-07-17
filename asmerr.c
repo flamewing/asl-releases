@@ -410,6 +410,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_DistTooBig:
         msgno = Num_ErrMsgDistTooBig;
         break;
+    case ErrNum_TargOnDiffPage:
+        msgno = Num_ErrMsgTargOnDiffPage;
+        break;
     case ErrNum_InAccReg:
         msgno = Num_ErrMsgInAccReg;
         break;
@@ -707,8 +710,8 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_NotFromThisAddress:
         msgno = Num_ErrMsgNotFromThisAddress;
         break;
-    case ErrNum_TargOnDiffPage:
-        msgno = Num_ErrMsgTargOnDiffPage;
+    case ErrNum_JmpTargOnDiffPage:
+        msgno = Num_ErrMsgJmpTargOnDiffPage;
         break;
     case ErrNum_TargOnDiffSection:
         msgno = Num_ErrMsgTargOnDiffSection;
@@ -1071,7 +1074,7 @@ void WrXErrorPos(
 
     pErrorMsg = ErrorNum2String(Num, h, sizeof(h));
 
-    if (((Num == ErrNum_TargOnDiffPage) || (Num == ErrNum_JmpDistTooBig)) && !Repass) {
+    if (((Num == ErrNum_JmpTargOnDiffPage) || (Num == ErrNum_JmpDistTooBig)) && !Repass) {
         JmpErrors++;
     }
 
