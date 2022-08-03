@@ -18,6 +18,7 @@
 | INEXTMODE     | boolean   | dynamic(0) | XM flag set for 4 Gbyte address space?                                                    |
 | INLWORDMODE   | boolean   | dynamic(0) | LW flag set for 32 bit instructions?                                                      |
 | INMAXMODE     | boolean   | dynamic(0) | processor in maximum mode?                                                                |
+| INPANEL | Boolean | dyn.(0) | IM61x0 Control Panel Flip-Flop state. |
 | INSUPMODE     | boolean   | dynamic(0) | processor in supervisor mode?                                                             |
 
 | name       | data type | definition       | meaning                                                       |
@@ -40,6 +41,7 @@
 | `NESTMAX` | Integer   | dynamic(256) | maximum nesting level of macro expansions                                 |
 | PADDING   | boolean   | dynamic(1)   | pad byte field to even count?                                             |
 | RELAXED   | boolean   | dynamic(0)   | any syntax allowed integer constants?                                     |
+| . | Integer | special | Current program counter (IM61x0). |
 | PC        | integer   | special      | current program counter (Thomson)                                         |
 | TIME      | string    | predefined   | time of begin of assembly (1. pass)                                       |
 | TRUE      | integer   | predefined   | 1 = logically "true"                                                      |

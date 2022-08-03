@@ -290,6 +290,12 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_IndexedForIndirect:
         msgno = Num_ErrMsgIndexedForIndirect;
         break;
+    case ErrNum_NotInNormalMode:
+        msgno = Num_ErrMsgNotInNormalMode;
+        break;
+    case ErrNum_NotInPanelMode:
+        msgno = Num_ErrMsgNotInPanelMode;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
@@ -901,6 +907,18 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
         break;
     case ErrNum_InvCBAR:
         msgno = Num_ErrMsgInvCBAR;
+        break;
+    case ErrNum_InAccPageErr:
+        msgno = Num_ErrMsgInAccPageErr;
+        break;
+    case ErrNum_InAccFieldErr:
+        msgno = Num_ErrMsgInAccFieldErr;
+        break;
+    case ErrNum_TargInDiffField:
+        msgno = Num_ErrMsgTargInDiffField;
+        break;
+    case ErrNum_InvCombination:
+        msgno = Num_ErrMsgInvCombination;
         break;
     case ErrNum_InternalError:
         msgno = Num_ErrMsgInternalError;

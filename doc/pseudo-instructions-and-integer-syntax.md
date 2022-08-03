@@ -603,3 +603,10 @@ _Default Integer Syntax: IBM (hex), C (oct)_
 _Default Integer Syntax: C_
 
 No processor-specific data pseudo instructions.
+
+
+#### IM61x0
+
+_Default Integer Syntax: C_
+
+`DC`, `DECIMAL`, `DS`, `LTORG`, `OCTAL`, `ZERO`.

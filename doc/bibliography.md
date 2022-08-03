@@ -324,3 +324,6 @@
 
 
 [^HPNano]: Hewlett Packard: _Nano Processor's Users Guide._ Drawing Number A-5955-0331-1. <https://www.hp9845.net/9845/downloads/manuals/Nanoprocessor.pdf>
+
+
+[^Inters6100]: Intersil: _IM6100 CMOS 12 Bit Microprocessor._ (no year of release given)

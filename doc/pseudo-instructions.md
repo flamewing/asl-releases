@@ -2959,3 +2959,16 @@ _valid for: all processors_
 <!-- markdownlint-enable MD036 -->
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
+
+
+### IM6100/6120 targets and banking
+
+Select `6100` or `6120`. IM6100 addresses 4 Kwords; IM6120 adds instructions and supports eight 4 Kword fields (32 Kwords). Data accesses and jumps normally stay in the same field. `ASSUME IB:value` supplies the upper three bits of a cross-field jump address; `ASSUME IB:NOTHING` disables this assumption. The program-counter symbol is `.`.
+
+### PANEL
+
+_valid for: IM61x0_
+
+`PANEL ON` or `PANEL OFF` declares the Control Panel Flip-Flop state. AS diagnoses IOT instructions used in the wrong mode. The current setting is available as `INPANEL`.
+
+On IM61x0, `DECIMAL` and `OCTAL` abbreviate `RADIX 10` and `RADIX 8`. `DC`, `DS`, `LTORG` and `ZERO` are also available.

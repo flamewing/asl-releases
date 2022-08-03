@@ -131,6 +131,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Panafacom MN1610/MN1613
 - Padauk PMS/PMC/PFSxxx
 - Symbios Logic SYM53C8xx (yes, they are programmable!)
+- Intersil IM6100/6120
 - Intersil CDP1802/1804/1805(A)
 - XMOS XS1
 - MIL STD 1750

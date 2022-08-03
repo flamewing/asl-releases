@@ -1607,3 +1607,12 @@ The target address _\[Dest\]_ that may optionally be added to skip instructions 
 ## HP Nanoprocessor
 
 The HP Nanoprocessor cannot read data from ROM. `LDR` and `STR` use immediate operands rather than accessing ROM data. Consequently, this target has no pseudo instructions for placing data constants or reserving ROM space.
+
+
+## IM61x0
+
+The Intersil IM6100/6120 implements the PDP-8/E instruction set. When adapting PAL-III sources:
+
+- Use AS labels (a trailing colon, or a label in the first column) instead of PAL-III's trailing comma.
+- Use `DC` to emit one or more constants; `LTORG` can place literals automatically.
+- Set the program counter with `ORG address` rather than `*address`.

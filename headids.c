@@ -123,6 +123,7 @@ static TFamilyDescr const Descrs[] = {
         {         "1750", 0x004f,   eHexFormatIntel},
         {       "CP1600", 0x000a,   eHexFormatIntel},
         {         "NANO", 0x000b,   eHexFormatIntel},
+        {       "IM6100", 0x000c,   eHexFormatIntel},
         {           NULL, 0xffff, eHexFormatDefault}
 };
 
