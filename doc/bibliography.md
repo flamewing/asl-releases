@@ -327,3 +327,6 @@
 
 
 [^Inters6100]: Intersil: _IM6100 CMOS 12 Bit Microprocessor._ (no year of release given)
+
+
+[^NECV60]: NEC: _V60 User's Manual._

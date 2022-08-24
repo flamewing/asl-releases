@@ -105,6 +105,7 @@ static TFamilyDescr const Descrs[] = {
         {         "7720", 0x007d,   eHexFormatIntel},
         {         "7725", 0x007e,   eHexFormatIntel},
         {        "77230", 0x007f,   eHexFormatIntel},
+        {          "V60", 0x000d, eHexFormatIntel32},
         {    "SYM53C8xx", 0x0025,   eHexFormatIntel},
         {        "F2MC8", 0x0015,   eHexFormatIntel},
         {       "F2MC16", 0x0016,   eHexFormatIntel},

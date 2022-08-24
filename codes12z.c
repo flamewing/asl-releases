@@ -2550,13 +2550,16 @@ static void DeinitFields(void) {
 static Boolean DecodeAttrPart_S12Z(void) {
     int z;
 
-    OpSize2 = eSymbolSizeUnknown;
+    if (strlen(AttrPart.str.p_str) > 2) {
+        WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+        return False;
+    }
+
     for (z = 0; z < 2; z++) {
         if (AttrPart.str.p_str[z] == '\0') {
             break;
         }
-        if (!DecodeMoto16AttrSize(
-                    AttrPart.str.p_str[z], z ? &OpSize2 : &AttrPartOpSize, True)) {
+        if (!DecodeMoto16AttrSize(AttrPart.str.p_str[z], &AttrPartOpSize[z], True)) {
             return False;
         }
     }
@@ -2567,9 +2570,10 @@ static void MakeCode_S12Z(void) {
     CodeLen   = 0;
     DontPrint = False;
 
-    /* OpSize2 has been set in DecodeAttrPart() */
-
-    OpSize = (AttrPartOpSize != eSymbolSizeUnknown) ? AttrPartOpSize : eSymbolSizeUnknown;
+    OpSize  = (AttrPartOpSize[0] != eSymbolSizeUnknown) ? AttrPartOpSize[0]
+                                                        : eSymbolSizeUnknown;
+    OpSize2 = (AttrPartOpSize[1] != eSymbolSizeUnknown) ? AttrPartOpSize[1]
+                                                        : eSymbolSizeUnknown;
 
     /* zu ignorierendes */
 

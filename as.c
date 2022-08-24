@@ -126,6 +126,7 @@
 #include "codesx20.h"
 #include "codetms1.h"
 #include "codetms7.h"
+#include "codev60.h"
 #include "codevector.h"
 #include "codexa.h"
 #include "codexcore.h"
@@ -2602,7 +2603,7 @@ static void Produce_Code(void) {
                         ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)",
                         STRINGSIZE);
             } else {
-                AttrPartOpSize = eSymbolSizeUnknown;
+                AttrPartOpSize[0] = AttrPartOpSize[1] = eSymbolSizeUnknown;
                 if (DecodeAttrPart ? DecodeAttrPart() : True) {
                     if (!CodeGlobalPseudo()) {
                         MakeCode();
@@ -4445,6 +4446,7 @@ int main(int argc, char** argv) {
         code78k4_init();
         code7720_init();
         code77230_init();
+        codev60_init();
         codescmp_init();
         code807x_init();
         codecop4_init();

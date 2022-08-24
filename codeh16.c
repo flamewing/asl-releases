@@ -3020,7 +3020,7 @@ static Boolean DecodeAttrPart_H16(void) {
     /* process operand size part of attribute */
 
     if (*SizePart.str.p_str) {
-        if (!DecodeMoto16AttrSizeStr(&SizePart, &AttrPartOpSize, False)) {
+        if (!DecodeMoto16AttrSizeStr(&SizePart, &AttrPartOpSize[0], False)) {
             return False;
         }
     }
@@ -3037,7 +3037,7 @@ static void MakeCode_H16(void) {
         return;
     }
 
-    OpSize = AttrPartOpSize;
+    OpSize = AttrPartOpSize[0];
     if (DecodeMoto16Pseudo(OpSize, True)) {
         return;
     }

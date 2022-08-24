@@ -988,9 +988,14 @@ static void DeinitFields(void) {
 /* Main Functions */
 
 static Boolean DecodeAttrPart_6805(void) {
+    if (strlen(AttrPart.str.p_str) > 1) {
+        WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+        return False;
+    }
+
     /* deduce operand size - no size is zero-length string -> '\0' */
 
-    return DecodeMoto16AttrSize(*AttrPart.str.p_str, &AttrPartOpSize, False);
+    return DecodeMoto16AttrSize(*AttrPart.str.p_str, &AttrPartOpSize[0], False);
 }
 
 static void MakeCode_6805(void) {
@@ -999,7 +1004,7 @@ static void MakeCode_6805(void) {
 
     CodeLen   = 0;
     DontPrint = False;
-    OpSize    = AttrPartOpSize;
+    OpSize    = AttrPartOpSize[0];
 
     /* zu ignorierendes */
 

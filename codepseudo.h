@@ -23,9 +23,10 @@ extern Boolean IsIndirect(char const* Asc);
 
 typedef int (*tDispBaseSplitQualifier)(char const* pArg, int StartPos, int SplitPos);
 extern int FindDispBaseSplitWithQualifier(
-        char const* pArg, int* pArgLen, tDispBaseSplitQualifier Qualifier);
+        char const* pArg, int* pArgLen, tDispBaseSplitQualifier Qualifier,
+        char const* pBracks);
 #define FindDispBaseSplit(pArg, pArgLen) \
-    FindDispBaseSplitWithQualifier(pArg, pArgLen, NULL)
+    FindDispBaseSplitWithQualifier(pArg, pArgLen, NULL, "()")
 
 extern void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max);
 

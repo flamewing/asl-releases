@@ -610,3 +610,10 @@ No processor-specific data pseudo instructions.
 _Default Integer Syntax: C_
 
 `DC`, `DECIMAL`, `DS`, `LTORG`, `OCTAL`, `ZERO`.
+
+
+#### NEC V60
+
+_Default Integer Syntax: Intel_
+
+`DB`, `DD`, `DQ`, `DS`, `DT`, `DW`, `REG`.

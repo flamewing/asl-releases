@@ -2972,3 +2972,8 @@ _valid for: IM61x0_
 `PANEL ON` or `PANEL OFF` declares the Control Panel Flip-Flop state. AS diagnoses IOT instructions used in the wrong mode. The current setting is available as `INPANEL`.
 
 On IM61x0, `DECIMAL` and `OCTAL` abbreviate `RADIX 10` and `RADIX 8`. `DC`, `DS`, `LTORG` and `ZERO` are also available.
+
+
+### NEC V60 target
+
+Select `70616` for NEC V60. Its code address space is 4 Gbytes. `SUPMODE` controls privileged instructions. `REGV60.INC` provides register addresses.

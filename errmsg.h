@@ -77,6 +77,7 @@ typedef enum {
     ErrNum_IntButFloat              = 1134,
     ErrNum_NotInNormalMode          = 390,
     ErrNum_NotInPanelMode           = 400,
+    ErrNum_ArgOutOfRange            = 410,
     /* ErrNum_InvOpType = 1135, */
     ErrNum_FloatButString              = 1136,
     ErrNum_OpTypeMismatch              = 1137,

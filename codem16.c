@@ -3074,13 +3074,13 @@ static Boolean DecodeAttrPart_M16(void) {
     if (*AttrPart.str.p_str) {
         switch (as_toupper(*AttrPart.str.p_str)) {
         case 'B':
-            AttrPartOpSize = eSymbolSize8Bit;
+            AttrPartOpSize[0] = eSymbolSize8Bit;
             break;
         case 'H':
-            AttrPartOpSize = eSymbolSize16Bit;
+            AttrPartOpSize[0] = eSymbolSize16Bit;
             break;
         case 'W':
-            AttrPartOpSize = eSymbolSize32Bit;
+            AttrPartOpSize[0] = eSymbolSize32Bit;
             break;
         default:
             WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
@@ -3093,7 +3093,7 @@ static Boolean DecodeAttrPart_M16(void) {
 static void MakeCode_M16(void) {
     int z;
 
-    DOpSize = AttrPartOpSize;
+    DOpSize = AttrPartOpSize[0];
     for (z = 1; z <= ArgCnt; OpSize[z++] = eSymbolSizeUnknown)
         ;
 

@@ -181,12 +181,13 @@ LongInt      MomSectionHandle;       /* mom. Namensraum */
 PSaveSection SectionStack;           /* gespeicherte Sektionshandles */
 tSavePhase*  pPhaseStacks[SegCount]; /* saves nested PHASE values */
 
-tSymbolSize AttrPartOpSize; /* instruction operand size deduced from insn attribute */
-LongWord    MaxCodeLen = 0; /* max. length of generated code */
-LongInt     CodeLen;        /* Laenge des erzeugten Befehls */
-LongWord*   DAsmCode;       /* Zwischenspeicher erzeugter Code */
-Word*       WAsmCode;
-Byte*       BAsmCode;
+tSymbolSize
+          AttrPartOpSize[2]; /* instruction operand size(s) deduced from insn attribute */
+LongWord  MaxCodeLen = 0;    /* max. length of generated code */
+LongInt   CodeLen;           /* Laenge des erzeugten Befehls */
+LongWord* DAsmCode;          /* Zwischenspeicher erzeugter Code */
+Word*     WAsmCode;
+Byte*     BAsmCode;
 
 Boolean DontPrint;   /* Flag:PC veraendert, aber keinen Code erzeugt */
 Word    ActListGran; /* uebersteuerte List-Granularitaet */

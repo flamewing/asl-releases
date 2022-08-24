@@ -85,6 +85,7 @@ A list of the files found in every binary distribution is given in the following
 | `REGST6.INC`          | register and macro definitions ST6                                                       |
 | `REGST7.INC`          | register and macro definitions ST7                                                       |
 | `REGSTM8.INC`         | register and macro definitions STM8                                                      |
+| `REGV60.INC` | register addresses NEC V60 |
 | `REGST9.INC`          | register and macro definitions ST9                                                       |
 | `REGZ380.INC`         | register addresses Z380                                                                  |
 | `STDDEF04.INC`        | register addresses 6804                                                                  |

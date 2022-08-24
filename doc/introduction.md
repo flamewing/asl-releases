@@ -121,6 +121,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - NEC 78K0
 - NEC 78K2
 - NEC 78K3
+- NEC V60
 - NEC 78K4
 - NEC μPD7720/7725
 - NEC μPD77230

@@ -1840,16 +1840,21 @@ static void ForceAlign(void) {
 }
 
 static Boolean DecodeAttrPart_XA(void) {
+    if (strlen(AttrPart.str.p_str) > 1) {
+        WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
+        return False;
+    }
+
     if (*AttrPart.str.p_str) {
         switch (as_toupper(*AttrPart.str.p_str)) {
         case 'B':
-            AttrPartOpSize = eSymbolSize8Bit;
+            AttrPartOpSize[0] = eSymbolSize8Bit;
             break;
         case 'W':
-            AttrPartOpSize = eSymbolSize16Bit;
+            AttrPartOpSize[0] = eSymbolSize16Bit;
             break;
         case 'D':
-            AttrPartOpSize = eSymbolSize32Bit;
+            AttrPartOpSize[0] = eSymbolSize32Bit;
             break;
         default:
             WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
@@ -1867,7 +1872,7 @@ static void MakeCode_XA(void) {
     /* Operandengroesse */
 
     if (*AttrPart.str.p_str) {
-        SetOpSize(AttrPartOpSize);
+        SetOpSize(AttrPartOpSize[0]);
     }
 
     /* Labels muessen auf geraden Adressen liegen */
@@ -2082,7 +2087,7 @@ static void InternSymbol_XA(char* pArg, TempResult* pResult) {
     tSymbolSize Size;
 
     if (*AttrPart.str.p_str) {
-        OpSize = AttrPartOpSize;
+        OpSize = AttrPartOpSize[0];
     }
 
     if (DecodeRegCore(pArg, &Size, &Reg)) {
