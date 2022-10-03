@@ -117,6 +117,8 @@
 #include "codeol40.h"
 #include "codeol50.h"
 #include "codepdk.h"
+#include "codepdp11.h"
+#include "codepseudo.h"
 #include "codes12z.h"
 #include "codesc14xxx.h"
 #include "codescmp.h"
@@ -4390,6 +4392,7 @@ int main(int argc, char** argv) {
         code4500_init();
         codem16_init();
         codem16c_init();
+        codepdp11_init();
         code4004_init();
         code8008_init();
         code48_init();

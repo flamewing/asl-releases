@@ -2977,3 +2977,14 @@ On IM61x0, `DECIMAL` and `OCTAL` abbreviate `RADIX 10` and `RADIX 8`. `DC`, `DS`
 ### NEC V60 target
 
 Select `70616` for NEC V60. Its code address space is 4 Gbytes. `SUPMODE` controls privileged instructions. `REGV60.INC` provides register addresses.
+
+
+### PDP-11 targets and extensions
+
+AS supports PDP-11/03, /04, /05, /10, /15, /20, /23, /24, /34, /35, /40, /44, /45, /50, /55, /60, /70, /84, /94, MicroPDP-11/53, /73, /83, /93, and T-11. Models differ in instruction sets and address space (64, 256 or 4096 Kbytes).
+
+`CIS`, `EIS`, `FIS` and `FP11` enable optional instruction extensions on models that offered those upgrades. CIS handles variable-length packed/unpacked BCD; EIS supplies `MUL`, `DIV`, `ASH`, `ASHC`; FIS supplies stack-based DEC F-format arithmetic; FP11 supplies register-based DEC F/D arithmetic. `SUPMODE` controls privileged instructions.
+
+Besides defining register aliases, unlabelled `REG ON`/`REG OFF` enables or disables built-in names (`Rn` = `%n`, `SP` = `R6`, `PC` = `R7`). They are enabled by default, and `DEFAULT_REGSYMS` reports the current setting.
+
+`BYTE` and `WORD` alias `DB` and `DW`. `FLT2` and `FLT4` emit floating point values in DEC F (32-bit) and D (64-bit) formats; integer arguments are rejected.

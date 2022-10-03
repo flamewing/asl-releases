@@ -617,3 +617,10 @@ _Default Integer Syntax: C_
 _Default Integer Syntax: Intel_
 
 `DB`, `DD`, `DQ`, `DS`, `DT`, `DW`, `REG`.
+
+
+#### PDP-11
+
+_Default Integer Syntax: C_
+
+`BYTE`, `CIS`, `DB`, `DD`, `DQ`, `DS`, `DT`, `DW`, `EIS`, `FIS`, `FLT2`, `FLT4`, `FP11`, `REG`, `WORD`.

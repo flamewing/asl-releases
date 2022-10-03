@@ -100,8 +100,7 @@ static Boolean DecodeRegCore(char const* pArg, Byte* pResult) {
     } else if (!as_strcasecmp(pArg, "FP")) {
         *pResult = REG_FP | REG_MARK;
         return True;
-    }
-    if (!as_strcasecmp(pArg, "AP")) {
+    } else if (!as_strcasecmp(pArg, "AP")) {
         *pResult = REG_AP | REG_MARK;
         return True;
     }
@@ -163,7 +162,7 @@ static void ResetAdrVals(tAdrVals* p_vals) {
     p_vals->count            = 0;
     p_vals->m                = 0;
     p_vals->forced_disp_size = p_vals->data_op_size = eSymbolSizeUnknown;
-    p_vals->immediate_flags                         = 0;
+    p_vals->immediate_flags                         = eSymbolFlag_None;
     p_vals->bit_offset_immediate                    = False;
     p_vals->bit_offset                              = 0;
 }
@@ -2799,13 +2798,6 @@ static void MakeCode_V60(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     InitCode_V60(void)
- * \brief  target-specific initializations before starting a pass
- * ------------------------------------------------------------------------ */
-
-static void InitCode_V60(void) {}
-
-/*!------------------------------------------------------------------------
  * \fn     IsDef_V60(void)
  * \brief  check whether insn makes own use of label
  * \return True if yes
@@ -2863,12 +2855,10 @@ static void SwitchTo_V60(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     codensv60_init(void)
+ * \fn     codev60_init(void)
  * \brief  register target to AS
  * ------------------------------------------------------------------------ */
 
 void codev60_init(void) {
     (void)AddCPU("70616", SwitchTo_V60);
-
-    AddInitPassProc(InitCode_V60);
 }

@@ -22,6 +22,7 @@
 #include "asmsub.h"
 #include "bpemu.h"
 #include "chartrans.h"
+#include "decfloat.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
 #include "nls.h"
@@ -55,8 +56,9 @@ typedef struct sCurrCodeFill tCurrCodeFill;
 
 struct sLayoutCtx {
     tDSFlag     DSFlag;
+    Word        flags;
     TLayoutFunc LayoutFunc;
-    int         BaseElemLenBits, FullWordSize, ElemsPerFullWord;
+    int         BaseElemLenBits, FullWordSize, ElemsPerFullWord, ListGran;
     Boolean (*Put4I)(Byte b, struct sLayoutCtx* pCtx);
     Boolean (*Put8I)(Byte b, struct sLayoutCtx* pCtx);
     Boolean (*Put16I)(Word w, struct sLayoutCtx* pCtx);
@@ -357,7 +359,16 @@ static Boolean Put8I_To_8(Byte b, struct sLayoutCtx* pCtx) {
     if (!IncMaxCodeLen(pCtx, 1)) {
         return False;
     }
-    BAsmCode[pCtx->CurrCodeFill.FullWordCnt++] = b;
+    if ((pCtx->ListGran == 1) || !(pCtx->CurrCodeFill.FullWordCnt & 1)) {
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt] = b;
+    } else if (pCtx->flags & eIntPseudoFlag_Turn) {
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt >> 1]
+                = (((Word)BAsmCode[pCtx->CurrCodeFill.FullWordCnt - 1]) << 8) | b;
+    } else {
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt >> 1]
+                = (((Word)b) << 8) | BAsmCode[pCtx->CurrCodeFill.FullWordCnt - 1];
+    }
+    pCtx->CurrCodeFill.FullWordCnt++;
     return True;
 }
 
@@ -480,8 +491,12 @@ static Boolean Put16I_To_8(Word w, struct sLayoutCtx* pCtx) {
     if (!IncMaxCodeLen(pCtx, 2)) {
         return False;
     }
-    BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ pCtx->LoHiMap)] = Lo(w);
-    BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)] = Hi(w);
+    if (pCtx->ListGran == 2) {
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt >> 1] = w;
+    } else {
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ pCtx->LoHiMap)] = Lo(w);
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)] = Hi(w);
+    }
     pCtx->CurrCodeFill.FullWordCnt += 2;
     return True;
 }
@@ -635,7 +650,15 @@ static Boolean Put32F_To_8(Double t, struct sLayoutCtx* pCtx) {
     if (!IncMaxCodeLen(pCtx, 4)) {
         return False;
     }
-    Double_2_ieee4(t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
+    if (pCtx->flags & eIntPseudoFlag_DECFormat) {
+        int ret = Double_2_dec4(t, WAsmCode + (pCtx->CurrCodeFill.FullWordCnt / 2));
+        if (ret) {
+            check_dec_fp_dispose_result(ret, pCtx->pCurrComp);
+            return False;
+        }
+    } else {
+        Double_2_ieee4(t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
+    }
     pCtx->CurrCodeFill.FullWordCnt += 4;
     return True;
 }
@@ -781,7 +804,15 @@ static Boolean Put64F_To_8(Double t, struct sLayoutCtx* pCtx) {
     if (!IncMaxCodeLen(pCtx, 8)) {
         return False;
     }
-    Double_2_ieee8(t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
+    if (pCtx->flags & eIntPseudoFlag_DECFormat) {
+        int ret = Double_2_dec8(t, WAsmCode + (pCtx->CurrCodeFill.FullWordCnt / 2));
+        if (ret) {
+            check_dec_fp_dispose_result(ret, pCtx->pCurrComp);
+            return False;
+        }
+    } else {
+        Double_2_ieee8(t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
+    }
     pCtx->CurrCodeFill.FullWordCnt += 8;
     return True;
 }
@@ -1199,6 +1230,12 @@ static void DecodeIntelDx(tLayoutCtx* pLayoutCtx) {
 
     pLayoutCtx->DSFlag       = DSNone;
     pLayoutCtx->FullWordSize = Grans[ActPC];
+    if ((pLayoutCtx->FullWordSize == 1)
+        && !(pLayoutCtx->flags & eIntPseudoFlag_DECFormat)) {
+        pLayoutCtx->ListGran = 1;
+    } else {
+        pLayoutCtx->ListGran = ActListGran;
+    }
     pLayoutCtx->ElemsPerFullWord
             = (8 * pLayoutCtx->FullWordSize) / pLayoutCtx->BaseElemLenBits;
     if (pLayoutCtx->ElemsPerFullWord > 1) {
@@ -1239,8 +1276,8 @@ static void DecodeIntelDx(tLayoutCtx* pLayoutCtx) {
             WrError(ErrNum_NullResMem);
         }
     }
-    if (OK && (pLayoutCtx->FullWordSize == 1)) {
-        ActListGran = 1;
+    if (OK) {
+        ActListGran = pLayoutCtx->ListGran;
     }
 }
 
@@ -1283,6 +1320,7 @@ void DecodeIntelDB(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutByte;
     LayoutCtx.BaseElemLenBits = 8;
+    LayoutCtx.flags           = Flags;
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put8I     = Put8I_To_8;
@@ -1312,6 +1350,7 @@ void DecodeIntelDW(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutWord;
     LayoutCtx.BaseElemLenBits = 16;
+    LayoutCtx.flags           = Flags;
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put16I    = (Flags & eIntPseudoFlag_AllowInt) ? Put16I_To_8 : NULL;
@@ -1343,6 +1382,7 @@ void DecodeIntelDD(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutDoubleWord;
     LayoutCtx.BaseElemLenBits = 32;
+    LayoutCtx.flags           = Flags;
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put32I    = (Flags & eIntPseudoFlag_AllowInt) ? Put32I_To_8 : NULL;
@@ -1375,6 +1415,7 @@ void DecodeIntelDQ(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutQuadWord;
     LayoutCtx.BaseElemLenBits = 64;
+    LayoutCtx.flags           = Flags;
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put64I    = (Flags & eIntPseudoFlag_AllowInt) ? Put64I_To_8 : NULL;
@@ -1407,6 +1448,7 @@ void DecodeIntelDT(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutTenBytes;
     LayoutCtx.BaseElemLenBits = 80;
+    LayoutCtx.flags           = Flags;
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put80F    = Put80F_To_8;
