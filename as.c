@@ -116,6 +116,7 @@
 #include "codens32k.h"
 #include "codeol40.h"
 #include "codeol50.h"
+#include "codepalm.h"
 #include "codepdk.h"
 #include "codepdp11.h"
 #include "codepseudo.h"
@@ -4373,6 +4374,7 @@ int main(int argc, char** argv) {
         code68k_init();
         code56k_init();
         code601_init();
+        codepalm_init();
         codemcore_init();
         codexgate_init();
         code68_init();

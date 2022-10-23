@@ -299,6 +299,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_ArgOutOfRange:
         msgno = Num_ErrMsgArgOutOfRange;
         break;
+    case ErrNum_TrySkipMultiwordInstruction:
+        msgno = Num_ErrMsgTrySkipMultiwordInstruction;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
@@ -463,6 +466,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
         break;
     case ErrNum_JmpDistTooBig:
         msgno = Num_ErrMsgJmpDistTooBig;
+        break;
+    case ErrNum_JmpDistIsZero:
+        msgno = Num_ErrMsgJmpDistIsZero;
         break;
     case ErrNum_DistIsOdd:
         msgno = Num_ErrMsgDistIsOdd;

@@ -2988,3 +2988,6 @@ AS supports PDP-11/03, /04, /05, /10, /15, /20, /23, /24, /34, /35, /40, /44, /4
 Besides defining register aliases, unlabelled `REG ON`/`REG OFF` enables or disables built-in names (`Rn` = `%n`, `SP` = `R6`, `PC` = `R7`). They are enabled by default, and `DEFAULT_REGSYMS` reports the current setting.
 
 `BYTE` and `WORD` alias `DB` and `DW`. `FLT2` and `FLT4` emit floating point values in DEC F (32-bit) and D (64-bit) formats; integer arguments are rejected.
+
+
+IBM PALM has a 64 Kbyte code space and 16 I/O ports. `PORT` defines I/O addresses from 0 through 15. `EBCDIC.INC` supplies code page 037.

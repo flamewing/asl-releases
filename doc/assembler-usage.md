@@ -55,6 +55,7 @@ A list of the files found in every binary distribution is given in the following
 | **Directory INCLUDE** | <!-- empty -->                                                                           |
 | `BITFUNCS.INC`        | functions for bit manipulation                                                           |
 | `CTYPE.INC`           | functions for classification of characters                                               |
+| `EBCDIC.INC` | EBCDIC/code page 037 definitions |
 | `80C50X.INC`          | register addresses SAB C50x                                                              |
 | `80C552.INC`          | register addresses 80C552                                                                |
 | `H8_3048.INC`         | register addresses H8/3048                                                               |

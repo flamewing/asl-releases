@@ -41,6 +41,7 @@ Now, after this inevitable introduction we can turn to the actual documentation:
 In contrast to ordinary assemblers, AS offers the possibility to generate code for totally different processors. At the moment, the following processor families have been implemented:
 
 - Motorola 68000...68040, 683xx, and Coldfire including coprocessor and MMU
+- IBM PALM
 - Motorola ColdFire
 - Motorola DSP5600x, DSP56300
 - Motorola M-Core

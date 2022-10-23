@@ -624,3 +624,10 @@ _Default Integer Syntax: Intel_
 _Default Integer Syntax: C_
 
 `BYTE`, `CIS`, `DB`, `DD`, `DQ`, `DS`, `DT`, `DW`, `EIS`, `FIS`, `FLT2`, `FLT4`, `FP11`, `REG`, `WORD`.
+
+
+#### IBM PALM
+
+_Default Integer Syntax: IBM_
+
+`DB`, `DD`, `DN`, `DQ`, `DS`, `DT`, `DW`, `PORT`, `REG`.

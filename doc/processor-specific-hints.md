@@ -1616,3 +1616,10 @@ The Intersil IM6100/6120 implements the PDP-8/E instruction set. When adapting P
 - Use AS labels (a trailing colon, or a label in the first column) instead of PAL-III's trailing comma.
 - Use `DC` to emit one or more constants; `LTORG` can place literals automatically.
 - Set the program counter with `ORG address` rather than `*address`.
+
+
+## IBM PALM
+
+`IBM5100`, `IBM5110` and `IBM5120` select the same PALM core. AS supports IBM's original mnemonics and Christian Corti's mnemonics, including `CALL`, `RCALL`, `JMP`, `BRA`, `LWI` and `RET` macro instructions. `AND`/`OR` accept immediate operands, translating to `CLR`/`SET` (with the AND mask inverted). Immediate `MOVE` and `MOVB` assemble like `LWI` and `LBI`.
+
+A conditional skip can skip only one instruction word. AS warns if it precedes a multiword macro instruction. Integer constants use IBM syntax by default, such as `X'FF'`. For Corti's Motorola-style examples, use `INTSYNTAX +$hex,-x'hex'`.
