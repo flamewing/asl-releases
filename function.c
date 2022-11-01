@@ -12,9 +12,11 @@
 
 #include "function.h"
 
+#include "asmdef.h"
 #include "asmerr.h"
 #include "asmpars.h"
 #include "bpemu.h"
+#include "chartrans.h"
 #include "cpu2phys.h"
 #include "errmsg.h"
 #include "nonzstring.h"
@@ -59,6 +61,36 @@ static Boolean FuncCHARFROMSTR(
                              ? pArgs[0].Contents.str.p_str[pArgs[1].Contents.Int]
                              : -1);
 
+    return True;
+}
+
+static Boolean FuncCODEPAGE_VAL(
+        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+    PTransTable p_table;
+
+    UNUSED(ArgCnt);
+
+    if (ArgCnt >= 2) {
+        String name;
+
+        as_nonz_dynstr_to_c_str(name, &pArgs[1].Contents.str, sizeof(name));
+        p_table = FindCodepage(name, NULL);
+        if (!p_table) {
+            WrXError(ErrNum_UnknownCodepage, name);
+            as_tempres_set_int(pResult, 0);
+            return True;
+        }
+    } else {
+        p_table = CurrTransTable;
+    }
+
+    if (ChkRange(pArgs[0].Contents.Int, 0, 255)) {
+        TransTableCheckReadFor(p_table);
+        as_tempres_set_int(
+                pResult, as_chartrans_xlate(p_table->Table, pArgs[0].Contents.Int));
+    } else {
+        as_tempres_set_int(pResult, 0);
+    }
     return True;
 }
 
@@ -585,49 +617,50 @@ static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned 
 }
 
 static tFunction const Functions[] = {
-        {     "SUBSTR", 3, 3, {AS_FARG_MString, AS_FARG_MInt, AS_FARG_MInt},      FuncSUBSTR},
-        {     "STRSTR", 2, 2,         {AS_FARG_MString, AS_FARG_MString, 0},      FuncSTRSTR},
-        {"CHARFROMSTR", 2, 2,            {AS_FARG_MString, AS_FARG_MInt, 0}, FuncCHARFROMSTR},
-        {   "EXPRTYPE", 1, 1,                          {AS_FARG_MAll, 0, 0},    FuncEXPRTYPE},
-        {   "UPSTRING", 1, 1,                       {AS_FARG_MString, 0, 0},    FuncUPSTRING},
-        {  "LOWSTRING", 1, 1,                       {AS_FARG_MString, 0, 0},   FuncLOWSTRING},
-        {     "STRLEN", 1, 1,                       {AS_FARG_MString, 0, 0},      FuncSTRLEN},
-        {        "VAL", 1, 1,                       {AS_FARG_MString, 0, 0},         FuncVAL},
-        {    "TOUPPER", 1, 1,                          {AS_FARG_MInt, 0, 0},     FuncTOUPPER},
-        {    "TOLOWER", 1, 1,                          {AS_FARG_MInt, 0, 0},     FuncTOLOWER},
-        {     "BITCNT", 1, 1,                          {AS_FARG_MInt, 0, 0},      FuncBITCNT},
-        {   "FIRSTBIT", 1, 1,                          {AS_FARG_MInt, 0, 0},    FuncFIRSTBIT},
-        {    "LASTBIT", 1, 1,                          {AS_FARG_MInt, 0, 0},     FuncLASTBIT},
-        {     "BITPOS", 1, 1,                          {AS_FARG_MInt, 0, 0},      FuncBITPOS},
-        {        "ABS", 1, 1,         {AS_FARG_MInt | AS_FARG_MFloat, 0, 0},         FuncABS},
-        {        "SGN", 1, 1,         {AS_FARG_MInt | AS_FARG_MFloat, 0, 0},         FuncSGN},
-        {        "INT", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncINT},
-        {       "SQRT", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncSQRT},
-        {        "SIN", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncSIN},
-        {        "COS", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncCOS},
-        {        "TAN", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncTAN},
-        {        "COT", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncCOT},
-        {       "ASIN", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncASIN},
-        {       "ACOS", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncACOS},
-        {       "ATAN", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncATAN},
-        {       "ACOT", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncACOT},
-        {        "EXP", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncEXP},
-        {       "ALOG", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncALOG},
-        {        "ALD", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncALD},
-        {       "SINH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncSINH},
-        {       "COSH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncCOSH},
-        {       "TANH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncTANH},
-        {       "COTH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncCOTH},
-        {         "LN", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncLN},
-        {        "LOG", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncLOG},
-        {         "LD", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncLD},
-        {      "ASINH", 1, 1,                        {AS_FARG_MFloat, 0, 0},       FuncASINH},
-        {      "ACOSH", 1, 1,                        {AS_FARG_MFloat, 0, 0},       FuncACOSH},
-        {      "ATANH", 1, 1,                        {AS_FARG_MFloat, 0, 0},       FuncATANH},
-        {      "ACOTH", 1, 1,                        {AS_FARG_MFloat, 0, 0},       FuncACOTH},
-        {   "PHYS2CPU", 1, 1,                          {AS_FARG_MInt, 0, 0},  fnc_phys_2_cpu},
-        {   "CPU2PHYS", 1, 1,                          {AS_FARG_MInt, 0, 0},  fnc_cpu_2_phys},
-        {         NULL, 0, 0,                                     {0, 0, 0},            NULL}
+        {      "SUBSTR", 3, 3, {AS_FARG_MString, AS_FARG_MInt, AS_FARG_MInt},       FuncSUBSTR},
+        {      "STRSTR", 2, 2,         {AS_FARG_MString, AS_FARG_MString, 0},       FuncSTRSTR},
+        { "CHARFROMSTR", 2, 2,            {AS_FARG_MString, AS_FARG_MInt, 0},  FuncCHARFROMSTR},
+        {"CODEPAGE_VAL", 1, 2,            {AS_FARG_MInt, AS_FARG_MString, 0}, FuncCODEPAGE_VAL},
+        {    "EXPRTYPE", 1, 1,                          {AS_FARG_MAll, 0, 0},     FuncEXPRTYPE},
+        {    "UPSTRING", 1, 1,                       {AS_FARG_MString, 0, 0},     FuncUPSTRING},
+        {   "LOWSTRING", 1, 1,                       {AS_FARG_MString, 0, 0},    FuncLOWSTRING},
+        {      "STRLEN", 1, 1,                       {AS_FARG_MString, 0, 0},       FuncSTRLEN},
+        {         "VAL", 1, 1,                       {AS_FARG_MString, 0, 0},          FuncVAL},
+        {     "TOUPPER", 1, 1,                          {AS_FARG_MInt, 0, 0},      FuncTOUPPER},
+        {     "TOLOWER", 1, 1,                          {AS_FARG_MInt, 0, 0},      FuncTOLOWER},
+        {      "BITCNT", 1, 1,                          {AS_FARG_MInt, 0, 0},       FuncBITCNT},
+        {    "FIRSTBIT", 1, 1,                          {AS_FARG_MInt, 0, 0},     FuncFIRSTBIT},
+        {     "LASTBIT", 1, 1,                          {AS_FARG_MInt, 0, 0},      FuncLASTBIT},
+        {      "BITPOS", 1, 1,                          {AS_FARG_MInt, 0, 0},       FuncBITPOS},
+        {         "ABS", 1, 1,         {AS_FARG_MInt | AS_FARG_MFloat, 0, 0},          FuncABS},
+        {         "SGN", 1, 1,         {AS_FARG_MInt | AS_FARG_MFloat, 0, 0},          FuncSGN},
+        {         "INT", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncINT},
+        {        "SQRT", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncSQRT},
+        {         "SIN", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncSIN},
+        {         "COS", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncCOS},
+        {         "TAN", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncTAN},
+        {         "COT", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncCOT},
+        {        "ASIN", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncASIN},
+        {        "ACOS", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncACOS},
+        {        "ATAN", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncATAN},
+        {        "ACOT", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncACOT},
+        {         "EXP", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncEXP},
+        {        "ALOG", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncALOG},
+        {         "ALD", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncALD},
+        {        "SINH", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncSINH},
+        {        "COSH", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncCOSH},
+        {        "TANH", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncTANH},
+        {        "COTH", 1, 1,                        {AS_FARG_MFloat, 0, 0},         FuncCOTH},
+        {          "LN", 1, 1,                        {AS_FARG_MFloat, 0, 0},           FuncLN},
+        {         "LOG", 1, 1,                        {AS_FARG_MFloat, 0, 0},          FuncLOG},
+        {          "LD", 1, 1,                        {AS_FARG_MFloat, 0, 0},           FuncLD},
+        {       "ASINH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncASINH},
+        {       "ACOSH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncACOSH},
+        {       "ATANH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncATANH},
+        {       "ACOTH", 1, 1,                        {AS_FARG_MFloat, 0, 0},        FuncACOTH},
+        {    "PHYS2CPU", 1, 1,                          {AS_FARG_MInt, 0, 0},   fnc_phys_2_cpu},
+        {    "CPU2PHYS", 1, 1,                          {AS_FARG_MInt, 0, 0},   fnc_cpu_2_phys},
+        {          NULL, 0, 0,                                     {0, 0, 0},             NULL}
 };
 
 /*!------------------------------------------------------------------------

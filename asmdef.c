@@ -219,22 +219,26 @@ void TransTableMarkModified(void) {
     }
 }
 
-void TransTableCheckRead(void) {
-    if (!CurrTransTable) {
+void TransTableCheckReadFor(PTransTable pTable) {
+    if (!pTable) {
         return;
     }
     if (SuppressTransTableReadCheck) {
         return;
     }
-    if (!CurrTransTable->CreatedBySingleArg) {
+    if (!pTable->CreatedBySingleArg) {
         return;
     }
-    if (CurrTransTable->WasModified || CurrTransTable->WarnedReadBeforeModify) {
+    if (pTable->WasModified || pTable->WarnedReadBeforeModify) {
         return;
     }
 
-    CurrTransTable->WarnedReadBeforeModify = True;
-    WrXError(ErrNum_CodepageReadBeforeModify, CurrTransTable->Name);
+    pTable->WarnedReadBeforeModify = True;
+    WrXError(ErrNum_CodepageReadBeforeModify, pTable->Name);
+}
+
+void TransTableCheckRead(void) {
+    TransTableCheckReadFor(CurrTransTable);
 }
 
 PDefinement FirstDefine; /* Liste von Praeprozessor-Defines */

@@ -976,3 +976,6 @@ definitions into a single include file, because a program that wants to use such
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-enable MD001 -->
+
+
+`CODEPAGE_VAL(character[, name])` returns the translated byte for a character code from 0 through 255. Omitting `name` uses the current codepage; a string name selects another codepage without changing the current one.

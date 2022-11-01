@@ -1,0 +1,2 @@
+Tests shared codepage creation, explicit copies, case-insensitive named lookup,
+and preservation of the fork's read-before-modification warning.

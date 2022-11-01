@@ -78,3 +78,6 @@ The TMS320C2x/5x code generators and the file `STDDEF2x.INC` come from Thomas Sa
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-enable MD001 -->
+
+
+`EBCDIC.INC` defines codepage 037, including ASCII control characters. `BCDIC.INC` defines codepage 359. `RADIX50.INC` defines the RADIX 50 character set and a packing macro that stores three characters per machine word as `c0*1600 + c1*40 + c2`, padding incomplete groups with spaces.

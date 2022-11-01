@@ -345,6 +345,7 @@ extern Boolean     SuppressTransTableReadCheck;
 extern void TransTableInitializeState(PTransTable pTable, Boolean CreatedBySingleArg);
 extern void TransTableMarkModified(void);
 extern void TransTableCheckRead(void);
+extern void TransTableCheckReadFor(PTransTable pTable);
 
 extern PDefinement FirstDefine;
 

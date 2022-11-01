@@ -1623,3 +1623,6 @@ The Intersil IM6100/6120 implements the PDP-8/E instruction set. When adapting P
 `IBM5100`, `IBM5110` and `IBM5120` select the same PALM core. AS supports IBM's original mnemonics and Christian Corti's mnemonics, including `CALL`, `RCALL`, `JMP`, `BRA`, `LWI` and `RET` macro instructions. `AND`/`OR` accept immediate operands, translating to `CLR`/`SET` (with the AND mask inverted). Immediate `MOVE` and `MOVB` assemble like `LWI` and `LBI`.
 
 A conditional skip can skip only one instruction word. AS warns if it precedes a multiword macro instruction. Integer constants use IBM syntax by default, such as `X'FF'`. For Corti's Motorola-style examples, use `INTSYNTAX +$hex,-x'hex'`.
+
+
+IBM 5110/5120 use EBCDIC. After including `EBCDIC.INC`, select it with `CODEPAGE cp037`; the include creates an additional codepage rather than selecting it permanently.

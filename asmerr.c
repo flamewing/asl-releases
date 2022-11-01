@@ -50,7 +50,14 @@ static void AddExpectError(tExpectError* pExpectError) {
     pExpectErrors       = pExpectError;
 }
 
-static tExpectError* FindAndTakeExpectError(tErrorNum Num) {
+/*!------------------------------------------------------------------------
+ * \fn     FindAndTakeExpectError(tErrorNum Num)
+ * \brief  check whether a certain error was expected
+ * \param  Num number of error message that was expected
+ * \return True if ther was an expectation
+ * ------------------------------------------------------------------------ */
+
+Boolean FindAndTakeExpectError(tErrorNum Num) {
     tExpectError *pRun, *pPrev;
 
     for (pRun = pExpectErrors, pPrev = NULL; pRun; pPrev = pRun, pRun = pRun->pNext) {
@@ -60,10 +67,11 @@ static tExpectError* FindAndTakeExpectError(tErrorNum Num) {
             } else {
                 pExpectErrors = pRun->pNext;
             }
-            return pRun;
+            free(pRun);
+            return True;
         }
     }
-    return NULL;
+    return False;
 }
 
 /*!------------------------------------------------------------------------
@@ -1083,14 +1091,11 @@ void WrErrorString(
 
 void WrXErrorPos(
         tErrorNum Num, char const* pExtendError, const struct sLineComp* pLineComp) {
-    String        h;
-    char          Add[11];
-    char const*   pErrorMsg;
-    tExpectError* pExpectError;
+    String      h;
+    char        Add[11];
+    char const* pErrorMsg;
 
-    pExpectError = FindAndTakeExpectError(Num);
-    if (pExpectError) {
-        free(pExpectError);
+    if (FindAndTakeExpectError(Num)) {
         return;
     }
 

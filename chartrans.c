@@ -15,6 +15,7 @@
 #include "nonzstring.h"
 
 #include <errno.h>
+#include <string.h>
 
 /*!------------------------------------------------------------------------
  * \fn     as_chartrans_table_new(void)

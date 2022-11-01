@@ -343,6 +343,10 @@ extern void ClearLocStack(void);
 
 extern void PrintRegDefs(void);
 
+struct tag_TTransTable;
+extern struct tag_TTransTable* FindCodepage(
+        char const* p_name, struct tag_TTransTable* p_source);
+
 extern void ClearCodepages(void);
 
 extern void PrintCodepages(void);
