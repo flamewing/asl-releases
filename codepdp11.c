@@ -34,9 +34,8 @@
 
 #define default_regsyms_name "DEFAULT_REGSYMS"
 
-#define REG_PC   7
-#define REG_SP   6
-#define REG_MARK 8
+#define REG_PC 7
+#define REG_SP 6
 
 #define APR_COUNT    8
 #define ASSUME_COUNT (2 * APR_COUNT)
@@ -125,11 +124,11 @@ static LongInt *          reg_par, *reg_pdr;
 
 static Boolean decode_reg_core(char const* p_arg, Word* p_result, tSymbolSize* p_size) {
     if (!as_strcasecmp(p_arg, "PC") && default_regsyms) {
-        *p_result = REG_PC | REG_MARK;
+        *p_result = REG_PC | REGSYM_FLAG_ALIAS;
         *p_size   = eSymbolSize16Bit;
         return True;
     } else if (!as_strcasecmp(p_arg, "SP") && default_regsyms) {
-        *p_result = REG_SP | REG_MARK;
+        *p_result = REG_SP | REGSYM_FLAG_ALIAS;
         *p_size   = eSymbolSize16Bit;
         return True;
     }
@@ -171,10 +170,10 @@ static void dissect_reg_pdp11(
     switch (inp_size) {
     case eSymbolSize16Bit:
         switch (value) {
-        case REG_MARK | REG_PC:
+        case REGSYM_FLAG_ALIAS | REG_PC:
             as_snprintf(p_dest, dest_size, "PC");
             break;
-        case REG_MARK | REG_SP:
+        case REGSYM_FLAG_ALIAS | REG_SP:
             as_snprintf(p_dest, dest_size, "SP");
             break;
         default:
@@ -323,7 +322,7 @@ static tRegEvalResult decode_reg(
         }
     }
 
-    *p_result = reg_descr.Reg & ~REG_MARK;
+    *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
     if (p_size) {
         *p_size = eval_result.DataSize;
     }
@@ -1656,6 +1655,7 @@ static void intern_symbol_pdp11(char* p_arg, TempResult* p_result) {
         p_result->Typ                       = TempReg;
         p_result->Contents.RegDescr.Reg     = reg_num;
         p_result->Contents.RegDescr.Dissect = dissect_reg_pdp11;
+        p_result->Contents.RegDescr.compare = NULL;
     }
 }
 

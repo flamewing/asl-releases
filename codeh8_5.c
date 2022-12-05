@@ -34,9 +34,8 @@
 #define RegEAOrderCount  9
 #define TwoRegOrderCount 3
 
-#define REG_SP   7
-#define REG_FP   6
-#define REG_MARK 8
+#define REG_SP 7
+#define REG_FP 6
 
 #define ModNone         (-1)
 #define ModReg          0
@@ -122,9 +121,9 @@ static void SetOpSize(tSymbolSize NSize) {
 
 static Boolean DecodeRegCore(char const* pArg, Byte* pResult) {
     if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_SP | REG_MARK;
+        *pResult = REG_SP | REGSYM_FLAG_ALIAS;
     } else if (!as_strcasecmp(pArg, "FP")) {
-        *pResult = REG_FP | REG_MARK;
+        *pResult = REG_FP | REGSYM_FLAG_ALIAS;
     } else if (
             (strlen(pArg) == 2) && (as_toupper(*pArg) == 'R') && (pArg[1] >= '0')
             && (pArg[1] <= '7')) {
@@ -148,9 +147,9 @@ static void DissectReg_H8_5(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
     switch (InpSize) {
     case eSymbolSize16Bit:
-        if (Value == (REG_SP | REG_MARK)) {
+        if (Value == (REG_SP | REGSYM_FLAG_ALIAS)) {
             as_snprintf(pDest, DestSize, "SP");
-        } else if (Value == (REG_FP | REG_MARK)) {
+        } else if (Value == (REG_FP | REGSYM_FLAG_ALIAS)) {
             as_snprintf(pDest, DestSize, "FP");
         } else {
             as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
@@ -176,7 +175,7 @@ static tRegEvalResult DecodeReg(tStrComp const* pArg, Byte* pResult, Boolean Mus
     tRegEvalResult RegEvalResult;
 
     if (DecodeRegCore(pArg->str.p_str, pResult)) {
-        *pResult &= ~REG_MARK;
+        *pResult &= ~REGSYM_FLAG_ALIAS;
         return eIsReg;
     }
 
@@ -2036,6 +2035,7 @@ static void InternSymbol_H8_5(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = eSymbolSize16Bit;
         pResult->Contents.RegDescr.Reg     = Erg;
         pResult->Contents.RegDescr.Dissect = DissectReg_H8_5;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

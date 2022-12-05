@@ -2151,11 +2151,13 @@ static void InternSymbol_601(char* Asc, TempResult* Erg) {
     } else if (DecodeGenRegCore(Asc, &RegValue)) {
         Erg->Typ                       = TempReg;
         Erg->Contents.RegDescr.Dissect = DissectReg_601;
+        Erg->Contents.RegDescr.compare = NULL;
         Erg->Contents.RegDescr.Reg     = RegValue;
         Erg->DataSize                  = eSymbolSize32Bit;
     } else if (DecodeFPRegCore(Asc, &RegValue)) {
         Erg->Typ                       = TempReg;
         Erg->Contents.RegDescr.Dissect = DissectReg_601;
+        Erg->Contents.RegDescr.compare = NULL;
         Erg->Contents.RegDescr.Reg     = RegValue;
         Erg->DataSize                  = eSymbolSizeFloat64Bit;
     }

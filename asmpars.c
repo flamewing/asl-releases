@@ -2288,6 +2288,7 @@ tRegEvalResult EvalStrRegExpressionAsOperand(
             if (PassNo <= MaxSymPass) {
                 pResult->Reg     = 0;
                 pResult->Dissect = NULL;
+                pResult->compare = NULL;
                 Repass           = True;
                 return eIsReg;
             } else {

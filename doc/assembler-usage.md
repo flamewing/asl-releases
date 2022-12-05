@@ -979,3 +979,6 @@ definitions into a single include file, because a program that wants to use such
 
 
 `CODEPAGE_VAL(character[, name])` returns the translated byte for a character code from 0 through 255. Omitting `name` uses the current codepage; a string name selects another codepage without changing the current one.
+
+
+Register symbols support `=`, `==`, `<>`, `!=`, `<`, `>`, `<=` and `>=`. Aliases for the same physical register compare equal (for example, 68000 `SP` and `A7`). Registers from different register files or architectures have no ordering: `<`, `>`, `<=` and `>=` return false, while equality and inequality remain meaningful. `!=` is also an alias for `<>` with integers, floats and strings.

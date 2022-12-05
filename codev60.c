@@ -27,11 +27,10 @@
 
 #include <string.h>
 
-#define REG_SP   31
-#define REG_FP   30
-#define REG_AP   29
-#define REG_MARK 32
-#define REG_PC   64
+#define REG_SP 31
+#define REG_FP 30
+#define REG_AP 29
+#define REG_PC 64
 
 /* NOTE: only 3 code flags are available, since machine sub code
    is 5 bits long: */
@@ -95,13 +94,13 @@ static Boolean DecodeRegCore(char const* pArg, Byte* pResult) {
     size_t l;
 
     if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_SP | REG_MARK;
+        *pResult = REG_SP | REGSYM_FLAG_ALIAS;
         return True;
     } else if (!as_strcasecmp(pArg, "FP")) {
-        *pResult = REG_FP | REG_MARK;
+        *pResult = REG_FP | REGSYM_FLAG_ALIAS;
         return True;
     } else if (!as_strcasecmp(pArg, "AP")) {
-        *pResult = REG_AP | REG_MARK;
+        *pResult = REG_AP | REGSYM_FLAG_ALIAS;
         return True;
     }
 
@@ -132,13 +131,13 @@ static void DissectReg_V60(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
     if (InpSize == eSymbolSize32Bit) {
         switch (Value) {
-        case REG_MARK | REG_SP:
+        case REGSYM_FLAG_ALIAS | REG_SP:
             as_snprintf(pDest, DestSize, "SP");
             break;
-        case REG_MARK | REG_FP:
+        case REGSYM_FLAG_ALIAS | REG_FP:
             as_snprintf(pDest, DestSize, "FP");
             break;
-        case REG_MARK | REG_AP:
+        case REGSYM_FLAG_ALIAS | REG_AP:
             as_snprintf(pDest, DestSize, "AP");
             break;
         default:
@@ -182,13 +181,13 @@ static tRegEvalResult DecodeReg(tStrComp const* pArg, Byte* pResult, Boolean Mus
     tRegEvalResult RegEvalResult;
 
     if (DecodeRegCore(pArg->str.p_str, pResult)) {
-        *pResult &= ~REG_MARK;
+        *pResult &= ~REGSYM_FLAG_ALIAS;
         return eIsReg;
     }
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
-    *pResult = RegDescr.Reg & ~REG_MARK;
+    *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
     return RegEvalResult;
 }
 
@@ -319,8 +318,9 @@ static Boolean ProcessAbsolute(
         tStrComp const* pArg, tAdrVals* pResult, Byte IndexReg, Byte ModByte,
         unsigned mode_mask) {
     tEvalResult eval_result;
-    LongWord Address = EvalStrIntExpressionOffsWithResult(pArg, 1, UInt32, &eval_result);
+    LongWord    Address;
 
+    Address        = EvalStrIntExpressionOffsWithResult(pArg, 1, UInt32, &eval_result);
     pResult->count = 0;
     if (!eval_result.OK) {
         return False;
@@ -332,7 +332,7 @@ static Boolean ProcessAbsolute(
         return False;
     }
 
-    if (IndexReg != REG_MARK) {
+    if (IndexReg != REGSYM_FLAG_ALIAS) {
         pResult->vals[pResult->count++] = 0xc0 | IndexReg;
         pResult->m                      = 1;
     } else {
@@ -374,32 +374,11 @@ static Boolean DeduceAndCheckDispSize(
 
 static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
     int         IndexSplitPos, OuterDispSplitPos, ArgLen;
-    Byte        IndexReg = REG_MARK, BaseReg = REG_MARK;
+    Byte        IndexReg = REGSYM_FLAG_ALIAS, BaseReg = REGSYM_FLAG_ALIAS;
     tEvalResult EvalResult;
 
     ResetAdrVals(pResult);
     pResult->data_op_size = OpSize;
-
-    /* Rn: */
-
-    switch (DecodeReg(pArg, pResult->vals, False)) {
-    case eIsReg:
-        if (!check_mode_mask(pArg, ModReg, ModeMask)) {
-            return False;
-        }
-        if (((OpSize == eSymbolSize64Bit) || (OpSize == eSymbolSizeFloat64Bit))
-            && (pResult->vals[0] == 31)) {
-            WrStrErrorPos(ErrNum_Unpredictable, pArg);
-        }
-        pResult->vals[0] |= 0x60;
-        pResult->m     = 1;
-        pResult->count = 1;
-        return True;
-    case eRegAbort:
-        return False;
-    default:
-        break;
-    }
 
     /* immediate */
 
@@ -603,7 +582,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
                 if (!check_mode_mask(pArg, ModMem, ModeMask)) {
                     return False;
                 }
-                if (IndexReg != REG_MARK) {
+                if (IndexReg != REGSYM_FLAG_ALIAS) {
                     pResult->vals[pResult->count++] = 0xc0 | IndexReg;
                     pResult->vals[pResult->count++] = 0x60 | BaseReg;
                     pResult->m                      = 1;
@@ -620,7 +599,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
                 return False;
             }
 
-            if (IndexReg != REG_MARK) {
+            if (IndexReg != REGSYM_FLAG_ALIAS) {
                 pResult->vals[pResult->count++] = 0xc0 | IndexReg;
                 pResult->m                      = 1;
             } else {
@@ -643,7 +622,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
                 return False;
             }
 
-            if (IndexReg != REG_MARK) {
+            if (IndexReg != REGSYM_FLAG_ALIAS) {
                 pResult->vals[pResult->count++] = 0xc0 | IndexReg;
                 pResult->m                      = 1;
             } else {
@@ -659,7 +638,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
 
         /* double [[]] and both displacements - no index register allowed! */
 
-        else if (IndexReg != REG_MARK) {
+        else if (IndexReg != REGSYM_FLAG_ALIAS) {
             WrStrErrorPos(ErrNum_InvAddrMode, pArg);
             return False;
         } else {
@@ -716,6 +695,27 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
         tSymbolSize DispSize = eSymbolSizeUnknown;
         LongInt     DispValue;
 
+        /* bare address: register? */
+
+        switch (DecodeReg(pArg, pResult->vals, False)) {
+        case eIsReg:
+            if (!check_mode_mask(pArg, ModReg, ModeMask)) {
+                return False;
+            }
+            if (((OpSize == eSymbolSize64Bit) || (OpSize == eSymbolSizeFloat64Bit))
+                && (pResult->vals[0] == 31)) {
+                WrStrErrorPos(ErrNum_Unpredictable, pArg);
+            }
+            pResult->vals[0] |= 0x60;
+            pResult->m     = 1;
+            pResult->count = 1;
+            return True;
+        case eRegAbort:
+            return False;
+        default:
+            break;
+        }
+
         /* treat bare address as PC-relative */
 
         CutSize(pArg, &DispSize);
@@ -727,7 +727,12 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
         if (!DeduceAndCheckDispSize(pArg, DispValue, &DispSize, &EvalResult)) {
             return False;
         }
-        pResult->m                      = 0;
+        if (IndexReg != REGSYM_FLAG_ALIAS) {
+            pResult->vals[pResult->count++] = 0xc0 | IndexReg;
+            pResult->m                      = 1;
+        } else {
+            pResult->m = 0;
+        }
         pResult->vals[pResult->count++] = 0xf0 + DispSize;
         AppendToVals(pResult, DispValue, DispSize);
     }
@@ -2735,6 +2740,7 @@ static void InternSymbol_V60(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = eSymbolSize32Bit;
         pResult->Contents.RegDescr.Reg     = RegNum;
         pResult->Contents.RegDescr.Dissect = DissectReg_V60;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

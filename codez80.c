@@ -4250,6 +4250,7 @@ static void InternSymbol_Z80(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = Z80RegSize(Reg);
         pResult->Contents.RegDescr.Reg     = Reg;
         pResult->Contents.RegDescr.Dissect = DissectReg_Z80;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

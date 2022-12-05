@@ -59,11 +59,10 @@ enum {
 #define MModPCRel   (1 << ModPCRel)
 #define MModImm     (1 << ModImm)
 
-#define REG_SP   15
-#define REG_MARK 16
-#define RegNone  (-1)
-#define RegPC    (-2)
-#define RegGBR   (-3)
+#define REG_SP  15
+#define RegNone (-1)
+#define RegPC   (-2)
+#define RegGBR  (-3)
 
 #define CompLiteralsName "COMPRESSEDLITERALS"
 
@@ -196,7 +195,7 @@ static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
     Boolean OK;
 
     if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_SP | REG_MARK;
+        *pResult = REG_SP | REGSYM_FLAG_ALIAS;
         return True;
     }
 
@@ -222,7 +221,7 @@ static void DissectReg_7000(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
     switch (InpSize) {
     case eSymbolSize32Bit:
-        if (Value == (REG_SP | REG_MARK)) {
+        if (Value == (REG_SP | REGSYM_FLAG_ALIAS)) {
             as_snprintf(pDest, DestSize, "SP");
         } else {
             as_snprintf(pDest, DestSize, "R%u", (unsigned)Value);
@@ -247,13 +246,13 @@ static tRegEvalResult DecodeReg(tStrComp const* pArg, Word* pResult, Boolean Mus
     tRegDescr      RegDescr;
 
     if (DecodeRegCore(pArg->str.p_str, pResult)) {
-        *pResult &= ~REG_MARK;
+        *pResult &= ~REGSYM_FLAG_ALIAS;
         return eIsReg;
     }
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
-    *pResult = RegDescr.Reg;
+    *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
     return RegEvalResult;
 }
 
@@ -1612,6 +1611,7 @@ static void InternSymbol_7000(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = eSymbolSize32Bit;
         pResult->Contents.RegDescr.Reg     = Reg;
         pResult->Contents.RegDescr.Dissect = DissectReg_7000;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

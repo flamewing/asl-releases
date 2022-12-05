@@ -30,9 +30,8 @@
 /*--------------------------------------------------------------------------*/
 /* Variablen */
 
-#define REG_SP   0
-#define REG_LR   15
-#define REG_MARK 16 /* internal mark to differentiate SP<->R0 and LR<->R15 */
+#define REG_SP 0
+#define REG_LR 15
 
 #define FixedOrderCnt  7
 #define OneRegOrderCnt 32
@@ -81,9 +80,9 @@ static Word const AllRegMask = 0xffff;
 
 static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
     if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_MARK | REG_SP;
+        *pResult = REGSYM_FLAG_ALIAS | REG_SP;
     } else if (!as_strcasecmp(pArg, "LR")) {
-        *pResult = REG_MARK | REG_LR;
+        *pResult = REGSYM_FLAG_ALIAS | REG_LR;
     } else if (as_toupper(*pArg) != 'R') {
         return False;
     } else {
@@ -111,10 +110,10 @@ static void DissectReg_MCORE(
     switch (InpSize) {
     case eSymbolSize32Bit:
         switch (Value) {
-        case REG_MARK | REG_SP:
+        case REGSYM_FLAG_ALIAS | REG_SP:
             as_snprintf(pDest, DestSize, "SP");
             break;
-        case REG_MARK | REG_LR:
+        case REGSYM_FLAG_ALIAS | REG_LR:
             as_snprintf(pDest, DestSize, "LR");
             break;
         default:
@@ -150,7 +149,7 @@ static tRegEvalResult DecodeReg(
                 pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
         *pResult = RegDescr.Reg;
     }
-    *pResult &= ~REG_MARK;
+    *pResult &= ~REGSYM_FLAG_ALIAS;
     if ((RegEvalResult == eIsReg) && !(Mask & (1 << *pResult))) {
         RegEvalResult = MustBeReg ? eRegAbort : eIsNoReg;
         WrStrErrorPos(ErrNum_InvReg, pArg);
@@ -869,6 +868,7 @@ static void InternSymbol_MCORE(char* pArg, TempResult* pResult) {
         pResult->Typ                       = TempReg;
         pResult->DataSize                  = eSymbolSize32Bit;
         pResult->Contents.RegDescr.Dissect = DissectReg_MCORE;
+        pResult->Contents.RegDescr.compare = NULL;
         pResult->Contents.RegDescr.Reg     = RegNum;
     }
 }

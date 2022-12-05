@@ -2419,6 +2419,7 @@ static void InternSymbol_97C241(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = Size;
         pResult->Contents.RegDescr.Reg     = Reg;
         pResult->Contents.RegDescr.Dissect = DissectReg_97C241;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

@@ -36,8 +36,7 @@ static CPUVar      CPU641016;
 static tSymbolSize OpSize;
 static tStrComp    FormatPart;
 
-#define REG_SP   15
-#define REG_MARK 16
+#define REG_SP 15
 
 typedef enum {
     eAdrModeNone        = -1,
@@ -354,7 +353,7 @@ static Boolean DecodeRegCore(char const* pArg, Byte* pResult, Byte* pPrefix) {
     Boolean OK;
 
     if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_MARK | REG_SP;
+        *pResult = REGSYM_FLAG_ALIAS | REG_SP;
         *pPrefix = 0x00;
         return True;
     }
@@ -389,7 +388,7 @@ static Boolean DecodeRegCore(char const* pArg, Byte* pResult, Byte* pPrefix) {
 static void DissectReg_H16(char* pDest, size_t DestSize, tRegInt Reg, tSymbolSize Size) {
     switch (Size) {
     case eSymbolSize32Bit:
-        if (Reg == (REG_MARK | REG_SP)) {
+        if (Reg == (REGSYM_FLAG_ALIAS | REG_SP)) {
             as_snprintf(pDest, DestSize, "SP");
         } else {
             if (Hi(Reg) == PREFIX_CRn) {
@@ -406,6 +405,35 @@ static void DissectReg_H16(char* pDest, size_t DestSize, tRegInt Reg, tSymbolSiz
         break;
     default:
         as_snprintf(pDest, DestSize, "%d-%u", Size, Reg);
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     compare_reg_h16(tRegInt reg1_num, tSymbolSize reg1_size, tRegInt reg2_num, tRegInt reg2_size)
+ * \brief  compare two register symbols
+ * \param  reg1_num 1st register's number
+ * \param  reg1_size 1st register's data size
+ * \param  reg2_num 2nd register's number
+ * \param  reg2_size 2nd register's data size
+ * \return 0, -1, 1, -2
+ * ------------------------------------------------------------------------ */
+
+static int compare_reg_h16(
+        tRegInt reg1_num, tSymbolSize size1, tRegInt reg2_num, tSymbolSize size2) {
+    if ((size1 != eSymbolSize32Bit) || (size2 != eSymbolSize32Bit)
+        || (Hi(reg1_num) != Hi(reg2_num))) {
+        return -2;
+    }
+
+    reg1_num = Lo(reg1_num) & ~REGSYM_FLAG_ALIAS;
+    reg2_num = Lo(reg2_num) & ~REGSYM_FLAG_ALIAS;
+
+    if (reg1_num < reg2_num) {
+        return -1;
+    } else if (reg1_num > reg2_num) {
+        return 1;
+    } else {
+        return 0;
     }
 }
 
@@ -442,7 +470,7 @@ static tRegEvalResult DecodeReg(
             RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
         }
     }
-    *pReg &= ~REG_MARK;
+    *pReg &= ~REGSYM_FLAG_ALIAS;
     return RegEvalResult;
 }
 
@@ -3072,6 +3100,7 @@ static void InternSymbol_H16(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = eSymbolSize32Bit;
         pResult->Contents.RegDescr.Reg     = ((Word)Prefix) << 8 | Reg;
         pResult->Contents.RegDescr.Dissect = DissectReg_H16;
+        pResult->Contents.RegDescr.compare = compare_reg_h16;
     }
 }
 

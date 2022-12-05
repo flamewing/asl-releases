@@ -3361,6 +3361,7 @@ static void InternSymbol_Z8000(char* pArg, TempResult* pResult) {
         pResult->DataSize                  = Size;
         pResult->Contents.RegDescr.Reg     = Reg;
         pResult->Contents.RegDescr.Dissect = DissectReg_Z8000;
+        pResult->Contents.RegDescr.compare = NULL;
     }
 }
 

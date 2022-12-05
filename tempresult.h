@@ -34,9 +34,21 @@ typedef unsigned tRegInt;
 typedef void (*DissectRegProc)(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize);
 
+typedef int (*compare_reg_fnc_t)(
+        tRegInt value1, tSymbolSize reg_size1, tRegInt value2, tSymbolSize reg_size2);
+
+/*
+ * Used in register's number to signify a built in alternate name
+ * for the same register, e.g. SP=A7 on 68K.  Registers will compare
+ * equal, but will be printed with individual name in the symbol table:
+ */
+
+#define REGSYM_FLAG_ALIAS 0x80
+
 typedef struct sRegDescr {
-    DissectRegProc Dissect;
-    tRegInt        Reg;
+    DissectRegProc    Dissect;
+    compare_reg_fnc_t compare;
+    tRegInt           Reg;
 } tRegDescr;
 
 struct sTempResult {
