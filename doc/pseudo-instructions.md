@@ -2991,3 +2991,8 @@ Besides defining register aliases, unlabelled `REG ON`/`REG OFF` enables or disa
 
 
 IBM PALM has a 64 Kbyte code space and 16 I/O ports. `PORT` defines I/O addresses from 0 through 15. `EBCDIC.INC` supplies code page 037.
+
+
+### 6502 data aliases and DDB
+
+On 65xx, `DB`, `DW` and `DS` alias `BYT`, `ADR` and `RMB`; the fork also retains `BYTE` as a byte-data alias. `DDB` emits 16-bit constants in big-endian order on 6502 and MELPS-7700, unlike their usual little-endian word directives.

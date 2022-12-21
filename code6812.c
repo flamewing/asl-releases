@@ -1643,8 +1643,7 @@ static void InitFields(void) {
     AddReg("CCRH", eRegCCRH, 0, CPU6812X);
     AddReg("CCRW", eRegCCRW, 1, CPU6812X);
 
-    AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
-    AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
+    init_moto8_pseudo(InstTable, e_moto_8_be | e_moto_8_db | e_moto_8_dw);
 }
 
 static void DeinitFields(void) {
@@ -1687,9 +1686,6 @@ static void MakeCode_6812(void) {
 
     /* Pseudoanweisungen */
 
-    if (DecodeMotoPseudo(True)) {
-        return;
-    }
     if (DecodeMoto16Pseudo(OpSize, True)) {
         return;
     }

@@ -84,7 +84,7 @@ typedef struct {
 #define M_HUC6280  (1 << 7)
 #define M_6502U    (1 << 8)
 
-static Boolean CLI_SEI_Flag, ADC_SBC_Flag;
+static Boolean This_CLI_SEI_Flag, This_ADC_SBC_Flag, Last_CLI_SEI_Flag, Last_ADC_SBC_Flag;
 
 static FixedOrder* FixedOrders;
 static NormOrder*  NormOrders;
@@ -105,13 +105,6 @@ static unsigned ChkZero(tStrComp const* pArg, Byte* erg) {
         *erg = 0;
         return 0;
     }
-}
-
-static void ChkFlags(void) {
-    /* Spezialflags ? */
-
-    CLI_SEI_Flag = (Memo("CLI") || Memo("SEI"));
-    ADC_SBC_Flag = (Memo("ADC") || Memo("SBC"));
 }
 
 static Boolean CPUAllowed(Word Flag) {
@@ -453,7 +446,6 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
 
     else {
         (void)ChkArgCnt(0, 2);
-        ChkFlags();
     }
 }
 
@@ -475,12 +467,11 @@ static void DecodeFixed(Word Index) {
             if (Memo("PLP")) {
                 BAsmCode[CodeLen++] = NOPCode;
             }
-            if ((ADC_SBC_Flag) && (Memo("SEC") || Memo("CLC") || Memo("CLD"))) {
+            if ((Last_ADC_SBC_Flag) && (Memo("SEC") || Memo("CLC") || Memo("CLD"))) {
                 InsNOP();
             }
         }
     }
-    ChkFlags();
 }
 
 /* All right, guys, this really makes tool developers' lives difficult: you can't
@@ -527,7 +518,6 @@ static void DecodeSEB_CLB(Word Code) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeBBC_BBS(Word Code) {
@@ -549,7 +539,7 @@ static void DecodeBBC_BBS(Word Code) {
             if (ValOK) {
                 Integer AdrInt
                         = EvalStrIntExpressionWithFlags(&ArgStr[3], Int16, &ValOK, &Flags)
-                          - (EProgCounter() + 2 + Ord(b) + Ord(CLI_SEI_Flag));
+                          - (EProgCounter() + 2 + Ord(b) + Ord(Last_CLI_SEI_Flag));
 
                 if (ValOK) {
                     if (((AdrInt > 127) || (AdrInt < -128))
@@ -558,7 +548,7 @@ static void DecodeBBC_BBS(Word Code) {
                     } else {
                         CodeLen               = 2 + Ord(b);
                         BAsmCode[CodeLen - 1] = AdrInt & 0xff;
-                        if (CLI_SEI_Flag) {
+                        if (Last_CLI_SEI_Flag) {
                             InsNOP();
                         }
                     }
@@ -566,7 +556,6 @@ static void DecodeBBC_BBS(Word Code) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeBBR_BBS(Word Code) {
@@ -601,7 +590,6 @@ static void DecodeBBR_BBS(Word Code) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeRMB_SMB(Word Code) {
@@ -623,7 +611,6 @@ static void DecodeRMB_SMB(Word Code) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeRBA_SBA(Word Code) {
@@ -713,7 +700,6 @@ static void DecodeLDM(Word Code) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeJSB(Word Code) {
@@ -781,7 +767,6 @@ static void DecodeNorm(Word Index) {
             }
         }
     }
-    ChkFlags();
 }
 
 static void DecodeTST(Word Index) {
@@ -873,7 +858,6 @@ static void DecodeCond(Word Index) {
             }
             break;
         }
-        ChkFlags();
     }
 }
 
@@ -956,7 +940,7 @@ static void InitFields(void) {
     int     Bit;
     char    Name[20];
 
-    InstTable = CreateInstTable(207);
+    InstTable = CreateInstTable(237);
     SetDynamicInstTable(InstTable);
 
     AddInstTable(InstTable, "SEB", 0x0b, DecodeSEB_CLB);
@@ -2858,6 +2842,10 @@ static void InitFields(void) {
             0x80, 0x83);
     AddCond("BSR", M_65CE02 | M_HUC6280, (MomCPU == CPUHUC6280) ? 0x44 : 0x00,
             (MomCPU == CPU65CE02) ? 0x63 : 0x00);
+
+    init_moto8_pseudo(
+            InstTable,
+            e_moto_8_le | e_moto_8_db | e_moto_8_dw | e_moto_8_ds | e_moto_8_ddb);
 }
 
 static void DeinitFields(void) {
@@ -2874,30 +2862,30 @@ static void MakeCode_65(void) {
     CodeLen   = 0;
     DontPrint = False;
 
+    This_CLI_SEI_Flag = (Memo("CLI") || Memo("SEI"));
+    This_ADC_SBC_Flag = (Memo("ADC") || Memo("SBC"));
+
     /* zu ignorierendes */
 
     if (Memo("")) {
-        ChkFlags();
         return;
     }
 
     /* Pseudoanweisungen */
 
-    if (DecodeMotoPseudo(False)) {
-        ChkFlags();
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }
+
+    Last_CLI_SEI_Flag = This_CLI_SEI_Flag;
+    Last_ADC_SBC_Flag = This_ADC_SBC_Flag;
 }
 
 static void InitCode_65(void) {
     int z;
 
-    CLI_SEI_Flag = False;
-    ADC_SBC_Flag = False;
+    Last_CLI_SEI_Flag = False;
+    Last_ADC_SBC_Flag = False;
     for (z = 0; z < 8; z++) {
         MPR[z] = z;
     }
