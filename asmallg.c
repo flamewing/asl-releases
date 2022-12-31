@@ -243,26 +243,35 @@ static void IntLine(
 }
 
 static void CodeSECTION(Word Index) {
-    PSaveSection Neu;
-    String       ExpName;
     UNUSED(Index);
 
-    if (ChkArgCnt(1, 1) && ExpandStrSymbol(ExpName, sizeof(ExpName), &ArgStr[1])) {
-        if (!ChkSymbName(ExpName)) {
-            WrStrErrorPos(ErrNum_InvSymName, &ArgStr[1]);
-        } else if (
-                (PassNo == 1)
-                && (GetSectionHandle(ExpName, False, MomSectionHandle) != -2)) {
-            WrError(ErrNum_DoubleSection);
-        } else {
-            Neu             = (PSaveSection)malloc(sizeof(TSaveSection));
-            Neu->Next       = SectionStack;
-            Neu->Handle     = MomSectionHandle;
-            Neu->LocSyms    = NULL;
-            Neu->GlobSyms   = NULL;
-            Neu->ExportSyms = NULL;
-            SetMomSection(GetSectionHandle(ExpName, True, MomSectionHandle));
-            SectionStack = Neu;
+    if (ChkArgCnt(1, 1)) {
+        PSaveSection    Neu;
+        String          exp_name_buf;
+        tStrComp        exp_name;
+        tStrComp const* p_exp_name;
+        StrCompMkTemp(&exp_name, exp_name_buf, sizeof(exp_name_buf));
+
+        p_exp_name = ExpandStrSymbol(&exp_name, &ArgStr[1], !CaseSensitive);
+        if (p_exp_name) {
+            if (!ChkSymbName(p_exp_name->str.p_str)) {
+                WrStrErrorPos(ErrNum_InvSymName, &ArgStr[1]);
+            } else if (
+                    (PassNo == 1)
+                    && (GetSectionHandle(p_exp_name->str.p_str, False, MomSectionHandle)
+                        != -2)) {
+                WrError(ErrNum_DoubleSection);
+            } else {
+                Neu             = (PSaveSection)malloc(sizeof(TSaveSection));
+                Neu->Next       = SectionStack;
+                Neu->Handle     = MomSectionHandle;
+                Neu->LocSyms    = NULL;
+                Neu->GlobSyms   = NULL;
+                Neu->ExportSyms = NULL;
+                SetMomSection(
+                        GetSectionHandle(p_exp_name->str.p_str, True, MomSectionHandle));
+                SectionStack = Neu;
+            }
         }
     }
 }
@@ -285,22 +294,38 @@ static void CodeENDSECTION_ChkEmptList(PForwardSymbol* Root) {
 }
 
 static void CodeENDSECTION(Word Index) {
-    PSaveSection Tmp;
-    String       ExpName;
     UNUSED(Index);
 
-    if (!ChkArgCnt(0, 1))
-        ;
-    else if (!SectionStack) {
+    if (!SectionStack) {
         WrError(ErrNum_NotInSection);
-    } else if ((ArgCnt == 0) || (ExpandStrSymbol(ExpName, sizeof(ExpName), &ArgStr[1]))) {
-        if ((ArgCnt == 1)
-            && (GetSectionHandle(ExpName, False, SectionStack->Handle)
-                != MomSectionHandle)) {
-            WrStrErrorPos(ErrNum_WrongEndSect, &ArgStr[1]);
-        } else {
-            Tmp          = SectionStack;
-            SectionStack = Tmp->Next;
+    } else {
+        switch (ArgCnt) {
+        case 0:
+            goto section_ok;
+        case 1: {
+            String          exp_name_buf;
+            tStrComp        exp_name;
+            tStrComp const* p_exp_name;
+
+            StrCompMkTemp(&exp_name, exp_name_buf, sizeof(exp_name_buf));
+            p_exp_name = ExpandStrSymbol(&exp_name, &ArgStr[1], !CaseSensitive);
+            if (!p_exp_name)
+                ;
+            else if (
+                    GetSectionHandle(exp_name.str.p_str, False, SectionStack->Handle)
+                    != MomSectionHandle) {
+                WrStrErrorPos(ErrNum_WrongEndSect, &ArgStr[1]);
+            } else {
+                goto section_ok;
+            }
+            break;
+        }
+        default:
+            (void)ChkArgCnt(0, 1);
+            break;
+        section_ok: {
+            PSaveSection Tmp = SectionStack;
+            SectionStack     = Tmp->Next;
             CodeENDSECTION_ChkEmptList(&(Tmp->LocSyms));
             CodeENDSECTION_ChkEmptList(&(Tmp->GlobSyms));
             CodeENDSECTION_ChkEmptList(&(Tmp->ExportSyms));
@@ -310,6 +335,7 @@ static void CodeENDSECTION(Word Index) {
             }
             SetMomSection(Tmp->Handle);
             free(Tmp);
+        }
         }
     }
 }
@@ -1629,9 +1655,6 @@ static void CodePUSHV(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(2, ArgCntMax)) {
-        if (!CaseSensitive) {
-            NLS_UpString(ArgStr[1].str.p_str);
-        }
         for (z = 2; z <= ArgCnt; z++) {
             PushSymbol(&ArgStr[z], &ArgStr[1]);
         }
@@ -1643,9 +1666,6 @@ static void CodePOPV(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(2, ArgCntMax)) {
-        if (!CaseSensitive) {
-            NLS_UpString(ArgStr[1].str.p_str);
-        }
         for (z = 2; z <= ArgCnt; z++) {
             PopSymbol(&ArgStr[z], &ArgStr[1]);
         }
@@ -1934,42 +1954,42 @@ static void CodeSEGTYPE(Word Index) {
 
 static void CodePPSyms(PForwardSymbol* Orig, PForwardSymbol* Alt1, PForwardSymbol* Alt2) {
     PForwardSymbol Lauf;
-    tStrComp *     pArg, SymArg, SectionArg;
-    String         Sym, Section;
+    tStrComp *     pArg, SymArg, SectionArg, exp_sym, *p_exp_sym;
+    String         exp_sym_buf, Section;
     char*          pSplit;
 
+    StrCompMkTemp(&exp_sym, exp_sym_buf, sizeof(exp_sym_buf));
     if (ChkArgCnt(1, ArgCntMax)) {
         forallargs(pArg, True) {
             pSplit = QuotPos(pArg->str.p_str, ':');
             if (pSplit) {
                 StrCompSplitRef(&SymArg, &SectionArg, pArg, pSplit);
-                if (!ExpandStrSymbol(Sym, sizeof(Sym), &SymArg)) {
+                p_exp_sym = ExpandStrSymbol(&exp_sym, &SymArg, !CaseSensitive);
+                if (!p_exp_sym) {
                     return;
                 }
             } else {
-                if (!ExpandStrSymbol(Sym, sizeof(Sym), pArg)) {
+                p_exp_sym = ExpandStrSymbol(&exp_sym, pArg, !CaseSensitive);
+                if (!p_exp_sym) {
                     return;
                 }
                 *Section = '\0';
                 StrCompMkTemp(&SectionArg, Section, sizeof(Section));
             }
-            if (!CaseSensitive) {
-                NLS_UpString(Sym);
-            }
-            Lauf = CodePPSyms_SearchSym(*Alt1, Sym);
+            Lauf = CodePPSyms_SearchSym(*Alt1, p_exp_sym->str.p_str);
             if (Lauf) {
                 WrStrErrorPos(ErrNum_ContForward, pArg);
             } else {
-                Lauf = CodePPSyms_SearchSym(*Alt2, Sym);
+                Lauf = CodePPSyms_SearchSym(*Alt2, p_exp_sym->str.p_str);
                 if (Lauf) {
                     WrStrErrorPos(ErrNum_ContForward, pArg);
                 } else {
-                    Lauf = CodePPSyms_SearchSym(*Orig, Sym);
+                    Lauf = CodePPSyms_SearchSym(*Orig, p_exp_sym->str.p_str);
                     if (!Lauf) {
                         Lauf            = (PForwardSymbol)malloc(sizeof(TForwardSymbol));
                         Lauf->Next      = (*Orig);
                         *Orig           = Lauf;
-                        Lauf->Name      = as_strdup(Sym);
+                        Lauf->Name      = as_strdup(p_exp_sym->str.p_str);
                         Lauf->pErrorPos = GetErrorPos();
                     }
                     IdentifySection(&SectionArg, &Lauf->DestSection);

@@ -344,8 +344,8 @@ Boolean FoundMacroByName(PMacroRec* Erg, StringPtr Name) {
     return False;
 }
 
-Boolean FoundMacro(PMacroRec* Erg) {
-    return FoundMacroByName(Erg, pLOpPart);
+Boolean FoundMacro(PMacroRec* Erg, tStrComp const* p_name) {
+    return FoundMacroByName(Erg, p_name->str.p_str);
 }
 
 static void ClearMacroList_ClearNode(PTree Tree, void* pData) {

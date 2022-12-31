@@ -66,7 +66,7 @@ extern PStructElem CloneStructElem(
 extern Boolean AddStructElem(PStructRec pStructRec, PStructElem pElement);
 
 extern void SetStructElemSize(
-        PStructRec pStructRec, char const* pElemName, tSymbolSize Size);
+        PStructRec pStructRec, const struct sStrComp* pElemName, tSymbolSize Size);
 
 extern void AddStructSymbol(char const* pName, LargeWord Value);
 
@@ -84,7 +84,7 @@ extern void PrintStructList(void);
 
 extern void ClearStructList(void);
 
-extern void ExpandStruct(PStructRec StructRec);
+extern void ExpandStruct(PStructRec StructRec, char const* p_struct_name);
 
 extern void asmstruct_init(void);
 

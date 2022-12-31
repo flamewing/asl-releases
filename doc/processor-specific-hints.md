@@ -1626,3 +1626,81 @@ A conditional skip can skip only one instruction word. AS warns if it precedes a
 
 
 IBM 5110/5120 use EBCDIC. After including `EBCDIC.INC`, select it with `CODEPAGE cp037`; the include creates an additional codepage rather than selecting it permanently.
+
+
+## CP-3F
+
+AS supports the original mnemonics and an alternate syntax that makes the operation explicit. The following table maps both forms.
+
+| Original | Alternate | Function |
+| --- | --- | --- |
+| `las imm4` | `ld a,#<imm4` | `A` ← `0:imm4` |
+| `lal imm8` | `ld a,#>imm8` | `A` ← `imm8` |
+| `lss imm3` | `ld s,#imm3` | `S` ← `imm3` |
+| `lts imm3` | `ld t,#imm3` | `T` ← `imm3` |
+| `anl imm8` | `and [a,]#imm8` | `A` ← `A` AND `imm8` |
+| `eol imm8` | `xor [a,]#imm8` | `A` ← `A` XOR `imm8` |
+| `orl imm8` | `or [a,]#imm8` | `A` ← `A` OR `imm8` |
+| `adl imm8` | `add [a,]#imm8` | `A` ← `A` + `imm8` |
+| `cml imm8` | `cp [a,]#imm8` | `Flags` ← `A` - `imm8` |
+| `lav` | `ld a,v` | `A` ← `V` |
+| `law` | `ld a,w` | `A` ← `W` |
+| `lax` | `ld a,x` | `A` ← `X` |
+| `lay` | `ld a,y` | `A` ← `Y` |
+| `sav` | `ld v,a` | `V` ← `A` |
+| `saw` | `ld w,a` | `W` ← `A` |
+| `sax` | `ld x,a` | `X` ← `A` |
+| `say` | `ld y,a` | `Y` ← `A` |
+| `sat` | `ld t,a` | `T` ← `A` |
+| `sst` | `ld st,a` | `S\|T` ← `A` |
+| `als` | `sla [a]` | `A(7..1)` ← `A(6..0)`, |
+| & `sla [a],1` | `A(0)` ← `0` |
+| `ars` | `srl [a]` | `A(6..0)` ← `A(7..1)`, |
+| & `srl [a],1` | `A(7)` ← `0` |
+| `alf` | `sla [a],4` | `A(7..4)` ← `A(3..0)`, |
+| | `A(3..0)` ← `0` |
+| `arf` | `srl [a],4` | `A(3..0)` ← `A(7..4)`, |
+| | `A(7..4)` ← `0` |
+| `lar n` | `ld a,n` | `A` ← `R(n), n=0..11` |
+| `lar 12` | `ld a,(st)` | `A` ← `R(S,T)` |
+| `lar 13` | `ld a,(st)-` | `A` ← `R(S,T)`, |
+| | `S` ← `S-1` |
+| `lar 14` | `ld a,(st)+` | `A` ← `R(S,T)`, |
+| | `S` ← `S+1` |
+| `sar n` | `ld n,a` | `R(n)` ← `A, n=0..11` |
+| `sar 12` | `ld (st),a` | `R(S,T)` ← `A` |
+| `sar 13` | `ld (st)-,a` | `R(S,T)` ← `A`, |
+| | `S` ← `S-1` |
+| `sar 14` | `ld (st)+,a` | `R(S,T)` ← `A`, |
+| | `S` ← `S+1` |
+| `adr n` | `add a,n` | `A` ← `A` + `R(n), n=0..11` |
+| `adr 12` | `add a,(st)` | `A` ← `A` + `R(S,T)` |
+| `adr 13` | `add a,(st)-` | `A` ← `A` + `R(S,T)`, |
+| | `S` ← `S-1` |
+| `adr 14` | `add a,(st)+` | `A` ← `A` + `R(S,T)`, |
+| | `S` ← `S+1` |
+| `anr n` | `and a,n` | `A` ← `A` AND `R(n), n=0..11` |
+| `anr 12` | `and a,(st)` | `A` ← `A` AND `R(S,T)` |
+| `anr 13` | `and a,(st)-` | `A` ← `A` AND `R(S,T)`, |
+| | `S` ← `S-1` |
+| `anr 14` | `and a,(st)+` | `A` ← `A` AND `R(S,T)`, |
+| | `S` ← `S+1` |
+| `eor n` | `xor a,n` | `A` ← `A` XOR `R(n), n=0..11` |
+| `eor 12` | `xor a,(st)` | `A` ← `A` XOR `R(S,T)` |
+| `eor 13` | `xor a,(st)-` | `A` ← `A` XOR `R(S,T)`, |
+| | `S` ← `S-1` |
+| `eor 14` | `xor a,(st)+` | `A` ← `A` XOR `R(S,T)`, |
+| | `S` ← `S+1` |
+| `dec n` | `dec a,n` | `R(n)` ← `R(n) - 1, n=0..11` |
+| `dec 12` | `dec a,(st)` | `R(S,T)` ← `R(S,T) - 1` |
+| `dec 13` | `dec a,(st)-` | `R(S,T)` ← `R(S,T) - 1`, |
+| | `S` ← `S-1` |
+| `dec 14` | `dec a,(st)+` | `R(S,T)` ← `R(S,T) - 1`, |
+| | `S` ← `S+1` |
+| `six` | `ld (z(x)),a` | `(Z(module X))` ← `A` |
+| `lix` | `ld a,(z(x))` | `A` ← `(Z(module X))` |
+| `liy` | `ld a,(z(y))` | `A` ← `(Z(module Y))` |
+| `sqx` | `ld q(x),a` | `Q(module X)` ← `X\|A` |
+| `sqy` | `ld q(y),a` | `Q(module Y)` ← `Y\|A` |
+| `szx` | `ld z(x),a` | `Z(module X)` ← `X\|A` |
+| `szy` | `ld z(y),a` | `Z(module Y)` ← `Y\|A` |

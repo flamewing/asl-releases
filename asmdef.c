@@ -154,7 +154,6 @@ int         ListRadixBase;  /* ditto for listing */
 char const* pCommentLeadIn; /* list of comment lead-in sequences */
 
 tStrComp*   ArgStr; /* Komponenten der Zeile */
-StringPtr   pLOpPart;
 tStrComp    LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char        AttrSplit;
 int         ArgCnt; /* Argumentzahl */
@@ -435,7 +434,6 @@ void asmdef_init(void) {
     StrCompAlloc(&AttrPart, STRINGSIZE);
     StrCompAlloc(&ArgPart, STRINGSIZE);
     StrCompAlloc(&CommPart, STRINGSIZE);
-    pLOpPart = GetString();
     as_dynstr_ini(&OneLine, STRINGSIZE);
     ListLine       = GetString();
     PrtInitString  = GetString();

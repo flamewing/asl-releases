@@ -631,3 +631,10 @@ _Default Integer Syntax: C_
 _Default Integer Syntax: IBM_
 
 `DB`, `DD`, `DN`, `DQ`, `DS`, `DT`, `DW`, `PORT`, `REG`.
+
+
+#### CP-3F
+
+_Default Integer Syntax: Intel_
+
+`DB`, `DN`, `DS`, `REG`.

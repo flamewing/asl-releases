@@ -21,6 +21,7 @@
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
+#include "dynstr_nls.h"
 #include "errmsg.h"
 #include "fileformat.h"
 #include "function.h"
@@ -678,60 +679,70 @@ Boolean MultiCharToInt(TempResult* pResult, unsigned MaxLen) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ExpandStrSymbol(char *pDest, size_t DestSize, const tStrComp *pSrc)
+ * \fn     ExpandStrSymbol(tStrComp *p_dest, const tStrComp *p_src, Boolean convert_upper)
  * \brief  expand symbol name from string component
- * \param  pDest dest buffer
- * \param  DestSize size of dest buffer
- * \param  pSrc source component
- * \return True if success
+ * \param  p_dest dest buffer (initialize to 0 capacity)
+ * \param  p_src source component
+ * \param  convert_upper convert to upper while copying?
+ * \return resulting component or NULL if error
  * ------------------------------------------------------------------------ */
 
-Boolean ExpandStrSymbol(char* pDest, size_t DestSize, tStrComp const* pSrc) {
-    tStrComp    SrcComp;
-    char const* pStart;
+tStrComp* ExpandStrSymbol(
+        tStrComp* p_dest, tStrComp const* p_src, Boolean convert_upper) {
+    tStrComp src_comp;
+    Boolean  first = True;
 
-    *pDest = '\0';
-    StrCompRefRight(&SrcComp, pSrc, 0);
+    StrCompRefRight(&src_comp, p_src, 0);
     while (True) {
-        pStart = QuotPos(SrcComp.str.p_str, '{');
-        if (pStart) {
-            unsigned    ls = pStart - SrcComp.str.p_str, ld = strlen(pDest);
-            String      Expr, Result;
-            tStrComp    ExprComp;
-            tEvalResult EvalResult;
-            char const* pStop;
+        char const* p_start = QuotPos(src_comp.str.p_str, '{');
+        if (first) {
+            p_dest->Pos          = p_src->Pos;
+            p_dest->str.p_str[0] = '\0';
+        }
+        if (p_start) {
+            unsigned    ls = p_start - src_comp.str.p_str;
+            String      expr, result;
+            tStrComp    expr_comp;
+            tEvalResult eval_result;
+            char const* p_stop;
 
-            if (ld + ls + 1 > DestSize) {
-                ls = DestSize - 1 - ld;
+            if (convert_upper) {
+                as_dynstr_append_upr(&p_dest->str, src_comp.str.p_str, ls);
+            } else {
+                as_dynstr_append(&p_dest->str, src_comp.str.p_str, ls);
             }
-            memcpy(pDest + ld, SrcComp.str.p_str, ls);
-            pDest[ld + ls] = '\0';
 
-            pStop = QuotPos(pStart + 1, '}');
-            if (!pStop) {
-                WrStrErrorPos(ErrNum_InvSymName, pSrc);
-                return False;
+            p_stop = QuotPos(p_start + 1, '}');
+            if (!p_stop) {
+                WrStrErrorPos(ErrNum_InvSymName, p_src);
+                return NULL;
             }
-            StrCompMkTemp(&ExprComp, Expr, sizeof(Expr));
+            StrCompMkTemp(&expr_comp, expr, sizeof(expr));
             StrCompCopySub(
-                    &ExprComp, &SrcComp, pStart + 1 - SrcComp.str.p_str,
-                    pStop - pStart - 1);
-            EvalStrStringExpressionWithResult(&ExprComp, &EvalResult, Result);
-            if (!EvalResult.OK) {
-                return False;
+                    &expr_comp, &src_comp, p_start + 1 - src_comp.str.p_str,
+                    p_stop - p_start - 1);
+            EvalStrStringExpressionWithResult(&expr_comp, &eval_result, result);
+            if (!eval_result.OK) {
+                return NULL;
             }
-            if (mFirstPassUnknown(EvalResult.Flags)) {
-                WrStrErrorPos(ErrNum_FirstPassCalc, &ExprComp);
-                return False;
+            if (mFirstPassUnknown(eval_result.Flags)) {
+                WrStrErrorPos(ErrNum_FirstPassCalc, &expr_comp);
+                return NULL;
             }
-            if (!CaseSensitive) {
-                UpString(Result);
+            if (CaseSensitive) {
+                as_dynstr_append_c_str(&p_dest->str, result);
+            } else {
+                as_dynstr_append_c_str_upr(&p_dest->str, result);
             }
-            strmaxcat(pDest, Result, DestSize);
-            StrCompIncRefLeft(&SrcComp, pStop + 1 - SrcComp.str.p_str);
+            StrCompIncRefLeft(&src_comp, p_stop + 1 - src_comp.str.p_str);
+            first = False;
         } else {
-            strmaxcat(pDest, SrcComp.str.p_str, DestSize);
-            return True;
+            if (convert_upper) {
+                as_dynstr_append_c_str_upr(&p_dest->str, src_comp.str.p_str);
+            } else {
+                as_dynstr_append_c_str(&p_dest->str, src_comp.str.p_str);
+            }
+            return p_dest;
         }
     }
 }
@@ -830,7 +841,7 @@ static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_
         Cnt = pRun - pBegin;
         if (pRun == pEnd) {
             if ((symbol_source != e_symbol_source_none) && (Cnt == 1)) {
-                as_snprintf(pDest, STRINGSIZE, "__back%d", (int)BackSymCounter);
+                as_snprintf(pDest, STRINGSIZE, "__BACK%d", (int)BackSymCounter);
                 AddTmpSymLog(TRUE, BackSymCounter);
                 BackSymCounter++;
                 Result = TRUE;
@@ -843,7 +854,7 @@ static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_
                 Cnt--;
                 as_snprintf(
                         pDest, STRINGSIZE, "__%s%d",
-                        TmpSymLog[Cnt].Back ? "back" : "forw",
+                        TmpSymLog[Cnt].Back ? "BACK" : "FORW",
                         (int)TmpSymLog[Cnt].Counter);
                 Result = TRUE;
             }
@@ -861,11 +872,11 @@ static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_
         Cnt = pRun - pBegin;
         if (pRun == pEnd) {
             if ((symbol_source != e_symbol_source_none) && (Cnt == 1)) {
-                as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter++);
+                as_snprintf(pDest, STRINGSIZE, "__FORW%d", (int)FwdSymCounter++);
                 Result = TRUE;
             } else if (Cnt <= LOCSYMSIGHT) {
                 as_snprintf(
-                        pDest, STRINGSIZE, "__forw%d", (int)(FwdSymCounter + (Cnt - 1)));
+                        pDest, STRINGSIZE, "__FORW%d", (int)(FwdSymCounter + (Cnt - 1)));
                 Result = TRUE;
             }
         }
@@ -877,7 +888,7 @@ static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_
             (pEnd - pBegin == 1) && (*pBegin == '/')
             && (symbol_source != e_symbol_source_none)) {
         AddTmpSymLog(FALSE, FwdSymCounter);
-        as_snprintf(pDest, STRINGSIZE, "__forw%d", (int)FwdSymCounter);
+        as_snprintf(pDest, STRINGSIZE, "__FORW%d", (int)FwdSymCounter);
         FwdSymCounter++;
         Result = TRUE;
     }
@@ -911,94 +922,94 @@ static Boolean ChkTmp(char* Name, as_symbol_source_t symbol_source) {
     return FALSE;
 }
 
-Boolean IdentifySection(tStrComp const* pName, LongInt* Erg) {
+Boolean IdentifySection(tStrComp const* pName, LongInt* p_ret) {
     PSaveSection SLauf;
-    String       ExpName;
+    String       exp_name_buf;
+    tStrComp     exp_name, *p_exp_name;
     sint         Depth;
+    size_t       exp_len;
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
+    StrCompMkTemp(&exp_name, exp_name_buf, sizeof(exp_name_buf));
+    p_exp_name = ExpandStrSymbol(&exp_name, pName, !CaseSensitive);
+    if (!p_exp_name) {
         return False;
     }
-    if (!CaseSensitive) {
-        NLS_UpString(ExpName);
-    }
 
-    if (*ExpName == '\0') {
-        *Erg = -1;
+    exp_len = strlen(p_exp_name->str.p_str);
+    if (!exp_len) {
+        *p_ret = -1;
         return True;
     } else if (
-            ((strlen(ExpName) == 6) || (strlen(ExpName) == 7))
-            && (!as_strncasecmp(ExpName, "PARENT", 6))
-            && ((strlen(ExpName) == 6) || ((ExpName[6] >= '0') && (ExpName[6] <= '9')))) {
-        Depth = (strlen(ExpName) == 6) ? 1 : ExpName[6] - AscOfs;
-        SLauf = SectionStack;
-        *Erg  = MomSectionHandle;
-        while ((Depth > 0) && (*Erg != -2)) {
+            ((exp_len == 6) || (exp_len == 7))
+            && !as_strncasecmp(p_exp_name->str.p_str, "PARENT", 6)
+            && ((exp_len == 6) || as_isdigit(p_exp_name->str.p_str[6]))) {
+        Depth  = (exp_len == 6) ? 1 : p_exp_name->str.p_str[6] - AscOfs;
+        SLauf  = SectionStack;
+        *p_ret = MomSectionHandle;
+        while ((Depth > 0) && (*p_ret != -2)) {
             if (!SLauf) {
-                *Erg = -2;
+                *p_ret = -2;
             } else {
-                *Erg  = SLauf->Handle;
-                SLauf = SLauf->Next;
+                *p_ret = SLauf->Handle;
+                SLauf  = SLauf->Next;
             }
             Depth--;
         }
-        if (*Erg == -2) {
+        if (*p_ret == -2) {
             WrStrErrorPos(ErrNum_InvSection, pName);
             return False;
         } else {
             return True;
         }
-    } else if (!strcmp(ExpName, GetSectionName(MomSectionHandle))) {
-        *Erg = MomSectionHandle;
+    } else if (!strcmp(p_exp_name->str.p_str, GetSectionName(MomSectionHandle))) {
+        *p_ret = MomSectionHandle;
         return True;
     } else {
         SLauf = SectionStack;
-        while ((SLauf) && (strcmp(GetSectionName(SLauf->Handle), ExpName))) {
+        while ((SLauf)
+               && (strcmp(GetSectionName(SLauf->Handle), p_exp_name->str.p_str))) {
             SLauf = SLauf->Next;
         }
         if (!SLauf) {
             WrStrErrorPos(ErrNum_InvSection, pName);
             return False;
         } else {
-            *Erg = SLauf->Handle;
+            *p_ret = SLauf->Handle;
             return True;
         }
     }
 }
 
-static Boolean GetSymSection(char* Name, LongInt* Erg, tStrComp const* pUnexpComp) {
-    String   Part;
+static Boolean GetSymSection(
+        tStrComp* p_name, LongInt* p_ret, tStrComp const* pUnexpComp) {
     tStrComp TmpComp;
     char*    q;
-    int      l = strlen(Name);
+    int      l = strlen(p_name->str.p_str), pos;
 
-    if (!l || (Name[l - 1] != ']')) {
-        *Erg = -2;
+    if (!l || (p_name->str.p_str[l - 1] != ']')) {
+        *p_ret = -2;
         return True;
     }
 
-    Name[l - 1] = '\0';
-    q           = RQuotPos(Name, '[');
+    p_name->str.p_str[l - 1] = '\0';
+    q                        = RQuotPos(p_name->str.p_str, '[');
     if (!q) {
-        *Erg = -2;
+        *p_ret = -2;
         return True;
     }
-    Name[l - 1] = ']';
-    if (Name + l - q <= 1) {
-        if (pUnexpComp) {
-            WrStrErrorPos(ErrNum_InvSymName, pUnexpComp);
-        } else {
-            WrXError(ErrNum_InvSymName, Name);
-        }
+    p_name->str.p_str[l - 1] = ']';
+    if (p_name->str.p_str + l - q <= 1) {
+        WrStrErrorPos(ErrNum_InvSymName, pUnexpComp ? pUnexpComp : p_name);
         return False;
     }
 
-    Name[l - 1] = '\0';
-    strmaxcpy(Part, q + 1, STRINGSIZE);
-    *q = '\0';
+    StrCompShorten(p_name, 1);
+    l--;
+    pos = q - p_name->str.p_str;
+    StrCompRefRight(&TmpComp, p_name, pos + 1);
+    StrCompShorten(p_name, l - pos);
 
-    StrCompMkTemp(&TmpComp, Part, sizeof(Part));
-    return IdentifySection(&TmpComp, Erg);
+    return IdentifySection(&TmpComp, p_ret);
 }
 
 /*****************************************************************************
@@ -1291,9 +1302,15 @@ func_exit:
     StrCompFree(&Raw);
 }
 
-static PSymbolEntry FindLocNode(char const* Name, TempType SearchType);
+typedef enum {
+    e_expand_chk_none,
+    e_expand_chk_upto,
+    e_expand_chk_empty_upto
+} expand_chk_t;
 
-static PSymbolEntry FindNode(char const* Name, TempType SearchType);
+static PSymbolEntry ExpandAndFindNode(
+        const struct sStrComp* pComp, TempType SearchType, Boolean SearchLocal,
+        expand_chk_t chk, Boolean* p_error_on_find);
 
 /*!------------------------------------------------------------------------
  * \fn     EvalResultClear(tEvalResult *pResult)
@@ -2204,31 +2221,9 @@ void EvalStrStringExpression(tStrComp const* pExpr, Boolean* pResult, char* pEva
  * \param  pResult retrieved register
  * \param  pEvalResult success flag, symbol size & flags
  * \param  IssueErrors print errors at all?
- * \return occurred error
+ * \param  p_error_on_find True if error on symbol resolution and not just not found
+ * \return occured error
  * ------------------------------------------------------------------------ */
-
-PSymbolEntry ExpandAndFindNode(const struct sStrComp* pComp, TempType SearchType) {
-    PSymbolEntry pEntry;
-    String       ExpName;
-    char const*  pKlPos;
-
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pComp)) {
-        return NULL;
-    }
-
-    /* just [...] without symbol name itself is not valid */
-
-    pKlPos = strchr(ExpName, '[');
-    if ((pKlPos == ExpName) || (ChkSymbNameUpTo(ExpName, pKlPos) != pKlPos)) {
-        return NULL;
-    }
-
-    pEntry = FindLocNode(ExpName, SearchType);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, SearchType);
-    }
-    return pEntry;
-}
 
 tErrorNum EvalStrRegExpressionWithResult(
         const struct sStrComp* pExpr, tRegDescr* pResult, tEvalResult* pEvalResult) {
@@ -2236,7 +2231,7 @@ tErrorNum EvalStrRegExpressionWithResult(
 
     EvalResultClear(pEvalResult);
 
-    pEntry = ExpandAndFindNode(pExpr, TempReg);
+    pEntry = ExpandAndFindNode(pExpr, TempReg, True, e_expand_chk_empty_upto, NULL);
     if (!pEntry) {
         return ErrNum_SymbolUndef;
     }
@@ -2462,10 +2457,7 @@ static Boolean SymbolAdder(PTree* PDest, PTree Neu, void* pData) {
 static void EnterLocSymbol(PSymbolEntry Neu) {
     TEnterStruct EnterStruct;
 
-    Neu->Tree.Attribute = MomLocHandle;
-    if (!CaseSensitive) {
-        NLS_UpString(Neu->Tree.Name);
-    }
+    Neu->Tree.Attribute   = MomLocHandle;
     EnterStruct.MayChange = EnterStruct.DoCross = FALSE;
     EnterSymbolHashTable(FirstLocSymbol, Neu, SymbolAdder, &EnterStruct);
 }
@@ -2494,10 +2486,6 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle) 
     LongInt         MSect;
     PSymbolEntry    Copy;
     TEnterStruct    EnterStruct;
-
-    if (!CaseSensitive) {
-        NLS_UpString(Neu->Tree.Name);
-    }
 
     SearchErg             = 0;
     EnterStruct.MayChange = MayChange;
@@ -2581,7 +2569,7 @@ void ChangeSymbol(PSymbolEntry pEntry, LargeInt Value) {
 
 /*!------------------------------------------------------------------------
  * \fn     CreateSymbolEntry(const tStrComp *pName, LongInt *pDestHandle, tSymbolFlags symbol_flags)
- * \brief  create empty container for symbol tabl eentry
+ * \brief  create empty container for symbol table entry
  * \param  pName unexpanded symbol name
  * \param  pDestHandle section handle (out)
  * \param  symbol_flags symbol flags
@@ -2590,25 +2578,34 @@ void ChangeSymbol(PSymbolEntry pEntry, LargeInt Value) {
 
 PSymbolEntry CreateSymbolEntry(
         tStrComp const* pName, LongInt* pDestHandle, tSymbolFlags symbol_flags) {
-    PSymbolEntry pNeu;
-    String       ExtName;
+    PSymbolEntry pNeu = NULL;
+    String       exp_name_buf;
+    tStrComp *   p_exp_name, exp_name;
 
-    if (!ExpandStrSymbol(ExtName, sizeof(ExtName), pName)) {
-        return NULL;
+    StrCompMkTemp(&exp_name, exp_name_buf, sizeof exp_name_buf);
+    p_exp_name = ExpandStrSymbol(&exp_name, pName, !CaseSensitive);
+    if (!p_exp_name) {
+        LEAVE;
     }
-    if (!GetSymSection(ExtName, pDestHandle, pName)) {
-        return NULL;
+    if (!GetSymSection(p_exp_name, pDestHandle, pName)) {
+        LEAVE;
     }
     (void)ChkTmp(
-            ExtName, (symbol_flags & eSymbolFlag_Label) ? e_symbol_source_label
-                                                        : e_symbol_source_define);
-    if (!ChkSymbName(ExtName)) {
+            p_exp_name->str.p_str, (symbol_flags & eSymbolFlag_Label)
+                                           ? e_symbol_source_label
+                                           : e_symbol_source_define);
+    if (!CaseSensitive) {
+        NLS_UpString(p_exp_name->str.p_str);
+    }
+    if (!ChkSymbName(p_exp_name->str.p_str)) {
         WrStrErrorPos(ErrNum_InvSymName, pName);
-        return NULL;
+        LEAVE;
     }
     pNeu            = (PSymbolEntry)calloc(1, sizeof(TSymbolEntry));
-    pNeu->Tree.Name = as_strdup(ExtName);
+    pNeu->Tree.Name = as_strdup(p_exp_name->str.p_str);
     as_tempres_ini(&pNeu->SymWert);
+func_exit:
+    StrCompFree(&exp_name);
     return pNeu;
 }
 
@@ -2909,7 +2906,8 @@ static void AddReference(PSymbolEntry Node) {
     }
 }
 
-static PSymbolEntry FindNode_FNode(char* Name, TempType SearchType, LongInt Handle) {
+static PSymbolEntry FindGlobNode_FNode(
+        char const* Name, TempType SearchType, LongInt Handle) {
     PSymbolEntry Lauf;
 
     Lauf = SearchSymbolHashTable(FirstSymbol, Name, Handle);
@@ -2927,60 +2925,48 @@ static PSymbolEntry FindNode_FNode(char* Name, TempType SearchType, LongInt Hand
     return Lauf;
 }
 
-static Boolean FindNode_FSpec(char* Name, PForwardSymbol Root) {
+static Boolean FindGlobNode_FSpec(char const* Name, PForwardSymbol Root) {
     while ((Root) && (strcmp(Root->Name, Name))) {
         Root = Root->Next;
     }
     return (Root != NULL);
 }
 
-static PSymbolEntry FindNode(char const* Name_O, TempType SearchType) {
+static PSymbolEntry FindGlobNode(
+        char const* p_name, TempType SearchType, LongInt DestSection) {
     PSaveSection Lauf;
-    LongInt      DestSection;
     PSymbolEntry Result = NULL;
-    String       Name;
-
-    strmaxcpy(Name, Name_O, STRINGSIZE);
-    ChkTmp3(Name, e_symbol_source_none);
-
-    /* TODO: pass StrComp */
-    if (!GetSymSection(Name, &DestSection, NULL)) {
-        return NULL;
-    }
-
-    if (!CaseSensitive) {
-        NLS_UpString(Name);
-    }
 
     if (SectionStack) {
         if (PassNo <= MaxSymPass) {
-            if (FindNode_FSpec(Name, SectionStack->LocSyms)) {
+            if (FindGlobNode_FSpec(p_name, SectionStack->LocSyms)) {
                 DestSection = MomSectionHandle;
             }
         }
     }
 
     if (DestSection == -2) {
-        Result = FindNode_FNode(Name, SearchType, MomSectionHandle);
+        Result = FindGlobNode_FNode(p_name, SearchType, MomSectionHandle);
         if (Result) {
             return Result;
         }
         Lauf = SectionStack;
         while (Lauf) {
-            Result = FindNode_FNode(Name, SearchType, Lauf->Handle);
+            Result = FindGlobNode_FNode(p_name, SearchType, Lauf->Handle);
             if (Result) {
                 break;
             }
             Lauf = Lauf->Next;
         }
     } else {
-        Result = FindNode_FNode(Name, SearchType, DestSection);
+        Result = FindGlobNode_FNode(p_name, SearchType, DestSection);
     }
 
     return Result;
 }
 
-static PSymbolEntry FindLocNode_FNode(char* Name, TempType SearchType, LongInt Handle) {
+static PSymbolEntry FindLocNode_FNode(
+        char const* Name, TempType SearchType, LongInt Handle) {
     PSymbolEntry Lauf;
 
     Lauf = SearchSymbolHashTable(FirstLocSymbol, Name, Handle);
@@ -2994,29 +2980,18 @@ static PSymbolEntry FindLocNode_FNode(char* Name, TempType SearchType, LongInt H
     return Lauf;
 }
 
-static PSymbolEntry FindLocNode(char const* Name_O, TempType SearchType) {
+static PSymbolEntry FindLocNode(char const* p_name, TempType SearchType) {
     PLocHandle   RunLocHandle;
     PSymbolEntry Result = NULL;
-    String       Name;
 
-    strmaxcpy(Name, Name_O, STRINGSIZE);
-    ChkTmp3(Name, e_symbol_source_none);
-    if (!CaseSensitive) {
-        NLS_UpString(Name);
-    }
-
-    if (MomLocHandle == -1) {
-        return NULL;
-    }
-
-    Result = FindLocNode_FNode(Name, SearchType, MomLocHandle);
+    Result = FindLocNode_FNode(p_name, SearchType, MomLocHandle);
     if (Result) {
         return Result;
     }
 
     RunLocHandle = FirstLocHandle;
     while ((RunLocHandle) && (RunLocHandle->Cont != -1)) {
-        Result = FindLocNode_FNode(Name, SearchType, RunLocHandle->Cont);
+        Result = FindLocNode_FNode(p_name, SearchType, RunLocHandle->Cont);
         if (Result) {
             break;
         }
@@ -3026,20 +3001,105 @@ static PSymbolEntry FindLocNode(char const* Name_O, TempType SearchType) {
     return Result;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     FindNode(const tStrComp *p_exp_name, TempType SearchType, Boolean SearchLocal, Boolean *p_error_on_find)
+ * \brief  find node in global and/or local symbol table
+ * \param  p_exp_name name of symbol to search
+ * \param  SearchType data type to search for
+ * \param  SearchLocal search in local table as well
+ * \param  p_error_on_find may return True if NULL due to symbol syntax error
+ * \return * to node or NULL
+ * ------------------------------------------------------------------------ */
+
+static PSymbolEntry FindNode(
+        tStrComp const* p_exp_name, TempType SearchType, Boolean SearchLocal,
+        Boolean* p_error_on_find) {
+    String   name;
+    tStrComp name_comp;
+    LongInt  DestSection = -1;
+
+    StrCompMkTemp(&name_comp, name, sizeof(name));
+    StrCompCopy(&name_comp, p_exp_name);
+    ChkTmp3(name_comp.str.p_str, e_symbol_source_none);
+    if (p_error_on_find) {
+        *p_error_on_find = False;
+    }
+
+    if (!GetSymSection(&name_comp, &DestSection, p_exp_name)) {
+        if (p_error_on_find) {
+            *p_error_on_find = True;
+        }
+        return NULL;
+    }
+    if (!CaseSensitive) {
+        NLS_UpString(name_comp.str.p_str);
+    }
+    if (DestSection != -2) {
+        SearchLocal = False;
+    }
+
+    if (SearchLocal && (MomLocHandle != -1)) {
+        PSymbolEntry p_result = FindLocNode(name_comp.str.p_str, SearchType);
+        if (p_result) {
+            return p_result;
+        }
+    }
+    return FindGlobNode(name_comp.str.p_str, SearchType, DestSection);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     ExpandAndFindNode(const struct sStrComp *pComp, TempType SearchType, Boolean SearchLocal, expand_chk_t chk, Boolean *p_error_on_find)
+ * \brief  expand, optionally check and find node in global and/or local symbol table
+ * \param  pComp name of symbol to expand & search
+ * \param  SearchType data type to search for
+ * \param  SearchLocal search in local table as well
+ * \param  chk preliminary checks to perform
+ * \param  p_error_on_find may return True if NULL due to symbol syntax error
+ * \return * to node or NULL
+ * ------------------------------------------------------------------------ */
+
+PSymbolEntry ExpandAndFindNode(
+        const struct sStrComp* pComp, TempType SearchType, Boolean SearchLocal,
+        expand_chk_t chk, Boolean* p_error_on_find) {
+    String          exp_name_buf;
+    tStrComp        exp_name;
+    tStrComp const* p_exp_name;
+    char const*     pKlPos;
+
+    if (p_error_on_find) {
+        *p_error_on_find = False;
+    }
+    StrCompMkTemp(&exp_name, exp_name_buf, sizeof(exp_name_buf));
+    p_exp_name = ExpandStrSymbol(&exp_name, pComp, !CaseSensitive);
+    if (!p_exp_name) {
+        if (p_error_on_find) {
+            *p_error_on_find = True;
+        }
+        return NULL;
+    }
+
+    if (chk != e_expand_chk_none) {
+        /* just [...] without symbol name itself is not valid */
+
+        pKlPos = strchr(p_exp_name->str.p_str, '[');
+        if ((pKlPos == p_exp_name->str.p_str)
+            || (ChkSymbNameUpTo(p_exp_name->str.p_str, pKlPos) != pKlPos)) {
+            return NULL;
+        }
+    }
+
+    return FindNode(p_exp_name, SearchType, SearchLocal, p_error_on_find);
+}
+
 /**
 void SetSymbolType(const tStrComp *pName, Byte NTyp)
 {
   PSymbolEntry Lauf;
   Boolean HRef;
-  String ExpName;
 
-  if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName))
-    return;
   HRef = DoRefs;
   DoRefs = False;
-  Lauf = FindLocNode(ExpName, TempInt);
-  if (!Lauf)
-    Lauf = FindNode(ExpName, TempInt);
+  Lauf = ExpandAndFindNode(pName, TempInt, True, expand_chk_none, NULL);
   if (Lauf)
     Lauf->SymType = NTyp;
   DoRefs = HRef;
@@ -3049,26 +3109,10 @@ void SetSymbolType(const tStrComp *pName, Byte NTyp)
 void LookupSymbol(
         const struct sStrComp* pComp, TempResult* pValue, Boolean WantRelocs,
         TempType ReqType) {
-    PSymbolEntry pEntry;
-    String       ExpName;
-    char const*  pKlPos;
+    Boolean      error_on_find;
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pComp, ReqType, True, e_expand_chk_upto, &error_on_find);
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pComp)) {
-        pValue->Typ = TempNone;
-        return;
-    }
-
-    pKlPos = strchr(ExpName, '[');
-    if (ChkSymbNameUpTo(ExpName, pKlPos) != pKlPos) {
-        WrStrErrorPos(ErrNum_InvSymName, pComp);
-        pValue->Typ = TempNone;
-        return;
-    }
-
-    pEntry = FindLocNode(ExpName, ReqType);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, ReqType);
-    }
     if (pEntry) {
         as_tempres_copy_value(pValue, &pEntry->SymWert);
         if (pValue->Typ != TempNone) {
@@ -3089,6 +3133,10 @@ void LookupSymbol(
             pValue->Flags |= eSymbolFlag_UsesForwards;
         }
         pEntry->Used = True;
+    }
+
+    else if (error_on_find) {
+        pValue->Typ = TempNone;
     }
 
     /* Symbol evtl. im ersten Pass unbekannt */
@@ -3115,21 +3163,14 @@ void LookupSymbol(
 
 void SetSymbolOrStructElemSize(const struct sStrComp* pName, tSymbolSize Size) {
     if (pInnermostNamedStruct) {
-        SetStructElemSize(pInnermostNamedStruct->StructRec, pName->str.p_str, Size);
+        SetStructElemSize(pInnermostNamedStruct->StructRec, pName, Size);
     } else {
         PSymbolEntry pEntry;
         Boolean      HRef;
-        String       ExpName;
 
-        if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-            return;
-        }
         HRef   = DoRefs;
         DoRefs = False;
-        pEntry = FindLocNode(ExpName, TempInt);
-        if (!pEntry) {
-            pEntry = FindNode(ExpName, TempInt);
-        }
+        pEntry = ExpandAndFindNode(pName, TempInt, True, e_expand_chk_none, NULL);
         if (pEntry) {
             pEntry->SymWert.DataSize = Size;
         }
@@ -3145,17 +3186,11 @@ void SetSymbolOrStructElemSize(const struct sStrComp* pName, tSymbolSize Size) {
  * ------------------------------------------------------------------------ */
 
 ShortInt GetSymbolSize(const struct sStrComp* pName) {
-    PSymbolEntry pEntry;
-    String       ExpName;
+    Boolean      error_on_find;
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pName, TempInt, True, e_expand_chk_none, &error_on_find);
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-        return -1;
-    }
-    pEntry = FindLocNode(ExpName, TempInt);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, TempInt);
-    }
-    return pEntry ? pEntry->SymWert.DataSize : eSymbolSizeUnknown;
+    return pEntry ? pEntry->SymWert.DataSize : (error_on_find ? -1 : eSymbolSizeUnknown);
 }
 
 /*!------------------------------------------------------------------------
@@ -3166,17 +3201,9 @@ ShortInt GetSymbolSize(const struct sStrComp* pName) {
  * ------------------------------------------------------------------------ */
 
 Boolean IsSymbolDefined(const struct sStrComp* pName) {
-    PSymbolEntry pEntry;
-    String       ExpName;
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pName, TempAll, True, e_expand_chk_none, NULL);
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-        return False;
-    }
-
-    pEntry = FindLocNode(ExpName, TempAll);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, TempAll);
-    }
     return pEntry && pEntry->Defined;
 }
 
@@ -3188,17 +3215,9 @@ Boolean IsSymbolDefined(const struct sStrComp* pName) {
  * ------------------------------------------------------------------------ */
 
 Boolean IsSymbolUsed(const struct sStrComp* pName) {
-    PSymbolEntry pEntry;
-    String       ExpName;
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pName, TempAll, True, e_expand_chk_none, NULL);
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-        return False;
-    }
-
-    pEntry = FindLocNode(ExpName, TempAll);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, TempAll);
-    }
     return pEntry && pEntry->Used;
 }
 
@@ -3210,17 +3229,9 @@ Boolean IsSymbolUsed(const struct sStrComp* pName) {
  * ------------------------------------------------------------------------ */
 
 Boolean IsSymbolChangeable(const struct sStrComp* pName) {
-    PSymbolEntry pEntry;
-    String       ExpName;
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pName, TempAll, True, e_expand_chk_none, NULL);
 
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-        return False;
-    }
-
-    pEntry = FindLocNode(ExpName, TempAll);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, TempAll);
-    }
     return pEntry && pEntry->Changeable;
 }
 
@@ -3243,17 +3254,8 @@ as_addrspace_t addrspace_from_mask(unsigned mask) {
 }
 
 Integer GetSymbolType(const struct sStrComp* pName) {
-    PSymbolEntry pEntry;
-    String       ExpName;
-
-    if (!ExpandStrSymbol(ExpName, sizeof(ExpName), pName)) {
-        return -1;
-    }
-
-    pEntry = FindLocNode(ExpName, TempAll);
-    if (!pEntry) {
-        pEntry = FindNode(ExpName, TempAll);
-    }
+    PSymbolEntry pEntry
+            = ExpandAndFindNode(pName, TempAll, True, e_expand_chk_none, NULL);
 
     if (!pEntry) {
         return -1;
@@ -3516,54 +3518,75 @@ void ClearSymbolList(void) {
 /*-------------------------------------------------------------------------*/
 /* Stack-Verwaltung */
 
+static PSymbolStack find_stack(
+        char const* p_name, PSymbolStack* pp_stack_prev, Boolean allow_create) {
+    PSymbolStack p_stack_run;
+
+    p_stack_run    = FirstStack;
+    *pp_stack_prev = NULL;
+    while (p_stack_run && (strcmp(p_stack_run->Name, p_name) < 0)) {
+        *pp_stack_prev = p_stack_run;
+        p_stack_run    = p_stack_run->Next;
+    }
+
+    if (!p_stack_run || (strcmp(p_stack_run->Name, p_name) > 0)) {
+        PSymbolStack p_stack_new;
+
+        if (!allow_create) {
+            return NULL;
+        }
+
+        p_stack_new           = (PSymbolStack)malloc(sizeof(TSymbolStack));
+        p_stack_new->Name     = as_strdup(p_name);
+        p_stack_new->Contents = NULL;
+        p_stack_new->Next     = p_stack_run;
+        if (!*pp_stack_prev) {
+            FirstStack = p_stack_new;
+        } else {
+            (*pp_stack_prev)->Next = p_stack_new;
+        }
+        return p_stack_new;
+    } else {
+        return p_stack_run;
+    }
+}
+
 Boolean PushSymbol(tStrComp const* pSymName, tStrComp const* pStackName) {
     PSymbolEntry      pSrc;
-    PSymbolStack      LStack, NStack, PStack;
+    PSymbolStack      LStack, PStack;
     PSymbolStackEntry Elem;
-    String            ExpSymName, ExpStackName;
+    tStrComp          exp_sym_name, exp_stack_name;
+    tStrComp const *  p_exp_sym_name, *p_exp_stack_name;
+    String            exp_sym_name_buf, exp_stack_name_buf;
 
-    if (!ExpandStrSymbol(ExpSymName, sizeof(ExpSymName), pSymName)) {
+    StrCompMkTemp(&exp_sym_name, exp_sym_name_buf, sizeof(exp_sym_name_buf));
+    p_exp_sym_name = ExpandStrSymbol(&exp_sym_name, pSymName, !CaseSensitive);
+    if (!p_exp_sym_name) {
         return False;
     }
 
-    pSrc = FindNode(ExpSymName, TempAll);
+    pSrc = FindNode(p_exp_sym_name, TempAll, False, NULL);
     if (!pSrc) {
         WrStrErrorPos(ErrNum_SymbolUndef, pSymName);
         return False;
     }
 
+    StrCompMkTemp(&exp_stack_name, exp_stack_name_buf, sizeof(exp_stack_name_buf));
     if (*pStackName->str.p_str) {
-        if (!ExpandStrSymbol(ExpStackName, sizeof(ExpStackName), pStackName)) {
+        p_exp_stack_name = ExpandStrSymbol(&exp_stack_name, pStackName, !CaseSensitive);
+        if (!p_exp_stack_name) {
             return False;
         }
     } else {
-        strmaxcpy(ExpStackName, DefStackName, STRINGSIZE);
+        strmaxcpy(exp_stack_name.str.p_str, DefStackName, exp_stack_name.str.capacity);
+        p_exp_stack_name = &exp_stack_name;
     }
-    if (!ChkSymbName(ExpStackName)) {
+    if (!ChkSymbName(p_exp_stack_name->str.p_str)) {
         WrStrErrorPos(ErrNum_InvSymName, pStackName);
         return False;
     }
 
-    LStack = FirstStack;
-    PStack = NULL;
-    while ((LStack) && (strcmp(LStack->Name, ExpStackName) < 0)) {
-        PStack = LStack;
-        LStack = LStack->Next;
-    }
-
-    if ((!LStack) || (strcmp(LStack->Name, ExpStackName) > 0)) {
-        NStack           = (PSymbolStack)malloc(sizeof(TSymbolStack));
-        NStack->Name     = as_strdup(ExpStackName);
-        NStack->Contents = NULL;
-        NStack->Next     = LStack;
-        if (!PStack) {
-            FirstStack = NStack;
-        } else {
-            PStack->Next = NStack;
-        }
-        LStack = NStack;
-    }
-
+    LStack           = find_stack(p_exp_stack_name->str.p_str, &PStack, True);
     Elem             = (PSymbolStackEntry)malloc(sizeof(TSymbolStackEntry));
     Elem->Next       = LStack->Contents;
     Elem->Contents   = pSrc->SymWert;
@@ -3576,38 +3599,39 @@ Boolean PopSymbol(tStrComp const* pSymName, tStrComp const* pStackName) {
     PSymbolEntry      pDest;
     PSymbolStack      LStack, PStack;
     PSymbolStackEntry Elem;
-    String            ExpSymName, ExpStackName;
+    tStrComp          exp_sym_name, exp_stack_name;
+    tStrComp const *  p_exp_sym_name, *p_exp_stack_name;
+    String            exp_sym_name_buf, exp_stack_name_buf;
 
-    if (!ExpandStrSymbol(ExpSymName, sizeof(ExpSymName), pSymName)) {
+    StrCompMkTemp(&exp_sym_name, exp_sym_name_buf, sizeof(exp_sym_name_buf));
+    p_exp_sym_name = ExpandStrSymbol(&exp_sym_name, pSymName, !CaseSensitive);
+    if (!p_exp_sym_name) {
         return False;
     }
 
-    pDest = FindNode(ExpSymName, TempAll);
+    pDest = FindNode(p_exp_sym_name, TempAll, False, NULL);
     if (!pDest) {
         WrStrErrorPos(ErrNum_SymbolUndef, pSymName);
         return False;
     }
 
+    StrCompMkTemp(&exp_stack_name, exp_stack_name_buf, sizeof(exp_stack_name_buf));
     if (*pStackName->str.p_str) {
-        if (!ExpandStrSymbol(ExpStackName, sizeof(ExpStackName), pStackName)) {
+        p_exp_stack_name = ExpandStrSymbol(&exp_stack_name, pStackName, !CaseSensitive);
+        if (!p_exp_stack_name) {
             return False;
         }
     } else {
-        strmaxcpy(ExpStackName, DefStackName, STRINGSIZE);
+        strmaxcpy(exp_stack_name.str.p_str, DefStackName, exp_stack_name.str.capacity);
+        p_exp_stack_name = &exp_stack_name;
     }
-    if (!ChkSymbName(ExpStackName)) {
+    if (!ChkSymbName(p_exp_stack_name->str.p_str)) {
         WrStrErrorPos(ErrNum_InvSymName, pStackName);
         return False;
     }
 
-    LStack = FirstStack;
-    PStack = NULL;
-    while ((LStack) && (strcmp(LStack->Name, ExpStackName) < 0)) {
-        PStack = LStack;
-        LStack = LStack->Next;
-    }
-
-    if ((!LStack) || (strcmp(LStack->Name, ExpStackName) > 0)) {
+    LStack = find_stack(p_exp_stack_name->str.p_str, &PStack, False);
+    if (!LStack) {
         WrStrErrorPos(ErrNum_StackEmpty, pStackName);
         return False;
     }
@@ -3864,20 +3888,14 @@ void PrintSymbolDepth(void) {
     fprintf(Debug, " MaxTree %ld\n", (long)TreeMax);
 }
 
-LongInt GetSectionHandle(char* SName_O, Boolean AddEmpt, LongInt Parent) {
+LongInt GetSectionHandle(char const* SName, Boolean AddEmpt, LongInt Parent) {
     PCToken Lauf, Prev;
     LongInt z;
-    String  SName;
-
-    strmaxcpy(SName, SName_O, STRINGSIZE);
-    if (!CaseSensitive) {
-        NLS_UpString(SName);
-    }
 
     Lauf = FirstSection;
     Prev = NULL;
     z    = 0;
-    while ((Lauf) && ((strcmp(Lauf->Name, SName)) || (Lauf->Parent != Parent))) {
+    while (Lauf && (strcmp(Lauf->Name, SName) || (Lauf->Parent != Parent))) {
         z++;
         Prev = Lauf;
         Lauf = Lauf->Next;

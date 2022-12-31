@@ -95,6 +95,7 @@
 #include "codecop4.h"
 #include "codecop8.h"
 #include "codecp1600.h"
+#include "codecp3f.h"
 #include "codef8.h"
 #include "codefmc16.h"
 #include "codefmc8.h"
@@ -704,7 +705,9 @@ static void ReadMacro(void) {
     PMacroRec         OneMacro;
     tReadMacroContext Context;
     LongInt           HSect;
-    String            MacroName;
+    String            macro_name_buf;
+    tStrComp          macro_name;
+    tStrComp const*   p_macro_name;
 
     WasMACRO = True;
 
@@ -714,13 +717,19 @@ static void ReadMacro(void) {
     /* Makronamen pruefen */
     /* Definition nur im ersten Pass */
 
+    StrCompMkTemp(&macro_name, macro_name_buf, sizeof(macro_name_buf));
     if (PassNo != 1) {
         Context.ErrFlag = True;
-    } else if (!ExpandStrSymbol(MacroName, sizeof(MacroName), &LabPart)) {
-        Context.ErrFlag = True;
-    } else if (!ChkSymbName(MacroName)) {
-        WrXError(ErrNum_InvSymName, LabPart.str.p_str);
-        Context.ErrFlag = True;
+        p_macro_name    = &LabPart;
+    } else {
+        p_macro_name = ExpandStrSymbol(&macro_name, &LabPart, False);
+        if (!p_macro_name) {
+            Context.ErrFlag = True;
+            p_macro_name    = &LabPart;
+        } else if (!ChkSymbName(p_macro_name->str.p_str)) {
+            WrStrErrorPos(ErrNum_InvSymName, &LabPart);
+            Context.ErrFlag = True;
+        }
     }
 
     /* create tag */
@@ -758,7 +767,7 @@ static void ReadMacro(void) {
     /* Bei Globalisierung Namen des Extramakros ermitteln */
 
     if (Context.pOutputTag->DoGlobCopy) {
-        strmaxcpy(Context.pOutputTag->GName, MacroName, STRINGSIZE);
+        strmaxcpy(Context.pOutputTag->GName, p_macro_name->str.p_str, STRINGSIZE);
         RunSection = SectionStack;
         HSect      = MomSectionHandle;
         while ((HSect != Context.pOutputTag->GlobSect) && (RunSection != NULL)) {
@@ -781,13 +790,14 @@ static void ReadMacro(void) {
     if ((MacroOutput) && (Context.pOutputTag->DoExport)) {
         errno = 0;
         fprintf(MacroFile, "%s MACRO %s\n",
-                Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName : MacroName,
+                Context.pOutputTag->DoGlobCopy ? Context.pOutputTag->GName
+                                               : p_macro_name->str.p_str,
                 Context.PList);
         ChkIO(ErrNum_FileWriteError);
     }
 
     OneMacro->UseCounter     = 0;
-    OneMacro->Name           = as_strdup(MacroName);
+    OneMacro->Name           = as_strdup(p_macro_name->str.p_str);
     OneMacro->ParamCount     = Context.ParamCount;
     OneMacro->FirstLine      = NULL;
     OneMacro->LstMacroExpMod = Context.LstMacroExpMod;
@@ -2431,22 +2441,36 @@ static void Produce_Code(void) {
     PMacroRec  OneMacro;
     PStructRec OneStruct;
     Boolean SearchMacros, Found, IsMacro = False, IsStruct = False, ResetLastLabel = True;
+    tStrComp        non_upper_case_op_part;
+    String          non_upper_case_op_part_buf;
+    tStrComp const* p_search_op_part;
 
     ActListGran = ListGran();
     WasIF = WasMACRO = False;
 
     /* Makrosuche unterdruecken ? */
 
+    /* We need the OpPart also in a variant not converted to all-uppercase,
+       since structure and macro names may be case sensitive: */
+
+    StrCompMkTemp(
+            &non_upper_case_op_part, non_upper_case_op_part_buf,
+            sizeof(non_upper_case_op_part_buf));
     if (*OpPart.str.p_str == '!') {
         SearchMacros = False;
         StrCompCutLeft(&OpPart, 1);
-        strcpy(pLOpPart, OpPart.str.p_str);
+        StrCompCopy(&non_upper_case_op_part, &OpPart);
     } else {
+        tStrComp const* p_lop_part;
+
         SearchMacros = True;
-        ExpandStrSymbol(pLOpPart, STRINGSIZE, &OpPart);
-        strcpy(OpPart.str.p_str, pLOpPart);
+        p_lop_part   = ExpandStrSymbol(&non_upper_case_op_part, &OpPart, False);
+        if (p_lop_part && (p_lop_part != &OpPart)) {
+            as_dynstr_copy(&OpPart.str, &p_lop_part->str);
+        }
     }
     NLS_UpString(OpPart.str.p_str);
+    p_search_op_part = CaseSensitive ? &non_upper_case_op_part : &OpPart;
 
     /* Prozessor eingehaengt ? */
 
@@ -2457,12 +2481,12 @@ static void Produce_Code(void) {
 
     /* otherwise generate code: check for macro/structs here */
 
-    IsMacro = (SearchMacros) && (FoundMacro(&OneMacro));
+    IsMacro = (SearchMacros) && (FoundMacro(&OneMacro, p_search_op_part));
     if (IsMacro) {
         WasMACRO = True;
     }
     if (!IsMacro) {
-        IsStruct = FoundStruct(&OneStruct, pLOpPart);
+        IsStruct = FoundStruct(&OneStruct, p_search_op_part->str.p_str);
     }
 
     /* no longer at an address right after a BSR? */
@@ -2473,7 +2497,7 @@ static void Produce_Code(void) {
 
     /* evtl. voranstehendes Label ablegen */
 
-    if ((IfAsm) && ((!IsMacro) || (!OneMacro->LocIntLabel))) {
+    if (IfAsm && (!IsMacro || !OneMacro->LocIntLabel)) {
         if (LabelPresent()) {
             LabelHandle(&LabPart, EProgCounter(), False);
         }
@@ -2601,7 +2625,7 @@ static void Produce_Code(void) {
             /* structure declaration ? */
 
             if (IsStruct) {
-                ExpandStruct(OneStruct);
+                ExpandStruct(OneStruct, p_search_op_part->str.p_str);
                 strmaxcpy(
                         ListLine, OneStruct->IsUnion ? "(UNION)" : "(STRUCT)",
                         STRINGSIZE);
@@ -4459,6 +4483,7 @@ int main(int argc, char** argv) {
         codesc14xxx_init();
         codens32k_init();
         codeace_init();
+        codecp3f_init();
         codef8_init();
         code53c8xx_init();
         codef2mc8_init();

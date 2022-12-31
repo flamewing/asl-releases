@@ -66,6 +66,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Mitsubishi M16
 - DEC PDP-11
 - Mitsubishi M16C
+- AEG/Olympia CP-3F, SGS M380 and GI LP8000
 - Intel 4004/4040
 - Intel MCS-48/41, including Siemens SAB80C382, and the OKI variants
 - Intel MCS-51/251, Dallas DS80C390

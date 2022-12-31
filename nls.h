@@ -59,6 +59,8 @@ extern void NLS_CurrencyString(double inp, char* erg, size_t DestSize);
 extern char Upcase(char inp);
 
 extern void NLS_UpString(char* s);
+extern void NLS_UpString2(
+        char* p_dest, size_t dest_size, char const* p_src, size_t src_len);
 
 extern void NLS_LowString(char* s);
 

@@ -2996,3 +2996,8 @@ IBM PALM has a 64 Kbyte code space and 16 I/O ports. `PORT` defines I/O addresse
 ### 6502 data aliases and DDB
 
 On 65xx, `DB`, `DW` and `DS` alias `BYT`, `ADR` and `RMB`; the fork also retains `BYTE` as a byte-data alias. `DDB` emits 16-bit constants in big-endian order on 6502 and MELPS-7700, unlike their usual little-endian word directives.
+
+
+### CP-3F targets
+
+`CP-3F`, `LP8000` and `M380` select the same processor, sold by AEG/Olympia, GI and SGS-Ates respectively. Their instruction sets and address spaces are identical.

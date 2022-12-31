@@ -311,7 +311,6 @@ extern int         OutRadixBase, ListRadixBase;
 extern char const* pCommentLeadIn;
 
 extern tStrComp*   ArgStr;
-extern StringPtr   pLOpPart;
 extern tStrComp    LabPart, CommPart, ArgPart, OpPart, AttrPart;
 extern char        AttrSplit;
 extern int         ArgCnt;
