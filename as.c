@@ -120,6 +120,7 @@
 #include "codepalm.h"
 #include "codepdk.h"
 #include "codepdp11.h"
+#include "codepps4.h"
 #include "codepseudo.h"
 #include "codes12z.h"
 #include "codesc14xxx.h"
@@ -142,6 +143,7 @@
 #include "cpulist.h"
 #include "intpseudo.h"
 #include "ioerrs.h"
+#include "literals.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "onoff_common.h"
@@ -4394,6 +4396,7 @@ int main(int argc, char** argv) {
 
         codeallg_init();
         onoff_common_init();
+        literals_init();
 
         code68k_init();
         code56k_init();
@@ -4412,6 +4415,7 @@ int main(int argc, char** argv) {
         codeh8_5_init();
         code7000_init();
         code65_init();
+        codepps4_init();
         codeh16_init();
         code7700_init();
         codehmcs400_init();

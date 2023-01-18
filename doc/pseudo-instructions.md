@@ -3001,3 +3001,9 @@ On 65xx, `DB`, `DW` and `DS` alias `BYT`, `ADR` and `RMB`; the fork also retains
 ### CP-3F targets
 
 `CP-3F`, `LP8000` and `M380` select the same processor, sold by AEG/Olympia, GI and SGS-Ates respectively. Their instruction sets and address spaces are identical.
+
+### DCM
+
+On 6502 targets, `DCM` stores floating point constants in the Apple II format: an eight bit exponent and a 24 bit mantissa in two’s complement, in big endian order. See [the Apple II floating point routines](http://www.6502.org/source/floats/wozfp3.txt).
+
+PPS-4 supports `DC` and `DS`; `RES` reserves bytes in code space and nibbles in data space.

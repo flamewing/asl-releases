@@ -638,3 +638,5 @@ _Default Integer Syntax: IBM_
 _Default Integer Syntax: Intel_
 
 `DB`, `DN`, `DS`, `REG`.
+
+PPS-4 uses Intel integer syntax and `$` for the current address, with 12 bit code and data address spaces.

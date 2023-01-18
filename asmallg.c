@@ -26,6 +26,7 @@
 #include "errmsg.h"
 #include "fileformat.h"
 #include "function.h"
+#include "literals.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "operator.h"
@@ -203,6 +204,7 @@ Boolean SetCPUByName(tStrComp const* pName) {
  * ------------------------------------------------------------------------ */
 
 void UnsetCPU(void) {
+    literals_chk_alldone();
     if (SwitchFrom) {
         ClearONOFF();
         SwitchFrom();

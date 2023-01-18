@@ -2844,8 +2844,8 @@ static void InitFields(void) {
             (MomCPU == CPU65CE02) ? 0x63 : 0x00);
 
     init_moto8_pseudo(
-            InstTable,
-            e_moto_8_le | e_moto_8_db | e_moto_8_dw | e_moto_8_ds | e_moto_8_ddb);
+            InstTable, e_moto_8_le | e_moto_8_db | e_moto_8_dw | e_moto_8_ds
+                               | e_moto_8_ddb | e_moto_8_dcm);
 }
 
 static void DeinitFields(void) {

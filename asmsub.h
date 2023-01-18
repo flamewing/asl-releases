@@ -76,8 +76,9 @@ extern char* PathPart(char* Name);
 
 extern void FloatString(char* pDest, size_t DestSize, Double f);
 
+struct sTempResult;
 extern void StrSym(
-        TempResult const* t, Boolean WithSystem, struct as_dynstr* p_dest,
+        const struct sTempResult* t, Boolean WithSystem, struct as_dynstr* p_dest,
         unsigned Radix);
 
 extern void ResetPageCounter(void);
@@ -86,7 +87,7 @@ extern void NewPage(ShortInt Level, Boolean WithFF);
 
 extern void WrLstLine(char const* Line);
 
-extern void SetListLineVal(TempResult* t);
+extern void SetListLineVal(struct sTempResult* t);
 
 extern void LimitListLine(void);
 

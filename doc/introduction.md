@@ -177,3 +177,5 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
+
+- Rockwell PPS-4

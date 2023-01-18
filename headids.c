@@ -35,6 +35,7 @@ static TFamilyDescr const Descrs[] = {
         {          "H16", 0x0040,   eHexFormatMotoS},
         {       "SH7x00", 0x006c,   eHexFormatMotoS},
         {      "HMCS400", 0x0050,   eHexFormatMotoS},
+        {        "PPS-4", 0x0010,   eHexFormatIntel},
         {         "65xx", 0x0011,     eHexFormatMOS},
         {   "MELPS-7700", 0x0019,     eHexFormatMOS},
         {   "MELPS-4500", 0x0012,   eHexFormatIntel},

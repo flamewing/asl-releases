@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "literals.h"
 #include "motpseudo.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -98,20 +99,9 @@ typedef struct {
     Boolean     NeedsDSP;
 } TRegDef;
 
-typedef struct tag_TLiteral {
-    struct tag_TLiteral* Next;
-    LongInt              Value, FCount;
-    Boolean              Is32, IsForward;
-    Integer              PassNo;
-    LongInt              DefSection;
-} *PLiteral, TLiteral;
-
 static tSymbolSize OpSize;  /* Groesse=8*(2^OpSize) */
 static ShortInt    AdrMode; /* Ergebnisadressmodus */
 static Word        AdrPart; /* Adressierungsmodusbits im Opcode */
-
-static PLiteral FirstLiteral;
-static LongInt  ForwardCount;
 
 static CPUVar CPU7000, CPU7600, CPU7700;
 
@@ -145,34 +135,6 @@ static void ChkDelayed(void) {
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
 
-static char* LiteralName(PLiteral Lit, char* Result, int ResultSize) {
-    as_snprintf(Result, ResultSize, "LITERAL_");
-    if (Lit->IsForward) {
-        as_snprcatf(Result, ResultSize, "F_%08" PRIx64, (LargeWord)Lit->FCount);
-    } else if (Lit->Is32) {
-        as_snprcatf(Result, ResultSize, "L_%08" PRIx64, (LargeWord)Lit->Value);
-    } else {
-        as_snprcatf(Result, ResultSize, "W_%04x", (unsigned)Lit->Value);
-    }
-    as_snprcatf(Result, ResultSize, "_%x", (unsigned)Lit->PassNo);
-    return Result;
-}
-
-/*
-static void PrintLiterals(void)
-{
-  PLiteral Lauf;
-  String Name;
-
-  WrLstLine("LiteralList");
-  Lauf = FirstLiteral;
-  while (Lauf)
-  {
-    LiteralName(Lauf, Name, sizeof(Name));
-    WrLstLine(Name); Lauf = Lauf->Next;
-  }
-}
-*/
 static void SetOpSize(tSymbolSize Size) {
     if (OpSize == eSymbolSizeUnknown) {
         OpSize = Size;
@@ -346,17 +308,13 @@ static LongInt OpMask(ShortInt OpSize) {
 }
 
 static void DecodeAdr(tStrComp const* pArg, Word Mask, Boolean Signed) {
-    Byte         p;
     Word         HReg;
     char*        pos;
     ShortInt     BaseReg, IndReg;
     tSymbolSize  DOpSize;
     LongInt      DispAcc;
-    String       AdrStr;
-    Boolean      OK, FirstFlag, NIs32, Critical, Found, LDef;
+    Boolean      OK, FirstFlag;
     tSymbolFlags Flags;
-    PLiteral     Lauf, Last;
-    String       Name;
 
     AdrMode = ModNone;
 
@@ -531,8 +489,9 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask, Boolean Signed) {
             OK      = True;
             Flags   = eSymbolFlag_None;
         }
-        Critical = mFirstPassUnknown(Flags) || mUsesForwards(Flags);
         if (OK) {
+            Boolean Critical = mFirstPassUnknown(Flags) || mUsesForwards(Flags);
+
             /* minimale Groesse optimieren */
 
             DOpSize = (OpSize == eSymbolSize8Bit)
@@ -544,92 +503,26 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask, Boolean Signed) {
             if (DOpSize == 0) {
                 AdrPart = DispAcc & 0xff;
                 AdrMode = ModImm;
-            } else if ((Mask & MModPCRel) != 0) {
-                tStrComp LComp;
-                String   LStr;
+            } else if (Mask & MModPCRel) {
+                tStrComp    LStrComp;
+                String      LStr;
+                tSymbolSize lit_size;
+                Byte        data_offset = 0;
 
-                StrCompMkTemp(&LComp, LStr, sizeof(LStr));
+                StrCompMkTemp(&LStrComp, LStr, sizeof(LStr));
 
-                /* Literalgroesse ermitteln */
+                lit_size = (DOpSize == 2) ? eSymbolSize32Bit : eSymbolSize16Bit;
 
-                NIs32 = (DOpSize == 2);
-                if (!NIs32) {
-                    DispAcc &= 0xffff;
-                }
-
-                /* Literale sektionsspezifisch */
-
-                strcpy(AdrStr, "[PARENT0]");
-
-                /* schon vorhanden ? */
-
-                Lauf  = FirstLiteral;
-                p     = 0;
-                OK    = False;
-                Last  = NULL;
-                Found = False;
-                while ((Lauf) && (!Found)) {
-                    Last = Lauf;
-                    if ((!Critical) && (!Lauf->IsForward)
-                        && (Lauf->DefSection == MomSectionHandle)) {
-                        if (((Lauf->Is32 == NIs32) && (DispAcc == Lauf->Value))
-                            || ((Lauf->Is32) && (!NIs32)
-                                && (DispAcc == (Lauf->Value >> 16)))) {
-                            Found = True;
-                        } else if (
-                                (Lauf->Is32) && (!NIs32)
-                                && (DispAcc == (Lauf->Value & 0xffff))) {
-                            Found = True;
-                            p     = 2;
-                        }
-                    }
-                    if (!Found) {
-                        Lauf = Lauf->Next;
-                    }
-                }
-
-                /* nein - erzeugen */
-
-                if (!Found) {
-                    Lauf            = (PLiteral)malloc(sizeof(TLiteral));
-                    Lauf->Is32      = NIs32;
-                    Lauf->Value     = DispAcc;
-                    Lauf->IsForward = Critical;
-                    if (Critical) {
-                        Lauf->FCount = ForwardCount++;
-                    }
-                    Lauf->Next       = NULL;
-                    Lauf->PassNo     = 1;
-                    Lauf->DefSection = MomSectionHandle;
-                    do {
-                        tStrComp LStrComp;
-
-                        as_snprintf(
-                                LComp.str.p_str, STRINGSIZE, "%s%s",
-                                LiteralName(Lauf, Name, sizeof(Name)), AdrStr);
-                        StrCompMkTemp(&LStrComp, LStr, sizeof(LStr));
-                        LDef = IsSymbolDefined(&LStrComp);
-                        if (LDef) {
-                            Lauf->PassNo++;
-                        }
-                    } while (LDef);
-                    if (!Last) {
-                        FirstLiteral = Lauf;
-                    } else {
-                        Last->Next = Lauf;
-                    }
-                }
+                literal_make(&LStrComp, &data_offset, DispAcc, lit_size, Critical);
 
                 /* Distanz abfragen - im naechsten Pass... */
 
-                as_snprintf(
-                        LComp.str.p_str, STRINGSIZE, "%s%s",
-                        LiteralName(Lauf, Name, sizeof(Name)), AdrStr);
-                DispAcc = EvalStrIntExpressionWithFlags(&LComp, Int32, &OK, &Flags) + p;
+                DispAcc = EvalStrIntExpressionWithFlags(&LStrComp, Int32, &OK, &Flags)
+                          + data_offset;
                 if (OK) {
                     if (mFirstPassUnknown(Flags)) {
                         DispAcc = 0;
-                    } else if (NIs32) {
+                    } else if (lit_size == eSymbolSize32Bit) {
                         DispAcc = (DispAcc - (PCRelAdr() & 0xfffffffc)) >> 2;
                     } else {
                         DispAcc = (DispAcc - PCRelAdr()) >> 1;
@@ -642,7 +535,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask, Boolean Signed) {
                     } else {
                         AdrMode = ModPCRel;
                         AdrPart = DispAcc;
-                        OpSize  = NIs32 ? eSymbolSize32Bit : eSymbolSize16Bit;
+                        OpSize  = lit_size;
                     }
                 }
             } else {
@@ -1250,68 +1143,34 @@ static void DecodeDCT_DCF(Word Cond) {
     UNUSED(Cond);
 }
 
-static void LTORG_16(void) {
-    PLiteral Lauf;
-    String   Name;
-    tStrComp TmpComp;
+static LargeInt ltorg_16(as_literal_t const* p_lit, tStrComp* p_name) {
+    LargeInt ret;
 
-    Lauf = FirstLiteral;
-    while (Lauf) {
-        if ((!Lauf->Is32) && (Lauf->DefSection == MomSectionHandle)) {
-            WAsmCode[CodeLen >> 1] = Lauf->Value;
-            LiteralName(Lauf, Name, sizeof(Name));
-            StrCompMkTemp(&TmpComp, Name, sizeof(Name));
-            EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
-            Lauf->PassNo = (-1);
-            CodeLen += 2;
-        }
-        Lauf = Lauf->Next;
-    }
+    SetMaxCodeLen(CodeLen + 2);
+    WAsmCode[CodeLen >> 1] = p_lit->value;
+    ret                    = EProgCounter() + CodeLen;
+    EnterIntSymbol(p_name, ret, ActPC, False);
+    CodeLen += 2;
+    return ret;
 }
 
-static void LTORG_32(void) {
-    PLiteral Lauf, EqLauf;
-    String   Name;
-    tStrComp TmpComp;
+static LargeInt ltorg_32(as_literal_t const* p_lit, tStrComp* p_name) {
+    LargeInt ret;
 
-    Lauf = FirstLiteral;
-    while (Lauf) {
-        if ((Lauf->Is32) && (Lauf->DefSection == MomSectionHandle)
-            && (Lauf->PassNo >= 0)) {
-            if (((EProgCounter() + CodeLen) & 2) != 0) {
-                WAsmCode[CodeLen >> 1] = 0;
-                CodeLen += 2;
-            }
-            WAsmCode[CodeLen >> 1]       = (Lauf->Value >> 16);
-            WAsmCode[(CodeLen >> 1) + 1] = (Lauf->Value & 0xffff);
-            LiteralName(Lauf, Name, sizeof(Name));
-            StrCompMkTemp(&TmpComp, Name, sizeof(Name));
-            EnterIntSymbol(&TmpComp, EProgCounter() + CodeLen, SegCode, False);
-            Lauf->PassNo = -1;
-            if (CompLiterals) {
-                EqLauf = Lauf->Next;
-                while (EqLauf) {
-                    if ((EqLauf->Is32) && (EqLauf->PassNo >= 0)
-                        && (EqLauf->DefSection == MomSectionHandle)
-                        && (EqLauf->Value == Lauf->Value)) {
-                        LiteralName(EqLauf, Name, sizeof(Name));
-                        StrCompMkTemp(&TmpComp, Name, sizeof(Name));
-                        EnterIntSymbol(
-                                &TmpComp, EProgCounter() + CodeLen, SegCode, False);
-                        EqLauf->PassNo = -1;
-                    }
-                    EqLauf = EqLauf->Next;
-                }
-            }
-            CodeLen += 4;
-        }
-        Lauf = Lauf->Next;
+    SetMaxCodeLen(CodeLen + 6);
+    if (((EProgCounter() + CodeLen) & 2) != 0) {
+        WAsmCode[CodeLen >> 1] = 0;
+        CodeLen += 2;
     }
+    WAsmCode[CodeLen >> 1]       = (p_lit->value >> 16);
+    WAsmCode[(CodeLen >> 1) + 1] = (p_lit->value & 0xffff);
+    ret                          = EProgCounter() + CodeLen;
+    EnterIntSymbol(p_name, ret, ActPC, False);
+    CodeLen += 4;
+    return ret;
 }
 
 static void DecodeLTORG(Word Code) {
-    PLiteral Lauf, Tmp, Last;
-
     UNUSED(Code);
 
     if (!ChkArgCnt(0, 0))
@@ -1320,28 +1179,11 @@ static void DecodeLTORG(Word Code) {
         WrError(ErrNum_UseLessAttr);
     } else {
         if ((EProgCounter() & 3) == 0) {
-            LTORG_32();
-            LTORG_16();
+            literals_dump(ltorg_32, eSymbolSize32Bit, MomSectionHandle, True);
+            literals_dump(ltorg_16, eSymbolSize16Bit, MomSectionHandle, False);
         } else {
-            LTORG_16();
-            LTORG_32();
-        }
-        Lauf = FirstLiteral;
-        Last = NULL;
-        while (Lauf) {
-            if ((Lauf->DefSection == MomSectionHandle) && (Lauf->PassNo < 0)) {
-                Tmp = Lauf->Next;
-                if (!Last) {
-                    FirstLiteral = Tmp;
-                } else {
-                    Last->Next = Tmp;
-                }
-                free(Lauf);
-                Lauf = Tmp;
-            } else {
-                Last = Lauf;
-                Lauf = Lauf->Next;
-            }
+            literals_dump(ltorg_16, eSymbolSize16Bit, MomSectionHandle, False);
+            literals_dump(ltorg_32, eSymbolSize32Bit, MomSectionHandle, True);
         }
     }
 }
@@ -1591,11 +1433,6 @@ static void MakeCode_7000(void) {
     }
 }
 
-static void InitCode_7000(void) {
-    FirstLiteral = NULL;
-    ForwardCount = 0;
-}
-
 /*!------------------------------------------------------------------------
  * \fn     InternSymbol_7000(char *pArg, TempResult *pResult)
  * \brief  handle built-in symbols in SH7x00
@@ -1621,9 +1458,6 @@ static Boolean IsDef_7000(void) {
 
 static void SwitchFrom_7000(void) {
     DeinitFields();
-    if (FirstLiteral) {
-        WrError(ErrNum_MsgMissingLTORG);
-    }
 }
 
 static void SwitchTo_7000(void) {
@@ -1667,7 +1501,4 @@ void code7000_init(void) {
     CPU7000 = AddCPU("SH7000", SwitchTo_7000);
     CPU7600 = AddCPU("SH7600", SwitchTo_7000);
     CPU7700 = AddCPU("SH7700", SwitchTo_7000);
-
-    AddInitPassProc(InitCode_7000);
-    FirstLiteral = NULL;
 }
