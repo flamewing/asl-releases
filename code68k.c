@@ -928,7 +928,7 @@ static void DecodeAbs(const tStrComp *pArg, ShortInt Size, tAdrResult *pResult)
 
     if (Size == 1)
     {
-      if (!IsShortAdr(HVal))
+      if (!mFirstPassUnknown(Flags) && !IsShortAdr(HVal))
       {
         WrError(ErrNum_NoShortAddr);
         pResult->Num = ModNone;
