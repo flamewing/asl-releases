@@ -103,6 +103,7 @@
 #include "codeh8_3.h"
 #include "codeh8_5.h"
 #include "codehmcs400.h"
+#include "codeimp16.h"
 #include "codekcp3.h"
 #include "codekcpsm.h"
 #include "codekenbak.h"
@@ -4481,6 +4482,7 @@ int main(int argc, char** argv) {
         code77230_init();
         codev60_init();
         codescmp_init();
+        codeimp16_init();
         code807x_init();
         codecop4_init();
         codecop8_init();

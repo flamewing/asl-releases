@@ -3007,3 +3007,9 @@ On 65xx, `DB`, `DW` and `DS` alias `BYT`, `ADR` and `RMB`; the fork also retains
 On 6502 targets, `DCM` stores floating point constants in the Apple II format: an eight bit exponent and a 24 bit mantissa in two’s complement, in big endian order. See [the Apple II floating point routines](http://www.6502.org/source/floats/wozfp3.txt).
 
 PPS-4 supports `DC` and `DS`; `RES` reserves bytes in code space and nibbles in data space.
+
+### IMP-16 and PACE
+
+`WORD`, `ASCII` and `LTORG` are supported. IMP-16 also accepts `PORT`.
+
+On IPC-16/INS8900, `ASSUME BPS:0` selects direct addressing of the first 256 words (the default). `ASSUME BPS:1` selects the lowest and highest 128 words. This models the processor’s BPS input pin.

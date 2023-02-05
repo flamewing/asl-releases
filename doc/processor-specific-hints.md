@@ -1704,3 +1704,7 @@ AS supports the original mnemonics and an alternate syntax that makes the operat
 | `sqy` | `ld q(y),a` | `Q(module Y)` ← `Y\|A` |
 | `szx` | `ld z(x),a` | `Z(module X)` ← `X\|A` |
 | `szy` | `ld z(y),a` | `Z(module Y)` ← `Y\|A` |
+
+### IMP-16 and PACE
+
+IMP-16C/200, IMP-16C/300, IMP-16P/200, IMP-16P/300 and IMP-16L are supported. IMP-16L adds status bits and branch conditions and supports the extended instruction set of the /300 variants. IPC-16 and INS8900 share an instruction set; INS8900 is a later NMOS implementation of PACE.

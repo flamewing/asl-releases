@@ -50,6 +50,7 @@ typedef enum {
     Int14,
     SInt15,
     UInt15,
+    Int15,
     SInt16,
     UInt16,
     Int16,
