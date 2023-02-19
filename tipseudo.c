@@ -149,12 +149,15 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
             }
 
             TransTableCheckRead();
-
-            as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-            cp   = (unsigned char*)t.Contents.str.p_str;
-            cend = cp + t.Contents.str.len;
-            while (cp < cend) {
-                callback(&ok, &adr, *cp++ & 0xff, t.Flags);
+            if (as_chartrans_xlate_nonz_dynstr(
+                        CurrTransTable->p_table, &t.Contents.str, pArg)) {
+                ok = False;
+            } else {
+                cp   = (unsigned char*)t.Contents.str.p_str;
+                cend = cp + t.Contents.str.len;
+                while (cp < cend) {
+                    callback(&ok, &adr, *cp++ & 0xff, t.Flags);
+                }
             }
             break;
         }
@@ -164,6 +167,9 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
             break;
         default:
             ok = False;
+            break;
+        }
+        if (!ok) {
             break;
         }
     }
@@ -744,9 +750,12 @@ static void DecodeDATA_TI34x(Word Code) {
                 }
 
                 TransTableCheckRead();
-
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, pArg)) {
+                    OK = False;
+                } else {
+                    string_2_dasm_code(&t.Contents.str, Packing ? 4 : 1, True);
+                }
                 break;
             }
             default:

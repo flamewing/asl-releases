@@ -1708,3 +1708,5 @@ AS supports the original mnemonics and an alternate syntax that makes the operat
 ### IMP-16 and PACE
 
 IMP-16C/200, IMP-16C/300, IMP-16P/200, IMP-16P/300 and IMP-16L are supported. IMP-16L adds status bits and branch conditions and supports the extended instruction set of the /300 variants. IPC-16 and INS8900 share an instruction set; INS8900 is a later NMOS implementation of PACE.
+
+2650 accepts P/N/Z condition aliases and numeric condition codes. PALM accepts `ORB` as an alias for `OR`; `JMP` uses a relative branch when possible and supports increment/decrement addressing.

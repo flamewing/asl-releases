@@ -573,28 +573,31 @@ static void DecodeSFR(Word Code) {
 
 static void DecodeASCII_ASCIZ(Word IsZ) {
     if (ChkArgCnt(1, ArgCntMax)) {
-        int        z, l;
-        Boolean    OK;
+        int        l;
+        Boolean    OK = True;
+        tStrComp*  pArg;
         TempResult t;
 
         as_tempres_ini(&t);
-        z  = 1;
-        OK = True;
-        do {
-            EvalStrExpression(&ArgStr[z], &t);
+        forallargs(pArg, OK) {
+            EvalStrExpression(pArg, &t);
             switch (t.Typ) {
             case TempString: {
                 TransTableCheckRead();
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                l = t.Contents.str.len;
-                if (SetMaxCodeLen(CodeLen + l + IsZ)) {
-                    WrError(ErrNum_CodeOverflow);
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, pArg)) {
                     OK = False;
                 } else {
-                    memcpy(BAsmCode + CodeLen, t.Contents.str.p_str, l);
-                    CodeLen += l;
-                    if (IsZ) {
-                        BAsmCode[CodeLen++] = 0;
+                    l = t.Contents.str.len;
+                    if (SetMaxCodeLen(CodeLen + l + IsZ)) {
+                        WrStrErrorPos(ErrNum_CodeOverflow, pArg);
+                        OK = False;
+                    } else {
+                        memcpy(BAsmCode + CodeLen, t.Contents.str.p_str, l);
+                        CodeLen += l;
+                        if (IsZ) {
+                            BAsmCode[CodeLen++] = 0;
+                        }
                     }
                 }
                 break;
@@ -603,11 +606,10 @@ static void DecodeASCII_ASCIZ(Word IsZ) {
                 OK = False;
                 break;
             default:
-                WrStrErrorPos(ErrNum_ExpectString, &ArgStr[z]);
+                WrStrErrorPos(ErrNum_ExpectString, pArg);
                 OK = False;
             }
-            z++;
-        } while (OK && (z <= ArgCnt));
+        }
         as_tempres_free(&t);
         if (!OK) {
             CodeLen = 0;

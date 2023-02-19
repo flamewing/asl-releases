@@ -1490,58 +1490,60 @@ static void PutWord(Word data, Boolean* p_lower_byte) {
 }
 
 static void DecodeDC(Word Index) {
-    int        z;
     int        c;
-    Boolean    OK, LowerByte = False;
+    Boolean    LowerByte = False;
     TempResult t;
 
     UNUSED(Index);
 
     as_tempres_ini(&t);
     if (ChkArgCnt(1, ArgCntMax)) {
-        OK = True;
-        for (z = 1; z <= ArgCnt; z++) {
-            if (OK) {
-                EvalStrExpression(&ArgStr[z], &t);
-                if (mFirstPassUnknown(t.Flags) && t.Typ == TempInt) {
-                    t.Contents.Int &= 65535;
+        Boolean   OK = True;
+        tStrComp* pArg;
+
+        forallargs(pArg, OK) {
+            EvalStrExpression(pArg, &t);
+            if (mFirstPassUnknown(t.Flags) && t.Typ == TempInt) {
+                t.Contents.Int &= 65535;
+            }
+            switch (t.Typ) {
+            case TempInt:
+                if (Packing) {
+                    if (ChkRange(t.Contents.Int, -128, 255)) {
+                        PutByte(t.Contents.Int, &LowerByte);
+                    }
+                } else {
+                ToInt:
+                    if (ChkRange(t.Contents.Int, -32768, 65535)) {
+                        PutWord(t.Contents.Int, &LowerByte);
+                    }
                 }
-                switch (t.Typ) {
-                case TempInt:
-                    if (Packing) {
-                        if (ChkRange(t.Contents.Int, -128, 255)) {
-                            PutByte(t.Contents.Int, &LowerByte);
-                        }
-                    } else {
-                    ToInt:
-                        if (ChkRange(t.Contents.Int, -32768, 65535)) {
-                            PutWord(t.Contents.Int, &LowerByte);
-                        }
-                    }
-                    break;
-                case TempFloat:
-                    SetMaxCodeLen((CodeLen + 2) * 2);
-                    if (Double2IBMFloat(&WAsmCode[CodeLen], t.Contents.Float, False)) {
-                        CodeLen += 2;
-                    } else {
-                        OK = False;
-                    }
-                    LowerByte = False;
-                    break;
-                case TempString:
-                    if (MultiCharToInt(&t, 2)) {
-                        goto ToInt;
-                    }
-                    TransTableCheckRead();
-                    as_chartrans_xlate_nonz_dynstr(
-                            CurrTransTable->Table, &t.Contents.str);
+                break;
+            case TempFloat:
+                SetMaxCodeLen((CodeLen + 2) * 2);
+                if (Double2IBMFloat(&WAsmCode[CodeLen], t.Contents.Float, False)) {
+                    CodeLen += 2;
+                } else {
+                    OK = False;
+                }
+                LowerByte = False;
+                break;
+            case TempString:
+                if (MultiCharToInt(&t, 2)) {
+                    goto ToInt;
+                }
+                TransTableCheckRead();
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, pArg)) {
+                    OK = False;
+                } else {
                     for (c = 0; c < (int)t.Contents.str.len; c++) {
                         PutByte(((usint)t.Contents.str.p_str[c]) & 0xff, &LowerByte);
                     }
-                    break;
-                default:
-                    OK = False;
                 }
+                break;
+            default:
+                OK = False;
             }
         }
         if (!OK) {

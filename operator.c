@@ -248,6 +248,8 @@ static void ModOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     PromoteLRValFlags();
 }
 
+/* TODO: handle return code of NonZString2Int() better */
+
 static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     as_tempres_set_none(pErg);
     switch (pLVal->Typ) {
@@ -258,9 +260,9 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
             break;
         case TempString: {
-            LargeInt RIntVal = NonZString2Int(&pRVal->Contents.str);
+            LargeInt RIntVal;
 
-            if (RIntVal >= 0) {
+            if (!NonZString2Int(&pRVal->Contents.str, &RIntVal)) {
                 as_tempres_set_c_str(pErg, "");
                 Int2NonZString(&pErg->Contents.str, RIntVal + pLVal->Contents.Int);
             }
@@ -282,9 +284,9 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             as_nonz_dynstr_append(&pErg->Contents.str, &pRVal->Contents.str);
             break;
         case TempInt: {
-            LargeInt LIntVal = NonZString2Int(&pLVal->Contents.str);
+            LargeInt LIntVal;
 
-            if (LIntVal >= 0) {
+            if (!NonZString2Int(&pLVal->Contents.str, &LIntVal)) {
                 as_tempres_set_c_str(pErg, "");
                 Int2NonZString(&pErg->Contents.str, LIntVal + pRVal->Contents.Int);
             }

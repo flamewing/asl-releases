@@ -81,3 +81,5 @@ The TMS320C2x/5x code generators and the file `STDDEF2x.INC` come from Thomas Sa
 
 
 `EBCDIC.INC` defines codepage 037, including ASCII control characters. `BCDIC.INC` defines codepage 359. `RADIX50.INC` defines the RADIX 50 character set and a packing macro that stores three characters per machine word as `c0*1600 + c1*40 + c2`, padding incomplete groups with spaces.
+
+`ebcdic.inc` includes the supported EBCDIC variants: `cp037.inc` (code page 037), `cp5100.inc` (IBM 5100 character set), and `cp5110.inc` (IBM 5110 EBCDIC).

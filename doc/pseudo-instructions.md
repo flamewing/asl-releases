@@ -3013,3 +3013,9 @@ PPS-4 supports `DC` and `DS`; `RES` reserves bytes in code space and nibbles in 
 `WORD`, `ASCII` and `LTORG` are supported. IMP-16 also accepts `PORT`.
 
 On IPC-16/INS8900, `ASSUME BPS:0` selects direct addressing of the first 256 words (the default). `ASSUME BPS:1` selects the lowest and highest 128 words. This models the processor’s BPS input pin.
+
+### Unsupported characters and 2650 data
+
+`CHARSET '[',` removes one mapping. `CHARSET 'a','z',` removes a range. Using an unmapped character in a string or character constant reports error 2300; `CODEPAGE_VAL` returns -1. `CHARSET` with no arguments restores identity mapping.
+
+On 2650, `RES` reserves space and `ACON` stores 16 bit constants in big endian order. `BIGENDIAN` controls `DW`, `DD` and `DQ`; `ACON` always uses big endian order.

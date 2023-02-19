@@ -3046,10 +3046,7 @@ static void AssembleFile_InitPass(void) {
     TransTables = CurrTransTable = (PTransTable)malloc(sizeof(TTransTable));
     CurrTransTable->Next         = NULL;
     CurrTransTable->Name         = as_strdup("STANDARD");
-    CurrTransTable->Table        = (unsigned char*)malloc(256 * sizeof(char));
-    for (z = 0; z < 256; z++) {
-        CurrTransTable->Table[z] = z;
-    }
+    CurrTransTable->p_table      = as_chartrans_table_new();
     TransTableInitializeState(CurrTransTable, False);
     CurrTransTable->WasModified = True;
 

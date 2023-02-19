@@ -151,21 +151,23 @@ void DecodeMotoBYT(Word big_endian) {
                     }
 
                     TransTableCheckRead();
-
-                    as_chartrans_xlate_nonz_dynstr(
-                            CurrTransTable->Table, &t.Contents.str);
-                    l = t.Contents.str.len;
-
-                    if (SetMaxCodeLen(CodeLen + (Rep * l))) {
-                        WrError(ErrNum_CodeOverflow);
+                    if (as_chartrans_xlate_nonz_dynstr(
+                                CurrTransTable->p_table, &t.Contents.str, &Arg)) {
                         OK = False;
                     } else {
-                        LongInt z2;
-                        int     z3;
+                        l = t.Contents.str.len;
 
-                        for (z2 = 0; z2 < Rep; z2++) {
-                            for (z3 = 0; z3 < l; z3++) {
-                                PutByte(t.Contents.str.p_str[z3], big_endian);
+                        if (SetMaxCodeLen(CodeLen + (Rep * l))) {
+                            WrError(ErrNum_CodeOverflow);
+                            OK = False;
+                        } else {
+                            LongInt z2;
+                            int     z3;
+
+                            for (z2 = 0; z2 < Rep; z2++) {
+                                for (z3 = 0; z3 < l; z3++) {
+                                    PutByte(t.Contents.str.p_str[z3], big_endian);
+                                }
                             }
                         }
                     }
@@ -262,9 +264,12 @@ void DecodeMotoADR(Word big_endian) {
                         goto ToInt;
                     }
                     TransTableCheckRead();
-                    as_chartrans_xlate_nonz_dynstr(
-                            CurrTransTable->Table, &Res.Contents.str);
-                    Cnt = Res.Contents.str.len;
+                    if (as_chartrans_xlate_nonz_dynstr(
+                                CurrTransTable->p_table, &Res.Contents.str, &Arg)) {
+                        Res.Typ = TempNone;
+                    } else {
+                        Cnt = Res.Contents.str.len;
+                    }
                     break;
                 case TempFloat:
                     WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
@@ -437,19 +442,22 @@ static void DecodeFCC(Word big_endian) {
                 int l;
 
                 TransTableCheckRead();
-
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                l = t.Contents.str.len;
-                if (SetMaxCodeLen(CodeLen + Rep * l)) {
-                    WrError(ErrNum_CodeOverflow);
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, &Arg)) {
                     OK = False;
                 } else {
-                    LongInt z2;
-                    int     z3;
+                    l = t.Contents.str.len;
+                    if (SetMaxCodeLen(CodeLen + Rep * l)) {
+                        WrError(ErrNum_CodeOverflow);
+                        OK = False;
+                    } else {
+                        LongInt z2;
+                        int     z3;
 
-                    for (z2 = 0; z2 < Rep; z2++) {
-                        for (z3 = 0; z3 < l; z3++) {
-                            PutByte(t.Contents.str.p_str[z3], big_endian);
+                        for (z2 = 0; z2 < Rep; z2++) {
+                            for (z3 = 0; z3 < l; z3++) {
+                                PutByte(t.Contents.str.p_str[z3], big_endian);
+                            }
                         }
                     }
                 }
@@ -1135,8 +1143,9 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean BigEndian) {
                     goto ToInt;
                 }
                 TransTableCheckRead();
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                if (!EnterInt) {
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, &Arg)) {
+                } else if (!EnterInt) {
                     if (ConvertFloat && EnterFloat) {
                         if (SetMaxCodeLen(CodeLen + (Rep * WSize * t.Contents.str.len))) {
                             WrError(ErrNum_CodeOverflow);

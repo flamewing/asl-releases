@@ -87,7 +87,7 @@ static Boolean FuncCODEPAGE_VAL(
     if (ChkRange(pArgs[0].Contents.Int, 0, 255)) {
         TransTableCheckReadFor(p_table);
         as_tempres_set_int(
-                pResult, as_chartrans_xlate(p_table->Table, pArgs[0].Contents.Int));
+                pResult, as_chartrans_xlate(p_table->p_table, pArgs[0].Contents.Int));
     } else {
         as_tempres_set_int(pResult, 0);
     }

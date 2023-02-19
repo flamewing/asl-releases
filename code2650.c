@@ -21,6 +21,8 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "nls.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -47,22 +49,35 @@ static Boolean DecodeReg(char const* pAsc, Byte* pRes) {
     return Result;
 }
 
-static Boolean DecodeCondition(char const* pAsc, Byte* pRes) {
-    Boolean Result = TRUE;
+/*!------------------------------------------------------------------------
+ * \fn     DecodeCondition(const tStrComp *p_arg, Byte *p_ret)
+ * \brief  decode condition code
+ * \param  p_arg source argument
+ * \param  p_ret binary encoded argument
+ * \return true if success
+ * ------------------------------------------------------------------------ */
 
-    if (!as_strcasecmp(pAsc, "EQ")) {
-        *pRes = 0;
-    } else if (!as_strcasecmp(pAsc, "GT")) {
-        *pRes = 1;
-    } else if (!as_strcasecmp(pAsc, "LT")) {
-        *pRes = 2;
-    } else if ((!as_strcasecmp(pAsc, "ALWAYS")) || (!as_strcasecmp(pAsc, "UN"))) {
-        *pRes = 3;
+static Boolean DecodeCondition(tStrComp const* p_arg, Byte* p_ret) {
+    char const* p_asc = p_arg->str.p_str;
+
+    if (!as_strcasecmp(p_asc, "EQ") || !as_strcasecmp(p_asc, "Z")) {
+        *p_ret = 0;
+        return True;
+    } else if (!as_strcasecmp(p_asc, "GT") || !as_strcasecmp(p_asc, "P")) {
+        *p_ret = 1;
+        return True;
+    } else if (!as_strcasecmp(p_asc, "LT") || !as_strcasecmp(p_asc, "N")) {
+        *p_ret = 2;
+        return True;
+    } else if ((!as_strcasecmp(p_asc, "ALWAYS")) || (!as_strcasecmp(p_asc, "UN"))) {
+        *p_ret = 3;
+        return True;
     } else {
-        Result = FALSE;
-    }
+        Boolean ok;
 
-    return Result;
+        *p_ret = EvalStrIntExpression(p_arg, UInt2, &ok);
+        return ok;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -308,11 +323,7 @@ static void DecodeCondAbs(Word Index) {
     Word    Address;
     Boolean OK, IndFlag;
 
-    if (!ChkArgCnt(2, 2))
-        ;
-    else if (!DecodeCondition(ArgStr[1].str.p_str, &Cond)) {
-        WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
-    } else {
+    if (ChkArgCnt(2, 2) && DecodeCondition(&ArgStr[1], &Cond)) {
         IndFlag = *ArgStr[2].str.p_str == '*';
         Address = EvalStrIntExpressionOffs(&ArgStr[2], IndFlag, ADDR_INT, &OK);
         if (OK) {
@@ -336,11 +347,7 @@ static void DecodeCondAbs(Word Index) {
 static void DecodeCondRel(Word code) {
     Byte cond;
 
-    if (!ChkArgCnt(2, 2))
-        ;
-    else if (!DecodeCondition(ArgStr[1].str.p_str, &cond)) {
-        WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
-    } else {
+    if (ChkArgCnt(2, 2) && DecodeCondition(&ArgStr[1], &cond)) {
         Boolean      ind_flag, ok;
         tSymbolFlags flags;
         Word         dist, dest;
@@ -412,11 +419,7 @@ static void DecodeBrAbs(Word Index) {
 static void DecodeCond(Word Index) {
     Byte Cond;
 
-    if (!ChkArgCnt(1, 1))
-        ;
-    else if (!DecodeCondition(ArgStr[1].str.p_str, &Cond)) {
-        WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
-    } else {
+    if (ChkArgCnt(1, 1) && DecodeCondition(&ArgStr[1], &Cond)) {
         BAsmCode[0] = Index | Cond;
         CodeLen     = 1;
     }
@@ -590,6 +593,11 @@ static void InitFields(void) {
 
     AddZero("ZBRR", 0x9b);
     AddZero("ZBSR", 0xbb);
+
+    AddInstTable(InstTable, "RES", 0, DecodeIntelDS);
+    AddInstTable(
+            InstTable, "ACON", eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDW);
 }
 
 static void DeinitFields(void) {
@@ -614,7 +622,7 @@ static void MakeCode_2650(void) {
 
     /* Pseudoanweisungen */
 
-    if (DecodeIntelPseudo(False)) {
+    if (DecodeIntelPseudo(TargetBigEndian)) {
         return;
     }
 
@@ -660,11 +668,12 @@ static void SwitchTo_2650(void) {
     SegInits[SegCode]  = 0;
     SegLimits[SegCode] = IntTypeDefs[ADDR_INT].Max;
 
-    MakeCode = MakeCode_2650;
-    IsDef    = IsDef_2650;
-
+    MakeCode   = MakeCode_2650;
+    IsDef      = IsDef_2650;
     SwitchFrom = SwitchFrom_2650;
     InitFields();
+
+    onoff_bigendian_add();
 }
 
 /*--------------------------------------------------------------------------*/

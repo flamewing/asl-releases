@@ -593,24 +593,31 @@ static Boolean ProcessBk(char** Start, char* Erg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     NonZString2Int(const struct as_nonz_dynstr *p_str)
+ * \fn     NonZString2Int(const struct as_nonz_dynstr *p_str, LargeInt *p_result)
  * \brief  convert string to its "ASCII representation"
  * \param  p_str string containing characters
- * \return -1 or converted int
+ * \param  p_result dest buffer
+ * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
-LargeInt NonZString2Int(const struct as_nonz_dynstr* p_str) {
+int NonZString2Int(const struct as_nonz_dynstr* p_str, LargeInt* p_result) {
     if ((p_str->len > 0) && (p_str->len <= 4)) {
-        unsigned Digit;
-        LargeInt Result;
+        unsigned    digit;
+        char const* p_run   = p_str->p_str;
+        size_t      run_len = p_str->len;
+        int         ret;
 
-        Result = 0;
         TransTableCheckRead();
-        foreach_as_chartrans(CurrTransTable->Table, *p_str, Digit) Result
-                = (Result << 8) | (Digit & 0xff);
-        foreach_as_chartrans_end return Result;
+        *p_result = 0;
+        while (
+                !(ret = as_chartrans_xlate_next(
+                          CurrTransTable->p_table, &digit, &p_run, &run_len))) {
+            *p_result = (*p_result << 8) | (digit & 0xff);
+        }
+        /* ENOMEM -> regular end of string */
+        return (ret == ENOMEM) ? 0 : ret;
     }
-    return -1;
+    return EBADF;
 }
 
 Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
@@ -624,7 +631,7 @@ Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
     p_dest     = &p_str->p_str[p_str->capacity];
     while (src && (p_str->len < p_str->capacity)) {
         TransTableCheckRead();
-        ret = as_chartrans_xlate_rev(CurrTransTable->Table, src & 0xff);
+        ret = as_chartrans_xlate_rev(CurrTransTable->p_table, src & 0xff);
         if (ret >= 0) {
             *(--p_dest) = ret;
             p_str->len++;
@@ -638,7 +645,7 @@ Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
 /*!------------------------------------------------------------------------
  * \fn     TempResultToInt(TempResult *pResult)
  * \brief  convert TempResult to integer
- * \param  pResult tempresult to convert
+ * \param  pResult temp result to convert
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
@@ -647,16 +654,24 @@ int TempResultToInt(TempResult* pResult) {
     case TempInt:
         break;
     case TempString: {
-        LargeInt Result = NonZString2Int(&pResult->Contents.str);
-        if (Result >= 0) {
+        LargeInt Result;
+        int      ret = NonZString2Int(&pResult->Contents.str, &Result);
+        switch (ret) {
+        case 0:
             as_tempres_set_int(pResult, Result);
             break;
+        case ENOENT:
+            WrError(ErrNum_UnmappedChar);
+        /* fall-through */
+        default:
+            as_tempres_set_none(pResult);
+            return -1;
         }
-        /* else */
+        break;
     }
     /* fall-through */
     default:
-        pResult->Typ = TempNone;
+        as_tempres_set_none(pResult);
         return -1;
     }
     return 0;
@@ -1062,8 +1077,20 @@ static LargeInt ConstIntVal(char const* pExpr, IntType Typ, Boolean* pResult) {
     /* we may have decremented Ctx.ExprLen, so do not run until string end */
 
     Wert = 0;
+    if (256 == Ctx.Base) {
+        TransTableCheckRead();
+    }
     while (Ctx.ExprLen > 0) {
-        Digit = DigitVal(as_toupper(*Ctx.pExpr), Ctx.Base);
+        if (256 == Ctx.Base) {
+            Digit = as_chartrans_xlate(
+                    CurrTransTable->p_table, ((unsigned)*Ctx.pExpr) & 0xff);
+            if (Digit < 0) {
+                WrError(ErrNum_UnmappedChar);
+                Digit = 0;
+            }
+        } else {
+            Digit = DigitVal(as_toupper(*Ctx.pExpr), Ctx.Base);
+        }
         if (Digit == -1) {
             return -1;
         }
@@ -2022,15 +2049,26 @@ LargeInt EvalStrIntExpressionWithResult(
         int l = t.Contents.str.len;
 
         if ((l > 0) && (l <= 4)) {
-            unsigned Digit;
+            unsigned    Digit;
+            char const* p_run   = t.Contents.str.p_str;
+            size_t      run_len = t.Contents.str.len;
+            int         ret;
 
             Result = 0;
             TransTableCheckRead();
-            foreach_as_chartrans(CurrTransTable->Table, t.Contents.str, Digit) Result
-                    = (Result << 8) | Digit;
-            foreach_as_chartrans_end pResult->Flags = t.Flags;
-            pResult->AddrSpaceMask                  = t.AddrSpaceMask;
-            pResult->DataSize                       = t.DataSize;
+            while (
+                    !(ret = as_chartrans_xlate_next(
+                              CurrTransTable->p_table, &Digit, &p_run, &run_len))) {
+                Result = (Result << 8) | Digit;
+            }
+            if (ENOENT == ret) {
+                WrStrErrorPos(ErrNum_UnmappedChar, pComp);
+                FreeRelocs(&LastRelocs);
+                LEAVE;
+            }
+            pResult->Flags         = t.Flags;
+            pResult->AddrSpaceMask = t.AddrSpaceMask;
+            pResult->DataSize      = t.DataSize;
             break;
         } else {
             WrStrErrorPos(ErrNum_IntButString, pComp);
@@ -4305,7 +4343,7 @@ PTransTable FindCodepage(char const* p_name, PTransTable p_source) {
             if (!CaseSensitive) {
                 UpString(p_new->Name);
             }
-            p_new->Table = as_chartrans_table_dup(p_source->Table);
+            p_new->p_table = as_chartrans_table_dup(p_source->p_table);
             TransTableInitializeState(p_new, False);
             if (p_prev) {
                 p_prev->Next = p_new;
@@ -4324,7 +4362,7 @@ void ClearCodepages(void) {
         Old         = TransTables;
         TransTables = Old->Next;
         free(Old->Name);
-        free(Old->Table);
+        as_chartrans_table_free(Old->p_table);
         free(Old);
     }
 }
@@ -4342,7 +4380,7 @@ void PrintCodepages(void) {
     cnt2 = 0;
     for (Table = TransTables; Table; Table = Table->Next) {
         for (z = cnt = 0; z < 256; z++) {
-            if (Table->Table[z] != z) {
+            if (Table->p_table->mapping[z] != z) {
                 cnt++;
             }
         }

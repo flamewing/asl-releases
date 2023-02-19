@@ -287,18 +287,17 @@ static void reset_adr_vals(adr_vals_t* p_vals) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     decode_adr(tStrComp *p_arg, tSymbolSize op_size, unsigned mode_mask, adr_vals_t *p_result)
+ * \fn     decode_adr(tStrComp *p_arg, tSymbolSize op_size, unsigned mode_mask)
  * \brief  decode address expression
  * \param  p_arg source argument
  * \param  op_size operand size (8/16 bit)
  * \param  mode_mask bit mask of allowed modes
- * \param  p_result returns decoded result
- * \return decoded mode
+ * \return register evaluation result: pattern match if eIsReg
  * ------------------------------------------------------------------------ */
 
-static Boolean is_auto_increment(
+static tRegEvalResult is_auto_increment(
         tStrComp const* p_arg, size_t arg_len, Word* p_result, char const* p_suffix,
-        size_t suffix_len, tRegEvalResult* p_reg_eval_result) {
+        size_t suffix_len) {
     String   reg;
     tStrComp reg_comp;
 
@@ -307,7 +306,7 @@ static Boolean is_auto_increment(
     if ((arg_len < 3 + suffix_len) || (p_arg->str.p_str[0] != '(')
         || (p_arg->str.p_str[arg_len - suffix_len - 1] != ')')
         || strcmp(&p_arg->str.p_str[arg_len - suffix_len], p_suffix)) {
-        return False;
+        return eIsNoReg;
     }
 
     /* if yes, see if part in () is a register */
@@ -316,12 +315,23 @@ static Boolean is_auto_increment(
     StrCompCopySub(&reg_comp, p_arg, 1, arg_len - (2 + suffix_len));
     KillPrefBlanksStrComp(&reg_comp);
     KillPostBlanksStrComp(&reg_comp);
-    *p_reg_eval_result = decode_reg(&reg_comp, p_result, False);
-    return (*p_reg_eval_result != eIsNoReg);
+    return decode_reg(&reg_comp, p_result, False);
 }
 
-static adr_mode_t decode_adr(
-        tStrComp* p_arg, tSymbolSize op_size, unsigned mode_mask, adr_vals_t* p_result) {
+/*!------------------------------------------------------------------------
+ * \fn     chk_auto_increment(const tStrComp *p_arg, tSymbolSize op_size, adr_vals_t *p_result)
+ * \brief  iterate over all auto-increment/decrement modes
+ * \param  p_arg source argument
+ * \param  op_size operand size used in instruction
+ * \param  p_result returns decoded addressing mode if match
+ * \return eIsReg: match, eIsNoReg: no match, eRegAbort -> error during decoding
+ * ------------------------------------------------------------------------ */
+
+static tRegEvalResult chk_auto_increment(
+        tStrComp const* p_arg, tSymbolSize op_size, adr_vals_t* p_result) {
+    /* The addressing modes are sorted in the packed strings
+       according to the modifier value (0..8): */
+
     static char const suffixes_8[]
             = {'+', '\0', '+',  '+',  '\0', '+',  '+', '+',  '\0', '+',
                '+', '+',  '+',  '\0', '-',  '\0', '-', '-',  '\0', '-',
@@ -329,11 +339,31 @@ static adr_mode_t decode_adr(
             suffixes_16[]
             = {'\'', '\0', '+',  '\0', '+', '\'', '\0', '+', '+',  '\0', '~',
                '\0', '-',  '\0', '-',  '~', '\0', '-',  '-', '\0', '\0'};
-    tRegEvalResult eval_result;
-    Word           reg;
-    size_t         suffix_len, arg_len;
-    char const*    p_suffix;
+    size_t      arg_len  = strlen(p_arg->str.p_str), suffix_len;
+    char const* p_suffix = (op_size == eSymbolSize16Bit) ? suffixes_16 : suffixes_8;
+    Word        reg;
 
+    p_result->value = 0;
+    do {
+        suffix_len = strlen(p_suffix);
+
+        switch (is_auto_increment(p_arg, arg_len, &reg, p_suffix, suffix_len)) {
+        case eRegAbort:
+            return eRegAbort;
+        case eIsReg:
+            p_result->value |= reg << 4;
+            p_result->mode = ModIReg;
+            return eIsReg;
+        default:
+            p_result->value++;
+            p_suffix += suffix_len + 1;
+        }
+    } while (suffix_len > 0);
+    return eIsNoReg;
+}
+
+static adr_mode_t decode_adr(
+        tStrComp* p_arg, tSymbolSize op_size, unsigned mode_mask, adr_vals_t* p_result) {
     reset_adr_vals(p_result);
 
     /* Rn */
@@ -376,25 +406,16 @@ static adr_mode_t decode_adr(
         goto check_exit;
     }
 
-    /* Indirect with modifier: the addressing modes are sorted in the packed strings
-       according to the modifier value (0..8): */
+    /* Indirect with modifier: */
 
-    p_suffix        = (op_size == eSymbolSize16Bit) ? suffixes_16 : suffixes_8;
-    p_result->value = 0;
-    arg_len         = strlen(p_arg->str.p_str);
-    do {
-        suffix_len = strlen(p_suffix);
-        if (is_auto_increment(p_arg, arg_len, &reg, p_suffix, suffix_len, &eval_result)) {
-            if (eRegAbort == eval_result) {
-                return p_result->mode;
-            }
-            p_result->value |= reg << 4;
-            p_result->mode = ModIReg;
-            goto check_exit;
-        }
-        p_result->value++;
-        p_suffix += suffix_len + 1;
-    } while (suffix_len > 0);
+    switch (chk_auto_increment(p_arg, op_size, p_result)) {
+    case eRegAbort:
+        return p_result->mode;
+    case eIsReg:
+        goto check_exit;
+    default:
+        break;
+    }
 
     /* -> direct address, either 0,2,4 in memory or I/O address */
 
@@ -455,6 +476,44 @@ static void put_code(Word code) {
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     check_bra_dist(LongInt dist, Boolean silent)
+ * \brief  check whether branch distance is valid for BRA instruction
+ * \param  dist distance to check
+ * \param  silent issue error messages if not?
+ * \return True if distance is OK
+ * ------------------------------------------------------------------------ */
+
+static Boolean check_bra_dist(LongInt dist, Boolean silent) {
+    if ((dist > 256) || (dist < -256)) {
+        if (!silent) {
+            WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+        }
+        return False;
+    } else if (!dist) {
+        if (!silent) {
+            WrStrErrorPos(ErrNum_JmpDistIsZero, &ArgStr[1]);
+        }
+        return False;
+    } else {
+        return True;
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     append_bra(LongInt dist)
+ * \brief  append BRA machine instruction with given distance
+ * \param  dist branch distance (must have been checked before)
+ * ------------------------------------------------------------------------ */
+
+static void encode_bra(LongInt dist) {
+    if (dist > 0) {
+        put_code(0xa000 | ((dist - 1) & 0xff));
+    } else {
+        put_code(0xf000 | ((-dist - 1) & 0xff));
+    }
+}
+
+/*!------------------------------------------------------------------------
  * \fn     put_bra(const tStrComp *p_arg, int pc_offset)
  * \brief  append a relative branch to generated code
  * \param  p_arg source argument of branch target address
@@ -468,20 +527,12 @@ static Boolean put_bra(tStrComp const* p_arg, int pc_offset) {
     if (decode_code_address(p_arg, &address, &eval_result)) {
         LongInt dist = address - (EProgCounter() + pc_offset);
 
-        if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-            if ((dist > 256) || (dist < -256)) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
-                return False;
-            } else if (!dist) {
-                WrStrErrorPos(ErrNum_JmpDistIsZero, &ArgStr[1]);
-                return False;
-            }
+        if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
+            && !check_bra_dist(dist, False)) {
+            return False;
         }
-        if (dist > 0) {
-            put_code(0xa000 | ((dist - 1) & 0xff));
-        } else {
-            put_code(0xf000 | ((-dist - 1) & 0xff));
-        }
+
+        encode_bra(dist);
         return True;
     } else {
         return False;
@@ -1037,12 +1088,24 @@ static void decode_jmp(Word code) {
     UNUSED(code);
 
     if (ChkArgCnt(1, 1)) {
-        tStrComp ind_comp;
-        Word     addr_or_reg;
+        tStrComp   ind_comp;
+        Word       addr_or_reg;
+        adr_vals_t adr_vals;
+
+        /* Extra handling for auto-increment/deceement since it did not fit
+           in here easily otherwise: */
+
+        switch (chk_auto_increment(&ArgStr[1], eSymbolSize16Bit, &adr_vals)) {
+        case eRegAbort:
+            return;
+        case eIsReg: /* JMP (Rn)*** -> LDHI PC,Rn,*** */
+            put_code(0xd000 | adr_vals.value);
+            return;
+        default:
+            break;
+        }
 
         if (strip_indirect(&ind_comp, &ArgStr[1])) {
-            adr_vals_t adr_vals;
-
             switch (decode_adr(
                     &ind_comp, eSymbolSize16Bit, MModDir | MModReg, &adr_vals)) {
             case ModDir: /* JMP (addr) -> LDHD PC, addr */
@@ -1060,11 +1123,23 @@ static void decode_jmp(Word code) {
             switch (decode_reg(&ArgStr[1], &addr_or_reg, False)) {
             case eIsNoReg: {
                 tEvalResult eval_result;
+                Boolean     force_long = !!(*ArgStr[1].str.p_str == '>');
+                tStrComp    addr_comp;
 
-                if (decode_code_address(&ArgStr[1], &addr_or_reg, &eval_result)) {
-                    /* JMP addr -> LDHI PC,PC,2 ; DW addr */
-                    put_code(0xd001);
-                    put_code(addr_or_reg);
+                StrCompRefRight(&addr_comp, &ArgStr[1], force_long);
+                if (decode_code_address(&addr_comp, &addr_or_reg, &eval_result)) {
+                    LongInt dist = addr_or_reg - (EProgCounter() + 2);
+
+                    if (check_bra_dist(dist, True) && !force_long) {
+                        /* JMP addr -> BRA addr */
+                        encode_bra(dist);
+                    }
+
+                    else {
+                        /* JMP addr -> LDHI PC,PC,2 ; DW addr */
+                        put_code(0xd001);
+                        put_code(addr_or_reg);
+                    }
                 }
                 break;
             }
@@ -1243,6 +1318,7 @@ static void init_fields(void) {
     AddInstTable(InstTable, "MOVE", 0x0000, decode_move);         /* I/C */
     AddInstTable(InstTable, "AND", 0x9005, decode_and_or);        /* I/A */
     AddInstTable(InstTable, "OR", 0xb006, decode_and_or);         /* I/A */
+    AddInstTable(InstTable, "ORB", 0xb006, decode_and_or);        /* I/A */
     AddInstTable(InstTable, "XOR", 0x0207, decode_basic_arith);   /* I */
     AddInstTable(InstTable, "ADD", 0xa008, decode_add_sub);       /* I/C */
     AddInstTable(InstTable, "SUB", 0xf009, decode_add_sub);       /* I/C */

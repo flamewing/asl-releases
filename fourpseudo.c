@@ -47,9 +47,7 @@ void DecodeRES(Word Code) {
 }
 
 void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
-    Boolean    ValOK;
     TempResult t;
-    int        z;
     IntType    ValIntType     = (ActPC == SegData) ? DataIntType : CodeIntType;
     LargeWord  ValMask        = IntTypeDefs[ValIntType].Mask;
     Word       MaxMultCharLen = (Lo(IntTypeDefs[ValIntType].SignAndWidth) + 7) / 8;
@@ -57,16 +55,18 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
 
     as_tempres_ini(&t);
     if (ChkArgCnt(1, ArgCntMax)) {
-        ValOK = True;
-        for (z = 1; ValOK && (z <= ArgCnt); z++) {
-            EvalStrExpression(&ArgStr[z], &t);
+        Boolean   ValOK = True;
+        tStrComp* pArg;
+
+        forallargs(pArg, ValOK) {
+            EvalStrExpression(pArg, &t);
             if ((t.Typ == TempInt) && mFirstPassUnknown(t.Flags)) {
                 t.Contents.Int &= UnknownMask;
             }
 
             switch (t.Typ) {
             case TempFloat:
-                WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                 ValOK = False;
                 break;
             case TempString: {
@@ -80,70 +80,73 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
                 }
 
                 TransTableCheckRead();
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, pArg)) {
+                    ValOK = False;
+                } else {
+                    for (z2 = 0, cp = (unsigned char*)t.Contents.str.p_str, bpos = 0;
+                         z2 < t.Contents.str.len; z2++, cp++) {
+                        TransCh = *cp & 0xff;
 
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                for (z2 = 0, cp = (unsigned char*)t.Contents.str.p_str, bpos = 0;
-                     z2 < t.Contents.str.len; z2++, cp++) {
-                    TransCh = *cp & 0xff;
+                        /* word width 24..31 bits: pack three characters into one dword */
 
-                    /* word width 24..31 bits: pack three characters into one dword */
-
-                    if (ValMask >= 0xfffffful) {
-                        if (!bpos) {
-                            DAsmCode[CodeLen++] = TransCh;
-                        } else if (1 == bpos) {
-                            DAsmCode[CodeLen - 1] |= TransCh << 8;
-                        } else {
-                            DAsmCode[CodeLen - 1] |= TransCh << 16;
+                        if (ValMask >= 0xfffffful) {
+                            if (!bpos) {
+                                DAsmCode[CodeLen++] = TransCh;
+                            } else if (1 == bpos) {
+                                DAsmCode[CodeLen - 1] |= TransCh << 8;
+                            } else {
+                                DAsmCode[CodeLen - 1] |= TransCh << 16;
+                            }
+                            if (++bpos >= 3) {
+                                bpos = 0;
+                            }
                         }
-                        if (++bpos >= 3) {
-                            bpos = 0;
+
+                        /* word width 17..23 bits: pack two characters into one dword */
+
+                        else if (ValMask > 0xfffful) {
+                            if (!bpos) {
+                                DAsmCode[CodeLen++] = TransCh;
+                            } else {
+                                DAsmCode[CodeLen - 1] |= TransCh << 8;
+                            }
+                            if (++bpos >= 2) {
+                                bpos = 0;
+                            }
                         }
-                    }
 
-                    /* word width 17..23 bits: pack two characters into one dword */
+                        /* word width 16 bits: pack two characters into one word */
 
-                    else if (ValMask > 0xfffful) {
-                        if (!bpos) {
-                            DAsmCode[CodeLen++] = TransCh;
-                        } else {
-                            DAsmCode[CodeLen - 1] |= TransCh << 8;
+                        else if (ValMask == 0xfffful) {
+                            if (!bpos) {
+                                WAsmCode[CodeLen++] = TransCh;
+                            } else {
+                                WAsmCode[CodeLen - 1] |= TransCh << 8;
+                            }
+                            if (++bpos >= 2) {
+                                bpos = 0;
+                            }
                         }
-                        if (++bpos >= 2) {
-                            bpos = 0;
-                        }
-                    }
 
-                    /* word width 16 bits: pack two characters into one word */
+                        /* word width 9..15 bits: pack one character into one word */
 
-                    else if (ValMask == 0xfffful) {
-                        if (!bpos) {
+                        else if (ValMask > 0xff) {
                             WAsmCode[CodeLen++] = TransCh;
-                        } else {
-                            WAsmCode[CodeLen - 1] |= TransCh << 8;
                         }
-                        if (++bpos >= 2) {
-                            bpos = 0;
+
+                        /* word width 8 bits: pack one character into one byte */
+
+                        else if (ValMask == 0xff) {
+                            BAsmCode[CodeLen++] = TransCh;
                         }
-                    }
 
-                    /* word width 9..15 bits: pack one character into one word */
+                        /* word width 4...7 bits: pack one character into two nibbles */
 
-                    else if (ValMask > 0xff) {
-                        WAsmCode[CodeLen++] = TransCh;
-                    }
-
-                    /* word width 8 bits: pack one character into one byte */
-
-                    else if (ValMask == 0xff) {
-                        BAsmCode[CodeLen++] = TransCh;
-                    }
-
-                    /* word width 4...7 bits: pack one character into two nibbles */
-
-                    else {
-                        BAsmCode[CodeLen++] = TransCh >> 4;
-                        BAsmCode[CodeLen++] = TransCh & 15;
+                        else {
+                            BAsmCode[CodeLen++] = TransCh >> 4;
+                            BAsmCode[CodeLen++] = TransCh & 15;
+                        }
                     }
                 }
                 break;
@@ -152,7 +155,7 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
             ToInt:
                 if (!mSymbolQuestionable(t.Flags)
                     && !RangeCheck(t.Contents.Int, ValIntType)) {
-                    WrError(ErrNum_OverRange);
+                    WrStrErrorPos(ErrNum_OverRange, pArg);
                     ValOK = False;
                 } else if (ValMask <= 0xff) {
                     BAsmCode[CodeLen++] = t.Contents.Int & ValMask;

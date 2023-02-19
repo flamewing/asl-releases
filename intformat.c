@@ -8,6 +8,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "stdinc.h"
+
 #include "intformat.h"
 
 #include "datatypes.h"
@@ -16,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static Byte const BaseVals[3] = {2, 8, 16};
+static Word const BaseVals[4] = {2, 8, 16, 256};
 
 LongWord        NativeIntConstModeMask, OtherIntConstModeMask;
 tIntFormatList* IntFormatList = NULL;
@@ -126,23 +128,24 @@ static Boolean ChkIntFormatDef(tIntCheckCtx* pCtx, char Ch) {
 }
 
 static tIntFormatList const IntFormatList_All[] = {
-        {  ChkIntFormatCHex,     eIntFormatCHex, 16,  'X',  "0xhex"},
-        {  ChkIntFormatCBin,     eIntFormatCBin,  2,  'B',  "0bbin"},
-        {   ChkIntFormatMot,   eIntFormatMotHex, 16,  '$',   "$hex"},
-        {   ChkIntFormatMot,   eIntFormatMotBin,  2,  '%',   "%bin"},
-        {   ChkIntFormatMot,   eIntFormatMotOct,  8,  '@',   "@oct"},
-        {   ChkIntFormatInt,   eIntFormatIntHex, 16,  'H',   "hexh"},
-        {   ChkIntFormatInt,   eIntFormatIntBin,  2,  'B',   "binb"},
-        {   ChkIntFormatInt,  eIntFormatIntOOct,  8,  'O',   "octo"},
-        {   ChkIntFormatInt,  eIntFormatIntQOct,  8,  'Q',   "octq"},
-        {   ChkIntFormatIBM,  eIntFormatIBMHHex, 16,  'H', "h'hex'"},
-        {   ChkIntFormatIBM,  eIntFormatIBMXHex, 16,  'X', "x'hex'"},
-        {   ChkIntFormatIBM,   eIntFormatIBMBin,  2,  'B', "b'bin'"},
-        {   ChkIntFormatIBM,   eIntFormatIBMOct,  8,  'O', "o'oct'"},
-        {  ChkIntFormatCOct,     eIntFormatCOct,  8,  '0',   "0oct"},
-        {ChkIntFormatNatHex,   eIntFormatNatHex, 16,  '0',   "0hex"},
-        {   ChkIntFormatDef, eIntFormatDefRadix, -1, '\0',    "dec"}, /* -1 -> RadixBase */
-        {              NULL,    (tIntFormatId)0,  0, '\0',       ""}
+        {  ChkIntFormatCHex,     eIntFormatCHex,  16,  'X',  "0xhex"},
+        {  ChkIntFormatCBin,     eIntFormatCBin,   2,  'B',  "0bbin"},
+        {   ChkIntFormatMot,   eIntFormatMotHex,  16,  '$',   "$hex"},
+        {   ChkIntFormatMot,   eIntFormatMotBin,   2,  '%',   "%bin"},
+        {   ChkIntFormatMot,   eIntFormatMotOct,   8,  '@',   "@oct"},
+        {   ChkIntFormatInt,   eIntFormatIntHex,  16,  'H',   "hexh"},
+        {   ChkIntFormatInt,   eIntFormatIntBin,   2,  'B',   "binb"},
+        {   ChkIntFormatInt,  eIntFormatIntOOct,   8,  'O',   "octo"},
+        {   ChkIntFormatInt,  eIntFormatIntQOct,   8,  'Q',   "octq"},
+        {   ChkIntFormatIBM,  eIntFormatIBMHHex,  16,  'H', "h'hex'"},
+        {   ChkIntFormatIBM,  eIntFormatIBMXHex,  16,  'X', "x'hex'"},
+        {   ChkIntFormatIBM,   eIntFormatIBMBin,   2,  'B', "b'bin'"},
+        {   ChkIntFormatIBM,   eIntFormatIBMOct,   8,  'O', "o'oct'"},
+        {   ChkIntFormatIBM,   eIntFormatIBMAsc, 256,  'A', "a'asc'"},
+        {  ChkIntFormatCOct,     eIntFormatCOct,   8,  '0',   "0oct"},
+        {ChkIntFormatNatHex,   eIntFormatNatHex,  16,  '0',   "0hex"},
+        {   ChkIntFormatDef, eIntFormatDefRadix,  -1, '\0',    "dec"}, /* -1 -> RadixBase */
+        {              NULL,    (tIntFormatId)0,   0, '\0',       ""}
 };
 
 /*!------------------------------------------------------------------------
@@ -156,7 +159,7 @@ char const* GetIntConstIntelSuffix(unsigned Radix) {
     static char const BaseLetters[3] = {'B', 'O', 'H'};
     unsigned          BaseIdx;
 
-    for (BaseIdx = 0; BaseIdx < sizeof(BaseVals) / sizeof(*BaseVals); BaseIdx++) {
+    for (BaseIdx = 0; BaseIdx < as_array_size(BaseLetters); BaseIdx++) {
         if (Radix == BaseVals[BaseIdx]) {
             static char Result[2] = {'\0', '\0'};
 
@@ -178,7 +181,7 @@ char const* GetIntConstMotoPrefix(unsigned Radix) {
     static char const BaseIds[3] = {'%', '@', '$'};
     unsigned          BaseIdx;
 
-    for (BaseIdx = 0; BaseIdx < sizeof(BaseVals) / sizeof(*BaseVals); BaseIdx++) {
+    for (BaseIdx = 0; BaseIdx < as_array_size(BaseIds); BaseIdx++) {
         if (Radix == BaseVals[BaseIdx]) {
             static char Result[2] = {'\0', '\0'};
 
@@ -200,7 +203,7 @@ char const* GetIntConstCPrefix(unsigned Radix) {
     static char const BaseIds[3][3] = {"0b", "0", "0x"};
     unsigned          BaseIdx;
 
-    for (BaseIdx = 0; BaseIdx < sizeof(BaseVals) / sizeof(*BaseVals); BaseIdx++) {
+    for (BaseIdx = 0; BaseIdx < as_array_size(BaseIds); BaseIdx++) {
         if (Radix == BaseVals[BaseIdx]) {
             return BaseIds[BaseIdx];
         }
@@ -216,10 +219,10 @@ char const* GetIntConstCPrefix(unsigned Radix) {
  * ------------------------------------------------------------------------ */
 
 char const* GetIntConstIBMPrefix(unsigned Radix) {
-    static char const BaseIds[3] = {'B', 'O', 'X'};
+    static char const BaseIds[4] = {'B', 'O', 'X', 'A'};
     unsigned          BaseIdx;
 
-    for (BaseIdx = 0; BaseIdx < sizeof(BaseVals) / sizeof(*BaseVals); BaseIdx++) {
+    for (BaseIdx = 0; BaseIdx < as_array_size(BaseIds); BaseIdx++) {
         if (Radix == BaseVals[BaseIdx]) {
             static char Result[3] = {'\0', '\'', '\0'};
 
@@ -240,7 +243,7 @@ char const* GetIntConstIBMPrefix(unsigned Radix) {
 char const* GetIntConstIBMSuffix(unsigned Radix) {
     unsigned BaseIdx;
 
-    for (BaseIdx = 0; BaseIdx < sizeof(BaseVals) / sizeof(*BaseVals); BaseIdx++) {
+    for (BaseIdx = 0; BaseIdx < as_array_size(BaseVals); BaseIdx++) {
         if (Radix == BaseVals[BaseIdx]) {
             return "\'";
         }

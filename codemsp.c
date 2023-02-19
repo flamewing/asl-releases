@@ -1149,61 +1149,60 @@ static void DecodeJmp(Word Code) {
 }
 
 static void DecodeBYTE(Word Index) {
-    Boolean    OK;
-    int        z;
     TempResult t;
 
     UNUSED(Index);
 
     as_tempres_ini(&t);
     if (ChkArgCnt(1, ArgCntMax)) {
-        z  = 1;
-        OK = True;
-        do {
-            KillBlanks(ArgStr[z].str.p_str);
-            EvalStrExpression(&ArgStr[z], &t);
+        Boolean   OK = True;
+        tStrComp* pArg;
+
+        forallargs(pArg, OK) {
+            KillBlanks(pArg->str.p_str);
+            EvalStrExpression(pArg, &t);
             switch (t.Typ) {
             case TempInt:
                 if (mFirstPassUnknown(t.Flags)) {
                     t.Contents.Int &= 0xff;
                 }
                 if (!RangeCheck(t.Contents.Int, Int8)) {
-                    WrError(ErrNum_OverRange);
+                    WrStrErrorPos(ErrNum_OverRange, pArg);
                 } else if (SetMaxCodeLen(CodeLen + 1)) {
-                    WrError(ErrNum_CodeOverflow);
+                    WrStrErrorPos(ErrNum_CodeOverflow, pArg);
                     OK = False;
                 } else {
                     PutByte(t.Contents.Int);
                 }
                 break;
             case TempString: {
-                unsigned l;
-
                 TransTableCheckRead();
-
-                as_chartrans_xlate_nonz_dynstr(CurrTransTable->Table, &t.Contents.str);
-                l = t.Contents.str.len;
-
-                if (SetMaxCodeLen(l + CodeLen)) {
-                    WrError(ErrNum_CodeOverflow);
+                if (as_chartrans_xlate_nonz_dynstr(
+                            CurrTransTable->p_table, &t.Contents.str, pArg)) {
                     OK = False;
                 } else {
-                    char *pEnd = t.Contents.str.p_str + l, *p;
+                    unsigned l = t.Contents.str.len;
 
-                    for (p = t.Contents.str.p_str; p < pEnd; PutByte(*(p++)))
-                        ;
+                    if (SetMaxCodeLen(l + CodeLen)) {
+                        WrStrErrorPos(ErrNum_CodeOverflow, pArg);
+                        OK = False;
+                    } else {
+                        char *pEnd = t.Contents.str.p_str + l, *p;
+
+                        for (p = t.Contents.str.p_str; p < pEnd; PutByte(*(p++)))
+                            ;
+                    }
                 }
                 break;
             }
             case TempFloat:
-                WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
                 /* fall-through */
             default:
                 OK = False;
                 break;
             }
-            z++;
-        } while ((z <= ArgCnt) && (OK));
+        }
         if (!OK) {
             CodeLen = 0;
         }

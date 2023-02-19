@@ -131,7 +131,7 @@ typedef Word WordField[6]; /* fuer Zahlenumwandlung */
 typedef struct tag_TTransTable {
     struct tag_TTransTable* Next;
     char*                   Name;
-    as_chartrans_table_t    Table;
+    as_chartrans_table_t*   p_table;
     Boolean                 CreatedBySingleArg;
     Boolean                 WasModified;
     Boolean                 WarnedReadBeforeModify;

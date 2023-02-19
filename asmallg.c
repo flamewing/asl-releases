@@ -863,20 +863,14 @@ static void CodeFATAL(Word Index) {
 }
 
 static void CodeCHARSET(Word Index) {
-    FILE*         f;
-    unsigned char tfield[256];
-    LongWord      Start, l, TStart, Stop, z;
-    Boolean       OK;
-    Boolean       SavedSuppress;
-    UNUSED(Index);
-
-    SavedSuppress               = SuppressTransTableReadCheck;
+    Boolean SavedSuppress       = SuppressTransTableReadCheck;
     SuppressTransTableReadCheck = True;
+    UNUSED(Index);
 
     if (!ChkArgCnt(0, 3))
         ;
     else if (ArgCnt == 0) {
-        as_chartrans_table_reset(CurrTransTable->Table);
+        as_chartrans_table_reset(CurrTransTable->p_table);
         TransTableMarkModified();
     } else {
         TempResult t;
@@ -893,54 +887,70 @@ static void CodeCHARSET(Word Index) {
             }
             if (ChkRange(t.Contents.Int, 0, 255)) {
                 if (ChkArgCnt(2, 3)) {
-                    Start = t.Contents.Int;
-                    EvalStrExpression(&ArgStr[2], &t);
-                    if ((t.Typ == TempString)
-                        && (t.Flags & eSymbolFlag_StringSingleQuoted)) {
-                        TempResultToInt(&t);
-                    }
-                    switch (t.Typ) {
-                    case TempInt: /* Uebersetzungsbereich als Character-Angabe */
-                        if (mFirstPassUnknown(t.Flags)) {
-                            t.Contents.Int &= 255;
+                    LongWord Start = t.Contents.Int;
+                    if ((ArgCnt == 2) && (!ArgStr[2].str.p_str[0])) {
+                        as_chartrans_table_unset(CurrTransTable->p_table, Start);
+                        TransTableMarkModified();
+                    } else {
+                        EvalStrExpression(&ArgStr[2], &t);
+                        if ((t.Typ == TempString)
+                            && (t.Flags & eSymbolFlag_StringSingleQuoted)) {
+                            TempResultToInt(&t);
                         }
-                        if (ArgCnt == 2) {
-                            Stop   = Start;
-                            TStart = t.Contents.Int;
-                            OK     = ChkRange(TStart, 0, 255);
-                        } else {
-                            Stop = t.Contents.Int;
-                            OK   = ChkRange(Stop, Start, 255);
-                            if (OK) {
-                                TStart = EvalStrIntExpression(&ArgStr[3], UInt8, &OK);
+                        switch (t.Typ) {
+                        case TempInt: /* Uebersetzungsbereich als Character-Angabe */
+                            if (mFirstPassUnknown(t.Flags)) {
+                                t.Contents.Int &= 255;
+                            }
+                            if (ChkRange(t.Contents.Int, 0, 255)) {
+                                if (ArgCnt == 2) {
+                                    as_chartrans_table_set(
+                                            CurrTransTable->p_table, Start,
+                                            t.Contents.Int);
+                                    TransTableMarkModified();
+                                } else if (!ArgStr[3].str.p_str[0]) {
+                                    as_chartrans_table_unset_mult(
+                                            CurrTransTable->p_table, Start,
+                                            t.Contents.Int);
+                                    TransTableMarkModified();
+                                } else if (ChkRange(t.Contents.Int, Start, 255)) {
+                                    Boolean  OK;
+                                    LongWord Stop   = t.Contents.Int,
+                                             TStart = EvalStrIntExpression(
+                                                     &ArgStr[3], UInt8, &OK);
+                                    if (OK) {
+                                        as_chartrans_table_set_mult(
+                                                CurrTransTable->p_table, Start, Stop,
+                                                TStart);
+                                        TransTableMarkModified();
+                                    }
+                                }
+                            }
+                            break;
+                        case TempString: {
+                            LongWord l = t.Contents.str
+                                                 .len; /* Uebersetzungsstring ab Start */
+
+                            if (Start + l > 256) {
+                                WrError(ErrNum_OverRange);
                             } else {
-                                TStart = 0;
+                                LongWord z;
+
+                                for (z = 0; z < l; z++) {
+                                    as_chartrans_table_set(
+                                            CurrTransTable->p_table, Start + z,
+                                            t.Contents.str.p_str[z]);
+                                    TransTableMarkModified();
+                                }
                             }
+                            break;
                         }
-                        if (OK) {
-                            as_chartrans_table_set_mult(
-                                    CurrTransTable->Table, Start, Stop, TStart);
-                            TransTableMarkModified();
+                        case TempFloat:
+                            WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[2]);
+                            break;
+                        default:
+                            break;
                         }
-                        break;
-                    case TempString:
-                        l = t.Contents.str.len; /* Uebersetzungsstring ab Start */
-                        if (Start + l > 256) {
-                            WrError(ErrNum_OverRange);
-                        } else {
-                            for (z = 0; z < l; z++) {
-                                as_chartrans_table_set(
-                                        CurrTransTable->Table, Start + z,
-                                        t.Contents.str.p_str[z]);
-                            }
-                            TransTableMarkModified();
-                        }
-                        break;
-                    case TempFloat:
-                        WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[2]);
-                        break;
-                    default:
-                        break;
                     }
                 }
             }
@@ -948,21 +958,26 @@ static void CodeCHARSET(Word Index) {
         case TempString:
             if (ChkArgCnt(1, 1)) /* Tabelle von Datei lesen */
             {
-                String Tmp;
+                String        Tmp;
+                FILE*         f;
+                unsigned char tfield[256];
+                LongWord      z;
 
                 as_nonz_dynstr_to_c_str(Tmp, &t.Contents.str, sizeof(Tmp));
                 f = fopen(Tmp, OPENRDMODE);
                 if (!f) {
                     ChkIO(ErrNum_OpeningFile);
+                } else {
+                    if (fread(tfield, sizeof(char), 256, f) != 256) {
+                        ChkIO(ErrNum_FileReadError);
+                    } else {
+                        for (z = 0; z < 256; z++) {
+                            as_chartrans_table_set(CurrTransTable->p_table, z, tfield[z]);
+                        }
+                        TransTableMarkModified();
+                    }
+                    fclose(f);
                 }
-                if (fread(tfield, sizeof(char), 256, f) != 256) {
-                    ChkIO(ErrNum_FileReadError);
-                }
-                fclose(f);
-                for (z = 0; z < 256; z++) {
-                    as_chartrans_table_set(CurrTransTable->Table, z, tfield[z]);
-                }
-                TransTableMarkModified();
             }
             break;
         case TempFloat:
@@ -973,14 +988,13 @@ static void CodeCHARSET(Word Index) {
         }
         as_tempres_free(&t);
     }
-
     SuppressTransTableReadCheck = SavedSuppress;
 }
 
 static void CodePRSET(Word Index) {
     UNUSED(Index);
 
-    as_chartrans_table_print(CurrTransTable->Table, stdout);
+    as_chartrans_table_print(CurrTransTable->p_table, stdout);
 }
 
 static void CodeCODEPAGE(Word Index) {

@@ -6143,7 +6143,7 @@ static void DecodeSTR(Word Index) {
         for (z = 1; z < l - 1; z++) {
             TransTableCheckRead();
             PutByte(as_chartrans_xlate(
-                    CurrTransTable->Table, ((usint)ArgStr[1].str.p_str[z]) & 0xff));
+                    CurrTransTable->p_table, ((usint)ArgStr[1].str.p_str[z]) & 0xff));
         }
     }
 }
