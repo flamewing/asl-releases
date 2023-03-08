@@ -33,6 +33,9 @@ char OBJSuffix[] = ".obj";
 char const* EnvName = "ASCMD"; /* Environment-Variable fuer Default-
                                   Parameter */
 
+as_cmd_rec_t* as_cmd_recs    = NULL;
+size_t        as_cmd_rec_cnt = 0;
+
 StringPtr SourceFile; /* Hauptquelldatei */
 
 StringPtr CursUp; /*   "     "  Cursor hoch */
@@ -77,7 +80,6 @@ Boolean     MakeCrossList;         /* Querverweisliste ? */
 Boolean     MakeSectionList;       /* Sektionsliste ? */
 Boolean     MakeIncludeList;       /* Includeliste ? */
 Boolean     DefRelaxedMode;        /* alle Integer-Syntaxen zulassen ? */
-Boolean     DefCompMode, CompMode; /* enable compatibility mode */
 Word        ListMask;              /* Listingmaske */
 ShortInt    ExtendErrors;          /* erweiterte Fehlermeldungen */
 Integer     EnumSegment;           /* ENUM state & config */
@@ -146,8 +148,6 @@ char      DefCPU[20];         /* per Kommandozeile vorgegebene CPU */
 char      MomCPUIdent[20],    /* dessen Name in ASCII */
         MomFPUIdent[20],      /* ditto FPU */
         MomPMMUIdent[20];     /* ditto PMMU */
-
-Boolean DefSupAllowed; /* Supervisormode freigegeben */
 
 int         OutRadixBase;   /* dito fuer Ausgabe */
 int         ListRadixBase;  /* ditto for listing */

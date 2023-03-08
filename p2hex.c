@@ -36,10 +36,10 @@ static char const* HexSuffix = ".hex";
 
 typedef void (*ProcessProc)(char const* FileName, LongWord Offset);
 
-static CMDProcessed ParUnprocessed;
-static FILE*        TargFile;
-static String       SrcName, TargName, CFormat;
-static Byte         ForceSegment;
+static as_cmd_processed_t ParUnprocessed;
+static FILE*              TargFile;
+static String             SrcName, TargName, CFormat;
+static Byte               ForceSegment;
 
 static LongWord StartAdr[SegCount], StopAdr[SegCount], LineLen, EntryAdr;
 static LargeInt Relocate;
@@ -820,97 +820,97 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
     fclose(f);
 }
 
-static CMDResult CMD_AdrRange(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_AdrRange(Boolean Negate, char const* Arg) {
     if (Negate) {
         DefStartStopAdr(1 << SegCode);
-        return CMDOK;
+        return e_cmd_ok;
     } else {
         return CMD_Range(
                 &StartAdr[SegCode], &StopAdr[SegCode], &StartAuto, &StopAuto, Arg);
     }
 }
 
-static CMDResult CMD_RelAdr(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_RelAdr(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
     RelAdr = (!Negate);
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-static CMDResult CMD_AdrRelocate(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_AdrRelocate(Boolean Negate, char const* Arg) {
     Boolean ok;
     UNUSED(Arg);
 
     if (Negate) {
         Relocate = 0;
-        return CMDOK;
+        return e_cmd_ok;
     } else {
         Relocate = ConstLongInt(Arg, &ok, 10);
         if (!ok) {
-            return CMDErr;
+            return e_cmd_err;
         }
 
-        return CMDArg;
+        return e_cmd_arg;
     }
 }
 
-static CMDResult CMD_Rec5(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_Rec5(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
     Rec5 = (!Negate);
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-static CMDResult CMD_SepMoto(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_SepMoto(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
     SepMoto = !Negate;
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-static CMDResult CMD_IntelMode(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_IntelMode(Boolean Negate, char const* Arg) {
     int     Mode;
     Boolean ok;
 
     if (*Arg == '\0') {
-        return CMDErr;
+        return e_cmd_err;
     } else {
         Mode = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (Mode < 0) || (Mode > 2)) {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             if (!Negate) {
                 IntelMode = Mode;
             } else if (IntelMode == Mode) {
                 IntelMode = 0;
             }
-            return CMDArg;
+            return e_cmd_arg;
         }
     }
 }
 
-static CMDResult CMD_MultiMode(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_MultiMode(Boolean Negate, char const* Arg) {
     int     Mode;
     Boolean ok;
 
     if (*Arg == '\0') {
-        return CMDErr;
+        return e_cmd_err;
     } else {
         Mode = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (Mode < 0) || (Mode > 3)) {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             if (!Negate) {
                 MultiMode = Mode;
             } else if (MultiMode == Mode) {
                 MultiMode = 0;
             }
-            return CMDArg;
+            return e_cmd_arg;
         }
     }
 }
 
-static CMDResult CMD_DestFormat(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_DestFormat(Boolean Negate, char const* pArg) {
 #define NameCnt (sizeof(Names) / sizeof(*Names))
 
     static char const* Names[] = {"DEFAULT", "MOTO", "INTEL", "INTEL16", "INTEL32", "MOS",
@@ -930,7 +930,7 @@ static CMDResult CMD_DestFormat(Boolean Negate, char const* pArg) {
         z++;
     }
     if (z >= NameCnt) {
-        return CMDErr;
+        return e_cmd_err;
     }
 
     if (!Negate) {
@@ -939,14 +939,14 @@ static CMDResult CMD_DestFormat(Boolean Negate, char const* pArg) {
         DestFormat = eHexFormatDefault;
     }
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
-static CMDResult CMD_ForceSegment(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_ForceSegment(Boolean Negate, char const* Arg) {
     int z = addrspace_lookup(Arg);
 
     if (z >= SegCount) {
-        return CMDErr;
+        return e_cmd_err;
     }
 
     if (!Negate) {
@@ -955,119 +955,119 @@ static CMDResult CMD_ForceSegment(Boolean Negate, char const* Arg) {
         ForceSegment = SegNone;
     }
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
-static CMDResult CMD_DataAdrRange(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_DataAdrRange(Boolean Negate, char const* Arg) {
     fputs(getmessage(Num_WarnDOption), stderr);
     fflush(stdout);
 
     if (Negate) {
         DefStartStopAdr(1 << SegData);
-        return CMDOK;
+        return e_cmd_ok;
     } else {
-        Boolean   StartDataAuto, StopDataAuto;
-        CMDResult Ret = CMD_Range(
+        Boolean         StartDataAuto, StopDataAuto;
+        as_cmd_result_t Ret = CMD_Range(
                 &StartAdr[SegData], &StopAdr[SegData], &StartDataAuto, &StopDataAuto,
                 Arg);
 
         if (StartDataAuto || StopDataAuto) {
-            Ret = CMDErr;
+            Ret = e_cmd_err;
         }
         return Ret;
     }
 }
 
-static CMDResult CMD_EntryAdr(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_EntryAdr(Boolean Negate, char const* Arg) {
     Boolean ok;
 
     if (Negate) {
         EntryAdrPresent = False;
-        return CMDOK;
+        return e_cmd_ok;
     } else {
         EntryAdr = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (EntryAdr > 0xffff)) {
-            return CMDErr;
+            return e_cmd_err;
         }
         EntryAdrPresent = True;
-        return CMDArg;
+        return e_cmd_arg;
     }
 }
 
-static CMDResult CMD_LineLen(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_LineLen(Boolean Negate, char const* Arg) {
     Boolean ok;
 
     if (Negate) {
         if (*Arg != '\0') {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             LineLen = 16;
-            return CMDOK;
+            return e_cmd_ok;
         }
     } else if (*Arg == '\0') {
-        return CMDErr;
+        return e_cmd_err;
     } else {
         LineLen = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (LineLen < 1) || (LineLen > MaxLineLen)) {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             LineLen += LineLen & 1;
-            return CMDArg;
+            return e_cmd_arg;
         }
     }
 }
 
-static CMDResult CMD_MinMoto(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_MinMoto(Boolean Negate, char const* Arg) {
     Boolean ok;
 
     if (Negate) {
         if (*Arg != '\0') {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             MinMoto = 0;
-            return CMDOK;
+            return e_cmd_ok;
         }
     } else if (*Arg == '\0') {
-        return CMDErr;
+        return e_cmd_err;
     } else {
         MinMoto = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (MinMoto < 1) || (MinMoto > 3)) {
-            return CMDErr;
+            return e_cmd_err;
         } else {
-            return CMDArg;
+            return e_cmd_arg;
         }
     }
 }
 
-static CMDResult CMD_AutoErase(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_AutoErase(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
     AutoErase = !Negate;
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-static CMDResult CMD_AVRLen(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_AVRLen(Boolean Negate, char const* Arg) {
     Word    Temp;
     Boolean ok;
 
     if (Negate) {
         AVRLen = AVRLEN_DEFAULT;
-        return CMDOK;
+        return e_cmd_ok;
     } else {
         Temp = ConstLongInt(Arg, &ok, 10);
         if ((!ok) || (Temp < 2) || (Temp > 3)) {
-            return CMDErr;
+            return e_cmd_err;
         } else {
             AVRLen = Temp;
-            return CMDArg;
+            return e_cmd_arg;
         }
     }
 }
 
-static CMDResult CMD_CFormat(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_CFormat(Boolean Negate, char const* pArg) {
     if (Negate) {
         strcpy(CFormat, DefaultCFormat);
-        return CMDOK;
+        return e_cmd_ok;
     } else {
         int         NumData = 0, NumStart = 0, NumLen = 0, NumEnd = 0;
         char const* pFormat;
@@ -1087,19 +1087,18 @@ static CMDResult CMD_CFormat(Boolean Negate, char const* pArg) {
                 NumEnd++;
                 break;
             default:
-                return CMDErr;
+                return e_cmd_err;
             }
         }
         if ((NumData > 1) || (NumStart > 1) || (NumLen > 1) || (NumEnd > 1)) {
-            return CMDErr;
+            return e_cmd_err;
         }
         strcpy(CFormat, pArg);
-        return CMDArg;
+        return e_cmd_arg;
     }
 }
 
-#define P2HEXParamCnt (sizeof(P2HEXParams) / sizeof(*P2HEXParams))
-static CMDRec P2HEXParams[] = {
+static as_cmd_rec_t const P2HEXParams[] = {
         {      "f",   CMD_FilterList},
         {      "r",     CMD_AdrRange},
         {      "R",  CMD_AdrRelocate},
@@ -1135,7 +1134,7 @@ int main(int argc, char** argv) {
 
     bpemu_init();
     chunks_init();
-    cmdarg_init(*argv);
+    as_cmdarg_init(*argv);
     toolutils_init(*argv);
     nlmessages_init("p2hex.msg", *argv, MsgId1, MsgId2);
     ioerrs_init(*argv);
@@ -1174,16 +1173,16 @@ int main(int argc, char** argv) {
     Relocate        = 0;
     ForceSegment    = SegNone;
     strcpy(CFormat, DefaultCFormat);
-    ProcessCMD(
-            argc, argv, P2HEXParams, P2HEXParamCnt, ParUnprocessed, "P2HEXCMD",
-            ParamError);
+    as_cmd_process(
+            argc, argv, P2HEXParams, as_array_size(P2HEXParams), ParUnprocessed,
+            "P2HEXCMD", ParamError);
 
     if (!QuietMode) {
         as_snprintf(Ver, sizeof(Ver), "P2HEX/C V%s", Version);
         WrCopyRight(Ver);
     }
 
-    if (ProcessedEmpty(ParUnprocessed)) {
+    if (as_cmd_processed_empty(ParUnprocessed)) {
         errno = 0;
         fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargMissing));
         ChkIO(OutName);
@@ -1199,7 +1198,7 @@ int main(int argc, char** argv) {
         ParamError(False, argv[TargArgIdx]);
     }
     ParUnprocessed[TargArgIdx] = False;
-    if (ProcessedEmpty(ParUnprocessed)) {
+    if (as_cmd_processed_empty(ParUnprocessed)) {
         strmaxcpy(SrcName, argv[TargArgIdx], STRINGSIZE);
         DelSuffix(TargName);
     }
@@ -1222,7 +1221,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        if (ProcessedEmpty(ParUnprocessed)) {
+        if (as_cmd_processed_empty(ParUnprocessed)) {
             ProcessGroup(SrcName, MeasureFile);
         } else {
             for (z = 1; z < argc; z++) {
@@ -1256,7 +1255,7 @@ int main(int argc, char** argv) {
         NumCBlocks = 0;
     }
 
-    if (ProcessedEmpty(ParUnprocessed)) {
+    if (as_cmd_processed_empty(ParUnprocessed)) {
         ProcessGroup(SrcName, ProcessFile);
     } else {
         int z;
@@ -1450,7 +1449,7 @@ int main(int argc, char** argv) {
     CloseTarget();
 
     if (AutoErase) {
-        if (ProcessedEmpty(ParUnprocessed)) {
+        if (as_cmd_processed_empty(ParUnprocessed)) {
             ProcessGroup(SrcName, EraseFile);
         } else {
             int z;

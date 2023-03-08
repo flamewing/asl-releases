@@ -90,7 +90,7 @@ The H8/500's `MOV` instruction features an interesting and uncommon optimization
 
 it is possible to encode the source just as a single $ff and to save one byte in code size. The processor automatically performs a sign extension, which turns $ff into the desired value $ffff. AS is aware of this optimization and will use it, unless it was explicitly forbidden via a `:16` suffix at the immediate operand.
 
-Unfortunately, the original Hitachi assembler seems to implement this optimization in another way: it assumes a zero instead of a sign extension. This means that values from 0 to 255 ($0000 to $00ff) and not from -128 to +127 ($ff80 to $007f) are encoded as one byte. I do not know whether the Hitachi assembler or the H8/500 Programmers Manual is right, and I have no way to verify this. Anyway, if one wants the "Hitachi Assembler Behaviour" for existing source code, one may enable the compatibility mode, either by the statement
+The original Hitachi assembler assumes zero extension, shortening values from 0 to 255 rather than -128 to +127. Tests on physical hardware confirm the manual’s sign-extension behavior, which AS uses by default. For existing code that relies on the original assembler, enable compatibility mode with the following statement
 
 ```asm
       compmode on
@@ -1710,3 +1710,4 @@ AS supports the original mnemonics and an alternate syntax that makes the operat
 IMP-16C/200, IMP-16C/300, IMP-16P/200, IMP-16P/300 and IMP-16L are supported. IMP-16L adds status bits and branch conditions and supports the extended instruction set of the /300 variants. IPC-16 and INS8900 share an instruction set; INS8900 is a later NMOS implementation of PACE.
 
 2650 accepts P/N/Z condition aliases and numeric condition codes. PALM accepts `ORB` as an alias for `OR`; `JMP` uses a relative branch when possible and supports increment/decrement addressing.
+

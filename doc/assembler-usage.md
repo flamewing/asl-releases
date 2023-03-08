@@ -984,3 +984,5 @@ definitions into a single include file, because a program that wants to use such
 Register symbols support `=`, `==`, `<>`, `!=`, `<`, `>`, `<=` and `>=`. Aliases for the same physical register compare equal (for example, 68000 `SP` and `A7`). Registers from different register files or architectures have no ordering: `<`, `>`, `<=` and `>=` return false, while equality and inequality remain meaningful. `!=` is also an alias for `<>` with integers, floats and strings.
 
 The optional `INTSYNTAX +a'asc'` format accepts `A'ABCD'` as a multi character constant equivalent to `'ABCD'`, using the current character translation table.
+
+The `-bigendian` and `-packing` command line switches override the initial `BIGENDIAN` and `PACKING` values on targets that support them. Negating a switch selects the opposite default.

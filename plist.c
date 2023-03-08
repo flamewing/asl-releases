@@ -27,10 +27,9 @@
 
 #include <string.h>
 
-static CMDProcessed ParUnprocessed;
+static as_cmd_processed_t ParUnprocessed;
 
-#define PListParamCnt (sizeof(PListParams) / sizeof(*PListParams))
-static CMDRec PListParams[] = {
+static as_cmd_rec_t const PListParams[] = {
         {    "q", CMD_QuietMode},
         {"QUIET", CMD_QuietMode},
 };
@@ -208,7 +207,7 @@ int main(int argc, char** argv) {
     strutil_init();
     nlmessages_init("plist.msg", *argv, MsgId1, MsgId2);
     ioerrs_init(*argv);
-    cmdarg_init(*argv);
+    as_cmdarg_init(*argv);
     toolutils_init(*argv);
 
     if (argc <= 1) {
@@ -228,9 +227,9 @@ int main(int argc, char** argv) {
         *ProgName = '\0';
     }
 
-    ProcessCMD(
-            argc, argv, PListParams, PListParamCnt, ParUnprocessed, "PLISTCMD",
-            ParamError);
+    as_cmd_process(
+            argc, argv, PListParams, as_array_size(PListParams), ParUnprocessed,
+            "PLISTCMD", ParamError);
 
     if (!QuietMode) {
         as_snprintf(Ver, sizeof(Ver), "PLIST/C V%s", Version);
@@ -240,7 +239,7 @@ int main(int argc, char** argv) {
         ChkIO(OutName);
     }
 
-    if (ProcessedEmpty(ParUnprocessed) && !*ProgName) {
+    if (as_cmd_processed_empty(ParUnprocessed) && !*ProgName) {
         errno = 0;
         printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]),
                getmessage(Num_InfoMessHead2));
