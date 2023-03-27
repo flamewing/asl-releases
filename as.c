@@ -107,6 +107,7 @@
 #include "codekcp3.h"
 #include "codekcpsm.h"
 #include "codekenbak.h"
+#include "codeko09.h"
 #include "codem16.h"
 #include "codem16c.h"
 #include "codemcore.h"
@@ -4394,6 +4395,7 @@ int main(int argc, char** argv) {
         codeh8_3_init();
         codeh8_5_init();
         code7000_init();
+        codeko09_init();
         code65_init();
         codepps4_init();
         codeh16_init();

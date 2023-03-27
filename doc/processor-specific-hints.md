@@ -1711,3 +1711,7 @@ IMP-16C/200, IMP-16C/300, IMP-16P/200, IMP-16P/300 and IMP-16L are supported. IM
 
 2650 accepts P/N/Z condition aliases and numeric condition codes. PALM accepts `ORB` as an alias for `OR`; `JMP` uses a relative branch when possible and supports increment/decrement addressing.
 
+
+### Konami 052001
+
+The `052001` target is a Konami design similar to the Motorola 6809. It has different binary encodings and supports a subset of the 6809 instructions and addressing modes.
