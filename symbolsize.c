@@ -30,6 +30,8 @@ static tSizeDescr const Descrs[] = {
         {   eSymbolSizeFloat96Bit, "F96", 12},
         {        eSymbolSize24Bit, "I24",  3},
         {eSymbolSizeFloatDec96Bit, "D96", 12},
+        {        eSymbolSize48Bit, "I48",  6},
+        {   eSymbolSizeFloat48Bit, "F48",  6},
         {      eSymbolSizeUnknown,  NULL,  0},
 };
 

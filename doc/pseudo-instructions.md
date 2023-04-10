@@ -3019,3 +3019,7 @@ On IPC-16/INS8900, `ASSUME BPS:0` selects direct addressing of the first 256 wor
 `CHARSET '[',` removes one mapping. `CHARSET 'a','z',` removes a range. Using an unmapped character in a string or character constant reports error 2300; `CODEPAGE_VAL` returns -1. `CHARSET` with no arguments restores identity mapping.
 
 On 2650, `RES` reserves space and `ACON` stores 16 bit constants in big endian order. `BIGENDIAN` controls `DW`, `DD` and `DQ`; `ACON` always uses big endian order.
+
+`SAVEENV` and `RESTOREENV` access assembler environment saving when a target defines machine instructions named `SAVE` or `RESTORE`. `PAGESIZE` and `SELECT` likewise avoid `PAGE` and `SWITCH` collisions.
+
+PDP-11 and WD16 accept `BYTE`/`WORD` as aliases for `DB`/`DW`. `FLT2` and `FLT4` store DEC F and D floating point values; WD16 `FLT3` stores its own 48 bit floating point format. WD16 also supports register aliases with `REG`.

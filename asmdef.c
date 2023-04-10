@@ -119,6 +119,7 @@ Boolean (*SetIsOccupiedFnc)(void),  /* TRUE: SET instr, to be parsed by code gen
         (*RestoreIsOccupiedFnc)(void); /* ditto for RESTORE */
 Boolean SwitchIsOccupied,              /* TRUE: SWITCH/PAGE/SHIFT ist Prozessorbefehl */
         PageIsOccupied, ShiftIsOccupied;
+Boolean multi_char_le;
 Boolean (*DecodeAttrPart)(void);  /* dissect attribute of instruction */
 void (*MakeCode)(void);           /* Codeerzeugungsprozedur */
 Boolean (*ChkPC)(LargeWord Addr); /* ueberprueft Codelaengenueberschreitungen */

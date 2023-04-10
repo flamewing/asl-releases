@@ -281,6 +281,7 @@ extern Boolean       IntConstModeIBMNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void), (*SaveIsOccupiedFnc)(void),
         (*RestoreIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied, ShiftIsOccupied;
+extern Boolean multi_char_le;
 extern Boolean (*DecodeAttrPart)(void);
 extern void (*MakeCode)(void);
 extern Boolean (*ChkPC)(LargeWord Addr);

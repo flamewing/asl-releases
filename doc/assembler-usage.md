@@ -986,3 +986,5 @@ Register symbols support `=`, `==`, `<>`, `!=`, `<`, `>`, `<=` and `>=`. Aliases
 The optional `INTSYNTAX +a'asc'` format accepts `A'ABCD'` as a multi character constant equivalent to `'ABCD'`, using the current character translation table.
 
 The `-bigendian` and `-packing` command line switches override the initial `BIGENDIAN` and `PACKING` values on targets that support them. Negating a switch selects the opposite default.
+
+Multi character constants use big endian order by default (`'ABCD'` = 0x41424344). PDP-11 and WD16 use little endian order to match MACRO-11 (`'AB'` = 0x4241).

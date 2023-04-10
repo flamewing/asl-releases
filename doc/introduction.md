@@ -183,3 +183,5 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 - National Semiconductor IMP-16 and IPC-16 (PACE), INS8900
 
 - Konami 052001
+
+- Western Digital WD16

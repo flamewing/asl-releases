@@ -1715,3 +1715,7 @@ IMP-16C/200, IMP-16C/300, IMP-16P/200, IMP-16P/300 and IMP-16L are supported. IM
 ### Konami 052001
 
 The `052001` target is a Konami design similar to the Motorola 6809. It has different binary encodings and supports a subset of the 6809 instructions and addressing modes.
+
+### Western Digital WD16
+
+WD16 uses the same processor hardware as LSI-11 with different microcode. It shares the PDP-11 register set and addressing modes but has a different instruction set and binary encodings.

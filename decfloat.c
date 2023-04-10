@@ -156,7 +156,7 @@ int Double_2_dec8(Double inp, Word* p_dest) {
 
     /* native format: */
 
-    memcpy(p_dest, &tmp, 4);
+    memcpy(p_dest, &tmp, 8);
 
 #else /* !HOST_DECFLOAT */
 
