@@ -573,7 +573,7 @@ static Boolean decode_adr(
         if (!decode_reg_or_const(&reg_arg, &p_result->mode)) {
             return False;
         }
-        if (!*disp_arg.str.p_str) {
+        if (!*disp_arg.str.p_str && !deferred) {
             p_result->mode |= 010;
         } else {
             p_result->vals[0]
@@ -1481,7 +1481,19 @@ static Boolean decode_adr_01(tStrComp* p_arg, adr_vals_t* p_vals) {
     if (!decode_adr(p_arg, p_vals, EProgCounter() + 2, MModReg | MModMem)) {
         return False;
     }
-    if ((p_vals->mode & 070) >= 020) {
+
+    switch (p_vals->mode & 070) {
+    case 010:
+        p_vals->mode = (p_vals->mode & 007) | 000;
+        break;
+    case 070:
+        if (p_vals->vals[0] == 0) {
+            p_vals->count = 0;
+            p_vals->mode  = (p_vals->mode & 007) | 010;
+            break;
+        }
+        /* else fall-through */
+    default:
         WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
         reset_adr_vals(p_vals);
         return False;
@@ -1519,12 +1531,14 @@ static Boolean decode_pseudo(void) {
     }
 
     if (Memo("BYTE")) {
-        DecodeIntelDB(eIntPseudoFlag_DECFormat);
+        DecodeIntelDB(eIntPseudoFlag_DECFormat | eIntPseudoFlag_AllowString);
         return True;
     }
 
     if (Memo("WORD")) {
-        DecodeIntelDW(eIntPseudoFlag_AllowInt | eIntPseudoFlag_DECFormat);
+        DecodeIntelDW(
+                eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                | eIntPseudoFlag_DECFormat);
         return True;
     }
 

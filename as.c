@@ -124,6 +124,7 @@
 #include "codepdp11.h"
 #include "codepps4.h"
 #include "codepseudo.h"
+#include "coderx.h"
 #include "codes12z.h"
 #include "codesc14xxx.h"
 #include "codescmp.h"
@@ -4487,6 +4488,7 @@ int main(int argc, char** argv) {
         codecp1600_init();
         codenano_init();
         code6100_init();
+        coderx_init();
         First = FALSE;
     }
 

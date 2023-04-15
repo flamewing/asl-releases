@@ -1719,3 +1719,7 @@ The `052001` target is a Konami design similar to the Motorola 6809. It has diff
 ### Western Digital WD16
 
 WD16 uses the same processor hardware as LSI-11 with different microcode. It shares the PDP-11 register set and addressing modes but has a different instruction set and binary encodings.
+
+### Renesas RX
+
+RXV1 (RX110/111/113/130/210/21A/220/610/621/62N/630/631), RXV2 (RX140/230/231/64M/651), and RXV3 (RX660/671/72M/72N) represent successive generations with additional instructions.

@@ -594,9 +594,11 @@ static void InitFields(void) {
     AddZero("ZBRR", 0x9b);
     AddZero("ZBSR", 0xbb);
 
-    AddInstTable(InstTable, "RES", 0, DecodeIntelDS);
+    AddInstTable(InstTable, "RES", 1, DecodeIntelDS);
     AddInstTable(
-            InstTable, "ACON", eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt,
+            InstTable, "ACON",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString,
             DecodeIntelDW);
 }
 

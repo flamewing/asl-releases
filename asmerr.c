@@ -403,6 +403,15 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_NoRelocs:
         msgno = Num_ErrMsgNoRelocs;
         break;
+    case ErrNum_IntOrFloatButReg:
+        msgno = Num_ErrMsgIntOrFloatButReg;
+        break;
+    case ErrNum_IntOrStringButReg:
+        msgno = Num_ErrMsgIntOrStringButReg;
+        break;
+    case ErrNum_IntButReg:
+        msgno = Num_ErrMsgIntButReg;
+        break;
     case ErrNum_UnresRelocs:
         msgno = Num_ErrMsgUnresRelocs;
         break;

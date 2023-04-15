@@ -185,3 +185,5 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 - Konami 052001
 
 - Western Digital WD16
+
+- Renesas RX

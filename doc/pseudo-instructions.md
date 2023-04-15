@@ -3023,3 +3023,7 @@ On 2650, `RES` reserves space and `ACON` stores 16 bit constants in big endian o
 `SAVEENV` and `RESTOREENV` access assembler environment saving when a target defines machine instructions named `SAVE` or `RESTORE`. `PAGESIZE` and `SELECT` likewise avoid `PAGE` and `SWITCH` collisions.
 
 PDP-11 and WD16 accept `BYTE`/`WORD` as aliases for `DB`/`DW`. `FLT2` and `FLT4` store DEC F and D floating point values; WD16 `FLT3` stores its own 48 bit floating point format. WD16 also supports register aliases with `REG`.
+
+### Renesas RX data
+
+`ENDIAN LITTLE` or `ENDIAN BIG` selects RX data byte order. `BLKB`, `BLKW`, `BLKL` and `BLKD` reserve the argument times 1, 2, 4 or 8 bytes. `BYTE` is equivalent to `DB`; `WORD` and `LWORD` store integer values only (like `DW` and `DD`). `FLOAT` and `DOUBLE` store floating point values only (like `DD` and `DQ`).
