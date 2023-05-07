@@ -3027,3 +3027,5 @@ PDP-11 and WD16 accept `BYTE`/`WORD` as aliases for `DB`/`DW`. `FLT2` and `FLT4`
 ### Renesas RX data
 
 `ENDIAN LITTLE` or `ENDIAN BIG` selects RX data byte order. `BLKB`, `BLKW`, `BLKL` and `BLKD` reserve the argument times 1, 2, 4 or 8 bytes. `BYTE` is equivalent to `DB`; `WORD` and `LWORD` store integer values only (like `DW` and `DD`). `FLOAT` and `DOUBLE` store floating point values only (like `DD` and `DQ`).
+
+To explicitly select an assembler directive when its name collides with a machine instruction, use `.SET`, `.EQU`, `.PAGE`, `.SWITCH`, `.SHIFT`, `.SAVE` or `.RESTORE`. These forms are always accepted regardless of target instruction names.

@@ -13,6 +13,7 @@
 #include "asmdef.h"
 
 #include "asmerr.h"
+#include "asmsub.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "strutil.h"
@@ -157,6 +158,7 @@ char const* pCommentLeadIn; /* list of comment lead-in sequences */
 tStrComp*   ArgStr; /* Komponenten der Zeile */
 tStrComp    LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char        AttrSplit;
+Boolean     oppart_leading_dot;
 int         ArgCnt; /* Argumentzahl */
 int         AllocArgCnt;
 as_dynstr_t OneLine; /* eingelesene Zeile */
@@ -389,16 +391,88 @@ void InsertArg(int Index, size_t ReqSize) {
     }
 }
 
-Boolean SetIsOccupied(void) {
-    return SetIsOccupiedFnc && SetIsOccupiedFnc();
+/*!------------------------------------------------------------------------
+ * \fn     memo_set_pseudo(void)
+ * \brief  is the current instruction SET, and the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean memo_set_pseudo(void) {
+    return Memo("SET") && is_set_pseudo();
 }
 
-Boolean SaveIsOccupied(void) {
-    return SaveIsOccupiedFnc && SaveIsOccupiedFnc();
+/*!------------------------------------------------------------------------
+ * \fn     is_set_pseudo(void)
+ * \brief  is the current (SET) instruction the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean is_set_pseudo(void) {
+    return (oppart_leading_dot || (!SetIsOccupiedFnc || !SetIsOccupiedFnc()));
 }
 
-Boolean RestoreIsOccupied(void) {
-    return RestoreIsOccupiedFnc && RestoreIsOccupiedFnc();
+/*!------------------------------------------------------------------------
+ * \fn     is_save_pseudo(void)
+ * \brief  is the current (SAVE) instruction the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean is_save_pseudo(void) {
+    return (oppart_leading_dot || (!SaveIsOccupiedFnc || !SaveIsOccupiedFnc()));
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     is_restore_pseudo(void)
+ * \brief  is the current (RESTORE) instruction the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean is_restore_pseudo(void) {
+    return (oppart_leading_dot || (!RestoreIsOccupiedFnc || !RestoreIsOccupiedFnc()));
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     memo_switch_pseudo(void)
+ * \brief  is the current instruction SWITCh, and the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean memo_switch_pseudo(void) {
+    return Memo("SWITCH") && (oppart_leading_dot || !SwitchIsOccupied);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     memo_shift_pseudo(void)
+ * \brief  is the current instruction SHIFT, and the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean memo_shift_pseudo(void) {
+    return Memo("SHIFT") && (oppart_leading_dot || !ShiftIsOccupied);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     is_page_pseudo(void)
+ * \brief  is the current PAGE instruction the pseudo instruction of that name?
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+Boolean is_page_pseudo(void) {
+    return oppart_leading_dot || !PageIsOccupied;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     free_forward_symbol(PForwardSymbol p_symbol)
+ * \brief  free entry from forward symbol list
+ * \param  p_symbol entry to free
+ * ------------------------------------------------------------------------ */
+
+void free_forward_symbol(PForwardSymbol p_symbol) {
+    free(p_symbol->Name);
+    p_symbol->Name = NULL;
+    free(p_symbol->pErrorPos);
+    p_symbol->pErrorPos = NULL;
+    free(p_symbol);
 }
 
 void asmdef_init(void) {

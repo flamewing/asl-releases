@@ -6,7 +6,7 @@
 	endexpect
 	charset 'a','z',
 	expect 2300
-	move.b #'a',d0
+	ds.b 'a'
 	endexpect
 	dc.b codepage_val(91)+1,codepage_val(97)+1
 	charset

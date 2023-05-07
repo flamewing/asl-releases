@@ -541,8 +541,10 @@ static int vsprcatf_core(
             }
             case 's': {
                 char const* pStr = va_arg(ap, char*);
+                size_t cnt = FormatContext.Arg[1] ? as_strnlen(pStr, FormatContext.Arg[1])
+                                                  : strlen(pStr);
 
-                Result += append(p_dest_ctx, pStr, strlen(pStr), &FormatContext);
+                Result += append(p_dest_ctx, pStr, cnt, &FormatContext);
                 break;
             }
             default:

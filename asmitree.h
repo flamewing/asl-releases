@@ -19,6 +19,8 @@
 
 typedef void (*InstProc)(Word Index);
 
+typedef Boolean (*inst_fnc_t)(Word index);
+
 typedef struct tag_TInstTreeNode {
     struct tag_TInstTreeNode *Left, *Right;
     InstProc                  Proc;
@@ -34,6 +36,13 @@ typedef struct tag_TInstTableEntry {
     int      Coll;
 } TInstTableEntry, *PInstTableEntry;
 
+typedef struct inst_fnc_table_entry {
+    inst_fnc_t fnc;
+    char*      p_name;
+    Word       index;
+    int        coll;
+} inst_fnc_table_entry_t;
+
 struct sInstTable {
     int             Fill, Size;
     Boolean         Dynamic;
@@ -41,6 +50,12 @@ struct sInstTable {
 };
 typedef struct sInstTable  TInstTable;
 typedef struct sInstTable* PInstTable;
+
+typedef struct inst_fnc_table {
+    int                     fill, size;
+    Boolean                 dynamic;
+    inst_fnc_table_entry_t* p_entries;
+} inst_fnc_table_t;
 
 extern void AddInstTree(PInstTreeNode* Root, char* NName, InstProc NProc, Word NIndex);
 
@@ -50,17 +65,22 @@ extern Boolean SearchInstTree(PInstTreeNode Root, char* OpPart);
 
 extern void PrintInstTree(PInstTreeNode Root);
 
-extern PInstTable CreateInstTable(int TableSize);
+extern PInstTable        CreateInstTable(int TableSize);
+extern inst_fnc_table_t* inst_fnc_table_create(int table_size);
 
 extern void SetDynamicInstTable(PInstTable Table);
 
 extern void DestroyInstTable(PInstTable tab);
+extern void inst_fnc_table_destroy(inst_fnc_table_t* p_table);
 
 extern void AddInstTable(PInstTable tab, char const* Name, Word Index, InstProc Proc);
+extern void inst_fnc_table_add(
+        inst_fnc_table_t* p_table, char const* p_name, Word index, inst_fnc_t fnc);
 
 extern void RemoveInstTable(PInstTable tab, char const* Name);
 
 extern Boolean LookupInstTable(PInstTable tab, char const* Name);
+extern Boolean inst_fnc_table_lookup(inst_fnc_table_t const* p_table, char const* p_name);
 
 extern void PrintInstTable(FILE* stream, PInstTable tab);
 

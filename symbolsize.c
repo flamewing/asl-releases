@@ -14,25 +14,26 @@
 
 typedef struct {
     tSymbolSize Size;
-    char const* pName;
+    char const  Name[5];
     unsigned    Bytes;
 } tSizeDescr;
 
 static tSizeDescr const Descrs[] = {
-        {      eSymbolSizeUnknown,   "?",  0},
-        {         eSymbolSize8Bit,  "I8",  1},
-        {        eSymbolSize16Bit, "I16",  2},
-        {        eSymbolSize32Bit, "I32",  4},
-        {        eSymbolSize64Bit, "I64",  8},
-        {        eSymbolSize80Bit, "F80", 10},
-        {   eSymbolSizeFloat32Bit, "F32",  4},
-        {   eSymbolSizeFloat64Bit, "F64",  8},
-        {   eSymbolSizeFloat96Bit, "F96", 12},
-        {        eSymbolSize24Bit, "I24",  3},
-        {eSymbolSizeFloatDec96Bit, "D96", 12},
-        {        eSymbolSize48Bit, "I48",  6},
-        {   eSymbolSizeFloat48Bit, "F48",  6},
-        {      eSymbolSizeUnknown,  NULL,  0},
+        {      eSymbolSizeUnknown,    "?",  0},
+        {         eSymbolSize8Bit,   "I8",  1},
+        {        eSymbolSize16Bit,  "I16",  2},
+        {        eSymbolSize32Bit,  "I32",  4},
+        {        eSymbolSize64Bit,  "I64",  8},
+        {        eSymbolSize80Bit,  "F80", 10},
+        {   eSymbolSizeFloat32Bit,  "F32",  4},
+        {   eSymbolSizeFloat64Bit,  "F64",  8},
+        {   eSymbolSizeFloat96Bit,  "F96", 12},
+        {        eSymbolSize24Bit,  "I24",  3},
+        {eSymbolSizeFloatDec96Bit,  "D96", 12},
+        {        eSymbolSize48Bit,  "I48",  6},
+        {   eSymbolSizeFloat48Bit,  "F48",  6},
+        {       eSymbolSize128Bit, "I128", 16},
+        {      eSymbolSizeUnknown,     "",  0},
 };
 
 /*!------------------------------------------------------------------------
@@ -45,9 +46,9 @@ static tSizeDescr const Descrs[] = {
 char const* GetSymbolSizeName(tSymbolSize Size) {
     tSizeDescr const* pDescr;
 
-    for (pDescr = Descrs; pDescr->pName; pDescr++) {
+    for (pDescr = Descrs; pDescr->Name[0]; pDescr++) {
         if (pDescr->Size == Size) {
-            return pDescr->pName;
+            return pDescr->Name;
         }
     }
     return "?";
@@ -63,7 +64,7 @@ char const* GetSymbolSizeName(tSymbolSize Size) {
 unsigned GetSymbolSizeBytes(tSymbolSize Size) {
     tSizeDescr const* pDescr;
 
-    for (pDescr = Descrs; pDescr->pName; pDescr++) {
+    for (pDescr = Descrs; pDescr->Name[0]; pDescr++) {
         if (pDescr->Size == Size) {
             return pDescr->Bytes;
         }
