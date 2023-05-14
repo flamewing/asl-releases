@@ -13,15 +13,21 @@
 #include "deco87c800.h"
 #include "entryaddress.h"
 #include "invaddress.h"
+#include "msg_level.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "strutil.h"
+#include "version.h"
 
 #include <string.h>
 
 #define TABSIZE 8
 
 char* pEnvName = "DASCMD";
+
+void WrCopyRight(char const* Msg) {
+    printf("%s\n%s\n", Msg, InfoMessCopyright);
+}
 
 typedef void (*tChunkCallback)(OneChunk const* pChunk, Boolean IsData, void* pUser);
 
@@ -111,16 +117,16 @@ static void ParamError(Boolean InEnv, char* Arg) {
     exit(4);
 }
 
-static CMDResult ArgError(int MsgNum, char const* pArg) {
+static as_cmd_result_t ArgError(int MsgNum, char const* pArg) {
     if (pArg) {
         fprintf(stderr, "%s:", pArg);
     }
     fprintf(stderr, "%s\n", getmessage(MsgNum));
 
-    return CMDErr;
+    return e_cmd_err;
 }
 
-static CMDResult CMD_BinFile(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     LargeWord  Start = 0, Len = 0, Gran = 1;
     char *     pStart = NULL, *pLen = NULL, *pGran = NULL;
     String     Arg;
@@ -175,7 +181,7 @@ static CMDResult CMD_BinFile(Boolean Negate, char const* pArg) {
     }
     MoveCodeChunkToList(&CodeChunks, &Chunk, TRUE);
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
 static void ResizeBuffer(Byte** ppBuffer, LargeWord* pAllocLen, LargeWord ReqLen) {
@@ -212,7 +218,26 @@ static void FlushChunk(tCodeChunk* pChunk) {
     InitCodeChunk(pChunk);
 }
 
-static CMDResult CMD_HexFile(Boolean Negate, char const* pArg) {
+/* ------------------------------------------------------- */
+
+static Boolean write_version_exit, write_help_exit, write_cpu_list_exit;
+
+static int screen_height = 0;
+
+static void write_console_next(char const* p_line) {
+    static int LineZ;
+
+    WrConsoleLine(p_line, True);
+    if (screen_height && (++LineZ >= screen_height)) {
+        LineZ = 0;
+        WrConsoleLine(getmessage(Num_KeyWaitMsg), False);
+        fflush(stdout);
+        while (getchar() != '\n')
+            ;
+    }
+}
+
+static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
     FILE*      pFile;
     char       Line[300], *pLine;
     size_t     Len;
@@ -309,10 +334,10 @@ static CMDResult CMD_HexFile(Boolean Negate, char const* pArg) {
         free(pDataBuffer);
     }
     fclose(pFile);
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-static CMDResult CMD_EntryAddress(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
     LargeWord Address;
     char*     pName = NULL;
     String    Arg, Str;
@@ -415,10 +440,10 @@ static CMDResult CMD_EntryAddress(Boolean Negate, char const* pArg) {
     }
     AddEntryAddress(Address);
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
-static CMDResult CMD_Symbol(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_Symbol(Boolean Negate, char const* pArg) {
     LargeWord Address;
     char*     pName = NULL;
     String    Arg;
@@ -446,14 +471,19 @@ static CMDResult CMD_Symbol(Boolean Negate, char const* pArg) {
         AddInvSymbol(pName, Address);
     }
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
-static CMDResult CMD_CPU(Boolean Negate, char const* pArg) {
+static as_cmd_result_t CMD_CPU(Boolean Negate, char const* pArg) {
     tCPUDef const* pCPUDef;
 
     if (Negate || !*pArg) {
         return ArgError(Num_ErrMsgCPUArgumentMissing, NULL);
+    }
+
+    if (!as_strcasecmp(pArg, "?") || !as_strcasecmp(pArg, "LIST")) {
+        write_cpu_list_exit = True;
+        return e_cmd_ok;
     }
 
     pCPUDef = LookupCPUDefByName(pArg);
@@ -463,45 +493,66 @@ static CMDResult CMD_CPU(Boolean Negate, char const* pArg) {
 
     pCPUDef->SwitchProc(pCPUDef->pUserData);
 
-    return CMDArg;
+    return e_cmd_arg;
 }
 
-static CMDResult CMD_HexLowerCase(Boolean Negate, char const* Arg) {
+static as_cmd_result_t CMD_HexLowerCase(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
     HexStartCharacter = Negate ? 'A' : 'a';
-    return CMDOK;
+    return e_cmd_ok;
 }
 
-#define DASParamCnt (sizeof(DASParams) / sizeof(*DASParams))
+static as_cmd_result_t CMD_PrintVersion(Boolean Negate, char const* Arg) {
+    UNUSED(Arg);
 
-static CMDRec DASParams[] = {
-        {         "CPU",          CMD_CPU},
-        {     "BINFILE",      CMD_BinFile},
-        {     "HEXFILE",      CMD_HexFile},
-        {"ENTRYADDRESS", CMD_EntryAddress},
-        {      "SYMBOL",       CMD_Symbol},
-        {           "h", CMD_HexLowerCase},
-};
-
-static void NxtLine(void) {
-    static int LineZ;
-
-    if (++LineZ == 23) {
-        LineZ = 0;
-#if 0
-    if (Redirected != NoRedir)
-      return;
-#endif
-        WrConsoleLine(getmessage(Num_KeyWaitMsg), False);
-        fflush(stdout);
-        while (getchar() != '\n')
-            ;
-#if 0
-    printf("%s", CursUp);
-#endif
+    if (Negate) {
+        return e_cmd_err;
     }
+
+    write_version_exit = True;
+    return e_cmd_ok;
 }
+
+static as_cmd_result_t CMD_PrintHelp(Boolean Negate, char const* Arg) {
+    UNUSED(Arg);
+
+    if (Negate) {
+        return e_cmd_err;
+    }
+
+    write_help_exit = True;
+    return e_cmd_ok;
+}
+
+static as_cmd_result_t CMD_screen_height(Boolean negate, char const* p_arg) {
+    Boolean ok;
+    int     new_screen_height;
+
+    if (negate) {
+        screen_height = 0;
+        return e_cmd_ok;
+    }
+    new_screen_height = ConstLongInt(p_arg, &ok, 10);
+    if (!ok) {
+        return e_cmd_err;
+    }
+    screen_height = new_screen_height;
+    return e_cmd_arg;
+}
+
+static as_cmd_rec_t DASParams[] = {
+        {         "CPU",               CMD_CPU},
+        {     "BINFILE",           CMD_BinFile},
+        {     "HEXFILE",           CMD_HexFile},
+        {"ENTRYADDRESS",      CMD_EntryAddress},
+        {"SCREENHEIGHT",     CMD_screen_height},
+        {      "SYMBOL",            CMD_Symbol},
+        {           "h",      CMD_HexLowerCase},
+        {        "HELP",         CMD_PrintHelp},
+        {           "v", cmd_msg_level_verbose},
+        {     "VERSION",      CMD_PrintVersion}
+};
 
 typedef struct {
     FILE* pDestFile;
@@ -569,42 +620,65 @@ static void DisasmIterator(OneChunk const* pChunk, Boolean IsData, void* pUser) 
 }
 
 int main(int argc, char** argv) {
-    CMDProcessed ParUnprocessed; /* bearbeitete Kommandozeilenparameter */
-    LargeWord    Address, NextAddress;
-    Boolean      NextAddressValid;
-    tDisassInfo  Info;
-    unsigned     z;
-    tDisasmData  Data;
-    int          ThisSrcLineLen;
+    LargeWord        Address, NextAddress;
+    Boolean          NextAddressValid;
+    tDisassInfo      Info;
+    unsigned         z;
+    tDisasmData      Data;
+    int              ThisSrcLineLen;
+    as_cmd_results_t cmd_results;
 
     strutil_init();
     nls_init();
     NLS_Initialize(&argc, argv);
     dasmdef_init();
     cpulist_init();
+    msg_level_init();
     nlmessages_init("das.msg", *argv, MsgId1, MsgId2);
     deco68_init();
     deco87c800_init();
     deco4004_init();
+    write_version_exit = write_help_exit = write_cpu_list_exit = False;
 
-    if (argc <= 1) {
-        char *ph1, *ph2;
+    if (e_cmd_err
+        == as_cmd_process(
+                argc, argv, DASParams, as_array_size(DASParams), pEnvName,
+                &cmd_results)) {
+        ParamError(cmd_results.error_arg_in_env, cmd_results.error_arg);
+    }
+    write_help_exit |= cmd_results.write_help_exit;
+    write_version_exit |= cmd_results.write_version_exit;
 
-        printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]),
-               getmessage(Num_InfoMessHead2));
-        NxtLine();
+    if ((msg_level >= e_msg_level_verbose) || write_version_exit) {
+        String Ver;
+
+        as_snprintf(Ver, sizeof(Ver), "DAS V%s", Version);
+        WrCopyRight(Ver);
+    }
+
+    if (write_help_exit) {
+        char * ph1, *ph2;
+        String Tmp;
+        as_snprintf(
+                Tmp, sizeof(Tmp), "%s%s%s", getmessage(Num_InfoMessHead1),
+                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessHead2));
+        write_console_next(Tmp);
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
              ph1 = ph2 + 1, ph2 = strchr(ph1, '\n')) {
             *ph2 = '\0';
-            printf("%s\n", ph1);
-            NxtLine();
+            write_console_next(ph1);
             *ph2 = '\n';
         }
-        PrintCPUList(NxtLine);
-        exit(1);
     }
 
-    ProcessCMD(argc, argv, DASParams, DASParamCnt, ParUnprocessed, pEnvName, ParamError);
+    if (write_cpu_list_exit) {
+        printf("%s\n", getmessage(Num_InfoMessCPUList));
+        PrintCPUList(write_console_next);
+    }
+
+    if (write_version_exit || write_help_exit || write_cpu_list_exit) {
+        exit(0);
+    }
 
     if (!Disassemble) {
         fprintf(stderr, "no CPU set, aborting\n");

@@ -988,3 +988,9 @@ The optional `INTSYNTAX +a'asc'` format accepts `A'ABCD'` as a multi character c
 The `-bigendian` and `-packing` command line switches override the initial `BIGENDIAN` and `PACKING` values on targets that support them. Negating a switch selects the opposite default.
 
 Multi character constants use big endian order by default (`'ABCD'` = 0x41424344). PDP-11 and WD16 use little endian order to match MACRO-11 (`'AB'` = 0x4241).
+
+### Help and message levels
+
+Run `asl -help` for command-line help, `asl -version` for version information, and `asl -cpu list` or `asl -cpu ?` for the target list. With no input filenames, ASL exits instead of asking for them interactively. `-v` enables verbose output; normal operation does not print the version banner. `-screenheight` enables paging, which is disabled by default.
+
+`-q`/`-quiet` suppresses normal progress; repeating it also suppresses source `MESSAGE` output. Error messages remain visible.

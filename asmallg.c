@@ -27,6 +27,7 @@
 #include "fileformat.h"
 #include "function.h"
 #include "literals.h"
+#include "msg_level.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "operator.h"

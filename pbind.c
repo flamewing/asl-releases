@@ -17,6 +17,7 @@
 #include "cmdarg.h"
 #include "fileformat.h"
 #include "ioerrs.h"
+#include "msg_level.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "stdhandl.h"
@@ -28,9 +29,7 @@
 
 #define BufferSize 8192
 
-static char const* Creator = "BIND/C 1.42";
-
-static as_cmd_processed_t ParUnprocessed;
+static char const* Creator = "BIND 1.42";
 
 static FILE*  TargFile;
 static String TargName;
@@ -80,7 +79,7 @@ static void ProcessFile(char* FileName) {
         FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
     }
 
-    if (!QuietMode) {
+    if (msg_level >= e_msg_level_normal) {
         errno = 0;
         printf("%s==>>%s", FileName, TargName);
         ChkIO(OutName);
@@ -146,7 +145,7 @@ static void ProcessFile(char* FileName) {
         }
     } while (InpHeader != FileHeaderEnd);
 
-    if (!QuietMode) {
+    if (msg_level >= e_msg_level_normal) {
         errno = 0;
         printf("  (");
         ChkIO(OutName);
@@ -163,23 +162,16 @@ static void ProcessFile(char* FileName) {
     }
 }
 
-static void ParamError(Boolean InEnv, char* Arg) {
-    fprintf(stderr, "%s%s\n",
-            getmessage(InEnv ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
-    fprintf(stderr, "%s\n", getmessage(Num_ErrMsgProgTerm));
-    exit(1);
-}
+/* ------------------------------ */
 
 static as_cmd_rec_t const BINDParams[] = {
-        {    "f", CMD_FilterList},
-        {    "q",  CMD_QuietMode},
-        {"QUIET",  CMD_QuietMode}
+        {"f", CMD_FilterList},
+        cmds_msg_level
 };
 
 int main(int argc, char** argv) {
-    int    z;
-    char * ph1, *ph2;
-    String Ver;
+    char*            p_target_name;
+    as_cmd_results_t cmd_results;
 
     if (!NLS_Initialize(&argc, argv)) {
         exit(4);
@@ -187,6 +179,7 @@ int main(int argc, char** argv) {
 
     stdhandl_init();
     as_cmdarg_init(*argv);
+    msg_level_init();
     toolutils_init(*argv);
     nls_init();
     nlmessages_init("pbind.msg", *argv, MsgId1, MsgId2);
@@ -194,9 +187,30 @@ int main(int argc, char** argv) {
 
     Buffer = (Byte*)malloc(sizeof(Byte) * BufferSize);
 
-    if (argc <= 1) {
+    if (e_cmd_err
+        == as_cmd_process(
+                argc, argv, BINDParams, as_array_size(BINDParams), "BINDCMD",
+                &cmd_results)) {
+        fprintf(stderr, "%s%s\n",
+                getmessage(
+                        cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam
+                                                     : Num_ErrMsgInvParam),
+                cmd_results.error_arg);
+        fprintf(stderr, "%s\n", getmessage(Num_ErrMsgProgTerm));
+        exit(1);
+    }
+
+    if ((msg_level >= e_msg_level_verbose) || cmd_results.write_version_exit) {
+        String Ver;
+        as_snprintf(Ver, sizeof(Ver), "PBIND V%s", Version);
+        WrCopyRight(Ver);
+    }
+
+    if (cmd_results.write_help_exit) {
+        char *ph1, *ph2;
+
         errno = 0;
-        printf("%s%s%s\n", getmessage(Num_InfoMessHead1), GetEXEName(argv[0]),
+        printf("%s%s%s\n", getmessage(Num_InfoMessHead1), as_cmdarg_get_executable_name(),
                getmessage(Num_InfoMessHead2));
         ChkIO(OutName);
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
@@ -205,39 +219,42 @@ int main(int argc, char** argv) {
             printf("%s\n", ph1);
             *ph2 = '\n';
         }
+    }
+
+    if (cmd_results.write_version_exit || cmd_results.write_help_exit) {
+        exit(0);
+    }
+
+    if (StringListEmpty(cmd_results.file_arg_list)) {
+        fprintf(stderr, "%s: %s\n", as_cmdarg_get_executable_name(),
+                getmessage(Num_ErrMessNoInputFiles));
         exit(1);
     }
 
-    as_cmd_process(
-            argc, argv, BINDParams, as_array_size(BINDParams), ParUnprocessed, "BINDCMD",
-            ParamError);
-
-    if (!QuietMode) {
-        as_snprintf(Ver, sizeof(Ver), "BIND/C V%s", Version);
-        WrCopyRight(Ver);
-    }
-
-    z = argc - 1;
-    while ((z > 0) && (!ParUnprocessed[z])) {
-        z--;
-    }
-    if (z == 0) {
+    p_target_name = MoveAndCutStringListLast(&cmd_results.file_arg_list);
+    strmaxcpy(TargName, p_target_name ? p_target_name : "", STRINGSIZE);
+    free(p_target_name);
+    p_target_name = NULL;
+    if (!*TargName) {
         errno = 0;
         fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargetMissing));
         ChkIO(OutName);
         exit(1);
-    } else {
-        strmaxcpy(TargName, argv[z], STRINGSIZE);
-        ParUnprocessed[z] = False;
-        AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
     }
+    AddSuffix(TargName, STRINGSIZE, getmessage(Num_Suffix));
 
     OpenTarget();
 
-    for (z = 1; z < argc; z++) {
-        if (ParUnprocessed[z]) {
-            DirScan(argv[z], ProcessFile);
+    while (True) {
+        char* p_src_name = MoveAndCutStringListFirst(&cmd_results.file_arg_list);
+
+        if (!p_src_name) {
+            break;
         }
+        if (*p_src_name) {
+            DirScan(p_src_name, ProcessFile);
+        }
+        free(p_src_name);
     }
 
     CloseTarget();

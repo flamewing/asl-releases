@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.244
+    VERSION 1.42.245
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -416,6 +416,8 @@ define_rescomp_target(p2bin tools2.res header.res)
 
 add_library(CMDLINE_COMMON
     OBJECT
+    msg_level.c
+    msg_level.h
     cmdarg.c
     cmdarg.h
     version.c

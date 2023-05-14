@@ -16,6 +16,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "cmdarg.h"
 
 Boolean FPUAvail,        /* floating point co processor instructions allowed? */
         PMMUAvail,       /* PMMU instructions allowed? */

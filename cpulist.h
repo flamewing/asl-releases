@@ -12,6 +12,8 @@
 
 #include "datatypes.h"
 
+typedef void (*tPrintLineCPUProc)(char const*);
+
 typedef void (*tCPUSwitchProc)(void);
 typedef void (*tCPUSwitchUserProc)(void* pUserData);
 typedef void (*tPrintNextCPUProc)(void);
@@ -55,7 +57,7 @@ extern tCPUDef const* LookupCPUDefByName(char const* pName);
 
 extern void IterateCPUList(tCPUListIterator Iterator, void* pUser);
 
-extern void PrintCPUList(tPrintNextCPUProc NxtProc);
+extern void PrintCPUList(tPrintLineCPUProc PrintProc);
 
 extern void ClearCPUList(void);
 

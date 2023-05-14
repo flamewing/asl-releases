@@ -294,7 +294,7 @@ Boolean Odd(int inp) {
     return ((inp & 1) == 1);
 }
 
-Boolean DirScan(char* Mask, charcallback callback) {
+Boolean DirScan(char const* Mask, charcallback callback) {
     char Name[1024];
 
 #ifdef __MSDOS__

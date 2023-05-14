@@ -37,9 +37,13 @@ extern char const* GetStringListFirst(StringList List, StringRecPtr* Lauf);
 
 extern char const* GetStringListNext(StringRecPtr* Lauf);
 
-extern char* GetAndCutStringList(StringList* List);
+extern char* MoveAndCutStringListFirst(StringList* p_list);
+
+extern char* MoveAndCutStringListLast(StringList* List);
 
 extern Boolean StringListEmpty(StringList List);
+
+extern unsigned StringListCount(StringList List);
 
 extern StringList DuplicateStringList(StringList Src);
 

@@ -133,7 +133,7 @@ extern void KillCtrl(char* Line);
 
 extern void AddCopyright(char const* NewLine);
 
-extern void WriteCopyrights(TSwitchProc NxtProc);
+extern void WriteCopyrights(void (*PrintProc)(char const*));
 
 extern char*   ChkSymbNameUpTo(char const* pSym, char const* pUpTo);
 extern Boolean ChkSymbName(char const* pSym);
@@ -153,7 +153,7 @@ extern void AddToOutList(char const* NewName);
 
 extern void RemoveFromOutList(char const* OldName);
 
-extern char* GetFromOutList(void);
+extern char* MoveFromOutListFirst(void);
 
 extern void ClearShareOutList(void);
 
@@ -161,7 +161,7 @@ extern void AddToShareOutList(char const* NewName);
 
 extern void RemoveFromShareOutList(char const* OldName);
 
-extern char* GetFromShareOutList(void);
+extern char* MoveFromShareOutListFirst(void);
 
 extern void ClearListOutList(void);
 
@@ -169,7 +169,7 @@ extern void AddToListOutList(char const* NewName);
 
 extern void RemoveFromListOutList(char const* OldName);
 
-extern char* GetFromListOutList(void);
+extern char* MoveFromListOutListFirst(void);
 
 extern void BookKeeping(void);
 
