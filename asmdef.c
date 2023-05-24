@@ -34,9 +34,6 @@ char OBJSuffix[] = ".obj";
 char const* EnvName = "ASCMD"; /* Environment-Variable fuer Default-
                                   Parameter */
 
-as_cmd_rec_t* as_cmd_recs    = NULL;
-size_t        as_cmd_rec_cnt = 0;
-
 StringPtr SourceFile; /* Hauptquelldatei */
 
 StringPtr CursUp; /*   "     "  Cursor hoch */
@@ -89,7 +86,6 @@ Boolean     NumericErrors;    /* Fehlermeldungen mit Nummer */
 Boolean     CodeOutput;       /* Code erzeugen */
 Boolean     MacProOutput;     /* Makroprozessorausgabe schreiben */
 Boolean     MacroOutput;      /* gelesene Makros schreiben */
-ShortInt    QuietMode;        /* keine Meldungen */
 Boolean     HardRanges;       /* Bereichsfehler echte Fehler ? */
 char const* DivideChars;      /* Trennzeichen fuer Parameter. Inhalt Read Only! */
 Boolean     HasAttrs;         /* Opcode hat Attribut */

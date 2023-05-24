@@ -19,14 +19,7 @@ enum {
 };
 
 extern unsigned msg_level;
-
-extern as_cmd_result_t cmd_msg_level_quiet(Boolean negate, char const* p_arg);
-extern as_cmd_result_t cmd_msg_level_verbose(Boolean negate, char const* p_arg);
-
-#define cmds_msg_level                                            \
-    {"q", cmd_msg_level_quiet}, {"quiet", cmd_msg_level_quiet}, { \
-        "v", cmd_msg_level_verbose                                \
-    }
+extern ShortInt msg_quiet_depth;
 
 extern void msg_level_init(void);
 

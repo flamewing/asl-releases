@@ -165,8 +165,7 @@ static void ProcessFile(char* FileName) {
 /* ------------------------------ */
 
 static as_cmd_rec_t const BINDParams[] = {
-        {"f", CMD_FilterList},
-        cmds_msg_level
+        {"f", CMD_FilterList}
 };
 
 int main(int argc, char** argv) {
@@ -187,10 +186,8 @@ int main(int argc, char** argv) {
 
     Buffer = (Byte*)malloc(sizeof(Byte) * BufferSize);
 
-    if (e_cmd_err
-        == as_cmd_process(
-                argc, argv, BINDParams, as_array_size(BINDParams), "BINDCMD",
-                &cmd_results)) {
+    as_cmd_register(BINDParams, as_array_size(BINDParams));
+    if (e_cmd_err == as_cmd_process(argc, argv, "BINDCMD", &cmd_results)) {
         fprintf(stderr, "%s%s\n",
                 getmessage(
                         cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam

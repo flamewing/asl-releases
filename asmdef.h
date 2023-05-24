@@ -13,7 +13,6 @@
 #include "addrspace.h"
 #include "chartrans.h"
 #include "chunks.h"
-#include "cmdarg.h"
 #include "cpulist.h"
 #include "dynstr.h"
 #include "intformat.h"
@@ -182,9 +181,6 @@ typedef struct tag_ASSUMERec {
     void (*pPostProc)(void);
 } ASSUMERec;
 
-extern as_cmd_rec_t* as_cmd_recs;
-extern size_t        as_cmd_rec_cnt;
-
 extern StringPtr SourceFile;
 
 extern StringPtr CursUp;
@@ -251,7 +247,6 @@ extern Boolean     NumericErrors;
 extern Boolean     CodeOutput;
 extern Boolean     MacProOutput;
 extern Boolean     MacroOutput;
-extern ShortInt    QuietMode;
 extern Boolean     HardRanges;
 extern char const* DivideChars;
 extern Boolean     HasAttrs;

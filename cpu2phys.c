@@ -13,11 +13,11 @@
 #include "cpu2phys.h"
 
 #include "asmdef.h"
-#include "stddef.h"
 #include "strutil.h"
 #include "tempresult.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include <string.h>
 
 typedef struct {

@@ -39,13 +39,10 @@ typedef struct {
     Boolean    error_arg_in_env;
 } as_cmd_results_t;
 
-extern void as_cmd_extend(
-        as_cmd_rec_t** p_cmd_recs, size_t* p_cmd_rec_cnt, as_cmd_rec_t const* p_new_recs,
-        size_t new_rec_cnt);
+extern void as_cmd_register(as_cmd_rec_t const* p_new_recs, size_t new_rec_cnt);
 
 extern as_cmd_result_t as_cmd_process(
-        int argc, char** argv, as_cmd_rec_t const* p_cmd_recs, size_t cmd_rec_cnt,
-        char const* p_env_name, as_cmd_results_t* p_results);
+        int argc, char** argv, char const* p_env_name, as_cmd_results_t* p_results);
 
 extern char const* as_cmdarg_get_executable_name(void);
 

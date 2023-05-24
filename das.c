@@ -111,12 +111,6 @@ static void PrTabs(FILE* pDestFile, int TargetLen, int ThisLen) {
     }
 }
 
-static void ParamError(Boolean InEnv, char* Arg) {
-    fprintf(stderr, "%s%s\n",
-            getmessage((InEnv) ? Num_ErrMsgInvEnvParam : Num_ErrMsgInvParam), Arg);
-    exit(4);
-}
-
 static as_cmd_result_t ArgError(int MsgNum, char const* pArg) {
     if (pArg) {
         fprintf(stderr, "%s:", pArg);
@@ -542,16 +536,15 @@ static as_cmd_result_t CMD_screen_height(Boolean negate, char const* p_arg) {
 }
 
 static as_cmd_rec_t DASParams[] = {
-        {         "CPU",               CMD_CPU},
-        {     "BINFILE",           CMD_BinFile},
-        {     "HEXFILE",           CMD_HexFile},
-        {"ENTRYADDRESS",      CMD_EntryAddress},
-        {"SCREENHEIGHT",     CMD_screen_height},
-        {      "SYMBOL",            CMD_Symbol},
-        {           "h",      CMD_HexLowerCase},
-        {        "HELP",         CMD_PrintHelp},
-        {           "v", cmd_msg_level_verbose},
-        {     "VERSION",      CMD_PrintVersion}
+        {         "CPU",           CMD_CPU},
+        {     "BINFILE",       CMD_BinFile},
+        {     "HEXFILE",       CMD_HexFile},
+        {"ENTRYADDRESS",  CMD_EntryAddress},
+        {"SCREENHEIGHT", CMD_screen_height},
+        {      "SYMBOL",        CMD_Symbol},
+        {           "h",  CMD_HexLowerCase},
+        {        "HELP",     CMD_PrintHelp},
+        {     "VERSION",  CMD_PrintVersion}
 };
 
 typedef struct {
@@ -640,11 +633,14 @@ int main(int argc, char** argv) {
     deco4004_init();
     write_version_exit = write_help_exit = write_cpu_list_exit = False;
 
-    if (e_cmd_err
-        == as_cmd_process(
-                argc, argv, DASParams, as_array_size(DASParams), pEnvName,
-                &cmd_results)) {
-        ParamError(cmd_results.error_arg_in_env, cmd_results.error_arg);
+    as_cmd_register(DASParams, as_array_size(DASParams));
+    if (e_cmd_err == as_cmd_process(argc, argv, pEnvName, &cmd_results)) {
+        fprintf(stderr, "%s%s\n",
+                getmessage(
+                        cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam
+                                                     : Num_ErrMsgInvParam),
+                cmd_results.error_arg);
+        exit(4);
     }
     write_help_exit |= cmd_results.write_help_exit;
     write_version_exit |= cmd_results.write_version_exit;

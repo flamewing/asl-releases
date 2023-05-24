@@ -35,8 +35,6 @@ LongWord        Sums[SegCount];
 
 /* --------------------------------------------------------------- */
 
-static as_cmd_rec_t const PListParams[] = {cmds_msg_level};
-
 static void ProcessSingle(char const* pFileName) {
     FILE*               ProgFile;
     Byte                Header, Segment, Gran, CPU;
@@ -202,10 +200,7 @@ int main(int argc, char** argv) {
     msg_level_init();
     toolutils_init(*argv);
 
-    if (e_cmd_err
-        == as_cmd_process(
-                argc, argv, PListParams, as_array_size(PListParams), "PLISTCMD",
-                &cmd_results)) {
+    if (e_cmd_err == as_cmd_process(argc, argv, "PLISTCMD", &cmd_results)) {
         fprintf(stderr, "%s%s\n",
                 getmessage(
                         cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam

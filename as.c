@@ -417,8 +417,11 @@ static void MACRO_OutProcessor(void) {
 
         l = FirstOutputTag->ParamNames;
         for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++) {
+            char const* p_param_name = GetStringListNext(&l);
             NeedsExpansion
-                    |= CompressLine(GetStringListNext(&l), z, &s, CaseSensitive) > 0;
+                    |= CompressLine(
+                               p_param_name ? p_param_name : "", z, &s, CaseSensitive)
+                       > 0;
         }
 
         /* reserved argument names are never case-sensitive */
@@ -1246,7 +1249,10 @@ static void IRP_OutProcessor(void) {
     /* falls noch nicht zuende, weiterzaehlen */
 
     if (FirstOutputTag->NestLevel > -1) {
-        as_dynstr_t s;
+        as_dynstr_t  s;
+        StringRecPtr Dummy;
+        char const*  p_first_param
+                = GetStringListFirst(FirstOutputTag->ParamNames, &Dummy);
 
         as_dynstr_ini_clone(&s, &OneLine);
         KillCtrl(s.p_str);
@@ -1254,7 +1260,8 @@ static void IRP_OutProcessor(void) {
         int          ParIter
                 = FirstOutputTag->Tag->ParIter == 0 ? 1 : FirstOutputTag->Tag->ParIter;
         for (int z = 1; z <= ParIter; z++) {
-            CompressLine(GetStringListNext(&l), z, &s, CaseSensitive);
+            char const* p_param_name = GetStringListNext(&l);
+            CompressLine(p_param_name ? p_param_name : "", z, &s, CaseSensitive);
         }
         AddStringListLast(&(FirstOutputTag->Tag->Lines), s.p_str);
         as_dynstr_free(&s);
@@ -3953,17 +3960,6 @@ static as_cmd_result_t CMD_SplitByte(Boolean Negate, char const* Arg) {
     }
 }
 
-static as_cmd_result_t CMD_QuietMode(Boolean Negate, char const* Arg) {
-    UNUSED(Arg);
-    if ((Negate) && (QuietMode > 0)) {
-        QuietMode--;
-    } else if ((!Negate) && (QuietMode < 2)) {
-        QuietMode++;
-    }
-
-    return cmd_msg_level_quiet(Negate, Arg);
-}
-
 static as_cmd_result_t CMD_ThrowErrors(Boolean Negate, char const* Arg) {
     UNUSED(Arg);
 
@@ -4326,9 +4322,6 @@ static as_cmd_rec_t const ASParams[] = {
         {           "o",               CMD_OutFile},
         {           "P",          CMD_MacProOutput},
         {           "p",           CMD_SharePascal},
-        {           "q",             CMD_QuietMode},
-        {       "quiet",             CMD_QuietMode},
-        {           "v",     cmd_msg_level_verbose},
         {           "r",           CMD_MsgIfRepass},
         {   RelaxedName,               CMD_Relaxed},
         {           "s",           CMD_SectionList},
@@ -4374,7 +4367,7 @@ int main(int argc, char** argv) {
         ioerrs_init(*argv);
         as_cmdarg_init(*argv);
         msg_level_init();
-        as_cmd_extend(&as_cmd_recs, &as_cmd_rec_cnt, ASParams, as_array_size(ASParams));
+        as_cmd_register(ASParams, as_array_size(ASParams));
 
         asmfnums_init();
         asminclist_init();
@@ -4565,9 +4558,7 @@ int main(int argc, char** argv) {
 #if defined(INCDIR)
     CMD_IncludeList(False, INCDIR);
 #endif
-    if (e_cmd_err
-        == as_cmd_process(
-                argc, argv, as_cmd_recs, as_cmd_rec_cnt, EnvName, &cmd_results)) {
+    if (e_cmd_err == as_cmd_process(argc, argv, EnvName, &cmd_results)) {
         printf("%s%s\n",
                getmessage(
                        cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam

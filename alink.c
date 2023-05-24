@@ -456,8 +456,6 @@ static void ProcessFile(char const* pSrcName, int Index) {
 /****************************************************************************/
 /* command line processing */
 
-static as_cmd_rec_t const ALINKParams[] = {cmds_msg_level};
-
 int main(int argc, char** argv) {
     String           Ver;
     int              file_index;
@@ -492,10 +490,7 @@ int main(int argc, char** argv) {
 
     /* process arguments */
 
-    if (e_cmd_err
-        == as_cmd_process(
-                argc, argv, ALINKParams, as_array_size(ALINKParams), "ALINKCMD",
-                &cmd_results)) {
+    if (e_cmd_err == as_cmd_process(argc, argv, "ALINKCMD", &cmd_results)) {
         printf("%s%s\n%s\n",
                getmessage(
                        cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam
@@ -572,9 +567,10 @@ int main(int argc, char** argv) {
     PartList  = NULL;
     for (p_src_name = GetStringListFirst(cmd_results.file_arg_list, &p_src_run),
         file_index  = 1;
-         p_src_name && *p_src_name;
-         p_src_name = GetStringListNext(&p_src_run), file_index++) {
-        ReadSymbols(p_src_name, file_index);
+         p_src_name; p_src_name = GetStringListNext(&p_src_run), file_index++) {
+        if (*p_src_name) {
+            ReadSymbols(p_src_name, file_index);
+        }
     }
 
     /* double-defined symbols? */
@@ -630,9 +626,10 @@ int main(int argc, char** argv) {
     UndefErr = 0;
     for (p_src_name = GetStringListFirst(cmd_results.file_arg_list, &p_src_run),
         file_index  = 1;
-         p_src_name && *p_src_name;
-         p_src_name = GetStringListNext(&p_src_run), file_index++) {
-        ProcessFile(p_src_name, file_index);
+         p_src_name; p_src_name = GetStringListNext(&p_src_run), file_index++) {
+        if (*p_src_name) {
+            ProcessFile(p_src_name, file_index);
+        }
     }
 
     /* write final creator record */
