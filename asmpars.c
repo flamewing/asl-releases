@@ -48,6 +48,7 @@
 /* Mask, Min & Max are computed at initialization */
 
 tIntTypeDef IntTypeDefs[IntTypeCnt] = {
+        {0x0000, 0, 0, 0}, /* UInt0 */
         {0x0001, 0, 0, 0}, /* UInt1 */
         {0x0002, 0, 0, 0}, /* UInt2 */
         {0x0003, 0, 0, 0}, /* UInt3 */
@@ -494,8 +495,7 @@ IntType GetUIntTypeByBits(unsigned Bits) {
             return Result;
         }
     }
-    fprintf(stderr, "define unsigned int type with %u bits\n", Bits);
-    exit(255);
+    return UInt0;
 }
 
 static Boolean ProcessBk(char** Start, char* Erg) {
@@ -4321,7 +4321,9 @@ void PrintRegDefs(void) {
 
 PTransTable FindCodepage(char const* p_name, PTransTable p_source) {
     PTransTable p_prev, p_run, p_new;
-    int         cmp_res = 1;
+    /* If TransTables is empty, p_name is right behind non-existing
+       last entry: */
+    int cmp_res = 1;
 
     for (p_run = TransTables, p_prev = NULL; p_run; p_prev = p_run, p_run = p_run->Next) {
         cmp_res = CaseSensitive ? strcmp(p_name, p_run->Name)

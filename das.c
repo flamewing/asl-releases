@@ -2,6 +2,9 @@
 #include "stdinc.h"
 
 #include "das.rsc"
+#ifdef _USE_MSH
+#    include "das.msh"
+#endif
 
 #include "cmdarg.h"
 #include "codechunks.h"
@@ -627,7 +630,12 @@ int main(int argc, char** argv) {
     dasmdef_init();
     cpulist_init();
     msg_level_init();
-    nlmessages_init("das.msg", *argv, MsgId1, MsgId2);
+#ifdef _USE_MSH
+    nlmessages_init_buffer(das_msh_data, sizeof(das_msh_data), MsgId1, MsgId2);
+#else
+    nlmessages_init_file("das.msg", *argv, MsgId1, MsgId2);
+#endif
+    as_cmdarg_init(*argv);
     deco68_init();
     deco87c800_init();
     deco4004_init();

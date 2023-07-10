@@ -12,6 +12,20 @@
 
 #include "as.rsc"
 
+#include "as_endian.h"
+#include "bpemu.h"
+#include "nlmessages.h"
+#include "nls.h"
+#include "stdhandl.h"
+#include "version.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <setjmp.h>
+#include <string.h>
+#ifdef _USE_MSH
+#    include "as.msh"
+#endif
 #include "as.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -29,7 +43,6 @@
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
-#include "bpemu.h"
 #include "chunks.h"
 #include "cmdarg.h"
 #include "code166.h"
@@ -149,10 +162,7 @@
 #include "ioerrs.h"
 #include "literals.h"
 #include "msg_level.h"
-#include "nlmessages.h"
-#include "nls.h"
 #include "onoff_common.h"
-#include "stdhandl.h"
 #include "stringlists.h"
 #include "strutil.h"
 #include "trees.h"
@@ -4363,7 +4373,11 @@ int main(int argc, char** argv) {
             exit(4);
         }
 
-        nlmessages_init("as.msg", *argv, MsgId1, MsgId2);
+#ifdef _USE_MSH
+        nlmessages_init_buffer(as_msh_data, sizeof(as_msh_data), MsgId1, MsgId2);
+#else
+        nlmessages_init_file("as.msg", *argv, MsgId1, MsgId2);
+#endif
         ioerrs_init(*argv);
         as_cmdarg_init(*argv);
         msg_level_init();

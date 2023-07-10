@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.246
+    VERSION 1.42.247
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -387,9 +387,14 @@ if(NOT CMAKE_CROSSCOMPILING)
     )
 endif(NOT CMAKE_CROSSCOMPILING)
 
+option(ASL_EMBED_MESSAGES "Embed message catalogs in executable files" ON)
+if(ASL_EMBED_MESSAGES)
+    add_compile_definitions(_USE_MSH)
+endif()
+
 function(define_rescomp_target STEM)
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${STEM}.msg
-        COMMAND rescomp ${STEM}.res -m ${CMAKE_BINARY_DIR}/${STEM}.msg
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.msh
+        COMMAND rescomp ${STEM}.res -m ${CMAKE_BINARY_DIR}/${STEM}.msg -i ${CMAKE_BINARY_DIR}/${STEM}.msh
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS rescomp ${STEM}.res ${ARGN}
     )
@@ -399,7 +404,7 @@ function(define_rescomp_target STEM)
         DEPENDS rescomp ${STEM}.res ${ARGN}
     )
     add_custom_target(${STEM}_res ALL
-        SOURCES ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.rsc
+        SOURCES ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.msh ${CMAKE_BINARY_DIR}/${STEM}.rsc
     )
 endfunction(define_rescomp_target)
 
@@ -1045,6 +1050,7 @@ install(
     ${CMAKE_INSTALL_BINDIR}
 )
 
+if(NOT ASL_EMBED_MESSAGES)
 install(
     FILES
     ${CMAKE_BINARY_DIR}/alink.msg
@@ -1060,6 +1066,7 @@ install(
     DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/asl
 )
+endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
     export(

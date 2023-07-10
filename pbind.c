@@ -26,6 +26,10 @@
 #include "version.h"
 
 #include <string.h>
+#ifdef _USE_MSH
+#    include "pbind.msh"
+#endif
+#include "ioerrs.h"
 
 #define BufferSize 8192
 
@@ -181,7 +185,11 @@ int main(int argc, char** argv) {
     msg_level_init();
     toolutils_init(*argv);
     nls_init();
-    nlmessages_init("pbind.msg", *argv, MsgId1, MsgId2);
+#ifdef _USE_MSH
+    nlmessages_init_buffer(pbind_msh_data, sizeof(pbind_msh_data), MsgId1, MsgId2);
+#else
+    nlmessages_init_file("pbind.msg", *argv, MsgId1, MsgId2);
+#endif
     ioerrs_init(*argv);
 
     Buffer = (Byte*)malloc(sizeof(Byte) * BufferSize);

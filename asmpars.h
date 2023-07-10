@@ -22,6 +22,7 @@
 #include <stdio.h>
 
 typedef enum {
+    UInt0,
     UInt1,
     UInt2,
     UInt3,

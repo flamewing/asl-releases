@@ -15,6 +15,15 @@
 #include "addrspace.h"
 #include "as_endian.h"
 #include "bpemu.h"
+#include "nlmessages.h"
+#include "nls.h"
+#include "version.h"
+
+#include <ctype.h>
+#include <string.h>
+#ifdef _USE_MSH
+#    include "p2hex.msh"
+#endif
 #include "chunks.h"
 #include "cmdarg.h"
 #include "fileformat.h"
@@ -23,12 +32,9 @@
 #include "msg_level.h"
 #include "nlmessages.h"
 #include "nls.h"
+#include "stringlists.h"
 #include "strutil.h"
 #include "toolutils.h"
-#include "version.h"
-
-#include <ctype.h>
-#include <string.h>
 
 static char const* HexSuffix = ".hex";
 #define MaxLineLen     254
@@ -1138,7 +1144,11 @@ int main(int argc, char** argv) {
     as_cmdarg_init(*argv);
     msg_level_init();
     toolutils_init(*argv);
-    nlmessages_init("p2hex.msg", *argv, MsgId1, MsgId2);
+#ifdef _USE_MSH
+    nlmessages_init_buffer(p2hex_msh_data, sizeof(p2hex_msh_data), MsgId1, MsgId2);
+#else
+    nlmessages_init_file("p2hex.msg", *argv, MsgId1, MsgId2);
+#endif
     ioerrs_init(*argv);
 
     InitChunk(&UsedList);

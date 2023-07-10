@@ -18,6 +18,7 @@
 #include "errmsg.h"
 
 #include <math.h>
+#include <stdio.h>
 
 #define PromoteLValFlags()                                           \
     do {                                                             \
@@ -192,7 +193,7 @@ static void PotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
                 Base *= Base;
                 HVal >>= 1;
             }
-            as_tempres_set_float(pErg, Base);
+            as_tempres_set_float(pErg, Result);
         } else {
             WrError(ErrNum_InvArgPair);
             pErg->Typ = TempNone;

@@ -26,7 +26,7 @@ typedef enum {
 
 extern TRedirected Redirected;
 
-extern void OpenWithStandard(FILE** ppFile, char* Path);
+extern void OpenWithStandard(FILE** ppFile, char const* Path);
 
 extern void CloseIfOpen(FILE** ppFile);
 

@@ -994,3 +994,5 @@ Multi character constants use big endian order by default (`'ABCD'` = 0x41424344
 Run `asl -help` for command-line help, `asl -version` for version information, and `asl -cpu list` or `asl -cpu ?` for the target list. With no input filenames, ASL exits instead of asking for them interactively. `-v` enables verbose output; normal operation does not print the version banner. `-screenheight` enables paging, which is disabled by default.
 
 `-q`/`-quiet` suppresses normal progress; repeating it also suppresses source `MESSAGE` output. Error messages remain visible.
+
+CMake builds embed message catalogs by default, so installed executables do not require companion `.msg` files. Configure with `-DASL_EMBED_MESSAGES=OFF` to use external catalogs and their existing language/path lookup behavior.

@@ -15,14 +15,17 @@
 
 #include "stdinc.h"
 
-#include "cmdarg.h"
-
 #include "cmdarg.rsc"
+
 #include "nlmessages.h"
 #include "stringlists.h"
 #include "strutil.h"
 
 #include <string.h>
+#ifdef _USE_MSH
+#    include "cmdarg.msh"
+#endif
+#include "cmdarg.h"
 
 /* --------------------------------------------------------------- */
 
@@ -367,5 +370,11 @@ char const* as_cmdarg_get_executable_name(void) {
 }
 
 void as_cmdarg_init(char* ProgPath) {
-    opencatalog(&MsgCat, "cmdarg.msg", ProgPath, MsgId1, MsgId2);
+#ifdef _USE_MSH
+    msg_catalog_open_buffer(
+            &MsgCat, cmdarg_msh_data, sizeof(cmdarg_msh_data), MsgId1, MsgId2);
+    UNUSED(ProgPath);
+#else
+    msg_catalog_open_file(&MsgCat, "cmdarg.msg", ProgPath, MsgId1, MsgId2);
+#endif
 }

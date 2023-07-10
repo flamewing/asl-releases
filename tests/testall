@@ -1,0 +1,73 @@
+#!/bin/sh
+
+echo executing self tests...
+echo "=================================================================" > ../testlog
+echo "Summaric results:" >> ../testlog
+SUMPASS="0"
+SUMFAIL="0"
+if [ "$1" = "" ]; then
+ SUBDIRS=t_*
+else
+ SUBDIRS="$1"
+fi
+if [ "$V" != "1" ]; then
+  QUIET="-q"
+fi
+
+for t in $SUBDIRS; do
+ if test -f $t/$t.asm; then
+ if test -f $t/$t.ori; then
+ if cd $t ; then
+ {
+  if test "$V" = "1"; then
+   cat $t.doc
+  fi
+  # valgrind --leak-check=yes  ...
+  ${RUNCMD} ../../${OBJDIR}asl${TARG_EXEXTENSION} `cat asflags` $QUIET -Werror -i ../../include $t.asm | tee $t.log
+  ${RUNCMD} ../../${OBJDIR}p2bin${TARG_EXEXTENSION} $QUIET -k -l 0 -r 0x-0x $t
+  if test "$V" = "1"; then
+   echo +---------------------------------------------------------------+
+  fi
+  if cmp $t.ori $t.bin; then
+   if test "$V" = "1"; then
+    echo "Test $t succeeded!"
+   fi
+   echo "$t : OK" >> ../../testlog
+   SUMPASS=`expr $SUMPASS + 1`
+  else
+   echo "Test $t failed!"
+   SUMFAIL=`expr $SUMFAIL + 1`
+   echo "$t : failed" >> ../../testlog
+  fi
+  grep assembly $t.log >> ../../testlog
+  grep Assemblierzeit $t.log >> ../../testlog
+  if test "$V" = "1"; then
+   echo +---------------------------------------------------------------+
+  fi
+  rm -f $t.bin
+  rm -f $t.log
+  rm -f $t.h
+  cd ..
+ }
+ else
+ {
+  echo "$t : no such test" >> ../testlog
+  SUMFAIL=`expr $SUMFAIL + 1`
+ }
+ fi
+ fi
+ fi
+done
+echo "successes: $SUMPASS" >> ../testlog
+echo "failures : $SUMFAIL" >> ../testlog
+if [ "$V" = "1" ] || [ "$SUMFAIL" != "0" ]; then
+  cat ../testlog
+else
+  echo "successes: $SUMPASS"
+  echo "failures : $SUMFAIL"
+fi
+if test "$SUMFAIL" = "0"; then
+  exit 0
+else
+  exit 1
+fi

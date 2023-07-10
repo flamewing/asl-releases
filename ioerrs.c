@@ -14,11 +14,14 @@
 
 #include "ioerrs.rsc"
 
-#include "ioerrs.h"
 #include "nlmessages.h"
 #include "strutil.h"
 
 #include <errno.h>
+#ifdef _USE_MSH
+#    include "ioerrs.msh"
+#endif
+#include "ioerrs.h"
 
 typedef struct {
     int Code;
@@ -200,5 +203,11 @@ char* GetErrorMsg(int number) {
 
 void ioerrs_init(char* ProgPath) {
     hs = (char*)malloc(sizeof(char) * STRINGSIZE);
-    opencatalog(&MsgCat, "ioerrs.msg", ProgPath, MsgId1, MsgId2);
+#ifdef _USE_MSH
+    msg_catalog_open_buffer(
+            &MsgCat, ioerrs_msh_data, sizeof(ioerrs_msh_data), MsgId1, MsgId2);
+    UNUSED(ProgPath);
+#else
+    msg_catalog_open_file(&MsgCat, "ioerrs.msg", ProgPath, MsgId1, MsgId2);
+#endif
 }
