@@ -892,7 +892,7 @@ static void AddOne(char const* NName, Word NCode) {
 
 static void AddSing(char const* NName, Word NCode, Byte Flags) {
     if (InstrZ >= SingOrderCnt) {
-        exit(42);
+        exit(255);
     }
     SingOrders[InstrZ].Code  = NCode;
     SingOrders[InstrZ].Flags = Flags;
@@ -917,7 +917,7 @@ static void AddShift(char const* NName, Word NCode) {
 
 static void AddImm(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= ImmOrderCnt) {
-        exit(42);
+        exit(255);
     }
     ImmOrders[InstrZ].Code  = NCode << 4;
     ImmOrders[InstrZ].Flags = Flags;
@@ -926,7 +926,7 @@ static void AddImm(char const* NName, Word NCode, Word Flags) {
 
 static void AddReg(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= RegOrderCnt) {
-        exit(42);
+        exit(255);
     }
     RegOrders[InstrZ].Code  = NCode << 4;
     RegOrders[InstrZ].Flags = Flags;
@@ -935,7 +935,7 @@ static void AddReg(char const* NName, Word NCode, Word Flags) {
 
 static void AddFixed(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= FixedOrderCnt) {
-        exit(42);
+        exit(255);
     }
     FixedOrders[InstrZ].Code  = NCode;
     FixedOrders[InstrZ].Flags = Flags;
@@ -944,7 +944,7 @@ static void AddFixed(char const* NName, Word NCode, Word Flags) {
 
 static void AddType11(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type11OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type11Orders[InstrZ].Code  = NCode;
     Type11Orders[InstrZ].Flags = Flags;
@@ -953,7 +953,7 @@ static void AddType11(char const* NName, Word NCode, Word Flags) {
 
 static void AddType11a(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type11aOrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type11aOrders[InstrZ].Code  = NCode;
     Type11aOrders[InstrZ].Flags = Flags;
@@ -962,7 +962,7 @@ static void AddType11a(char const* NName, Word NCode, Word Flags) {
 
 static void AddType12(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type12OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type12Orders[InstrZ].Code  = NCode;
     Type12Orders[InstrZ].Flags = Flags;
@@ -971,7 +971,7 @@ static void AddType12(char const* NName, Word NCode, Word Flags) {
 
 static void AddType15(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type15OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type15Orders[InstrZ].Code  = NCode;
     Type15Orders[InstrZ].Flags = Flags;
@@ -980,7 +980,7 @@ static void AddType15(char const* NName, Word NCode, Word Flags) {
 
 static void AddType16(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type16OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type16Orders[InstrZ].Code  = NCode;
     Type16Orders[InstrZ].Flags = Flags;
@@ -989,7 +989,7 @@ static void AddType16(char const* NName, Word NCode, Word Flags) {
 
 static void AddType17(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type17OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type17Orders[InstrZ].Code  = NCode;
     Type17Orders[InstrZ].Flags = Flags;
@@ -998,7 +998,7 @@ static void AddType17(char const* NName, Word NCode, Word Flags) {
 
 static void AddType20(char const* NName, Word NCode, Word Flags) {
     if (InstrZ >= Type20OrderCnt) {
-        exit(42);
+        exit(255);
     }
     Type20Orders[InstrZ].Code  = NCode;
     Type20Orders[InstrZ].Flags = Flags;

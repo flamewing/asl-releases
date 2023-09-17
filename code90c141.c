@@ -34,8 +34,6 @@ typedef struct {
 #define AccReg 6
 #define HLReg  2
 
-#define ConditionCnt 24
-
 enum {
     ModNone   = -1,
     ModReg8   = 0,
@@ -302,7 +300,7 @@ static unsigned DecodeCondition(char* pCondStr) {
     int z;
 
     NLS_UpString(pCondStr);
-    for (z = 0; z < ConditionCnt; z++) {
+    for (z = 0; Conditions[z].Name; z++) {
         if (!strcmp(pCondStr, Conditions[z].Name)) {
             break;
         }
@@ -1037,7 +1035,7 @@ static void DecodeJR(Word Code) {
     if (ChkArgCnt(1, 2)) {
         int Cond
                 = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1].str.p_str);
-        if (Cond >= ConditionCnt) {
+        if (!Conditions[Cond].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             Boolean      OK;
@@ -1064,7 +1062,7 @@ static void DecodeCALL_JP(Word Code) {
         unsigned Cond
                 = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1].str.p_str);
 
-        if (Cond >= ConditionCnt) {
+        if (!Conditions[Cond].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             OpSize = 1;
@@ -1111,7 +1109,7 @@ static void DecodeRET(Word Code) {
         if (Cond == DefaultCondition) {
             CodeLen     = 1;
             BAsmCode[0] = 0x1e;
-        } else if (Cond >= ConditionCnt) {
+        } else if (!Conditions[Cond].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             CodeLen     = 2;
@@ -1205,9 +1203,7 @@ static void AddAcc(char const* NName, Byte NCode) {
 }
 
 static void AddCondition(char const* NName, Byte NCode) {
-    if (InstrZ >= ConditionCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Conditions, Condition);
     Conditions[InstrZ].Name   = NName;
     Conditions[InstrZ++].Code = NCode;
 }
@@ -1293,8 +1289,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "OR", InstrZ++, DecodeALU2);
     AddInstTable(InstTable, "CP", InstrZ++, DecodeALU2);
 
-    Conditions = (Condition*)malloc(sizeof(Condition) * ConditionCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCondition("F", 0);
     DefaultCondition = InstrZ;
     AddCondition("T", 8);
@@ -1320,12 +1315,13 @@ static void InitFields(void) {
     AddCondition("ULT", 7);
     AddCondition("UGT", 11);
     AddCondition("ULE", 3);
+    AddCondition(NULL, 0);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
 
-    free(Conditions);
+    order_array_free(Conditions);
 }
 
 static void MakeCode_90C141(void) {

@@ -77,7 +77,7 @@ static void ProcessFile(char* FileName) {
     }
 
     if (!Read2(SrcFile, &TestID)) {
-        ChkIO(FileName);
+        chk_wr_read_error(FileName);
     }
     if (TestID != FileMagic) {
         FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
@@ -96,7 +96,7 @@ static void ProcessFile(char* FileName) {
 
         if (InpHeader == FileHeaderStartAdr) {
             if (!Read4(SrcFile, &InpStart)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             WriteRecordHeader(
                     &InpHeader, &InpCPU, &InpSegment, &InpGran, TargName, TargFile);
@@ -107,10 +107,10 @@ static void ProcessFile(char* FileName) {
 
         else if (InpHeader == FileHeaderDataRec) {
             if (!Read4(SrcFile, &InpStart)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             if (!Read2(SrcFile, &InpLen)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
 
             if (ftell(SrcFile) + InpLen >= FileSize(SrcFile) - 1) {
@@ -132,7 +132,7 @@ static void ProcessFile(char* FileName) {
                 while (InpLen > 0) {
                     TransLen = min(BufferSize, InpLen);
                     if (fread(Buffer, 1, TransLen, SrcFile) != TransLen) {
-                        ChkIO(FileName);
+                        chk_wr_read_error(FileName);
                     }
                     if (fwrite(Buffer, 1, TransLen, TargFile) != TransLen) {
                         ChkIO(TargName);

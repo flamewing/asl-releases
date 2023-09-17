@@ -4298,55 +4298,47 @@ static as_cmd_result_t CMD_MaxIncludeLevel(Boolean Negate, char const* pArg) {
     }
 }
 
-static as_cmd_result_t CMD_TreatWarningsAsErrors(Boolean Negate, char const* Arg) {
-    UNUSED(Arg);
-
-    TreatWarningsAsErrors = !Negate;
-    return e_cmd_ok;
-}
-
 static as_cmd_rec_t const ASParams[] = {
-        {           "A",           CMD_BalanceTree},
-        {       "alias",              CMD_CPUAlias},
-        {           "a",        CMD_ShareAssembler},
-        {           "C",             CMD_CrossList},
-        {           "c",                CMD_ShareC},
-        {         "CPU",                CMD_SetCPU},
-        {           "D",             CMD_DefSymbol},
-        {           "E",             CMD_ErrorPath},
-        {           "g",             CMD_DebugMode},
-        {           "G",            CMD_CodeOutput},
-        {   "gnuerrors",             CMD_GNUErrors},
-        {           "h",          CMD_HexLowerCase},
-        {           "i",           CMD_IncludeList},
-        {           "I",       CMD_MakeIncludeList},
-        {           "L",              CMD_ListFile},
-        {           "l",           CMD_ListConsole},
-        {   "listradix",             CMD_ListRadix},
-        {   "splitbyte",             CMD_SplitByte},
-        {           "M",           CMD_MacroOutput},
-        {   "maxerrors",             CMD_MaxErrors},
-        { "maxinclevel",       CMD_MaxIncludeLevel},
-        {           "n",         CMD_NumericErrors},
-        {   "noicemask",             CMD_NoICEMask},
-        {           "o",               CMD_OutFile},
-        {           "P",          CMD_MacProOutput},
-        {           "p",           CMD_SharePascal},
-        {           "r",           CMD_MsgIfRepass},
-        {   RelaxedName,               CMD_Relaxed},
-        {           "s",           CMD_SectionList},
-        {"screenheight",         CMD_screen_height},
-        {    "shareout",          CMD_ShareOutFile},
-        {       "olist",           CMD_ListOutFile},
-        {           "t",              CMD_ListMask},
-        {           "u",               CMD_UseList},
-        {           "U",         CMD_CaseSensitive},
-        {           "w",             CMD_SuppWarns},
-        {  "warnranges",            CMD_HardRanges},
-        {      "werror", CMD_TreatWarningsAsErrors},
-        {           "x",          CMD_ExtendErrors},
-        {           "X",             CMD_MakeDebug},
-        {           "Y",           CMD_ThrowErrors}
+        {           "A",     CMD_BalanceTree},
+        {       "alias",        CMD_CPUAlias},
+        {           "a",  CMD_ShareAssembler},
+        {           "C",       CMD_CrossList},
+        {           "c",          CMD_ShareC},
+        {         "CPU",          CMD_SetCPU},
+        {           "D",       CMD_DefSymbol},
+        {           "E",       CMD_ErrorPath},
+        {           "g",       CMD_DebugMode},
+        {           "G",      CMD_CodeOutput},
+        {   "gnuerrors",       CMD_GNUErrors},
+        {           "h",    CMD_HexLowerCase},
+        {           "i",     CMD_IncludeList},
+        {           "I", CMD_MakeIncludeList},
+        {           "L",        CMD_ListFile},
+        {           "l",     CMD_ListConsole},
+        {   "listradix",       CMD_ListRadix},
+        {   "splitbyte",       CMD_SplitByte},
+        {           "M",     CMD_MacroOutput},
+        {   "maxerrors",       CMD_MaxErrors},
+        { "maxinclevel", CMD_MaxIncludeLevel},
+        {           "n",   CMD_NumericErrors},
+        {   "noicemask",       CMD_NoICEMask},
+        {           "o",         CMD_OutFile},
+        {           "P",    CMD_MacProOutput},
+        {           "p",     CMD_SharePascal},
+        {           "r",     CMD_MsgIfRepass},
+        {   RelaxedName,         CMD_Relaxed},
+        {           "s",     CMD_SectionList},
+        {"screenheight",   CMD_screen_height},
+        {    "shareout",    CMD_ShareOutFile},
+        {       "olist",     CMD_ListOutFile},
+        {           "t",        CMD_ListMask},
+        {           "u",         CMD_UseList},
+        {           "U",   CMD_CaseSensitive},
+        {           "w",       CMD_SuppWarns},
+        {  "warnranges",      CMD_HardRanges},
+        {           "x",    CMD_ExtendErrors},
+        {           "X",       CMD_MakeDebug},
+        {           "Y",     CMD_ThrowErrors}
 };
 
 /*--------------------------------------------------------------------------*/
@@ -4396,6 +4388,7 @@ int main(int argc, char** argv) {
         asmmac_init();
         asmstruct_init();
         asmif_init();
+        asmerr_init();
         asmcode_init();
         asmlabel_init();
         asmdebug_init();
@@ -4552,19 +4545,18 @@ int main(int argc, char** argv) {
     MacProOutput    = False;
     CodeOutput      = True;
     strcpy(ErrorPath, "!2");
-    MsgIfRepass           = False;
-    NumericErrors         = False;
-    DebugMode             = DebugNone;
-    CaseSensitive         = False;
-    ThrowErrors           = False;
-    HardRanges            = True;
-    NoICEMask             = 1 << SegCode;
-    GNUErrors             = False;
-    MaxErrors             = 0;
-    TreatWarningsAsErrors = False;
-    ListRadixBase         = 16;
-    MaxIncludeLevel       = DEFAULT_MAXINCLUDELEVEL;
-    write_cpu_list_exit   = False;
+    MsgIfRepass         = False;
+    NumericErrors       = False;
+    DebugMode           = DebugNone;
+    CaseSensitive       = False;
+    ThrowErrors         = False;
+    HardRanges          = True;
+    NoICEMask           = 1 << SegCode;
+    GNUErrors           = False;
+    MaxErrors           = 0;
+    ListRadixBase       = 16;
+    MaxIncludeLevel     = DEFAULT_MAXINCLUDELEVEL;
+    write_cpu_list_exit = False;
 
     LineZ         = 0;
     screen_height = 0;

@@ -1694,7 +1694,7 @@ Another three floating point commands. All of them support non-IEEE formats, whi
 
 - `EFLOAT`: mantissa with 16 bits, exponent with 16 bits
 - `BFLOAT`: mantissa with 32 bits, exponent with 16 bits
-- `DFLOAT`: mantissa with 64 bits, exponent with 32 bits
+- `TFLOAT`: mantissa with 64 bits, exponent with 32 bits
 
 The three commands share a common storage strategy. In all cases the mantissa precedes the exponent in memory, both are stored as 2's complement with the least significant byte first. Note that when in 320C2(0)x/5x mode the assembler assumes that all labels on the left side of an instruction have no type, i.e. they belong to no address space. This behaviour is explained in the processor-specific hints.
 
@@ -3029,3 +3029,4 @@ PDP-11 and WD16 accept `BYTE`/`WORD` as aliases for `DB`/`DW`. `FLT2` and `FLT4`
 `ENDIAN LITTLE` or `ENDIAN BIG` selects RX data byte order. `BLKB`, `BLKW`, `BLKL` and `BLKD` reserve the argument times 1, 2, 4 or 8 bytes. `BYTE` is equivalent to `DB`; `WORD` and `LWORD` store integer values only (like `DW` and `DD`). `FLOAT` and `DOUBLE` store floating point values only (like `DD` and `DQ`).
 
 To explicitly select an assembler directive when its name collides with a machine instruction, use `.SET`, `.EQU`, `.PAGE`, `.SWITCH`, `.SHIFT`, `.SAVE` or `.RESTORE`. These forms are always accepted regardless of target instruction names.
+

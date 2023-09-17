@@ -225,11 +225,11 @@ static void ReadSymbols(char const* pSrcName, int Index) {
             PNew->Gran    = Gran;
             PNew->Segment = Segment;
             if (!Read4(f, &Addr)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             PNew->CodeStart = Addr;
             if (!Read2(f, &Len)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             PNew->CodeLen = Len;
             PNew->MustReloc
@@ -331,7 +331,7 @@ static void ProcessFile(char const* pSrcName, int Index) {
     /* check magic */
 
     if (!Read2(f, &Magic)) {
-        ChkIO(SrcName);
+        chk_wr_read_error(SrcName);
     }
     if (Magic != FileMagic) {
         FormatError(SrcName, getmessage(Num_FormatInvHeaderMsg));
@@ -361,14 +361,14 @@ static void ProcessFile(char const* pSrcName, int Index) {
 
         if ((Header == FileHeaderDataRec) || (Header == FileHeaderRelocRec)) {
             if (!Read4(f, &Addr)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             if (!Read2(f, &Len)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             BumpBuffer(Len);
             if (fread(Buffer, 1, Len, f) != Len) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             WriteRecordHeader(&Header, &CPU, &Segment, &Gran, TargName, TargFile);
             if (!Write4(TargFile, &Addr)) {
@@ -391,14 +391,14 @@ static void ProcessFile(char const* pSrcName, int Index) {
 
         else if ((Header == FileHeaderRDataRec) || (Header == FileHeaderRRelocRec)) {
             if (!Read4(f, &Addr)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             if (!Read2(f, &Len)) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
             BumpBuffer(Len);
             if (fread(Buffer, 1, Len, f) != Len) {
-                ChkIO(SrcName);
+                chk_wr_read_error(SrcName);
             }
 
             UndefFlag = False;

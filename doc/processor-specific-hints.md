@@ -1723,3 +1723,7 @@ WD16 uses the same processor hardware as LSI-11 with different microcode. It sha
 ### Renesas RX
 
 RXV1 (RX110/111/113/130/210/21A/220/610/621/62N/630/631), RXV2 (RX140/230/231/64M/651), and RXV3 (RX660/671/72M/72N) represent successive generations with additional instructions.
+
+`MOVEQ` accepts immediate values 0x80 through 0xff and warns (430) that the processor sign extends them to the full register width. Use a signed value when the sign extension is intentional.
+
+The 8086 family includes 8088/8086, 80188/80186, V20/V30/V40/V50, V33/V53, V25/V35, V55, V55SC and V55PI. Variants on each line share instruction sets; later groups add instructions to their branch of the NEC family.

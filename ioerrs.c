@@ -183,7 +183,7 @@ static ErrorDef ErrorDefs[] = {
 
 char* hs;
 
-char* GetErrorMsg(int number) {
+char const* GetErrorMsg(int number) {
     ErrorDef* z;
 
     for (z = ErrorDefs; z->Msg != -1; z++) {
@@ -199,6 +199,10 @@ char* GetErrorMsg(int number) {
                 hs, STRINGSIZE, "%s%d", catgetmessage(&MsgCat, Num_IoErrUnknown), number);
         return hs;
     }
+}
+
+char const* GetReadErrorMsg(void) {
+    return catgetmessage(&MsgCat, Num_IoErr_READERROR);
 }
 
 void ioerrs_init(char* ProgPath) {

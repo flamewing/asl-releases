@@ -39,9 +39,7 @@ typedef struct {
     Word Code1, Code2;
 } EmuOrder;
 
-#define GenOrderCnt 66
-#define EmuOrderCnt 6
-#define RegCnt      7
+#define RegCnt 7
 
 enum {
     ModNone   = -1,
@@ -752,9 +750,7 @@ static void AddLRel(char const* NName, Word NCode) {
 static void AddGen(
         char const* NName, tSymbolSize NSize, Word NCode, Word NExtCode, Byte NShift,
         Byte NMask) {
-    if (InstrZ >= GenOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(GenOrders, GenOrder);
     GenOrders[InstrZ].Code     = NCode;
     GenOrders[InstrZ].ExtCode  = NExtCode;
     GenOrders[InstrZ].Size     = NSize;
@@ -776,9 +772,7 @@ static void AddExt(char const* NName, Word NCode) {
 }
 
 static void AddEmu(char const* NName, Word NCode1, Word NCode2) {
-    if (InstrZ >= EmuOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(EmuOrders, EmuOrder);
     EmuOrders[InstrZ].Code1 = NCode1;
     EmuOrders[InstrZ].Code2 = NCode2;
     AddInstTable(InstTable, NName, InstrZ++, DecodeEmu);
@@ -969,8 +963,7 @@ static void InitFields(void) {
     AddLRel("LBMV", 0x3790);
     AddLRel("LBSR", 0x27f9);
 
-    GenOrders = (GenOrder*)malloc(sizeof(GenOrder) * GenOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddGen("ADCA", eSymbolSize8Bit, 0x43, 0xffff, 0x00,
            MModDisp8 | MModImm | MModDisp16 | MModAbs | MModDispE);
     AddGen("ADCB", eSymbolSize8Bit, 0xc3, 0xffff, 0x00,
@@ -1093,8 +1086,7 @@ static void InitFields(void) {
     AddExt("LDHI", 0x27b0);
     AddExt("STED", 0x2773);
 
-    EmuOrders = (EmuOrder*)malloc(sizeof(EmuOrder) * EmuOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddEmu("CLC", 0x373a, 0xfeff);
     AddEmu("CLI", 0x373a, 0xff1f);
     AddEmu("CLV", 0x373a, 0xfdff);
@@ -1143,8 +1135,8 @@ static void InitFields(void) {
 }
 
 static void DeinitFields(void) {
-    free(GenOrders);
-    free(EmuOrders);
+    order_array_free(GenOrders);
+    order_array_free(EmuOrders);
     DestroyInstTable(InstTable);
     free(Regs);
 }

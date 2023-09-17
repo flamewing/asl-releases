@@ -60,27 +60,26 @@ unsigned         ASSUMERecCnt;
 ASSUMERec const* pASSUMERecs;
 void (*pASSUMEOverride)(void);
 
-Integer     PassNo;                /* Durchlaufsnummer */
-Integer     JmpErrors;             /* Anzahl fraglicher Sprungfehler */
-Boolean     ThrowErrors;           /* Fehler verwerfen bei Repass ? */
-LongWord    MaxErrors;             /* terminate upon n errors? */
-Boolean     TreatWarningsAsErrors; /* treat warnings like erros? */
-Boolean     Repass;                /* noch ein Durchlauf erforderlich */
-Byte        MaxSymPass;            /* Pass, nach dem Symbole definiert sein muessen */
-Byte        ShareMode;             /* 0=kein SHARED,1=Pascal-,2=C-Datei, 3=ASM-Datei */
-DebugType   DebugMode;             /* Ausgabeformat Debug-Datei */
-Word        NoICEMask;             /* which symbols to use in NoICE dbg file */
-Byte        ListMode;              /* 0=kein Listing,1=Konsole,2=auf Datei */
-Byte        ListOn;                /* Listing erzeugen ? */
-Integer     MaxIncludeLevel;       /* maximum include nesting level */
-Boolean     MakeUseList;           /* Belegungsliste ? */
-Boolean     MakeCrossList;         /* Querverweisliste ? */
-Boolean     MakeSectionList;       /* Sektionsliste ? */
-Boolean     MakeIncludeList;       /* Includeliste ? */
-Boolean     DefRelaxedMode;        /* alle Integer-Syntaxen zulassen ? */
-Word        ListMask;              /* Listingmaske */
-ShortInt    ExtendErrors;          /* erweiterte Fehlermeldungen */
-Integer     EnumSegment;           /* ENUM state & config */
+Integer     PassNo;          /* Durchlaufsnummer */
+Integer     JmpErrors;       /* Anzahl fraglicher Sprungfehler */
+Boolean     ThrowErrors;     /* Fehler verwerfen bei Repass ? */
+LongWord    MaxErrors;       /* terminate upon n errors? */
+Boolean     Repass;          /* noch ein Durchlauf erforderlich */
+Byte        MaxSymPass;      /* Pass, nach dem Symbole definiert sein muessen */
+Byte        ShareMode;       /* 0=kein SHARED,1=Pascal-,2=C-Datei, 3=ASM-Datei */
+DebugType   DebugMode;       /* Ausgabeformat Debug-Datei */
+Word        NoICEMask;       /* which symbols to use in NoICE dbg file */
+Byte        ListMode;        /* 0=kein Listing,1=Konsole,2=auf Datei */
+Byte        ListOn;          /* Listing erzeugen ? */
+Integer     MaxIncludeLevel; /* maximum include nesting level */
+Boolean     MakeUseList;     /* Belegungsliste ? */
+Boolean     MakeCrossList;   /* Querverweisliste ? */
+Boolean     MakeSectionList; /* Sektionsliste ? */
+Boolean     MakeIncludeList; /* Includeliste ? */
+Boolean     DefRelaxedMode;  /* alle Integer-Syntaxen zulassen ? */
+Word        ListMask;        /* Listingmaske */
+ShortInt    ExtendErrors;    /* erweiterte Fehlermeldungen */
+Integer     EnumSegment;     /* ENUM state & config */
 LongInt     EnumIncrement, EnumCurrentValue;
 Boolean     NumericErrors;    /* Fehlermeldungen mit Nummer */
 Boolean     CodeOutput;       /* Code erzeugen */

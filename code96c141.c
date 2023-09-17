@@ -56,11 +56,6 @@ typedef struct {
     Byte        Code;
 } Condition;
 
-#define FixedOrderCnt 13
-#define ImmOrderCnt   3
-#define RegOrderCnt   8
-#define ConditionCnt  24
-
 #define ModNone  (-1)
 #define ModReg   0
 #define MModReg  (1 << ModReg)
@@ -945,7 +940,7 @@ static void CheckSup(void) {
 static int DecodeCondition(char const* pAsc) {
     int z;
 
-    for (z = 0; (z < ConditionCnt) && (as_strcasecmp(pAsc, Conditions[z].Name)); z++)
+    for (z = 0; Conditions[z].Name && as_strcasecmp(pAsc, Conditions[z].Name); z++)
         ;
     return z;
 }
@@ -988,7 +983,7 @@ static void DecodeJPCALL(Word Index) {
 
     if (ChkArgCnt(1, 2)) {
         z = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1].str.p_str);
-        if (z >= ConditionCnt) {
+        if (!Conditions[z].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             OpSize = 2;
@@ -1031,7 +1026,7 @@ static void DecodeJR(Word Index) {
 
     if (ChkArgCnt(1, 2)) {
         z = (ArgCnt == 1) ? DefaultCondition : DecodeCondition(ArgStr[1].str.p_str);
-        if (z >= ConditionCnt) {
+        if (!Conditions[z].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int32, &OK, &Flags);
@@ -1099,7 +1094,7 @@ static void DecodeRET(Word Index) {
 
     if (ChkArgCnt(0, 1)) {
         z = (ArgCnt == 0) ? DefaultCondition : DecodeCondition(ArgStr[1].str.p_str);
-        if (z >= ConditionCnt) {
+        if (!Conditions[z].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else if (z == DefaultCondition) {
             CodeLen     = 1;
@@ -2292,7 +2287,7 @@ static void DecodeSCC(Word Code) {
 
     if (ChkArgCnt(2, 2)) {
         int Cond = DecodeCondition(ArgStr[1].str.p_str);
-        if (Cond >= ConditionCnt) {
+        if (!Conditions[Cond].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             DecodeAdr(&ArgStr[2], MModReg | MModXReg);
@@ -2356,9 +2351,7 @@ static void AddMod(char const* NName, Byte NCode) {
 }
 
 static void AddFixed(char const* NName, Word NCode, Byte NFlag, Boolean NSup) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code    = NCode;
     FixedOrders[InstrZ].CPUFlag = NFlag;
     FixedOrders[InstrZ].InSup   = NSup;
@@ -2366,9 +2359,7 @@ static void AddFixed(char const* NName, Word NCode, Byte NFlag, Boolean NSup) {
 }
 
 static void AddReg(char const* NName, Word NCode, Byte NMask) {
-    if (InstrZ >= RegOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(RegOrders, RegOrder);
     RegOrders[InstrZ].Code   = NCode;
     RegOrders[InstrZ].OpMask = NMask;
     AddInstTable(InstTable, NName, InstrZ++, DecodeReg);
@@ -2377,9 +2368,7 @@ static void AddReg(char const* NName, Word NCode, Byte NMask) {
 static void AddImm(
         char const* NName, Word NCode, Boolean NInSup, Byte NMinMax, Byte NMaxMax,
         ShortInt NDefault) {
-    if (InstrZ >= ImmOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(ImmOrders, ImmOrder);
     ImmOrders[InstrZ].Code    = NCode;
     ImmOrders[InstrZ].InSup   = NInSup;
     ImmOrders[InstrZ].MinMax  = NMinMax;
@@ -2409,9 +2398,7 @@ static void AddBit(char const* NName) {
 }
 
 static void AddCondition(char const* NName, Byte NCode) {
-    if (InstrZ >= ConditionCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Conditions, Condition);
     Conditions[InstrZ].Name   = NName;
     Conditions[InstrZ++].Code = NCode;
 }
@@ -2456,8 +2443,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "RRD", 0x07, DecodeRLD_RRD);
     AddInstTable(InstTable, "SCC", 0, DecodeSCC);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("CCF", 0x0012, 3, False);
     AddFixed("DECF", 0x000d, 3, False);
     AddFixed("DI", 0x0607, 3, True);
@@ -2472,8 +2458,7 @@ static void InitFields(void) {
     AddFixed("SCF", 0x0011, 3, False);
     AddFixed("ZCF", 0x0013, 3, False);
 
-    RegOrders = (RegOrder*)malloc(sizeof(RegOrder) * RegOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddReg("CPL", 0xc006, 3);
     AddReg("DAA", 0xc010, 1);
     AddReg("EXTS", 0xc013, 6);
@@ -2483,8 +2468,7 @@ static void InitFields(void) {
     AddReg("PAA", 0xc014, 6);
     AddReg("UNLK", 0xc00d, 4);
 
-    ImmOrders = (ImmOrder*)malloc(sizeof(ImmOrder) * ImmOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddImm("EI", 0x0600, True, 7, 7, 0);
     AddImm("LDF", 0x1700, False, 7, 3, -1);
     AddImm("SWI", 0x00f8, False, 7, 7, 7);
@@ -2527,8 +2511,7 @@ static void InitFields(void) {
     AddBit("BIT");
     AddBit("TSET");
 
-    Conditions = (Condition*)malloc(sizeof(Condition) * ConditionCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCondition("F", 0);
     DefaultCondition = InstrZ;
     AddCondition("T", 8);
@@ -2554,14 +2537,15 @@ static void InitFields(void) {
     AddCondition("ULT", 7);
     AddCondition("UGT", 11);
     AddCondition("ULE", 3);
+    AddCondition(NULL, 0);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(RegOrders);
-    free(ImmOrders);
-    free(Conditions);
+    order_array_free(FixedOrders);
+    order_array_free(RegOrders);
+    order_array_free(ImmOrders);
+    order_array_free(Conditions);
 }
 
 static void MakeCode_96C141(void) {

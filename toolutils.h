@@ -45,6 +45,7 @@ extern void AddSuffix(char* Name, unsigned NameSize, char const* Suff);
 extern void FormatError(char const* Name, char const* Detail);
 
 extern void ChkIO(char const* Name);
+extern void chk_wr_read_error(char const* p_name);
 
 extern Word Granularity(Byte Header, Byte Segment);
 

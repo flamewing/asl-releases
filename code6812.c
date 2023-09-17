@@ -79,14 +79,6 @@ enum {
 
 #define MModAllIdx (MModIdx | MModIdx1 | MModIdx2 | MModDIdx | MModIIdx2)
 
-#define FixedOrderCount  (87 + 26)
-#define BranchOrderCount 20
-#define GenOrderCount    (56 + 46)
-#define LoopOrderCount   6
-#define LEAOrderCount    3
-#define JmpOrderCount    2
-#define RegCount         17
-
 static tSymbolSize OpSize;
 static ShortInt    AdrMode;
 static ShortInt    ExPos;
@@ -1263,20 +1255,14 @@ static void LookupReg(Word Index) {
 /* Dynamic Code Table Handling */
 
 static void AddFixed(char const* NName, Word NCode, CPUVar NMin) {
-    if (InstrZ >= FixedOrderCount) {
-        fprintf(stderr, "AddFixed");
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code   = NCode;
     FixedOrders[InstrZ].MinCPU = NMin;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddBranch(char const* NName, Word NCode) {
-    if (InstrZ >= BranchOrderCount) {
-        fprintf(stderr, "AddBranch");
-        exit(255);
-    }
+    order_array_rsv_end(BranchOrders, FixedOrder);
     BranchOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName + 1, InstrZ, DecodeBranch);
     AddInstTable(InstTable, NName, InstrZ++, DecodeLBranch);
@@ -1285,10 +1271,7 @@ static void AddBranch(char const* NName, Word NCode) {
 static void AddGen(
         char const* NName, Word NCode, Boolean NMayI, Boolean NMayD, Boolean NMayE,
         tSymbolSize NSize, CPUVar NMin) {
-    if (InstrZ >= GenOrderCount) {
-        fprintf(stderr, "AddGen");
-        exit(255);
-    }
+    order_array_rsv_end(GenOrders, GenOrder);
     GenOrders[InstrZ].Code       = NCode;
     GenOrders[InstrZ].MayImm     = NMayI;
     GenOrders[InstrZ].MayDir     = NMayD;
@@ -1299,38 +1282,26 @@ static void AddGen(
 }
 
 static void AddLoop(char const* NName, Word NCode) {
-    if (InstrZ >= LoopOrderCount) {
-        fprintf(stderr, "AddLoop");
-        exit(255);
-    }
+    order_array_rsv_end(LoopOrders, FixedOrder);
     LoopOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeLoop);
 }
 
 static void AddLEA(char const* NName, Word NCode) {
-    if (InstrZ >= LEAOrderCount) {
-        fprintf(stderr, "AddLEA");
-        exit(255);
-    }
+    order_array_rsv_end(LEAOrders, FixedOrder);
     LEAOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeLEA);
 }
 
 static void AddJmp(char const* NName, Word NCode, Boolean NDir) {
-    if (InstrZ >= JmpOrderCount) {
-        fprintf(stderr, "AddJmp");
-        exit(255);
-    }
+    order_array_rsv_end(JmpOrders, JmpOrder);
     JmpOrders[InstrZ].Code   = NCode;
     JmpOrders[InstrZ].MayDir = NDir;
     AddInstTable(InstTable, NName, InstrZ++, DecodeJmp);
 }
 
 static void AddReg(char const* NName, Word NCode, Word NSize, CPUVar NMin) {
-    if (InstrZ >= RegCount) {
-        fprintf(stderr, "AddReg");
-        exit(255);
-    }
+    order_array_rsv_end(Regs, Reg);
     Regs[InstrZ].Code   = NCode;
     Regs[InstrZ].OpSize = NSize;
     Regs[InstrZ].MinCPU = NMin;
@@ -1340,8 +1311,7 @@ static void AddReg(char const* NName, Word NCode, Word NSize, CPUVar NMin) {
 static void InitFields(void) {
     InstTable = CreateInstTable(405);
 
-    FixedOrders = (FixedOrder*)malloc(FixedOrderCount * sizeof(FixedOrder));
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("ABA", 0x1806, CPU6812);
     AddFixed("ABX", 0x1ae5, CPU6812);
     AddFixed("ABY", 0x19ed, CPU6812);
@@ -1456,8 +1426,7 @@ static void InitFields(void) {
     AddFixed("XGDX", 0xb7c5, CPU6812);
     AddFixed("XGDY", 0xb7c6, CPU6812);
 
-    BranchOrders = (FixedOrder*)malloc(BranchOrderCount * sizeof(FixedOrder));
-    InstrZ       = 0;
+    InstrZ = 0;
     AddBranch("LBGT", 0x2e);
     AddBranch("LBGE", 0x2c);
     AddBranch("LBEQ", 0x27);
@@ -1478,8 +1447,7 @@ static void InitFields(void) {
     AddBranch("LBVC", 0x28);
     AddBranch("LBSR", 0x07);
 
-    GenOrders = (GenOrder*)malloc(sizeof(GenOrder) * GenOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddGen("ADCA", 0x0089, True, True, True, eSymbolSize8Bit, CPU6812);
     AddGen("ADCB", 0x00c9, True, True, True, eSymbolSize8Bit, CPU6812);
     AddGen("ADDA", 0x008b, True, True, True, eSymbolSize8Bit, CPU6812);
@@ -1583,8 +1551,7 @@ static void InitFields(void) {
     AddGen("TST", 0x00c7, False, False, True, eSymbolSizeUnknown, CPU6812);
     AddGen("TSTW", 0x18c7, False, False, True, eSymbolSizeUnknown, CPU6812X);
 
-    LoopOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * LoopOrderCount);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddLoop("DBEQ", 0x00);
     AddLoop("DBNE", 0x20);
     AddLoop("IBEQ", 0x80);
@@ -1592,14 +1559,12 @@ static void InitFields(void) {
     AddLoop("TBEQ", 0x40);
     AddLoop("TBNE", 0x60);
 
-    LEAOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * LEAOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddLEA("LEAS", 0x1b);
     AddLEA("LEAX", 0x1a);
     AddLEA("LEAY", 0x19);
 
-    JmpOrders = (JmpOrder*)malloc(sizeof(JmpOrder) * JmpOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddJmp("JMP", 0x06, False);
     AddJmp("JSR", 0x16, True);
 
@@ -1623,7 +1588,6 @@ static void InitFields(void) {
     AddInstTable(InstTable, "BTAS", 0, DecodeBTAS);
 
     RegTable = CreateInstTable(31);
-    Regs     = (Reg*)malloc(sizeof(Reg) * RegCount);
     InstrZ   = 0;
     AddReg("A", eRegA, 0, CPU6812);
     AddReg("B", eRegB, 0, CPU6812);
@@ -1648,15 +1612,15 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(BranchOrders);
-    free(GenOrders);
-    free(LoopOrders);
-    free(LEAOrders);
-    free(JmpOrders);
+    order_array_free(FixedOrders);
+    order_array_free(BranchOrders);
+    order_array_free(GenOrders);
+    order_array_free(LoopOrders);
+    order_array_free(LEAOrders);
+    order_array_free(JmpOrders);
 
     DestroyInstTable(RegTable);
-    free(Regs);
+    order_array_free(Regs);
 }
 
 /*--------------------------------------------------------------------------*/

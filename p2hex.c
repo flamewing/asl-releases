@@ -193,7 +193,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
     }
 
     if (!Read2(SrcFile, &TestID)) {
-        ChkIO(FileName);
+        chk_wr_read_error(FileName);
     }
     if (TestID != FileMagic) {
         FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
@@ -212,7 +212,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
 
         if (InpHeader == FileHeaderStartAdr) {
             if (!Read4(SrcFile, &ErgStart)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             if (!EntryAdrPresent) {
                 EntryAdr        = ErgStart;
@@ -261,10 +261,10 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
             }
 
             if (!Read4(SrcFile, &InpStart)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             if (!Read2(SrcFile, &InpLen)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
 
             NextPos = ftell(SrcFile) + InpLen;
@@ -537,7 +537,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     /* Daten selber */
 
                     if (fread(Buffer, 1, TransLen, SrcFile) != TransLen) {
-                        ChkIO(FileName);
+                        chk_wr_read_error(FileName);
                     }
                     if (MultiMode == 1) {
                         switch (Gran) {
@@ -773,7 +773,7 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
     }
 
     if (!Read2(f, &TestID)) {
-        ChkIO(FileName);
+        chk_wr_read_error(FileName);
     }
     if (TestID != FileMagic) {
         FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
@@ -784,10 +784,10 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
 
         if (Header == FileHeaderDataRec) {
             if (!Read4(f, &Adr)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             if (!Read2(f, &Length)) {
-                ChkIO(FileName);
+                chk_wr_read_error(FileName);
             }
             NextPos = ftell(f) + Length;
             if (NextPos > FileSize(f)) {

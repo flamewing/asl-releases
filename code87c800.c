@@ -31,8 +31,6 @@ typedef struct {
     Byte        Code;
 } CondRec;
 
-#define ConditionCnt 12
-
 enum {
     ModNone  = -1,
     ModReg8  = 0,
@@ -272,17 +270,21 @@ static void CodeMem(Byte Entry, Byte Opcode) {
     BAsmCode[1 + AdrCnt] = Opcode;
 }
 
-static int DecodeCondition(char* pCondStr, int Start) {
+static int DecodeCondition(char* pCondStr) {
     int Condition;
 
     NLS_UpString(pCondStr);
-    for (Condition = Start; Condition < ConditionCnt; Condition++) {
+    for (Condition = 0; Conditions[Condition].Name; Condition++) {
         if (!strcmp(ArgStr[1].str.p_str, Conditions[Condition].Name)) {
             break;
         }
     }
 
     return Condition;
+}
+
+static Boolean condition_tf(int condition) {
+    return (Conditions[condition].Code == 6) || (Conditions[condition].Code == 7);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1151,8 +1153,8 @@ static void DecodeJRS(Word Code) {
         Boolean      OK;
         tSymbolFlags Flags;
 
-        Condition = DecodeCondition(ArgStr[1].str.p_str, ConditionCnt - 2);
-        if (Condition >= ConditionCnt) {
+        Condition = DecodeCondition(ArgStr[1].str.p_str);
+        if (!condition_tf(Condition)) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], Int16, &OK, &Flags)
@@ -1178,8 +1180,8 @@ static void DecodeJR(Word Code) {
         Boolean      OK;
         tSymbolFlags Flags;
 
-        Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1].str.p_str, 0);
-        if (Condition >= ConditionCnt) {
+        Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1].str.p_str);
+        if ((Condition >= 0) && !Conditions[Condition].Name) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags)
@@ -1277,9 +1279,7 @@ static void AddFixed(char const* NName, Word NCode) {
 }
 
 static void AddCond(char const* NName, Byte NCode) {
-    if (InstrZ >= ConditionCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Conditions, CondRec);
     Conditions[InstrZ].Name   = NName;
     Conditions[InstrZ++].Code = NCode;
 }
@@ -1321,8 +1321,7 @@ static void InitFields(void) {
     AddFixed("SWI", 0x00ff);
     AddFixed("NOP", 0x0000);
 
-    Conditions = (CondRec*)malloc(sizeof(CondRec) * ConditionCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCond("EQ", 0);
     AddCond("Z", 0);
     AddCond("NE", 1);
@@ -1335,6 +1334,7 @@ static void InitFields(void) {
     AddCond("GT", 5);
     AddCond("T", 6);
     AddCond("F", 7);
+    AddCond(NULL, 0);
 
     AddReg("DAA", 0x0a);
     AddReg("DAS", 0x0b);
@@ -1358,7 +1358,7 @@ static void InitFields(void) {
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
 
-    free(Conditions);
+    order_array_free(Conditions);
 }
 
 /*--------------------------------------------------------------------------*/

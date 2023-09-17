@@ -58,7 +58,7 @@ static void ProcessSingle(char const* pFileName) {
     }
 
     if (!Read2(ProgFile, &ID)) {
-        ChkIO(pFileName);
+        chk_wr_read_error(pFileName);
     }
     if (ID != FileMagic) {
         FormatError(pFileName, getmessage(Num_FormatInvHeaderMsg));
@@ -98,7 +98,7 @@ static void ProcessSingle(char const* pFileName) {
 
         else if (Header == FileHeaderStartAdr) {
             if (!Read4(ProgFile, &StartAdr)) {
-                ChkIO(pFileName);
+                chk_wr_read_error(pFileName);
             }
             errno = 0;
             printf("%s%08lX\n", getmessage(Num_MessEntryPoint), LoDWord(StartAdr));
@@ -148,14 +148,14 @@ static void ProcessSingle(char const* pFileName) {
             ChkIO(OutName);
 
             if (!Read4(ProgFile, &StartAdr)) {
-                ChkIO(pFileName);
+                chk_wr_read_error(pFileName);
             }
             errno = 0;
             printf("%08lX          ", LoDWord(StartAdr));
             ChkIO(OutName);
 
             if (!Read2(ProgFile, &Len)) {
-                ChkIO(pFileName);
+                chk_wr_read_error(pFileName);
             }
             errno = 0;
             printf("%04X       ", LoWord(Len));
