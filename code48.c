@@ -77,14 +77,15 @@ typedef struct {
     LongWord    Flags;
 } tCPUProps;
 
-#define ClrCplCnt   4
-#define SelOrderCnt 8
+typedef struct {
+    char const* p_val;
+    Byte        code;
+} clr_cpl_t;
 
 static tCPUProps const* pCurrCPUProps;
 static tAdrMode         AdrMode;
 static Byte             AdrVal;
-static char const**     ClrCplVals;
-static Byte*            ClrCplCodes;
+clr_cpl_t*              clr_cpl_args;
 static SelOrder*        SelOrders;
 static LongInt          Reg_MB;
 
@@ -394,18 +395,18 @@ static void DecodeCLR_CPL(Word Code) {
 
         NLS_UpString(ArgStr[1].str.p_str);
         do {
-            if (!strcmp(ClrCplVals[z], ArgStr[1].str.p_str)) {
+            if (!strcmp(clr_cpl_args[z].p_val, ArgStr[1].str.p_str)) {
                 if ((*ArgStr[1].str.p_str == 'F')
                     && !(pCurrCPUProps->Flags & eCPUFlagUserFlags)) {
                     WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
                 } else {
                     CodeLen     = 1;
-                    BAsmCode[0] = ClrCplCodes[z];
+                    BAsmCode[0] = clr_cpl_args[z].code;
                     OK          = True;
                 }
             }
             z++;
-        } while ((z < ClrCplCnt) && (CodeLen != 1));
+        } while ((clr_cpl_args[z].p_val) && (CodeLen != 1));
         if (!OK) {
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
         } else {
@@ -924,7 +925,7 @@ static void DecodeSEL(Word Code) {
         int     z;
 
         NLS_UpString(ArgStr[1].str.p_str);
-        for (z = 0; z < SelOrderCnt; z++) {
+        for (z = 0; SelOrders[z].Name; z++) {
             if (!strcmp(ArgStr[1].str.p_str, SelOrders[z].Name)) {
                 /* SEL MBx not allowed if program memory cannot be larger than 2K.
                    Similar is true for the Philips-specific MB2/MB3 arguments if
@@ -1097,11 +1098,16 @@ static void AddCond(char const* Name, Byte Code) {
 }
 
 static void AddSel(char const* Name, Byte Code) {
-    if (InstrZ == SelOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(SelOrders, SelOrder);
     SelOrders[InstrZ].Name = Name;
     SelOrders[InstrZ].Code = Code;
+    InstrZ++;
+}
+
+static void add_clr_cpl(char const* p_name, Byte code) {
+    order_array_rsv_end(clr_cpl_args, clr_cpl_t);
+    clr_cpl_args[InstrZ].p_val = p_name;
+    clr_cpl_args[InstrZ].code  = code;
     InstrZ++;
 }
 
@@ -1153,16 +1159,11 @@ static void InitFields(void) {
     AddInstTable(InstTable, "FLTT", 0xc2, DecodeOKIFixed);
     AddInstTable(InstTable, "FRES", 0xe2, DecodeOKIFixed);
 
-    ClrCplVals     = (char const**)malloc(sizeof(char*) * ClrCplCnt);
-    ClrCplCodes    = (Byte*)malloc(sizeof(Byte) * ClrCplCnt);
-    ClrCplVals[0]  = "A";
-    ClrCplVals[1]  = "C";
-    ClrCplVals[2]  = "F0";
-    ClrCplVals[3]  = "F1";
-    ClrCplCodes[0] = 0x27;
-    ClrCplCodes[1] = 0x97;
-    ClrCplCodes[2] = 0x85;
-    ClrCplCodes[3] = 0xa5;
+    InstrZ = 0;
+    add_clr_cpl("A", 0x27);
+    add_clr_cpl("C", 0x97);
+    add_clr_cpl("F0", 0x85);
+    add_clr_cpl("F1", 0xa5);
 
     AddCond("JTF", 0x16);
     AddCond("JC", 0xf6);
@@ -1208,8 +1209,7 @@ static void InitFields(void) {
 
     /* Leave MBx first, used by CALL/JMP! */
 
-    SelOrders = (SelOrder*)malloc(sizeof(SelOrder) * SelOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddSel("MB0", 0xe5);
     AddSel("MB1", 0xf5);
     AddSel("MB2", 0xa5);
@@ -1218,15 +1218,15 @@ static void InitFields(void) {
     AddSel("RB1", 0xd5);
     AddSel("AN0", 0x95);
     AddSel("AN1", 0x85);
+    AddSel(NULL, 0);
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(ClrCplVals);
-    free(ClrCplCodes);
-    free(SelOrders);
+    order_array_free(clr_cpl_args);
+    order_array_free(SelOrders);
 }
 
 static void MakeCode_48(void) {

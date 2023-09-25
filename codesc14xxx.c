@@ -34,8 +34,6 @@
 #define M_14422 (1 << 7)
 #define M_14424 (1 << 8)
 
-#define FixedOrderCnt 155
-
 typedef struct {
     Word CPUMask;
     Byte Code, MinArg, MaxArg;
@@ -213,9 +211,7 @@ static void DecodeDW(Word Code) {
 /*---------------------------------------------------------------------------*/
 
 static void AddFixed(char const* NName, Byte NCode, Word NMask, Byte NMin, Byte NMax) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].CPUMask = NMask;
     FixedOrders[InstrZ].Code    = NCode;
     FixedOrders[InstrZ].MinArg  = NMin;
@@ -226,8 +222,7 @@ static void AddFixed(char const* NName, Byte NCode, Word NMask, Byte NMin, Byte 
 static void InitFields(void) {
     InstTable = CreateInstTable(301);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
 
     AddInstTable(InstTable, "DC", 0, DecodeDC);
     AddInstTable(InstTable, "DC8", 0, DecodeDC);
@@ -732,7 +727,7 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
+    order_array_free(FixedOrders);
 }
 
 /*---------------------------------------------------------------------------*/

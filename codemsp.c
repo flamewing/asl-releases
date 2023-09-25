@@ -27,8 +27,6 @@
 
 #include <string.h>
 
-#define OneOpCount 6
-
 typedef struct {
     Boolean MayByte;
     Word    Code;
@@ -1341,9 +1339,7 @@ static void AddEmulOneToTwoX(char const* NName, Word NCode) {
 }
 
 static void AddOneOp(char const* NName, Boolean NMay, Boolean AllowX, Word NCode) {
-    if (InstrZ >= OneOpCount) {
-        exit(255);
-    }
+    order_array_rsv_end(OneOpOrders, OneOpOrder);
     OneOpOrders[InstrZ].MayByte = NMay;
     OneOpOrders[InstrZ].Code    = NCode;
     AddInstTable(InstTable, NName, InstrZ, DecodeOneOp);
@@ -1402,8 +1398,7 @@ static void InitFields(void) {
     AddEmulOneToTwo("SBC", 0x7000);                    /* SUBC #0, dst */
     AddEmulOneToTwo("TST", 0x9000);                    /* CMP #0, dst */
 
-    OneOpOrders = (OneOpOrder*)malloc(sizeof(OneOpOrder) * OneOpCount);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddOneOp("RRC", True, True, 0x1000);
     AddOneOp("RRA", True, True, 0x1100);
     AddOneOp("PUSH", True, True, 0x1200);
@@ -1473,7 +1468,7 @@ static void InitFields(void) {
 }
 
 static void DeinitFields(void) {
-    free(OneOpOrders);
+    order_array_free(OneOpOrders);
 
     DestroyInstTable(InstTable);
 }

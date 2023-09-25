@@ -47,16 +47,11 @@ typedef struct {
     Word        Mode;
 } tAdrMode;
 
-static AdrOrder* AdrOrders;
-#define AdrOrderCnt 44
-static AdrOrder* Adr2ndAdrOrders;
-#define Adr2ndAdrOrderCnt 5
+static AdrOrder*      AdrOrders;
+static AdrOrder*      Adr2ndAdrOrders;
 static AdrShiftOrder* AdrShiftOrders;
-#define AdrShiftOrderCnt 7
-static ImmOrder* ImmOrders;
-#define ImmOrderCnt 17
-static tAdrMode* AdrModes;
-#define AdrModeCnt 10
+static ImmOrder*      ImmOrders;
+static tAdrMode*      AdrModes;
 
 /* ---------------------------------------------------------------------- */
 
@@ -418,27 +413,21 @@ static void AddJmp(char const* NName, Word NCode) {
 }
 
 static void AddAdr(char const* NName, Word NCode, Boolean NMust1) {
-    if (InstrZ >= AdrOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AdrOrders, AdrOrder);
     AdrOrders[InstrZ].Code  = NCode;
     AdrOrders[InstrZ].Must1 = NMust1;
     AddInstTable(InstTable, NName, InstrZ++, DecodeAdrInst);
 }
 
 static void Add2ndAdr(char const* NName, Word NCode, Boolean NMust1) {
-    if (InstrZ >= Adr2ndAdrOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Adr2ndAdrOrders, AdrOrder);
     Adr2ndAdrOrders[InstrZ].Code  = NCode;
     Adr2ndAdrOrders[InstrZ].Must1 = NMust1;
     AddInstTable(InstTable, NName, InstrZ++, Decode2ndAdr);
 }
 
 static void AddShiftAdr(char const* NName, Word NCode, Word nallow) {
-    if (InstrZ >= AdrShiftOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AdrShiftOrders, AdrShiftOrder);
     AdrShiftOrders[InstrZ].Code        = NCode;
     AdrShiftOrders[InstrZ].AllowShifts = nallow;
     AddInstTable(InstTable, NName, InstrZ++, DecodeShiftAdr);
@@ -446,9 +435,7 @@ static void AddShiftAdr(char const* NName, Word NCode, Word nallow) {
 
 static void AddImm(
         char const* NName, Word NCode, Integer NMin, Integer NMax, Word NMask) {
-    if (InstrZ >= ImmOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(ImmOrders, ImmOrder);
     ImmOrders[InstrZ].Code = NCode;
     ImmOrders[InstrZ].Min  = NMin;
     ImmOrders[InstrZ].Max  = NMax;
@@ -457,9 +444,7 @@ static void AddImm(
 }
 
 static void AddAdrMode(char const* NName, Word NMode) {
-    if (InstrZ >= AdrModeCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AdrModes, tAdrMode);
     AdrModes[InstrZ].Name   = NName;
     AdrModes[InstrZ++].Mode = NMode;
 }
@@ -535,8 +520,7 @@ static void InitFields(void) {
     AddJmp("BZ", 0xf680);
     AddJmp("CALL", 0xfe80);
 
-    AdrOrders = (AdrOrder*)malloc(sizeof(AdrOrder) * AdrOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddAdr("ADDC", 0x4300, False);
     AddAdr("ADDH", 0x4800, False);
     AddAdr("ADDS", 0x4900, False);
@@ -581,15 +565,13 @@ static void InitFields(void) {
     AddAdr("SST", 0x7800, True);
     AddAdr("SST1", 0x7900, True);
 
-    Adr2ndAdrOrders = (AdrOrder*)malloc(sizeof(AdrOrder) * Adr2ndAdrOrderCnt);
-    InstrZ          = 0;
+    InstrZ = 0;
     Add2ndAdr("BLKD", 0xfd00, False);
     Add2ndAdr("BLKP", 0xfc00, False);
     Add2ndAdr("MAC", 0x5d00, False);
     Add2ndAdr("MACD", 0x5c00, False);
 
-    AdrShiftOrders = (AdrShiftOrder*)malloc(sizeof(AdrShiftOrder) * AdrShiftOrderCnt);
-    InstrZ         = 0;
+    InstrZ = 0;
     AddShiftAdr("ADD", 0x0000, 0xf);
     AddShiftAdr("LAC", 0x2000, 0xf);
     AddShiftAdr("SACH", 0x6800, 0x7);
@@ -597,8 +579,7 @@ static void InitFields(void) {
     AddShiftAdr("SUB", 0x1000, 0xf);
     AddShiftAdr("BIT", 0x9000, 0xf);
 
-    ImmOrders = (ImmOrder*)malloc(sizeof(ImmOrder) * ImmOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddImm("ADDK", 0xcc00, 0, 255, 0xff);
     AddImm("LACK", 0xca00, 0, 255, 0xff);
     AddImm("SUBK", 0xcd00, 0, 255, 0xff);
@@ -616,8 +597,7 @@ static void InitFields(void) {
     AddImm("SBLK", 0xd003, 0, 0x7fff, 0xffff);
     AddImm("XORK", 0xd006, 0, 0x7fff, 0xffff);
 
-    AdrModes = (tAdrMode*)malloc(sizeof(tAdrMode) * AdrModeCnt);
-    InstrZ   = 0;
+    InstrZ = 0;
     AddAdrMode("*-", 0x90);
     AddAdrMode("*+", 0xa0);
     AddAdrMode("*BR0-", 0xc0);
@@ -633,11 +613,11 @@ static void InitFields(void) {
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
 
-    free(AdrOrders);
-    free(Adr2ndAdrOrders);
-    free(AdrShiftOrders);
-    free(ImmOrders);
-    free(AdrModes);
+    order_array_free(AdrOrders);
+    order_array_free(Adr2ndAdrOrders);
+    order_array_free(AdrShiftOrders);
+    order_array_free(ImmOrders);
+    order_array_free(AdrModes);
 }
 
 /* ---------------------------------------------------------------------- */

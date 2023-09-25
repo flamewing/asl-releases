@@ -40,13 +40,6 @@ enum {
 #define MModFReg (1 << ModFReg)
 #define MModImm  (1 << ModImm)
 
-#define FixedOrderCnt 13
-#define RegOrderCnt   116
-#define CobrOrderCnt  24
-#define CtrlOrderCnt  11
-#define MemOrderCnt   20
-#define SpecRegCnt    4
-
 typedef enum {
     NoneOp,
     IntOp,
@@ -91,7 +84,7 @@ static RegOrder*     RegOrders;
 static CobrOrder*    CobrOrders;
 static FixedOrder*   CtrlOrders;
 static MemOrder*     MemOrders;
-static SpecReg const SpecRegs[SpecRegCnt] = {
+static SpecReg const SpecRegs[] = {
         { "FP", 31},
         {"PFP",  0},
         { "SP",  1},
@@ -123,10 +116,10 @@ static Boolean ChkAdr(int AMode, Byte Mask, LongWord* Erg, LongWord* Mode) {
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeIRegCore(char const* pArg, LongWord* pResult) {
-    int      z;
+    size_t   z;
     LongWord Offs;
 
-    for (z = 0; z < SpecRegCnt; z++) {
+    for (z = 0; z < as_array_size(SpecRegs); z++) {
         if (!as_strcasecmp(pArg, SpecRegs[z].Name)) {
             *pResult = REGSYM_FLAG_ALIAS | SpecRegs[z].Code;
             return True;
@@ -190,9 +183,9 @@ static void DissectReg_960(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
     switch (InpSize) {
     case eSymbolSize32Bit: {
-        int z;
+        size_t z;
 
-        for (z = 0; z < SpecRegCnt; z++) {
+        for (z = 0; z < as_array_size(SpecRegs); z++) {
             if (Value == (REGSYM_FLAG_ALIAS | SpecRegs[z].Code)) {
                 as_snprintf(pDest, DestSize, "%s", SpecRegs[z].Name);
                 return;
@@ -687,9 +680,7 @@ static void MakeCode_960(void) {
 /*--------------------------------------------------------------------------*/
 
 static void AddFixed(char const* NName, LongWord NCode) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
@@ -697,9 +688,7 @@ static void AddFixed(char const* NName, LongWord NCode) {
 static void AddReg(
         char const* NName, LongWord NCode, OpType NSrc1, OpType NSrc2, OpType NDest,
         Boolean NImm1, Boolean NImm2, Boolean NPriv) {
-    if (InstrZ >= RegOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(RegOrders, RegOrder);
     RegOrders[InstrZ].Code       = NCode;
     RegOrders[InstrZ].Src1Type   = NSrc1;
     RegOrders[InstrZ].Src2Type   = NSrc2;
@@ -711,26 +700,20 @@ static void AddReg(
 }
 
 static void AddCobr(char const* NName, LongWord NCode, Boolean NHas) {
-    if (InstrZ >= CobrOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(CobrOrders, CobrOrder);
     CobrOrders[InstrZ].Code   = NCode;
     CobrOrders[InstrZ].HasSrc = NHas;
     AddInstTable(InstTable, NName, InstrZ++, DecodeCobr);
 }
 
 static void AddCtrl(char const* NName, LongWord NCode) {
-    if (InstrZ >= CtrlOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(CtrlOrders, FixedOrder);
     CtrlOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeCtrl);
 }
 
 static void AddMem(char const* NName, LongWord NCode, OpType NType, int NPos) {
-    if (InstrZ >= MemOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(MemOrders, MemOrder);
     MemOrders[InstrZ].Code   = NCode;
     MemOrders[InstrZ].Type   = NType;
     MemOrders[InstrZ].RegPos = NPos;
@@ -740,8 +723,7 @@ static void AddMem(char const* NName, LongWord NCode, OpType NType, int NPos) {
 static void InitFields(void) {
     InstTable = CreateInstTable(301);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("FLUSHREG", 0x66000680);
     AddFixed("FMARK", 0x66000600);
     AddFixed("MARK", 0x66000580);
@@ -756,8 +738,7 @@ static void InitFields(void) {
     AddFixed("FAULTLE", 0x1e000000);
     AddFixed("FAULTO", 0x1f000000);
 
-    RegOrders = (RegOrder*)malloc(sizeof(RegOrder) * RegOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     /*  Name       OpCode Src1Type  Src2Type  DestType  Imm1   Imm2 */
     AddReg("ADDC", 0x5b0, IntOp, IntOp, IntOp, True, True, False);
     AddReg("ADDI", 0x591, IntOp, IntOp, IntOp, True, True, False);
@@ -878,8 +859,7 @@ static void InitFields(void) {
     AddReg("XOR", 0x589, IntOp, IntOp, IntOp, True, True, False);
     AddReg("XNOR", 0x589, IntOp, IntOp, IntOp, True, True, False);
 
-    CobrOrders = (CobrOrder*)malloc(sizeof(CobrOrder) * CobrOrderCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCobr("BBC", 0x30, True);
     AddCobr("BBS", 0x37, True);
     AddCobr("CMPIBE", 0x3a, True);
@@ -905,8 +885,7 @@ static void InitFields(void) {
     AddCobr("TESTO", 0x27, False);
     AddCobr("TESTNO", 0x27, False);
 
-    CtrlOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * CtrlOrderCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCtrl("B", 0x08);
     AddCtrl("CALL", 0x09);
     AddCtrl("BAL", 0x0b);
@@ -919,8 +898,7 @@ static void InitFields(void) {
     AddCtrl("BLE", 0x16);
     AddCtrl("BO", 0x17);
 
-    MemOrders = (MemOrder*)malloc(sizeof(MemOrder) * MemOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddMem("LDOB", 0x80, IntOp, 2);
     AddMem("STOB", 0x82, IntOp, 1);
     AddMem("BX", 0x84, IntOp, 0);
@@ -949,10 +927,10 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(RegOrders);
-    free(CobrOrders);
-    free(CtrlOrders);
+    order_array_free(FixedOrders);
+    order_array_free(RegOrders);
+    order_array_free(CobrOrders);
+    order_array_free(CtrlOrders);
 }
 
 /*--------------------------------------------------------------------------*/

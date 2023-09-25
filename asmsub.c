@@ -15,6 +15,7 @@
 #include "as.rsc"
 #include "asmdebug.h"
 #include "asmdef.h"
+#include "asmlist.h"
 #include "asmpars.h"
 #include "chardefs.h"
 #include "chunks.h"
@@ -988,15 +989,7 @@ void SetListLineVal(TempResult* t) {
     as_dynstr_ini(&str, STRINGSIZE);
     StrSym(t, True, &str, ListRadixBase);
     as_snprintf(ListLine, STRINGSIZE, "=%s", str.p_str);
-    LimitListLine();
     as_dynstr_free(&str);
-}
-
-void LimitListLine(void) {
-    if (strlen(ListLine) + 1 > LISTLINESPACE) {
-        ListLine[LISTLINESPACE - 4] = '\0';
-        strmaxcat(ListLine, "..", STRINGSIZE);
-    }
 }
 
 /*!------------------------------------------------------------------------

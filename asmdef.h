@@ -303,6 +303,7 @@ extern char         DefCPU[20];
 extern char         MomCPUIdent[20], MomFPUIdent[20], MomPMMUIdent[20];
 
 extern int         OutRadixBase, ListRadixBase;
+extern Boolean     ListPCZeroPad;
 extern char const* pCommentLeadIn;
 
 extern tStrComp*   ArgStr;

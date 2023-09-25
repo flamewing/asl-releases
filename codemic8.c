@@ -27,13 +27,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ALUOrderCnt         14
-#define FixedOrderCnt       9
-#define ShortBranchOrderCnt 8
-#define LongBranchOrderCnt  10
-#define MemOrderCnt         6
-#define RegOrderCnt         2
-
 /* define as needed by address space */
 
 #define CodeAddrInt UInt12
@@ -287,19 +280,13 @@ static void DecodeReg(Word Index) {
  *--------------------------------------------------------------------------*/
 
 static void AddFixed(char const* NName, LongWord NCode) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddALU(char const* NName, char const* NImmName, LongWord NCode) {
-    if (InstrZ >= ALUOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(ALUOrders, ALUOrder);
     ALUOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ, DecodeALU);
     ALUOrders[InstrZ].MayImm = NImmName != NULL;
@@ -310,28 +297,19 @@ static void AddALU(char const* NName, char const* NImmName, LongWord NCode) {
 }
 
 static void AddShortBranch(char const* NName, LongWord NCode) {
-    if (InstrZ >= ShortBranchOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(ShortBranchOrders, FixedOrder);
     ShortBranchOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeShortBranch);
 }
 
 static void AddLongBranch(char const* NName, LongWord NCode) {
-    if (InstrZ >= LongBranchOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(LongBranchOrders, FixedOrder);
     LongBranchOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeLongBranch);
 }
 
 static void AddMem(char const* NName, char const* NImmName, LongWord NCode, Byte NSpace) {
-    if (InstrZ >= MemOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(MemOrders, MemOrder);
     MemOrders[InstrZ].Code  = NCode;
     MemOrders[InstrZ].Space = NSpace;
     AddInstTable(InstTable, NName, InstrZ, DecodeMem);
@@ -340,10 +318,7 @@ static void AddMem(char const* NName, char const* NImmName, LongWord NCode, Byte
 }
 
 static void AddReg(char const* NName, LongWord NCode) {
-    if (InstrZ >= RegOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(RegOrders, FixedOrder);
     RegOrders[InstrZ].Code = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeReg);
 }
@@ -351,8 +326,7 @@ static void AddReg(char const* NName, LongWord NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(97);
 
-    InstrZ      = 0;
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
+    InstrZ = 0;
     AddFixed("CLRC", 0x2c000);
     AddFixed("SETC", 0x2c001);
     AddFixed("CLRZ", 0x2c002);
@@ -371,8 +345,7 @@ static void InitFields(void) {
     }
     AddFixed("NOP", 0x10000);
 
-    InstrZ    = 0;
-    ALUOrders = (ALUOrder*)malloc(sizeof(ALUOrder) * ALUOrderCnt);
+    InstrZ = 0;
     AddALU("ADD", "ADDI", 2UL << 14);
     AddALU("ADDC", "ADDIC", 3UL << 14);
     AddALU("SUB", "SUBI", 0UL << 14);
@@ -388,13 +361,11 @@ static void InitFields(void) {
     AddALU("RORC", NULL, (10UL << 14) | 2); /* decoding the last 3 bits of the Rotate */
     AddALU("ROLC", NULL, (10UL << 14) | 3); /* instructions. These values are correct. */
 
-    InstrZ    = 0;
-    RegOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * RegOrderCnt);
+    InstrZ = 0;
     AddReg("INC", (2UL << 14) | (1UL << 13) | 1);
     AddReg("DEC", (0UL << 14) | (1UL << 13) | 1);
 
-    InstrZ            = 0;
-    ShortBranchOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * ShortBranchOrderCnt);
+    InstrZ = 0;
     if (MomCPU != CPUMico8_V31) {
         AddShortBranch("BZ", 0x32000);
         AddShortBranch("BNZ", 0x32400);
@@ -410,8 +381,7 @@ static void InitFields(void) {
      *         larger branches then the conditional branches (not supported
      *         in the earliest versions of the Mico8 processor). The branch
      *         range is +2047 to -2048 instead of +511 to -512. */
-    InstrZ           = 0;
-    LongBranchOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * LongBranchOrderCnt);
+    InstrZ = 0;
     if (MomCPU != CPUMico8_05) {
         if (MomCPU == CPUMico8_V31) {
             AddLongBranch("BZ", 0x30000);
@@ -430,8 +400,7 @@ static void InitFields(void) {
         }
     }
 
-    InstrZ    = 0;
-    MemOrders = (MemOrder*)malloc(sizeof(MemOrder) * MemOrderCnt);
+    InstrZ = 0;
     if (MomCPU == CPUMico8_V31) {
         AddMem("INP", "INPI", (23UL << 13) | 1, SegIO);
         AddMem("IMPORT", "IMPORTI", (23UL << 13) | 1, SegIO);
@@ -456,12 +425,12 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(ALUOrders);
-    free(LongBranchOrders);
-    free(ShortBranchOrders);
-    free(MemOrders);
-    free(RegOrders);
+    order_array_free(FixedOrders);
+    order_array_free(ALUOrders);
+    order_array_free(LongBranchOrders);
+    order_array_free(ShortBranchOrders);
+    order_array_free(MemOrders);
+    order_array_free(RegOrders);
 }
 
 /*--------------------------------------------------------------------------

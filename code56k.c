@@ -48,9 +48,6 @@ typedef struct {
     Byte   Code;
 } ParOrder;
 
-#define FixedOrderCnt 14
-#define ParOrderCnt   31
-
 #define CondCount (sizeof(CondNames) / sizeof(*CondNames))
 static char const CondNames[][3] = {"CC", "GE", "NE", "PL", "NN", "EC", "LC", "GT", "CS",
                                     "LT", "EQ", "MI", "NR", "ES", "LS", "LE", "HS", "LO"};
@@ -2583,20 +2580,14 @@ static void DecodeREP(Word Code) {
 /*----------------------------------------------------------------------------------------------*/
 
 static void AddFixed(char const* Name, LongWord Code, CPUVar NMin) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code   = Code;
     FixedOrders[InstrZ].MinCPU = NMin;
     AddInstTable(InstTable, Name, InstrZ++, DecodeFixed);
 }
 
 static void AddPar(char const* Name, ParTyp Typ, LongWord Code) {
-    if (InstrZ >= ParOrderCnt) {
-        exit(255);
-    }
-
+    order_array_rsv_end(ParOrders, ParOrder);
     ParOrders[InstrZ].Typ  = Typ;
     ParOrders[InstrZ].Code = Code;
     AddInstTable(InstTable, Name, InstrZ++, DecodePar);
@@ -2666,8 +2657,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "DOR", 1, DecodeDO_DOR);
     AddInstTable(InstTable, "REP", 0, DecodeREP);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("NOP", 0x000000, CPU56000);
     AddFixed("ENDDO", 0x00008c, CPU56000);
     AddFixed("ILLEGAL", 0x000005, CPU56000);
@@ -2683,8 +2673,7 @@ static void InitFields(void) {
     AddFixed("PFREE", 0x000002, CPU56300);
     AddFixed("TRAP", 0x000006, CPU56300);
 
-    ParOrders = (ParOrder*)malloc(sizeof(ParOrder) * ParOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddPar("ABS", ParAB, 0x26);
     AddPar("ASL", ParABShl1, 0x32);
     AddPar("ASR", ParABShl1, 0x22);
@@ -2770,8 +2759,8 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(ParOrders);
+    order_array_free(FixedOrders);
+    order_array_free(ParOrders);
 
     StrCompFree(&LeftComp);
     StrCompFree(&MidComp);

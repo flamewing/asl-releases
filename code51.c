@@ -15,6 +15,7 @@
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
+#include "asmlist.h"
 #include "asmpars.h"
 #include "asmrelocs.h"
 #include "asmsub.h"
@@ -68,11 +69,6 @@ enum {
 
 #define MMod51  (MModReg | MModIReg8 | MModImm | MModAcc | MModDir8)
 #define MMod251 (MModIReg | MModInd | MModImmEx | MModDir16)
-
-#define AccOrderCnt   6
-#define FixedOrderCnt 5
-#define CondOrderCnt  13
-#define BCondOrderCnt 3
 
 #define AccReg   11
 #define DPXValue 14
@@ -2282,7 +2278,6 @@ static void DecodeSFR(Word Index) {
                         (unsigned)AdrByte,
                         GetIntConstIntelSuffix((unsigned)ListRadixBase));
             }
-            LimitListLine();
             PopLocHandle();
         }
     }
@@ -2301,7 +2296,6 @@ static void DecodeBIT(Word Index) {
             PopLocHandle();
             *ListLine = '=';
             DissectBit_251(ListLine + 1, STRINGSIZE - 1, AdrLong);
-            LimitListLine();
         }
     } else {
         if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit51) {
@@ -2311,9 +2305,8 @@ static void DecodeBIT(Word Index) {
             // Original format string on the next line was "=%~02.*u%s"
             // Trying without the non-standard '~' to see if there is a difference.
             as_snprintf(
-                    ListLine, STRINGSIZE, "=%02.*u%s", ListRadixBase, (unsigned)AdrLong,
+                    ListLine, STRINGSIZE, "=%~02.*u%s", ListRadixBase, (unsigned)AdrLong,
                     GetIntConstIntelSuffix((unsigned)ListRadixBase));
-            LimitListLine();
         }
     }
 }
@@ -2330,36 +2323,28 @@ static void DecodePORT(Word Index) {
 /* dynamische Codetabellenverwaltung */
 
 static void AddFixed(char const* NName, Word NCode, CPUVar NCPU) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code   = NCode;
     FixedOrders[InstrZ].MinCPU = NCPU;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddAcc(char const* NName, Word NCode, CPUVar NCPU) {
-    if (InstrZ >= AccOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AccOrders, FixedOrder);
     AccOrders[InstrZ].Code   = NCode;
     AccOrders[InstrZ].MinCPU = NCPU;
     AddInstTable(InstTable, NName, InstrZ++, DecodeAcc);
 }
 
 static void AddCond(char const* NName, Word NCode, CPUVar NCPU) {
-    if (InstrZ >= CondOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(CondOrders, FixedOrder);
     CondOrders[InstrZ].Code   = NCode;
     CondOrders[InstrZ].MinCPU = NCPU;
     AddInstTable(InstTable, NName, InstrZ++, DecodeCond);
 }
 
 static void AddBCond(char const* NName, Word NCode, CPUVar NCPU) {
-    if (InstrZ >= BCondOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(BCondOrders, FixedOrder);
     BCondOrders[InstrZ].Code   = NCode;
     BCondOrders[InstrZ].MinCPU = NCPU;
     AddInstTable(InstTable, NName, InstrZ++, DecodeBCond);
@@ -2411,16 +2396,14 @@ static void InitFields(void) {
     AddInstTable(InstTable, "BIT", 0, DecodeBIT);
     AddInstTable(InstTable, "PORT", 0, DecodePORT);
 
-    FixedOrders = (FixedOrder*)malloc(FixedOrderCnt * sizeof(FixedOrder));
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("NOP", 0x0000, CPU87C750);
     AddFixed("RET", 0x0022, CPU87C750);
     AddFixed("RETI", 0x0032, CPU87C750);
     AddFixed("ERET", 0x01aa, CPU80251);
     AddFixed("TRAP", 0x01b9, CPU80251);
 
-    AccOrders = (FixedOrder*)malloc(AccOrderCnt * sizeof(FixedOrder));
-    InstrZ    = 0;
+    InstrZ = 0;
     AddAcc("DA", 0x00d4, CPU87C750);
     AddAcc("RL", 0x0023, CPU87C750);
     AddAcc("RLC", 0x0033, CPU87C750);
@@ -2428,8 +2411,7 @@ static void InitFields(void) {
     AddAcc("RRC", 0x0013, CPU87C750);
     AddAcc("SWAP", 0x00c4, CPU87C750);
 
-    CondOrders = (FixedOrder*)malloc(CondOrderCnt * sizeof(FixedOrder));
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCond("JC", 0x0040, CPU87C750);
     AddCond("JE", 0x0168, CPU80251);
     AddCond("JG", 0x0138, CPU80251);
@@ -2444,8 +2426,7 @@ static void InitFields(void) {
     AddCond("JZ", 0x0060, CPU87C750);
     AddCond("SJMP", 0x0080, CPU87C750);
 
-    BCondOrders = (FixedOrder*)malloc(BCondOrderCnt * sizeof(FixedOrder));
-    InstrZ      = 0;
+    InstrZ = 0;
     AddBCond("JB", 0x0020, CPU87C750);
     AddBCond("JBC", 0x0010, CPU87C750);
     AddBCond("JNB", 0x0030, CPU87C750);
@@ -2455,10 +2436,10 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(AccOrders);
-    free(CondOrders);
-    free(BCondOrders);
+    order_array_free(FixedOrders);
+    order_array_free(AccOrders);
+    order_array_free(CondOrders);
+    order_array_free(BCondOrders);
 }
 
 /*-------------------------------------------------------------------------*/

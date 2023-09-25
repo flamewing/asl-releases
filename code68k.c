@@ -109,11 +109,6 @@ typedef struct {
     Word        Code;
 } PMMUReg;
 
-#define FixedOrderCnt 10
-#define CtRegCnt      29
-#define FPUOpCnt      47
-#define PMMURegCnt    13
-
 #define EMACAvailName "HASEMAC"
 
 #define REG_SP     15
@@ -5144,16 +5139,14 @@ static Boolean DecodePMMUReg(char* Asc, Word* erg, tSymbolSize* pSize) {
         return True;
     }
 
-    for (z = 0; z < PMMURegCnt; z++) {
+    for (z = 0; PMMURegs[z].pName; z++) {
         if (!as_strcasecmp(Asc, PMMURegs[z].pName)) {
-            break;
+            *pSize = PMMURegs[z].Size;
+            *erg   = PMMURegs[z].Code << 10;
+            return True;
         }
     }
-    if (z < PMMURegCnt) {
-        *pSize = PMMURegs[z].Size;
-        *erg   = PMMURegs[z].Code << 10;
-    }
-    return (z < PMMURegCnt);
+    return False;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -6159,9 +6152,7 @@ static void DecodeSTR(Word Index) {
 /* Codetabellenverwaltung */
 
 static void AddFixed(char const* NName, Word NCode, Boolean NSup, unsigned NMask) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code       = NCode;
     FixedOrders[InstrZ].MustSup    = NSup;
     FixedOrders[InstrZ].FamilyMask = NMask;
@@ -6185,9 +6176,7 @@ static void AddCond(char const* NName, Byte NCode) {
 }
 
 static void AddFPUOp(char const* NName, Byte NCode, Boolean NDya, tSuppFlags NeedFlags) {
-    if (InstrZ >= FPUOpCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FPUOps, FPUOp);
     FPUOps[InstrZ].Code           = NCode;
     FPUOps[InstrZ].Dya            = NDya;
     FPUOps[InstrZ].NeedsSuppFlags = NeedFlags;
@@ -6222,9 +6211,7 @@ static void AddPMMUCond(char const* NName) {
 }
 
 static void AddPMMUReg(char const* Name, tSymbolSize Size, Word Code) {
-    if (InstrZ >= PMMURegCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(PMMURegs, PMMUReg);
     PMMURegs[InstrZ].pName  = Name;
     PMMURegs[InstrZ].Size   = Size;
     PMMURegs[InstrZ++].Code = Code;
@@ -6336,8 +6323,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "CPUSHP", 6, DecodeCache);
     AddInstTable(InstTable, "STR", 0, DecodeSTR);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed(
             "NOP", 0x4e71, False,
             (1 << e68KGen1a) | (1 << e68KGen1b) | (1 << e68KGen2) | (1 << e68KGen3)
@@ -6392,7 +6378,6 @@ static void InitFields(void) {
     AddInstTable(InstTable, "BSR", 1, DecodeBcc);
     AddInstTable(InstTable, "DBRA", 1, DecodeDBcc);
 
-    FPUOps = (FPUOp*)malloc(sizeof(FPUOp) * FPUOpCnt);
     InstrZ = 0;
     AddFPUOp("FINT", 0x01, False, eFlagNone);
     AddFPUOp("FSINH", 0x02, False, eFlagExtFPU);
@@ -6548,8 +6533,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "CP0NOP", 0xfc00, DecodeCPNOP);
     AddInstTable(InstTable, "CP1NOP", 0xfe00, DecodeCPNOP);
 
-    PMMURegs = (PMMUReg*)malloc(sizeof(PMMUReg) * PMMURegCnt);
-    InstrZ   = 0;
+    InstrZ = 0;
     AddPMMUReg("TC", eSymbolSize32Bit, 16);
     AddPMMUReg("DRP", eSymbolSize64Bit, 17);
     AddPMMUReg("SRP", eSymbolSize64Bit, 18);
@@ -6563,15 +6547,16 @@ static void InitFields(void) {
     AddPMMUReg("TT0", eSymbolSize32Bit, 2);
     AddPMMUReg("TT1", eSymbolSize32Bit, 3);
     AddPMMUReg("MMUSR", eSymbolSize16Bit, 24);
+    AddPMMUReg(NULL, eSymbolSizeUnknown, 0);
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(FPUOps);
-    free(PMMURegs);
+    order_array_free(FixedOrders);
+    order_array_free(FPUOps);
+    order_array_free(PMMURegs);
 }
 
 /*-------------------------------------------------------------------------*/

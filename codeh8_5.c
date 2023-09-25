@@ -29,11 +29,6 @@
 
 #include <string.h>
 
-#define OneOrderCount    13
-#define OneRegOrderCount 3
-#define RegEAOrderCount  9
-#define TwoRegOrderCount 3
-
 #define REG_SP 7
 #define REG_FP 6
 
@@ -1853,9 +1848,7 @@ static void AddRel(char const* NName, Word NCode) {
 }
 
 static void AddOne(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef) {
-    if (InstrZ >= OneOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(OneOrders, OneOrder);
     OneOrders[InstrZ].Code     = NCode;
     OneOrders[InstrZ].SizeMask = NMask;
     OneOrders[InstrZ].DefSize  = NDef;
@@ -1863,9 +1856,7 @@ static void AddOne(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef) 
 }
 
 static void AddOneReg(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef) {
-    if (InstrZ >= OneRegOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(OneRegOrders, OneOrder);
     OneRegOrders[InstrZ].Code     = NCode;
     OneRegOrders[InstrZ].SizeMask = NMask;
     OneRegOrders[InstrZ].DefSize  = NDef;
@@ -1873,9 +1864,7 @@ static void AddOneReg(char const* NName, Word NCode, Byte NMask, tSymbolSize NDe
 }
 
 static void AddRegEA(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef) {
-    if (InstrZ >= RegEAOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(RegEAOrders, OneOrder);
     RegEAOrders[InstrZ].Code     = NCode;
     RegEAOrders[InstrZ].SizeMask = NMask;
     RegEAOrders[InstrZ].DefSize  = NDef;
@@ -1883,9 +1872,7 @@ static void AddRegEA(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef
 }
 
 static void AddTwoReg(char const* NName, Word NCode, Byte NMask, tSymbolSize NDef) {
-    if (InstrZ >= TwoRegOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(TwoRegOrders, OneOrder);
     TwoRegOrders[InstrZ].Code     = NCode;
     TwoRegOrders[InstrZ].SizeMask = NMask;
     TwoRegOrders[InstrZ].DefSize  = NDef;
@@ -1957,8 +1944,7 @@ static void InitFields(void) {
     AddRel("BLE", 0x2f);
     AddRel("BSR", 0x0e);
 
-    InstrZ    = 0;
-    OneOrders = (OneOrder*)malloc(sizeof(OneOrder) * OneOrderCount);
+    InstrZ = 0;
     AddOne("CLR", 0x13, 3, eSymbolSize16Bit);
     AddOne("NEG", 0x14, 3, eSymbolSize16Bit);
     AddOne("NOT", 0x15, 3, eSymbolSize16Bit);
@@ -1973,14 +1959,12 @@ static void InitFields(void) {
     AddOne("TAS", 0x17, 1, eSymbolSize8Bit);
     AddOne("TST", 0x16, 3, eSymbolSize16Bit);
 
-    InstrZ       = 0;
-    OneRegOrders = (OneOrder*)malloc(sizeof(OneOrder) * OneRegOrderCount);
+    InstrZ = 0;
     AddOneReg("EXTS", 0x11, 1, eSymbolSize8Bit);
     AddOneReg("EXTU", 0x12, 1, eSymbolSize8Bit);
     AddOneReg("SWAP", 0x10, 1, eSymbolSize8Bit);
 
-    InstrZ      = 0;
-    RegEAOrders = (OneOrder*)malloc(sizeof(OneOrder) * RegEAOrderCount);
+    InstrZ = 0;
     AddRegEA("ADDS", 0x28, 3, eSymbolSize16Bit);
     AddRegEA("ADDX", 0xa0, 3, eSymbolSize16Bit);
     AddRegEA("AND", 0x50, 3, eSymbolSize16Bit);
@@ -1991,8 +1975,7 @@ static void InitFields(void) {
     AddRegEA("SUBX", 0xb0, 3, eSymbolSize16Bit);
     AddRegEA("XOR", 0x60, 3, eSymbolSize16Bit);
 
-    InstrZ       = 0;
-    TwoRegOrders = (OneOrder*)malloc(sizeof(OneOrder) * TwoRegOrderCount);
+    InstrZ = 0;
     AddTwoReg("DADD", 0xa000, 1, eSymbolSize8Bit);
     AddTwoReg("DSUB", 0xb000, 1, eSymbolSize8Bit);
     AddTwoReg("XCH", 0x90, 2, eSymbolSize16Bit);
@@ -2013,10 +1996,10 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     free(Format);
-    free(OneOrders);
-    free(OneRegOrders);
-    free(RegEAOrders);
-    free(TwoRegOrders);
+    order_array_free(OneOrders);
+    order_array_free(OneRegOrders);
+    order_array_free(RegEAOrders);
+    order_array_free(TwoRegOrders);
     DestroyInstTable(InstTable);
 }
 

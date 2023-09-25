@@ -29,10 +29,6 @@
 
 #include <string.h>
 
-#define FixedOrderCnt 27
-#define Reg1OrderCnt  10
-#define Reg2OrderCnt  12
-
 #define RegBankSize    32
 #define IOAreaStdSize  64
 #define IOAreaExtSize  (IOAreaStdSize + 160)
@@ -903,27 +899,21 @@ static void DecodeBIT(Word Code) {
 /* Dynamic Code Table Handling                                               */
 
 static void AddFixed(char const* NName, Word NMin, Word NCode) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].Code     = NCode;
     FixedOrders[InstrZ].CoreMask = NMin;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddReg1(char const* NName, Word NMin, Word NCode) {
-    if (InstrZ >= Reg1OrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Reg1Orders, FixedOrder);
     Reg1Orders[InstrZ].Code     = NCode;
     Reg1Orders[InstrZ].CoreMask = NMin;
     AddInstTable(InstTable, NName, InstrZ++, DecodeReg1);
 }
 
 static void AddReg2(char const* NName, Word NMin, Word NCode) {
-    if (InstrZ >= Reg2OrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Reg2Orders, FixedOrder);
     Reg2Orders[InstrZ].Code     = NCode;
     Reg2Orders[InstrZ].CoreMask = NMin;
     AddInstTable(InstTable, NName, InstrZ++, DecodeReg2);
@@ -952,8 +942,7 @@ static void AddPBit(char const* NName, Word NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(*FixedOrders) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("IJMP", MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x9409);
     AddFixed("ICALL", MinCoreMask(eCoreClassic) | (1 << eCoreMinTiny), 0x9509);
     AddFixed("RET", MinCoreMask(eCoreMinTiny), 0x9508);
@@ -982,8 +971,7 @@ static void InitFields(void) {
     AddFixed("SPM", MinCoreMask(eCoreTiny), 0x95e8);
     AddFixed("BREAK", MinCoreMask(eCoreTiny) | (1 << eCoreMinTiny), 0x9598);
 
-    Reg1Orders = (FixedOrder*)malloc(sizeof(*Reg1Orders) * Reg1OrderCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddReg1("COM", MinCoreMask(eCoreMinTiny), 0x9400);
     AddReg1("NEG", MinCoreMask(eCoreMinTiny), 0x9401);
     AddReg1("INC", MinCoreMask(eCoreMinTiny), 0x9403);
@@ -995,8 +983,7 @@ static void InitFields(void) {
     AddReg1("ASR", MinCoreMask(eCoreMinTiny), 0x9405);
     AddReg1("SWAP", MinCoreMask(eCoreMinTiny), 0x9402);
 
-    Reg2Orders = (FixedOrder*)malloc(sizeof(*Reg2Orders) * Reg2OrderCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddReg2("ADD", MinCoreMask(eCoreMinTiny), 0x0c00);
     AddReg2("ADC", MinCoreMask(eCoreMinTiny), 0x1c00);
     AddReg2("SUB", MinCoreMask(eCoreMinTiny), 0x1800);
@@ -1103,9 +1090,9 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(Reg1Orders);
-    free(Reg2Orders);
+    order_array_free(FixedOrders);
+    order_array_free(Reg1Orders);
+    order_array_free(Reg2Orders);
 }
 
 /*---------------------------------------------------------------------------*/

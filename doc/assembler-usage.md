@@ -996,3 +996,5 @@ Run `asl -help` for command-line help, `asl -version` for version information, a
 `-q`/`-quiet` suppresses normal progress; repeating it also suppresses source `MESSAGE` output. Error messages remain visible.
 
 CMake builds embed message catalogs by default, so installed executables do not require companion `.msg` files. Configure with `-DASL_EMBED_MESSAGES=OFF` to use external catalogs and their existing language/path lookup behavior.
+
+A leading zero in `-listradix` (for example, `-listradix 08`) prints the program counter with leading zeros in the listing. The radix remains octal in this example; the supported radix range is 2 through 36.

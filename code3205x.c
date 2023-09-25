@@ -62,19 +62,12 @@ typedef struct {
 #define NOCONDITION 0xffff
 
 static FixedOrder* FixedOrders;
-#define FixedOrderCnt 45
 static FixedOrder* AdrOrders;
-#define AdrOrderCnt 32
-static JmpOrder* JmpOrders;
-#define JmpOrderCnt 11
+static JmpOrder*   JmpOrders;
 static FixedOrder* PluOrders;
-#define PluOrderCnt 7
-static tAdrMode* AdrModes;
-#define AdrModeCnt 10
-static Condition* Conditions;
-#define CondCnt 15
-static tBitTable* BitTable;
-#define BitCnt 9
+static tAdrMode*   AdrModes;
+static Condition*  Conditions;
+static tBitTable*  BitTable;
 
 static Word AdrMode;
 
@@ -881,27 +874,21 @@ static void DecodePORT(Word Code) {
 /* ---------------------------------------------------------------------- */
 
 static void AddFixed(char const* NName, CPUVar MinCPU, Word NCode) {
-    if (InstrZ >= FixedOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, FixedOrder);
     FixedOrders[InstrZ].MinCPU = MinCPU;
     FixedOrders[InstrZ].Code   = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixed);
 }
 
 static void AddAdr(char const* NName, CPUVar MinCPU, Word NCode) {
-    if (InstrZ >= AdrOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AdrOrders, FixedOrder);
     AdrOrders[InstrZ].MinCPU = MinCPU;
     AdrOrders[InstrZ].Code   = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeCmdAdr);
 }
 
 static void AddJmp(char const* NName, CPUVar MinCPU, Word NCode, Boolean NCond) {
-    if (InstrZ >= JmpOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(JmpOrders, JmpOrder);
     JmpOrders[InstrZ].MinCPU = MinCPU;
     JmpOrders[InstrZ].Code   = NCode;
     JmpOrders[InstrZ].Cond   = NCond;
@@ -909,18 +896,14 @@ static void AddJmp(char const* NName, CPUVar MinCPU, Word NCode, Boolean NCond) 
 }
 
 static void AddPlu(char const* NName, CPUVar MinCPU, Word NCode) {
-    if (InstrZ >= PluOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(PluOrders, FixedOrder);
     PluOrders[InstrZ].MinCPU = MinCPU;
     PluOrders[InstrZ].Code   = NCode;
     AddInstTable(InstTable, NName, InstrZ++, DecodeCmdPlu);
 }
 
 static void AddAdrMode(char const* NName, CPUVar MinCPU, Word NMode) {
-    if (InstrZ >= AdrModeCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AdrModes, tAdrMode);
     AdrModes[InstrZ].Name   = NName;
     AdrModes[InstrZ].MinCPU = MinCPU;
     AdrModes[InstrZ++].Mode = NMode;
@@ -929,9 +912,7 @@ static void AddAdrMode(char const* NName, CPUVar MinCPU, Word NMode) {
 static void AddCond(
         char const* NName, CPUVar MinCPU, Word NCodeAND, Word NCodeOR, Byte NIsZL,
         Byte NIsC, Byte NIsV, Byte NIsTP) {
-    if (InstrZ >= CondCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(Conditions, Condition);
     Conditions[InstrZ].Name    = NName;
     Conditions[InstrZ].MinCPU  = MinCPU;
     Conditions[InstrZ].CodeAND = NCodeAND;
@@ -943,9 +924,7 @@ static void AddCond(
 }
 
 static void AddBit(char const* NName, CPUVar MinCPU, Word NCode) {
-    if (InstrZ >= BitCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(BitTable, tBitTable);
     BitTable[InstrZ].name   = NName;
     BitTable[InstrZ].MinCPU = MinCPU;
     BitTable[InstrZ++].Code = NCode;
@@ -954,8 +933,7 @@ static void AddBit(char const* NName, CPUVar MinCPU, Word NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
 
-    FixedOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * FixedOrderCnt);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("ABS", CPU320203, 0xbe00);
     AddFixed("ADCB", CPU32050, 0xbe11);
     AddFixed("ADDB", CPU32050, 0xbe10);
@@ -1002,8 +980,7 @@ static void InitFields(void) {
     AddFixed("PUSH", CPU320203, 0xbe3c);
     AddFixed("IDLE2", CPU32050, 0xbe23);
 
-    AdrOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * AdrOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddAdr("ADDC", CPU320203, 0x6000);
     AddAdr("ADDS", CPU320203, 0x6200);
     AddAdr("ADDT", CPU320203, 0x6300);
@@ -1037,8 +1014,7 @@ static void InitFields(void) {
     AddAdr("POPD", CPU320203, 0x8a00);
     AddAdr("PSHD", CPU320203, 0x7600);
 
-    JmpOrders = (JmpOrder*)malloc(sizeof(JmpOrder) * JmpOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddJmp("B", CPU320203, 0x7980, False);
     AddJmp("BD", CPU32050, 0x7d80, False);
     AddJmp("BANZ", CPU320203, 0x7b80, False);
@@ -1050,16 +1026,14 @@ static void InitFields(void) {
     AddJmp("CC", CPU320203, 0xe800, True);
     AddJmp("CCD", CPU32050, 0xf800, True);
 
-    PluOrders = (FixedOrder*)malloc(sizeof(FixedOrder) * PluOrderCnt);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddPlu("APL", CPU32050, 0x5a00);
     AddPlu("CPL", CPU32050, 0x5b00);
     AddPlu("OPL", CPU32050, 0x5900);
     AddPlu("SPLK", CPU320203, 0xaa00);
     AddPlu("XPL", CPU32050, 0x5800);
 
-    AdrModes = (tAdrMode*)malloc(sizeof(tAdrMode) * AdrModeCnt);
-    InstrZ   = 0;
+    InstrZ = 0;
     AddAdrMode("*-", CPU320203, 0x90);
     AddAdrMode("*+", CPU320203, 0xa0);
     AddAdrMode("*BR0-", CPU320203, 0xc0);
@@ -1071,8 +1045,7 @@ static void InitFields(void) {
     AddAdrMode("*", CPU320203, 0x80);
     AddAdrMode(NULL, CPU32050, 0);
 
-    Conditions = (Condition*)malloc(sizeof(Condition) * CondCnt);
-    InstrZ     = 0;
+    InstrZ = 0;
     AddCond("EQ", CPU32050, 0xf33, 0x088, 1, 0, 0, 0);
     AddCond("NEQ", CPU32050, 0xf33, 0x008, 1, 0, 0, 0);
     AddCond("LT", CPU32050, 0xf33, 0x044, 1, 0, 0, 0);
@@ -1089,8 +1062,7 @@ static void InitFields(void) {
     AddCond("UNC", CPU32050, 0x0ff, 0x300, 0, 0, 0, 1);
     AddCond(NULL, CPU32050, 0xfff, 0x000, 0, 0, 0, 0);
 
-    BitTable = (tBitTable*)malloc(sizeof(tBitTable) * BitCnt);
-    InstrZ   = 0;
+    InstrZ = 0;
     AddBit("OVM", CPU320203, 0xbe42);
     AddBit("SXM", CPU320203, 0xbe46);
     AddBit("HM", CPU32050, 0xbe48);
@@ -1147,13 +1119,13 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(FixedOrders);
-    free(AdrOrders);
-    free(JmpOrders);
-    free(PluOrders);
-    free(AdrModes);
-    free(Conditions);
-    free(BitTable);
+    order_array_free(FixedOrders);
+    order_array_free(AdrOrders);
+    order_array_free(JmpOrders);
+    order_array_free(PluOrders);
+    order_array_free(AdrModes);
+    order_array_free(Conditions);
+    order_array_free(BitTable);
 }
 
 /* ---------------------------------------------------------------------- */

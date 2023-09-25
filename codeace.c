@@ -43,11 +43,6 @@ enum {
 #define MModDir   (1 << ModDir)
 #define MModImm   (1 << ModImm)
 
-#define FixedOrderCnt 9
-#define AriOrderCnt   7
-#define SingOrderCnt  3
-#define BitOrderCnt   6
-
 typedef struct {
     Byte ImmCode, DirCode, IndCode, DispCode;
 } AriOrder;
@@ -579,9 +574,7 @@ static void AddFixed(char const* NName, Byte NCode) {
 }
 
 static void AddAri(char const* NName, Byte NImm, Byte NDir, Byte NInd, Byte NDisp) {
-    if (InstrZ >= AriOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(AriOrders, AriOrder);
     AriOrders[InstrZ].ImmCode  = NImm;
     AriOrders[InstrZ].DirCode  = NDir;
     AriOrders[InstrZ].IndCode  = NInd;
@@ -590,9 +583,7 @@ static void AddAri(char const* NName, Byte NImm, Byte NDir, Byte NInd, Byte NDis
 }
 
 static void AddSing(char const* NName, Byte NAcc, Byte NX, Byte NDir) {
-    if (InstrZ >= SingOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(SingOrders, SingOrder);
     SingOrders[InstrZ].AccCode = NAcc;
     SingOrders[InstrZ].XCode   = NX;
     SingOrders[InstrZ].DirCode = NDir;
@@ -600,9 +591,7 @@ static void AddSing(char const* NName, Byte NAcc, Byte NX, Byte NDir) {
 }
 
 static void AddBit(char const* NName, Byte NAcc, Byte NIndX, Byte NDir) {
-    if (InstrZ >= BitOrderCnt) {
-        exit(255);
-    }
+    order_array_rsv_end(BitOrders, BitOrder);
     BitOrders[InstrZ].AccCode  = NAcc;
     BitOrders[InstrZ].XIndCode = NIndX;
     BitOrders[InstrZ].DirCode  = NDir;
@@ -623,8 +612,7 @@ static void InitFields(void) {
     AddFixed("RETI", 0x18);
     AddFixed("SC", 0x1d);
 
-    AriOrders = (AriOrder*)malloc(AriOrderCnt * sizeof(AriOrder));
-    InstrZ    = 0;
+    InstrZ = 0;
     AddAri("ADC", 0x60, 0x42, 0x02, 0x70);
     AddAri("ADD", 0x66, 0x43, 0x03, 0x71);
     AddAri("AND", 0x61, 0x50, 0x04, 0x72);
@@ -633,14 +621,12 @@ static void InitFields(void) {
     AddAri("SUBC", 0x63, 0x53, 0x06, 0x74);
     AddAri("XOR", 0x64, 0x45, 0x07, 0x75);
 
-    SingOrders = (SingOrder*)malloc(SingOrderCnt * sizeof(SingOrder));
-    InstrZ     = 0;
+    InstrZ = 0;
     AddSing("CLR", 0x16, 0x0f, 0x7d);
     AddSing("DEC", 0x1a, 0x0c, 0x7b);
     AddSing("INC", 0x1b, 0x0d, 0x7c);
 
-    BitOrders = (BitOrder*)malloc(BitOrderCnt * sizeof(BitOrder));
-    InstrZ    = 0;
+    InstrZ = 0;
     AddBit("IFBIT", 0xa0, 0xa8, 0x58);
     AddBit("LDC", 0xff, 0xff, 0x80);
     AddBit("RBIT", 0x61, 0xb8, 0x68);
@@ -662,9 +648,9 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(AriOrders);
-    free(SingOrders);
-    free(BitOrders);
+    order_array_free(AriOrders);
+    order_array_free(SingOrders);
+    order_array_free(BitOrders);
 }
 
 /*---------------------------------------------------------------------------*/

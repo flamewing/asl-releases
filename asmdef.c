@@ -148,6 +148,7 @@ char      MomCPUIdent[20],    /* dessen Name in ASCII */
 
 int         OutRadixBase;   /* dito fuer Ausgabe */
 int         ListRadixBase;  /* ditto for listing */
+Boolean     ListPCZeroPad;  /* PC with leading zeros? */
 char const* pCommentLeadIn; /* list of comment lead-in sequences */
 
 tStrComp*   ArgStr; /* Komponenten der Zeile */

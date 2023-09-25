@@ -74,12 +74,6 @@
 #define Mask_PureDest (Mask_NoImmGen & ~(MModPush | MModPop))
 #define Mask_PureMem  (Mask_MemGen & ~(MModPush | MModPop))
 
-#define FixedLongOrderCount 2
-#define OneOrderCount       13
-#define GE2OrderCount       11
-#define BitOrderCount       6
-#define ConditionCount      14
-
 typedef struct {
     Word Mask;
     Byte OpMask;
@@ -976,13 +970,13 @@ static Boolean DecodeRegList(tStrComp const* pArg, Word* pResult, Boolean Turn) 
 static Boolean DecodeCondition(char const* Asc, Word* Erg) {
     int z;
 
-    for (z = 0; z < ConditionCount; z++) {
+    for (z = 0; Conditions[z]; z++) {
         if (!as_strcasecmp(Asc, Conditions[z])) {
-            break;
+            *Erg = z;
+            return True;
         }
     }
-    *Erg = z;
-    return (z < ConditionCount);
+    return False;
 }
 
 static Boolean DecodeStringCondition(char const* Asc, Word* pErg) {
@@ -2822,18 +2816,14 @@ static void AddFixed(char const* NName, Word NCode) {
 }
 
 static void AddFixedLong(char const* NName, Word NCode1, Word NCode2) {
-    if (InstrZ >= FixedLongOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedLongOrders, BitOrder);
     FixedLongOrders[InstrZ].Code1 = NCode1;
     FixedLongOrders[InstrZ].Code2 = NCode2;
     AddInstTable(InstTable, NName, InstrZ++, DecodeFixedLong);
 }
 
 static void AddOne(char const* NName, Byte NOpMask, Word NMask, Word NCode) {
-    if (InstrZ >= OneOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(OneOrders, OneOrder);
     OneOrders[InstrZ].Code   = NCode;
     OneOrders[InstrZ].Mask   = NMask;
     OneOrders[InstrZ].OpMask = NOpMask;
@@ -2843,9 +2833,7 @@ static void AddOne(char const* NName, Byte NOpMask, Word NMask, Word NCode) {
 static void AddGE2(
         char const* NName, Word NMask1, Word NMask2, Byte NSMask1, Byte NSMask2,
         Word NCode, Boolean NSigned) {
-    if (InstrZ >= GE2OrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(GE2Orders, GE2Order);
     GE2Orders[InstrZ].Mask1  = NMask1;
     GE2Orders[InstrZ].Mask2  = NMask2;
     GE2Orders[InstrZ].SMask1 = NSMask1;
@@ -2856,9 +2844,7 @@ static void AddGE2(
 }
 
 static void AddBit(char const* NName, Boolean NMust, Word NCode1, Word NCode2) {
-    if (InstrZ >= BitOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(BitOrders, BitOrder);
     BitOrders[InstrZ].Code1    = NCode1;
     BitOrders[InstrZ].Code2    = NCode2;
     BitOrders[InstrZ].MustByte = NMust;
@@ -2870,8 +2856,11 @@ static void AddGetPut(char const* NName, Byte NSize, Word NCode, Boolean NTurn) 
 }
 
 static void Addcc(char const* BName) {
+    order_array_rsv_end(Conditions, char const*);
     Conditions[InstrZ] = BName + 1;
-    AddInstTable(InstTable, BName, InstrZ << 10, DecodeBcc);
+    if (BName) {
+        AddInstTable(InstTable, BName, InstrZ << 10, DecodeBcc);
+    }
     InstrZ++;
 }
 
@@ -2929,13 +2918,11 @@ static void InitFields(void) {
     AddFixed("STCTX", 0x07d6);
     AddFixed("REIT", 0x2fd6);
 
-    FixedLongOrders = (BitOrder*)malloc(sizeof(BitOrder) * FixedLongOrderCount);
-    InstrZ          = 0;
+    InstrZ = 0;
     AddFixedLong("STOP", 0x5374, 0x6f70);
     AddFixedLong("SLEEP", 0x5761, 0x6974);
 
-    OneOrders = (OneOrder*)malloc(sizeof(OneOrder) * OneOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddOne("ACS", 0x00, Mask_PureMem, 0x8300);
     AddOne("NEG", 0x07, Mask_PureDest, 0xc800);
     AddOne("NOT", 0x07, Mask_PureDest, 0xcc00);
@@ -2953,8 +2940,7 @@ static void InitFields(void) {
     AddOne("STPSB", 0x02, Mask_Dest, 0xdd00);
     AddOne("STPSM", 0x02, Mask_Dest, 0xde00);
 
-    GE2Orders = (GE2Order*)malloc(sizeof(GE2Order) * GE2OrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddGE2("ADDU", Mask_Source, Mask_PureDest, 7, 7, 0x0400, False);
     AddGE2("ADDX", Mask_Source, Mask_PureDest, 7, 7, 0x1000, True);
     AddGE2("SUBU", Mask_Source, Mask_PureDest, 7, 7, 0x0c00, False);
@@ -2967,8 +2953,7 @@ static void InitFields(void) {
     AddGE2("REMU", Mask_Source, Mask_PureDest, 7, 7, 0x5c00, True);
     AddGE2("ROT", Mask_Source, Mask_PureDest, 1, 7, 0x3800, True);
 
-    BitOrders = (BitOrder*)malloc(sizeof(BitOrder) * BitOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddBit("BCLR", False, 0xb400, 0xa180);
     AddBit("BCLRI", True, 0xa400, 0x0000);
     AddBit("BNOT", False, 0xb800, 0x0000);
@@ -2997,8 +2982,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "DIV", InstrZ++, DecodeMul);
     AddInstTable(InstTable, "DIVU", InstrZ++, DecodeMul);
 
-    InstrZ     = 0;
-    Conditions = (char const**)malloc(ConditionCount * sizeof(char*));
+    InstrZ = 0;
     Addcc("BXS");
     Addcc("BXC");
     Addcc("BEQ");
@@ -3013,6 +2997,7 @@ static void InitFields(void) {
     Addcc("BMC");
     Addcc("BFS");
     Addcc("BFC");
+    Addcc(NULL);
 
     InstrZ = 0;
     AddInstTable(InstTable, "AND", InstrZ++, DecodeLog);
@@ -3023,12 +3008,12 @@ static void InitFields(void) {
 }
 
 static void DeinitFields(void) {
-    free(Conditions);
-    free(Format);
-    free(FixedLongOrders);
-    free(OneOrders);
-    free(GE2Orders);
-    free(BitOrders);
+    order_array_free(Conditions);
+    order_array_free(Format);
+    order_array_free(FixedLongOrders);
+    order_array_free(OneOrders);
+    order_array_free(GE2Orders);
+    order_array_free(BitOrders);
     DestroyInstTable(InstTable);
 }
 

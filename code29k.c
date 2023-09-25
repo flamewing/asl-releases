@@ -47,14 +47,6 @@ typedef struct {
 
 #define REG_LRMARK 256
 
-#define StdOrderCount   51
-#define NoImmOrderCount 22
-#define VecOrderCount   10
-#define JmpOrderCount   5
-#define FixedOrderCount 2
-#define MemOrderCount   7
-#define SPRegCount      28
-
 static StdOrder* StdOrders;
 static StdOrder* NoImmOrders;
 static StdOrder* VecOrders;
@@ -236,13 +228,15 @@ static Boolean DecodeSpReg(char* Asc_O, LongWord* Erg) {
 
     strmaxcpy(Asc, Asc_O, STRINGSIZE);
     NLS_UpString(Asc);
-    for (z = 0; z < SPRegCount; z++) {
+    for (z = 0; SPRegs[z].Name; z++) {
         if (!strcmp(Asc, SPRegs[z].Name)) {
             *Erg = SPRegs[z].Code;
-            break;
+            return True;
+            ;
         }
     }
-    return (z < SPRegCount);
+    return False;
+    ;
 }
 
 static Boolean DecodeArgSpReg(int ArgIndex, LongWord* pRes) {
@@ -767,9 +761,7 @@ static void DecodeEMULATED(Word Code) {
 /*-------------------------------------------------------------------------*/
 
 static void AddStd(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode) {
-    if (InstrZ >= StdOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(StdOrders, StdOrder);
     StdOrders[InstrZ].Code    = NCode;
     StdOrders[InstrZ].MustSup = NSup;
     StdOrders[InstrZ].MinCPU  = NMin;
@@ -777,9 +769,7 @@ static void AddStd(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 }
 
 static void AddNoImm(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode) {
-    if (InstrZ >= NoImmOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(NoImmOrders, StdOrder);
     NoImmOrders[InstrZ].Code    = NCode;
     NoImmOrders[InstrZ].MustSup = NSup;
     NoImmOrders[InstrZ].MinCPU  = NMin;
@@ -787,9 +777,7 @@ static void AddNoImm(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCod
 }
 
 static void AddVec(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode) {
-    if (InstrZ >= VecOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(VecOrders, StdOrder);
     VecOrders[InstrZ].Code    = NCode;
     VecOrders[InstrZ].MustSup = NSup;
     VecOrders[InstrZ].MinCPU  = NMin;
@@ -800,9 +788,7 @@ static void AddJmp(
         char const* NName, CPUVar NMin, Boolean NHas, Boolean NInd, LongWord NCode) {
     char IName[30];
 
-    if (InstrZ >= JmpOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(JmpOrders, JmpOrder);
     JmpOrders[InstrZ].HasReg = NHas;
     JmpOrders[InstrZ].HasInd = NInd;
     JmpOrders[InstrZ].Code   = NCode;
@@ -814,9 +800,7 @@ static void AddJmp(
 }
 
 static void AddFixed(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode) {
-    if (InstrZ >= FixedOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(FixedOrders, StdOrder);
     FixedOrders[InstrZ].Code    = NCode;
     FixedOrders[InstrZ].MustSup = NSup;
     FixedOrders[InstrZ].MinCPU  = NMin;
@@ -824,9 +808,7 @@ static void AddFixed(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCod
 }
 
 static void AddMem(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode) {
-    if (InstrZ >= MemOrderCount) {
-        exit(255);
-    }
+    order_array_rsv_end(MemOrders, StdOrder);
     MemOrders[InstrZ].Code    = NCode;
     MemOrders[InstrZ].MustSup = NSup;
     MemOrders[InstrZ].MinCPU  = NMin;
@@ -834,9 +816,7 @@ static void AddMem(char const* NName, CPUVar NMin, Boolean NSup, LongWord NCode)
 }
 
 static void AddSP(char const* NName, LongWord NCode) {
-    if (InstrZ >= SPRegCount) {
-        exit(255);
-    }
+    order_array_rsv_end(SPRegs, SPReg);
     SPRegs[InstrZ].Name   = NName;
     SPRegs[InstrZ++].Code = NCode;
 }
@@ -863,8 +843,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "EMULATED", 0, DecodeEMULATED);
     AddInstTable(InstTable, "REG", 0, CodeREG);
 
-    StdOrders = (StdOrder*)malloc(sizeof(StdOrder) * StdOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddStd("ADD", CPU29245, False, 0x14);
     AddStd("ADDC", CPU29245, False, 0x1c);
     AddStd("ADDCS", CPU29245, False, 0x18);
@@ -917,8 +896,7 @@ static void InitFields(void) {
     AddStd("XNOR", CPU29245, False, 0x96);
     AddStd("XOR", CPU29245, False, 0x94);
 
-    NoImmOrders = (StdOrder*)malloc(sizeof(StdOrder) * NoImmOrderCount);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddNoImm("DADD", CPU29000, False, 0xf1);
     AddNoImm("DDIV", CPU29000, False, 0xf7);
     AddNoImm("DEQ", CPU29000, False, 0xeb);
@@ -942,8 +920,7 @@ static void InitFields(void) {
     AddNoImm("MULTMU", CPU29243, False, 0xdf);
     AddNoImm("SETIP", CPU29245, False, 0x9e);
 
-    VecOrders = (StdOrder*)malloc(sizeof(StdOrder) * VecOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddVec("ASEQ", CPU29245, False, 0x70);
     AddVec("ASGE", CPU29245, False, 0x5c);
     AddVec("ASGEU", CPU29245, False, 0x5e);
@@ -955,21 +932,18 @@ static void InitFields(void) {
     AddVec("ASLTU", CPU29245, False, 0x52);
     AddVec("ASNEQ", CPU29245, False, 0x72);
 
-    JmpOrders = (JmpOrder*)malloc(sizeof(JmpOrder) * JmpOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddJmp("CALL", CPU29245, True, True, 0xa8);
     AddJmp("JMP", CPU29245, False, True, 0xa0);
     AddJmp("JMPF", CPU29245, True, True, 0xa4);
     AddJmp("JMPFDEC", CPU29245, True, False, 0xb4);
     AddJmp("JMPT", CPU29245, True, True, 0xac);
 
-    FixedOrders = (StdOrder*)malloc(sizeof(StdOrder) * FixedOrderCount);
-    InstrZ      = 0;
+    InstrZ = 0;
     AddFixed("HALT", CPU29245, True, 0x89);
     AddFixed("IRET", CPU29245, True, 0x88);
 
-    MemOrders = (StdOrder*)malloc(sizeof(StdOrder) * MemOrderCount);
-    InstrZ    = 0;
+    InstrZ = 0;
     AddMem("LOAD", CPU29245, False, 0x16);
     AddMem("LOADL", CPU29245, False, 0x06);
     AddMem("LOADM", CPU29245, False, 0x36);
@@ -978,7 +952,6 @@ static void InitFields(void) {
     AddMem("STOREL", CPU29245, False, 0x0e);
     AddMem("STOREM", CPU29245, False, 0x3e);
 
-    SPRegs = (SPReg*)malloc(sizeof(SPReg) * SPRegCount);
     InstrZ = 0;
     AddSP("VAB", 0);
     AddSP("OPS", 1);
@@ -1008,17 +981,18 @@ static void InitFields(void) {
     AddSP("FPE", 160);
     AddSP("INTE", 161);
     AddSP("FPS", 162);
+    AddSP(NULL, 0);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(StdOrders);
-    free(NoImmOrders);
-    free(VecOrders);
-    free(JmpOrders);
-    free(FixedOrders);
-    free(MemOrders);
-    free(SPRegs);
+    order_array_free(StdOrders);
+    order_array_free(NoImmOrders);
+    order_array_free(VecOrders);
+    order_array_free(JmpOrders);
+    order_array_free(FixedOrders);
+    order_array_free(MemOrders);
+    order_array_free(SPRegs);
 }
 
 /*-------------------------------------------------------------------------*/

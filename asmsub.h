@@ -17,8 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LISTLINESPACE 20
-
 struct sLineComp;
 struct sStrComp;
 struct as_dynstr;
@@ -88,8 +86,6 @@ extern void NewPage(ShortInt Level, Boolean WithFF);
 extern void WrLstLine(char const* Line);
 
 extern void SetListLineVal(struct sTempResult* t);
-
-extern void LimitListLine(void);
 
 extern void PrintOneLineMuted(
         FILE* pFile, char const* pLine, const struct sLineComp* pMuteComponent,

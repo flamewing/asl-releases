@@ -296,10 +296,13 @@ static void DecodeOP(Word Index) {
             NCode = InstInfo[Index].NCode[i];
 
             tmp = CCode[i] | NCode;
+            /* non-base instruction does not contribute any new bits (duplicate
+             * instruction?) */
             if (tmp == CCode[i] || tmp == NCode) {
                 CCode[i] = 0;
                 return;
             }
+            /* ??? blocks SZL     OSR HLT */
             if ((tmp & 00016) == 00016) {
                 CCode[i] = 0;
                 return;
@@ -307,12 +310,16 @@ static void DecodeOP(Word Index) {
 
             switch (i) {
             case 0:
+                /* Group 1: RAR, RAL, RTR, RTL, and BSW cannot be used in same instruction
+                 */
                 if ((CCode[i] & 00016) && (NCode & 00016)) {
                     CCode[0] = 0;
                     return;
                 }
                 break;
             case 1:
+                /* Group 2: SMA|SZA|SNL and SPA|SNA|SZL cannot be used in same instruction
+                 */
                 if ((CCode[i] & 00160) && (NCode & 00160)
                     && ((CCode[i] & 00010) != (NCode & 00010))) {
                     CCode[i] = 0;

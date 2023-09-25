@@ -38,7 +38,7 @@ typedef struct {
 
 static CPUVar CPUXS1;
 
-static lr2r_Order lr2r_Orders[5];
+static lr2r_Order* lr2r_Orders;
 
 /*--------------------------------------------------------------------------*/
 /* Common Decoder Subroutines */
@@ -459,9 +459,7 @@ static void Code_lr2r(Word Index) {
 /* Dynamic Code Table Handling */
 
 static void Add_lr2r(char const* NName, Word NCode1, Word NCode2) {
-    if (InstrZ >= (int)(sizeof(lr2r_Orders) / sizeof(*lr2r_Orders))) {
-        exit(255);
-    }
+    order_array_rsv_end(lr2r_Orders, lr2r_Order);
     lr2r_Orders[InstrZ].Opcode1 = NCode1;
     lr2r_Orders[InstrZ].Opcode2 = NCode2;
     AddInstTable(InstTable, NName, InstrZ++, Code_lr2r);
@@ -672,6 +670,7 @@ static void InitFields(void) {
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
+    order_array_free(lr2r_Orders);
 }
 
 /*--------------------------------------------------------------------------*/

@@ -3777,6 +3777,7 @@ static as_cmd_result_t CMD_ListRadix(Boolean Negate, char const* Arg) {
 
     if (Negate) {
         ListRadixBase = 16;
+        ListPCZeroPad = False;
         return e_cmd_ok;
     }
     NewListRadixBase = ConstLongInt(Arg, &OK, 10);
@@ -3784,6 +3785,7 @@ static as_cmd_result_t CMD_ListRadix(Boolean Negate, char const* Arg) {
         return e_cmd_err;
     }
     ListRadixBase = NewListRadixBase;
+    ListPCZeroPad = (*Arg == '0');
     return e_cmd_arg;
 }
 
@@ -4555,6 +4557,7 @@ int main(int argc, char** argv) {
     GNUErrors           = False;
     MaxErrors           = 0;
     ListRadixBase       = 16;
+    ListPCZeroPad       = False;
     MaxIncludeLevel     = DEFAULT_MAXINCLUDELEVEL;
     write_cpu_list_exit = False;
 

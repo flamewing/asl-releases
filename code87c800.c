@@ -49,6 +49,8 @@ enum {
 #define AccReg 0
 #define WAReg  0
 
+#define COND_CODE_TRUE 6
+
 #define Reg8Cnt 8
 static char const Reg8Names[] = "AWCBEDLH";
 
@@ -270,21 +272,36 @@ static void CodeMem(Byte Entry, Byte Opcode) {
     BAsmCode[1 + AdrCnt] = Opcode;
 }
 
-static int DecodeCondition(char* pCondStr) {
-    int Condition;
+/*!------------------------------------------------------------------------
+ * \fn     decode_condition(const char *p_cond_str, Byte *p_cond_code)
+ * \brief  parse condition code
+ * \param  p_cond_str source argument
+ * \param  p_cond_code returns code if found
+ * \return True if found
+ * ------------------------------------------------------------------------ */
 
-    NLS_UpString(pCondStr);
-    for (Condition = 0; Conditions[Condition].Name; Condition++) {
-        if (!strcmp(ArgStr[1].str.p_str, Conditions[Condition].Name)) {
-            break;
+static Boolean decode_condition(char const* p_cond_str, Byte* p_cond_code) {
+    int z;
+
+    for (z = 0; Conditions[z].Name; z++) {
+        if (!as_strcasecmp(p_cond_str, Conditions[z].Name)) {
+            *p_cond_code = Conditions[z].Code;
+            return True;
         }
     }
 
-    return Condition;
+    return False;
 }
 
-static Boolean condition_tf(int condition) {
-    return (Conditions[condition].Code == 6) || (Conditions[condition].Code == 7);
+/*!------------------------------------------------------------------------
+ * \fn     cond_code_tf(Byte cond_code)
+ * \brief  is condition code True or False?
+ * \param  cond_code code to check
+ * \return True if yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean cond_code_tf(Byte cond_code) {
+    return (cond_code == COND_CODE_TRUE) || (cond_code == 7);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1149,12 +1166,13 @@ static void DecodeJRS(Word Code) {
     UNUSED(Code);
 
     if (ChkArgCnt(2, 2)) {
-        Integer      AdrInt, Condition;
+        Integer      AdrInt;
+        Byte         cond_code;
         Boolean      OK;
         tSymbolFlags Flags;
 
-        Condition = DecodeCondition(ArgStr[1].str.p_str);
-        if (!condition_tf(Condition)) {
+        if (!decode_condition(ArgStr[1].str.p_str, &cond_code)
+            || !cond_code_tf(cond_code)) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         } else {
             AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], Int16, &OK, &Flags)
@@ -1163,9 +1181,8 @@ static void DecodeJRS(Word Code) {
                 if (((AdrInt < -16) || (AdrInt > 15)) && !mSymbolQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
-                    CodeLen = 1;
-                    BAsmCode[0]
-                            = ((Conditions[Condition].Code - 2) << 5) | (AdrInt & 0x1f);
+                    CodeLen     = 1;
+                    BAsmCode[0] = ((cond_code - 2) << 5) | (AdrInt & 0x1f);
                 }
             }
         }
@@ -1176,25 +1193,27 @@ static void DecodeJR(Word Code) {
     UNUSED(Code);
 
     if (ChkArgCnt(1, 2)) {
-        Integer      Condition, AdrInt;
+        Integer      AdrInt;
+        Byte         cond_code;
         Boolean      OK;
         tSymbolFlags Flags;
 
-        Condition = (ArgCnt == 1) ? -1 : DecodeCondition(ArgStr[1].str.p_str);
-        if ((Condition >= 0) && !Conditions[Condition].Name) {
+        if (ArgCnt == 1) {
+            cond_code = COND_CODE_TRUE;
+        } else if (!decode_condition(ArgStr[1].str.p_str, &cond_code)) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
-        } else {
-            AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags)
-                     - (EProgCounter() + 2);
-            if (OK) {
-                if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
-                } else {
-                    CodeLen     = 2;
-                    BAsmCode[0] = (Condition == -1) ? 0xfb
-                                                    : 0xd0 | Conditions[Condition].Code;
-                    BAsmCode[1] = AdrInt & 0xff;
-                }
+            return;
+        }
+
+        AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags)
+                 - (EProgCounter() + 2);
+        if (OK) {
+            if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
+                WrError(ErrNum_JmpDistTooBig);
+            } else {
+                CodeLen     = 2;
+                BAsmCode[0] = (ArgCnt == 1) ? 0xfb : 0xd0 | cond_code;
+                BAsmCode[1] = AdrInt & 0xff;
             }
         }
     }
@@ -1332,7 +1351,7 @@ static void InitFields(void) {
     AddCond("GE", 3);
     AddCond("LE", 4);
     AddCond("GT", 5);
-    AddCond("T", 6);
+    AddCond("T", COND_CODE_TRUE);
     AddCond("F", 7);
     AddCond(NULL, 0);
 
