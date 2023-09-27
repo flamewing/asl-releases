@@ -121,12 +121,14 @@ static void ParseCPUArgs(tStrComp const* pArgs, tCPUArg const* pCPUArgs) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SetNSeg(as_addrspace_t NSeg)
+ * \fn     SetNSeg(as_addrspace_t NSeg, Boolean force_setup)
  * \brief  preparations when segment was switched
+ * \param  NSeg new segment to set
+ * \param  force_setup perform setup operations even if segment remains same
  * ------------------------------------------------------------------------ */
 
-static void SetNSeg(as_addrspace_t NSeg) {
-    if ((ActPC != NSeg) || !PCsUsed[ActPC]) {
+static void SetNSeg(as_addrspace_t NSeg, Boolean force_setup) {
+    if ((ActPC != NSeg) || !PCsUsed[ActPC] || force_setup) {
         ActPC = NSeg;
         if (!PCsUsed[ActPC]) {
             PCs[ActPC] = SegInits[ActPC];
@@ -197,7 +199,7 @@ void SetCPUByType(CPUVar NewCPU, tStrComp const* pCPUArgs) {
     pCPUDef = LookupCPUDefByVar(NewCPU);
     if (pCPUDef) {
         SetCPUCore(pCPUDef, pCPUArgs);
-        SetNSeg(SegCode);
+        SetNSeg(SegCode, True);
     }
 }
 
@@ -218,7 +220,7 @@ Boolean SetCPUByName(tStrComp const* pName) {
         } else {
             SetCPUCore(pCPUDef, NULL);
         }
-        SetNSeg(SegCode);
+        SetNSeg(SegCode, True);
         return True;
     }
 }
@@ -1214,7 +1216,7 @@ static void CodeSEGMENT(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(1, 1) && DecodeSegment(&ArgStr[1], SegCode, &NewSegment)) {
-        SetNSeg(NewSegment);
+        SetNSeg(NewSegment, False);
     }
 }
 
