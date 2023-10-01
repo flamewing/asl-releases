@@ -265,6 +265,7 @@ static void DecodeOP(Word Index) {
 
         BaseInst = False;
         for (i = 1; i <= ArgCnt; i++) {
+            NLS_UpString(ArgStr[i].str.p_str);
             if (!LookupInstTable(InstTable, ArgStr[i].str.p_str)) {
                 WrError(ErrNum_UnknownInstruction);
                 return;
@@ -299,11 +300,6 @@ static void DecodeOP(Word Index) {
             /* non-base instruction does not contribute any new bits (duplicate
              * instruction?) */
             if (tmp == CCode[i] || tmp == NCode) {
-                CCode[i] = 0;
-                return;
-            }
-            /* ??? blocks SZL     OSR HLT */
-            if ((tmp & 00016) == 00016) {
                 CCode[i] = 0;
                 return;
             }
