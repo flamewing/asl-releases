@@ -1321,6 +1321,28 @@ typedef unsigned long long Card64;
 /*===========================================================================*/
 /* Misc... */
 
+#ifdef __wasm__
+#define ARCHPRNAME "m68k"
+#define ARCHSYSNAME "wasm-emscripten"
+#define DEFSMADE
+#define OPENRDMODE "r"
+#define OPENWRMODE "w"
+#define OPENUPMODE "r+"
+#define IEEEFLOAT
+typedef signed char Integ8;
+typedef unsigned char Card8;
+typedef signed short Integ16;
+typedef unsigned short Card16;
+#define HAS16
+typedef signed int Integ32;
+#define PRIInteg32 "d"
+typedef unsigned int Card32;
+typedef signed long long Integ64;
+typedef unsigned long long Card64;
+#define HAS64
+#define NO_NLS
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* Just for curiosity, it won't work without 16 bit int's... */
 
