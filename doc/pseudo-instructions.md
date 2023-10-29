@@ -3030,3 +3030,5 @@ PDP-11 and WD16 accept `BYTE`/`WORD` as aliases for `DB`/`DW`. `FLT2` and `FLT4`
 
 To explicitly select an assembler directive when its name collides with a machine instruction, use `.SET`, `.EQU`, `.PAGE`, `.SWITCH`, `.SHIFT`, `.SAVE` or `.RESTORE`. These forms are always accepted regardless of target instruction names.
 
+
+`Z80SYNTAX` also supports NEC 78xx; see the processor notes for its partial instruction mapping.

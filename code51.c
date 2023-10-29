@@ -386,7 +386,8 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             *PPos             = '\0';
             IndirComp.Pos.Len = PPos - IndirComp.str.p_str;
         }
-        if (DecodeReg(&IndirComp, &AdrPart, &HSize, False) == eIsReg) {
+        switch (DecodeReg(&IndirComp, &AdrPart, &HSize, False)) {
+        case eIsReg: {
             if (!PPos) {
                 H32 = 0;
                 OK  = True;
@@ -436,6 +437,14 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                     break;
                 }
             }
+            break;
+        }
+        case eIsNoReg:
+            WrStrErrorPos(ErrNum_InvReg, &IndirComp);
+            break;
+        case eRegAbort:
+            /* will go to function end anyway after restoring separator */
+            break;
         }
         if (PPos) {
             *PPos = Save;

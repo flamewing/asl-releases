@@ -300,7 +300,7 @@ Boolean DirScan(char const* Mask, charcallback callback) {
 #ifdef __MSDOS__
     struct ffblk blk;
     int          res;
-    char*        pos;
+    char const*  pos;
 
     res = findfirst(
             Mask, &blk,

@@ -1727,3 +1727,249 @@ RXV1 (RX110/111/113/130/210/21A/220/610/621/62N/630/631), RXV2 (RX140/230/231/64
 `MOVEQ` accepts immediate values 0x80 through 0xff and warns (430) that the processor sign extends them to the full register width. Use a signed value when the sign extension is intentional.
 
 The 8086 family includes 8088/8086, 80188/80186, V20/V30/V40/V50, V33/V53, V25/V35, V55, V55SC and V55PI. Variants on each line share instruction sets; later groups add instructions to their branch of the NEC family.
+
+### NEC 78xx Z80 syntax
+
+`Z80SYNTAX ON` accepts Z80-style forms of many 78xx instructions. The mapping is partial: some original instructions have no alias, and some 8080/Z80 instructions do not exist on these CPUs. `Z80SYNTAX EXCLUSIVE` is therefore unavailable.
+
+CPU groups: 1 = 78C05/78C06; 2 = 7800/7801/7802; 3 = 7807/7808/7809/7810; 4 = 7810/78C1x.
+
+| Z80 syntax | Original | Operation | CPU groups |
+| --- | --- | --- | --- |
+| `LD r1,A` | `MOV r1,A` | r1 ← A | 1,2,3,4 |
+|  |  |  | (r1 ≠ EAx) |
+|  |  |  | 3,4 |
+|  |  |  | (r1=EAx) |
+| `LD A,r1` | `MOV A,r1` | A ← r1 | 1,2,3,4 |
+|  |  |  | (r1 ≠ EAx) |
+|  |  |  | 3,4 |
+|  |  |  | (r1=EAx) |
+| `LD sr,A` | `MOV sr,A` | sr ← A | 1,2,3,4 |
+| `LD A,sr1` | `MOV A,sr1` | A ← sr1 | 1,2,3,4 |
+| `LD r,(word)` | `MOV r,word` | r ← (word) | 1,2,3,4 |
+|  |  |  | (r1 ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r1=V) |
+| `LD (word),r` | `MOV word,r` | (word) ← r | 1,2,3,4 |
+|  |  |  | (r1 ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r1=V) |
+| `LD r,byte` | `MVI r,byte` | r ← byte | 1,2,3,4 |
+|  |  |  | (r1 ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r1=V) |
+| `LD sr2,byte` | `MVI sr2,byte` | sr2 ← byte | 2,3,4 |
+| `LD (wa),byte` | `MVIW wa,byte` | (wa) ← byte | 2,3,4 |
+| `LD (rpa1),byte` | `MVIX rpa1,byte` | (rpa1) ← byte | 2,3,4 |
+| `LD (wa),a` | `STAW wa` | (wa) ← A | 1,2,3,4 |
+| `LD A,(wa)` | `LDAW wa` | A ← (wa) | 1,2,3,4 |
+| `LD (rpa),a` | `STAX rpa` | (rpa) ← (wa) | 1,2 |
+| `LD (rpa2),a` | `STAX rpa2` | (rpa2) ← (wa) | 3,4 |
+| `LD A,(rpa)` | `LDAX rpa` | (wa) ← (rpa) | 1,2 |
+| `LD A,(rpa2)` | `LDAX rpa2` | (wa) ← (rpa2) | 3,4 |
+| `LD rp3,EA` | `DMOV rp3,EA` | rp3 ← EA | 3,4 |
+| `LD sr3,EA` | `DMOV sr3,EA` | sr3 ← EA | 3,4 |
+| `LD EA,sr4` | `DMOV EA,sr4` | EA ← sr4 | 3,4 |
+| `LD EA,rp3` | `DMOV EA,rp3` | EA ← rp3 | 3,4 |
+| `LD (word),BC` | `SBCD word` | (word) ← BC | 1,2,3,4 |
+| `LD (word),DE` | `SDED word` | (word) ← DE | 1,2,3,4 |
+| `LD (word),HL` | `SHLD word` | (word) ← HL | 1,2,3,4 |
+| `LD (word),SP` | `SSPD word` | (word) ← SP | 1,2,3,4 |
+| `LD (rpa3),EA` | `STEAX rpa3` | (rpa3) ← EA | 3,4 |
+| `LD BC,(word)` | `LBCD word` | BC ← (word) | 1,2,3,4 |
+| `LD DE,(word)` | `LDED word` | DE ← (word) | 1,2,3,4 |
+| `LD HL,(word)` | `LHLD word` | HL ← (word) | 1,2,3,4 |
+| `LD SP,(word)` | `LSPD word` | SP ← (word) | 1,2,3,4 |
+| `LD EA,(rpa3)` | `LDEAX rpa3` | EA ← (word) | 3,4 |
+| `LD rp,word` | `LXI rp,word` | rp ← word | 1,2,3,4 |
+| `LD EA,word` | `LXI EA,word` | EA ← word | 3,4 |
+| `ADD A,(rpa)` | `ADDX rpa` | A ← A+(rpa) | 1,2,3,4 |
+| `ADD A,byte` | `ADI A,byte` | A ← A+byte | 1,2,3,4 |
+| `ADD r,byte` | `ADI r,byte` | r ← r+byte | 2,3,4 |
+| `ADD sr2,byte` | `ADI sr2,byte` | sr2 ← A+sr2 | 2,3,4 |
+| `ADD A,(wa)` | `ADDW wa` | A ← A+(wa) | 2,3,4 |
+| `ADD EA,r2` | `EADD EA,r2` | EA ← EA+r2 | 3,4 |
+| `ADD EA,rp3` | `DADD EA,rp3` | EA ← EA+rp3 | 3,4 |
+| `ADC A,(rpa)` | `ADCX rpa` | A ← A+(rpa)+CY | 1,2,3,4 |
+| `ADC A,byte` | `ACI A,byte` | A ← A+byte+CY | 1,2,3,4 |
+| `ADC r,byte` | `ACI r,byte` | r ← r+A+CY | 2,3,4 |
+| `ADC sr2,byte` | `ACI sr2,byte` | sr2 ← A+sr2+CY | 2,3,4 |
+| `ADC A,(wa)` | `ADCW wa` | A ← A+(wa)+CY | 2,3,4 |
+| `ADC EA,rp3` | `DADC EA,rp3` | EA ← EA+rp3+CY | 3,4 |
+| `ADDNC A,(rpa)` | `ADDNCX rpa` | A ← A+(rpa) | 1,2,3,4 |
+|  |  | skip if !CY |  |
+| `ADDNC A,byte` | `ADINC A,byte` | A ← A+byte | 1,2,3,4 |
+|  |  | skip if !CY |  |
+| `ADDNC r,byte` | `ADINC r,byte` | r ← r+A | 2,3,4 |
+|  |  | skip if !CY |  |
+| `ADDNC sr2,byte` | `ADINC sr2,byte` | sr2 ← A+sr2 | 2,3,4 |
+|  |  | skip if !CY |  |
+| `ADDNC A,(wa)` | `ADDNCW wa` | A ← A+(wa) | 2,3,4 |
+|  |  | skip if !CY |  |
+| `ADDNC EA,rp3` | `DADDNC EA,rp3` | EA ← EA+rp3 | 3, 4 |
+|  |  | skip if !CY |  |
+| `SUB A,(rpa)` | `SUBX rpa` | A ← A-(rpa) | 1,2,3,4 |
+| `SUB A,byte` | `SUI A,byte` | A ← A-byte | 1,2,3,4 |
+| `SUB r,byte` | `SUI r,byte` | r ← r-A | 2,3,4 |
+| `SUB sr2,byte` | `SUI sr2,byte` | sr2 ← A-sr2 | 2,3,4 |
+| `SUB A,(wa)` | `SUBW wa` | A ← A-(wa) | 2,3,4 |
+| `SUB EA,r2` | `ESUB EA,r2` | EA ← EA-r2 | 3,4 |
+| `SUB EA,rp3` | `DSUB EA,rp3` | EA ← EA-rp3 | 3,4 |
+| `SBB A,(rpa)` | `SBBX rpa` | A ← A-(rpa)-CY | 1,2,3,4 |
+| `SBB A,byte` | `SBI A,byte` | A ← A-byte-CY | 1,2,3,4 |
+| `SBB r,byte` | `SBI r,byte` | r ← r-A-CY | 2,3,4 |
+| `SBB sr2,byte` | `SBI sr2,byte` | sr2 ← A-sr2-CY | 2,3,4 |
+| `SBB A,(wa)` | `SBBW wa` | A ← A-(wa)-CY | 2,3,4 |
+| `SBB EA,rp3` | `DSBB EA,rp3` | EA ← EA-rp3-CY | 3,4 |
+| `SUBNB A,(rpa)` | `SUBNBX rpa` | A ← A-(rpa) | 1,2,3,4 |
+|  |  | skip if !CY |  |
+| `SUBNB A,byte` | `SUINB A,byte` | A ← A-byte | 1,2,3,4 |
+|  |  | skip if !CY |  |
+| `SUBNB r,byte` | `SUINB r,byte` | r ← r-A | 2,3,4 |
+|  |  | skip if !CY |  |
+| `SUBNB sr2,byte` | `SUINB sr2,byte` | sr2 ← A-sr2 | 2,3,4 |
+|  |  | skip if !CY |  |
+| `SUBNB A,(wa)` | `SUBNBW wa` | A ← A-(wa) | 2,3,4 |
+|  |  | skip if !CY |  |
+| `SUBNB EA,rp3` | `DSUBNB EA,rp3` | EA ← EA-rp3 | 3,4 |
+|  |  | skip if !CY |  |
+| `AND A,r` | `ANA A,r` | A ← A AND r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `AND r,A` | `ANA r,A` | r ← A AND r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `AND A,(rpa)` | `ANAX rpa` | A ← A AND (rpa) | 1,2,3,4 |
+| `AND A,byte` | `ANI A,byte` | A ← A AND byte | 1,2,3,4 |
+| `AND r,byte` | `ANI r,byte` | r ← r AND byte | 2,3,4 |
+| `AND sr2,byte` | `ANI sr2,byte` | sr2 ← sr2 AND byte | 1,2,3,4 |
+| `AND A,(wa)` | `ANAW wa` | A ← A AND (wa) | 2,3,4 |
+| `AND (wa),byte` | `ANIW wa,byte` | (wa) ← (wa) AND byte | 1,2,3,4 |
+| `AND EA,rp3` | `DAN EA,rp3` | EA ← EA AND rp3 | 3,4 |
+| `OR A,r` | `ORA A,r` | A ← A OR r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `OR r,A` | `ORA r,A` | r ← A OR r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `OR A,(rpa)` | `ORAX rpa` | A ← A OR (rpa) | 1,2,3,4 |
+| `OR A,byte` | `ORI A,byte` | A ← A OR byte | 1,2,3,4 |
+| `OR r,byte` | `ORI r,byte` | r ← r OR byte | 2,3,4 |
+| `OR sr2,byte` | `ORI sr2,byte` | sr2 ← sr2 OR byte | 1,2,3,4 |
+| `OR A,(wa)` | `ORAW wa` | A ← A OR (wa) | 2,3,4 |
+| `OR (wa),byte` | `ORIW wa,byte` | (wa) ← (wa) OR byte | 1,2,3,4 |
+| `OR EA,rp3` | `DOR EA,rp3` | EA ← EA OR rp3 | 3,4 |
+| `XOR A,r` | `XRA A,r` | A ← A XOR r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `XOR r,A` | `XRA r,A` | r ← A XOR r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `XOR A,(rpa)` | `XRAX rpa` | A ← A XOR (rpa) | 1,2,3,4 |
+| `XOR A,byte` | `XRI A,byte` | A ← A XOR byte | 2,3,4 |
+| `XOR r,byte` | `XRI r,byte` | r ← r XOR byte | 2,3,4 |
+| `XOR sr2,byte` | `XRI sr2,byte` | sr2 ← sr2 XOR byte | 2,3,4 |
+| `XOR A,(wa)` | `XRAW wa` | A ← A XOR (wa) | 2,3,4 |
+| `XOR EA,rp3` | `DXR EA,rp3` | EA ← EA XOR rp3 | 3,4 |
+| `SKGT A,r` | `GTA A,r` | skip if A>r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKGT r,A` | `GTA r,A` | skip if r>A | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKGT A,(rpa)` | `GTAX rpa` | skip if A>(rpa) | 1,2,3,4 |
+| `SKGT A,byte` | `GTI A,byte` | skip if A>byte | 1,2,3,4 |
+| `SKGT r,byte` | `GTI r,byte` | skip if r>byte | 2,3,4 |
+| `SKGT sr2,byte` | `GTI sr2,byte` | skip if sr2>byte | 2,3,4 |
+| `SKGT A,(wa)` | `GTAW wa` | skip if A>(wa) | 2,3,4 |
+| `SKGT (wa),byte` | `GTIW wa,byte` | skip if (wa)>byte | 1,2,3,4 |
+| `SKGT EA,rp3` | `DGT EA,rp3` | skip if EA>rp3 | 3,4 |
+| `SKLT A,r` | `LTA A,r` | skip if A<r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKLT r,A` | `LTA r,A` | skip if r<A | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKLT A,(rpa)` | `LTAX rpa` | skip if A<(rpa) | 1,2,3,4 |
+| `SKLT A,byte` | `LTI A,byte` | skip if A<byte | 1,2,3,4 |
+| `SKLT r,byte` | `LTI r,byte` | skip if r<byte | 2,3,4 |
+| `SKLT sr2,byte` | `LTI sr2,byte` | skip if sr2<byte | 2,3,4 |
+| `SKLT A,(wa)` | `LTAW wa` | skip if A<(wa) | 2,3,4 |
+| `SKLT (wa),byte` | `LTIW wa,byte` | skip if (wa)<byte | 1,2,3,4 |
+| `SKLT EA,rp3` | `DLT EA,rp3` | skip if EA<rp3 | 3,4 |
+| `SKNE A,r` | `NEA A,r` | skip if A ≠ r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKNE r,A` | `NEA r,A` | skip if r ≠ A | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKNE A,(rpa)` | `NEAX rpa` | skip if A ≠ (rpa) | 1,2,3,4 |
+| `SKNE A,byte` | `NEI A,byte` | skip if A ≠ byte | 1,2,3,4 |
+| `SKNE r,byte` | `NEI r,byte` | skip if r ≠ byte | 2,3,4 |
+| `SKNE sr2,byte` | `NEI sr2,byte` | skip if sr2 ≠ byte | 2,3,4 |
+| `SKNE A,(wa)` | `NEAW wa` | skip if A ≠ (wa) | 2,3,4 |
+| `SKNE (wa),byte` | `NEIW wa,byte` | skip if (wa) ≠ byte | 1,2,3,4 |
+| `SKNE EA,rp3` | `DNE EA,rp3` | skip if EA ≠ rp3 | 3,4 |
+| `SKEQ A,r` | `EQA A,r` | skip if A=r | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKEQ r,A` | `EQA r,A` | skip if r=A | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKEQ A,(rpa)` | `EQAX rpa` | skip if A=(rpa) | 1,2,3,4 |
+| `SKEQ A,byte` | `EQI A,byte` | skip if A=byte | 1,2,3,4 |
+| `SKEQ r,byte` | `EQI r,byte` | skip if r=byte | 2,3,4 |
+| `SKEQ sr2,byte` | `EQI sr2,byte` | skip if sr2=byte | 2,3,4 |
+| `SKEQ A,(wa)` | `EQAW wa` | skip if A=(wa) | 2,3,4 |
+| `SKEQ (wa),byte` | `EQIW wa,byte` | skip if (wa)=byte | 1,2,3,4 |
+| `SKEQ EA,rp3` | `DEQ EA,rp3` | skip if AEA=rp3 | 3,4 |
+| `SKON A,r` | `ONA A,r` | skip if (A AND r) ≠ 0 | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKON r,A` | `ONA r,A` | skip if (r AND A) ≠ 0 | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKON A,(rpa)` | `ONAX rpa` | skip if (A AND (rpa)) ≠ 0 | 1,2,3,4 |
+| `SKON A,byte` | `ONI A,byte` | skip if (A AND byte) ≠ 0 | 1,2,3,4 |
+| `SKON r,byte` | `ONI r,byte` | skip if (r AND byte) ≠ 0 | 2,3,4 |
+| `SKON sr2,byte` | `ONI sr2,byte` | skip if (sr2 AND byte) ≠ 0 | 2,3,4 |
+| `SKON A,(wa)` | `ONAW wa` | skip if (A AND (wa)) ≠ 0 | 2,3,4 |
+| `SKON (wa),byte` | `ONIW wa,byte` | skip if (wa) AND byte ≠ 0 | 1,2,3,4 |
+| `SKON EA,rp3` | `DON EA,rp3` | skip if (EA AND rp3) ≠ 0 | 3,4 |
+| `SKOFF A,r` | `OFFA A,r` | skip if (A AND r)=0 | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKOFF r,A` | `OFFA r,A` | skip if (r AND A)=0 | 1,2,3,4 |
+|  |  |  | (r ≠ V) |
+|  |  |  | 2,3,4 |
+|  |  |  | (r=V) |
+| `SKOFF A,(rpa)` | `OFFAX rpa` | skip if (A AND (rpa))=0 | 1,2,3,4 |
+| `SKOFF A,byte` | `OFFI A,byte` | skip if (A AND byte)=0 | 1,2,3,4 |
+| `SKOFF r,byte` | `OFFI r,byte` | skip if (r AND byte)=0 | 2,3,4 |
+| `SKOFF sr2,byte` | `OFFI sr2,byte` | skip if (sr2 AND byte)=0 | 2,3,4 |
+| `SKOFF A,(wa)` | `OFFAW wa` | skip if (A AND (wa))=0 | 2,3,4 |
+| `SKOFF (wa),byte` | `OFFIW wa,byte` | skip if (wa) AND byte=0 | 1,2,3,4 |
+| `SKOFF EA,rp3` | `DOFF EA,rp3` | skip if (EA AND rp3)=0 | 3,4 |
+| `INC r2` | `INR r2` | r2 ← r2+1 | 1,2,3,4 |
+| `INC (wa)` | `INRW wa` | (wa) ← (wa)+1 | 1,2,3,4 |
+| `INC rp` | `INX rp` | rp ← rp+1 | 1,2,3,4 |
+| `DEC r2` | `DCR r2` | r2 ← r2-1 | 1,2,3,4 |
+| `DEC (wa)` | `DCRW wa` | (wa) ← (wa)-1 | 1,2,3,4 |
+| `DEC rp` | `DCX rp` | rp ← rp-1 | 1,2,3,4 |
