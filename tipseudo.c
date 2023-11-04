@@ -20,6 +20,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "chartrans.h"
 #include "codepseudo.h"
 #include "errmsg.h"

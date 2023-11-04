@@ -19,6 +19,8 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
+#include "bpemu.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "strutil.h"

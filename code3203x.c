@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -65,12 +66,14 @@ static Byte          PrevARs, ARs;
 static char          PrevOp[7];
 static tGenOrderInfo PrevGenInfo;
 
-static FixedOrder*  FixedOrders;
-static GenOrder*    GenOrders;
-static char const** ParOrders;
-static SingOrder*   SingOrders;
+static FixedOrder* FixedOrders;
+static GenOrder*   GenOrders;
+static SingOrder*  SingOrders;
 
 static LongInt DPValue;
+
+static char const ParOrders[][6]
+        = {"LDF", "LDI", "STF", "STI", "ADDF3", "SUBF3", "ADDI3", "SUBI3"};
 
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
@@ -1511,15 +1514,15 @@ static void AddGen(
         Byte NMask1, Byte NMask3, Byte C20, Byte C21, Byte C22, Byte C23, Byte C24,
         Byte C25, Byte C26, Byte C27, Byte C30, Byte C31, Byte C32, Byte C33, Byte C34,
         Byte C35, Byte C36, Byte C37) {
-    char     NName3[30];
-    unsigned z;
+    char   NName3[30];
+    size_t z;
 
     order_array_rsv_end(GenOrders, GenOrder);
 
     as_snprintf(NName3, sizeof(NName3), "%s3", NName);
 
     GenOrders[InstrZ].ParIndex = GenOrders[InstrZ].ParIndex3 = -1;
-    for (z = 0; ParOrders[z]; z++) {
+    for (z = 0; z < as_array_size(ParOrders); z++) {
         if (!strcmp(ParOrders[z], NName)) {
             GenOrders[InstrZ].ParIndex = z;
         }
@@ -1560,11 +1563,6 @@ static void AddGen(
     AddInstTable(InstTable, NName, InstrZ, DecodeGen);
     AddInstTable(InstTable, NName3, InstrZ | 0x8000, DecodeGen);
     InstrZ++;
-}
-
-static void AddPar(char const* p_name) {
-    order_array_rsv_end(ParOrders, char const*);
-    ParOrders[InstrZ++] = p_name;
 }
 
 static void InitFields(void) {
@@ -1639,17 +1637,6 @@ static void InitFields(void) {
     AddInstTable(InstTable, "LDHI", 0x007f, DecodeRegImm);
     AddInstTable(InstTable, "LDPK", 0x003e, DecodeLDPK);
     AddInstTable(InstTable, "STIK", 0x002a, DecodeSTIK);
-
-    InstrZ = 0;
-    AddPar("LDF");
-    AddPar("LDI");
-    AddPar("STF");
-    AddPar("STI");
-    AddPar("ADDF3");
-    AddPar("SUBF3");
-    AddPar("ADDI3");
-    AddPar("SUBI3");
-    AddPar(NULL);
 
     InstrZ = 0;
     /*        Name      MinCPU    May1   May3   Cd    Cd3   OnlyM  Swap   ImmF   Comm PM1
@@ -1886,7 +1873,6 @@ static void DeinitFields(void) {
 
     order_array_free(FixedOrders);
     order_array_free(GenOrders);
-    order_array_free(ParOrders);
     order_array_free(SingOrders);
 }
 

@@ -24,5 +24,7 @@ extern void sub64(t64* pRes, t64 const* pA, t64 const* pB);
 extern void mul64(t64* pRes, t64 const* pA, t64 const* pB);
 
 extern void div64(t64* pRes, t64 const* pA, t64 const* pB);
+extern void mod64(t64* pRes, t64 const* pA, t64 const* pB);
+extern void mod_div64(t64* pQuot, t64* pRem, t64 const* pA, t64 const* pB);
 
 #endif /* MATH64_H */

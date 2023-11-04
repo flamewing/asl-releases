@@ -16,6 +16,7 @@
 #include "asmdef.h"
 #include "asmif.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "dynstr.h"
 #include "strutil.h"
 

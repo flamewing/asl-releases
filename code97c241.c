@@ -32,21 +32,6 @@ typedef struct {
     Byte Mask; /* B0..2=OpSizes, B4=-MayImm, B5=-MayReg */
 } RMWOrder;
 
-typedef struct {
-    char const* Name;
-    Byte        Code;
-    Byte        Mask; /* B7: DD in A-Format gedreht */
-
-    enum {
-        Equal,
-        FirstCounts,
-        SecondCounts,
-        Op2Half
-    } SizeType;
-
-    Boolean ImmKorr, ImmErl, RegErl;
-} GAOrder;
-
 static CPUVar CPU97C241;
 
 static int     OpSize, OpSize2;
@@ -62,8 +47,11 @@ static Boolean PrefUsed[2];
 static char    Format;
 static Boolean MinOneIs0;
 
-static RMWOrder*    RMWOrders;
-static char const** Conditions;
+static RMWOrder* RMWOrders;
+
+static char const Conditions[][4]
+        = {"C",  "NC", "Z",   "NZ",  "OV", "NOV", "MI",  "PL",  "LE", "GT",
+           "LT", "GE", "ULE", "UGT", "N",  "A",   "ULT", "UGE", "EQ", "NE"};
 
 /*--------------------------------------------------------------------------*/
 
@@ -863,9 +851,9 @@ static void AddPrefixes(void) {
 }
 
 static Boolean DecodeCondition(char const* pAsc, Word* pCondition) {
-    int z;
+    size_t z;
 
-    for (z = 0; Conditions[z]; z++) {
+    for (z = 0; as_array_size(Conditions); z++) {
         if (!as_strcasecmp(pAsc, Conditions[z])) {
             *pCondition = z;
             return True;
@@ -2139,11 +2127,6 @@ static void AddRMW(char const* NName, Byte NCode, Byte NMask) {
     AddInstTable(InstTable, NName, InstrZ++, DecodeRMW);
 }
 
-static void AddCondition(char const* NName) {
-    order_array_rsv_end(Conditions, char const*);
-    Conditions[InstrZ++] = NName;
-}
-
 static void AddGAEq(char const* NName, Word NCode) {
     AddInstTable(InstTable, NName, NCode, DecodeGAEq);
 }
@@ -2286,36 +2269,12 @@ static void InitFields(void) {
     AddInstTable(InstTable, "CPSZ", 0, DecodeString);
     AddInstTable(InstTable, "CPSN", 1, DecodeString);
     AddInstTable(InstTable, "LDS", 3, DecodeString);
-
-    InstrZ = 0;
-    AddCondition("C");
-    AddCondition("NC");
-    AddCondition("Z");
-    AddCondition("NZ");
-    AddCondition("OV");
-    AddCondition("NOV");
-    AddCondition("MI");
-    AddCondition("PL");
-    AddCondition("LE");
-    AddCondition("GT");
-    AddCondition("LT");
-    AddCondition("GE");
-    AddCondition("ULE");
-    AddCondition("UGT");
-    AddCondition("N");
-    AddCondition("A");
-    AddCondition("ULT");
-    AddCondition("UGE");
-    AddCondition("EQ");
-    AddCondition("NE");
-    AddCondition(NULL);
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
 
     order_array_free(RMWOrders);
-    order_array_free(Conditions);
 }
 
 static Boolean DecodeAttrPart_97C241(void) {

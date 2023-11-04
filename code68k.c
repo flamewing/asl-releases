@@ -19,6 +19,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"

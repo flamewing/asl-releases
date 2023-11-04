@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"

@@ -18,6 +18,7 @@
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"

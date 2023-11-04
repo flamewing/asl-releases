@@ -17,6 +17,8 @@
 #include "asmfnums.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "as_endian.h"
+#include "chunks.h"
 #include "errmsg.h"
 #include "strutil.h"
 

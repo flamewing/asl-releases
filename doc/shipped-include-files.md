@@ -56,23 +56,25 @@ TRUE or FALSE:
 >
 > _–unknown_
 
-If one decides to rewrite a chapter that has been out of date for two years, it is almost unavoidable that one forgets to mention some of the good ghosts who contributed to the success this project had up to now. The first "thank you" therefore goes to the people whose names I unwillingly forgot in the following enumeration!
+There is a common saying that programs you write are like children you put into the world. It is now more than 30 years that I have been working on this assembler, and I have come to the conclusion that such a project is rather a journey for its author. The people you meet and learn to know on this journey are at least as important as the perceived target itself. You learn a lot on this trip and, in the best case, also understand that things can be seen from a completely different perspective. If the discussions are fruitful, it is a win for both sides.
+
+While making this journey, some people have kept a special place in my memories because of the way they contributed to this project and to the state it has now achieved. The following enumeration is naturally incomplete, since my memories are no longer as good as they used to be. So the first 'thank you' goes to all the people I accidentally omit. The journey goes on, and maybe our paths will cross again!
 
 The concept of AS as a universal cross assembler came from Bernhard (C.) Zschocke who needed a "student friendly", i.e. free cross assembler for his microprocessor course and talked me into extending an already existing 68000 assembler. The rest is history... The microprocessor course held at RWTH Aachen also always provided the most engaged users (and bug-searchers) of new AS features and therefore contributed a lot to today's quality of AS.
 
-The internet and FTP have proved to be a big help for spreading AS and reporting of bugs. My thanks therefore go to the FTP admins (Bernd Casimir in Stuttgart, Norbert Breidor in Aachen, and Jürgen Meißburger in Jülich). Especially the last one personally engaged a lot to establish a practicable way in Jülich.
+The Internet and FTP have proved to be a big help for spreading AS and reporting of bugs. My thanks therefore go to the FTP admins (Bernd Casimir in Stuttgart, Norbert Breidor in Aachen, and Jürgen Meißburger in Jülich). Especially the last one personally engaged a lot to establish a practicable way in Jülich.
 
-As we are just talking about the ZAM: Though Wolfgang E. Nagel is not personally involved into AS, he is at least my boss and always puts at least four eyes on what I am doing. Regarding AS, there seems to be at least one that smiles...
+As we are just talking about the ZAM: Though Wolfgang E. Nagel never became personally involved in AS, he was my tutor and boss. He always had at least four eyes on what I was doing. Regarding AS, there seemed to be at least one that smiled...
 
-A program like AS cannot be done without appropriate data books and documentation. I received information from an enormous amount of people, ranging from tips up to complete data books. An enumeration follows (as stated before, without guarantee for completeness!):
+A program like AS cannot be done without appropriate data books and documentation. I received information from an enormous amount of people, ranging from tips up to complete data books. An enumeration follows (as stated before, this is very probably incomplete!):
 
-Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch, Rolf Buchholz, Bernd Casimir, Nils Eilers, Gunther Ewald, Michael Haardt, Stephan Hruschka, Peter Kliegelhöfer, Ulf Meinke, Udo Möller, Matthias Paul, Norbert Rosch, Curt J. Sampson, Steffen Schmid, Leonhard Schneider, Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter, Patrik Strömdahl, Tadashi G. Takaoka, Oliver Thamm, Thorsten Thiele, Leszek Ulman, Rob Warmelink, Andreas Wassatsch, John Weinrich.
+Ernst Ahlers, Charles Altmann, Marco Awater, Len Bayles, Andreas Bolsch, Rolf Buchholz, Bernd Casimir, Nils Eilers, Gunther Ewald, Michael Haardt, Stephan Hruschka, Fred van Kempen, Peter Kliegelhöfer, Ulf Meinke, Udo Möller, Matthias Paul, Norbert Rosch, Curt J. Sampson, Steffen Schmid, Leonhard Schneider, Ernst Schwab, Michael Schwingen, Oliver Sellke, Christian Stelter, Patrik Strömdahl, Tadashi G. Takaoka, Oliver Thamm, Thorsten Thiele, Leszek Ulman, Rob Warmelink, Andreas Wassatsch, John Weinrich.
 
-...and an ironic "thank you" to Rolf-Dieter-Klein and Tobias Thiel who demonstrated with their ASM68K how one should **not** do it and thereby indirectly gave me the impulse to write something better!
+...and a somewhat ironic "thank you" to Rolf-Dieter-Klein and Tobias Thiel, who gave me the initial impulse with their ASM68K. Several things did not work the way I wanted, so I thought I could do better or at least differently.
 
-I did not entirely write AS on my own. The DOS version of AS contained the OverXMS routines from Wilbert van Leijen which can move the overlay modules into the extended memory. A really nice library, easy to use without problems!
+And of course, I did not entirely write AS on my own. The DOS version of AS contained the OverXMS routines from Wilbert van Leijen which can move the overlay modules into the extended memory. A really nice library, easy to use without problems!
 
-The TMS320C2x/5x code generators and the file `STDDEF2x.INC` come from Thomas Sailer, ETH Zurich. It's surprising, he only needed one weekend to understand my coding and to implement the new code generator. Either that was a long night shift or I am slowly getting old...the same praise goes to Haruo Asano for providing the MN1610/MN1613 code generator.
+The TMS320C2x/5x code generators and the file `STDDEF2x.INC` come from Thomas Sailer, ETH Zurich. It's surprising, he only needed one weekend to understand my coding and to implement the new code generator. Either that was a long night shift or I am slowly getting old...the same praise goes to Haruo Asano for providing the MN1610/MN1613, IM6100, CP1600, Renesas RX and HP NanoProcessor code generators.
 
 <!-- markdownlint-enable MD036 -->
 <!-- markdownlint-enable MD030 -->

@@ -13,6 +13,10 @@
 #include "trees.h"
 
 #include "asmdef.h"
+#include "asmpars.h"
+#include "asmsub.h"
+#include "as_endian.h"
+#include "nls.h"
 
 #include <string.h>
 

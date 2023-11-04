@@ -18,6 +18,7 @@
 #include "asmlabel.h"
 #include "asmlist.h"
 #include "asmsub.h"
+#include "as_endian.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "fileformat.h"

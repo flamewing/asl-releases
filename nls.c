@@ -434,6 +434,7 @@ static void Default_TimeString(
 #    include <windef.h>
 
 #    include <winbase.h>
+#    include <windows.h>
 #    include <winnls.h>
 
 static void QueryInfo(void) {

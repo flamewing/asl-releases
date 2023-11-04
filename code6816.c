@@ -39,8 +39,6 @@ typedef struct {
     Word Code1, Code2;
 } EmuOrder;
 
-#define RegCnt 7
-
 enum {
     ModNone   = -1,
     ModDisp8  = 0,
@@ -69,11 +67,12 @@ static Byte        AdrVals[4];
 
 static LongInt Reg_EK;
 
-static GenOrder*    GenOrders;
-static EmuOrder*    EmuOrders;
-static char const** Regs;
+static GenOrder* GenOrders;
+static EmuOrder* EmuOrders;
 
 static CPUVar CPU6816;
+
+static char const Regs[][4] = {"D", "E", "X", "Y", "Z", "K", "CCR"};
 
 /*-------------------------------------------------------------------------*/
 
@@ -462,7 +461,7 @@ static void DecodeExt(Word Code) {
 }
 
 static void DecodeStkMult(Word Index) {
-    int     z, z2;
+    int     z;
     Boolean OK;
 
     if (ChkArgCnt(1, ArgCntMax)) {
@@ -470,9 +469,10 @@ static void DecodeStkMult(Word Index) {
         BAsmCode[1] = 0;
         for (z = 1; z <= ArgCnt; z++) {
             if (OK) {
-                z2 = 0;
+                size_t const RegCnt = as_array_size(Regs);
+                size_t       z2     = 0;
                 NLS_UpString(ArgStr[z].str.p_str);
-                while ((z2 < RegCnt) && (strcmp(ArgStr[z].str.p_str, Regs[z2]))) {
+                while ((z2 < RegCnt) && strcmp(ArgStr[z].str.p_str, Regs[z2])) {
                     z2++;
                 }
                 if (z2 >= RegCnt) {
@@ -1122,15 +1122,6 @@ static void InitFields(void) {
     AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
     AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
 
-    Regs    = (char const**)malloc(sizeof(char*) * RegCnt);
-    Regs[0] = "D";
-    Regs[1] = "E";
-    Regs[2] = "X";
-    Regs[3] = "Y";
-    Regs[4] = "Z";
-    Regs[5] = "K";
-    Regs[6] = "CCR";
-
     init_moto8_pseudo(InstTable, e_moto_8_be);
 }
 
@@ -1138,7 +1129,7 @@ static void DeinitFields(void) {
     order_array_free(GenOrders);
     order_array_free(EmuOrders);
     DestroyInstTable(InstTable);
-    free(Regs);
+    InstTable = NULL;
 }
 
 /*-------------------------------------------------------------------------*/

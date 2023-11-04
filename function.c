@@ -23,6 +23,7 @@
 #include "strutil.h"
 
 #include <ctype.h>
+#include <string.h>
 
 static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     int cnt = pArgs[0].Contents.str.len - pArgs[1].Contents.Int;
