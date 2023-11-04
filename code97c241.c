@@ -853,7 +853,7 @@ static void AddPrefixes(void) {
 static Boolean DecodeCondition(char const* pAsc, Word* pCondition) {
     size_t z;
 
-    for (z = 0; as_array_size(Conditions); z++) {
+    for (z = 0; z < as_array_size(Conditions); z++) {
         if (!as_strcasecmp(pAsc, Conditions[z])) {
             *pCondition = z;
             return True;

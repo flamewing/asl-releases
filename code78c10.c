@@ -961,7 +961,8 @@ static z80_adr_mode_t decode_z80_adr(
         }
     }
 
-    if ((p_sreg = decode_sr_core(s_regs8, p_arg))) {
+    p_sreg = decode_sr_core(s_regs8, p_arg);
+    if (p_sreg) {
         if (set_op_size(eSymbolSize8Bit, p_arg)) {
             p_vals->mode    = e_mod_sreg8;
             p_vals->val     = p_sreg->code;
@@ -970,7 +971,8 @@ static z80_adr_mode_t decode_z80_adr(
         goto found;
     }
 
-    if ((p_sreg = decode_sr_core(s_regs16, p_arg))) {
+    p_sreg = decode_sr_core(s_regs16, p_arg);
+    if (p_sreg) {
         if (set_op_size(eSymbolSize16Bit, p_arg)) {
             p_vals->mode    = e_mod_sreg16;
             p_vals->val     = p_sreg->code;

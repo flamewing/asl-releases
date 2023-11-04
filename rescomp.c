@@ -286,7 +286,8 @@ static char* make_sym_name(char const* p_file_name, int include_guard) {
     size_t      l;
     Boolean     no_replace;
 
-    if ((p_base = strrchr(p_file_name, PATHSEP))) {
+    p_base = strrchr(p_file_name, PATHSEP);
+    if (p_base) {
         p_file_name = p_base + 1;
     }
     if ((p_base = strrchr(p_file_name, '/'))) {

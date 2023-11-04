@@ -30,9 +30,15 @@
 #    include <malloc.h>
 #endif
 
-#include "chardefs.h"     // IWYU pragma: export
-#include "datatypes.h"    // IWYU pragma: export
-#include "pascstyle.h"    // IWYU pragma: export
+#include "chardefs.h" // IWYU pragma: export
+#include "datatypes.h" // IWYU pragma: export
+
+#ifndef False
+#    define False 0
+#    define True  1
+#endif
+
+#define Ord(b) ((b) ? 1L : 0L)
 
 #ifndef min
 #    define min(a, b) ((a < b) ? (a) : (b))
