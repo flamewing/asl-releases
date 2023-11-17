@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.254
+    VERSION 1.42.255
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -394,30 +394,30 @@ endif()
 
 function(define_rescomp_target STEM)
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.msh
-        COMMAND rescomp ${STEM}.res -m ${CMAKE_BINARY_DIR}/${STEM}.msg -i ${CMAKE_BINARY_DIR}/${STEM}.msh
+        COMMAND rescomp ${STEM}.mes -m ${CMAKE_BINARY_DIR}/${STEM}.msg -i ${CMAKE_BINARY_DIR}/${STEM}.msh
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        DEPENDS rescomp ${STEM}.res ${ARGN}
+        DEPENDS rescomp ${STEM}.mes ${ARGN}
     )
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${STEM}.rsc
-        COMMAND rescomp ${STEM}.res -h ${CMAKE_BINARY_DIR}/${STEM}.rsc
+        COMMAND rescomp ${STEM}.mes -h ${CMAKE_BINARY_DIR}/${STEM}.rsc
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        DEPENDS rescomp ${STEM}.res ${ARGN}
+        DEPENDS rescomp ${STEM}.mes ${ARGN}
     )
     add_custom_target(${STEM}_res ALL
         SOURCES ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.msh ${CMAKE_BINARY_DIR}/${STEM}.rsc
     )
 endfunction(define_rescomp_target)
 
-define_rescomp_target(ioerrs header.res)
-define_rescomp_target(cmdarg header.res)
-define_rescomp_target(tools header.res)
-define_rescomp_target(as header.res)
-define_rescomp_target(das header.res)
-define_rescomp_target(plist tools2.res header.res)
-define_rescomp_target(alink tools2.res header.res)
-define_rescomp_target(pbind tools2.res header.res)
-define_rescomp_target(p2hex tools2.res header.res)
-define_rescomp_target(p2bin tools2.res header.res)
+define_rescomp_target(ioerrs header.mes)
+define_rescomp_target(cmdarg header.mes)
+define_rescomp_target(tools header.mes)
+define_rescomp_target(as header.mes)
+define_rescomp_target(das header.mes)
+define_rescomp_target(plist tools2.mes header.mes)
+define_rescomp_target(alink tools2.mes header.mes)
+define_rescomp_target(pbind tools2.mes header.mes)
+define_rescomp_target(p2hex tools2.mes header.mes)
+define_rescomp_target(p2bin tools2.mes header.mes)
 
 add_library(CMDLINE_COMMON
     OBJECT
