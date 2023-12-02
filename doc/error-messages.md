@@ -63,6 +63,7 @@ is described by:
 | 410 | Warning | argument out of range | the argument in question | An argument, or sum of arguments, exceeds the permitted range even though the encoding supports a larger value. |
 | 420 | Warning | attempt to skip multiword instruction | the instruction in question | The preceding skip can skip only one word; the following instruction is longer. |
 | 430 | ⚠Warning | implicit sign extension | The value | The processor fills the upper register bits with ones for this immediate operand. |
+| 440 | Warning | Numeric value -128 selects the E register | displacement | On SC/MP with P1–P3, use literal `E` or an E register symbol to make the intended addressing explicit. |
 | 1000  |  ⛔Error  | symbol double defined                                               | the name of the offending symbol, and the line number where it was defined for the first time, according to the symbol table. | A new value is assigned to a symbol, using a label or a `EQU, PORT, SFR, LABEL, SFRB` or `BIT` instruction: however this can be done only using `SET/EVAL`.                                                                                                                                                  |
 | 1010  |  ⛔Error  | symbol undefined                                                    | the name of the undefined symbol.                                                                                             | A symbol is still not defined in the symbol table, also after a second pass.                                                                                                                                                                                                                                 |
 | 1020  |  ⛔Error  | invalid symbol name                                                 | the wrong symbol                                                                                                              | A symbol does not fulfill the requirements that symbols must have to be considered valid by AS. Please pay attention that more stringent syntax rules exist for macros and function parameters.                                                                                                              |
@@ -313,3 +314,4 @@ The following error messages are generated not only by AS, but also by the auxil
 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
+

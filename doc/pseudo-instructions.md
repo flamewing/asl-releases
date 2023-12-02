@@ -1101,7 +1101,7 @@ Intel substantially extended the 8051 instruction set with the 80C251, but unfor
 
 ### BIGENDIAN
 
-_valid for: MCS-51/251, PowerPC, SC/MP_
+_valid for: MCS-51/251, PowerPC, SC/MP, 2650, NS32000_
 
 Intel broke with its own principles when the 8051 series was designed: in contrast to all traditions, the processor uses big-endian ordering for all multi-byte values! While this was not a big deal for MCS-51 processors (the processor could access memory only in 8-bit portions, so everyone was free to use whichever endianess one wanted), it may be a problem for the 251 as it can fetch whole (long-)words from memory and expects the MSB to be first. As this is not the way of constant disposal earlier versions of AS used, one can use this instruction to toggle between big and little endian mode for the instructions `DB, DW, DD, DQ,` and `DT`. `BIGENDIAN OFF` (the default) puts the LSB first into memory as it used to be on earlier versions of AS, `BIGENDIAN ON` engages the big-endian mode compatible to the MCS-251. One may of course change this setting as often as one wants; the current setting can be read from the symbol with the same name.
 

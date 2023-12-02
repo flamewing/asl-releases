@@ -933,7 +933,7 @@ Admittedly, this was quite a lengthy excursion, but I thought it was necessary. 
 
 ## Register Symbols
 
-_valid for: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x, AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300, H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000, KENBAK_
+_valid for: PowerPC, M-Core, XGate, 4004/4040, MCS-48/(2)51, 80C16x, AVR, XS1, Z8, KCPSM, Mico8, MSP430(X), ST9, M16, M16C, H8/300, H8/500, SH7x00, H16, i960, XA, 29K, TLCS-9000, KENBAK, SC/MP_
 
 Sometimes it is desirable not only to assign symbolic names to memory addresses or constants, but also to a register, to emphasize its function in a certain program section. This is no problem for processors that treat registers simply as another address space, as this allows to use numeric expressions and one can use simple `EQU`s to define such symbols. (e.g. for the MCS-96 or TMS70000). However, for most processors, register identifiers are fixed literals which are separately treated by AS for speed reasons. Therefore, registers symbols (sometime also called 'register aliases') are also a separate type of symbols in the symbol table. Just like other symbols, they may be defined or re-defined with `EQU` or `SET`, and there is a specialized `REG` instruction which accepts only symbols and expressions of this type.
 

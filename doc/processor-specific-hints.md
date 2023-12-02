@@ -1376,7 +1376,7 @@ First, the instruction set of these controllers is partially defined via the ROM
 
 Furthermore, keep in mind that branches and subroutine calls only contain the lower 6 bits of the target address. The upper 4 resp. 5 bits are fetched from page and chapter registers that have to be set beforehand. AS cannot check whether these registers have been set correctly by the programmer! At least for the cas of staying in the same chapter, there are the assembler pseudo instructions `CALLL` resp. `BL` that combine an `LDP` and `CALL/BR` instruction. Regarding the limited amount of program memory, this is a convenient yet inefficient variant.
 
-## COP8 & SC/MP
+## COP8
 
 National unfortunately also decided to use the syntax well known from IBM mainframes (and much hated by me...) to write non-decimal integer constants. Just like with other processors, this does not work with AS's parser. ASMCOP however fortunately also seems to allow the C syntax, which is why this became the default for the COP series and the SC/MP...
 
@@ -1973,3 +1973,8 @@ CPU groups: 1 = 78C05/78C06; 2 = 7800/7801/7802; 3 = 7807/7808/7809/7810; 4 = 78
 | `DEC r2` | `DCR r2` | r2 ← r2-1 | 1,2,3,4 |
 | `DEC (wa)` | `DCRW wa` | (wa) ← (wa)-1 | 1,2,3,4 |
 | `DEC rp` | `DCX rp` | rp ← rp-1 | 1,2,3,4 |
+
+
+## SC/MP displacement and register symbols
+
+With P1–P3 as the base register, displacement `-128` (`80` hex) selects the contents of the E register. AS warns when a numeric expression produces this value, since it may be unintended. Write `ld e(p1)` to select E explicitly without a warning, or define a register symbol with `ereg reg e` and use `ld ereg(p1)`. With P0/PC, -128 is an ordinary displacement and E is not allowed. PC addressing cannot use auto-increment.

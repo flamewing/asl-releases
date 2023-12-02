@@ -315,6 +315,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_SignExtension:
         msgno = Num_ErrMsgSignExtension;
         break;
+    case ErrNum_MeansE:
+        msgno = Num_ErrMsgMeansE;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
