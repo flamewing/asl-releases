@@ -1653,7 +1653,6 @@ static void DecodeFLD(Word Code) {
         case TypeFReg:
             BAsmCode[CodeLen++] = 0xd9;
             BAsmCode[CodeLen++] = 0xc0 | AdrMode;
-            CodeLen += 2;
             break;
         case TypeMem:
             if ((OpSize == eSymbolSizeUnknown) && UnknownFlag) {
@@ -2129,15 +2128,16 @@ static void DecodeFIADD_FIMUL(Word Code) {
     if (ArgCnt == 1) {
         pArg2 = &ArgStr[1];
         pArg1 = &ArgST;
-    } else if (ChkArgCnt(1, 2)) {
+    }
+    if (ChkArgCnt(1, 2)) {
         switch (DecodeAdr(pArg1, MTypeFReg)) {
         case TypeFReg:
             if (AdrMode != 0) {
                 WrStrErrorPos(ErrNum_InvAddrMode, pArg1);
             } else {
                 OpSize = eSymbolSizeUnknown;
-                switch (DecodeAdr(pArg2, MTypeFReg)) {
-                case TypeFReg:
+                switch (DecodeAdr(pArg2, MTypeMem)) {
+                case TypeMem:
                     if ((OpSize == eSymbolSizeUnknown) && UnknownFlag) {
                         OpSize = eSymbolSize16Bit;
                     }

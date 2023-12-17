@@ -120,12 +120,12 @@ void ClearInstTree(PInstTreeNode* Root) {
 }
 
 Boolean SearchInstTree(PInstTreeNode Root, char* OpPart) {
-    int z;
-
-    z = 0;
-    while ((Root) && (strcmp(Root->Name, OpPart))) {
-        Root = (strcmp(OpPart, Root->Name) < 0) ? Root->Left : Root->Right;
-        z++;
+    while (Root) {
+        int cmp_res = strcmp(OpPart, Root->Name);
+        if (!cmp_res) {
+            break;
+        }
+        Root = (cmp_res < 0) ? Root->Left : Root->Right;
     }
 
     if (!Root) {
