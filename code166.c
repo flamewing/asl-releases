@@ -13,6 +13,7 @@
 #include "code166.h"
 
 #include "asmallg.h"
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -487,6 +488,8 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
 
         StrCompRefRight(&Arg, pArg, 1);
         StrCompShorten(&Arg, 1);
+        KillPrefBlanksStrCompRef(&Arg);
+        KillPostBlanksStrComp(&Arg);
         ArgLen = strlen(Arg.str.p_str);
 
         /* Predekrement ? */
@@ -523,7 +526,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
             DispAcc            = 0;
             pResult->Mode      = 0xff;
             do {
-                pSplitPos = QuotMultPos(Arg.str.p_str, "-+");
+                pSplitPos = indir_split_pos(Arg.str.p_str);
                 if (pSplitPos) {
                     NNegFlag = *pSplitPos == '-';
                     StrCompSplitRef(&Arg, &Remainder, &Arg, pSplitPos);

@@ -15,6 +15,7 @@
 #include "code96c141.h"
 
 #include "asmallg.h"
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -573,7 +574,9 @@ static void DecodeAdrMem(tStrComp const* pArg) {
     Arg      = *pArg;
     DispSize = eSymbolSizeUnknown;
     do {
-        EPos     = QuotMultPos(Arg.str.p_str, "+-");
+        /* Split off one component: */
+
+        EPos     = indir_split_pos(Arg.str.p_str);
         NNegFlag = EPos && (*EPos == '-');
         if ((EPos == Arg.str.p_str)
             || (EPos == Arg.str.p_str + strlen(Arg.str.p_str) - 1)) {
@@ -843,6 +846,8 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl) {
 
         StrCompRefRight(&Arg, pArg, 1);
         StrCompShorten(&Arg, 1);
+        KillPrefBlanksStrCompRef(&Arg);
+        KillPostBlanksStrComp(&Arg);
         DecodeAdrMem(&Arg);
         ChkAdr(Erl);
         return;

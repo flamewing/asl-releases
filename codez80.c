@@ -752,9 +752,9 @@ static ShortInt DecodeAdr(tStrComp const* pArg, unsigned ModeMask) {
         addr_reg                       = 0xff;
         addr_reg_size                  = eSymbolSizeUnknown;
         do {
-            /* split off one component */
+            /* Split off one component: */
 
-            p_split_pos   = QuotMultPos(arg.str.p_str, "+-");
+            p_split_pos   = indir_split_pos(arg.str.p_str);
             next_neg_flag = p_split_pos && (*p_split_pos == '-');
             if ((p_split_pos == arg.str.p_str)
                 || (p_split_pos == arg.str.p_str + strlen(arg.str.p_str) - 1)) {

@@ -12,6 +12,7 @@
 
 #include "code870c.h"
 
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -81,11 +82,13 @@ static Boolean DecodeRegDisp(
     OK          = True;
     *pFirstFlag = False;
     do {
-        EPos     = QuotMultPos(pArg->str.p_str, "+-");
+        KillPrefBlanksStrCompRef(pArg);
+        EPos     = indir_split_pos(pArg->str.p_str);
         NNegFlag = EPos && (*EPos == '-');
         if (EPos) {
             StrCompSplitRef(pArg, &Remainder, pArg, EPos);
         }
+        KillPostBlanksStrComp(pArg);
 
         for (z = 0; z < AdrRegCnt; z++) {
             if (!as_strcasecmp(pArg->str.p_str, AdrRegs[z])) {

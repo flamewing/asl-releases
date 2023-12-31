@@ -13,6 +13,7 @@
 #include "codexa.h"
 
 #include "asmallg.h"
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -236,12 +237,12 @@ static Boolean DecodeAdrIndirect(tStrComp* pArg, Word Mask) {
 
         AdrPart = 0xff;
         do {
-            pSplit      = QuotMultPos(ThisComp.str.p_str, "+-");
+            KillPrefBlanksStrComp(&ThisComp);
+            pSplit      = indir_split_pos(ThisComp.str.p_str);
             NextNegFlag = (pSplit && (*pSplit == '-'));
             if (pSplit) {
                 StrCompSplitRef(&ThisComp, &RemComp, &ThisComp, pSplit);
             }
-            KillPrefBlanksStrComp(&ThisComp);
             KillPostBlanksStrComp(&ThisComp);
 
             switch (DecodeReg(&ThisComp, &NSize, &Reg, False)) {

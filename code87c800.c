@@ -12,6 +12,7 @@
 
 #include "code87c800.h"
 
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -124,11 +125,13 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl) {
         OK        = True;
         FirstFlag = False;
         do {
-            EPos     = QuotMultPos(Arg.str.p_str, "+-");
+            KillPrefBlanksStrCompRef(&Arg);
+            EPos     = indir_split_pos(Arg.str.p_str);
             NNegFlag = EPos && (*EPos == '-');
             if (EPos) {
                 StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
             }
+            KillPostBlanksStrComp(&Arg);
 
             for (z = 0; z < AdrRegCnt; z++) {
                 if (!as_strcasecmp(Arg.str.p_str, AdrRegs[z])) {

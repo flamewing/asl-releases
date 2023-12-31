@@ -12,6 +12,7 @@
 
 #include "code78c10.h"
 
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -413,13 +414,14 @@ static void parse_indirect_list(
     Boolean  bad_reg, first_unknown = False, this_minus, next_minus;
 
     StrCompRefRight(&arg, p_arg, 0);
+    KillPostBlanksStrComp(&arg);
     this_minus = False;
     do {
         /* split off one component */
 
         KillPrefBlanksStrCompRef(&arg);
         next_minus = False;
-        p          = QuotMultPos(arg.str.p_str, "+-"); /* TODO: parentheses */
+        p          = indir_split_pos(arg.str.p_str); /* TODO: parentheses */
         if (p) {
             next_minus = (*p == '-');
             StrCompSplitRef(&arg, &rem, &arg, p);

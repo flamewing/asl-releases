@@ -2436,6 +2436,7 @@ void WriteCode(void) {
     if ((ActPC != StructSeg) && (!ChkPC(EProgCounter() + CodeLen - 1))
         && (CodeLen != 0)) {
         WrError(ErrNum_AdrOverflow);
+        CodeLen = 0;
     } else {
         LargeWord NewPC = ProgCounter() + CodeLen;
 
