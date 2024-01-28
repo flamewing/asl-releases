@@ -41,8 +41,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#define LOCSYMSIGHT 3 /* max. sight for nameless temporary symbols */
-
 #define LEAVE  goto func_exit
 #define LEAVE2 goto func_exit2
 
@@ -1410,6 +1408,8 @@ static tErrorNum DeduceExpectTypeErrMsgMask(unsigned Mask, TempType ActType) {
             return ErrNum_ExpectString;
         case TempInt | TempString:
             return ErrNum_ExpectIntOrString;
+        case TempInt | TempFloat:
+            return ErrNum_IntOrFloatButReg;
         case TempInt | TempFloat | TempString:
             return ErrNum_StringOrIntOrFloatButReg;
         default:

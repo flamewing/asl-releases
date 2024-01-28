@@ -50,6 +50,17 @@ extern ShortInt StrCaseCmp(char const* s1, char const* s2, LongInt Hand1, LongIn
 extern char* MatchChars(char const* pStr, char const* pPattern, ...);
 extern char* MatchCharsRev(char const* pStr, char const* pPattern, ...);
 
+typedef struct as_quoted_iterator_cb_data {
+    char const* p_str;
+    Boolean     in_single_quote, in_double_quote;
+} as_quoted_iterator_cb_data_t;
+
+typedef Boolean (*as_quoted_iterator_cb_t)(
+        char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data);
+extern void as_iterate_str_quoted(
+        char const* p_str, as_quoted_iterator_cb_t callback,
+        as_quoted_iterator_cb_data_t* p_cb_data);
+
 extern char* FindClosingParenthese(char const* pStr);
 
 extern char* FindOpeningParenthese(

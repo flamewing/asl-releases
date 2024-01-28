@@ -121,6 +121,8 @@ extern LongWord MaxCodeLen;
 
 #define DEF_NESTMAX 256
 
+#define LOCSYMSIGHT 3 /* max. sight for nameless temporary symbols */
+
 typedef void (*SimpProc)(void);
 typedef void (*DissectBitProc)(char* pDest, size_t DestSize, LargeWord Inp);
 typedef Boolean (*tQualifyQuoteFnc)(char const* pStart, char const* pQuotePos);
