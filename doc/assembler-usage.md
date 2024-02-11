@@ -998,3 +998,10 @@ Run `asl -help` for command-line help, `asl -version` for version information, a
 CMake builds embed message catalogs by default, so installed executables do not require companion `.msg` files. Configure with `-DASL_EMBED_MESSAGES=OFF` to use external catalogs and their existing language/path lookup behavior.
 
 A leading zero in `-listradix` (for example, `-listradix 08`) prints the program counter with leading zeros in the listing. The radix remains octal in this example; the supported radix range is 2 through 36.
+
+
+### Underscores in macro parameters
+
+`-underscore-macroargs` permits underscores in macro parameter names. By default, underscores delimit parameter references: a parameter `led` is expanded in both `led` and `led_shadow`. With this option, only the standalone `led` is expanded. Shipped include files may rely on the default behavior. Explicit backslash-delimited parameter references remain available in this fork.
+
+`-plainbase` enables the 6809 indexed-address shorthand described under [PLAINBASE](pseudo-instructions.md#plainbase).

@@ -20,6 +20,7 @@
 #include "asmpars.h"
 #include "chardefs.h"
 #include "chunks.h"
+#include "cmdarg.h"
 #include "console.h"
 #include "errmsg.h"
 #include "intformat.h"
@@ -1182,6 +1183,10 @@ Boolean ChkMacSymbName(char const* pSym) {
     return *pSym && !pEnd;
 }
 
+Boolean ChkMacSymbChar(char ch) {
+    return !!(GetValidSymChar(ch) & (VALID_M1 | VALID_MN));
+}
+
 /*!------------------------------------------------------------------------
  * \fn     visible_strlen(const char *pSym)
  * \brief  retrieve 'visible' length of string, regarding multi-byte
@@ -1464,14 +1469,9 @@ char* MoveFromListOutListFirst(void) {
 /****************************************************************************/
 /* Tokenverarbeitung */
 
-static Boolean CompressLine_NErl(char ch) {
-    return (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z'))
-            || ((ch >= '0') && (ch <= '9')));
-}
-
 static Boolean IsValidParameterName(as_dynstr_t* p_str, int Pos, int End, int StrLen) {
-    return (Pos == 0 || !CompressLine_NErl(p_str->p_str[Pos - 1]))
-           && (End >= StrLen || !CompressLine_NErl(p_str->p_str[End]));
+    return (Pos == 0 || !ChkMacSymbChar(p_str->p_str[Pos - 1]))
+           && (End >= StrLen || !ChkMacSymbChar(p_str->p_str[End]));
 }
 
 typedef int (*tCompareFnc)(char const* s1, char const* s2, size_t n);
@@ -1888,19 +1888,37 @@ static void SetValidSymChars(unsigned Start, unsigned Stop, Byte Value) {
     }
 }
 
+static as_cmd_result_t cmd_underscore_macroargs(Boolean negate, char const* p_arg) {
+    unsigned ch = (unsigned)'_';
+
+    UNUSED(p_arg);
+    if (negate) {
+        ValidSymChar[ch] &= ~(VALID_M1 | VALID_MN);
+    } else {
+        ValidSymChar[ch] |= (VALID_M1 | VALID_MN);
+    }
+    return e_cmd_ok;
+}
+
+static as_cmd_rec_t const cmd_params[] = {
+        {"underscore-macroargs", cmd_underscore_macroargs}
+};
+
 void asmsub_init(void) {
     InitStringList(&CopyrightList);
     InitStringList(&OutList);
     InitStringList(&ShareOutList);
     InitStringList(&ListOutList);
 
+    as_cmd_register(cmd_params, as_array_size(cmd_params));
+
     /* initialize array of valid characters */
 
     ValidSymCharLen = (NLS_GetCodepage() == eCodepageUTF8) ? 1280 : 256;
     ValidSymChar    = (Byte*)calloc(ValidSymCharLen, sizeof(Byte));
 
-    /* The basic ASCII stuff: letters, dot and underbar are allowed
-       anwhere, numbers not at beginning: */
+    /* The basic ASCII stuff: letters, dot and underscore are allowed
+       anywhere, numbers not at beginning: */
 
     SetValidSymChars('a', 'z', VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
     SetValidSymChars('A', 'Z', VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);

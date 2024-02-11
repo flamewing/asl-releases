@@ -1099,6 +1099,12 @@ _valid for: MCS-251_
 
 Intel substantially extended the 8051 instruction set with the 80C251, but unfortunately there was only a single free opcode for all these new instructions. To avoid a processor that will be eternally crippled by a prefix, Intel provided two operating modes: the binary and the source mode. The new processor is fully binary compatible to the 8051 in binary mode, all new instructions require the free opcode as prefix. In source mode, the new instructions exchange their places in the code tables with the corresponding 8051 instructions, which in turn then need a prefix. One has to inform AS whether the processor operates in source mode (`ON`) or binary mode (`OFF`) to enable AS to add prefixes when required. The current setting may be read from the variable `INSRCMODE`. The default is `OFF`.
 
+### PLAINBASE
+
+_valid for: 6809_
+
+Indexed addresses require the explicit empty displacement, such as `lda ,x`. `PLAINBASE ON` also accepts `lda x` as indexed addressing, restoring the historical shorthand. The symbol `PLAINBASE` reports the current setting. The command-line switch `-plainbase` enables this behavior from the start.
+
 ### BIGENDIAN
 
 _valid for: MCS-51/251, PowerPC, SC/MP, 2650, NS32000_
