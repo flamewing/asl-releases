@@ -3038,3 +3038,6 @@ To explicitly select an assembler directive when its name collides with a machin
 
 
 `Z80SYNTAX` also supports NEC 78xx; see the processor notes for its partial instruction mapping.
+
+
+SC61860 has a 64 KiB code address space and supports Motorola-style `DC`/`DS`, byte `BYT`/`FCB` and word `ADR`/`FDB` directives. SC62015 has a 1 MiB code address space and supports Intel-style data directives.

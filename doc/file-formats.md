@@ -192,3 +192,6 @@ It is possible that the file contains empty lines or comments (semi colon at lin
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-disable MD001 -->
+
+
+Processor identifiers `$1f` and `$20` identify SC61860 and SC62015 respectively.

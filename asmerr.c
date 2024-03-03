@@ -960,6 +960,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_InvCombination:
         msgno = Num_ErrMsgInvCombination;
         break;
+    case ErrNum_UnmappedChar:
+        msgno = Num_ErrMsgUnmappedChar;
+        break;
     case ErrNum_InternalError:
         msgno = Num_ErrMsgInternalError;
         break;
@@ -1256,8 +1259,16 @@ void CodeEXPECT(Word Code) {
         tErrorNum Num;
 
         for (z = 1; z <= ArgCnt; z++) {
-            Num = (tErrorNum)EvalStrIntExpression(&ArgStr[z], UInt16, &OK);
-            if (OK) {
+            tSymbolFlags flags;
+
+            Num = (tErrorNum)EvalStrIntExpressionWithFlags(
+                    &ArgStr[z], UInt16, &OK, &flags);
+            if (!OK) {
+                continue;
+            }
+            if (mFirstPassUnknownOrQuestionable(flags)) {
+                WrStrErrorPos(ErrNum_FirstPassCalc, &ArgStr[z]);
+            } else if (Num) {
                 tExpectError* pNew = (tExpectError*)calloc(1, sizeof(*pNew));
                 pNew->Num          = Num;
                 AddExpectError(pNew);

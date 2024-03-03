@@ -187,3 +187,6 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 - Western Digital WD16
 
 - Renesas RX
+
+
+Sharp SC61860 and SC62015 processors are also supported.

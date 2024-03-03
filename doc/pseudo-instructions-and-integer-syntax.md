@@ -640,3 +640,12 @@ _Default Integer Syntax: Intel_
 `DB`, `DN`, `DS`, `REG`.
 
 PPS-4 uses Intel integer syntax and `$` for the current address, with 12 bit code and data address spaces.
+
+
+#### Sharp SC61860
+
+Default integer syntax: Motorola. Directives: `ADR`, `BYT`, `DB`, `DC`, `DFS`, `DS`, `DW`, `FCB`, `FCC`, `FDB`, `RMB`.
+
+#### Sharp SC62015
+
+Default integer syntax: Intel. Directives: `DN`, `DB`, `DD`, `DQ`, `DS`, `DT`, `DW`.

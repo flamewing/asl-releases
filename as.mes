@@ -1053,6 +1053,10 @@ Message ErrMsgInvCombination
  "Ung&uuml;tige Instruktions-Kombination"
  "invalid instruction combination"
 
+Message ErrMsgUnmappedChar
+ "nicht-gemapptes Zeichen"
+ "unmapped character"
+
 Message ErrMsgInternalError
  "interner Fehler"
  "internal error"

@@ -395,7 +395,15 @@ static Boolean is_post_increment(
     StrCompCopySub(&reg_comp, p_arg, 1, arg_len - 3);
     KillPrefBlanksStrComp(&reg_comp);
     KillPostBlanksStrComp(&reg_comp);
-    *p_reg_eval_result = decode_reg(&reg_comp, p_result, NULL, eSymbolSize16Bit, False);
+
+    /* Opposed to -(...), (...)+ cannot be interpreted as an arbitrary
+       arithmetic expression.  The expression in parentheses MUST be a
+       register: */
+
+    *p_reg_eval_result = decode_reg(&reg_comp, p_result, NULL, eSymbolSize16Bit, True);
+    if (*p_reg_eval_result == eIsNoReg) {
+        *p_reg_eval_result = eRegAbort;
+    }
     return (*p_reg_eval_result != eIsNoReg);
 }
 

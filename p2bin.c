@@ -305,7 +305,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
 
     if (msg_level >= e_msg_level_normal) {
         errno = 0;
-        printf("  (");
+        printf(" (");
         ChkIO(OutName);
         errno = 0;
         printf("%" PRIu32, SumLen);

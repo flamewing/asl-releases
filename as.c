@@ -69,6 +69,8 @@
 #include "code56k.h"
 #include "code601.h"
 #include "code6100.h"
+#include "code61860.h"
+#include "code62015.h"
 #include "code65.h"
 #include "code68.h"
 #include "code6804.h"
@@ -4515,6 +4517,8 @@ int main(int argc, char** argv) {
         codenano_init();
         code6100_init();
         coderx_init();
+        code61860_init();
+        code62015_init();
         First = FALSE;
     }
 
