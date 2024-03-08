@@ -918,7 +918,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, unsigned ModeMask) {
             }
             AdrVals[0] = disp_acc & 0xff;
             AdrCnt     = 1;
-            if ((disp_acc < -0x80l) || (disp_acc > 0x7fl)) {
+            if (((disp_acc < -0x80l) || (disp_acc > 0x7fl)) && (MomCPU >= CPUZ380)) {
                 AdrVals[AdrCnt++] = (disp_acc >> 8) & 0xff;
                 if ((disp_acc >= -0x8000l) && (disp_acc <= 0x7fffl)) {
                     ChangeDDPrefix(ePrefixIB);

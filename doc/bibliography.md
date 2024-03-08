@@ -330,3 +330,8 @@
 
 
 [^NECV60]: NEC: _V60 User's Manual._
+
+
+[^Sharp1350]: Sharp: _Pocket Computer PC-1350 Machine Language Reference Manual._ <https://pockemul.com/wp-content/uploads/2022/12/PC1350_ML_EN.pdf>
+
+[^SharpEsrL0]: Sharp Corporation: _ESR-L Instruction Manual._ <https://web.archive.org/web/20060521205349if_/http://www.sarnau.info:80/files/ESR-LInstructionManual.pdf>

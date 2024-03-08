@@ -61,8 +61,8 @@ static CPUVar CPUSC62015;
 #define IsWPL(index) ((index) == 0 || (index) == 1 || (index) == 2)
 
 typedef struct {
-    char const* name;
-    Byte        addr;
+    char const name[4];
+    Byte       addr;
 } tIntReg;
 
 static tIntReg const IntRegs[] = {
@@ -89,9 +89,9 @@ static tIntReg const IntRegs[] = {
 };
 
 static Boolean DecodeReg(tStrComp const* arg, Byte* pReg) {
-    char const* rtable[] = {"A", "IL", "BA", "I",  "X",  "Y", "U",
-                            "S", "B",  "IH", "PS", "PC", "F", "IMR"};
-    char const* str      = arg->str.p_str;
+    char const  rtable[][4] = {"A", "IL", "BA", "I",  "X",  "Y", "U",
+                               "S", "B",  "IH", "PS", "PC", "F", "IMR"};
+    char const* str         = arg->str.p_str;
     size_t      i;
 
     for (i = 0; i < as_array_size(rtable); i++) {
@@ -221,8 +221,8 @@ static Boolean DecodeInternal(
 }
 
 static void PreByte(Byte mode1, Byte mode2) {
-    Byte const ptable[] = {0x32, 0x30, 0x33, 0x31, 0x22, 0x00, 0x23, 0x21,
-                           0x36, 0x34, 0x37, 0x35, 0x26, 0x24, 0x27, 0x25};
+    static Byte const ptable[] = {0x32, 0x30, 0x33, 0x31, 0x22, 0x00, 0x23, 0x21,
+                                  0x36, 0x34, 0x37, 0x35, 0x26, 0x24, 0x27, 0x25};
 
     if (mode1 == 1 && mode2 == 1) {
         return;
