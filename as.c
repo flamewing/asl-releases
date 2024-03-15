@@ -2947,6 +2947,9 @@ static void ProcessFile(char* pFileName) {
         MakeList(OneLine.p_str);
         DoLst    = NextDoLst;
         IncDepth = NextIncDepth;
+        if (MaxIncDepth < IncDepth) {
+            MaxIncDepth = IncDepth;
+        }
 
         /* Zeilenzaehler */
 
@@ -3330,6 +3333,12 @@ static void AssembleFile(char* Name) {
     if (msg_level >= e_msg_level_normal) {
         printf("%s%s\n", getmessage(Num_InfoMessAssembling), SourceFile);
     }
+
+    /* Maximum include level survives re-passing, so it can be
+       used for the listing to format to the right max. depth from
+       the beginning: */
+
+    MaxIncDepth = 0;
 
     do {
         /* Durchlauf initialisieren */

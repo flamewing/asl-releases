@@ -2633,6 +2633,7 @@ static void SwitchTo_96C141(void) {
     Grans[SegCode]     = 1;
     ListGrans[SegCode] = 1;
     SegInits[SegCode]  = 0;
+    SegLimits[SegCode] = 0xfffffful;
 
     MakeCode   = MakeCode_96C141;
     ChkPC      = ChkPC_96C141;

@@ -3041,3 +3041,6 @@ To explicitly select an assembler directive when its name collides with a machin
 
 
 SC61860 has a 64 KiB code address space and supports Motorola-style `DC`/`DS`, byte `BYT`/`FCB` and word `ADR`/`FDB` directives. SC62015 has a 1 MiB code address space and supports Intel-style data directives.
+
+
+SC61860 is used in Sharp PC-12xx through PC-15xx pocket computers; SC62015 is used in the Sharp PC-E500.

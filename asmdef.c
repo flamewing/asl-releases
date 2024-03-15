@@ -126,15 +126,16 @@ DissectBitProc   DissectBit;
 DissectRegProc   DissectReg;
 tQualifyQuoteFnc QualifyQuote;
 
-StringPtr    IncludeList;            /* Suchpfade fuer Includedateien */
-Integer      IncDepth, NextIncDepth; /* Verschachtelungstiefe INCLUDEs */
-FILE*        ErrorFile  = NULL;      /* Fehlerausgabe */
-FILE*        LstFile    = NULL;      /* Listdatei */
-FILE*        ShareFile  = NULL;      /* Sharefile */
-FILE*        MacProFile = NULL;      /* Makroprozessorausgabe */
-FILE*        MacroFile  = NULL;      /* Ausgabedatei Makroliste */
-Boolean      InMacroFlag;            /* momentan wird Makro expandiert */
-StringPtr    LstName;                /* Name der Listdatei */
+StringPtr IncludeList;            /* Suchpfade fuer Includedateien */
+Integer   IncDepth, NextIncDepth, /* Verschachtelungstiefe INCLUDEs */
+        MaxIncDepth;
+FILE*        ErrorFile  = NULL; /* Fehlerausgabe */
+FILE*        LstFile    = NULL; /* Listdatei */
+FILE*        ShareFile  = NULL; /* Sharefile */
+FILE*        MacProFile = NULL; /* Makroprozessorausgabe */
+FILE*        MacroFile  = NULL; /* Ausgabedatei Makroliste */
+Boolean      InMacroFlag;       /* momentan wird Makro expandiert */
+StringPtr    LstName;           /* Name der Listdatei */
 StringPtr    MacroName, MacProName;
 tLstMacroExp DoLst, NextDoLst; /* Listing an */
 StringPtr    ShareName;        /* Name des Sharefiles */
