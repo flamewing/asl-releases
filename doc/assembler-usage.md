@@ -235,7 +235,7 @@ Concerning effect and function of the SHARED-symbols please see [Share File](#sh
 
 - `Y`: This switch instructs AS to to suppress all messages about out-of-branch conditions, once the necessity for another pass is given. See [Forward References and Other Disasters](#forward-references-and-other-disasters) for the (rare) situations that might make use of this switch necessary.
 
-- `cpu <name>`: this switch allows to set the target processor AS shall generate code for, in case the source file does not contain a `CPU` instruction and is not 68008 code. If the selected target supports CPU arguments (see [CPU](pseudo-instructions.md#cpu)), they may be used on the command line as well.
+- `cpu <name>`: this switch allows to set the target processor AS shall generate code for, in case the source file does not contain a `CPU` instruction . If the selected target supports CPU arguments (see [CPU](pseudo-instructions.md#cpu)), they may be used on the command line as well.
 
 - `alias <new>=<old>`: defines the processor type `<new>` to be an alias for the type `<old>`. See [Processor Aliases](#processor-aliases) for the sense of processor aliases.
 
@@ -1005,3 +1005,6 @@ A leading zero in `-listradix` (for example, `-listradix 08`) prints the program
 `-underscore-macroargs` permits underscores in macro parameter names. By default, underscores delimit parameter references: a parameter `led` is expanded in both `led` and `led_shadow`. With this option, only the standalone `led` is expanded. Shipped include files may rely on the default behavior. Explicit backslash-delimited parameter references remain available in this fork.
 
 `-plainbase` enables the 6809 indexed-address shorthand described under [PLAINBASE](pseudo-instructions.md#plainbase).
+
+
+The listing learns maximum include depth in the first pass and retains it across later passes, reserving a consistent-width depth field. The selected target address space determines address-field width.

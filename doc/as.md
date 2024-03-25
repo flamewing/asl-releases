@@ -5,7 +5,7 @@
 
 Welcome to the Flamewing's Enhanced AS documentation!
 
-Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 265]`.
+Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 266]`.
 
 # Macro Assembler AS V1.42
 
@@ -37,7 +37,8 @@ Intended reading order is as follows:
 8. [Pseudo Instructions and Integer Syntax](pseudo-instructions-and-integer-syntax.md)
 9. [Predefined Symbols](predefined-symbols.md)
 10. [Shipped Include Files](shipped-include-files.md)
-11. [Bibliography](bibliography.md)
+11. [Programming Examples](programming-examples.md)
+12. [Bibliography](bibliography.md)
 
 For historical reasons, the following are preserved:
 

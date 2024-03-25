@@ -13,12 +13,12 @@
 #include "asmpars.h"
 
 #include "as.rsc"
+#include "as_endian.h"
 #include "asmdef.h"
 #include "asmfnums.h"
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
@@ -596,10 +596,10 @@ static Boolean ProcessBk(char** Start, char* Erg) {
  * \brief  convert string to its "ASCII representation"
  * \param  p_str string containing characters
  * \param  p_result dest buffer
- * \return 0 or error code
+ * \return 0 or error message
  * ------------------------------------------------------------------------ */
 
-int NonZString2Int(const struct as_nonz_dynstr* p_str, LargeInt* p_result) {
+tErrorNum NonZString2Int(const struct as_nonz_dynstr* p_str, LargeInt* p_result) {
     if ((p_str->len > 0) && (p_str->len <= 4)) {
         unsigned    digit, shift;
         char const* p_run   = p_str->p_str;
@@ -619,9 +619,9 @@ int NonZString2Int(const struct as_nonz_dynstr* p_str, LargeInt* p_result) {
             }
         }
         /* ENOMEM -> regular end of string */
-        return (ret == ENOMEM) ? 0 : ret;
+        return (ret == ENOMEM) ? ErrNum_None : ErrNum_UnmappedChar;
     }
-    return EBADF;
+    return ErrNum_MultiCharInvLength;
 }
 
 Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
@@ -656,31 +656,29 @@ Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt src) {
  * ------------------------------------------------------------------------ */
 
 int TempResultToInt(TempResult* pResult) {
+    int ret = 0;
+
     switch (pResult->Typ) {
     case TempInt:
         break;
     case TempString: {
-        LargeInt Result;
-        int      ret = NonZString2Int(&pResult->Contents.str, &Result);
-        switch (ret) {
-        case 0:
+        LargeInt  Result;
+        tErrorNum error_num = NonZString2Int(&pResult->Contents.str, &Result);
+
+        if (error_num == ErrNum_None) {
             as_tempres_set_int(pResult, Result);
-            break;
-        case ENOENT:
-            WrError(ErrNum_UnmappedChar);
-        /* fall-through */
-        default:
+        } else {
+            WrError(error_num);
             as_tempres_set_none(pResult);
-            return -1;
+            ret = -1;
         }
         break;
     }
-    /* fall-through */
     default:
         as_tempres_set_none(pResult);
-        return -1;
+        ret = -1;
     }
-    return 0;
+    return ret;
 }
 
 /*!------------------------------------------------------------------------
@@ -1947,11 +1945,10 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
             LEAVE;
         }
         for (z1 = 0; z1 < cnt; z1++) {
-            if ((InVals[z1].Typ == TempInt)
-                && (!(pFunction->ArgTypes[z1] & (1 << TempInt)))) {
+            if ((InVals[z1].Typ == TempInt) && !(pFunction->ArgTypes[z1] & TempInt)) {
                 TempResultToFloat(&InVals[z1]);
             }
-            if (!(pFunction->ArgTypes[z1] & (1 << InVals[z1].Typ))) {
+            if (!(pFunction->ArgTypes[z1] & InVals[z1].Typ)) {
                 WrStrErrorPos(
                         DeduceExpectTypeErrMsgMask(
                                 pFunction->ArgTypes[z1], InVals[z1].Typ),
@@ -2054,25 +2051,16 @@ LargeInt EvalStrIntExpressionWithResult(
         pResult->DataSize      = t.DataSize;
         break;
     case TempString: {
-        int l = t.Contents.str.len;
-
-        if ((l > 0) && (l <= 4)) {
-            int ret = NonZString2Int(&t.Contents.str, &Result);
-
-            if (ENOENT == ret) {
-                WrStrErrorPos(ErrNum_UnmappedChar, pComp);
-                FreeRelocs(&LastRelocs);
-                LEAVE;
-            }
-            pResult->Flags         = t.Flags;
-            pResult->AddrSpaceMask = t.AddrSpaceMask;
-            pResult->DataSize      = t.DataSize;
-            break;
-        } else {
-            WrStrErrorPos(ErrNum_IntButString, pComp);
+        tErrorNum error_num = NonZString2Int(&t.Contents.str, &Result);
+        if (error_num != ErrNum_None) {
+            WrStrErrorPos(error_num, pComp);
             FreeRelocs(&LastRelocs);
             LEAVE;
         }
+        pResult->Flags         = t.Flags;
+        pResult->AddrSpaceMask = t.AddrSpaceMask;
+        pResult->DataSize      = t.DataSize;
+        break;
     }
     /* else fall-through */
     default:

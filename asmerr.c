@@ -963,6 +963,12 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_UnmappedChar:
         msgno = Num_ErrMsgUnmappedChar;
         break;
+    case ErrNum_NoTarget:
+        msgno = Num_ErrMsgNoTarget;
+        break;
+    case ErrNum_MultiCharInvLength:
+        msgno = Num_ErrMsgMultiCharInvLength;
+        break;
     case ErrNum_InternalError:
         msgno = Num_ErrMsgInternalError;
         break;

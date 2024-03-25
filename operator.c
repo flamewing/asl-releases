@@ -261,11 +261,14 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
             break;
         case TempString: {
-            LargeInt RIntVal;
+            LargeInt  RIntVal;
+            tErrorNum error_num = NonZString2Int(&pRVal->Contents.str, &RIntVal);
 
-            if (!NonZString2Int(&pRVal->Contents.str, &RIntVal)) {
+            if (ErrNum_None == error_num) {
                 as_tempres_set_c_str(pErg, "");
                 Int2NonZString(&pErg->Contents.str, RIntVal + pLVal->Contents.Int);
+            } else {
+                WrError(error_num);
             }
             break;
         }
@@ -285,11 +288,14 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             as_nonz_dynstr_append(&pErg->Contents.str, &pRVal->Contents.str);
             break;
         case TempInt: {
-            LargeInt LIntVal;
+            LargeInt  LIntVal;
+            tErrorNum error_num = NonZString2Int(&pLVal->Contents.str, &LIntVal);
 
-            if (!NonZString2Int(&pLVal->Contents.str, &LIntVal)) {
+            if (ErrNum_None == error_num) {
                 as_tempres_set_c_str(pErg, "");
                 Int2NonZString(&pErg->Contents.str, LIntVal + pRVal->Contents.Int);
+            } else {
+                WrError(error_num);
             }
             break;
         }

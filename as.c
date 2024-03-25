@@ -131,6 +131,7 @@
 #include "codemn2610.h"
 #include "codemsp.h"
 #include "codenano.h"
+#include "codenone.h"
 #include "codens32k.h"
 #include "codeol40.h"
 #include "codeol50.h"
@@ -4416,6 +4417,9 @@ int main(int argc, char** argv) {
         onoff_common_init();
         literals_init();
 
+#if 1
+        codenone_init();
+#endif
         code68k_init();
         code56k_init();
         code601_init();

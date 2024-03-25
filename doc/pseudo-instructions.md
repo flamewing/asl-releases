@@ -996,7 +996,7 @@ As not all processor names are built only out of numbers and letters from A...F,
 
 The assembler implicitly switches back to the `CODE` segment when a `CPU` instruction is executed. This is done because `CODE` is the only segment all processors support.
 
-The default processor type is 68008, unless it has been changed via the command line option with same name.
+The default processor type is `NONE`. Set a target with `CPU` or `-cpu` before emitting instructions or data. Target-independent directives, including constant and macro definitions, remain available before selecting a target. `NONE` may also be selected explicitly.
 
 Some targets define options or variants that are so fundamental for operation, that they have to be selected with the `CPU` instruction. Such options are appended to the argument, separated by double colons:
 

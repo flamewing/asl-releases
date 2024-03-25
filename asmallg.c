@@ -24,6 +24,8 @@
 #include "asmsub.h"
 #include "bpemu.h"
 #include "chunks.h"
+#include "codenone.h"
+#include "codepseudo.h"
 #include "console.h"
 #include "dyn_array.h"
 #include "errmsg.h"
@@ -189,6 +191,10 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
 
     ParseCPUArgs(pCPUArgs, pCPUDef->pArgs);
     pCPUDef->SwitchProc(pCPUDef->pUserData);
+
+    if (pCPUDef->Number) {
+        none_target_seglimit = SegLimits[SegCode];
+    }
 
     DontPrint = True;
 }
