@@ -13,6 +13,7 @@
 #include "strutil.h"
 
 #include "dynstr.h"
+#include "striter.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -1249,86 +1250,6 @@ LargeInt ConstLongInt(char const* inp, Boolean* pErr, LongInt Base) {
     }
 
     return erg;
-}
-
-/*--------------------------------------------------------------------------*/
-/* alle Leerzeichen aus einem String loeschen */
-
-void KillBlanks(char* s) {
-    char *  z, *dest;
-    Boolean InSgl = False, InDbl = False, ThisEscaped = False, NextEscaped = False;
-
-    dest = s;
-    for (z = s; *z != '\0'; z++, ThisEscaped = NextEscaped) {
-        NextEscaped = False;
-        switch (*z) {
-        case '\'':
-            if (!InDbl && !ThisEscaped) {
-                InSgl = !InSgl;
-            }
-            break;
-        case '"':
-            if (!InSgl && !ThisEscaped) {
-                InDbl = !InDbl;
-            }
-            break;
-        case '\\':
-            if ((InSgl || InDbl) && !ThisEscaped) {
-                NextEscaped = True;
-            }
-            break;
-        }
-        if (!as_isspace(*z) || InSgl || InDbl) {
-            *dest++ = *z;
-        }
-    }
-    *dest = '\0';
-}
-
-int CopyNoBlanks(char* pDest, char const* pSrc, size_t MaxLen) {
-    char const* pSrcRun;
-    char*       pDestRun = pDest;
-    size_t      Cnt      = 0;
-    Byte        Flags    = 0;
-    char        ch;
-    Boolean     ThisEscaped, PrevEscaped;
-
-    /* leave space for NUL */
-
-    MaxLen--;
-
-    PrevEscaped = False;
-    for (pSrcRun = pSrc; *pSrcRun; pSrcRun++) {
-        ch          = *pSrcRun;
-        ThisEscaped = False;
-        switch (ch) {
-        case '\'':
-            if (!(Flags & 2) && !PrevEscaped) {
-                Flags ^= 1;
-            }
-            break;
-        case '"':
-            if (!(Flags & 1) && !PrevEscaped) {
-                Flags ^= 2;
-            }
-            break;
-        case '\\':
-            if (!PrevEscaped) {
-                ThisEscaped = True;
-            }
-            break;
-        }
-        if (!as_isspace(ch) || Flags) {
-            *(pDestRun++) = ch;
-        }
-        if (++Cnt >= MaxLen) {
-            break;
-        }
-        PrevEscaped = ThisEscaped;
-    }
-    *pDestRun = '\0';
-
-    return Cnt;
 }
 
 /*--------------------------------------------------------------------------*/

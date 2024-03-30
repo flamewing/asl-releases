@@ -18,6 +18,7 @@
 #include "intformat.h"
 #include "lstmacroexp.h"
 #include "strcomp.h"
+#include "striter.h"
 #include "tempresult.h"
 
 #include <stddef.h>
@@ -125,7 +126,6 @@ extern LongWord MaxCodeLen;
 
 typedef void (*SimpProc)(void);
 typedef void (*DissectBitProc)(char* pDest, size_t DestSize, LargeWord Inp);
-typedef Boolean (*tQualifyQuoteFnc)(char const* pStart, char const* pQuotePos);
 
 typedef Word WordField[6]; /* fuer Zahlenumwandlung */
 
@@ -284,9 +284,9 @@ extern Boolean (*ChkPC)(LargeWord Addr);
 extern Boolean (*IsDef)(void);
 extern void (*SwitchFrom)(void);
 extern void (*InternSymbol)(char* Asc, TempResult* Erg);
-extern DissectBitProc   DissectBit;
-extern DissectRegProc   DissectReg;
-extern tQualifyQuoteFnc QualifyQuote;
+extern DissectBitProc         DissectBit;
+extern DissectRegProc         DissectReg;
+extern as_qualify_quote_fnc_t QualifyQuote;
 
 extern StringPtr    IncludeList;
 extern Integer      IncDepth, NextIncDepth, MaxIncDepth;

@@ -42,6 +42,8 @@ extern void ChkIO(tErrorNum ErrNo);
 extern void ChkXIO(tErrorNum ErrNo, char* pExtError);
 extern void ChkStrIO(tErrorNum ErrNo, const struct sStrComp* pComp);
 
+extern void asmerr_warn_relative_add(void);
+
 extern void asmerr_init(void);
 
 #endif /* ASMERR_H */

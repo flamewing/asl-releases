@@ -13,6 +13,8 @@
 #include "tempresult.h"
 
 #include "dynstr.h"
+#include "asmdef.h"
+#include "asmsub.h"
 #include "strutil.h"
 
 #include <string.h>

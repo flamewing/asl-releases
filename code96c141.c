@@ -27,6 +27,7 @@
 #include "intpseudo.h"
 #include "nls.h"
 #include "onoff_common.h"
+#include "operator.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -87,13 +88,15 @@ static CPUVar CPU96C141, CPU93C141;
 /*---------------------------------------------------------------------------*/
 /* Adressparser */
 
-static Boolean IsRegBase(Byte No, Byte Size) {
-    return ((Size == 2) || ((Size == 1) && (No < 0xf0) && (!MaxMode) && ((No & 3) == 0)));
+static Boolean IsRegBase(Byte No, tSymbolSize Size) {
+    return ((Size == eSymbolSize32Bit)
+            || ((Size == eSymbolSize16Bit) && (No < 0xf0) && (!MaxMode)
+                && ((No & 3) == 0)));
 }
 
-static void ChkMaxMode(Boolean MustMax, Byte* Result) {
+static void ChkMaxMode(Boolean MustMax, tRegEvalResult* Result) {
     if (MaxMode != MustMax) {
-        *Result = 1;
+        *Result = eRegAbort;
         WrError((MustMax) ? ErrNum_OnlyInMaxmode : ErrNum_NotInMaxmode);
     }
 }
@@ -102,7 +105,7 @@ static Boolean IsQuot(char Ch) {
     return ((Ch == '\'') || (Ch == '`'));
 }
 
-static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
+static tRegEvalResult CodeEReg(char* Asc, Byte* ErgNo, tSymbolSize* ErgSize) {
 #define RegCnt 8
     static char const Reg8Names[RegCnt + 1] = "AWCBEDLH";
     static char const Reg16Names[RegCnt][3]
@@ -110,16 +113,16 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
     static char const Reg32Names[RegCnt][4]
             = {"XWA", "XBC", "XDE", "XHL", "XIX", "XIY", "XIZ", "XSP"};
 
-    int         z, l = strlen(Asc);
-    char const* pos;
-    String      HAsc, Asc_N;
-    Byte        Result;
+    int            z, l = strlen(Asc);
+    char const*    pos;
+    String         HAsc, Asc_N;
+    tRegEvalResult Result;
 
     strmaxcpy(Asc_N, Asc, STRINGSIZE);
     NLS_UpString(Asc_N);
     Asc = Asc_N;
 
-    Result = 2;
+    Result = eIsReg;
 
     /* mom. Bank ? */
 
@@ -128,19 +131,19 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
         if (pos) {
             z        = pos - Reg8Names;
             *ErgNo   = 0xe0 + ((z & 6) << 1) + (z & 1);
-            *ErgSize = 0;
+            *ErgSize = eSymbolSize8Bit;
             return Result;
         }
     }
     for (z = 0; z < RegCnt; z++) {
         if (!strcmp(Asc, Reg16Names[z])) {
             *ErgNo   = 0xe0 + (z << 2);
-            *ErgSize = 1;
+            *ErgSize = eSymbolSize16Bit;
             return Result;
         }
         if (!strcmp(Asc, Reg32Names[z])) {
             *ErgNo   = 0xe0 + (z << 2);
-            *ErgSize = 2;
+            *ErgSize = eSymbolSize32Bit;
             if (z < 4) {
                 ChkMaxMode(True, &Result);
             }
@@ -161,9 +164,9 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 }
                 if (((*Asc == 'Q') || (MaxMode)) && (Asc[2] > '3')) {
                     WrError(ErrNum_OverRange);
-                    Result = 1;
+                    Result = eRegAbort;
                 }
-                *ErgSize = 0;
+                *ErgSize = eSymbolSize8Bit;
                 return Result;
             }
         }
@@ -184,9 +187,9 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 }
                 if (((*Asc == 'Q') || (MaxMode)) && (Asc[3] > '3')) {
                     WrError(ErrNum_OverRange);
-                    Result = 1;
+                    Result = eRegAbort;
                 }
-                *ErgSize = 1;
+                *ErgSize = eSymbolSize16Bit;
                 return Result;
             }
         }
@@ -201,9 +204,9 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 ChkMaxMode(True, &Result);
                 if (Asc[3] > '3') {
                     WrError(ErrNum_OverRange);
-                    Result = 1;
+                    Result = eRegAbort;
                 }
-                *ErgSize = 2;
+                *ErgSize = eSymbolSize32Bit;
                 return Result;
             }
         }
@@ -216,7 +219,7 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
             if (Asc[1] == Reg8Names[z]) {
                 *ErgNo = 0xe2 + ((z & 6) << 1) + (z & 1);
                 ChkMaxMode(True, &Result);
-                *ErgSize = 0;
+                *ErgSize = eSymbolSize8Bit;
                 return Result;
             }
         }
@@ -231,7 +234,7 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 if (z < 4) {
                     ChkMaxMode(True, &Result);
                 }
-                *ErgSize = 1;
+                *ErgSize = eSymbolSize16Bit;
                 return Result;
             }
         }
@@ -246,7 +249,7 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
         for (z = 0; z < RegCnt >> 1; z++) {
             if (!strcmp(HAsc, Reg16Names[z + 4])) {
                 *ErgNo   = 0xf0 + (z << 2) + ((l - 3) << 1) + (Ord(Asc[l - 1] == 'H'));
-                *ErgSize = 0;
+                *ErgSize = eSymbolSize8Bit;
                 return Result;
             }
         }
@@ -261,7 +264,7 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 if (l == 3) {
                     ChkMaxMode(True, &Result);
                 }
-                *ErgSize = 0;
+                *ErgSize = eSymbolSize8Bit;
                 return Result;
             }
         }
@@ -278,7 +281,7 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
                 if (l == 4) {
                     ChkMaxMode(True, &Result);
                 }
-                *ErgSize = 1;
+                *ErgSize = eSymbolSize16Bit;
                 return Result;
             }
         }
@@ -293,40 +296,40 @@ static Byte CodeEReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
             if (!strcmp(HAsc, Reg32Names[z])) {
                 *ErgNo = 0xd0 + (z << 2);
                 ChkMaxMode(True, &Result);
-                *ErgSize = 2;
+                *ErgSize = eSymbolSize32Bit;
                 return Result;
             }
         }
     }
 
-    return (Result = 0);
+    return (Result = eIsNoReg);
 }
 
-static void ChkL(CPUVar Must, Byte* Result) {
+static void ChkL(CPUVar Must, tRegEvalResult* Result) {
     if (MomCPU != Must) {
         WrError(ErrNum_InvCtrlReg);
-        *Result = 0;
+        *Result = eRegAbort;
     }
 }
 
-static Byte CodeCReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
-    Byte Result = 2;
+static tRegEvalResult CodeCReg(char* Asc, Byte* ErgNo, tSymbolSize* ErgSize) {
+    tRegEvalResult Result = eIsReg;
 
     if (!as_strcasecmp(Asc, "NSP")) {
         *ErgNo   = 0x3c;
-        *ErgSize = 1;
+        *ErgSize = eSymbolSize16Bit;
         ChkL(CPU96C141, &Result);
         return Result;
     }
     if (!as_strcasecmp(Asc, "XNSP")) {
         *ErgNo   = 0x3c;
-        *ErgSize = 2;
+        *ErgSize = eSymbolSize32Bit;
         ChkL(CPU96C141, &Result);
         return Result;
     }
     if (!as_strcasecmp(Asc, "INTNEST")) {
         *ErgNo   = 0x3c;
-        *ErgSize = 1;
+        *ErgSize = eSymbolSize16Bit;
         ChkL(CPU93C141, &Result);
         return Result;
     }
@@ -335,24 +338,24 @@ static Byte CodeCReg(char* Asc, Byte* ErgNo, Byte* ErgSize) {
         switch (as_toupper(Asc[3])) {
         case 'S':
             *ErgNo   = (Asc[4] - '0') * 4;
-            *ErgSize = 2;
+            *ErgSize = eSymbolSize32Bit;
             return Result;
         case 'D':
             *ErgNo   = (Asc[4] - '0') * 4 + 0x10;
-            *ErgSize = 2;
+            *ErgSize = eSymbolSize32Bit;
             return Result;
         case 'M':
             *ErgNo   = (Asc[4] - '0') * 4 + 0x22;
-            *ErgSize = 0;
+            *ErgSize = eSymbolSize8Bit;
             return Result;
         case 'C':
             *ErgNo   = (Asc[4] - '0') * 4 + 0x20;
-            *ErgSize = 1;
+            *ErgSize = eSymbolSize16Bit;
             return Result;
         }
     }
 
-    return (Result = 0);
+    return (Result = eIsNoReg);
 }
 
 typedef struct {
@@ -370,17 +373,17 @@ static void SetOpSize(ShortInt NewSize) {
     }
 }
 
-static Boolean IsRegCurrent(Byte No, Byte Size, Byte* Erg) {
+static Boolean IsRegCurrent(Byte No, tSymbolSize Size, Byte* Erg) {
     switch (Size) {
-    case 0:
+    case eSymbolSize8Bit:
         if ((No & 0xf2) == 0xe0) {
             *Erg = ((No & 0x0c) >> 1) + ((No & 1) ^ 1);
             return True;
         } else {
             return False;
         }
-    case 1:
-    case 2:
+    case eSymbolSize16Bit:
+    case eSymbolSize32Bit:
         if ((No & 0xe3) == 0xe0) {
             *Erg = ((No & 0x1c) >> 2);
             return True;
@@ -395,7 +398,7 @@ static Boolean IsRegCurrent(Byte No, Byte Size, Byte* Erg) {
 static char const Sizes[] = "124";
 
 static Boolean GetPostInc(
-        char const* pArg, int ArgLen, ShortInt* pOpSize, int* pCutoffRight) {
+        char const* pArg, int ArgLen, tSymbolSize* pOpSize, int* pCutoffRight) {
     char const* pPos;
 
     /* <reg>+ */
@@ -411,7 +414,7 @@ static Boolean GetPostInc(
     if ((ArgLen > 4) && (pArg[ArgLen - 3] == '+') && strchr(":+", pArg[ArgLen - 2])) {
         pPos = strchr(Sizes, pArg[ArgLen - 1]);
         if (pPos) {
-            *pOpSize      = pPos - Sizes;
+            *pOpSize      = (tSymbolSize)(pPos - Sizes);
             *pCutoffRight = 3;
             return True;
         }
@@ -420,7 +423,7 @@ static Boolean GetPostInc(
 }
 
 static Boolean GetPreDec(
-        char const* pArg, int ArgLen, ShortInt* pOpSize, int* pCutoffLeft,
+        char const* pArg, int ArgLen, tSymbolSize* pOpSize, int* pCutoffLeft,
         int* pCutoffRight) {
     char const* pPos;
 
@@ -429,7 +432,7 @@ static Boolean GetPreDec(
     if ((ArgLen > 4) && (pArg[1] == '-') && (pArg[2] == '-')) {
         pPos = strchr(Sizes, pArg[0]);
         if (pPos) {
-            *pOpSize      = pPos - Sizes;
+            *pOpSize      = (tSymbolSize)(pPos - Sizes);
             *pCutoffLeft  = 3;
             *pCutoffRight = 0;
             return True;
@@ -444,7 +447,7 @@ static Boolean GetPreDec(
         if ((ArgLen > 4) && (pArg[ArgLen - 2] == ':')) {
             pPos = strchr(Sizes, pArg[ArgLen - 1]);
             if (pPos) {
-                *pOpSize      = pPos - Sizes;
+                *pOpSize      = (tSymbolSize)(pPos - Sizes);
                 *pCutoffRight = 2;
                 return True;
             }
@@ -470,43 +473,111 @@ static void ChkAdr(Byte Erl) {
     }
 }
 
-static tSymbolSize SplitSize(tStrComp* pArg) {
-    int l = strlen(pArg->str.p_str);
+typedef struct {
+    as_eval_cb_data_t cb_data;
+    Byte              base_reg, index_reg, part_mask;
+    tSymbolSize       base_size, index_size;
+} tlcs900_eval_cb_data_t;
 
-    if ((l >= 3) && !strcmp(pArg->str.p_str + l - 2, ":8")) {
-        StrCompShorten(pArg, 2);
-        return eSymbolSize8Bit;
+DECLARE_AS_EVAL_CB(tlcs900_eval_cb) {
+    tlcs900_eval_cb_data_t* p_eval_cb_data = (tlcs900_eval_cb_data_t*)p_data;
+    Byte                    reg_num;
+    tSymbolSize             reg_size;
+
+    switch (CodeEReg(p_arg->str.p_str, &reg_num, &reg_size)) {
+    case eIsNoReg: {
+        if ((as_eval_cb_data_stack_depth(p_data->p_stack) > 0)
+            && as_eval_cb_data_stack_plain_add(p_data->p_stack)) {
+            p_eval_cb_data->part_mask |= 1;
+        }
+        return e_eval_none;
     }
-    if ((l >= 4) && !strcmp(pArg->str.p_str + l - 3, ":16")) {
-        StrCompShorten(pArg, 3);
-        return eSymbolSize16Bit;
+    case eRegAbort:
+        return e_eval_fail;
+    case eIsReg:
+        if (!as_eval_cb_data_stack_plain_add(p_data->p_stack)) {
+            WrError(ErrNum_InvAddrMode);
+            return e_eval_fail;
+        } else {
+            Boolean MustInd;
+
+            if (reg_size == eSymbolSize8Bit) {
+                MustInd = True;
+            } else if (reg_size == eSymbolSize32Bit) {
+                MustInd = False;
+            } else if (!IsRegBase(reg_num, reg_size)) {
+                MustInd = True;
+            } else if (p_eval_cb_data->part_mask & 4) {
+                MustInd = True;
+            } else {
+                MustInd = False;
+            }
+            if (MustInd) {
+                if (p_eval_cb_data->part_mask & 2) {
+                    WrError(ErrNum_InvAddrMode);
+                    return e_eval_fail;
+                } else {
+                    p_eval_cb_data->index_reg = reg_num;
+                    p_eval_cb_data->part_mask |= 2;
+                    p_eval_cb_data->index_size = reg_size;
+                }
+            } else {
+                if (p_eval_cb_data->part_mask & 4) {
+                    WrError(ErrNum_InvAddrMode);
+                    return e_eval_fail;
+                } else {
+                    p_eval_cb_data->base_reg = reg_num;
+                    p_eval_cb_data->part_mask |= 4;
+                    p_eval_cb_data->base_size = reg_size;
+                }
+            }
+        }
+        as_tempres_set_int(p_res, 0);
+        return e_eval_ok;
+    default:
+        return e_eval_none;
     }
-    if ((l >= 4) && !strcmp(pArg->str.p_str + l - 3, ":24")) {
-        StrCompShorten(pArg, 3);
-        return eSymbolSize24Bit;
-    }
-    return eSymbolSizeUnknown;
 }
 
-static void DecodeAdrMem(tStrComp const* pArg) {
-    LongInt     DispPart, DispAcc;
-    char*       EPos;
-    tStrComp    Arg, Remainder;
-    Boolean     NegFlag, NNegFlag, FirstFlag, OK;
-    Byte        BaseReg, BaseSize;
-    Byte        IndReg, IndSize;
-    Byte        PartMask;
-    Byte        HNum, HSize;
-    int         CutoffLeft, CutoffRight, ArgLen = strlen(pArg->str.p_str);
-    ShortInt    IncOpSize;
-    tSymbolSize DispSize;
+static void force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
+    tSymbolFlags add_flags = eSymbolFlag_None;
 
-    NegFlag   = False;
-    NNegFlag  = False;
-    FirstFlag = False;
-    PartMask  = 0;
-    DispAcc   = 0;
-    BaseReg = IndReg = BaseSize = IndSize = 0xff;
+    switch (pRVal->Contents.Int) {
+    case 8:
+        add_flags = eSymbolFlag_UserShort;
+        goto copy;
+    case 16:
+        add_flags = eSymbolFlag_UserMedium;
+        goto copy;
+    case 24:
+        add_flags = eSymbolFlag_UserLong;
+        goto copy;
+    default:
+        WrError(ErrNum_InvDispLen);
+        as_tempres_set_none(pErg);
+        break;
+    copy:
+        as_tempres_copy_value(pErg, pLVal);
+        pErg->Flags |= add_flags;
+        pErg->DataSize = pLVal->DataSize;
+    }
+}
+
+static as_operator_t const tlcs900_operators[] = {
+        { ":", 1,  True, 1, {TempInt | (TempInt << 4), 0, 0, 0}, force_op_size},
+        {NULL, 0, False, 0,                     {0, 0, 0, 0, 0},          NULL}
+};
+
+static void DecodeAdrMem(tStrComp const* pArg) {
+    LongInt                DispAcc;
+    tStrComp               Arg;
+    Byte                   HNum;
+    tSymbolSize            HSize;
+    tEvalResult            eval_result;
+    int                    CutoffLeft, CutoffRight, ArgLen = strlen(pArg->str.p_str);
+    tSymbolSize            IncOpSize, disp_size;
+    tlcs900_eval_cb_data_t eval_cb_data;
+    Boolean                FirstFlag;
 
     AdrType           = ModNone;
     AutoIncSizeNeeded = False;
@@ -520,12 +591,12 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         StrCompMkTemp(&RegComp, Reg, sizeof(Reg));
         StrCompCopy(&RegComp, pArg);
         StrCompShorten(&RegComp, CutoffRight);
-        if (CodeEReg(RegComp.str.p_str, &HNum, &HSize) == 2) {
+        if (CodeEReg(RegComp.str.p_str, &HNum, &HSize) == eIsReg) {
             if (!IsRegBase(HNum, HSize)) {
                 WrStrErrorPos(ErrNum_InvAddrMode, &RegComp);
             } else {
                 if (IncOpSize == eSymbolSizeUnknown) {
-                    IncOpSize = OpSize;
+                    IncOpSize = (tSymbolSize)OpSize;
                 }
                 AdrType    = ModMem;
                 AdrMode    = 0x45;
@@ -550,12 +621,12 @@ static void DecodeAdrMem(tStrComp const* pArg) {
 
         StrCompMkTemp(&RegComp, Reg, sizeof(Reg));
         StrCompCopySub(&RegComp, pArg, CutoffLeft, ArgLen - CutoffLeft - CutoffRight);
-        if (CodeEReg(RegComp.str.p_str, &HNum, &HSize) == 2) {
+        if (CodeEReg(RegComp.str.p_str, &HNum, &HSize) == eIsReg) {
             if (!IsRegBase(HNum, HSize)) {
                 WrError(ErrNum_InvAddrMode);
             } else {
                 if (IncOpSize == eSymbolSizeUnknown) {
-                    IncOpSize = OpSize;
+                    IncOpSize = (tSymbolSize)OpSize;
                 }
                 AdrType    = ModMem;
                 AdrMode    = 0x44;
@@ -571,127 +642,57 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         }
     }
 
-    Arg      = *pArg;
-    DispSize = eSymbolSizeUnknown;
-    do {
-        /* Split off one component: */
-
-        EPos     = indir_split_pos(Arg.str.p_str);
-        NNegFlag = EPos && (*EPos == '-');
-        if ((EPos == Arg.str.p_str)
-            || (EPos == Arg.str.p_str + strlen(Arg.str.p_str) - 1)) {
-            WrError(ErrNum_InvAddrMode);
-            return;
-        }
-        if (EPos) {
-            StrCompSplitRef(&Arg, &Remainder, &Arg, EPos);
-        }
-        KillPrefBlanksStrComp(&Arg);
-        KillPostBlanksStrComp(&Arg);
-
-        switch (CodeEReg(Arg.str.p_str, &HNum, &HSize)) {
-        case 0: {
-            tSymbolSize  ThisSize;
-            tSymbolFlags Flags;
-
-            if ((ThisSize = SplitSize(&Arg)) != eSymbolSizeUnknown) {
-                if (ThisSize > DispSize) {
-                    DispSize = ThisSize;
-                }
-            }
-            DispPart = EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
-            if (mFirstPassUnknown(Flags)) {
-                FirstFlag = True;
-            }
-            if (!OK) {
-                return;
-            }
-            if (NegFlag) {
-                DispAcc -= DispPart;
-            } else {
-                DispAcc += DispPart;
-            }
-            PartMask |= 1;
-            break;
-        }
-        case 1:
-            break;
-        case 2:
-            if (NegFlag) {
-                WrError(ErrNum_InvAddrMode);
-                return;
-            } else {
-                Boolean MustInd;
-
-                if (HSize == 0) {
-                    MustInd = True;
-                } else if (HSize == 2) {
-                    MustInd = False;
-                } else if (!IsRegBase(HNum, HSize)) {
-                    MustInd = True;
-                } else if (PartMask & 4) {
-                    MustInd = True;
-                } else {
-                    MustInd = False;
-                }
-                if (MustInd) {
-                    if (PartMask & 2) {
-                        WrError(ErrNum_InvAddrMode);
-                        return;
-                    } else {
-                        IndReg = HNum;
-                        PartMask |= 2;
-                        IndSize = HSize;
-                    }
-                } else {
-                    if (PartMask & 4) {
-                        WrError(ErrNum_InvAddrMode);
-                        return;
-                    } else {
-                        BaseReg = HNum;
-                        PartMask |= 4;
-                        BaseSize = HSize;
-                    }
-                }
-            }
-            break;
-        }
-
-        NegFlag  = NNegFlag;
-        NNegFlag = False;
-        if (EPos) {
-            Arg = Remainder;
-        }
-    } while (EPos);
+    Arg = *pArg;
+    as_eval_cb_data_ini(&eval_cb_data.cb_data, tlcs900_eval_cb);
+    eval_cb_data.cb_data.p_operators = tlcs900_operators;
+    eval_cb_data.base_reg = eval_cb_data.index_reg = 0xff;
+    eval_cb_data.base_size = eval_cb_data.index_size = eSymbolSizeUnknown;
+    eval_cb_data.part_mask                           = 0;
+    DispAcc = EvalStrIntExprWithResultAndCallback(
+            &Arg, Int32, &eval_result, &eval_cb_data.cb_data);
+    if (!eval_result.OK) {
+        return;
+    }
+    if (!eval_cb_data.part_mask || DispAcc) {
+        eval_cb_data.part_mask |= 1;
+    }
+    FirstFlag = mFirstPassUnknownOrQuestionable(eval_result.Flags);
 
     /* auto-deduce address/displacement size? */
 
-    if (DispSize == eSymbolSizeUnknown) {
-        switch (PartMask) {
+    if (eval_result.Flags & eSymbolFlag_UserLong) {
+        disp_size = eSymbolSize24Bit;
+    } else if (eval_result.Flags & eSymbolFlag_UserMedium) {
+        disp_size = eSymbolSize16Bit;
+    } else if (eval_result.Flags & eSymbolFlag_UserShort) {
+        disp_size = eSymbolSize8Bit;
+    } else {
+        switch (eval_cb_data.part_mask) {
         case 1:
             if (DispAcc <= 0xff) {
-                DispSize = eSymbolSize8Bit;
+                disp_size = eSymbolSize8Bit;
             } else if (DispAcc < 0xffff) {
-                DispSize = eSymbolSize16Bit;
+                disp_size = eSymbolSize16Bit;
             } else {
-                DispSize = eSymbolSize24Bit;
+                disp_size = eSymbolSize24Bit;
             }
             break;
         case 5:
             if (!DispAcc) {
-                PartMask &= ~1;
+                eval_cb_data.part_mask &= ~1;
             } else if (
                     RangeCheck(DispAcc, SInt8)
-                    && IsRegCurrent(BaseReg, BaseSize, &AdrMode)) {
-                DispSize = eSymbolSize8Bit;
+                    && IsRegCurrent(
+                            eval_cb_data.base_reg, eval_cb_data.base_size, &AdrMode)) {
+                disp_size = eSymbolSize8Bit;
             } else {
-                DispSize = eSymbolSize16Bit;
+                disp_size = eSymbolSize16Bit;
             }
             break;
         }
     }
 
-    switch (PartMask) {
+    switch (eval_cb_data.part_mask) {
     case 0:
     case 2:
     case 3:
@@ -699,7 +700,7 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         WrError(ErrNum_InvAddrMode);
         break;
     case 1:
-        switch (DispSize) {
+        switch (disp_size) {
         case eSymbolSize8Bit:
             if (FirstFlag) {
                 DispAcc &= 0xff;
@@ -747,23 +748,23 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         }
         break;
     case 4:
-        if (IsRegCurrent(BaseReg, BaseSize, &AdrMode)) {
+        if (IsRegCurrent(eval_cb_data.base_reg, eval_cb_data.base_size, &AdrMode)) {
             AdrType = ModMem;
             AdrCnt  = 0;
         } else {
             AdrType    = ModMem;
             AdrMode    = 0x43;
             AdrCnt     = 1;
-            AdrVals[0] = BaseReg;
+            AdrVals[0] = eval_cb_data.base_reg;
         }
         break;
     case 5:
-        switch (DispSize) {
+        switch (disp_size) {
         case eSymbolSize8Bit:
             if (FirstFlag) {
                 DispAcc &= 0x7f;
             }
-            if (!IsRegCurrent(BaseReg, BaseSize, &AdrMode)) {
+            if (!IsRegCurrent(eval_cb_data.base_reg, eval_cb_data.base_size, &AdrMode)) {
                 WrError(ErrNum_InvAddrMode);
             } else if (ChkRange(DispAcc, -128, 127)) {
                 AdrType = ModMem;
@@ -780,13 +781,13 @@ static void DecodeAdrMem(tStrComp const* pArg) {
                 AdrType    = ModMem;
                 AdrMode    = 0x43;
                 AdrCnt     = 3;
-                AdrVals[0] = BaseReg + 1;
+                AdrVals[0] = eval_cb_data.base_reg + 1;
                 AdrVals[1] = DispAcc & 0xff;
                 AdrVals[2] = (DispAcc >> 8) & 0xff;
             }
             break;
         case eSymbolSize24Bit:
-            WrError(ErrNum_InvAddrMode);
+            WrError(ErrNum_InvDispLen);
             break;
         default:
             break; /* assert(0)? */
@@ -796,17 +797,18 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         AdrType    = ModMem;
         AdrMode    = 0x43;
         AdrCnt     = 3;
-        AdrVals[0] = 3 + (IndSize << 2);
-        AdrVals[1] = BaseReg;
-        AdrVals[2] = IndReg;
+        AdrVals[0] = 3 + (eval_cb_data.index_size << 2);
+        AdrVals[1] = eval_cb_data.base_reg;
+        AdrVals[2] = eval_cb_data.index_reg;
         break;
     }
 }
 
 static void DecodeAdr(tStrComp const* pArg, Byte Erl) {
-    Byte    HNum, HSize;
-    LongInt DispAcc;
-    Boolean OK;
+    Byte        HNum;
+    tSymbolSize HSize;
+    LongInt     DispAcc;
+    Boolean     OK;
 
     AdrType           = ModNone;
     AutoIncSizeNeeded = False;
@@ -814,10 +816,10 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl) {
     /* Register ? */
 
     switch (CodeEReg(pArg->str.p_str, &HNum, &HSize)) {
-    case 1:
+    case eRegAbort:
         ChkAdr(Erl);
         return;
-    case 2:
+    case eIsReg:
         if (IsRegCurrent(HNum, HSize, &AdrMode)) {
             AdrType = ModReg;
         } else {
@@ -827,16 +829,24 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl) {
         SetOpSize(HSize);
         ChkAdr(Erl);
         return;
+    default:
+        break;
     }
 
     /* Steuerregister ? */
 
-    if (CodeCReg(pArg->str.p_str, &HNum, &HSize) == 2) {
+    switch (CodeCReg(pArg->str.p_str, &HNum, &HSize)) {
+    case eRegAbort:
+        ChkAdr(Erl);
+        return;
+    case eIsReg:
         AdrType = ModCReg;
         AdrMode = HNum;
         SetOpSize(HSize);
         ChkAdr(Erl);
         return;
+    default:
+        break;
     }
 
     /* Speicheroperand ? */
@@ -2152,7 +2162,7 @@ static void DecodeCPxx(Word Code) {
             OpSize  = 0;
             AdrMode = 3;
         } else {
-            Byte        HReg;
+            tSymbolSize HSize;
             int         l = strlen(ArgStr[2].str.p_str);
             char const* CmpStr;
 
@@ -2170,11 +2180,11 @@ static void DecodeCPxx(Word Code) {
                 OK = False;
             } else {
                 ArgStr[2].str.p_str[l - 2] = '\0';
-                if (CodeEReg(ArgStr[2].str.p_str + 1, &AdrMode, &HReg) != 2) {
+                if (CodeEReg(ArgStr[2].str.p_str + 1, &AdrMode, &HSize) != eIsReg) {
                     OK = False;
-                } else if (!IsRegBase(AdrMode, HReg)) {
+                } else if (!IsRegBase(AdrMode, HSize)) {
                     OK = False;
-                } else if (!IsRegCurrent(AdrMode, HReg, &AdrMode)) {
+                } else if (!IsRegCurrent(AdrMode, HSize, &AdrMode)) {
                     OK = False;
                 }
             }

@@ -30,6 +30,16 @@
         }                                                            \
     } while (0)
 
+#define PromoteRValFlags()                                           \
+    do {                                                             \
+        if (pErg->Typ != TempNone) {                                 \
+            pErg->Flags |= (pRVal->Flags & eSymbolFlags_Promotable); \
+            pErg->AddrSpaceMask |= pRVal->AddrSpaceMask;             \
+            if (pErg->DataSize == eSymbolSizeUnknown)                \
+                pErg->DataSize = pRVal->DataSize;                    \
+        }                                                            \
+    } while (0)
+
 #define PromoteLRValFlags()                                                           \
     do {                                                                              \
         if (pErg->Typ != TempNone) {                                                  \
@@ -87,12 +97,6 @@ static int reg_cmp(TempResult const* p_val1, TempResult const* p_val2) {
     } else {
         return 0;
     }
-}
-
-static void DummyOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
-    UNUSED(pLVal);
-    UNUSED(pRVal);
-    UNUSED(pErg);
 }
 
 static void OneComplOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
@@ -324,6 +328,21 @@ static void SubOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     PromoteLRValFlags();
 }
 
+static void SubSglOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
+    UNUSED(pLVal);
+    switch (pLVal->Typ) {
+    case TempInt:
+        as_tempres_set_int(pErg, -pRVal->Contents.Int);
+        break;
+    case TempFloat:
+        as_tempres_set_float(pErg, -pRVal->Contents.Float);
+        break;
+    default:
+        break;
+    }
+    PromoteRValFlags();
+}
+
 static void LogNotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     UNUSED(pLVal);
     as_tempres_set_int(pErg, pRVal->Contents.Int ? 0 : 1);
@@ -503,41 +522,43 @@ static void UneqOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 #define Int2String    (TempInt | (TempString << 4))
 #define String2Int    (TempString | (TempInt << 4))
 
-Operator const Operators[] =
-{
-  {" " , 1 , False,  0, { 0, 0, 0, 0, 0 }, DummyOp},
-  {"~" , 1 , False,  1, { TempInt << 4, 0, 0, 0, 0 }, OneComplOp},
-  {"<<", 2 , True ,  3, { Int2Int, 0, 0, 0, 0 }, ShLeftOp},
-  {">>", 2 , True ,  3, { Int2Int, 0, 0, 0, 0 }, ShRightOp},
-  {"><", 2 , True ,  4, { Int2Int, 0, 0, 0, 0 }, BitMirrorOp},
-  {"&" , 1 , True ,  5, { Int2Int, 0, 0, 0, 0 }, BinAndOp},
-  {"|" , 1 , True ,  6, { Int2Int, 0, 0, 0, 0 }, BinOrOp},
-  {"!" , 1 , True ,  7, { Int2Int, 0, 0, 0, 0 }, BinXorOp},
-  {"^" , 1 , True ,  8, { Int2Int, Float2Float, 0, 0, 0 }, PotOp},
-  {"*" , 1 , True , 11, { Int2Int, Float2Float, 0, 0, 0 }, MultOp},
-  {"/" , 1 , True , 11, { Int2Int, Float2Float, 0, 0, 0 }, DivOp},
-  {"#" , 1 , True , 11, { Int2Int, 0, 0, 0, 0 }, ModOp},
-  {"+" , 1 , True , 13, { Int2Int, Float2Float, String2String, Int2String, String2Int }, AddOp},
-  {"-" , 1 , True , 13, { Int2Int, Float2Float, 0, 0, 0 }, SubOp},
-  {"~~", 2 , False,  2, { TempInt << 4, 0, 0, 0, 0 }, LogNotOp},
-  {"&&", 2 , True , 15, { Int2Int, 0, 0, 0, 0 }, LogAndOp},
-  {"||", 2 , True , 16, { Int2Int, 0, 0, 0, 0 }, LogOrOp},
-  {"!!", 2 , True , 17, { Int2Int, 0, 0, 0, 0 }, LogXorOp},
-  {"=" , 1 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, EqOp},
-  {"==", 2 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, EqOp},
-  {">" , 1 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, GtOp},
-  {"<" , 1 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, LtOp},
-  {"<=", 2 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, LeOp},
-  {">=", 2 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, GeOp},
-  {"<>", 2 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, UneqOp},
-  {"!=", 2 , True , 23, { Int2Int, Float2Float, String2String, Reg2Reg, 0 }, UneqOp},
-  /* termination marker */
-  {NULL, 0 , False,  0, { 0, 0, 0, 0, 0 }, NULL}
-},
-/* minus may have one or two operands */
-MinusMonadicOperator =
-{
-  "-" ,1 , False, 13, { TempInt << 4, TempFloat << 4, 0, 0, 0 }, SubOp
+as_operator_t const operators[] = {
+        { "~",1, False,1,                                    {TempInt << 4, 0, 0, 0, 0},OneComplOp                                                                                           },
+        {"<<", 2,  True,  3,                                         {Int2Int, 0, 0, 0, 0},    ShLeftOp},
+        {">>", 2,  True,  3,                                         {Int2Int, 0, 0, 0, 0},   ShRightOp},
+        {"><", 2,  True,  4,                                         {Int2Int, 0, 0, 0, 0}, BitMirrorOp},
+        { "&", 1,  True,  5,                                         {Int2Int, 0, 0, 0, 0},    BinAndOp},
+        { "|", 1,  True,  6,                                         {Int2Int, 0, 0, 0, 0},     BinOrOp},
+        { "!", 1,  True,  7,                                         {Int2Int, 0, 0, 0, 0},    BinXorOp},
+        { "^", 1,  True,  8,                               {Int2Int, Float2Float, 0, 0, 0},       PotOp},
+        { "*", 1,  True, 11,                               {Int2Int, Float2Float, 0, 0, 0},      MultOp},
+        { "/", 1,  True, 11,                               {Int2Int, Float2Float, 0, 0, 0},       DivOp},
+        { "#", 1,  True, 11,                                         {Int2Int, 0, 0, 0, 0},       ModOp},
+        { "+",
+         1,  True,
+         13, {Int2Int, Float2Float, String2String, Int2String, String2Int},
+         AddOp                                                                                         },
+        /* minus may have one or two operands */
+        { "-", 1,  True, 13,                               {Int2Int, Float2Float, 0, 0, 0},       SubOp},
+        { "-", 1, False, 13,                       {TempInt << 4, TempFloat << 4, 0, 0, 0},    SubSglOp},
+        {"~~", 2, False,  2,                                    {TempInt << 4, 0, 0, 0, 0},    LogNotOp},
+        {"&&", 2,  True, 15,                                         {Int2Int, 0, 0, 0, 0},    LogAndOp},
+        {"||", 2,  True, 16,                                         {Int2Int, 0, 0, 0, 0},     LogOrOp},
+        {"!!", 2,  True, 17,                                         {Int2Int, 0, 0, 0, 0},    LogXorOp},
+        { "=", 1,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        EqOp},
+        {"==", 2,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        EqOp},
+        { ">", 1,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        GtOp},
+        { "<", 1,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        LtOp},
+        {"<=", 2,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        LeOp},
+        {">=", 2,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},        GeOp},
+        {"<>", 2,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},      UneqOp},
+        {"!=", 2,  True, 23,             {Int2Int, Float2Float, String2String, Reg2Reg, 0},      UneqOp},
+        /* termination marker */
+        {NULL, 0, False,  0,                                               {0, 0, 0, 0, 0},        NULL}
 };
 
-Operator const* pPotMonadicOperator = NULL;
+as_operator_t const no_operators[] = {
+        {NULL, 0, False, 0, {0, 0, 0, 0, 0}, NULL}
+};
+
+as_operator_t const* target_operators = no_operators;

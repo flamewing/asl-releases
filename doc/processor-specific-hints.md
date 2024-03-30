@@ -1978,3 +1978,10 @@ CPU groups: 1 = 78C05/78C06; 2 = 7800/7801/7802; 3 = 7807/7808/7809/7810; 4 = 78
 ## SC/MP displacement and register symbols
 
 With P1–P3 as the base register, displacement `-128` (`80` hex) selects the contents of the E register. AS warns when a numeric expression produces this value, since it may be unintended. Write `ld e(p1)` to select E explicitly without a warning, or define a register symbol with `ereg reg e` and use `ld ereg(p1)`. With P0/PC, -128 is an ordinary displacement and E is not allowed. PC addressing cannot use auto-increment.
+
+
+## Z80 and Z380 generic jumps
+
+`J` selects the shortest valid relative or absolute jump based on distance and condition. On Z80 and derived targets (Z80UNDOC, Z180, Rabbit2000 and LR35902), relative jumps reach -128 through +127 bytes and support only selected conditions. On Z380, the largest relative form reaches approximately ±8 MiB before an absolute form is needed. Choose this instruction carefully: relative code is position-independent, whereas absolute jumps require relocation.
+
+In 8080/8085 Z80 syntax, `J` is always translated to `JP`, since these processors have no relative jump instruction.

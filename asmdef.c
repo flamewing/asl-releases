@@ -124,7 +124,7 @@ void (*SwitchFrom)(void) = NULL;  /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char* Asc, TempResult* Erg); /* vordefinierte Symbole ? */
 DissectBitProc   DissectBit;
 DissectRegProc   DissectReg;
-tQualifyQuoteFnc QualifyQuote;
+as_qualify_quote_fnc_t QualifyQuote;
 
 StringPtr IncludeList;            /* Suchpfade fuer Includedateien */
 Integer   IncDepth, NextIncDepth, /* Verschachtelungstiefe INCLUDEs */

@@ -1008,3 +1008,6 @@ A leading zero in `-listradix` (for example, `-listradix 08`) prints the program
 
 
 The listing learns maximum include depth in the first pass and retains it across later passes, reserving a consistent-width depth field. The selected target address space determines address-field width.
+
+
+`-wrelative` enables warnings when a Z80 absolute jump can use a relative form; `-wno-relative` disables them. `-wsign-extension` and `-wno-sign-extension` control implicit 68000 `MOVEQ` sign-extension warnings.

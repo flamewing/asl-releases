@@ -1079,6 +1079,12 @@ In some way, `PACKING` is similar to `PADDING`, it just has a somewhat opposite 
 
 This distinction is only made for integer arguments of `DATA`, strings will always be packed. Keep further in mind that packing of values only works within the arguments of a `DATA` statement; if one has subsequent `DATA` statements, there will still be half-filled words when the argument count is odd!
 
+### WARNRELATIVE
+
+_valid for: Z80-derived targets_
+
+`WARNRELATIVE ON` warns when an absolute jump can use a shorter relative instruction. The default is OFF unless enabled by `-wrelative`; `-wno-relative` disables the command-line default. The symbol `WARNRELATIVE` reports the current setting.
+
 ### MAXMODE
 
 _valid for: TLCS-900, H8_

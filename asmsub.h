@@ -12,6 +12,7 @@
 
 #include "asmdef.h"
 #include "datatypes.h"
+#include "striter.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -30,16 +31,20 @@ extern long GTime(void);
 extern void UpString(char* s);
 
 extern char* QuotPosQualify(
-        char const* s, char Zeichen, tQualifyQuoteFnc QualifyQuoteFnc);
+        char const* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotPos(s, Zeichen) QuotPosQualify(s, Zeichen, NULL)
 extern char* QuotMultPosQualify(
-        char const* s, char const* pSearch, tQualifyQuoteFnc QualifyQuoteFnc);
+        char const* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotMultPos(s, pSearch) QuotMultPosQualify(s, pSearch, NULL)
 extern char* QuotSMultPosQualify(
-        char const* s, char const* pStrs, tQualifyQuoteFnc QualifyQuoteFnc);
+        char const* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotSMultPos(s, pStrs) QuotSMultPosQualify(s, pStrs, NULL)
 
 extern char* RQuotPos(char* s, char Zeichen);
+
+extern void KillBlanks(char* s);
+
+extern int CopyNoBlanks(char* pDest, char const* pSrc, size_t MaxLen);
 
 extern char* FirstBlank(char const* s);
 
@@ -49,17 +54,6 @@ extern ShortInt StrCaseCmp(char const* s1, char const* s2, LongInt Hand1, LongIn
 
 extern char* MatchChars(char const* pStr, char const* pPattern, ...);
 extern char* MatchCharsRev(char const* pStr, char const* pPattern, ...);
-
-typedef struct as_quoted_iterator_cb_data {
-    char const* p_str;
-    Boolean     in_single_quote, in_double_quote;
-} as_quoted_iterator_cb_data_t;
-
-typedef Boolean (*as_quoted_iterator_cb_t)(
-        char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data);
-extern void as_iterate_str_quoted(
-        char const* p_str, as_quoted_iterator_cb_t callback,
-        as_quoted_iterator_cb_data_t* p_cb_data);
 
 extern char* FindClosingParenthese(char const* pStr);
 

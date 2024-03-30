@@ -96,7 +96,7 @@ typedef struct {
    i.e. we continue to search after a finding.
  */
 
-static Boolean disp_base_split_cb(
+static int disp_base_split_cb(
         char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) {
     disp_base_split_cb_data_t* p_data = (disp_base_split_cb_data_t*)p_cb_data;
     int                        pos    = p_pos - p_cb_data->p_str;
@@ -123,7 +123,7 @@ static Boolean disp_base_split_cb(
         p_data->last_nonspace_pos = pos;
         p_data->last_nonspace     = *p_pos;
     }
-    return True;
+    return 0;
 }
 
 int FindDispBaseSplitWithQualifier(
@@ -137,12 +137,14 @@ int FindDispBaseSplitWithQualifier(
         return -1;
     }
 
-    data.nest              = 0;
-    data.split_pos         = -1;
-    data.last_nonspace_pos = -1;
-    data.last_nonspace     = ' ';
-    data.qualifier         = Qualifier;
-    data.p_bracks          = pBracks;
+    data.data.callback_before = False;
+    data.data.qualify_quote   = QualifyQuote;
+    data.nest                 = 0;
+    data.split_pos            = -1;
+    data.last_nonspace_pos    = -1;
+    data.last_nonspace        = ' ';
+    data.qualifier            = Qualifier;
+    data.p_bracks             = pBracks;
 
     as_iterate_str_quoted(pArg, disp_base_split_cb, &data.data);
 
