@@ -1168,17 +1168,8 @@ void WrXErrorPos(
     char        Add[11];
     char const* pErrorMsg;
 
-    if (FindAndTakeExpectError(Num)) {
-        return;
-    }
-
-    if (!CodeOutput && (Num == ErrNum_UnknownInstruction)) {
-        return;
-    }
-
-    if (SuppWarns && (Num < 1000)) {
-        return;
-    }
+    /* If issuing of a certain error or warning is disabled, a program
+       that expects it should trigger an error. */
 
     switch (Num) {
     case ErrNum_RelJumpPossible:
@@ -1193,6 +1184,18 @@ void WrXErrorPos(
         break;
     default:
         break;
+    }
+
+    if (FindAndTakeExpectError(Num)) {
+        return;
+    }
+
+    if (!CodeOutput && (Num == ErrNum_UnknownInstruction)) {
+        return;
+    }
+
+    if (SuppWarns && (Num < 1000)) {
+        return;
     }
 
     pErrorMsg = ErrorNum2String(Num, h, sizeof(h));
