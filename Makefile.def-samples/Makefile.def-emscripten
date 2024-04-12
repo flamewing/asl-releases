@@ -6,7 +6,7 @@
 
 OBJDIR =
 CC = gcc
-CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Werror -Wstrict-prototypes
+CFLAGS = -g -O3 -fomit-frame-pointer -Wall -Wextra -Wstrict-prototypes
 #CFLAGS = $(CFLAGS) -ansi -std=c89 -pedantic
 HOST_OBJEXTENSION = .o
 LDFLAGS =
@@ -17,11 +17,11 @@ HOST_EXEXTENSION =
 
 TARG_OBJDIR = wasm-emscripten/
 TARG_CC = emcc
-TARG_CFLAGS = -g -O3 -fomit-frame-pointer -Wall
+TARG_CFLAGS = $(CFLAGS)
 TARG_OBJEXTENSION = .o
 TARG_LD = $(TARG_CC)
 TARG_LDFLAGS = -lnodefs.js -lnoderawfs.js
-TARG_EXEXTENSION = .wasm
+TARG_EXEXTENSION = .js
 TARG_RUNCMD = node
 
 # -------------------------------------------------------------------------
