@@ -90,7 +90,7 @@ include $(DOC_EN_DIR)makedefs.dok
 # Supplementary Targets
 
 test: binaries
-	cd tests; OBJDIR=$(TARG_OBJDIR) RUNCMD=$(TARG_RUNCMD) V=$(V) ./testall "$(TESTDIRS)"
+	cd tests; OBJDIR=$(TARG_OBJDIR) RUNCMD=$(TARG_RUNCMD) EXEXTENSION=$(TARG_EXEXTENSION) V=$(V) ./testall "$(TESTDIRS)"
 
 install: all
 	INSTROOT=$(INSTROOT) OBJDIR=$(OBJDIR) TARG_OBJDIR=$(TARG_OBJDIR) TARG_EXEXTENSION=$(TARG_EXEXTENSION) ./install.sh $(BINDIR) $(INCDIR) $(MANDIR) $(LIBDIR)
