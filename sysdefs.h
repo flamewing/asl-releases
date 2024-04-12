@@ -1321,8 +1321,11 @@ typedef unsigned long long Card64;
 /*===========================================================================*/
 /* Misc... */
 
+/*---------------------------------------------------------------------------*/
+/* Emscripten */
+
 #ifdef __wasm__
-#define ARCHPRNAME "m68k"
+#define ARCHPRNAME "wasm"
 #define ARCHSYSNAME "wasm-emscripten"
 #define DEFSMADE
 #define OPENRDMODE "r"
