@@ -1011,3 +1011,8 @@ The listing learns maximum include depth in the first pass and retains it across
 
 
 `-wrelative` enables warnings when a Z80 absolute jump can use a relative form; `-wno-relative` disables them. `-wsign-extension` and `-wno-sign-extension` control implicit 68000 `MOVEQ` sign-extension warnings.
+
+
+### Listing line prefixes
+
+`-listline-prefix` sets the format before each source line. `%i` inserts include depth, `%n` the source line number (default width 5), and `%a` the current address (target-specific width). A width may be placed before the letter, such as `%8a`; a leading zero requests zero padding. Include depth zero may leave a blank field or omit it when no includes are used. The default is `%i%n/%a`; `%1i%5n/%8a` recreates the format from before build249. `%i` and `%n` may each appear at most three times. Generated code uses the selected listing radix too.

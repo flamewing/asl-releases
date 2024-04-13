@@ -162,35 +162,84 @@ char* as_strdup(char const* s) {
 /*---------------------------------------------------------------------------*/
 /* ...so is snprintf... */
 
-typedef enum {
-    eNotSet,
-    eSet,
-    eFinished
-} tArgState;
-
-typedef struct {
-    tArgState ArgState[3];
-    Boolean   InFormat, LeadZero, Signed, LeftAlign, AddPlus, ForceLeadZero, ForceUpper;
-    int       Arg[3], CurrArg, IntSize;
-} tFormatContext;
-
 typedef struct {
     char*        p_dest;
     size_t       dest_remlen;
     as_dynstr_t* p_dynstr;
 } dest_format_context_t;
 
-static void ResetFormatContext(tFormatContext* pContext) {
+/*!------------------------------------------------------------------------
+ * \fn     as_format_context_reset(as_format_ctx_t *p_context)
+ * \brief  reset format context to idle (not within format spec)
+ * \param  p_context context to reset
+ * ------------------------------------------------------------------------ */
+
+void as_format_context_reset(as_format_ctx_t* p_context) {
     int z;
 
     for (z = 0; z < 3; z++) {
-        pContext->Arg[z]      = 0;
-        pContext->ArgState[z] = eNotSet;
+        p_context->arg[z]       = 0;
+        p_context->arg_state[z] = e_not_set;
     }
-    pContext->CurrArg  = 0;
-    pContext->IntSize  = 0;
-    pContext->InFormat = pContext->LeadZero = pContext->ForceLeadZero = pContext->Signed
-            = pContext->LeftAlign = pContext->AddPlus = pContext->ForceUpper = False;
+    p_context->curr_arg  = 0;
+    p_context->int_size  = 0;
+    p_context->in_format = p_context->lead_zero = p_context->force_lead_zero
+            = p_context->is_signed = p_context->left_align = p_context->add_plus
+            = p_context->force_upper                       = False;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     as_format_context_consume(as_format_ctx_t *p_context, char ch)
+ * \brief  core of updating format context by next character
+ * \param  p_context context to update
+ * \param  ch next character in format string
+ * \return True if character consumed
+ * ------------------------------------------------------------------------ */
+
+Boolean as_format_context_consume(as_format_ctx_t* p_context, char ch) {
+    if (p_context->in_format) {
+        switch (ch) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9': {
+            if (!p_context->curr_arg && !p_context->arg_state[p_context->curr_arg]
+                && (ch == '0')) {
+                p_context->lead_zero = True;
+            }
+            p_context->arg[p_context->curr_arg]
+                    = (p_context->arg[p_context->curr_arg] * 10) + (ch - '0');
+            p_context->arg_state[p_context->curr_arg] = e_set;
+            return True;
+        }
+        case '-':
+            if (!p_context->curr_arg && !p_context->arg_state[p_context->curr_arg]) {
+                p_context->left_align = True;
+            }
+            return True;
+        case '+':
+            p_context->add_plus = True;
+            return True;
+        case '~':
+            p_context->force_lead_zero = True;
+            return True;
+        case '.':
+            if (p_context->curr_arg < 3) {
+                p_context->curr_arg++;
+            }
+            return True;
+        default:
+            return False;
+        }
+    } else {
+        return (p_context->in_format = (ch == '%'));
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -320,7 +369,7 @@ static size_t FloatConvert(
 #endif
 
 /*!------------------------------------------------------------------------
- * \fn     append(dest_format_context_t *p_dest_ctx, const char *p_src, size_t cnt, tFormatContext *pFormatContext)
+ * \fn     append(dest_format_context_t *p_dest_ctx, const char *p_src, size_t cnt, as_format_ctx_t *pFormatContext)
  * \brief  append given data, with possible left/right padding
  * \param  p_dest_ctx destination context
  * \param  p_src data to append
@@ -331,12 +380,12 @@ static size_t FloatConvert(
 
 static size_t append(
         dest_format_context_t* p_dest_ctx, char const* p_src, size_t cnt,
-        tFormatContext* pFormatContext) {
+        as_format_ctx_t* pFormatContext) {
     size_t pad_len, result = 0;
 
-    pad_len = (pFormatContext->Arg[0] > (int)cnt) ? pFormatContext->Arg[0] - cnt : 0;
+    pad_len = (pFormatContext->arg[0] > (int)cnt) ? pFormatContext->arg[0] - cnt : 0;
 
-    if ((pad_len > 0) && !pFormatContext->LeftAlign) {
+    if ((pad_len > 0) && !pFormatContext->left_align) {
         result += append_pad(p_dest_ctx, ' ', pad_len);
     }
 
@@ -347,12 +396,12 @@ static size_t append(
         p_dest_ctx->dest_remlen -= cnt;
     }
 
-    if ((pad_len > 0) && pFormatContext->LeftAlign) {
+    if ((pad_len > 0) && pFormatContext->left_align) {
         result += append_pad(p_dest_ctx, ' ', pad_len);
     }
 
-    if (pFormatContext->InFormat) {
-        ResetFormatContext(pFormatContext);
+    if (pFormatContext->in_format) {
+        as_format_context_reset(pFormatContext);
     }
 
     return result + cnt;
@@ -369,11 +418,12 @@ static size_t append(
 
 static int vsprcatf_core(
         dest_format_context_t* p_dest_ctx, char const* pFormat, va_list ap) {
-    char const*    pFormatStart = pFormat;
-    int            Result       = 0;
-    size_t         OrigLen      = strlen(p_dest_ctx->p_dest);
-    tFormatContext FormatContext;
-    LargeInt       IntArg;
+    char const*     pFormatStart = pFormat;
+    int             Result       = 0;
+    size_t          OrigLen      = strlen(p_dest_ctx->p_dest);
+    as_format_ctx_t FormatContext;
+    LargeWord       UIntArg;
+    Boolean         UIntArgNeg;
 
     if (p_dest_ctx->dest_remlen > OrigLen) {
         p_dest_ctx->dest_remlen -= OrigLen;
@@ -382,51 +432,15 @@ static int vsprcatf_core(
     }
     p_dest_ctx->p_dest += OrigLen;
 
-    ResetFormatContext(&FormatContext);
+    as_format_context_reset(&FormatContext);
     for (; *pFormat; pFormat++) {
-        if (FormatContext.InFormat) {
+        if (as_format_context_consume(&FormatContext, *pFormat))
+            ;
+        else if (FormatContext.in_format) {
             switch (*pFormat) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9': {
-                if (!FormatContext.CurrArg
-                    && !FormatContext.ArgState[FormatContext.CurrArg]
-                    && (*pFormat == '0')) {
-                    FormatContext.LeadZero = True;
-                }
-                FormatContext.Arg[FormatContext.CurrArg]
-                        = (FormatContext.Arg[FormatContext.CurrArg] * 10)
-                          + (*pFormat - '0');
-                FormatContext.ArgState[FormatContext.CurrArg] = eSet;
-                break;
-            }
-            case '-':
-                if (!FormatContext.CurrArg
-                    && !FormatContext.ArgState[FormatContext.CurrArg]) {
-                    FormatContext.LeftAlign = True;
-                }
-                break;
-            case '+':
-                FormatContext.AddPlus = True;
-                break;
-            case '~':
-                FormatContext.ForceLeadZero = True;
-                break;
             case '*':
-                FormatContext.Arg[FormatContext.CurrArg]      = va_arg(ap, int);
-                FormatContext.ArgState[FormatContext.CurrArg] = eFinished;
-                break;
-            case '.':
-                if (FormatContext.CurrArg < 3) {
-                    FormatContext.CurrArg++;
-                }
+                FormatContext.arg[FormatContext.curr_arg]       = va_arg(ap, int);
+                FormatContext.arg_state[FormatContext.curr_arg] = e_finished;
                 break;
             case 'c': {
                 char ch = va_arg(ap, int);
@@ -438,61 +452,67 @@ static int vsprcatf_core(
                 Result += append(p_dest_ctx, "%", 1, &FormatContext);
                 break;
             case 'l': {
-                FormatContext.IntSize++;
-                FormatContext.CurrArg = 2;
+                FormatContext.int_size++;
+                FormatContext.curr_arg = 2;
                 break;
             }
             case 'd': {
-                if (FormatContext.IntSize >= 3) {
+                LargeInt IntArg;
+
+                if (FormatContext.int_size >= 3) {
                     IntArg = va_arg(ap, LargeInt);
                 } else
 #ifndef NOLONGLONG
-                        if (FormatContext.IntSize >= 2)
+                        if (FormatContext.int_size >= 2)
                     IntArg = va_arg(ap, long long);
                 else
 #endif
-                        if (FormatContext.IntSize >= 1)
+                        if (FormatContext.int_size >= 1)
                     IntArg = va_arg(ap, long);
                 else {
                     IntArg = va_arg(ap, int);
                 }
-                FormatContext.Arg[1] = 10;
-                FormatContext.Signed = True;
+                FormatContext.arg[1]    = 10;
+                FormatContext.is_signed = True;
+                UIntArgNeg              = (IntArg < 0);
+                UIntArg                 = UIntArgNeg ? 0 - IntArg : IntArg;
                 goto IntCommon;
             }
             case 'u': {
-                if (FormatContext.IntSize >= 3) {
-                    IntArg = va_arg(ap, LargeWord);
+                if (FormatContext.int_size >= 3) {
+                    UIntArg = va_arg(ap, LargeWord);
                 } else
 #ifndef NOLONGLONG
-                        if (FormatContext.IntSize >= 2)
-                    IntArg = va_arg(ap, unsigned long long);
+                        if (FormatContext.int_size >= 2)
+                    UIntArg = va_arg(ap, unsigned long long);
                 else
 #endif
-                        if (FormatContext.IntSize >= 1)
-                    IntArg = va_arg(ap, unsigned long);
+                        if (FormatContext.int_size >= 1)
+                    UIntArg = va_arg(ap, unsigned long);
                 else {
-                    IntArg = va_arg(ap, unsigned);
+                    UIntArg = va_arg(ap, unsigned);
                 }
+                UIntArgNeg = False;
                 goto IntCommon;
             }
             case 'x':
             case 'X': {
-                if (FormatContext.IntSize >= 3) {
-                    IntArg = va_arg(ap, LargeWord);
+                if (FormatContext.int_size >= 3) {
+                    UIntArg = va_arg(ap, LargeWord);
                 } else
 #ifndef NOLONGLONG
-                        if (FormatContext.IntSize >= 2)
-                    IntArg = va_arg(ap, unsigned long long);
+                        if (FormatContext.int_size >= 2)
+                    UIntArg = va_arg(ap, unsigned long long);
                 else
 #endif
-                        if (FormatContext.IntSize)
-                    IntArg = va_arg(ap, unsigned long);
+                        if (FormatContext.int_size)
+                    UIntArg = va_arg(ap, unsigned long);
                 else {
-                    IntArg = va_arg(ap, unsigned);
+                    UIntArg = va_arg(ap, unsigned);
                 }
-                FormatContext.Arg[1]     = 16;
-                FormatContext.ForceUpper = as_isupper(*pFormat);
+                FormatContext.arg[1]      = 16;
+                UIntArgNeg                = False;
+                FormatContext.force_upper = as_isupper(*pFormat);
                 goto IntCommon;
             }
             IntCommon: {
@@ -500,24 +520,23 @@ static int vsprcatf_core(
                 int  Cnt;
                 int  NumPadZeros = 0;
 
-                if (FormatContext.Signed) {
-                    if (IntArg < 0) {
+                if (FormatContext.is_signed) {
+                    if (UIntArgNeg) {
                         *pStr++ = '-';
-                        IntArg  = 0 - IntArg;
-                    } else if (FormatContext.AddPlus) {
+                    } else if (FormatContext.add_plus) {
                         *pStr++ = '+';
                     }
                 }
-                if (FormatContext.LeadZero) {
-                    NumPadZeros          = FormatContext.Arg[0];
-                    FormatContext.Arg[0] = 0;
+                if (FormatContext.lead_zero) {
+                    NumPadZeros          = FormatContext.arg[0];
+                    FormatContext.arg[0] = 0;
                 }
                 Cnt = (pStr - Str)
                       + SysString(
-                              pStr, sizeof(Str) - (pStr - Str), IntArg,
-                              FormatContext.Arg[1] ? FormatContext.Arg[1] : 10,
-                              NumPadZeros, FormatContext.ForceLeadZero,
-                              FormatContext.ForceUpper ? 'A' : HexStartCharacter,
+                              pStr, sizeof(Str) - (pStr - Str), UIntArg,
+                              FormatContext.arg[1] ? FormatContext.arg[1] : 10,
+                              NumPadZeros, FormatContext.force_lead_zero,
+                              FormatContext.force_upper ? 'A' : HexStartCharacter,
                               SplitByteCharacter);
                 if (Cnt > (int)sizeof(Str)) {
                     Cnt = sizeof(Str);
@@ -532,7 +551,7 @@ static int vsprcatf_core(
                 size_t Cnt;
 
                 Cnt = FloatConvert(
-                        Str, sizeof(Str), va_arg(ap, double), FormatContext.Arg[1], False,
+                        Str, sizeof(Str), va_arg(ap, double), FormatContext.arg[1], False,
                         *pFormat);
                 if (Cnt > sizeof(Str)) {
                     Cnt = sizeof(Str);
@@ -542,7 +561,7 @@ static int vsprcatf_core(
             }
             case 's': {
                 char const* pStr = va_arg(ap, char*);
-                size_t cnt = FormatContext.Arg[1] ? as_strnlen(pStr, FormatContext.Arg[1])
+                size_t cnt = FormatContext.arg[1] ? as_strnlen(pStr, FormatContext.arg[1])
                                                   : strlen(pStr);
 
                 Result += append(p_dest_ctx, pStr, cnt, &FormatContext);
@@ -552,8 +571,6 @@ static int vsprcatf_core(
                 fprintf(stderr, "invalid format: '%c' in '%s'\n", *pFormat, pFormatStart);
                 exit(255);
             }
-        } else if (*pFormat == '%') {
-            FormatContext.InFormat = True;
         } else {
             Result += append(p_dest_ctx, pFormat, 1, &FormatContext);
         }

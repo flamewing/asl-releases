@@ -317,6 +317,9 @@ The following error messages are generated not only by AS, but also by the auxil
 | 161  |         device write error          | The operating system detected an unclassifiable write error                                                                                                     |
 | 162  |        general failure error        | The operating system has absolutely no idea of what happened to the device.                                                                                     |
 
+
+Listing prefix format errors: **10010** (fatal), invalid placeholder; use `%i`, `%n` or `%a`. **10011** (fatal), `%i` or `%n` used more than three times.
+
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 

@@ -1037,6 +1037,12 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_MaxIncLevelExceeded:
         msgno = Num_ErrMsgMaxIncLevelExceeded;
         break;
+    case ErrNum_InvListHeadFormat:
+        msgno = Num_ErrMsgInvListHeadFormat;
+        break;
+    case ErrNum_ListHeadFormatElemTooOften:
+        msgno = Num_ErrMsgListHeadFormatElemTooOften;
+        break;
     default:
         as_snprintf(Buf, BufSize, "%s %d", getmessage(Num_ErrMsgIntError), (int)Num);
     }
