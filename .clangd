@@ -1,0 +1,27 @@
+CompileFlags:
+  Add:
+    [
+      -Weverything,
+      -Wno-c11-extensions,
+      -Wno-c23-compat,
+      -Wno-c23-extensions,
+      -Wno-c2x-compat,
+      -Wno-c2x-extensions,
+      -Wno-c99-compat,
+      -Wno-c99-designator,
+      -Wno-c99-extensions,
+      -Wno-declaration-after-statement,
+      -Wno-used-but-marked-unused,
+      -Wno-missing-variable-declarations,
+    ]
+  Remove: -W*
+---
+If:
+  PathMatch: [.*\.h, .*\.rsc]
+CompileFlags:
+  Add: [-xc-header, -std=c11]
+---
+If:
+  PathMatch: [.*\.hpp]
+CompileFlags:
+  Add: [-xc++-header, -std=c++17]

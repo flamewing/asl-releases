@@ -48,15 +48,15 @@ jobs:
         run: |
           sudo apt-fast update
           # TODO: Figure out packages for building documentation.
-          # sudo apt-fast install -y
+          sudo apt-fast install -y cmake ninja-build
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cp Makefile.def-samples/Makefile.def-x86_64-unknown-linux ./Makefile.def
+          cmake -S . -B build -G Ninja
       - name: Build
         run: |
-          make binaries -j2
+          cmake --build build -j
       - name: Test
         run: |
-          make test -j2
+          cmake --build build -j --target test

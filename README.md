@@ -6,9 +6,9 @@
 <!-- [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/flamewing/asl-releases?logo=LGTM)](https://lgtm.com/projects/g/flamewing/asl-releases/alerts/)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/flamewing/asl-releases?logo=LGTM)](https://lgtm.com/projects/g/flamewing/asl-releases/context:cpp) -->
 
-[![CI Mac OS Catalina 10.15](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-macos.yml?label=CI%20Mac%20OS%20X&logo=Apple&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-macos.yml?query=workflow%3Aci-macos)
-[![CI Ubuntu 20.04](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-linux.yml?label=CI%20Ubuntu&logo=Ubuntu&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-linux.yml?query=workflow%3Aci-linux)
-[![CI Windows Server 2019](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-windows.yml?label=CI%20Windows&logo=Windows&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-windows.yml?query=workflow%3Aci-windows)
+[![CI Mac OS X](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-macos.yml?label=CI%20Mac%20OS%20X&logo=Apple&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-macos.yml?query=workflow%3Aci-macos)
+[![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-linux.yml?label=CI%20Ubuntu&logo=Ubuntu&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-linux.yml?query=workflow%3Aci-linux)
+[![CI Windows](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-windows.yml?label=CI%20Windows&logo=Windows&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-windows.yml?query=workflow%3Aci-windows)
 
 [![Coverity Scan Analysis](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/coverity-scan.yml?label=Coverity%20Scan%20Analysis&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjU2IDI1MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjYuOTUgMTA5LjA4bC0zLjUyLTkuNDUgMzcuOTYgNzAuODloLjg1bDQ3LjMzLTExOC4xM2MuODMtMi41NiA4LjI2LTIxLjc0IDguNTEtMzAuMi42My0yMS44NC0xNC4xLTIzLjgxLTI5Ljc3LTE5LjM5QzM2Ljg3IDE5LjQ2LS4yNCA2Ny44My4wMSAxMjQuNzhjLjIgNTIuOTcgMzIuNjQgOTguMjQgNzguNjUgMTE3LjM4TDI2Ljk1IDEwOS4wOE0xNzQuMzMgNS40OGMtNi4zMiAxMi43LTEzLjEgMjYuMzctMjEuNjggNDguMDhMNzkuMjIgMjQyLjM5YzE1LjA5IDYuMiAzMS42MyA5LjYgNDguOTYgOS41MiA3MC41LS4yNyAxMjcuNDItNTcuNjcgMTI3LjEzLTEyOC4xOC0uMjItNTMuODMtMzMuNzYtOTkuNy04MC45OC0xMTguMjYiIGZpbGw9IiNmZmYiLz48L3N2Zz4=)](https://github.com/flamewing/asl-releases/actions/workflows/coverity-scan.yml?query=workflow%3Acoverity-scan)
 [![Coverity Scan](https://img.shields.io/coverity/scan/flamewing-asl-releases?label=Coverity%20Scan%20Results&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjU2IDI1MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjYuOTUgMTA5LjA4bC0zLjUyLTkuNDUgMzcuOTYgNzAuODloLjg1bDQ3LjMzLTExOC4xM2MuODMtMi41NiA4LjI2LTIxLjc0IDguNTEtMzAuMi42My0yMS44NC0xNC4xLTIzLjgxLTI5Ljc3LTE5LjM5QzM2Ljg3IDE5LjQ2LS4yNCA2Ny44My4wMSAxMjQuNzhjLjIgNTIuOTcgMzIuNjQgOTguMjQgNzguNjUgMTE3LjM4TDI2Ljk1IDEwOS4wOE0xNzQuMzMgNS40OGMtNi4zMiAxMi43LTEzLjEgMjYuMzctMjEuNjggNDguMDhMNzkuMjIgMjQyLjM5YzE1LjA5IDYuMiAzMS42MyA5LjYgNDguOTYgOS41MiA3MC41LS4yNyAxMjcuNDItNTcuNjcgMTI3LjEzLTEyOC4xOC0uMjItNTMuODMtMzMuNzYtOTkuNy04MC45OC0xMTguMjYiIGZpbGw9IiNmZmYiLz48L3N2Zz4=)](https://scan.coverity.com/projects/flamewing-asl-releases)
@@ -22,18 +22,36 @@ Custom version of AS, intended to track the original source and fix some issues.
 
 ## Create and install the package
 
-You need a C development toolchain, including `make`. You also need Git. You need to copy a file from `Makefile.def-samples` directory according to your platform to a file named `Makefile.def` on the same level as `Makefile`. You can then run the following commands:
+You need a C development toolchain, and `cmake` at least `3.19`. You also need Git. When everything is setup, run the following commands:
 
 ```bash
-   make binaries
-   make install
+cmake -S . -B build -G <generator>
+cmake --build build -j
 ```
 
-Where the later will probably require administrative privileges. This has been tested on the following environments:
+Here, `<generator>` stands for any backend for `cmake` to use. I personally use `Ninja`, but you can also use any others, like `Unix Makefiles`, or `MSYS Makefiles`. Check `cmake` help for generators available in your platform.
 
-- Windows 10 Home and Windows Server 2019 (32- and 64-bit builds)
-- Ubuntu 20.04 (64-bit build)
-- Mac OS Catalina 10.15 (64-bit build)
+To install the program, run
+
+```bash
+cmake --install build
+```
+
+Where the later will probably require administrative privileges.
+
+To run tests, build as above then run:
+
+```bash
+cmake --build build -j --target test
+```
+
+This build procedure has been tested on the following environments:
+
+- Windows (32- and 64-bit builds)
+- Ubuntu (64-bit build)
+- Mac OS X (x86-64 build)
+
+Note that, on Windows, I have only tested with MinGW under MSYS2. I would like to know if it works on other circumstances.
 
 ## Preparing your disassembly
 

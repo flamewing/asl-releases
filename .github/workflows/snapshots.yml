@@ -62,14 +62,12 @@ jobs:
         architecture:
           - linux32
           - linux64
-          # - macos32
           - macos64
           - win32
           - win64
         include:
           - architecture: linux32
             os: ubuntu-latest
-            deffile: Makefile.def-unknown-linux
             shell: bash
             arch: i686
             package: asl-ubuntu-i686
@@ -79,36 +77,22 @@ jobs:
             depends: "gcc-multilib"
           - architecture: linux64
             os: ubuntu-latest
-            deffile: Makefile.def-x86_64-unknown-linux
             shell: bash
             arch: x86_64
             package: asl-ubuntu-x86_64
             p7zip: 7z
             exe_ext: ""
             as: asl
-            depends: ""
-          # - architecture: macos32
-          #   os: macos-latest
-          #   deffile: Makefile.def-i386-osx
-          #   shell: bash
-          #   arch: i686
-          #   package: asl-osx-i686
-          #   p7zip: 7z
-          #   exe_ext: ""
-          #   depends: ""
           - architecture: macos64
             os: macos-latest
-            deffile: Makefile.def-x86_64-osx
             shell: bash
             arch: x86_64
             package: asl-osx-x86_64
             p7zip: 7z
             exe_ext: ""
             as: asl
-            depends: ""
           - architecture: win32
             os: windows-latest
-            deffile: Makefile.def-multiarch-msys2-win32
             shell: msys2
             msystem: MINGW32
             arch: i686
@@ -116,10 +100,8 @@ jobs:
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
             as: asw
-            depends: ""
           - architecture: win64
             os: windows-latest
-            deffile: Makefile.def-multiarch-msys2-win32
             shell: msys2
             msystem: MINGW64
             arch: x86_64
@@ -127,7 +109,6 @@ jobs:
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
             as: asw
-            depends: ""
     defaults:
       run:
         shell: ${{ matrix.shell }} {0}
@@ -137,12 +118,14 @@ jobs:
         run: |
           sudo apt-fast update
           # TODO: Figure out packages for building documentation.
-          sudo apt-fast install -y ${{ matrix.depends }}
+          sudo apt-fast install -y cmake ninja-build
       - name: Install dependencies (Mac OS)
         if: ${{ matrix.architecture == 'macos32' || matrix.architecture == 'macos64' }}
         run: |
-          brew install make
+          brew update
+          brew upgrade || true
           # TODO: Figure out packages for building documentation.
+          brew install cmake ninja
       - name: Install dependencies (Windows)
         if: ${{ matrix.architecture == 'win32' || matrix.architecture == 'win64' }}
         uses: msys2/setup-msys2@v2
@@ -151,28 +134,31 @@ jobs:
           install:
             base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
+            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
             # TODO: Figure out packages for building documentation.
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cp Makefile.def-samples/${{ matrix.deffile }} ./Makefile.def
+          cmake -S . -B build -G Ninja
       - name: Build
         run: |
-          make binaries -j2
+          cmake --build build -j
       - name: Create package
         run: |
           if [[ ${{ matrix.as }} != "asl" ]]; then
             cp asl${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
           fi
-          "${{ matrix.p7zip }}" -tzip a ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,mkdepend,p2bin,p2hex,pbind,plist,rescomp}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
+          cp COPYING build/
+          cd build
+          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,mkdepend,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
       - name: Upload snapshot
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.activity-check.outputs.upload_url }}
-          asset_path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_path: build${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
           asset_name: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
           asset_content_type: application/zip
 
