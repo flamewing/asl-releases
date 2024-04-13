@@ -46,16 +46,18 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          brew install make
+          brew update
+          brew upgrade || true
           # TODO: Figure out packages for building documentation.
+          brew install cmake ninja
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cp Makefile.def-samples/Makefile.def-x86_64-osx ./Makefile.def
+          cmake -S . -B build -G Ninja
       - name: Build
         run: |
-          make binaries -j2
+          cmake --build build -j
       - name: Test
         run: |
-          make test -j2
+          cmake --build build -j --target test

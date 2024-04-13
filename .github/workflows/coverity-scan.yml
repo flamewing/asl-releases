@@ -47,12 +47,12 @@ jobs:
       - name: Configure
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
-          cp Makefile.def-samples/Makefile.def-x86_64-unknown-linux ./Makefile.def
+          cmake -S . -B build -G "Unix Makefiles"
       - name: Build with cov-build
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
           export PATH=/tmp/cov-analysis-linux64/bin:$PATH
-          cov-build --dir cov-int make binaries -j2
+          cov-build --dir cov-int make -j
       - name: Submit the result to Coverity Scan
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |

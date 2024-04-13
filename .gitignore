@@ -24,3 +24,5 @@ Makefile.def
 .vscode/*
 
 compile_commands.json
+
+build*/*

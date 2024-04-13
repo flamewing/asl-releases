@@ -66,15 +66,16 @@ jobs:
           install:
             base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
+            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
             # TODO: Figure out packages for building documentation.
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cp Makefile.def-samples/Makefile.def-multiarch-msys2-win32 ./Makefile.def
+          cmake -S . -B build -G Ninja
       - name: Build
         run: |
-          make binaries -j2
+          cmake --build build -j
       - name: Test
         run: |
-          make test -j2
+          cmake --build build -j --target test
