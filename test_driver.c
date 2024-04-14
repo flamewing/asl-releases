@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PATH_BIFFER_SIZE 4096
+#define PATH_BUFFER_SIZE 4096
 
 static char io_buffer[32768];
 
@@ -123,7 +123,7 @@ static void dump_file(const char *data, size_t size) {
  */
 static bool compare_files(const char *source_dir, const char *output_dir,
                           const char *test_name) {
-  char ori_file[PATH_BIFFER_SIZE];
+  char ori_file[PATH_BUFFER_SIZE];
   snprintf(ori_file, sizeof(ori_file), "%s" PATHSEP "%s.ori", source_dir,
            test_name);
   FILE *ori = fopen(ori_file, "rb");
@@ -134,7 +134,7 @@ static bool compare_files(const char *source_dir, const char *output_dir,
     return false;
   }
 
-  char bin_file[PATH_BIFFER_SIZE];
+  char bin_file[PATH_BUFFER_SIZE];
   snprintf(bin_file, sizeof(bin_file), "%s" PATHSEP "%s.bin", output_dir,
            test_name);
   FILE *bin = fopen(bin_file, "rb");
@@ -226,17 +226,17 @@ int main(int argc, char *argv[]) {
   const char *p2bin_path = convert_path(argv[6]);
   const char *output_dir = convert_path(argv[7]);
 
-  char file_name[PATH_BIFFER_SIZE];
+  char file_name[PATH_BUFFER_SIZE];
   memset(file_name, 0, sizeof(file_name));
 
   printf("Running test %s...", test_name);
   printf("Test %s:\n", test_name);
 
-  sprintf(file_name, "%s.bin", test_name);
+  snprintf(file_name, sizeof(file_name), "%s.bin", test_name);
   remove(file_name);
-  sprintf(file_name, "%s.log", test_name);
+  snprintf(file_name, sizeof(file_name), "%s.log", test_name);
   remove(file_name);
-  sprintf(file_name, "%s.h", test_name);
+  snprintf(file_name, sizeof(file_name), "%s.h", test_name);
   remove(file_name);
 
   if (verbose) {
