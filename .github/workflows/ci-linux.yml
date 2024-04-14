@@ -68,4 +68,4 @@ jobs:
           cmake --build build -j
       - name: Test
         run: |
-          cmake --build build -j --target test
+          ctest --build-run-dir build --test-dir build -j
