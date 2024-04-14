@@ -6,6 +6,7 @@
 <!-- [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/flamewing/asl-releases?logo=LGTM)](https://lgtm.com/projects/g/flamewing/asl-releases/alerts/)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/flamewing/asl-releases?logo=LGTM)](https://lgtm.com/projects/g/flamewing/asl-releases/context:cpp) -->
 
+[![CI Emscripten](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-emscripten.yml?label=CI%20Emscripten&logo=nodedotjs&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-emscripten.yml?query=workflow%3Aci-emscripten)
 [![CI Mac OS X](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-macos.yml?label=CI%20Mac%20OS%20X&logo=Apple&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-macos.yml?query=workflow%3Aci-macos)
 [![CI Ubuntu](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-linux.yml?label=CI%20Ubuntu&logo=Ubuntu&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-linux.yml?query=workflow%3Aci-linux)
 [![CI Windows](https://img.shields.io/github/actions/workflow/status/flamewing/asl-releases/ci-windows.yml?label=CI%20Windows&logo=Windows&logoColor=white)](https://github.com/flamewing/asl-releases/actions/workflows/ci-windows.yml?query=workflow%3Aci-windows)
@@ -52,6 +53,59 @@ This build procedure has been tested on the following environments:
 - Mac OS X (x86-64 build)
 
 Note that, on Windows, I have only tested with MinGW under MSYS2. I would like to know if it works on other circumstances.
+
+## Cross-compiling
+
+To cross-compile, you need to have an appropriate toolchain file for your target, in addition to the actual toolchain. You start by doing a (potentially partial) host build:
+
+```bash
+cmake -S . -B build-host -G <host-generator>
+cmake --build build-host -j --target rescomp
+```
+
+Then you do the cross-compile build itself:
+
+```bash
+cmake -S . -B build-target -G <target-generator> \
+        -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain/file.cmake
+cmake --build build-target -j
+```
+
+If the toolchain file defines an appropriate emulator, you can even run the tests:
+
+```bash
+cmake --build build-target -j --target test
+```
+
+### Worked cross-compile example: WASM target, Linux host
+
+Here is a full example of how to cross-compile to WASM/Emscripten. This is based on [this](https://gist.github.com/ericoporto/8ce679ecb862a12795156d31f3ecac49). Start by getting the latest SDK:
+
+```bash
+cd ~
+mkdir emsdk
+cd emsdk
+git clone https://github.com/emscripten-core/emsdk.git .
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh   # Change this to match your shell
+```
+
+Then on the `asl-releases` directory:
+
+```bash
+cd ~
+mkdir asl
+cd asl
+git clone https://github.com/flamewing/asl-releases.git .
+cmake -S . -B build-host -G <host-generator>
+cmake --build build-host -j --target rescomp
+emcmake cmake -S . -B build-wasm \
+        -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
+cmake --build build-wasm -j
+cmake --build build-wasm -j --target test
+```
 
 ## Preparing your disassembly
 
