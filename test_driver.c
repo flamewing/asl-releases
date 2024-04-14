@@ -214,7 +214,8 @@ int main(int argc, char *argv[]) {
     printf("Usage: %s <verbose> <source_dir> <test_name> <include_dir> "
            "<asl_path> <p2bin_path> <output_dir>\n",
            argv[0]);
-    return 1;
+    const bool is_help = (argc == 2 && strcmp(argv[1], "--help") == 0);
+    return is_help ? 0 : 1;
   }
 
   const bool verbose = strcmp(argv[1], "1") == 0;
@@ -247,9 +248,10 @@ int main(int argc, char *argv[]) {
   read_flags(file_name, sizeof(file_name), source_dir, flags, sizeof(flags));
 
   snprintf(io_buffer, sizeof(io_buffer),
-           "%s %s %s -i %s %s" PATHSEP "%s.asm -o %s" PATHSEP "%s.p", asl_path,
-           flags, quiet, include_dir, source_dir, test_name, output_dir,
-           test_name);
+           "%s %s %s -i %s %s" PATHSEP "%s.asm -o %s" PATHSEP
+           "%s.p -shareout %s" PATHSEP "%s.h ",
+           asl_path, flags, quiet, include_dir, source_dir, test_name,
+           output_dir, test_name, output_dir, test_name);
   printf("Running: %s\n", io_buffer);
   int asl_ret = system(io_buffer);
 

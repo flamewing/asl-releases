@@ -43,7 +43,7 @@ Where the later will probably require administrative privileges.
 To run tests, build as above then run:
 
 ```bash
-cmake --build build -j --target test
+ctest --build-run-dir build --test-dir build -j
 ```
 
 This build procedure has been tested on the following environments:
@@ -75,7 +75,7 @@ cmake --build build-target -j
 If the toolchain file defines an appropriate emulator, you can even run the tests:
 
 ```bash
-cmake --build build-target -j --target test
+ctest --build-run-dir build-target --test-dir build-target -j
 ```
 
 ### Worked cross-compile example: WASM target, Linux host

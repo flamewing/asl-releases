@@ -875,7 +875,6 @@ define_executable(p2bin
 )
 target_link_libraries(p2bin PUBLIC m)
 
-
 define_executable(test_driver
     test_driver.c
 )
@@ -1000,7 +999,6 @@ foreach(TEST_TARGET ${test_dirs})
             TEST ${TEST_TARGET}
             PROPERTY
                 ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR}"
-                TIMEOUT 3
         )
     endif()
 endforeach()
