@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 project(asl-flamewing
     VERSION 1.42.212
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
-    LANGUAGES C ASM
+    LANGUAGES C
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -820,6 +820,11 @@ function(define_executable NAME)
         PROPERTIES
         OUTPUT_NAME ${NAME}
     )
+    if (CMAKE_CROSSCOMPILING)
+        if (DEFINED EMSCRIPTEN AND ${EMSCRIPTEN})
+            target_link_libraries(${NAME} PUBLIC nodefs.js noderawfs.js)
+        endif()
+    endif()
 endfunction(define_executable)
 
 define_executable(asl
@@ -968,12 +973,19 @@ else()
 endif()
 
 file(GLOB test_dirs RELATIVE "${CMAKE_SOURCE_DIR}/tests" "${CMAKE_SOURCE_DIR}/tests/*")
+
+if(NOT DEFINED CMAKE_CROSSCOMPILING_EMULATOR)
+    set(EMULATOR "")
+else()
+    set(EMULATOR "${CMAKE_CROSSCOMPILING_EMULATOR} ")
+endif(NOT DEFINED CMAKE_CROSSCOMPILING_EMULATOR)
+
 foreach(TEST_TARGET ${test_dirs})
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET}/${TEST_TARGET}.asm" AND EXISTS "${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET}/${TEST_TARGET}.ori")
         add_test(
             NAME ${TEST_TARGET}
             COMMAND
-                test_driver ${VERBOSE_MODE} ${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET} ${TEST_TARGET} ${CMAKE_SOURCE_DIR}/include $<TARGET_FILE:asl> $<TARGET_FILE:p2bin> ${CMAKE_BINARY_DIR}/Testing
+                test_driver ${VERBOSE_MODE} ${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET} ${TEST_TARGET} ${CMAKE_SOURCE_DIR}/include "${EMULATOR}$<TARGET_FILE:asl>" "${EMULATOR}$<TARGET_FILE:p2bin>" ${CMAKE_BINARY_DIR}/Testing
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
         set_property(
