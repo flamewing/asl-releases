@@ -46,7 +46,16 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt-fast update
+          if ! apt-fast -- help &> /dev/null; then
+            sudo add-apt-repository -u -y ppa:apt-fast/stable
+            sudo apt-get update
+            echo debconf apt-fast/maxdownloads string 16 | sudo debconf-set-selections
+            echo debconf apt-fast/dlflag boolean true | sudo debconf-set-selections
+            echo debconf apt-fast/aptmanager string apt-get | sudo debconf-set-selections
+            DEBIAN_FRONTEND=noninteractive sudo apt install -y apt-fast
+          else
+            sudo apt-fast update
+          fi
           # TODO: Figure out packages for building documentation.
           sudo apt-fast install -y cmake ninja-build
       - name: Checkout code
