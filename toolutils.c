@@ -489,8 +489,6 @@ void EraseFile(const char *FileName, LongWord Offset)
 
 void toolutils_init(const char *ProgPath)
 {
-  version_init();
-
   opencatalog(&MsgCat, "tools.msg", ProgPath, MsgId1, MsgId2);
 
   FilterCnt = 0;

@@ -171,9 +171,6 @@ static void CloseTarget(void)
     if (fclose(TargFile) == EOF)
       ChkIO(TargName);
   }
-
-  if (Magic != 0)
-    unlink(TargName);
 }
 
 static void ProcessFile(const char *FileName, LongWord Offset)
@@ -483,7 +480,7 @@ static CMDResult CMD_StartHeader(Boolean Negate, const char *Arg)
     StartHeader *= Sgn;
     return CMDArg;
   }
-}	
+}
 
 static CMDResult CMD_EntryAdr(Boolean Negate, const char *Arg)
 {
@@ -559,7 +556,7 @@ static CMDRec P2BINParams[] =
   { "SEGMENT"  , CMD_ForceSegment },
 };
 
-int main(int argc, char **argv)	
+int main(int argc, char **argv)
 {
   int z;
   char *ph1, *ph2;

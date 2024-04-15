@@ -4415,6 +4415,7 @@ static void WrHead(void)
     as_snprintf(Tmp, sizeof(Tmp), "(%s-%s)", ARCHPRNAME, ARCHSYSNAME);
     WrConsoleLine(Tmp, True); NxtLine();
     WrConsoleLine(InfoMessCopyright, True); NxtLine();
+    WrConsoleLine(InfoNewCopyright, True); NxtLine();
     WriteCopyrights(NxtLine);
     WrConsoleLine("\n", True); NxtLine();
   }

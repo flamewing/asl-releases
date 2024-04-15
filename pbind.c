@@ -52,8 +52,6 @@ static void CloseTarget(void)
     ChkIO(TargName);
   if (fclose(TargFile) == EOF)
     ChkIO(TargName);
-  if (Magic != 0)
-    unlink(TargName);
 }
 
 static void ProcessFile(char *FileName)

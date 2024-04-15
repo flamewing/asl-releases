@@ -142,8 +142,6 @@ static void CloseTarget(void)
   errno = 0;
   fclose(TargFile);
   ChkIO(TargName);
-  if (Magic != 0)
-    unlink(TargName);
 }
 
 static void PrCData(FILE *pTargFile, char Ident, const char *pName,

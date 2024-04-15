@@ -128,10 +128,7 @@ static void ProcessSingle(const char *pFileName)
           || (Header == FileHeaderRelocRec) || (Header == FileHeaderRRelocRec))
     {
       errno = 0;
-      if (Magic != 0)
-        FoundId = NULL;
-      else
-        FoundId = FindFamilyById(CPU);
+      FoundId = FindFamilyById(CPU);
       if (!FoundId)
         printf("\?\?\?=%02x        ", Header);
       else
