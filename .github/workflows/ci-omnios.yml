@@ -1,0 +1,73 @@
+name: ci-omnios
+
+on:
+  push:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-omnios.yml'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-omnios.yml'
+
+jobs:
+  ci-omnios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Build and test in OmniOS
+        id: ci-omnios
+        uses: vmactions/omnios-vm@v1
+        with:
+          usesh: true
+          sync: rsync
+          copyback: false
+          prepare: |
+            pkg update
+            pkg install gcc13
+            pkg install llvm-17
+            curl -ORL https://pkgsrc.SmartOS.org/packages/SmartOS/bootstrap/bootstrap-2023Q4-x86_64.tar.gz
+            tar -zxpf bootstrap-2023Q4-x86_64.tar.gz -C /
+            export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+            export MANPATH=/opt/local/man:$MANPATH
+            pkgin update
+            pkgin upgrade
+            # TODO: Figure out packages for building documentation.
+            pkgin -y install cmake ninja
+          run: |
+            export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+            export MANPATH=/opt/local/man:$MANPATH
+            cmake -S . -B build -G Ninja
+            cmake --build build -j
+            ctest --build-run-dir build --test-dir build -j
