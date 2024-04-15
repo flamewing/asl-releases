@@ -627,7 +627,7 @@ int main(int argc, char **argv)
   /* close target file and erase if undefined symbols */
 
   fclose(TargFile);
-  if ((UndefErr > 0) || (Magic != 0))
+  if (UndefErr > 0)
     unlink(TargName);
   if (UndefErr > 0)
   {

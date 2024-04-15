@@ -297,8 +297,6 @@ void CloseFile(void)
   if (fwrite(&Head,sizeof(Head), 1, PrgFile) != 1) ChkIO(ErrNum_FileWriteError);
   if (fwrite(h, 1, strlen(h), PrgFile) != strlen(h)) ChkIO(ErrNum_FileWriteError);
   fclose(PrgFile);
-  if (Magic)
-    unlink(OutName);
 }
 
 /*--- erzeugten Code einer Zeile in Datei ablegen ---------------------------*/

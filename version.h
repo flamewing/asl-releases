@@ -16,9 +16,6 @@ extern const char *Version;
 extern LongInt VerNo;
 
 extern const char *InfoMessCopyright;
-
-extern LongInt Magic;
-
-extern void version_init(void);
+extern const char *InfoNewCopyright;
 
 #endif /* _VERSION_H */

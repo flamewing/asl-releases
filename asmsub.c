@@ -2009,6 +2009,4 @@ void asmsub_init(void)
       fprintf(stderr, "\n");
   }
 #endif
-
-  version_init();
 }
