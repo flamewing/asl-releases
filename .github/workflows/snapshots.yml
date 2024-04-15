@@ -5,6 +5,10 @@ on:
     - cron: "0 01 * * *" # Daily at 01:00 UTC
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   activity-check:
     if: ${{ github.repository_owner == 'flamewing' }}
