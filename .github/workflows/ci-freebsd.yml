@@ -40,6 +40,10 @@ on:
       - '!.github/workflows/*'
       - '.github/workflows/ci-freebsd.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   ci-freebsd:
     runs-on: ubuntu-latest

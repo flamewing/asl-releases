@@ -40,6 +40,10 @@ on:
       - '!.github/workflows/*'
       - '.github/workflows/ci-windows-msvc.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   ci-windows-msvc:
     runs-on: windows-latest

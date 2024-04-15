@@ -12,6 +12,10 @@ env:
   FILE: asl-releases-ubuntu-gcc.tgz
   PROJ: flamewing%2Fasl-releases
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   coverity-linux:
     if: ${{ github.repository_owner == 'flamewing' }}

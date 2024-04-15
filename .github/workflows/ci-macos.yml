@@ -40,6 +40,10 @@ on:
       - '!.github/workflows/*'
       - '.github/workflows/ci-macos.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   ci-macos:
     runs-on: macos-latest
