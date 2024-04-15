@@ -19,10 +19,13 @@
 *.toc
 
 testlog
-Makefile.def
+run-msbuild.bat
 
+out/*
 .vscode/*
+.vs/*
 
 compile_commands.json
+CMakeSettings.json
 
 build*/*

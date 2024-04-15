@@ -6,6 +6,17 @@ project(asl-flamewing
     LANGUAGES C
 )
 
+# Joins arguments and places the results in ${result_var}.
+function(join result_var)
+    set(result "")
+    foreach (arg ${ARGN})
+        set(result "${result}${arg}")
+    endforeach ()
+    set(${result_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
@@ -51,8 +62,34 @@ function(add_compile_options_safe FLAG)
     endif(C_COMPILER_SUPPORTS_${FLAG_NO_SIGNS})
 endfunction()
 
+add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}")
+
+include(CheckFunctionExists)
+
+if(NOT POW_FUNCTION_EXISTS AND NOT NEED_LINKING_AGAINST_LIBM)
+  CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
+  if(NOT POW_FUNCTION_EXISTS)
+      unset(POW_FUNCTION_EXISTS CACHE)
+      list(APPEND CMAKE_REQUIRED_LIBRARIES m)
+      CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
+      if(POW_FUNCTION_EXISTS)
+          set(NEED_LINKING_AGAINST_LIBM True CACHE BOOL "" FORCE)
+      else()
+          message(FATAL_ERROR "Failed making the pow() function available")
+      endif()
+  endif()
+endif()
+
+if (NEED_LINKING_AGAINST_LIBM)
+    function(target_link_libm target)
+        target_link_libraries(${target} PUBLIC m)
+    endfunction()
+else()
+    function(target_link_libm target)
+    endfunction()
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-DLIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}")
     if(${FORCE_COLORED_OUTPUT})
         if(CMAKE_C_COMPILER_ID MATCHES "Clang")
             add_compile_options(-fcolor-diagnostics -fansi-escape-codes)
@@ -196,6 +233,43 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wstringop-overflow=2>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wunused-const-variable=2>)
     endif()
+elseif(MSVC)
+    if(WARNINGS_ARE_ERRORS)
+        add_compile_options("/WX")
+    endif()
+
+    # add_compile_options("/W4")
+    # add_compile_options("/wd4018") # warning C4018: '>': signed/unsigned mismatch
+    # add_compile_options("/wd4127") # warning C4127: conditional expression is constant
+    # add_compile_options("/wd4244") # warning C4244: 'initializing': conversion from 'int' to 'char', possible loss of data
+    # add_compile_options("/wd4251")
+
+    # # Clang: -Wshorten-64-to-32 -Wimplicit-int-conversion
+    # add_compile_options("/wd4267") # warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+    # add_compile_options("/wd4389") # warning C4389: '==': signed/unsigned mismatch
+    # add_compile_options("/wd4482")
+    # add_compile_options("/wd4512")
+    # add_compile_options("/wd4701") # warning C4701: potentially uninitialized local variable 'err' used
+    # add_compile_options("/wd4706") # warning C4706: assignment within conditional expression
+    # add_compile_options("/wd4800") # warning C4800: 'const SymbolDatabase *' : forcing value to bool 'true' or 'false' (performance warning)
+endif()
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    # If Microsoft SDK is installed create script run-msbuild.bat that
+    # calls SetEnv.cmd to set up build environment and runs msbuild.
+    # It is useful when building Visual Studio projects with the SDK
+    # toolchain rather than Visual Studio.
+    include(FindSetEnv)
+
+    if(WINSDK_SETENV)
+        set(MSBUILD_SETUP "call \"${WINSDK_SETENV}\"")
+    endif()
+
+    # Set FrameworkPathOverride to get rid of MSB3644 warnings.
+    join(netfxpath "C:\\Program Files\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0")
+    file(WRITE run-msbuild.bat "
+        ${MSBUILD_SETUP}
+        ${CMAKE_MAKE_PROGRAM} -p:FrameworkPathOverride=\"${netfxpath}\" %*")
 endif()
 
 # only build the generator if not crosscompiling
@@ -832,13 +906,13 @@ endfunction(define_executable)
 define_executable(asl
     ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(asl PUBLIC m)
+target_link_libm(asl)
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
     define_executable(asw
         ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
     )
-    target_link_libraries(asw PUBLIC m)
+    target_link_libm(asw)
     set(ASW_TARGET asw)
 else()
     set(ASW_TARGET "")
@@ -851,29 +925,29 @@ define_executable(dasl
 define_executable(plist
     ${PLIST_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(plist PUBLIC m)
+target_link_libm(plist)
 
 define_executable(alink
     ${ALINK_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(alink PUBLIC m)
+target_link_libm(alink)
 
 define_executable(pbind
     ${PBIND_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(pbind PUBLIC m)
+target_link_libm(pbind)
 
 
 define_executable(p2hex
     ${P2HEX_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(p2hex PUBLIC m)
+target_link_libm(p2hex)
 
 
 define_executable(p2bin
     ${P2BIN_OBJECTS} ${NLS_OBJECTS}
 )
-target_link_libraries(p2bin PUBLIC m)
+target_link_libm(p2bin)
 
 define_executable(test_driver
     test_driver.c

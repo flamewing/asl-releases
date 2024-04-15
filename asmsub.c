@@ -1670,11 +1670,13 @@ long GTime(void)
   return (mktime(&ts) * 100) + (dt.hundredths);
 }
 
-#elif __MINGW32__
+#elif defined(__MINGW32__) || defined(_MSC_VER)
 
 /* distribution by Gunnar Wallmann */
 
-#include <sys/time.h>
+#ifndef _MSC_VER
+# include <sys/time.h>
+#endif
 #include "math64.h"
 
 /*time from 1 Jan 1601 to 1 Jan 1970 in 100ns units */

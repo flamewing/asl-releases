@@ -1161,7 +1161,7 @@ typedef unsigned long Card32;
 /*===========================================================================*/
 /* Intel x86_64 platforms */
 
-#if  (defined __k8__) || (defined __x86_64) || (defined __x86_64__)
+#if  (defined __k8__) || (defined __x86_64) || (defined __x86_64__) || (defined _M_AMD64)
 
 #define ARCHPRNAME "x86_64"
 

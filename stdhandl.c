@@ -115,6 +115,19 @@ void stdhandl_init(void)
     Redirected = RedirToDevice;
 
 #else
+#ifndef S_IFIFO
+# ifdef _S_IFIFO
+#  define S_IFIFO _S_IFIFO
+# endif
+#endif
+#ifndef S_ISFIFO
+# ifndef S_IFIFO
+#  define	S_ISFIFO(m)	(((m) & S_IFMT) == S_IFIFO)
+# else
+#  define	S_ISFIFO(m)	(0)
+# endif
+#endif
+
   fstat(NumStdOut, &stdout_stat);
   if (S_ISREG(stdout_stat.st_mode))
     Redirected = RedirToFile;

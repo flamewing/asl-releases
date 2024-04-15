@@ -1,4 +1,4 @@
-name: ci-windows
+name: ci-windows-msvc
 
 on:
   push:
@@ -19,7 +19,7 @@ on:
       - '!.gitignore'
       - '!.gitattributes'
       - '!.github/workflows/*'
-      - '.github/workflows/ci-windows.yml'
+      - '.github/workflows/ci-windows-msvc.yml'
   pull_request:
     paths:
       - '**'
@@ -38,44 +38,24 @@ on:
       - '!.gitignore'
       - '!.gitattributes'
       - '!.github/workflows/*'
-      - '.github/workflows/ci-windows.yml'
+      - '.github/workflows/ci-windows-msvc.yml'
 
 jobs:
-  ci-windows:
+  ci-windows-msvc:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      matrix:
-        # generator: [make, msys, vs2019]
-        architecture: [i686, x86_64]
-        include:
-          - architecture: i686
-            msystem: MINGW32
-            arch: i686
-          - architecture: x86_64
-            msystem: MINGW64
-            arch: x86_64
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
-      - name: Install dependencies
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.msystem }}
-          install:
-            base-devel git
-            mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
-            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
-            # TODO: Figure out packages for building documentation.
       - name: Checkout code
         uses: actions/checkout@master
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja
+          cmake -S . -B build -G "Visual Studio 17 2022"
       - name: Build
         run: |
           cmake --build build -j
       - name: Test
         run: |
-          ctest --build-run-dir build --test-dir build -j
+          ctest -j --test-dir build --build-run-dir build -C Debug
