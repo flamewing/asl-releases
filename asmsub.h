@@ -14,6 +14,7 @@
 #include "datatypes.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #define LISTLINESPACE 20
 

@@ -9,7 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-
+#include <string.h>
 #include <errno.h>
 
 #include "strutil.h"
