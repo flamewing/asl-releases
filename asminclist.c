@@ -70,8 +70,6 @@ static void PrintIncludeList_PrintNode(PFileNode Node, int Indent)
   int z;
   String h;
 
-  ChkStack();
-
   if (Node)
   {
     strmaxcpy(h, Blanks(Indent), STRINGSIZE);
@@ -94,8 +92,6 @@ void PrintIncludeList(void)
 static void ClearIncludeList_ClearNode(PFileNode Node)
 {
   int z;
-
-  ChkStack();
 
   if (Node)
   {

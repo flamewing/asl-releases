@@ -310,7 +310,6 @@ static PChainRec DecodeChain(tStrComp *pArg)
   Byte Scale;
   tRegEvalResult RegEvalResult;
 
-  ChkStack();
   Rec = (PChainRec) malloc(sizeof(TChainRec));
   Rec->Next = NULL;
   Rec->RegCnt = 0;

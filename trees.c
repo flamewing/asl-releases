@@ -40,7 +40,6 @@ static ShortInt StrCmp(const char *s1, const char *s2, LongInt Hand1, LongInt Ha
 
 void IterTree(PTree Tree, TTreeCallback Callback, void *pData)
 {
-  ChkStack();
   if (Tree)
   {
     if (Tree->Left) IterTree(Tree->Left, Callback, pData);
@@ -51,7 +50,6 @@ void IterTree(PTree Tree, TTreeCallback Callback, void *pData)
 
 static void TreeDepthIter(PTree Tree, LongInt Level, LongInt *pMin, LongInt *pMax)
 {
-  ChkStack();
   if (Tree)
   {
     TreeDepthIter(Tree->Left, Level + 1, pMin, pMax);
@@ -72,7 +70,6 @@ void GetTreeDepth(PTree Tree, LongInt *pMin, LongInt *pMax)
 
 void DestroyTree(PTree *Tree, TTreeCallback Callback, void *pData)
 {
-  ChkStack();
   if (*Tree)
   {
     if ((*Tree)->Left) DestroyTree(&((*Tree)->Left), Callback, pData);
@@ -88,7 +85,6 @@ void DestroyTree(PTree *Tree, TTreeCallback Callback, void *pData)
 
 static void DumpTreeIter(PTree Tree, LongInt Level)
 {
-  ChkStack();
   if (Tree)
   {
     if (Tree->Left) DumpTreeIter(Tree->Left, Level + 1);
@@ -123,7 +119,7 @@ Boolean EnterTree(PTree *PDest, PTree Neu, TTreeAdder Adder, void *pData)
 
   /* check for stack overflow, nothing yet inserted */
 
-  ChkStack(); Result = False;
+  Result = False;
 
   /* arrived at a leaf? --> simply add */
 

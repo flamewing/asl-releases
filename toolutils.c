@@ -500,33 +500,6 @@ Boolean AddressWildcard(const char *addr)
   return ((strcmp(addr, "$") == 0) || (as_strcasecmp(addr, "0x") == 0));
 }
 
-#ifdef CKMALLOC
-#undef malloc
-#undef realloc
-
-void *ckmalloc(size_t s)
-{
-  void *tmp = malloc(s);
-  if (tmp == NULL)
-  {
-    fprintf(stderr,"allocation error(malloc): out of memory");
-    exit(255);
-  }
-  return tmp;
-}
-
-void *ckrealloc(void *p, size_t s)
-{
-  void *tmp = realloc(p,s);
-  if (tmp == NULL)
-  {
-    fprintf(stderr,"allocation error(realloc): out of memory");
-    exit(255);
-  }
-  return tmp;
-}
-#endif
-
 void WrError(Word Num)
 {
   UNUSED(Num);

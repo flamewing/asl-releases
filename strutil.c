@@ -146,13 +146,6 @@ char *as_strdup(const char *s)
   if (!s)
     return NULL;
   ptr = (char *) malloc(strlen(s) + 1);
-#ifdef CKMALLOC
-  if (!ptr)
-  {
-    fprintf(stderr, "strdup: out of memory?\n");
-    exit(255);
-  }
-#endif
   if (ptr != 0)
     strcpy(ptr, s);
   return ptr;
@@ -715,7 +708,7 @@ int as_strcasecmp(const char *src1, const char *src2)
     src2++;
   }
   return ((int) tolower(*src1)) - ((int) tolower(*src2));
-}	
+}
 
 int as_strncasecmp(const char *src1, const char *src2, size_t len)
 {
@@ -733,7 +726,7 @@ int as_strncasecmp(const char *src1, const char *src2, size_t len)
     src2++;
   }
   return ((int) tolower(*src1)) - ((int) tolower(*src2));
-}	
+}
 
 #ifdef NEEDS_STRSTR
 char *strstr(const char *haystack, const char *needle)

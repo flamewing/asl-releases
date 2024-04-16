@@ -34,23 +34,12 @@
 
 #include "asmsub.h"
 
-
-#ifdef __TURBOC__
-#ifdef __DPMI16__
-#define STKSIZE 35328
-#else
-#define STKSIZE 49152
-#endif
-#endif
-
 #define VALID_S1 1
 #define VALID_SN 2
 #define VALID_M1 4
 #define VALID_MN 8
 
 static StringList CopyrightList, OutList, ShareOutList, ListOutList;
-
-static LongWord StartStack, MinStack, LowStack;
 
 static unsigned ValidSymCharLen;
 static Byte *ValidSymChar;
@@ -1732,73 +1721,6 @@ long GTime(void)
 
 #endif
 
-/*-------------------------------------------------------------------------*/
-/* Stackfehler abfangen - bis auf DOS nur Dummies */
-
-#ifdef __TURBOC__
-
-#ifdef __DPMI16__
-#else
-unsigned _stklen = STKSIZE;
-unsigned _ovrbuffer = 64*48;
-#endif
-#include <malloc.h>
-
-void ChkStack(void)
-{
-  LongWord avail = stackavail();
-  if (avail < MinStack)
-    WrError(ErrNum_StackOvfl);
-  if (avail < LowStack)
-    LowStack = avail;
-}
-
-void ResetStack(void)
-{
-  LowStack = stackavail();
-}
-
-LongWord StackRes(void)
-{
-  return LowStack - MinStack;
-}
-#endif /* __TURBOC__ */
-
-#ifdef CKMALLOC
-#undef malloc
-#undef realloc
-
-void *ckmalloc(size_t s)
-{
-  void *tmp;
-
-#ifdef __TURBOC__
-  if (coreleft() < HEAPRESERVE + s)
-    WrError(ErrNum_HeapOvfl);
-#endif
-
-  tmp = malloc(s);
-  if (!tmp && (s > 0))
-    WrError(ErrNum_HeapOvfl);
-  return tmp;
-}
-
-void *ckrealloc(void *p, size_t s)
-{
-  void *tmp;
-
-#ifdef __TURBOC__
-  if (coreleft() < HEAPRESERVE + s)
-    WrError(ErrNum_HeapOvfl);
-#endif
-
-  tmp = realloc(p, s);
-  if (!tmp)
-    WrError(ErrNum_HeapOvfl);
-  return tmp;
-}
-#endif
-
 static void SetValidSymChar(unsigned Ch, Byte Value)
 {
   ValidSymChar[Ch] = Value;
@@ -1812,81 +1734,10 @@ static void SetValidSymChars(unsigned Start, unsigned Stop, Byte Value)
 
 void asmsub_init(void)
 {
-#ifdef __TURBOC__
-#ifdef __MSDOS__
-#ifdef __DPMI16__
-  char *MemFlag, *p;
-  String MemVal, TempName;
-  unsigned long FileLen;
-#else
-  char *envval;
-  int ovrerg;
-#endif
-#endif
-#endif
-
   InitStringList(&CopyrightList);
   InitStringList(&OutList);
   InitStringList(&ShareOutList);
   InitStringList(&ListOutList);
-
-#ifdef __TURBOC__
-#ifdef __MSDOS__
-#ifdef __DPMI16__
-  /* Fuer DPMI evtl. Swapfile anlegen */
-
-  MemFlag = getenv("ASXSWAP");
-  if (MemFlag)
-  {
-    strmaxcpy(MemVal, MemFlag, STRINGSIZE);
-    p = strchr(MemVal, ',');
-    if (!p)
-      strcpy(TempName, "ASX.TMP");
-    else
-    {
-      *p = NULL;
-      strcpy(TempName, MemVal);
-      strmov(MemVal, p + 1);
-    };
-    KillBlanks(TempName);
-    KillBlanks(MemVal);
-    FileLen = strtol(MemFlag, &p, 0);
-    if (*p != '\0')
-    {
-      fputs(getmessage(Num_ErrMsgInvSwapSize), stderr);
-      exit(4);
-    }
-    if (MEMinitSwapFile(TempName, FileLen << 20) != RTM_OK)
-    {
-      fputs(getmessage(Num_ErrMsgSwapTooBig), stderr);
-      exit(4);
-    }
-  }
-#else
-  /* Bei DOS Auslagerung Overlays in XMS/EMS versuchen */
-
-  envval = getenv("USEXMS");
-  if ((envval) && (as_toupper(*envval) == 'N'))
-    ovrerg = -1;
-  else
-    ovrerg = _OvrInitExt(0, 0);
-  if (ovrerg != 0)
-  {
-    envval = getenv("USEEMS");
-    if ((!envval) || (as_toupper(*envval) != 'N'))
-      _OvrInitEms(0, 0, 0);
-  }
-#endif
-#endif
-#endif
-
-#ifdef __TURBOC__
-  StartStack = stackavail();
-  LowStack = stackavail();
-  MinStack = StartStack - STKSIZE + 0x800;
-#else
-  StartStack = LowStack = MinStack = 0;
-#endif
 
   /* initialize array of valid characters */
 

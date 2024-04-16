@@ -3160,7 +3160,6 @@ static void AssembleFile(char *Name)
   AsmParsInit();
   AsmIFInit();
   InitFileList();
-  ResetStack();
 
   /* Kommandozeilenoptionen verarbeiten */
 
@@ -3508,16 +3507,6 @@ static void AssembleFile(char *Name)
 
   if ((ErrorCount > 0) && (Repass) && (ListMode != 0))
     WrLstLine(getmessage(Num_InfoMessNoPass));
-
-#ifdef __TURBOC__
-  as_snprintf(s, sizeof(s), "%7lu%s", coreleft() >> 10,
-              getmessage(Num_InfoMessRemainMem));
-  AssembleFile_WrSummary(s);
-
-  as_snprintf(s, sizeof(s), "%7lu%s", (unsigned long)StackRes(),
-              getmessage(Num_InfoMessRemainStack));
-  AssembleFile_WrSummary(s);
-#endif
 
   as_snprintf(s, sizeof(s), "%7u%s%s", (unsigned)ErrorCount,
               getmessage(Num_InfoMessErrCnt),

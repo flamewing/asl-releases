@@ -29,8 +29,6 @@ static Boolean AddSingle(PInstTreeNode *Node, char *NName, InstProc NProc, Word 
   PInstTreeNode p1, p2;
   Boolean Result = False;
 
-  ChkStack();
-
   if (!*Node)
   {
     *Node = (PInstTreeNode) malloc(sizeof(TInstTreeNode));
@@ -124,8 +122,6 @@ void AddInstTree(PInstTreeNode *Root, char *NName, InstProc NProc, Word NIndex)
 
 static void ClearSingle(PInstTreeNode *Node)
 {
-  ChkStack();
-
   if (*Node)
   {
     free((*Node)->Name);
@@ -163,7 +159,6 @@ Boolean SearchInstTree(PInstTreeNode Root, char *OpPart)
 
 static void PNode(PInstTreeNode Node, Word Lev)
 {
-  ChkStack();
   if (Node)
   {
     PNode(Node->Left, Lev + 1);
