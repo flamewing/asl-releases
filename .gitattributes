@@ -12,6 +12,33 @@
 *.hpp		text diff=cpp
 *.res		text
 *.yml		text
+*.def		text
+*.1 		text
+*.inc		text
+*.lsm		text
+*.tex		text
+BENCHES		text
+changelog	text
+TODO		text
+MakeDef.*	text
+rscdeps		text
+makedefs.*	text
+warnlog.*	text
+warnlog.*	text
+*.sh		text eol=lf
+
+tests/t_*/t_*.doc	text
+tests/t_*/*.clk	text
+tests/t_*/*.fp	text
+tests/t_*/*.pgm	text
+tests/t_*/*.pwm	text
+tests/t_*/*.out	text
+tests/t_*/*.rst	text
+tests/t_*/*.tl	text
+
+testall		text
+testall.bat	text eol=crlf
+testall.cmd	text eol=crlf
 
 asflags		text
 Makefile*	text
