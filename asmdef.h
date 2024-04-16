@@ -135,18 +135,8 @@ extern LongWord MaxCodeLen;
 
 #define DEF_NESTMAX 256
 
-typedef void (*SimpProc)(
-#ifdef __PROTOS__
-void
-#endif
-);
-
-typedef void (*DissectBitProc)(
-#ifdef __PROTOS__
-char *pDest, size_t DestSize, LargeWord Inp
-#endif
-);
-
+typedef void (*SimpProc)(void);
+typedef void (*DissectBitProc)(char *pDest, size_t DestSize, LargeWord Inp);
 typedef Boolean (*tQualifyQuoteFnc)(const char *pStart, const char *pQuotePos);
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */

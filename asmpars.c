@@ -1105,17 +1105,9 @@ func_exit:
 }
 
 
-static PSymbolEntry FindLocNode(
-#ifdef __PROTOS__
-const char *Name, TempType SearchType
-#endif
-);
+static PSymbolEntry FindLocNode(const char *Name, TempType SearchType);
 
-static PSymbolEntry FindNode(
-#ifdef __PROTOS__
-const char *Name, TempType SearchType
-#endif
-);
+static PSymbolEntry FindNode(const char *Name, TempType SearchType);
 
 /*!------------------------------------------------------------------------
  * \fn     EvalResultClear(tEvalResult *pResult)

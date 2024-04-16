@@ -12,24 +12,9 @@
 
 #include "datatypes.h"
 
-typedef void (*tCPUSwitchProc)(
-#ifdef __PROTOS__
-void
-#endif
-);
-
-typedef void (*tCPUSwitchUserProc)(
-#ifdef __PROTOS__
-void *pUserData
-#endif
-);
-
-typedef void (*tPrintNextCPUProc)(
-#ifdef __PROTOS__
-void
-#endif
-);
-
+typedef void (*tCPUSwitchProc)(void);
+typedef void (*tCPUSwitchUserProc)(void *pUserData);
+typedef void (*tPrintNextCPUProc)(void);
 typedef void (*tCPUFreeUserDataProc)(void *pUserData);
 
 typedef unsigned CPUVar;

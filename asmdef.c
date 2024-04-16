@@ -119,21 +119,12 @@ Boolean (*SetIsOccupiedFnc)(void),       /* TRUE: SET instr, to be parsed by cod
 Boolean SwitchIsOccupied,                /* TRUE: SWITCH/PAGE/SHIFT ist Prozessorbefehl */
         PageIsOccupied,
         ShiftIsOccupied;
-#ifdef __PROTOS__
 Boolean (*DecodeAttrPart)(void);         /* dissect attribute of instruction */
 void (*MakeCode)(void);                  /* Codeerzeugungsprozedur */
 Boolean (*ChkPC)(LargeWord Addr);        /* ueberprueft Codelaengenueberschreitungen */
 Boolean (*IsDef)(void);	                 /* ist Label nicht als solches zu werten ? */
 void (*SwitchFrom)(void) = NULL;         /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char *Asc, TempResult *Erg); /* vordefinierte Symbole ? */
-#else
-Boolean (*DecodeAttrPart)();
-void (*MakeCode)();
-Boolean (*ChkPC)();
-Boolean (*IsDef)();
-void (*SwitchFrom)();
-void (*InternSymbol)();
-#endif
 DissectBitProc DissectBit;
 DissectRegProc DissectReg;
 tQualifyQuoteFnc QualifyQuote;

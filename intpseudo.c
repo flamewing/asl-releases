@@ -39,11 +39,7 @@
 
 struct sLayoutCtx;
 
-typedef Boolean (*TLayoutFunc)(
-#ifdef __PROTOS__
-                               const tStrComp *pArg, struct sLayoutCtx *pCtx
-#endif
-                               );
+typedef Boolean (*TLayoutFunc)(const tStrComp *pArg, struct sLayoutCtx *pCtx);
 
 typedef enum
 {
