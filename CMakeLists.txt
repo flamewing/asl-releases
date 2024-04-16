@@ -45,12 +45,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 include(GNUInstallDirs)
 
-INCLUDE (CheckIncludeFiles)
-CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
-set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
-set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-
 # when crosscompiling import the executable targets from a file
 if(CMAKE_CROSSCOMPILING)
     set(IMPORT_EXECUTABLES "IMPORTFILE-NOTFOUND" CACHE FILEPATH "Point it to the export file from a native build")
@@ -277,6 +271,29 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
         ${MSBUILD_SETUP}
         ${CMAKE_MAKE_PROGRAM} -p:FrameworkPathOverride=\"${netfxpath}\" %*")
 endif()
+
+INCLUDE (CheckIncludeFiles)
+set(CHECK_LOCALE TRUE)
+if (CMAKE_CROSSCOMPILING)
+    if (DEFINED EMSCRIPTEN)
+        if (${EMSCRIPTEN})
+            set(CHECK_LOCALE FALSE)
+        endif(${EMSCRIPTEN})
+    endif()
+endif()
+if(${CHECK_LOCALE})
+    CHECK_INCLUDE_FILES ("windef.h;winbase.h;winnls.h" W32_NLS)
+    CHECK_INCLUDE_FILES("locale.h;langinfo.h" LOCALE_NLS)
+    CHECK_INCLUDE_FILES(os2.h OS2_NLS)
+else()
+    set(LOCALE_NLS FALSE)
+    set(OS2_NLS FALSE)
+    set(W32_NLS FALSE)
+endif(${CHECK_LOCALE})
+CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
+set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
+set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 # only build the generator if not crosscompiling
 if(NOT CMAKE_CROSSCOMPILING)

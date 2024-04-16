@@ -27,7 +27,7 @@ typedef struct
   tCodepage Codepage; /* mom. gewaehlter Zeichensatz */
   void (*DateString)(Word Year, Word Month, Word Day, char *Dest, size_t DestSize);
   void (*TimeString)(Word Hour, Word Minute, Word Second, Word Sec100, char *Dest, size_t DestSize);
-#if (defined OS2_NLS) || (defined DOS_NLS)
+#if (defined OS2_NLS)
   DateFormat DateFmt;  /* Datumsreihenfolge */
   const char *DateSep; /* Trennzeichen zwischen Datumskomponenten */
   TimeFormat TimeFmt;  /* 12/24-Stundenanzeige */
@@ -88,7 +88,7 @@ static void DumpNLSInfo(void)
 
   printf("Country      = %d\n", NLSInfo.Country);
   printf("Codepage     = %s\n", CodepageNames[NLSInfo.Codepage]);
-#if (defined OS2_NLS) || (defined DOS_NLS)
+#if (defined OS2_NLS)
   printf("DateFmt      = ");
   switch(NLSInfo.DateFmt)
   {
@@ -312,7 +312,7 @@ void UpCaseFromCodeTable(void)
   }
 }
 
-#if (defined OS2_NLS) || (defined DOS_NLS)
+#if (defined OS2_NLS)
 
 static void DOS_OS2_DateString(Word Year, Word Month, Word Day, char *Dest, size_t DestSize)
 {
@@ -347,7 +347,7 @@ static void DOS_OS2_TimeString(Word Hour, Word Minute, Word Second, Word Sec100,
   if (NLSInfo.TimeFmt == TimeFormatUSA)
     as_snprcatf(Dest, DestSize, "%c", (OriHour > 12) ? 'p' : 'a');
 }
-#endif /* OS2_NLS || DOS_NLS */
+#endif /* OS2_NLS */
 
 /*-------------------------------------------------------------------------------*/
 
@@ -456,139 +456,6 @@ static void QueryInfo(void)
     CollateTable[z] = z;
   for (z = 'a'; z <= 'z'; z++)
     CollateTable[z] = toupper(z);
-}
-
-#elif defined DOS_NLS
-
-#include <dos.h>
-
-typedef struct
-{
-  Byte SubFuncNo;
-  char *Result;
-} DosTableRec;
-
-char *DosCopy(char *Src, int Len)
-{
-  char *res = malloc(sizeof(char)*(Len + 1));
-  memcpy(res, Src, Len);
-  res[Len] = '\0';
-  return res;
-}
-
-static void QueryInfo(void)
-{
-  union REGS Regs;
-  struct SREGS SRegs;
-  struct COUNTRY country_info;
-  DosTableRec DOSTablePtr;
-  int z;
-  Word CodePage;
-  Boolean GotTable = False;
-
-  if (_osmajor < 3)
-  {
-    fprintf(stderr, "requires DOS 3.x or above\n");
-    exit(255);
-  }
-
-  if (_osminor < 30)
-    CodePage = 437;
-  else
-  {
-    Regs.x.ax = 0x6601;
-    int86(0x21, &Regs, &Regs);
-    CodePage = Regs.x.bx;
-  }
-  switch (CodePage)
-  {
-    case 437: NLSInfo.Codepage = eCodepage437; break;
-    case 850: NLSInfo.Codepage = eCodepage850; break;
-    case 866: NLSInfo.Codepage = eCodepage866; break;
-    case 1251: NLSInfo.Codepage = eCodepage1251; break;
-    case 1252: NLSInfo.Codepage = eCodepage1252; break;
-    case 20866: NLSInfo.Codepage = eCodepageKOI8_R; break;
-    case 28591: NLSInfo.Codepage = eCodepageISO8859_1; break;
-    case 28605: NLSInfo.Codepage = eCodepageISO8859_15; break;
-    default: NLSInfo.Codepage = eCodepageASCII;
-  }
-
-  country(0x0000, &country_info);
-
-  NLSInfo.DecSep = DosCopy(country_info.co_desep, 2);
-  NLSInfo.DataSep = DosCopy(country_info.co_dtsep, 2);
-  NLSInfo.ThouSep = DosCopy(country_info.co_thsep, 2);
-  NLSInfo.Currency = DosCopy(country_info.co_curr, 5);
-  NLSInfo.CurrDecimals = country_info.co_digits;
-  NLSInfo.CurrFmt = (CurrFormat) country_info.co_currstyle;
-
-  NLSInfo.Country = strcmp(NLSInfo.Currency, "DM") ? 1 : 49;
-
-  NLSInfo.DateFmt = (DateFormat) country_info.co_date;
-  NLSInfo.DateSep = DosCopy(country_info.co_dtsep, 2);
-  NLSInfo.DateString = DOS_OS2_DateString;
-
-  NLSInfo.TimeFmt = (TimeFormat) country_info.co_time;
-  NLSInfo.TimeSep = DosCopy(country_info.co_tmsep, 2);
-  NLSInfo.TimeString = DOS_OS2_TimeString;
-
-#ifndef __DPMI16__
-  for (z = 0; z < 256; z++)
-    UpCaseTable[z] = (char) z;
-  for (z = 'a'; z <= 'z'; z++)
-    UpCaseTable[z] -= 'a' - 'A';
-  if ((((Word)_osmajor) * 100) + _osminor >= 330)
-  {
-    Regs.x.ax = 0x6502;
-    Regs.x.bx = CodePage;
-    Regs.x.dx = NLSInfo.Country;
-    Regs.x.cx = sizeof(DOSTablePtr);
-    info = &DOSTablePtr;
-    SRegs.es = FP_SEG(info);
-    Regs.x.di = FP_OFF(info);
-    int86x(0x21, &Regs, &Regs, &SRegs);
-    if (Regs.x.cx == sizeof(DOSTablePtr))
-    {
-      DOSTablePtr.Result += sizeof(Word);
-      memcpy(UpCaseTable + 128, DOSTablePtr.Result, 128);
-      GotTable = True;
-    }
-  }
-#endif /* __DPMI16__ */
-
-  if (GotTable)
-  {
-    for (z = 0; z < 256; z++)
-      LowCaseTable[z] = (char) z;
-    for (z = 255; z >= 0; z--)
-      if (UpCaseTable[z] != (char) z)
-        LowCaseTable[((unsigned int) UpCaseTable[z])&0xff] = (char) z;
-  }
-  else
-    UpCaseFromCodeTable();
-
-  for (z = 0; z < 256; z++)
-    CollateTable[z] = (char) z;
-  for (z = 'a'; z <= 'z'; z++)
-    CollateTable[z] = (char) (z - ('a' - 'A'));
-#ifndef __DPMI16__
-  if ((((Word)_osmajor)*100) + _osminor >= 330)
-  {
-    Regs.x.ax = 0x6506;
-    Regs.x.bx = CodePage;
-    Regs.x.dx = NLSInfo.Country;
-    Regs.x.cx = sizeof(DOSTablePtr);
-    info = &DOSTablePtr;
-    SRegs.es = FP_SEG(info);
-    Regs.x.di = FP_OFF(info);
-    int86x(0x21, &Regs, &Regs, &SRegs);
-    if (Regs.x.cx == sizeof(DOSTablePtr))
-    {
-      DOSTablePtr.Result += sizeof(Word);
-      memcpy(CollateTable, DOSTablePtr.Result, 256);
-    }
-  }
-#endif /* __DPMI16__ */
 }
 
 #elif defined LOCALE_NLS
