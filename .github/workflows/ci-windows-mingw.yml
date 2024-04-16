@@ -81,5 +81,7 @@ jobs:
         run: |
           cmake --build build -j
       - name: Test
+        env:
+          VERBOSE: 1
         run: |
-          ctest --build-run-dir build --test-dir build -j
+          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure

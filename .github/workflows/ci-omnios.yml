@@ -74,4 +74,5 @@ jobs:
             export MANPATH=/opt/local/man:$MANPATH
             cmake -S . -B build -G Ninja
             cmake --build build -j
-            ctest --build-run-dir build --test-dir build -j
+            export VERBOSE=1
+            ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure
