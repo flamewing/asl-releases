@@ -47,6 +47,8 @@ include(GNUInstallDirs)
 
 INCLUDE (CheckIncludeFiles)
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
+set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
+set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 # when crosscompiling import the executable targets from a file
