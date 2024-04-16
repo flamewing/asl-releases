@@ -1,0 +1,11 @@
+/*****************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
+/*                                                                           */
+/* Configuration macros for CMake                                            */
+/*                                                                           */
+/*****************************************************************************/
+
+#ifndef CONFIG_H
+#define CONFIG_H
+#cmakedefine HAVE_UNISTD_H
+#endif

@@ -15,12 +15,12 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#ifndef __MUNIX__
 #include <stdlib.h>
-#endif
-#if !defined ( __MSDOS__ ) && !defined( __IBMC__ ) && !defined( _MSC_VER )
+#include "config.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+
 #include <math.h>
 #include <errno.h>
 #include <sys/types.h>
