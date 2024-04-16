@@ -72,7 +72,7 @@ jobs:
           run: |
             export PATH=/opt/local/bin:/opt/local/sbin:$PATH
             export MANPATH=/opt/local/man:$MANPATH
-            cmake -S . -B build -G Ninja
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG
             cmake --build build -j
             export VERBOSE=1
             ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure
