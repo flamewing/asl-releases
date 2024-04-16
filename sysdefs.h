@@ -191,7 +191,6 @@ typedef unsigned long long Card64;
 #endif
 #define memmove(s1,s2,len) bcopy(s2,s1,len)
 extern void bcopy();
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -216,7 +215,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -243,7 +241,6 @@ typedef unsigned int Card32;
 #define memmove(s1,s2,len) bcopy(s2,s1,len)
 extern double strtod();
 extern char *getenv();
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -268,7 +265,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define NO_NLS
 #endif
 
 #endif /* __m68k */
@@ -320,7 +316,6 @@ typedef unsigned long long Card64;
 extern void bcopy();
 #endif
 #define memmove(s1,s2,len) bcopy(s2,s1,len)
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -345,7 +340,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -370,7 +364,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -393,7 +386,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #endif /* __sparc */
@@ -432,7 +424,6 @@ typedef unsigned long long Card64;
 #else
 #define NOLONGLONG
 #endif
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -457,7 +448,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -483,7 +473,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #ifdef __linux__
@@ -503,7 +492,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #endif /* __mips */
@@ -533,7 +521,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #endif /* __hppa */
@@ -563,7 +550,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*===========================================================================*/
@@ -591,7 +577,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -623,7 +608,6 @@ typedef signed long long Integ64;
 typedef unsigned long long Card64;
 # define HAS64
 #endif /* !NOLONGLONG */
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -646,7 +630,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define NO_NLS
 #endif
 
 #endif /* _POWER */
@@ -676,7 +659,6 @@ typedef signed int Integ32;
 #define PRIInteg32 "d"
 typedef unsigned int Card32;
 #define NOLONGLONG
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -701,7 +683,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #endif /* vax */
@@ -728,7 +709,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #endif /* __aarch64__ */
@@ -761,7 +741,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -786,7 +765,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -811,7 +789,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 #ifdef __FreeBSD__
@@ -831,7 +808,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define NO_NLS
 #endif
 
 #endif /* __alpha */
@@ -863,7 +839,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -897,7 +872,6 @@ typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
 #endif /* !NOLONGLONG */
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -922,7 +896,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -946,7 +919,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -1089,7 +1061,6 @@ typedef signed long Integ32;
 #define PRIInteg32 "ld"
 typedef unsigned long Card32;
 #define NOLONGLONG
-#define DOS_NLS
 #define __PROTOS__
 #undef UNUSED
 #define UNUSED(x) (void)x
@@ -1133,7 +1104,6 @@ typedef unsigned int Card32;
 typedef signed long Integ64;
 typedef unsigned long Card64;
 #define HAS64
-#define LOCALE_NLS
 
 #endif /* __linux__ || __FreeBSD__ || __APPLE__ */
 
@@ -1178,7 +1148,6 @@ typedef signed long long Integ64;
 typedef unsigned long long Card64;
 # define HAS64
 #endif
-#define NO_NLS
 
 #endif /* _WIN32 */
 
@@ -1209,7 +1178,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif /* __linux__ */
 
 /*---------------------------------------------------------------------------*/
@@ -1236,7 +1204,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define NO_NLS
 #endif /* __EPOCEMX__ */
 
 
@@ -1267,7 +1234,6 @@ typedef unsigned int Card32;
 typedef signed long long Integ64;
 typedef unsigned long long Card64;
 #define HAS64
-#define NO_NLS
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -1286,7 +1252,6 @@ typedef unsigned short Card32;
 typedef signed int Integ64;
 typedef unsigned int Card64;
 #define HAS64
-#define LOCALE_NLS
 #endif
 
 /*===========================================================================*/

@@ -7,6 +7,9 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
+#cmakedefine LOCALE_NLS
+#cmakedefine OS2_NLS
+#cmakedefine W32_NLS
 #cmakedefine HAVE_UNISTD_H
 #cmakedefine ARCHPRNAME "@ARCHPRNAME@"
 #cmakedefine ARCHSYSNAME "@ARCHSYSNAME@"
