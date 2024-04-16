@@ -123,19 +123,6 @@ extern void ExpandLine(const char *TokNam, unsigned TokenNum, struct as_dynstr *
 
 extern void KillCtrl(char *Line);
 
-#ifdef __TURBOC__
-extern void ChkStack(void);
-
-extern void ResetStack(void);
-
-extern LongWord StackRes(void);
-#else
-#define ChkStack() {}
-#define ResetStack() {}
-#define StackRes() 0
-#endif
-
-
 extern void AddCopyright(const char *NewLine);
 
 extern void WriteCopyrights(TSwitchProc NxtProc);

@@ -19,10 +19,6 @@
 #include <os2.h>
 #endif
 
-#ifdef __TURBOC__
-#include <io.h>
-#endif
-
 #ifndef S_ISCHR
 #ifdef __IBMC__
 #define S_ISCHR(m)    ((m) & S_IFCHR)
@@ -82,15 +78,8 @@ void stdhandl_init(void)
 {
 #ifdef __EMX__
   ULONG HandType,DevAttr;
-
-#else
-#ifdef __TURBOC__
-  int HandErg;
-
 #else
   struct stat stdout_stat;
-
-#endif
 #endif
 
    /* wohin zeigt die Standardausgabe ? */
@@ -103,16 +92,6 @@ void stdhandl_init(void)
     Redirected = RedirToDevice;
   else
     Redirected = NoRedir;
-
-#else
-#ifdef __TURBOC__
-  HandErg = ioctl(1, 0x00);
-  if ((HandErg & 2) == 2)
-    Redirected = NoRedir;
-  else if ((HandErg & 0x8000) == 0)
-    Redirected = RedirToFile;
-  else
-    Redirected = RedirToDevice;
 
 #else
 #ifndef S_IFIFO
@@ -136,6 +115,5 @@ void stdhandl_init(void)
   else
     Redirected = NoRedir;
 
-#endif
 #endif
 }

@@ -255,7 +255,7 @@ Boolean SingleBit(LargeInt Inp, LargeInt *Erg)
   }
   while ((*Erg != LARGEBITS) && (!Odd(Inp)));
   return (*Erg != LARGEBITS) && (Inp == 1);
-}	
+}
 
 IntType GetSmallestUIntType(LargeWord MaxValue)
 {
@@ -1236,8 +1236,6 @@ void EvalStrExpression(const tStrComp *pExpr, TempResult *pErg)
   tSymbolFlags PromotedFlags;
   unsigned PromotedAddrSpaceMask;
   tSymbolSize PromotedDataSize;
-
-  ChkStack();
 
   for (z1 = 0; z1 < 3; z1++)
     as_tempres_ini(&InVals[z1]);
@@ -2462,7 +2460,7 @@ void EnterExtSymbol(const tStrComp *pName, LargeInt Wert, as_addrspace_t addrspa
   if (!pNeu)
     return;
 
-  as_tempres_set_int(&pNeu->SymWert, Wert);  
+  as_tempres_set_int(&pNeu->SymWert, Wert);
   pNeu->SymWert.AddrSpaceMask = (addrspace != SegNone) ? 1 << addrspace : 0;
   pNeu->SymWert.Flags = eSymbolFlag_None;
   pNeu->SymWert.DataSize = eSymbolSizeUnknown;
@@ -3750,7 +3748,6 @@ static void PrintSectionList_PSection(LongInt Handle, int Indent)
   LongInt Cnt;
   String h;
 
-  ChkStack();
   if (Handle != -1)
   {
     strmaxcpy(h, Blanks(Indent << 1), STRINGSIZE);

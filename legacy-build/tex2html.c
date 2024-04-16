@@ -120,10 +120,6 @@ static PInstTable TeXTable;
 
 /*--------------------------------------------------------------------------*/
 
-void ChkStack(void)
-{
-}
-
 static void SetSrcDir(const char *pSrcFile)
 {
   const char *pSep;
@@ -3006,30 +3002,3 @@ int main(int argc, char **argv)
     return 0;
   }
 }
-
-#ifdef CKMALLOC
-#undef malloc
-#undef realloc
-
-void *ckmalloc(size_t s)
-{
-  void *tmp = malloc(s);
-  if (!tmp)
-  {
-    fprintf(stderr, "allocation error(malloc): out of memory");
-    exit(255);
-  }
-  return tmp;
-}
-
-void *ckrealloc(void *p, size_t s)
-{
-  void *tmp = realloc(p, s);
-  if (!tmp)
-  {
-    fprintf(stderr, "allocation error(realloc): out of memory");
-    exit(255);
-  }
-  return tmp;
-}
-#endif
