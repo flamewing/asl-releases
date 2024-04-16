@@ -334,6 +334,9 @@ function(define_rescomp_target STEM)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS rescomp ${STEM}.res ${ARGN}
     )
+    add_custom_target(${STEM}_res
+        SOURCES ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.rsc
+    )
 endfunction(define_rescomp_target)
 
 define_rescomp_target(ioerrs header.res)
@@ -935,12 +938,14 @@ define_executable(asl
     ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(asl)
+add_dependencies(asl as_res cmdarg_res ioerrs_res)
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
     define_executable(asw
         ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
     )
     target_link_libm(asw)
+    add_dependencies(asw as_res cmdarg_res ioerrs_res)
     set(ASW_TARGET asw)
 else()
     set(ASW_TARGET "")
@@ -949,33 +954,37 @@ endif(DEFINED ENV{MSYSTEM_PREFIX})
 define_executable(dasl
     ${DASM_OBJECTS} ${DAS_OBJECTS} ${ST_OBJECTS} ${DECODE_OBJECTS} ${NLS_OBJECTS}
 )
+add_dependencies(dasl das_res cmdarg_res ioerrs_res)
 
 define_executable(plist
     ${PLIST_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(plist)
+add_dependencies(plist plist_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(alink
     ${ALINK_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(alink)
+add_dependencies(alink alink_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(pbind
     ${PBIND_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(pbind)
-
+add_dependencies(pbind pbind_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(p2hex
     ${P2HEX_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(p2hex)
-
+add_dependencies(p2hex p2hex_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(p2bin
     ${P2BIN_OBJECTS} ${NLS_OBJECTS}
 )
 target_link_libm(p2bin)
+add_dependencies(p2bin p2bin_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(test_driver
     test_driver.c

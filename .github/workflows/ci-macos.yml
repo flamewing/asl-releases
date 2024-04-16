@@ -51,6 +51,11 @@ jobs:
       fail-fast: false
       matrix:
         generator: [Ninja, Xcode]
+        include:
+          - generator: Ninja
+            config:
+          - generator: Xcode
+            config: -C Debug
     steps:
       - name: Install dependencies
         run: |
@@ -70,4 +75,4 @@ jobs:
         env:
           VERBOSE: 1
         run: |
-          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure
+          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure ${{ matrix.config }}
