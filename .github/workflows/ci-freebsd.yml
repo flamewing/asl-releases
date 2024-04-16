@@ -63,7 +63,7 @@ jobs:
             # TODO: Figure out packages for building documentation.
             pkg install -y cmake ninja
           run: |
-            cmake -S . -B build -G Ninja
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG
             cmake --build build -j
             export VERBOSE=1
             ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure

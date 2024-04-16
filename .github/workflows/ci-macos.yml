@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cmake -S . -B build -G ${{ matrix.generator }}
+          cmake -S . -B build -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=DEBUG
       - name: Build
         run: |
           cmake --build build -j

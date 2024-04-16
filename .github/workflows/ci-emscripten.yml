@@ -65,7 +65,7 @@ jobs:
           cmake --build build-host -j --target rescomp
       - name: Configure Target
         run: |
-          emcmake cmake -S . -B build -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
+          emcmake cmake -S . -B build -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake -DCMAKE_BUILD_TYPE=DEBUG
       - name: Build Target
         run: |
           cmake --build build -j
