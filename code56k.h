@@ -1,5 +1,5 @@
-#ifndef _CODE56K_H
-#define _CODE56K_H
+#ifndef CODE56K_H
+#define CODE56K_H
 /* code56k.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code56k_init(void);
-#endif /* _CODE56K_H */
+#endif /* CODE56K_H */

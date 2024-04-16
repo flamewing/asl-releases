@@ -1,5 +1,5 @@
-#ifndef _CODEZ8_H
-#define _CODEZ8_H
+#ifndef CODEZ8_H
+#define CODEZ8_H
 /* codez8.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codez8_init(void);
-#endif /* _CODEZ8_H */
+#endif /* CODEZ8_H */

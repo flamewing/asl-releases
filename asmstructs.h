@@ -1,5 +1,5 @@
-#ifndef _ASMSTRUCTS_H
-#define _ASMSTRUCTS_H
+#ifndef ASMSTRUCTS_H
+#define ASMSTRUCTS_H
 /* asmstructs.h  */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -86,4 +86,4 @@ extern void ExpandStruct(PStructRec StructRec);
 
 extern void asmstruct_init(void);
 
-#endif /* _ASMSTRUCTS_H */
+#endif /* ASMSTRUCTS_H */

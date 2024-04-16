@@ -21,9 +21,9 @@
 
 /*****************************************************************************/
 
-typedef struct _TMsgList
+typedef struct tag_TMsgList
 {
-  struct _TMsgList *Next;
+  struct tag_TMsgList *Next;
   LongInt Position;
   char *Contents;
 } TMsgList,*PMsgList;
@@ -59,9 +59,9 @@ static TransRec TransRecs[] =
 
 /*****************************************************************************/
 
-typedef struct _TIncList
+typedef struct tag_TIncList
 {
-  struct _TIncList *Next;
+  struct tag_TIncList *Next;
   FILE *Contents;
 } TIncList,*PIncList;
 

@@ -1,5 +1,5 @@
-#ifndef _FOURPSEUDO_H
-#define _FOURPSEUDO_H
+#ifndef FOURPSEUDO_H
+#define FOURPSEUDO_H
 /* fourpseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -21,4 +21,4 @@ extern void DecodeRES(Word Code);
 
 extern void DecodeDATA(IntType CodeIntType, IntType DataIntType);
 
-#endif /* _FOURPSEUDO_H */
+#endif /* FOURPSEUDO_H */

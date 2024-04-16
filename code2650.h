@@ -1,5 +1,5 @@
-#ifndef _CODE2650_H
-#define _CODE2650_H
+#ifndef CODE2650_H
+#define CODE2650_H
 /* code2650.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void code2650_init(void);
-#endif /* _CODE2650_H */
+#endif /* CODE2650_H */

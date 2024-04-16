@@ -1,5 +1,5 @@
-#ifndef _CODE90C141_H
-#define _CODE90C141_H
+#ifndef CODE90C141_H
+#define CODE90C141_H
 /* code90c141.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code90c141_init(void);
-#endif /* _CODE90C141_H */
+#endif /* CODE90C141_H */

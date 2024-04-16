@@ -1,5 +1,5 @@
-#ifndef _DECO4004_H
-#define _DECO4004_H
+#ifndef DECO4004_H
+#define DECO4004_H
 /* deco4004.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void deco4004_init(void);
-#endif /* _DECO4004_H */
+#endif /* DECO4004_H */

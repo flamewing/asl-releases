@@ -1,5 +1,5 @@
-#ifndef _INTPSEUDO_H
-#define _INTPSEUDO_H
+#ifndef INTPSEUDO_H
+#define INTPSEUDO_H
 /* intpseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -49,4 +49,4 @@ extern Boolean ChkZ80Syntax(tZ80Syntax InstrSyntax);
 
 extern void intpseudo_init(void);
 
-#endif /* _INTPSEUDO_H */
+#endif /* INTPSEUDO_H */

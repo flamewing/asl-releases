@@ -1,5 +1,5 @@
-#ifndef _NATPSEUDO_H
-#define _NATPSEUDO_H
+#ifndef NATPSEUDO_H
+#define NATPSEUDO_H
 /* natpseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,4 +18,4 @@
 
 extern Boolean DecodeNatPseudo(void);
 
-#endif /* _NATPSEUDO_H */
+#endif /* NATPSEUDO_H */

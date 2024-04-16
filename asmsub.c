@@ -1050,9 +1050,9 @@ static Byte GetValidSymChar(unsigned Ch)
   return (Ch < ValidSymCharLen) ? ValidSymChar[Ch] : 0;
 }
 
-static char *ChkNameUpTo(const char *pSym, const char *pUpTo, Byte _Mask)
+static char *ChkNameUpTo(const char *pSym, const char *pUpTo, Byte Mask_)
 {
-  Byte Mask = _Mask;
+  Byte Mask = Mask_;
   unsigned Ch;
   const char *pPrev;
 
@@ -1069,7 +1069,7 @@ static char *ChkNameUpTo(const char *pSym, const char *pUpTo, Byte _Mask)
 
     if (!(GetValidSymChar(Ch) & Mask))
       return (char*)pPrev;
-    Mask = _Mask << 1;
+    Mask = Mask_ << 1;
   }
   return (char*)pSym;
 }
@@ -1670,7 +1670,7 @@ long GTime(void)
 
 /*time from 1 Jan 1601 to 1 Jan 1970 in 100ns units */
 
-typedef struct _FILETIME
+typedef struct tag_FILETIME
 {
   unsigned long dwLowDateTime;
   unsigned long dwHighDateTime;
@@ -1686,24 +1686,24 @@ long GTime(void)
     long long ns100; /*time since 1 Jan 1601 in 100ns units */
 #endif
     FILETIME ft;
-  } _now;
+  } now_;
 
-  GetSystemTimeAsFileTime(&(_now.ft));
+  GetSystemTimeAsFileTime(&(now_.ft));
 #ifdef NOLONGLONG
   {
     static const t64 offs = { 0xd53e8000, 0x019db1de },
                      div = { 100000, 0 };
     t64 acc;
 
-    acc.low = _now.ft.dwLowDateTime;
-    acc.high = _now.ft.dwHighDateTime;
+    acc.low = now_.ft.dwLowDateTime;
+    acc.high = now_.ft.dwHighDateTime;
     sub64(&acc, &acc, &offs);
     div64(&acc, &acc, &div);
     return acc.low;
   }
 #else
-# define _W32_FT_OFFSET (116444736000000000LL)
-  return (_now.ns100 - _W32_FT_OFFSET) / 100000LL;
+# define W32_FT_OFFSET (116444736000000000LL)
+  return (now_.ns100 - W32_FT_OFFSET) / 100000LL;
 #endif
 }
 

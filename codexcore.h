@@ -1,5 +1,5 @@
-#ifndef _CODEXCORE_H
-#define _CODEXCORE_H
+#ifndef CODEXCORE_H
+#define CODEXCORE_H
 /* codexcore.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void codexcore_init(void);
-#endif /* _CODEXCORE_H */
+#endif /* CODEXCORE_H */

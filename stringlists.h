@@ -1,5 +1,5 @@
-#ifndef _STRINGLISTS_H
-#define _STRINGLISTS_H
+#ifndef STRINGLISTS_H
+#define STRINGLISTS_H
 /* stringlists.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -46,4 +46,4 @@ extern StringList DuplicateStringList(StringList Src);
 extern Boolean StringListPresent(StringList List, char *Search);
 
 extern void DumpStringList(StringList List);
-#endif /* _STRINGLISTS_H */
+#endif /* STRINGLISTS_H */

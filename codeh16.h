@@ -1,5 +1,5 @@
-#ifndef _CODE_H16_H
-#define _CODE_H16_H
+#ifndef CODE_H16_H
+#define CODE_H16_H
 /* codeh16.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -12,4 +12,4 @@
 
 extern void codeh16_init(void);
 
-#endif /* _CODE_H16_H */
+#endif /* CODE_H16_H */

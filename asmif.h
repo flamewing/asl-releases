@@ -1,5 +1,5 @@
-#ifndef _ASMIF_H
-#define _ASMIF_H
+#ifndef ASMIF_H
+#define ASMIF_H
 /* asmif.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -21,9 +21,9 @@ typedef enum
   IfState_CASESWITCH, IfState_CASECASE, IfState_CASEELSE
 } tIfState;
 
-typedef struct _TIfSave
+typedef struct tag_TIfSave
 {
-  struct _TIfSave *Next;
+  struct tag_TIfSave *Next;
   Integer NestLevel;
   Boolean SaveIfAsm;
   TempResult SaveExpr;
@@ -47,4 +47,4 @@ extern void RestoreIFs(Integer Level);
 extern Boolean IFListMask(void);
 
 extern void asmif_init(void);
-#endif /* _ASMIF_H */
+#endif /* ASMIF_H */

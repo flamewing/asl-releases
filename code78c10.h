@@ -1,5 +1,5 @@
-#ifndef _CODE78C10_H
-#define _CODE78C10_H
+#ifndef CODE78C10_H
+#define CODE78C10_H
 /* code78c10.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code78c10_init(void);
-#endif /* _CODE78C10_H */
+#endif /* CODE78C10_H */

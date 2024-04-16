@@ -1,5 +1,5 @@
-#ifndef _ERRMSG_H
-#define _ERRMSG_H
+#ifndef ERRMSG_H
+#define ERRMSG_H
 /* errmsg.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -302,4 +302,4 @@ extern int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
 
 extern Boolean ChkSamePage(LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits, tSymbolFlags DestFlags);
 
-#endif /* _ERRMSG_H */
+#endif /* ERRMSG_H */

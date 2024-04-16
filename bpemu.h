@@ -1,5 +1,5 @@
-#ifndef _BPEMU_H
-#define _BPEMU_H
+#ifndef BPEMU_H
+#define BPEMU_H
 /* bpemu.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -46,4 +46,4 @@ extern char *DeCygwinPath(char *pStr);
 #endif
 
 extern void bpemu_init(void);
-#endif /* _BPEMU_H */
+#endif /* BPEMU_H */

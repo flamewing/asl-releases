@@ -1,5 +1,5 @@
-#ifndef _CODE370_H
-#define _CODE370_H
+#ifndef CODE370_H
+#define CODE370_H
 /* code370h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code370_init(void);
-#endif /* _CODE370_H */
+#endif /* CODE370_H */

@@ -1,5 +1,5 @@
-#ifndef _ADDRSPACE_H
-#define _ADDRSPACE_H
+#ifndef ADDRSPACE_H
+#define ADDRSPACE_H
 /* addrspace.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -41,4 +41,4 @@ extern char SegShorts[SegCountPlusStruct];
 
 extern as_addrspace_t addrspace_lookup(const char *p_name);
 
-#endif /* _ADDRSPACE_H */
+#endif /* ADDRSPACE_H */

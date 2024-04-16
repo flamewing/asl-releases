@@ -1,5 +1,5 @@
-#ifndef _CODESC14XXX_H
-#define _CODESC14XXX_H
+#ifndef CODESC14XXX_H
+#define CODESC14XXX_H
 /* codesc14xxx.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codesc14xxx_init(void);
-#endif /* _CODESC14XXX_H */
+#endif /* CODESC14XXX_H */

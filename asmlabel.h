@@ -1,5 +1,5 @@
-#ifndef _ASMLABEL_H
-#define _ASMLABEL_H
+#ifndef ASMLABEL_H
+#define ASMLABEL_H
 /* asmlabel.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -26,4 +26,4 @@ extern void AsmLabelPassInit(void);
 
 extern void asmlabel_init(void);
 
-#endif /* _ASMLABEL_H */
+#endif /* ASMLABEL_H */

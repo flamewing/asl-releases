@@ -1,5 +1,5 @@
-#ifndef _INVADDRESS_H
-#define _INVADDRESS_H
+#ifndef INVADDRESS_H
+#define INVADDRESS_H
 /* invaddress.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,4 +18,4 @@ extern const char *LookupInvSymbol(LargeWord Value);
 
 extern int GetMaxInvSymbolNameLen(void);
 
-#endif /* _INVADDRESS_H */
+#endif /* INVADDRESS_H */

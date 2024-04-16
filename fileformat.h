@@ -1,5 +1,5 @@
-#ifndef _FILEFORMAT_H
-#define _FILEFORMAT_H
+#ifndef FILEFORMAT_H
+#define FILEFORMAT_H
 /* fileformat.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -67,4 +67,4 @@
 
 #define RelFlag_Relative 1
 
-#endif /* _FILEFORMAT_H */
+#endif /* FILEFORMAT_H */

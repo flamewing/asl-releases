@@ -1,5 +1,5 @@
-#ifndef _CODEKENBAK_H
-#define _CODEKENBAK_H
+#ifndef CODEKENBAK_H
+#define CODEKENBAK_H
 /* codekenbak.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -12,4 +12,4 @@
 
 extern void codekenbak_init(void);
 
-#endif /* _CODEKENBAK_H */
+#endif /* CODEKENBAK_H */

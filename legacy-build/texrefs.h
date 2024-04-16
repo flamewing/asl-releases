@@ -1,5 +1,5 @@
-#ifndef _TEXREFS_H
-#define _TEXREFS_H
+#ifndef TEXREFS_H
+#define TEXREFS_H
 /* texrefs.c */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -22,4 +22,4 @@ extern void GetCite(char *pName, char *pDest);
 extern void PrintCites(const char *pFileName);
 extern void FreeCites(void);
 
-#endif /* _TEXREFS_H */
+#endif /* TEXREFS_H */

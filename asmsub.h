@@ -1,5 +1,5 @@
-#ifndef _ASMSUB_H
-#define _ASMSUB_H
+#ifndef ASMSUB_H
+#define ASMSUB_H
 /* asmsub.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -182,4 +182,4 @@ extern void asmsub_init(void);
 
 #include "asmerr.h"
 
-#endif /* _ASMSUB_H */
+#endif /* ASMSUB_H */

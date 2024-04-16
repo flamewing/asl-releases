@@ -1,5 +1,5 @@
-#ifndef _ASMERR_H
-#define _ASMERR_H
+#ifndef ASMERR_H
+#define ASMERR_H
 /* asmerr.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -40,5 +40,5 @@ extern void ChkIO(tErrorNum ErrNo);
 extern void ChkXIO(tErrorNum ErrNo, char *pExtError);
 extern void ChkStrIO(tErrorNum ErrNo, const struct sStrComp *pComp);
 
-#endif /* _ASMERR_H */
+#endif /* ASMERR_H */
 

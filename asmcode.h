@@ -1,5 +1,5 @@
-#ifndef _ASMCODE_H
-#define _ASMCODE_H
+#ifndef ASMCODE_H
+#define ASMCODE_H
 /* asmcode.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -38,4 +38,4 @@ extern void InsertPadding(unsigned NumBytes, Boolean OnlyReserve);
 
 extern void asmcode_init(void);
 
-#endif /* _ASMCODE_H */
+#endif /* ASMCODE_H */

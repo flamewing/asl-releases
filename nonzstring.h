@@ -1,5 +1,5 @@
-#ifndef _NONZSTRING_H
-#define _NONZSTRING_H
+#ifndef NONZSTRING_H
+#define NONZSTRING_H
 /* nonzstring.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -46,4 +46,4 @@ extern int as_nonz_dynstr_find(const as_nonz_dynstr_t *p_haystack, const as_nonz
 
 extern void as_nonz_dynstr_dump_hex(FILE *p_file, const as_nonz_dynstr_t *p_str);
 
-#endif /* _NONZSTRING_H */
+#endif /* NONZSTRING_H */

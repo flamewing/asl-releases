@@ -1,5 +1,5 @@
-#ifndef _CODE48_H
-#define _CODE48_H
+#ifndef CODE48_H
+#define CODE48_H
 /* code48.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code48_init(void);
-#endif /* _CODE48_H */
+#endif /* CODE48_H */

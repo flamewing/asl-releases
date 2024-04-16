@@ -1,5 +1,5 @@
-#ifndef _CODE7720_H
-#define _CODE7720_H
+#ifndef CODE7720_H
+#define CODE7720_H
 /* code7720.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code7720_init(void);
-#endif /* _CODE7720_H */
+#endif /* CODE7720_H */

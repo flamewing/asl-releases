@@ -1,5 +1,5 @@
-#ifndef _NLMESSAGES_H
-#define _NLMESSAGES_H
+#ifndef NLMESSAGES_H
+#define NLMESSAGES_H
 /* nlmessages.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -28,4 +28,4 @@ extern void opencatalog(PMsgCat Catalog, const char *File, const char *Path, Lon
 extern char *getmessage(int Num);
 
 extern void nlmessages_init(const char *File, char *Path, LongInt File_MsgId1, LongInt File_MsgId2);
-#endif /* _NLMESSAGES_H */
+#endif /* NLMESSAGES_H */

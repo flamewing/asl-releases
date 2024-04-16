@@ -1,5 +1,5 @@
-#ifndef _DASMDEF_H
-#define _DASMDEF_H
+#ifndef DASMDEF_H
+#define DASMDEF_H
 /* dasmdef.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -29,4 +29,4 @@ extern void(*Disassemble)(LargeWord Address, tDisassInfo *pInfo, Boolean IsData,
 
 extern void dasmdef_init(void);
 
-#endif /* _DASMDEF_H */
+#endif /* DASMDEF_H */

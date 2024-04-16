@@ -1,5 +1,5 @@
-#ifndef _CODE51_H
-#define _CODE51_H
+#ifndef CODE51_H
+#define CODE51_H
 /* code51.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code51_init(void);
-#endif /* _CODE51_H */
+#endif /* CODE51_H */

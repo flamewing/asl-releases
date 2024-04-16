@@ -1,5 +1,5 @@
-#ifndef _CODE47C00_H
-#define _CODE47C00_H
+#ifndef CODE47C00_H
+#define CODE47C00_H
 /* code47c00.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code47c00_init(void);
-#endif /* _CODE47C00_H */
+#endif /* CODE47C00_H */

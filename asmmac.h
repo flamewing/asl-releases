@@ -1,5 +1,5 @@
-#ifndef _ASMMAC_H
-#define _ASMMAC_H
+#ifndef ASMMAC_H
+#define ASMMAC_H
 /* asmmac.h  */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-typedef struct _MacroRec
+typedef struct tag_MacroRec
 {
   char *Name;            /* Name des Makros */
   Byte ParamCount;       /* Anzahl Parameter */
@@ -40,16 +40,16 @@ typedef struct _MacroRec
 
 struct as_dynstr;
 
-typedef struct _TInputTag
+typedef struct tag_TInputTag
 {
-  struct _TInputTag *Next;
+  struct tag_TInputTag *Next;
   Boolean IsMacro;
   Integer IfLevel, IncludeLevel;
   Boolean First;
   Boolean GlobalSymbols;
   tLstMacroExp OrigDoLst;
   LongInt StartLine;
-  Boolean (*Processor)(struct _TInputTag *P, struct as_dynstr *p_dest);
+  Boolean (*Processor)(struct tag_TInputTag *P, struct as_dynstr *p_dest);
   LongInt ParCnt,ParZ,ParIter;
   StringList Params;
   LongInt LineCnt, LineZ;
@@ -60,15 +60,15 @@ typedef struct _TInputTag
   Boolean IsEmpty, FromFile, UsesAllArgs, UsesNumArgs;
   FILE *Datei;
   void *Buffer;
-  void (*Cleanup)(struct _TInputTag *P);
-  void (*Restorer)(struct _TInputTag *P);
-  Boolean (*GetPos)(struct _TInputTag *P, char *Dest, size_t DestSize);
+  void (*Cleanup)(struct tag_TInputTag *P);
+  void (*Restorer)(struct tag_TInputTag *P);
+  Boolean (*GetPos)(struct tag_TInputTag *P, char *Dest, size_t DestSize);
   PMacroRec Macro;
 } TInputTag, *PInputTag;
 
-typedef struct _TOutputTag
+typedef struct tag_TOutputTag
 {
-  struct _TOutputTag *Next;
+  struct tag_TOutputTag *Next;
   void (*Processor)(void);
   Integer NestLevel;
   PInputTag Tag;
@@ -111,4 +111,4 @@ extern void ExpandDefines(char *Line);
 
 
 extern void asmmac_init(void);
-#endif /* _ASMMAC_H */
+#endif /* ASMMAC_H */

@@ -1,5 +1,5 @@
-#ifndef _CODEST9_H
-#define _CODEST9_H
+#ifndef CODEST9_H
+#define CODEST9_H
 /* codest9.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codest9_init(void);
-#endif /* _CODEST9_H */
+#endif /* CODEST9_H */

@@ -1,5 +1,5 @@
-#ifndef _TREES_H
-#define _TREES_H
+#ifndef TREES_H
+#define TREES_H
 /* trees.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -14,9 +14,9 @@
 
 extern Boolean BalanceTrees;
 
-typedef struct _TTree
+typedef struct tag_TTree
 {
-  struct _TTree *Left, *Right;
+  struct tag_TTree *Left, *Right;
   ShortInt Balance;
   char *Name;
   LongInt Attribute;
@@ -38,4 +38,4 @@ extern PTree SearchTree(PTree Tree, char *Name, LongInt Attribute);
 
 extern Boolean EnterTree(PTree *PDest, PTree Neu, TTreeAdder Adder, void *pData);
 
-#endif /* _TREES_H */
+#endif /* TREES_H */

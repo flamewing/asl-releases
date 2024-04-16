@@ -1,5 +1,5 @@
-#ifndef _ASMFNUMS_H
-#define _ASMFNUMS_H
+#ifndef ASMFNUMS_H
+#define ASMFNUMS_H
 /* asmfnums.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -33,4 +33,4 @@ extern void GetAddressRange(int File, LargeWord *Start, LargeWord *End);
 extern void ResetAddressRanges(void);
 
 extern void asmfnums_init(void);
-#endif /* _ASMFNUMS_H */
+#endif /* ASMFNUMS_H */

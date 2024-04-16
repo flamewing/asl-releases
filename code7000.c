@@ -107,9 +107,9 @@ typedef struct
    Boolean NeedsDSP;
 } TRegDef;
 
-typedef struct _TLiteral
+typedef struct tag_TLiteral
 {
-  struct _TLiteral *Next;
+  struct tag_TLiteral *Next;
   LongInt Value, FCount;
   Boolean Is32, IsForward;
   Integer PassNo;

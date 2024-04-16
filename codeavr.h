@@ -1,5 +1,5 @@
-#ifndef _CODEAVR_H
-#define _CODEAVR_H
+#ifndef CODEAVR_H
+#define CODEAVR_H
 /* codeavr.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codeavr_init(void);
-#endif /* _CODEAVR_H */
+#endif /* CODEAVR_H */

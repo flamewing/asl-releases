@@ -1,5 +1,5 @@
-#ifndef _SYMBOLSIZE_H
-#define _SYMBOLSIZE_H
+#ifndef SYMBOLSIZE_H
+#define SYMBOLSIZE_H
 /* symbolsize.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -35,4 +35,4 @@ extern const char *GetSymbolSizeName(tSymbolSize Size);
 
 extern unsigned GetSymbolSizeBytes(tSymbolSize Size);
 
-#endif /* _SYMBOLSIZE_H */
+#endif /* SYMBOLSIZE_H */

@@ -1,5 +1,5 @@
-#ifndef _HEADIDS_H
-#define _HEADIDS_H
+#ifndef HEADIDS_H
+#define HEADIDS_H
 /* headids.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -43,4 +43,4 @@ extern PFamilyDescr FindFamilyByName(const char *Name);
 extern PFamilyDescr FindFamilyById(Word Id);
 
 extern void headids_init(void);
-#endif /* _HEADIDS_H */
+#endif /* HEADIDS_H */

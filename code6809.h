@@ -1,5 +1,5 @@
-#ifndef _CODE6809_H
-#define _CODE6809_H
+#ifndef CODE6809_H
+#define CODE6809_H
 /* code6809.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code6809_init(void);
-#endif /* _CODE6809_H */
+#endif /* CODE6809_H */

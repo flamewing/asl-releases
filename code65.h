@@ -1,5 +1,5 @@
-#ifndef _CODE65_H
-#define _CODE65_H
+#ifndef CODE65_H
+#define CODE65_H
 /* code65.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code65_init(void);
-#endif /* _CODE65_H */
+#endif /* CODE65_H */

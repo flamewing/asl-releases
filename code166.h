@@ -1,5 +1,5 @@
-#ifndef _CODE166_H
-#define _CODE166_H
+#ifndef CODE166_H
+#define CODE166_H
 /* code166.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code166_init(void);
-#endif /* _CODE166_H */
+#endif /* CODE166_H */

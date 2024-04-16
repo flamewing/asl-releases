@@ -1,5 +1,5 @@
-#ifndef _SPECCHARS_H
-#define _SPECCHARS_H
+#ifndef SPECCHARS_H
+#define SPECCHARS_H
 /* specchars.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -23,4 +23,4 @@ static unsigned char specchars[][2]=
              {0205,0340},        /* a graph */
              {0000,0000}};
 
-#endif /* _SPECCHARS_H */
+#endif /* SPECCHARS_H */

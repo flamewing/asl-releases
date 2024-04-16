@@ -1,5 +1,5 @@
-#ifndef _CODEPSEUDO_H
-#define _CODEPSEUDO_H
+#ifndef CODEPSEUDO_H
+#define CODEPSEUDO_H
 /* codepseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,7 +13,7 @@
 #include "addrspace.h"
 #include "datatypes.h"
 
-struct _ASSUMERec;
+struct tag_ASSUMERec;
 
 extern int FindInst(void *Field, int Size, int Count);
 
@@ -28,4 +28,4 @@ extern void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max);
 
 extern Boolean QualifyQuote_SingleQuoteConstant(const char *pStart, const char *pQuotePos);
 
-#endif /* _CODEPSEUDO_H */
+#endif /* CODEPSEUDO_H */

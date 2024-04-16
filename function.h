@@ -1,5 +1,5 @@
-#ifndef _FUNCTION_H
-#define _FUNCTION_H
+#ifndef FUNCTION_H
+#define FUNCTION_H
 /* function.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -23,4 +23,4 @@ typedef struct
 
 extern const tFunction Functions[];
 
-#endif /* _FUNCTION_H */
+#endif /* FUNCTION_H */

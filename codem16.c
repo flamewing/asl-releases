@@ -132,9 +132,9 @@ typedef enum
   DispSize32
 } DispSize;
 
-typedef struct _TChainRec
+typedef struct tag_TChainRec
 {
-  struct _TChainRec *Next;
+  struct tag_TChainRec *Next;
   Byte RegCnt;
   Word Regs[5],Scales[5];
   LongInt DispAcc;

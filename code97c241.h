@@ -1,5 +1,5 @@
-#ifndef _CODE97C241_H
-#define _CODE97C241_H
+#ifndef CODE97C241_H
+#define CODE97C241_H
 /* code97c241.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code97c241_init(void);
-#endif /* _CODE97C241_H */
+#endif /* CODE97C241_H */
