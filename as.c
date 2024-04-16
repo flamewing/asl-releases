@@ -4351,12 +4351,6 @@ static CMDRec ASParams[] =
 
 /*--------------------------------------------------------------------------*/
 
-/* Might no longer need this with newer TCC versions: */
-
-#ifdef __TINYC__
-void * __dso_handle __attribute((visibility("hidden"))) = &__dso_handle;
-#endif
-
 static void GlobExitProc(void)
 {
   if (MakeDebug)
