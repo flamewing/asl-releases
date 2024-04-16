@@ -163,15 +163,12 @@
 
 #ifdef __m68k
 
-#define ARCHPRNAME "m68k"
-
 /*---------------------------------------------------------------------------*/
 /* SUN/3 with SunOS 4.x:
 
    see my SunOS quarrels in the Sparc section... */
 
 #ifdef __sunos__
-#define ARCHSYSNAME "sun-sunos"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -203,7 +200,6 @@ extern void bcopy();
    quite a normal 32-Bit-UNIX system */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "sun-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -229,7 +225,6 @@ typedef unsigned long long Card64;
    quite a bare system, lots of work required... */
 
 #ifdef __MUNIX__
-#define ARCHSYSNAME "pcs-munix"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -257,7 +252,6 @@ extern char *getenv();
    quite a normal 32-Bit-UNIX system */
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -284,8 +278,6 @@ typedef unsigned long long Card64;
 
 #ifdef __sparc
 
-#define ARCHPRNAME "sparc"
-
 /*---------------------------------------------------------------------------*/
 /* SUN Sparc with SunOS 4.1.x:
 
@@ -303,7 +295,6 @@ typedef unsigned long long Card64;
    32-bit-UNIX... */
 
 #ifdef __sunos__
-#define ARCHSYSNAME "sun-sunos"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -338,7 +329,6 @@ extern void bcopy();
    quite a normal 32-Bit-UNIX system */
 
 #ifdef __solaris__
-#define ARCHSYSNAME "sun-solaris"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -364,7 +354,6 @@ typedef unsigned long long Card64;
    quite a normal 32-Bit-UNIX system */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "sun-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -388,7 +377,6 @@ typedef unsigned long long Card64;
 /* Sparc with Linux                                                          */
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -415,8 +403,6 @@ typedef unsigned long long Card64;
 
 #ifdef __mips
 
-#define ARCHPRNAME "mips"
-
 /*---------------------------------------------------------------------------*/
 /* R3000 with Ultrix 4.3:
 
@@ -425,7 +411,6 @@ typedef unsigned long long Card64;
    cc isn't worth trying, believe me! */
 
 #ifdef __ultrix
-#define ARCHSYSNAME "dec-ultrix"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -456,7 +441,6 @@ typedef unsigned long long Card64;
    quite a normal 32-Bit-UNIX system */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "dec-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -483,7 +467,6 @@ typedef unsigned long long Card64;
   seems also to work with 6.2... */
 
 #ifdef __sgi
-#define ARCHSYSNAME "sgi-irix"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -504,7 +487,6 @@ typedef unsigned long long Card64;
 #endif
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -531,13 +513,10 @@ typedef unsigned long long Card64;
 
 #ifdef __hppa
 
-#define ARCHPRNAME "parisc"
-
 /*---------------------------------------------------------------------------*/
 /* HP-PA 1.x with HP-UX: */
 
 #ifdef __hpux
-#define ARCHSYSNAME "hp-hpux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -564,14 +543,10 @@ typedef unsigned long long Card64;
 
 #ifdef _POWER64
 
-#define ARCHPRNAME "ppc64"
-
 /*---------------------------------------------------------------------------*/
 /* POWER64 with Linux (Macintosh) */
 
 #ifdef __linux__
-
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -596,13 +571,10 @@ typedef unsigned long Card64;
 
 #elif defined _POWER
 
-#define ARCHPRNAME "ppc"
-
 /*---------------------------------------------------------------------------*/
 /* POWER with AIX 4.1: rs6000 */
 
 #ifdef _AIX
-#define ARCHSYSNAME "ibm-aix"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -633,7 +605,6 @@ typedef unsigned long long Card64;
 # define NOLONGLONG
 #endif
 
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -659,7 +630,6 @@ typedef unsigned long long Card64;
 /* POWER with OSX (Macintosh) */
 
 #ifdef __APPLE__
-#define ARCHSYSNAME "apple-macosx"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -686,13 +656,10 @@ typedef unsigned long long Card64;
 
 #ifdef __vax__
 
-#define ARCHPRNAME "vax"
-
 /*---------------------------------------------------------------------------*/
 /* VAX with Ultrix: */
 
 #ifdef ultrix
-#define ARCHSYSNAME "dec-ultrix"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -718,7 +685,6 @@ typedef unsigned int Card32;
    quite a normal 32-Bit-UNIX system - apart from the float format... */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "vax-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -742,13 +708,10 @@ typedef unsigned long long Card64;
 
 #ifdef __aarch64__
 
-#define ARCHPRNAME "aarch64"
-
 /*---------------------------------------------------------------------------*/
 /* AArch64 with Linux and GCC: */
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -775,8 +738,6 @@ typedef unsigned long Card64;
 
 #ifdef __alpha
 
-#define ARCHPRNAME "alpha"
-
 /*---------------------------------------------------------------------------*/
 /* DEC Alpha with Digital UNIX and DEC C / GCC:
 
@@ -784,7 +745,6 @@ typedef unsigned long Card64;
    OSF has full NLS support */
 
 #ifdef __osf__
-#define ARCHSYSNAME "dec-osf"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -810,7 +770,6 @@ typedef unsigned long Card64;
    see OSF... */
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -836,7 +795,6 @@ typedef unsigned long Card64;
    see OSF... */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "unknown-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -857,7 +815,6 @@ typedef unsigned long Card64;
 #endif
 
 #ifdef __FreeBSD__
-#define ARCHSYSNAME "unknown-freebsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -884,15 +841,12 @@ typedef unsigned long Card64;
 
 #ifdef __i386
 
-#define ARCHPRNAME "i386"
-
 /*---------------------------------------------------------------------------*/
 /* Intel i386 with NetBSD 1. and GCC: (tested on 1.5.3)
 
    principally, a normal 32-bit UNIX */
 
 #ifdef __NetBSD__
-#define ARCHSYSNAME "i386-netbsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -925,7 +879,6 @@ typedef unsigned long long Card64;
 # define NOLONGLONG
 #endif
 
-#define ARCHSYSNAME "unknown-linux"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -953,7 +906,6 @@ typedef unsigned long long Card64;
    principally, a normal 32-bit *NIX */
 
 #ifdef __FreeBSD__
-#define ARCHSYSNAME "unknown-freebsd"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -978,7 +930,6 @@ typedef unsigned long long Card64;
    principally, a normal 32-bit *NIX */
 
 #ifdef __APPLE__
-#define ARCHSYSNAME "apple-osx"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -1011,7 +962,6 @@ typedef unsigned long long Card64;
 # define NOLONGLONG
 #endif
 
-#define ARCHSYSNAME "unknown-win32"
 #define DEFSMADE
 #define OPENRDMODE "rb"
 #define OPENWRMODE "wb"
@@ -1047,7 +997,6 @@ typedef unsigned long long Card64;
    well, not really a UNIX... */
 
 #ifdef __EMX__
-#define ARCHSYSNAME "unknown-os2"
 #define DEFSMADE
 #define OPENRDMODE "rb"
 #define OPENWRMODE "wb"
@@ -1116,14 +1065,6 @@ typedef unsigned int Card32;
 #ifndef __LARGE__
 #error Wrong memory model - use large!
 #endif
-#undef ARCHPRNAME
-#ifdef __DPMI16__
-#define ARCHPRNAME "i286"
-#define ARCHSYSNAME "unknown-dpmi"
-#else
-#define ARCHPRNAME "i86"
-#define ARCHSYSNAME "unknown-msdos"
-#endif
 #define CKMALLOC
 #define HEAPRESERVE 4096
 #define DEFSMADE
@@ -1163,8 +1104,6 @@ typedef unsigned long Card32;
 
 #if  (defined __k8__) || (defined __x86_64) || (defined __x86_64__) || (defined _M_AMD64)
 
-#define ARCHPRNAME "x86_64"
-
 /*---------------------------------------------------------------------------*/
 /* x86-64/amd64 with Linux/FreeBSD, OSX and GCC:
 
@@ -1176,14 +1115,6 @@ typedef unsigned long Card32;
 
 #if (defined __STDC__) && (!defined __STDC_VERSION__)
 # define NOLONGLONG
-#endif
-
-#ifdef __linux__
-#define ARCHSYSNAME "unknown-linux"
-#elif defined __FreeBSD__
-#define ARCHSYSNAME "unknown-freebsd"
-#else
-#define ARCHSYSNAME "apple-osx"
 #endif
 
 #define DEFSMADE
@@ -1221,7 +1152,6 @@ typedef unsigned long Card64;
 # define NOLONGLONG
 #endif
 
-#define ARCHSYSNAME "unknown-win64"
 #define DEFSMADE
 #define OPENRDMODE "rb"
 #define OPENWRMODE "wb"
@@ -1259,13 +1189,10 @@ typedef unsigned long long Card64;
 
 #ifdef __arm
 
-#define ARCHPRNAME "arm"
-
 /*---------------------------------------------------------------------------*/
 /* ARM linux with GCC */
 
 #ifdef __linux__
-#define ARCHSYSNAME "unknown-linux-arm"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -1293,7 +1220,6 @@ typedef unsigned long long Card64;
 #ifdef __EPOC32__
 
 #ifdef __EPOCEMX__
-#define ARCHSYSNAME "psion-epoc32-epocemx"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
@@ -1325,8 +1251,6 @@ typedef unsigned long long Card64;
 /* Emscripten */
 
 #ifdef __wasm__
-#define ARCHPRNAME "wasm"
-#define ARCHSYSNAME "wasm-emscripten"
 #define DEFSMADE
 #define OPENRDMODE "r"
 #define OPENWRMODE "w"
