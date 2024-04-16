@@ -9,6 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include <string.h>
 #include "strutil.h"
 #include "trees.h"
 #include "invaddress.h"
