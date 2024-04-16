@@ -4351,18 +4351,6 @@ static CMDRec ASParams[] =
 
 /*--------------------------------------------------------------------------*/
 
-#ifdef __sunos__
-
-extern void on_exit(void (*procp)(int status, caddr_t arg),caddr_t arg);
-
-static void GlobExitProc(int status, caddr_t arg)
-{
-  if (MakeDebug)
-    CloseIfOpen(&Debug);
-}
-
-#else
-
 /* Might no longer need this with newer TCC versions: */
 
 #ifdef __TINYC__
@@ -4374,8 +4362,6 @@ static void GlobExitProc(void)
   if (MakeDebug)
     CloseIfOpen(&Debug);
 }
-
-#endif
 
 static int LineZ;
 
@@ -4554,13 +4540,7 @@ int main(int argc, char **argv)
     First = FALSE;
   }
 
-#ifdef __sunos__
-  on_exit(GlobExitProc, (caddr_t) NULL);
-#else
-# ifndef __MUNIX__
   atexit(GlobExitProc);
-# endif
-#endif
 
   *CursUp = '\0';
   switch (Redirected)
