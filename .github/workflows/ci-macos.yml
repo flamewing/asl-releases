@@ -47,6 +47,10 @@ concurrency:
 jobs:
   ci-macos:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        generator: [Ninja, Xcode]
     steps:
       - name: Install dependencies
         run: |
@@ -58,7 +62,7 @@ jobs:
         uses: actions/checkout@master
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja
+          cmake -S . -B build -G ${{ matrix.generator }}
       - name: Build
         run: |
           cmake --build build -j
