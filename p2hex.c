@@ -32,11 +32,7 @@ static const char *HexSuffix = ".hex";
 #define AVRLEN_DEFAULT 3
 #define DefaultCFormat "dSEl"
 
-typedef void (*ProcessProc)(
-#ifdef __PROTOS__
-const char *FileName, LongWord Offset
-#endif
-);
+typedef void (*ProcessProc)(const char *FileName, LongWord Offset);
 
 static CMDProcessed ParUnprocessed;
 static FILE *TargFile;

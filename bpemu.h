@@ -15,11 +15,7 @@
 #include "datatypes.h"
 #include <stdio.h>
 
-typedef void (*charcallback)(
-#ifdef __PROTOS__
-char *Name
-#endif
-);
+typedef void (*charcallback)(char *Name);
 
 extern char *FExpand(char *Src);
 

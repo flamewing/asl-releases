@@ -16,11 +16,7 @@
 #include "datatypes.h"
 #include <stdio.h>
 
-typedef void (*InstProc)(
-#ifdef __PROTOS__
-Word Index
-#endif
-);
+typedef void (*InstProc)(Word Index);
 
 typedef struct _TInstTreeNode
 {

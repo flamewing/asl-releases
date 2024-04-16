@@ -32,11 +32,7 @@ struct as_dynstr;
 
 typedef unsigned tRegInt;
 
-typedef void (*DissectRegProc)(
-#ifdef __PROTOS__
-char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize
-#endif
-);
+typedef void (*DissectRegProc)(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize);
 
 typedef struct sRegDescr
 {
