@@ -50,9 +50,13 @@ ctest --build-run-dir build --test-dir build -j
 
 This build procedure has been tested on the following environments:
 
-- Windows (32- and 64-bit builds)
-- Ubuntu (64-bit build)
-- Mac OS X (x86-64 build)
+- FreeBSD (x86-64 build)
+- Mac OS X (x86-64 build) with Ninja and XCode
+- OmniOS (x86-64 build)
+- Ubuntu (x86-64 build)
+- Windows (32- and 64-bit builds) with MinGW64/MSYS2
+- Windows (64-bit build) with Microsoft Visual Studio
+- WASM/Emscripten cross compiled from Linux
 
 Note that, on Windows, I have only tested with MinGW under MSYS2. I would like to know if it works on other circumstances.
 
