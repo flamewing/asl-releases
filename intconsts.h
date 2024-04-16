@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
-#ifndef _INTCONSTS_H
-#define _INTCONSTS_H
+#ifndef INTCONSTS_H
+#define INTCONSTS_H
 
 #ifdef __STDC__
 
@@ -33,4 +33,4 @@
 
 #endif /* __STDC__ */
 
-#endif /* _INTCONSTS_H */
+#endif /* INTCONSTS_H */

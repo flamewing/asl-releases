@@ -1,5 +1,5 @@
-#ifndef _CODENS32K_HPP
-#define _CODENS32K_HPP
+#ifndef CODENS32K_HPP
+#define CODENS32K_HPP
 
 /* Declare this in a header file so CLang++ does not complain
    about unused inline functions: */
@@ -8,4 +8,4 @@
 DefCPPOps_Enum(tFPU)
 DefCPPOps_Enum(tPMMU)
 
-#endif /* _CODENS32K_HPP */
+#endif /* CODENS32K_HPP */

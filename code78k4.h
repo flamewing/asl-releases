@@ -1,5 +1,5 @@
-#ifndef _CODE78K4_H
-#define _CODE78K4_H
+#ifndef CODE78K4_H
+#define CODE78K4_H
 /* code78k4.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -12,4 +12,4 @@
 
 extern void code78k4_init(void);
 
-#endif /* _CODE78K4_H */
+#endif /* CODE78K4_H */

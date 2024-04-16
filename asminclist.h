@@ -1,5 +1,5 @@
-#ifndef _ASMINCLIST_H
-#define _ASMINCLIST_H
+#ifndef ASMINCLIST_H
+#define ASMINCLIST_H
 /* asminclist.c */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -21,4 +21,4 @@ extern void PrintIncludeList(void);
 extern void ClearIncludeList(void);
 
 extern void asminclist_init(void);
-#endif /* _ASMINCLIST_H */
+#endif /* ASMINCLIST_H */

@@ -1,5 +1,5 @@
-#ifndef _CODE8X30X_H
-#define _CODE8X30X_H
+#ifndef CODE8X30X_H
+#define CODE8X30X_H
 /* code8x30x.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code8x30x_init(void);
-#endif /* _CODE8X30X_H */
+#endif /* CODE8X30X_H */

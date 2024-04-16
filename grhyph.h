@@ -1,5 +1,5 @@
-#ifndef _GRHYPH_H
-#define _GRHYPH_H
+#ifndef GRHYPH_H
+#define GRHYPH_H
 /* grhyph.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -14,4 +14,4 @@
 /*****************************************************************************/
 
 extern char *GRHyphens[];
-#endif /* _GRHYPH_H */
+#endif /* GRHYPH_H */

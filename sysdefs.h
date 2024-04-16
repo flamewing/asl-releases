@@ -1,5 +1,5 @@
-#ifndef _SYSDEFS_H
-#define _SYSDEFS_H
+#ifndef SYSDEFS_H
+#define SYSDEFS_H
 /* sysdefs.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -65,4 +65,4 @@ typedef uint64_t Card64;
 
 #define UNUSED(x) (void)x
 
-#endif /* _SYSDEFS_H */
+#endif /* SYSDEFS_H */

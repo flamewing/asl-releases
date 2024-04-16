@@ -1,5 +1,5 @@
-#ifndef _CODE96_H
-#define _CODE96_H
+#ifndef CODE96_H
+#define CODE96_H
 /* code96.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code96_init(void);
-#endif /* _CODE96_H */
+#endif /* CODE96_H */

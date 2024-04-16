@@ -1,5 +1,5 @@
-#ifndef _VERSION_H
-#define _VERSION_H
+#ifndef VERSION_H
+#define VERSION_H
 /* version.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,4 +18,4 @@ extern LongInt VerNo;
 extern const char *InfoMessCopyright;
 extern const char *InfoNewCopyright;
 
-#endif /* _VERSION_H */
+#endif /* VERSION_H */

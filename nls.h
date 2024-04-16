@@ -1,5 +1,5 @@
-#ifndef _NLS_H
-#define _NLS_H
+#ifndef NLS_H
+#define NLS_H
 /* nls.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -69,4 +69,4 @@ extern int NLS_StrCmp(const char *s1, const char *s2);
 
 
 extern void nls_init(void);
-#endif /* _NLS_H */
+#endif /* NLS_H */

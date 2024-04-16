@@ -1,5 +1,5 @@
-#ifndef _CODE85_H
-#define _CODE85_H
+#ifndef CODE85_H
+#define CODE85_H
 /* code85.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code85_init(void);
-#endif /* _CODE85_H */
+#endif /* CODE85_H */

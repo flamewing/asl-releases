@@ -1,5 +1,5 @@
-#ifndef _TEMPRESULT_H
-#define _TEMPRESULT_H
+#ifndef TEMPRESULT_H
+#define TEMPRESULT_H
 /* tempresult.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -85,4 +85,4 @@ extern int TempResultToFloat(TempResult *pResult);
 
 extern int as_tempres_append_dynstr(struct as_dynstr *p_dest, const TempResult *pResult);
 
-#endif /* _TEMPRESULT_H */
+#endif /* TEMPRESULT_H */

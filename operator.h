@@ -1,5 +1,5 @@
-#ifndef _OPERATOR_H
-#define _OPERATOR_H
+#ifndef OPERATOR_H
+#define OPERATOR_H
 /* operator.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -28,4 +28,4 @@ typedef struct
 
 extern const Operator Operators[], MinusMonadicOperator, *pPotMonadicOperator;
 
-#endif /* _OPERATOR_H */
+#endif /* OPERATOR_H */

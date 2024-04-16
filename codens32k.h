@@ -1,5 +1,5 @@
-#ifndef _CODENS32K_H
-#define _CODENS32K_H
+#ifndef CODENS32K_H
+#define CODENS32K_H
 /* codens32k.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void codens32k_init(void);
-#endif /* _CODENS32K_H */
+#endif /* CODENS32K_H */

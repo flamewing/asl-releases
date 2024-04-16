@@ -1,5 +1,5 @@
-#ifndef _CODE960_H
-#define _CODE960_H
+#ifndef CODE960_H
+#define CODE960_H
 /* code960.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code960_init(void);
-#endif /* _CODE960_H */
+#endif /* CODE960_H */

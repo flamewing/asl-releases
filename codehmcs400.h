@@ -1,5 +1,5 @@
-#ifndef _CODEHMCS400_H
-#define _CODEHMCS400_H
+#ifndef CODEHMCS400_H
+#define CODEHMCS400_H
 /* codehmcs400.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void codehmcs400_init(void);
-#endif /* _CODEHMCS400_H */
+#endif /* CODEHMCS400_H */

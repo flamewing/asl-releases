@@ -1,5 +1,5 @@
-#ifndef _TEXUTIL_H
-#define _TEXUTIL_H
+#ifndef TEXUTIL_H
+#define TEXUTIL_H
 /* texutil.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -22,4 +22,4 @@ extern int CurrLine, CurrColumn;
 
 extern void Warning(const char *pMsg);
 
-#endif /* _TEXUTIL_H */
+#endif /* TEXUTIL_H */

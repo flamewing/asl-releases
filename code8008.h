@@ -1,5 +1,5 @@
-#ifndef _CODE8008_H
-#define _CODE8008_H
+#ifndef CODE8008_H
+#define CODE8008_H
 /* code8008.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code8008_init(void);
-#endif /* _CODE8008_H */
+#endif /* CODE8008_H */

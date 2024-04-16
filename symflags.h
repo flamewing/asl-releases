@@ -1,5 +1,5 @@
-#ifndef _SYMFLAGS_H
-#define _SYMFLAGS_H
+#ifndef SYMFLAGS_H
+#define SYMFLAGS_H
 /* symflags.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -49,4 +49,4 @@ DefCPPOps_Mask(tSymbolFlags)
 
 #define mUsesForwards(Flags) (!!((Flags) & eSymbolFlag_UsesForwards))
 
-#endif /* _SYMFLAGS_H */
+#endif /* SYMFLAGS_H */

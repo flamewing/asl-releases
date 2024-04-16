@@ -1,5 +1,5 @@
-#ifndef _CODE807X_H
-#define _CODE807X_H
+#ifndef CODE807X_H
+#define CODE807X_H
 /* codescmp.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void code807x_init(void);
-#endif /* _CODE807X_H */
+#endif /* CODE807X_H */

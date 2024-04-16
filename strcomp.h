@@ -1,5 +1,5 @@
-#ifndef _STRCOMP_H
-#define _STRCOMP_H
+#ifndef STRCOMP_H
+#define STRCOMP_H
 /* strcomp.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -62,4 +62,4 @@ extern void KillPostBlanksStrComp(struct sStrComp *pComp);
 
 extern void DumpStrComp(const char *pTitle, const struct sStrComp *pComp);
 
-#endif /* _STRCOMP_H */
+#endif /* STRCOMP_H */

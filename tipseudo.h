@@ -1,5 +1,5 @@
-#ifndef _TIPSEUDO_H
-#define _TIPSEUDO_H
+#ifndef TIPSEUDO_H
+#define TIPSEUDO_H
 /* tipseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -30,4 +30,4 @@ extern Boolean ExtToTIC34xExt(Double Inp, LongWord *ErgL, LongWord *ErgH);
 
 extern void AddTI34xPseudo(struct sInstTable *pInstTable);
 
-#endif /* _TIPSEUDO_H */
+#endif /* TIPSEUDO_H */

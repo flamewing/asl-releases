@@ -1,5 +1,5 @@
-#ifndef _CODE68K_H
-#define _CODE68K_H
+#ifndef CODE68K_H
+#define CODE68K_H
 /* code68k.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code68k_init(void);
-#endif /* _CODE68K_H */
+#endif /* CODE68K_H */

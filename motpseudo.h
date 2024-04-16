@@ -1,5 +1,5 @@
-#ifndef _MOTPSEUDO_H
-#define _MOTPSEUDO_H
+#ifndef MOTPSEUDO_H
+#define MOTPSEUDO_H
 /* motpseudo.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -37,4 +37,4 @@ extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean
 
 extern Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, tSymbolSize *pResult, Boolean Allow24);
 
-#endif /* _MOTPSEUDO_H */
+#endif /* MOTPSEUDO_H */

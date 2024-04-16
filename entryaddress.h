@@ -1,5 +1,5 @@
-#ifndef _ENTRYADDRESS_H
-#define _ENTRYADDRESS_H
+#ifndef ENTRYADDRESS_H
+#define ENTRYADDRESS_H
 /* entryaddress.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -21,4 +21,4 @@ extern void AddEntryAddress(LargeWord Address);
 extern void PrintEntryAddress(FILE *pDestFile);
 extern LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddress);
 
-#endif /* _ENTRYADDRESS_H */
+#endif /* ENTRYADDRESS_H */

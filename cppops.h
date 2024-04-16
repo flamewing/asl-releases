@@ -1,5 +1,5 @@
-#ifndef _CPPOPS_H
-#define _CPPOPS_H
+#ifndef CPPOPS_H
+#define CPPOPS_H
 
 #define DefCPPOps_Mask(datatype)\
 \
@@ -56,4 +56,4 @@ static inline datatype operator-(datatype lhs, int rhs)\
   return (datatype)((int)lhs - rhs);\
 }\
 
-#endif /* _CPPOPS_H */
+#endif /* CPPOPS_H */

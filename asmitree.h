@@ -1,5 +1,5 @@
-#ifndef _ASMITREE_H
-#define _ASMITREE_H
+#ifndef ASMITREE_H
+#define ASMITREE_H
 /* asmitree.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,16 +18,16 @@
 
 typedef void (*InstProc)(Word Index);
 
-typedef struct _TInstTreeNode
+typedef struct tag_TInstTreeNode
 {
-  struct _TInstTreeNode *Left,*Right;
+  struct tag_TInstTreeNode *Left,*Right;
   InstProc Proc;
   char *Name;
   Word Index;
   ShortInt Balance;
 } TInstTreeNode,*PInstTreeNode;
 
-typedef struct _TInstTableEntry
+typedef struct tag_TInstTableEntry
 {
   InstProc Proc;
   char *Name;
@@ -70,4 +70,4 @@ extern void PrintInstTable(FILE *stream, PInstTable tab);
 
 extern void asmitree_init(void);
 
-#endif /* _ASMITREE_H */
+#endif /* ASMITREE_H */

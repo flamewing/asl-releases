@@ -1,5 +1,5 @@
-#ifndef _CODECHUNKS_H
-#define _CODECHUNKS_H
+#ifndef CODECHUNKS_H
+#define CODECHUNKS_H
 /* codechunks.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -38,4 +38,4 @@ extern Boolean RetrieveCodeFromChunkList(const tCodeChunkList *pCodeChunkList, L
 
 extern LargeWord GetCodeChunksStored(const tCodeChunkList *pCodeChunkList);
 
-#endif /* _CODECHUNKS_H */
+#endif /* CODECHUNKS_H */

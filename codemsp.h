@@ -1,5 +1,5 @@
-#ifndef _CODEMSP_H
-#define _CODEMSP_H
+#ifndef CODEMSP_H
+#define CODEMSP_H
 /* codemsp.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codemsp_init(void);
-#endif /* _CODEMSP_H */
+#endif /* CODEMSP_H */

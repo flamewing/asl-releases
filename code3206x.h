@@ -1,5 +1,5 @@
-#ifndef _CODE3206X_H
-#define _CODE3206X_H
+#ifndef CODE3206X_H
+#define CODE3206X_H
 /* code3206x.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -14,4 +14,4 @@
 
 extern void code3206x_init(void);
 
-#endif /* _CODE3206X_H */
+#endif /* CODE3206X_H */

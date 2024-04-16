@@ -1,5 +1,5 @@
-#ifndef _STRUTIL_H
-#define _STRUTIL_H
+#ifndef STRUTIL_H
+#define STRUTIL_H
 /* strutil.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -98,16 +98,16 @@ extern void strutil_init(void);
 
 #include <ctype.h>
 
-#define __chartouint(c) (((unsigned int)(c)) & 0xff)
-#define as_toupper(c) (toupper(__chartouint(c)))
-#define as_tolower(c) (tolower(__chartouint(c)))
-#define as_isspace(c) (!!isspace(__chartouint(c)))
-#define as_isdigit(c) (!!isdigit(__chartouint(c)))
-#define as_isxdigit(c) (!!isxdigit(__chartouint(c)))
-#define as_isprint(c) (!!isprint(__chartouint(c)))
-#define as_isalpha(c) (!!isalpha(__chartouint(c)))
-#define as_isupper(c) (!!isupper(__chartouint(c)))
-#define as_islower(c) (!!islower(__chartouint(c)))
-#define as_isalnum(c) (!!isalnum(__chartouint(c)))
+#define chartouint(c) (((unsigned int)(c)) & 0xff)
+#define as_toupper(c) (toupper(chartouint(c)))
+#define as_tolower(c) (tolower(chartouint(c)))
+#define as_isspace(c) (!!isspace(chartouint(c)))
+#define as_isdigit(c) (!!isdigit(chartouint(c)))
+#define as_isxdigit(c) (!!isxdigit(chartouint(c)))
+#define as_isprint(c) (!!isprint(chartouint(c)))
+#define as_isalpha(c) (!!isalpha(chartouint(c)))
+#define as_isupper(c) (!!isupper(chartouint(c)))
+#define as_islower(c) (!!islower(chartouint(c)))
+#define as_isalnum(c) (!!isalnum(chartouint(c)))
 
-#endif /* _STRUTIL_H */
+#endif /* STRUTIL_H */

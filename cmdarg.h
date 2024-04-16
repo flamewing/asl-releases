@@ -1,5 +1,5 @@
-#ifndef _CMDARG_H
-#define _CMDARG_H
+#ifndef CMDARG_H
+#define CMDARG_H
 /* cmdarg.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -43,4 +43,4 @@ extern const char *GetEXEName(const char *argv0);
 
 extern void cmdarg_init(char *ProgPath);
 
-#endif /* _CMDARG_H */
+#endif /* CMDARG_H */

@@ -1,5 +1,5 @@
-#ifndef _STDINC_H
-#define _STDINC_H
+#ifndef STDINC_H
+#define STDINC_H
 /* stdinc.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -44,4 +44,4 @@
 #define M_PI 3.1415926535897932385E0
 #endif
 
-#endif /* _STDINC_H */
+#endif /* STDINC_H */

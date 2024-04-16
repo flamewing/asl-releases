@@ -1,5 +1,5 @@
-#ifndef _DATATYPES_H
-#define _DATATYPES_H
+#ifndef DATATYPES_H
+#define DATATYPES_H
 /* datatypes.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -73,4 +73,4 @@ typedef char ShortString[SHORTSTRINGSIZE];
 #define False 0
 #endif
 
-#endif /* _DATATYPES_H */
+#endif /* DATATYPES_H */

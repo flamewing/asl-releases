@@ -1,5 +1,5 @@
-#ifndef _ASMDEBUG_H
-#define _ASMDEBUG_H
+#ifndef ASMDEBUG_H
+#define ASMDEBUG_H
 /* asmdebug.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -24,4 +24,4 @@ extern void ClearLineInfo(void);
 extern void DumpDebugInfo(void);
 
 extern void asmdebug_init(void);
-#endif /* _ASMDEBUG_H */
+#endif /* ASMDEBUG_H */

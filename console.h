@@ -1,5 +1,5 @@
-#ifndef _CONSOLE_H
-#define _CONSOLE_H
+#ifndef CONSOLE_H
+#define CONSOLE_H
 /* console.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -14,4 +14,4 @@
 
 extern void WrConsoleLine(const char *pLine, Boolean NewLine);
 
-#endif /* _CONSOLE_H */
+#endif /* CONSOLE_H */

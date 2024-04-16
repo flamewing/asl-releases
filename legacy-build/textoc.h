@@ -1,5 +1,5 @@
-#ifndef _TEXTOC_H
-#define _TEXTOC_H
+#ifndef TEXTOC_H
+#define TEXTOC_H
 /* textoc.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,4 +18,4 @@ extern void PrintToc(char *pFileName);
 
 extern void FreeToc(void);
 
-#endif /* _TEXTOC_H */
+#endif /* TEXTOC_H */

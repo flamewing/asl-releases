@@ -1,5 +1,5 @@
-#ifndef _CHARDEFS_H
-#define _CHARDEFS_H
+#ifndef CHARDEFS_H
+#define CHARDEFS_H
 /* chardefs.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -113,4 +113,4 @@ extern LongWord UTF8ToUnicode(const char* *ppChr);
 
 extern void UnicodeToUTF8(char* *ppChr, LongWord Unicode);
 
-#endif /* _CHARDEFS_H */
+#endif /* CHARDEFS_H */

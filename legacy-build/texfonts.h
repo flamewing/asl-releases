@@ -1,5 +1,5 @@
-#ifndef _TEXFONTS_H
-#define _TEXFONTS_H
+#ifndef TEXFONTS_H
+#define TEXFONTS_H
 /* texfonts.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -43,4 +43,4 @@ extern void RestoreFont(void);
 
 extern void FreeFontStack(void);
 
-#endif /* _TEXFONTS_H */
+#endif /* TEXFONTS_H */

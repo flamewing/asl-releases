@@ -1,5 +1,5 @@
-#ifndef _AS_H
-#define _AS_H
+#ifndef AS_H
+#define AS_H
 /* as.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -14,4 +14,4 @@ extern char *GetErrorPos(void);
 
 extern void WriteCode(void);
 
-#endif /* _AS_H */
+#endif /* AS_H */

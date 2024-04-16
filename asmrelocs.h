@@ -1,5 +1,5 @@
-#ifndef _ASMRELOCS_H
-#define _ASMRELOCS_H
+#ifndef ASMRELOCS_H
+#define ASMRELOCS_H
 /* asmrelocs.h */
 /****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                    */
@@ -46,4 +46,4 @@ extern void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type
 extern void SubPCRefReloc(void);
 
 extern void AddExport(char *Name, LargeInt Value, LongWord Flags);
-#endif /* _ASMRELOCS_H */
+#endif /* ASMRELOCS_H */

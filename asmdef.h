@@ -1,5 +1,5 @@
-#ifndef _ASMDEF_H
-#define _ASMDEF_H
+#ifndef ASMDEF_H
+#define ASMDEF_H
 /* asmdef.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -23,27 +23,27 @@
 #include "tempresult.h"
 #include "addrspace.h"
 
-typedef struct _TCrossRef
+typedef struct tag_TCrossRef
 {
-  struct _TCrossRef *Next;
+  struct tag_TCrossRef *Next;
   Byte FileNum;
   LongInt LineNum;
   Integer OccNum;
 } TCrossRef,*PCrossRef;
 
 
-typedef struct _TPatchEntry
+typedef struct tag_TPatchEntry
 {
-  struct _TPatchEntry *Next;
+  struct tag_TPatchEntry *Next;
   LargeWord Address;
   char *Ref;
   Word len;
   LongWord RelocType;
 } TPatchEntry, *PPatchEntry;
 
-typedef struct _TExportEntry
+typedef struct tag_TExportEntry
 {
-  struct _TExportEntry *Next;
+  struct tag_TExportEntry *Next;
   char *Name;
   Word len;
   LongWord Flags;
@@ -140,16 +140,16 @@ typedef void (*DissectBitProc)(char *pDest, size_t DestSize, LargeWord Inp);
 typedef Boolean (*tQualifyQuoteFnc)(const char *pStart, const char *pQuotePos);
 
 typedef Word WordField[6];          /* fuer Zahlenumwandlung */
-typedef struct _TTransTable
+typedef struct tag_TTransTable
 {
-  struct _TTransTable *Next;
+  struct tag_TTransTable *Next;
   char *Name;
   unsigned char *Table;
 } TTransTable, *PTransTable;
 
-typedef struct _TSaveState
+typedef struct tag_TSaveState
 {
-  struct _TSaveState *Next;
+  struct tag_TSaveState *Next;
   CPUVar SaveCPU;
   char *pSaveCPUArgs;
   Integer SavePC;
@@ -162,17 +162,17 @@ typedef struct _TSaveState
   LongInt SaveEnumCurrentValue, SaveEnumIncrement;
 } TSaveState,*PSaveState;
 
-typedef struct _TForwardSymbol
+typedef struct tag_TForwardSymbol
 {
-  struct _TForwardSymbol *Next;
+  struct tag_TForwardSymbol *Next;
   StringPtr Name;
   LongInt DestSection;
   StringPtr pErrorPos;
 } TForwardSymbol, *PForwardSymbol;
 
-typedef struct _TSaveSection
+typedef struct tag_TSaveSection
 {
-  struct _TSaveSection *Next;
+  struct tag_TSaveSection *Next;
   PForwardSymbol LocSyms, GlobSyms, ExportSyms;
   LongInt Handle;
 } TSaveSection, *PSaveSection;
@@ -183,14 +183,14 @@ typedef struct sSavePhase
   LargeWord SaveValue;
 } tSavePhase;
 
-typedef struct _TDefinement
+typedef struct tag_TDefinement
 {
-  struct _TDefinement *Next;
+  struct tag_TDefinement *Next;
   StringPtr TransFrom, TransTo;
   Byte Compiled[256];
 } TDefinement, *PDefinement;
 
-typedef struct _ASSUMERec
+typedef struct tag_ASSUMERec
 {
   const char *Name;
   LongInt *Dest;
@@ -398,4 +398,4 @@ extern Boolean SaveIsOccupied(void);
 extern Boolean RestoreIsOccupied(void);
 
 extern void asmdef_init(void);
-#endif /* _ASMDEF_H */
+#endif /* ASMDEF_H */

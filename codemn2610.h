@@ -1,5 +1,5 @@
-#ifndef _CODEMN2610_H
-#define _CODEMN2610_H
+#ifndef CODEMN2610_H
+#define CODEMN2610_H
 /* codemn2610.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void codemn2610_init(void);
-#endif /* _CODEMN2610_H */
+#endif /* CODEMN2610_H */

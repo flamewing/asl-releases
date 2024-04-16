@@ -1,5 +1,5 @@
-#ifndef _CODEFMC16_H
-#define _CODEFMC16_H
+#ifndef CODEFMC16_H
+#define CODEFMC16_H
 /* codefmc16.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codef2mc16_init(void);
-#endif /* _CODEFMC16_H */
+#endif /* CODEFMC16_H */

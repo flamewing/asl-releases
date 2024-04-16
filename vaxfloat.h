@@ -1,5 +1,5 @@
-#ifndef _VAXFLOAT_H
-#define _VAXFLOAT_H
+#ifndef VAXFLOAT_H
+#define VAXFLOAT_H
 /* vaxfloat.c */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -18,4 +18,4 @@ extern void VAXD_2_Double(Byte *pDest, Double inp);
 
 extern void VAXD_2_LongDouble(Byte *pDest, Double inp);
 
-#endif /* _VAXFLOAT_H */
+#endif /* VAXFLOAT_H */

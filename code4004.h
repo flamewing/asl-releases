@@ -1,5 +1,5 @@
-#ifndef _CODE4004_H
-#define _CODE4004_H
+#ifndef CODE4004_H
+#define CODE4004_H
 /* code4004.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code4004_init(void);
-#endif /* _CODE4004_H */
+#endif /* CODE4004_H */

@@ -1,5 +1,5 @@
-#ifndef _CODEFMC8_H
-#define _CODEFMC8_H
+#ifndef CODEFMC8_H
+#define CODEFMC8_H
 /* codefmc8.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codef2mc8_init(void);
-#endif /* _CODEFMC8_H */
+#endif /* CODEFMC8_H */

@@ -1,5 +1,5 @@
-#ifndef _CODE29K_H
-#define _CODE29K_H
+#ifndef CODE29K_H
+#define CODE29K_H
 /* code29k.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code29k_init(void);
-#endif /* _CODE29K_H */
+#endif /* CODE29K_H */

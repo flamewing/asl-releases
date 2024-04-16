@@ -1,5 +1,5 @@
-#ifndef _ASMALLG_H
-#define _ASMALLG_H
+#ifndef ASMALLG_H
+#define ASMALLG_H
 /* codeallg.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -38,4 +38,4 @@ extern void CodeNAMEREG(Word Index);
 extern void INCLUDE_SearchCore(struct sStrComp *pDest, const struct sStrComp *pArg, Boolean SearchPath);
 
 extern void codeallg_init(void);
-#endif /* _ASMALLG_H */
+#endif /* ASMALLG_H */

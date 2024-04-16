@@ -1,5 +1,5 @@
-#ifndef _CODE9900_H
-#define _CODE9900_H
+#ifndef CODE9900_H
+#define CODE9900_H
 /* code9900.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code9900_init(void);
-#endif /* _CODE9900_H */
+#endif /* CODE9900_H */

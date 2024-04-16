@@ -1,5 +1,5 @@
-#ifndef _CHUNKS_H
-#define _CHUNKS_H
+#ifndef CHUNKS_H
+#define CHUNKS_H
 /* chunks.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -47,4 +47,4 @@ extern LargeWord ChunkSum(ChunkList *NChunk);
 
 
 extern void chunks_init(void);
-#endif /* _CHUNKS_H */
+#endif /* CHUNKS_H */

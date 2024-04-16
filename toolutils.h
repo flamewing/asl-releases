@@ -1,5 +1,5 @@
-#ifndef _TOOLUTILS_H
-#define _TOOLUTILS_H
+#ifndef TOOLUTILS_H
+#define TOOLUTILS_H
 /* toolutils.c */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -86,4 +86,4 @@ extern Boolean AddressWildcard(const char *addr);
 
 extern void toolutils_init(const char *ProgPath);
 
-#endif /* _TOOLUTILS_H */
+#endif /* TOOLUTILS_H */

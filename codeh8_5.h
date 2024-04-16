@@ -1,5 +1,5 @@
-#ifndef _CODEH8_5_H
-#define _CODEH8_5_H
+#ifndef CODEH8_5_H
+#define CODEH8_5_H
 /* codeh8_5.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void codeh8_5_init(void);
-#endif /* _CODEH8_5_H */
+#endif /* CODEH8_5_H */

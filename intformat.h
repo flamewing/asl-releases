@@ -8,8 +8,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#ifndef _INTFORMAT_H
-#define _INTFORMAT_H
+#ifndef INTFORMAT_H
+#define INTFORMAT_H
 
 #include "datatypes.h"
 #include <stddef.h>
@@ -88,4 +88,4 @@ extern tIntFormatId GetIntFormatId(const char *pIdent);
 
 extern void intformat_init(void);
 
-#endif /* _INTFORMAT_H */
+#endif /* INTFORMAT_H */

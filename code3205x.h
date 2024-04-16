@@ -1,5 +1,5 @@
-#ifndef _CODE3205X_H
-#define _CODE3205X_H
+#ifndef CODE3205X_H
+#define CODE3205X_H
 /*
  * AS-Portierung
  *
@@ -9,4 +9,4 @@
  */
 
 extern void code3205x_init(void);
-#endif /* _CODE3205X_H */
+#endif /* CODE3205X_H */

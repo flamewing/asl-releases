@@ -1,5 +1,5 @@
-#ifndef _IEEEFLOAT_H
-#define _IEEEFLOAT_H
+#ifndef IEEEFLOAT_H
+#define IEEEFLOAT_H
 /* ieeefloat.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -31,4 +31,4 @@ extern void Double_2_ieee8(Double inp, Byte *pDest, Boolean NeedsBig);
 
 extern void Double_2_ieee10(Double inp, Byte *pDest, Boolean NeedsBig);
 
-#endif /* _IEEEFLOAT_H */
+#endif /* IEEEFLOAT_H */

@@ -1,5 +1,5 @@
-#ifndef _ASMPARS_H
-#define _ASMPARS_H
+#ifndef ASMPARS_H
+#define ASMPARS_H
 /* asmpars.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -95,9 +95,9 @@ typedef enum
   e_symbol_source_define
 } as_symbol_source_t;
 
-typedef struct _TFunction
+typedef struct tag_TFunction
 {
-  struct _TFunction *Next;
+  struct tag_TFunction *Next;
   Byte ArguCnt;
   StringPtr Name, Definition;
 } TFunction, *PFunction;
@@ -299,4 +299,4 @@ extern void PrintCodepages(void);
 
 extern void asmpars_init(void);
 
-#endif /* _ASMPARS_H */
+#endif /* ASMPARS_H */

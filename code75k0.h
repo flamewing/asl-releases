@@ -1,5 +1,5 @@
-#ifndef _CODE75K0_H
-#define _CODE75K0_H
+#ifndef CODE75K0_H
+#define CODE75K0_H
 /* code75k0.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code75k0_init(void);
-#endif /* _CODE75K0_H */
+#endif /* CODE75K0_H */

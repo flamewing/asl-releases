@@ -1,5 +1,5 @@
-#ifndef _DYNSTR_H
-#define _DYNSTR_H
+#ifndef DYNSTR_H
+#define DYNSTR_H
 /* dynstr.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -43,4 +43,4 @@ extern size_t as_dynstr_append_c_str(as_dynstr_t *p_dest, const char *p_src);
 
 extern void as_dynstr_dump_hex(FILE *p_file, const as_dynstr_t *p_str);
 
-#endif /* _DYNSTR_H */
+#endif /* DYNSTR_H */

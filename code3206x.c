@@ -801,7 +801,7 @@ static Boolean CodeD(LongWord OpCode, LongWord Dest, LongWord Src1, LongWord Src
 
 /*-------------------------------------------------------------------------*/
 
-static Boolean __erg;
+static Boolean erg;
 
 static void DecodeIDLE(Word Index)
 {
@@ -812,7 +812,7 @@ static void DecodeIDLE(Word Index)
   else
   {
     ThisInst = 0x0001e000;
-    __erg = True;
+    erg = True;
   }
 }
 
@@ -842,7 +842,7 @@ static void DecodeNOP(Word Index)
     if (OK)
     {
       ThisInst = Count << 13;
-      __erg = True;
+      erg = True;
     }
   }
 }
@@ -872,11 +872,11 @@ static void DecodeMul(Word Index)
                 SwapReg(&S1Reg, &S2Reg);
               SetCross(S2Reg);
               AddSrc(S1Reg);
-              __erg = CodeM(POrder->Code, DReg, S1Reg, S2Reg);
+              erg = CodeM(POrder->Code, DReg, S1Reg, S2Reg);
             }
             break;
           case ModImm:
-            __erg = Memo("MPY") ?
+            erg = Memo("MPY") ?
                     CodeM(POrder->Code - 1, DReg, S1Reg, S2Reg) :
                     CodeM(POrder->Code + 3, DReg, S1Reg, S2Reg);
             break;
@@ -918,7 +918,7 @@ static void DecodeMemO(Word Index)
       {
         ThisInst = S1Reg + (DReg << 23) + (POrder->Code << 4)
                  + ((DReg & 16) >> 3);
-        __erg = True;
+        erg = True;
       }
     }
   }
@@ -938,7 +938,7 @@ static void DecodeSTP(Word Index)
       else
       {
         AddSrc(S2Reg);
-        __erg = CodeS(0x0c, 0, 0, S2Reg);
+        erg = CodeS(0x0c, 0, 0, S2Reg);
       }
     }
   }
@@ -962,13 +962,13 @@ static void DecodeABS(Word Index)
       SetCross(S1Reg);
       if (DPFlag)
       {
-        __erg = CodeL(0x38, DReg, 0, S1Reg);
+        erg = CodeL(0x38, DReg, 0, S1Reg);
         AddLSrc(S1Reg);
         AddLDest(DReg);
       }
       else
       {
-        __erg = CodeL(0x1a, DReg, 0, S1Reg);
+        erg = CodeL(0x1a, DReg, 0, S1Reg);
         AddSrc(S1Reg);
         AddDest(DReg);
       }
@@ -1009,7 +1009,7 @@ static void DecodeADD(Word Index)
                     if (IsCross(S1Reg))
                       SwapReg(&S1Reg, &S2Reg);
                     SetCross(S2Reg);
-                    __erg = CodeL(0x23, DReg, S1Reg, S2Reg);
+                    erg = CodeL(0x23, DReg, S1Reg, S2Reg);
                   }
                 }
                 break;
@@ -1022,7 +1022,7 @@ static void DecodeADD(Word Index)
                   {
                     AddLSrc(S2Reg);
                     SetCross(S1Reg);
-                    __erg = CodeL(0x21, DReg, S1Reg, S2Reg);
+                    erg = CodeL(0x21, DReg, S1Reg, S2Reg);
                   }
                 }
                 break;
@@ -1042,7 +1042,7 @@ static void DecodeADD(Word Index)
                   {
                     AddSrc(S2Reg);
                     SetCross(S2Reg);
-                    __erg = CodeL(0x21, DReg, S2Reg, S1Reg);
+                    erg = CodeL(0x21, DReg, S2Reg, S1Reg);
                   }
                 }
                 break;
@@ -1052,7 +1052,7 @@ static void DecodeADD(Word Index)
                   if (IsCross(S1Reg)) WrError(ErrNum_InvAddrMode);
                   else if (ThisCross) WrError(ErrNum_InvAddrMode);
                   else
-                    __erg = CodeL(0x20, DReg, S2Reg, S1Reg);
+                    erg = CodeL(0x20, DReg, S2Reg, S1Reg);
                 }
                 break;
              }
@@ -1067,7 +1067,7 @@ static void DecodeADD(Word Index)
                  else
                  {
                    AddLSrc(S2Reg);
-                   __erg = CodeL(0x20, DReg, S1Reg, S2Reg);
+                   erg = CodeL(0x20, DReg, S1Reg, S2Reg);
                  }
                }
              }
@@ -1098,13 +1098,13 @@ static void DecodeADD(Word Index)
                     switch (ThisUnit)
                     {
                       case L1: case L2: /* ADD.Lx int,int,int */
-                        __erg = CodeL(0x03, DReg, S1Reg, S2Reg);
+                        erg = CodeL(0x03, DReg, S1Reg, S2Reg);
                         break;
                       case S1: case S2: /* ADD.Sx int,int,int */
-                        __erg = CodeS(0x07, DReg, S1Reg, S2Reg);
+                        erg = CodeS(0x07, DReg, S1Reg, S2Reg);
                         break;
                       case D1: case D2: /* ADD.Dx int,int,int */
-                        __erg = CodeD(0x10, DReg, S1Reg, S2Reg);
+                        erg = CodeD(0x10, DReg, S1Reg, S2Reg);
                         break;
                       default:
                         WrError(ErrNum_CannotUseUnit);
@@ -1121,10 +1121,10 @@ static void DecodeADD(Word Index)
                     switch (ThisUnit)
                     {
                       case L1: case L2:
-                        __erg = CodeL(0x02, DReg, S2Reg, S1Reg);
+                        erg = CodeL(0x02, DReg, S2Reg, S1Reg);
                         break;
                       case S1: case S2:
-                        __erg = CodeS(0x06, DReg, S2Reg, S1Reg);
+                        erg = CodeS(0x06, DReg, S2Reg, S1Reg);
                         break;
                       default:
                         WrError(ErrNum_CannotUseUnit);
@@ -1145,10 +1145,10 @@ static void DecodeADD(Word Index)
                   switch (ThisUnit)
                   {
                     case L1: case L2:
-                      __erg = CodeL(0x02, DReg, S1Reg, S2Reg);
+                      erg = CodeL(0x02, DReg, S1Reg, S2Reg);
                       break;
                     case S1: case S2:
-                      __erg = CodeS(0x06, DReg, S1Reg, S2Reg);
+                      erg = CodeS(0x06, DReg, S1Reg, S2Reg);
                       break;
                     default:
                       WrError(ErrNum_CannotUseUnit);
@@ -1185,7 +1185,7 @@ static void DecodeADDU(Word Index)
               {
                 AddSrc(S1Reg);
                 if (DecodeAdr(&ArgStr[2], MModImm, False, &S2Reg))
-                 __erg = CodeD(0x12, DReg, S2Reg, S1Reg);
+                 erg = CodeD(0x12, DReg, S2Reg, S1Reg);
               }
               break;
             case ModImm: /* ADDU imm,?,int */
@@ -1195,7 +1195,7 @@ static void DecodeADDU(Word Index)
                 else
                 {
                   AddSrc(S2Reg);
-                  __erg = CodeD(0x12, DReg, S1Reg, S2Reg);
+                  erg = CodeD(0x12, DReg, S1Reg, S2Reg);
                 }
               }
               break;
@@ -1222,7 +1222,7 @@ static void DecodeADDU(Word Index)
                     if ((S1Reg ^ DReg) > 15)
                       SwapReg(&S1Reg, &S2Reg);
                     SetCross(S2Reg);
-                    __erg = CodeL(0x2b, DReg, S1Reg, S2Reg);
+                    erg = CodeL(0x2b, DReg, S1Reg, S2Reg);
                   }
                   break;
                 case ModLReg: /* ADDU int,long,long */
@@ -1232,7 +1232,7 @@ static void DecodeADDU(Word Index)
                   {
                     AddLSrc(S2Reg);
                     SetCross(S1Reg);
-                    __erg = CodeL(0x29, DReg, S1Reg, S2Reg);
+                    erg = CodeL(0x29, DReg, S1Reg, S2Reg);
                   }
                   break;
               }
@@ -1248,7 +1248,7 @@ static void DecodeADDU(Word Index)
                   else
                   {
                     AddSrc(S2Reg); SetCross(S2Reg);
-                    __erg = CodeL(0x29, DReg, S2Reg, S1Reg);
+                    erg = CodeL(0x29, DReg, S2Reg, S1Reg);
                   }
                 }
               }
@@ -1295,14 +1295,14 @@ static void DecodeSUB(Word Index)
                    switch (ThisUnit)
                    {
                      case L1: case L2:
-                       if ((S1Reg ^ DReg) > 15) __erg = CodeL(0x17, DReg, S1Reg, S2Reg);
-                       else __erg = CodeL(0x07, DReg, S1Reg, S2Reg);
+                       if ((S1Reg ^ DReg) > 15) erg = CodeL(0x17, DReg, S1Reg, S2Reg);
+                       else erg = CodeL(0x07, DReg, S1Reg, S2Reg);
                        break;
                      case S1: case S2:
-                       __erg = CodeS(0x17, DReg, S1Reg, S2Reg);
+                       erg = CodeS(0x17, DReg, S1Reg, S2Reg);
                        break;
                      case D1: case D2:
-                       __erg = CodeD(0x11, DReg, S2Reg, S1Reg);
+                       erg = CodeD(0x11, DReg, S2Reg, S1Reg);
                        break;
                      default:
                        WrError(ErrNum_CannotUseUnit);
@@ -1313,7 +1313,7 @@ static void DecodeSUB(Word Index)
                if (ChkUnit(DReg, D1, D2))
                {
                  if ((ThisCross) || ((S1Reg ^ DReg) > 15)) WrError(ErrNum_InvAddrMode);
-                 else __erg = CodeD(0x13, DReg, S2Reg, S1Reg);
+                 else erg = CodeD(0x13, DReg, S2Reg, S1Reg);
                }
                break;
             }
@@ -1329,10 +1329,10 @@ static void DecodeSUB(Word Index)
                   switch (ThisUnit)
                   {
                     case L1: case L2:
-                      __erg = CodeL(0x06, DReg, S1Reg, S2Reg);
+                      erg = CodeL(0x06, DReg, S1Reg, S2Reg);
                       break;
                     case S1: case S2:
-                      __erg = CodeS(0x16, DReg, S1Reg, S2Reg);
+                      erg = CodeS(0x16, DReg, S1Reg, S2Reg);
                       break;
                     default:
                       WrError(ErrNum_CannotUseUnit);
@@ -1356,7 +1356,7 @@ static void DecodeSUB(Word Index)
                 else
                 {
                   AddLSrc(S2Reg);
-                  __erg = CodeL(0x24, DReg, S1Reg, S2Reg);
+                  erg = CodeL(0x24, DReg, S1Reg, S2Reg);
                 }
               }
               break;
@@ -1371,7 +1371,7 @@ static void DecodeSUB(Word Index)
                   AddSrc(S2Reg);
                   ThisCross = (IsCross(S1Reg)) || (IsCross(S2Reg));
                   /* what did I do here? */
-                  __erg = IsCross(S1Reg) ?
+                  erg = IsCross(S1Reg) ?
                           CodeL(0x37, DReg, S1Reg, S2Reg) :
                           CodeL(0x47, DReg, S1Reg, S2Reg);
                 }
@@ -1405,7 +1405,7 @@ static void DecodeSUBU(Word Index)
         {
           AddSrc(S2Reg);
           ThisCross = IsCross(S1Reg) || IsCross(S2Reg);
-          __erg = IsCross(S1Reg) ?
+          erg = IsCross(S1Reg) ?
                   CodeL(0x3f, DReg, S1Reg, S2Reg) :
                   CodeL(0x2f, DReg, S1Reg, S2Reg);
         }
@@ -1434,7 +1434,7 @@ static void DecodeSUBC(Word Index)
         {
           AddSrc(S2Reg);
           SetCross(S2Reg);
-          __erg = CodeL(0x4b, DReg, S1Reg, S2Reg);
+          erg = CodeL(0x4b, DReg, S1Reg, S2Reg);
         }
       }
     }
@@ -1468,11 +1468,11 @@ static void DecodeLinAdd(Word Index)
               else
               {
                 AddSrc(S1Reg);
-                __erg = CodeD(POrder->Code, DReg, S1Reg, S2Reg);
+                erg = CodeD(POrder->Code, DReg, S1Reg, S2Reg);
               }
               break;
             case ModImm:
-              __erg = CodeD(POrder->Code + 2, DReg, S1Reg, S2Reg);
+              erg = CodeD(POrder->Code + 2, DReg, S1Reg, S2Reg);
               break;
           }
         }
@@ -1497,7 +1497,7 @@ static void DecodeADDK(Word Index)
     if (OK)
     {
       ThisInst = 0x50 + (UnitFlag << 1) + ((Value & 0xffff) << 7) + (DReg << 23);
-      __erg = True;
+      erg = True;
     }
   }
 }
@@ -1535,7 +1535,7 @@ static void DecodeADD2_SUB2(Word Index)
           if (OK)
           {
             SetCross(S2Reg);
-            __erg = CodeS(Index, DReg, S1Reg, S2Reg);
+            erg = CodeS(Index, DReg, S1Reg, S2Reg);
           }
         }
       }
@@ -1567,7 +1567,7 @@ static void DecodeMV(Word Index)
             else
             {
               AddLSrc(SReg);
-              __erg = CodeL(0x20, DReg, 0, SReg);
+              erg = CodeL(0x20, DReg, 0, SReg);
             }
           }
         }
@@ -1586,13 +1586,13 @@ static void DecodeMV(Word Index)
               switch (ThisUnit)
               {
                 case L1: case L2:
-                  __erg = CodeL(0x02, DReg, 0, SReg);
+                  erg = CodeL(0x02, DReg, 0, SReg);
                   break;
                 case S1: case S2:
-                  __erg = CodeS(0x06, DReg, 0, SReg);
+                  erg = CodeS(0x06, DReg, 0, SReg);
                   break;
                 case D1: case D2:
-                  __erg = CodeD(0x12, DReg, 0, SReg);
+                  erg = CodeD(0x12, DReg, 0, SReg);
                   break;
                 default:
                   WrError(ErrNum_CannotUseUnit);
@@ -1628,10 +1628,10 @@ static void DecodeNEG(Word Index)
               switch (ThisUnit)
               {
                 case L1: case L2:
-                  __erg = CodeL(0x06, DReg, 0, SReg);
+                  erg = CodeL(0x06, DReg, 0, SReg);
                   break;
                 case S1: case S2:
-                  __erg = CodeS(0x16, DReg, 0, SReg);
+                  erg = CodeS(0x16, DReg, 0, SReg);
                   break;
                 default:
                   WrError(ErrNum_CannotUseUnit);
@@ -1649,7 +1649,7 @@ static void DecodeNEG(Word Index)
             else
             {
               AddLSrc(SReg);
-              __erg = CodeL(0x24, DReg, 0, SReg);
+              erg = CodeL(0x24, DReg, 0, SReg);
             }
           }
         }
@@ -1713,10 +1713,10 @@ static void DecodeLogic(Word Index)
           switch (ThisUnit)
           {
             case L1: case L2:
-              __erg = CodeL(Code1 - Ord(WithImm), DReg, S1Reg, S2Reg);
+              erg = CodeL(Code1 - Ord(WithImm), DReg, S1Reg, S2Reg);
               break;
             case S1: case S2:
-              __erg = CodeS(Code2 - Ord(WithImm), DReg, S1Reg, S2Reg);
+              erg = CodeS(Code2 - Ord(WithImm), DReg, S1Reg, S2Reg);
               break;
             default:
               WrError(ErrNum_CannotUseUnit);
@@ -1752,10 +1752,10 @@ static void DecodeNOT(Word Index)
             switch (ThisUnit)
             {
               case L1: case L2:
-                __erg = CodeL(0x6e, DReg, 0x1f, SReg);
+                erg = CodeL(0x6e, DReg, 0x1f, SReg);
                 break;
               case S1: case S2:
-                __erg = CodeS(0x0a, DReg, 0x1f, SReg);
+                erg = CodeS(0x0a, DReg, 0x1f, SReg);
                 break;
               default:
                 WrError(ErrNum_CannotUseUnit);
@@ -1788,13 +1788,13 @@ static void DecodeZERO(Word Index)
             switch (ThisUnit)
             {
               case L1: case L2:
-                __erg = CodeL(0x17, DReg, DReg, DReg);
+                erg = CodeL(0x17, DReg, DReg, DReg);
                 break;
               case S1: case S2:
-                __erg = CodeS(0x17, DReg, DReg, DReg);
+                erg = CodeS(0x17, DReg, DReg, DReg);
                 break;
               case D1: case D2:
-                __erg = CodeD(0x11, DReg, DReg, DReg);
+                erg = CodeD(0x11, DReg, DReg, DReg);
                 break;
               default:
                 WrError(ErrNum_CannotUseUnit);
@@ -1804,7 +1804,7 @@ static void DecodeZERO(Word Index)
           AddLDest(DReg);
           AddLSrc(DReg);
           if (ChkUnit(DReg, L1, L2))
-            __erg = CodeL(0x37, DReg, DReg, DReg);
+            erg = CodeL(0x37, DReg, DReg, DReg);
           break;
       }
   }
@@ -1833,7 +1833,7 @@ static void DecodeCLR_EXT_EXTU_SET(Word Code)
             else
             {
               SetCross(S2Reg);
-              __erg = CodeS(Hi(Code), DReg, S1Reg, S2Reg);
+              erg = CodeS(Hi(Code), DReg, S1Reg, S2Reg);
             }
           }
         }
@@ -1848,7 +1848,7 @@ static void DecodeCLR_EXT_EXTU_SET(Word Code)
             {
               ThisInst = (DReg << 23) + (S2Reg << 18) + (S1Reg << 13)
                        + (HReg << 8) + (UnitFlag << 1) + Lo(Code);
-              __erg = True;
+              erg = True;
             }
           }
         }
@@ -1883,7 +1883,7 @@ static void DecodeCmp(Word Index)
               AddSrc(S2Reg);
               if (IsCross(S1Reg)) SwapReg(&S1Reg, &S2Reg);
               SetCross(S2Reg);
-              __erg = CodeL(pOrder->Code + 3, DReg, S1Reg, S2Reg);
+              erg = CodeL(pOrder->Code + 3, DReg, S1Reg, S2Reg);
             }
             break;
           case ModLReg:
@@ -1892,7 +1892,7 @@ static void DecodeCmp(Word Index)
             else
             {
               AddLSrc(S2Reg); SetCross(S1Reg);
-              __erg = CodeL(pOrder->Code + 1, DReg, S1Reg, S2Reg);
+              erg = CodeL(pOrder->Code + 1, DReg, S1Reg, S2Reg);
             }
             break;
         }
@@ -1906,7 +1906,7 @@ static void DecodeCmp(Word Index)
             else
             {
               AddSrc(S2Reg); SetCross(S2Reg);
-              __erg = CodeL(pOrder->Code + 2, DReg, S1Reg, S2Reg);
+              erg = CodeL(pOrder->Code + 2, DReg, S1Reg, S2Reg);
             }
             break;
           case ModLReg:
@@ -1914,7 +1914,7 @@ static void DecodeCmp(Word Index)
             else
             {
               AddLSrc(S2Reg);
-              __erg = CodeL(pOrder->Code, DReg, S1Reg, S2Reg);
+              erg = CodeL(pOrder->Code, DReg, S1Reg, S2Reg);
             }
             break;
         }
@@ -1943,7 +1943,7 @@ static void DecodeLMBD(Word Code)
         {
           if (AdrMode == ModReg)
             AddSrc(S1Reg);
-          __erg = CodeL(0x6a + Ord(AdrMode == ModImm), DReg, S1Reg, S2Reg);
+          erg = CodeL(0x6a + Ord(AdrMode == ModImm), DReg, S1Reg, S2Reg);
         }
       }
     }
@@ -1969,7 +1969,7 @@ static void DecodeNORM(Word Code)
         else
         {
           SetCross(S2Reg); AddSrc(S2Reg);
-          __erg = CodeL(0x63, DReg, 0, S2Reg);
+          erg = CodeL(0x63, DReg, 0, S2Reg);
         }
         break;
       case ModLReg:
@@ -1977,7 +1977,7 @@ static void DecodeNORM(Word Code)
         else
         {
           AddLSrc(S2Reg);
-          __erg = CodeL(0x60, DReg, 0, S2Reg);
+          erg = CodeL(0x60, DReg, 0, S2Reg);
         }
         break;
     }
@@ -2014,7 +2014,7 @@ static void DecodeSADD(Word Code)
                  AddSrc(S2Reg);
                  if (IsCross(S1Reg)) SwapReg(&S1Reg, &S2Reg);
                  SetCross(S2Reg);
-                 __erg = CodeL(0x13, DReg, S1Reg, S2Reg);
+                 erg = CodeL(0x13, DReg, S1Reg, S2Reg);
                }
                break;
               case ModImm:
@@ -2022,7 +2022,7 @@ static void DecodeSADD(Word Code)
                else
                {
                  SetCross(S1Reg);
-                 __erg = CodeL(0x12, DReg, S2Reg, S1Reg);
+                 erg = CodeL(0x12, DReg, S2Reg, S1Reg);
                }
                break;
             }
@@ -2034,7 +2034,7 @@ static void DecodeSADD(Word Code)
               else
               {
                 SetCross(S2Reg);
-                __erg = CodeL(0x12, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x12, DReg, S1Reg, S2Reg);
               }
             }
             break;
@@ -2053,7 +2053,7 @@ static void DecodeSADD(Word Code)
               else
               {
                 AddLSrc(S2Reg); SetCross(S1Reg);
-                __erg = CodeL(0x31, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x31, DReg, S1Reg, S2Reg);
               }
             }
             break;
@@ -2070,11 +2070,11 @@ static void DecodeSADD(Word Code)
                   else
                   {
                     AddSrc(S2Reg); SetCross(S2Reg);
-                    __erg = CodeL(0x31, DReg, S2Reg, S1Reg);
+                    erg = CodeL(0x31, DReg, S2Reg, S1Reg);
                   }
                   break;
                 case ModImm:
-                  __erg = CodeL(0x30, DReg, S2Reg, S1Reg);
+                  erg = CodeL(0x30, DReg, S2Reg, S1Reg);
                   break;
               }
             }
@@ -2086,7 +2086,7 @@ static void DecodeSADD(Word Code)
               else
               {
                 AddLSrc(S2Reg);
-                __erg = CodeL(0x30, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x30, DReg, S1Reg, S2Reg);
               }
             }
             break;
@@ -2113,7 +2113,7 @@ static void DecodeSAT(Word Code)
       else
       {
         AddLSrc(S2Reg);
-        __erg = CodeL(0x40, DReg, 0, S2Reg);
+        erg = CodeL(0x40, DReg, 0, S2Reg);
       }
     }
   }
@@ -2150,12 +2150,12 @@ static void DecodeMVC(Word Code)
           {
             AddSrc(S1Reg);
             SetCross(S1Reg);
-            __erg = CodeS(0x0e, CReg, 0, S1Reg);
+            erg = CodeS(0x0e, CReg, 0, S1Reg);
           }
           else
           {
             AddDest(S1Reg);
-            __erg = CodeS(0x0f, S1Reg, 0, CReg);
+            erg = CodeS(0x0f, S1Reg, 0, CReg);
           }
         }
       }
@@ -2183,7 +2183,7 @@ static void DecodeMVK(Word Code)
        {
          AddDest(DReg);
          ThisInst = (DReg << 23) + (((S1Reg >> Hi(Code)) & 0xffff) << 7) + (UnitFlag << 1) + Lo(Code);
-         __erg = True;
+         erg = True;
        }
      }
   }
@@ -2218,11 +2218,11 @@ static void DecodeSHL(Word Code)
                  else
                  {
                    AddSrc(S1Reg);
-                   __erg = CodeS(0x33, DReg, S1Reg, S2Reg);
+                   erg = CodeS(0x33, DReg, S1Reg, S2Reg);
                  }
                  break;
                case ModImm:
-                 __erg = CodeS(0x32, DReg, S1Reg, S2Reg);
+                 erg = CodeS(0x32, DReg, S1Reg, S2Reg);
                  break;
              }
            }
@@ -2246,11 +2246,11 @@ static void DecodeSHL(Word Code)
                    else
                    {
                      AddSrc(S1Reg);
-                     __erg = CodeS(0x13, DReg, S1Reg, S2Reg);
+                     erg = CodeS(0x13, DReg, S1Reg, S2Reg);
                    }
                    break;
                  case ModImm:
-                   __erg = CodeS(0x12, DReg, S1Reg, S2Reg);
+                   erg = CodeS(0x12, DReg, S1Reg, S2Reg);
                    break;
                }
              }
@@ -2268,11 +2268,11 @@ static void DecodeSHL(Word Code)
                    else
                    {
                      AddSrc(S1Reg);
-                     __erg = CodeS(0x31, DReg, S1Reg, S2Reg);
+                     erg = CodeS(0x31, DReg, S1Reg, S2Reg);
                    }
                    break;
                  case ModImm:
-                   __erg = CodeS(0x30, DReg, S1Reg, S2Reg);
+                   erg = CodeS(0x30, DReg, S1Reg, S2Reg);
                    break;
                }
              }
@@ -2310,11 +2310,11 @@ static void DecodeSHR_SHRU(Word Code)
                  else
                  {
                    AddSrc(S1Reg);
-                   __erg = CodeS(0x27 + Code, DReg, S1Reg, S2Reg);
+                   erg = CodeS(0x27 + Code, DReg, S1Reg, S2Reg);
                  }
                  break;
                case ModImm:
-                 __erg = CodeS(0x26 + Code, DReg, S1Reg, S2Reg);
+                 erg = CodeS(0x26 + Code, DReg, S1Reg, S2Reg);
                  break;
              }
            }
@@ -2336,11 +2336,11 @@ static void DecodeSHR_SHRU(Word Code)
                  else
                  {
                    AddSrc(S1Reg);
-                   __erg = CodeS(0x25 + Code, DReg, S1Reg, S2Reg);
+                   erg = CodeS(0x25 + Code, DReg, S1Reg, S2Reg);
                  }
                  break;
                case ModImm:
-                 __erg = CodeS(0x24 + Code, DReg, S1Reg, S2Reg);
+                 erg = CodeS(0x24 + Code, DReg, S1Reg, S2Reg);
                  break;
              }
            }
@@ -2376,11 +2376,11 @@ static void DecodeSSHL(Word Code)
                else
                {
                  AddSrc(S1Reg);
-                 __erg = CodeS(0x23, DReg, S1Reg, S2Reg);
+                 erg = CodeS(0x23, DReg, S1Reg, S2Reg);
                }
                break;
              case ModImm:
-               __erg = CodeS(0x22, DReg, S1Reg, S2Reg);
+               erg = CodeS(0x22, DReg, S1Reg, S2Reg);
                break;
            }
          }
@@ -2415,12 +2415,12 @@ static void DecodeSSUB(Word Code)
               else if (IsCross(S1Reg))
               {
                 ThisCross = True;
-                __erg = CodeL(0x1f, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x1f, DReg, S1Reg, S2Reg);
               }
               else
               {
                 SetCross(S2Reg);
-                __erg = CodeL(0x0f, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x0f, DReg, S1Reg, S2Reg);
               }
             }
             break;
@@ -2431,7 +2431,7 @@ static void DecodeSSUB(Word Code)
               else
               {
                 AddSrc(S2Reg); SetCross(S2Reg);
-                __erg = CodeL(0x0e, DReg, S1Reg, S2Reg);
+                erg = CodeL(0x0e, DReg, S1Reg, S2Reg);
               }
             }
             break;
@@ -2447,7 +2447,7 @@ static void DecodeSSUB(Word Code)
              else
              {
                AddLSrc(S2Reg);
-               __erg = CodeL(0x2c, DReg, S1Reg, S2Reg);
+               erg = CodeL(0x2c, DReg, S1Reg, S2Reg);
              }
            }
          }
@@ -2514,7 +2514,7 @@ static void DecodeB(Word Code)
           {
             ThisInst = 0x10 + ((Dist & 0x007ffffc) << 5) + (UnitFlag << 1);
             ThisAbsBranch = True;
-            __erg = True;
+            erg = True;
           }
         }
       }
@@ -2523,7 +2523,7 @@ static void DecodeB(Word Code)
         if (ChkUnit(0x10, S1, S2))
         {
           SetCross(S2Reg);
-          __erg = CodeS(Code1, 0, 0, S2Reg);
+          erg = CodeS(Code1, 0, 0, S2Reg);
         }
       }
     }
@@ -2532,12 +2532,12 @@ static void DecodeB(Word Code)
 
 static Boolean DecodeInst(void)
 {
-  __erg = False;
+  erg = False;
 
   /* ueber Tabelle: */
 
   if (LookupInstTable(InstTable, OpPart.str.p_str))
-    return __erg;
+    return erg;
 
   WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
   return False;

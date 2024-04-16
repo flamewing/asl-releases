@@ -1,5 +1,5 @@
-#ifndef _CODE68RS08_H
-#define _CODE68RS08_H
+#ifndef CODE68RS08_H
+#define CODE68RS08_H
 /* code68rs08.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -13,4 +13,4 @@
 /*****************************************************************************/
 
 extern void code68rs08_init(void);
-#endif /* _CODE68RS08_H */
+#endif /* CODE68RS08_H */

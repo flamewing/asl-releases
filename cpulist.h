@@ -1,5 +1,5 @@
-#ifndef _CPULIST_H
-#define _CPULIST_H
+#ifndef CPULIST_H
+#define CPULIST_H
 /* cpulist.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -59,4 +59,4 @@ extern void ClearCPUList(void);
 
 extern void cpulist_init(void);
 
-#endif /* _CPULIST_H */
+#endif /* CPULIST_H */
