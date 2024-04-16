@@ -24,13 +24,9 @@
 #include <math.h>
 #include <errno.h>
 #include <sys/types.h>
-#ifdef __MSDOS__
-#include <alloc.h>
-#else
 #include <memory.h>
 #if !defined (__FreeBSD__) && !defined(__APPLE__)
 #include <malloc.h>
-#endif
 #endif
 
 #include "pascstyle.h"
