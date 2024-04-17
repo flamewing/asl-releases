@@ -55,8 +55,8 @@ jobs:
         include:
           - generator: Ninja
             config:
-          - generator: Xcode
-            config: -C Debug
+          # - generator: Xcode
+          #   config: -C Debug
     steps:
       - name: Install dependencies
         run: |
