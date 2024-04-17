@@ -14,24 +14,24 @@
 /*****************************************************************************/
 
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio.h>  // IWYU pragma: export
+#include <stdlib.h> // IWYU pragma: export
 #include "config.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include <math.h>
-#include <errno.h>
+#include <math.h>   // IWYU pragma: export
+#include <errno.h>  // IWYU pragma: export
 #include <sys/types.h>
 #include <memory.h>
 #if !defined (__FreeBSD__) && !defined(__APPLE__)
 #include <malloc.h>
 #endif
 
-#include "pascstyle.h"
-#include "datatypes.h"
-#include "chardefs.h"
+#include "pascstyle.h"  // IWYU pragma: export
+#include "datatypes.h"  // IWYU pragma: export
+#include "chardefs.h"   // IWYU pragma: export
 
 #ifndef min
 #define min(a,b) ((a<b)?(a):(b))
