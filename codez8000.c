@@ -1137,7 +1137,9 @@ static void DissectBit_Z8000(char *pDest, size_t DestSize, LargeWord Inp)
   Attribute = "bw"[OpSize];
   if (HexStartCharacter == 'A')
     Attribute = as_toupper(Attribute);
-  as_snprintf(pDest, DestSize, "%s%~.*u%s%s(%c).%u",
+  // Original format string on the next line was "%s%~.*u%s%s(%c).%u"
+  // Trying without the non-standard '~' to see if there is a difference.
+  as_snprintf(pDest, DestSize, "%s%.*u%s%s(%c).%u",
               ForceShort ? "|" : "",
               ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix((unsigned)ListRadixBase),
               ForceShort ? "|" : "",

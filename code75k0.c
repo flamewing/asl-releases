@@ -286,7 +286,9 @@ chk:
 static void DissectBit_75K0(char *pDest, size_t DestSize, LargeWord Inp)
 {
   if (Hi(Inp))
-    as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+    // Original format string on the next line was "%~03.*u%s.%c"
+    // Trying without the non-standard '~' to see if there is a difference.
+    as_snprintf(pDest, DestSize, "%03.*u%s.%c",
                 ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntConstIntelSuffix(ListRadixBase),
                 '0' + (char)(Hi(Inp) & 3));
   else switch ((Inp >> 6) & 3)
@@ -298,17 +300,23 @@ static void DissectBit_75K0(char *pDest, size_t DestSize, LargeWord Inp)
                   '0' + (char)((Inp >> 4) & 3));
       break;
     case 1:
-      as_snprintf(pDest, DestSize, "%~03.*u%s.@%c",
+      // Original format string on the next line was "%~03.*u%s.@%c"
+      // Trying without the non-standard '~' to see if there is a difference.
+      as_snprintf(pDest, DestSize, "%03.*u%s.@%c",
                   ListRadixBase, (unsigned)(0xfc0 + ((Inp & 0x0f) << 2)), GetIntConstIntelSuffix(ListRadixBase),
                   HexStartCharacter + ('L' - 'A'));
       break;
     case 2:
-      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+      // Original format string on the next line was "%~03.*u%s.%c"
+      // Trying without the non-standard '~' to see if there is a difference.
+      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
                   '0' + (char)((Inp >> 4) & 3));
       break;
     case 3:
-      as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
+      // Original format string on the next line was "%~03.*u%s.%c"
+      // Trying without the non-standard '~' to see if there is a difference.
+      as_snprintf(pDest, DestSize, "%03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
                   '0' + (char)((Inp >> 4) & 3));
       break;
