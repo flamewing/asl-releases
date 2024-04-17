@@ -16,7 +16,26 @@
 
 #include <inttypes.h>
 #include <stdint.h>
-#include "config.h"
+#include "config.h" // IWYU pragma: export
+
+#ifdef _MSC_VER
+# include <stddef.h>
+# ifdef _USE_ATTRIBUTES_FOR_SAL
+#  undef _USE_ATTRIBUTES_FOR_SAL
+# endif
+/* nolint */
+# define _USE_ATTRIBUTES_FOR_SAL 1
+# include <sal.h>
+# define PRINTF_FORMAT _Printf_format_string_
+# define PRINTF_FORMAT_ATTR(format_param, dots_param)
+#elif defined(__GNUC__)
+# define PRINTF_FORMAT
+# define PRINTF_FORMAT_ATTR(format_param, dots_param) \
+  __attribute__((__format__(__printf__, format_param, dots_param)))
+#else
+# define PRINTF_FORMAT
+# define PRINTF_FORMAT_ATTR(format_param, dots_param)
+#endif
 
 #if defined(_WIN32) || defined(__EMX__) || defined(__MSDOS__) || defined(__IBMC__)
 # define OPENRDMODE "rb"
