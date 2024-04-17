@@ -388,6 +388,7 @@ target_include_directories(CMDLINE_COMMON
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}
 )
+add_dependencies(CMDLINE_COMMON cmdarg_res ioerrs_res)
 
 add_library(NLS_OBJECTS
     OBJECT
@@ -439,6 +440,7 @@ target_include_directories(TOOLS_COMMON
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}
 )
+add_dependencies(TOOLS_COMMON tools_res)
 
 add_library(CHUNKS_COMMON
     chunks.c
@@ -746,6 +748,7 @@ target_include_directories(AS_OBJECTS
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}
 )
+add_dependencies(AS_OBJECTS as_res)
 
 set(DAS_OBJECTS
     das.c
@@ -828,7 +831,6 @@ define_executable(asl
     $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(asl)
-add_dependencies(asl as_res cmdarg_res ioerrs_res)
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
     define_executable(asw
@@ -842,7 +844,6 @@ if(DEFINED ENV{MSYSTEM_PREFIX})
         $<TARGET_OBJECTS:HEADIDS_COMMON>
     )
     target_link_libm(asw)
-    add_dependencies(asw as_res cmdarg_res ioerrs_res)
     set(ASW_TARGET asw)
 else()
     set(ASW_TARGET "")
@@ -856,7 +857,7 @@ define_executable(dasl
     $<TARGET_OBJECTS:CMDLINE_COMMON>
     $<TARGET_OBJECTS:CHUNKS_COMMON>
 )
-add_dependencies(dasl das_res cmdarg_res ioerrs_res)
+add_dependencies(dasl das_res)
 
 define_executable(plist
     ${PLIST_OBJECTS}
@@ -868,7 +869,7 @@ define_executable(plist
     $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(plist)
-add_dependencies(plist plist_res tools_res cmdarg_res ioerrs_res)
+add_dependencies(plist plist_res)
 
 define_executable(alink
     ${ALINK_OBJECTS}
@@ -879,7 +880,7 @@ define_executable(alink
     $<TARGET_OBJECTS:CMDLINE_COMMON>
 )
 target_link_libm(alink)
-add_dependencies(alink alink_res tools_res cmdarg_res ioerrs_res)
+add_dependencies(alink alink_res)
 
 define_executable(pbind
     ${PBIND_OBJECTS}
@@ -890,7 +891,7 @@ define_executable(pbind
     $<TARGET_OBJECTS:CMDLINE_COMMON>
 )
 target_link_libm(pbind)
-add_dependencies(pbind pbind_res tools_res cmdarg_res ioerrs_res)
+add_dependencies(pbind pbind_res)
 
 define_executable(p2hex
     ${P2HEX_OBJECTS}
@@ -903,7 +904,7 @@ define_executable(p2hex
     $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(p2hex)
-add_dependencies(p2hex p2hex_res tools_res cmdarg_res ioerrs_res)
+add_dependencies(p2hex p2hex_res)
 
 define_executable(p2bin
     ${P2BIN_OBJECTS}
@@ -915,7 +916,7 @@ define_executable(p2bin
     $<TARGET_OBJECTS:CHUNKS_COMMON>
 )
 target_link_libm(p2bin)
-add_dependencies(p2bin p2bin_res tools_res cmdarg_res ioerrs_res)
+add_dependencies(p2bin p2bin_res)
 
 define_executable(test_driver
     test_driver.c
