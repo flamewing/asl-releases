@@ -549,8 +549,7 @@ void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig)
       DigIns(Exp[z], epos + 20, pDest);
   }
 
-  if (HostBigEndian)
-    WSwap(pDest, 12);
+  WSwapLittleEndianToHost(pDest, 12);
 }
 
 static void EnterByte(LargeWord b)
@@ -1017,8 +1016,12 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn)
             Word TurnField[8];
 
             ConvertFloat(t.Contents.Float, (Byte *) TurnField, HostBigEndian);
-            if (HostBigEndian && Swap)
+#if HostBigEndian
+            if (Swap)
               Swap((void*) TurnField, WSize);
+#else
+            (void)Swap;
+#endif
             for (z2 = 0; z2 < Rep; z2++)
               EnterFloat(TurnField);
           }
@@ -1043,8 +1046,12 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn)
                     Word TurnField[8];
 
                     ConvertFloat(CharTransTable[(usint) (*zp & 0xff)], (Byte *) TurnField, HostBigEndian);
-                    if (HostBigEndian && Swap)
+#if HostBigEndian
+                    if (Swap)
                       Swap((void*) TurnField, WSize);
+#else
+                    (void)Swap;
+#endif
                     EnterFloat(TurnField);
                   }
               }

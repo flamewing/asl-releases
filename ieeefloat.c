@@ -120,8 +120,7 @@ void Double_2_ieee10(Double inp, Byte *pDest, Boolean NeedsBig)
   Boolean Denormal;
 
   memcpy(Buffer, &inp, 8);
-  if (HostBigEndian)
-    QSwap(Buffer, 8);
+  QSwapLittleEndianToHost(Buffer, 8);
   Sign = (Buffer[7] & 0x80);
   Exponent = (Buffer[6] >> 4) + (((Word) Buffer[7] & 0x7f) << 4);
   Denormal = (Exponent == 0);

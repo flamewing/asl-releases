@@ -18,74 +18,139 @@
 #include "datatypes.h"
 #include <stdio.h>
 
-extern Boolean HostBigEndian;
-
-extern const char *Integ16Format, *Integ32Format, *Integ64Format;
-extern const char *IntegerFormat, *LongIntFormat, *QuadIntFormat;
-extern const char *LargeIntFormat, *LargeHIntFormat;
-
-
-extern void WSwap(void *Field, int Cnt);
-
-extern void DSwap(void *Field, int Cnt);
-
-extern void QSwap(void *Field, int Cnt);
-
-extern void TSwap(void *Field, int Cnt);
-
-extern void DWSwap(void *Field, int Cnt);
-
-extern void QWSwap(void *Field, int Cnt);
-
-extern void TWSwap(void *Field, int Cnt);
-
-
-extern Boolean Read2(FILE *file, void *Ptr);
-
-extern Boolean Read4(FILE *file, void *Ptr);
-
-extern Boolean Read8(FILE *file, void *Ptr);
-
-
-extern Boolean Write2(FILE *file, void *Ptr);
-
-extern Boolean Write4(FILE *file, void *Ptr);
-
-extern Boolean Write8(FILE *file, void *Ptr);
-
-#define MRead1L(Buffer) (*((Byte *)(Buffer)))
-
-#define MRead1B(Buffer) (*((Byte *)(Buffer)))
-
-extern Word MRead2L(Byte *Buffer);
-
-extern Word MRead2B(Byte *Buffer);
-
-#define MWrite1L(Buffer, Value) (*((Byte*) (Buffer))) = Value;
-
-#define MWrite1B(Buffer, Value) (*((Byte*) (Buffer))) = Value;
-
-extern void MWrite2L(Byte *Buffer, Word Value);
-
-extern void MWrite2B(Byte *Buffer, Word Value);
-
-extern LongWord MRead4L(Byte *Buffer);
-
-extern LongWord MRead4B(Byte *Buffer);
-
-extern void MWrite4L(Byte *Buffer, LongWord Value);
-
-extern void MWrite4B(Byte *Buffer, LongWord Value);
-
+_Static_assert(sizeof(Byte) == 1, "sizeof(Byte) is not 1");
+_Static_assert(sizeof(ShortInt) == 1, "sizeof(ShortInt) is not 1");
+#ifdef HAS16
+_Static_assert(sizeof(Word) == 2, "sizeof(Word) is not 2");
+_Static_assert(sizeof(Integer) == 2, "sizeof(Integer) is not 2");
+#endif
+_Static_assert(sizeof(LongInt) == 4, "sizeof(LongInt) is not 4");
+_Static_assert(sizeof(LongWord) == 4, "sizeof(LongWord) is not 4");
 #ifdef HAS64
-extern QuadWord MRead8L(Byte *Buffer);
+_Static_assert(sizeof(QuadInt) == 8, "sizeof(QuadInt) is not 8");
+_Static_assert(sizeof(QuadWord) == 8, "sizeof(QuadWord) is not 8");
+#endif
+_Static_assert(sizeof(Single) == 4, "sizeof(Single) is not 4");
+_Static_assert(sizeof(Double) == 8, "sizeof(Double) is not 8");
 
-extern QuadWord MRead8B(Byte *Buffer);
-
-extern void MWrite8L(Byte *Buffer, QuadWord Value);
-
-extern void MWrite8B(Byte *Buffer, QuadWord Value);
+#ifdef __BYTE_ORDER__
+# ifndef BYTE_ORDER
+#  define BYTE_ORDER __BYTE_ORDER__
+# endif
+# ifndef BIG_ENDIAN
+#  define BIG_ENDIAN __ORDER_BIG_ENDIAN__
+# endif
+# ifndef LITTLE_ENDIAN
+#  define LITTLE_ENDIAN	__ORDER_LITTLE_ENDIAN__
+# endif
+#elif defined (_MSC_VER)
+# define BIG_ENDIAN	4321
+# define LITTLE_ENDIAN	1234
+# define PDP_ENDIAN	3412
+# define BYTE_ORDER	LITTLE_ENDIAN
+#elif defined(HAVE_ENDIAN_H)
+# include <endian.h>
+#elif defined(HAVE_SYS_PARAM_H)
+# include <sys/param.h>
+#else
+# error "Cannot determine endianness of target platform."
 #endif
 
-extern void endian_init(void);
+#define HostBigEndian (BYTE_ORDER == BIG_ENDIAN)
+
+#define IntegerFormat "%" PRId32
+#define Integ16Format "%" PRId32
+
+#define LongIntFormat "%" PRId32
+#define Integ32Format "%" PRId32
+
+#define QuadIntFormat "%" PRId64
+#define Integ64Format "%" PRId64
+
+#define LargeIntFormat "%" PRId64
+#define LargeHIntFormat "%" PRIx64
+
+#ifdef __TINYC__
+# define INLINE extern
+#else
+# define INLINE static inline
+#endif
+
+INLINE void WSwap(void *Field, int Cnt);
+INLINE void DSwap(void *Field, int Cnt);
+INLINE void QSwap(void *Field, int Cnt);
+INLINE void TSwap(void *Field, int Cnt);
+INLINE void DWSwap(void *Field, int Cnt);
+INLINE void QWSwap(void *Field, int Cnt);
+INLINE void TWSwap(void *Field, int Cnt);
+
+#if HostBigEndian
+# define WSwapBigEndianToHost(Field, Cnt)
+# define DSwapBigEndianToHost(Field, Cnt)
+# define QSwapBigEndianToHost(Field, Cnt)
+# define TSwapBigEndianToHost(Field, Cnt)
+# define DWSwapBigEndianToHost(Field, Cnt)
+# define QWSwapBigEndianToHost(Field, Cnt)
+# define TWSwapBigEndianToHost(Field, Cnt)
+# define WSwapLittleEndianToHost(Field, Cnt) WSwap(Field, Cnt)
+# define DSwapLittleEndianToHost(Field, Cnt) DSwap(Field, Cnt)
+# define QSwapLittleEndianToHost(Field, Cnt) QSwap(Field, Cnt)
+# define TSwapLittleEndianToHost(Field, Cnt) TSwap(Field, Cnt)
+# define DWSwapLittleEndianToHost(Field, Cnt) DWSwap(Field, Cnt)
+# define QWSwapLittleEndianToHost(Field, Cnt) QWSwap(Field, Cnt)
+# define TWSwapLittleEndianToHost(Field, Cnt) TWSwap(Field, Cnt)
+#else
+# define WSwapBigEndianToHost(Field, Cnt) WSwap(Field, Cnt)
+# define DSwapBigEndianToHost(Field, Cnt) DSwap(Field, Cnt)
+# define QSwapBigEndianToHost(Field, Cnt) QSwap(Field, Cnt)
+# define TSwapBigEndianToHost(Field, Cnt) TSwap(Field, Cnt)
+# define DWSwapBigEndianToHost(Field, Cnt) DWSwap(Field, Cnt)
+# define QWSwapBigEndianToHost(Field, Cnt) QWSwap(Field, Cnt)
+# define TWSwapBigEndianToHost(Field, Cnt) TWSwap(Field, Cnt)
+# define WSwapLittleEndianToHost(Field, Cnt)
+# define DSwapLittleEndianToHost(Field, Cnt)
+# define QSwapLittleEndianToHost(Field, Cnt)
+# define TSwapLittleEndianToHost(Field, Cnt)
+# define DWSwapLittleEndianToHost(Field, Cnt)
+# define QWSwapLittleEndianToHost(Field, Cnt)
+# define TWSwapLittleEndianToHost(Field, Cnt)
+#endif
+
+INLINE Boolean Read2(FILE *file, void *Ptr);
+INLINE Boolean Read4(FILE *file, void *Ptr);
+INLINE Boolean Read8(FILE *file, void *Ptr);
+
+INLINE Boolean Write2(FILE *file, const void *Ptr);
+INLINE Boolean Write4(FILE *file, const void *Ptr);
+INLINE Boolean Write8(FILE *file, const void *Ptr);
+
+#define MRead1L(Buffer) (*((Byte *)(Buffer)))
+#define MRead1B(Buffer) (*((Byte *)(Buffer)))
+
+INLINE Word MRead2L(const Byte *Buffer);
+INLINE Word MRead2B(const Byte *Buffer);
+
+#define MWrite1L(Buffer, Value) (*((Byte*) (Buffer))) = Value;
+#define MWrite1B(Buffer, Value) (*((Byte*) (Buffer))) = Value;
+
+INLINE void MWrite2L(Byte *Buffer, Word Value);
+INLINE void MWrite2B(Byte *Buffer, Word Value);
+INLINE LongWord MRead4L(const Byte *Buffer);
+INLINE LongWord MRead4B(const Byte *Buffer);
+INLINE void MWrite4L(Byte *Buffer, LongWord Value);
+INLINE void MWrite4B(Byte *Buffer, LongWord Value);
+
+#ifdef HAS64
+INLINE QuadWord MRead8L(const Byte *Buffer);
+INLINE QuadWord MRead8B(const Byte *Buffer);
+INLINE void MWrite8L(Byte *Buffer, QuadWord Value);
+INLINE void MWrite8B(Byte *Buffer, QuadWord Value);
+#endif
+
+#undef INLINE
+
+#ifndef __TINYC__
+# include "as_endian.inl.h"
+#endif
+
 #endif /* AS_ENDIAN_H */

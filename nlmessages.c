@@ -258,8 +258,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
   Catalog->StrPosis[0] = 0;
   if ((int)fread(Catalog->StrPosis + 1, 4, Catalog->MsgCount - 1, MsgFile) + 1 != Catalog->MsgCount)
     error(ERdMsg);
-  if (HostBigEndian)
-    DSwap(Catalog->StrPosis + 1, (Catalog->MsgCount - 1) << 2);
+  DSwapLittleEndianToHost(Catalog->StrPosis + 1, (Catalog->MsgCount - 1) << 2);
   for (z = 1; z < Catalog->MsgCount; z++)
   {
     Catalog->StrPosis[z] -= StrStart;

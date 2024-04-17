@@ -1078,8 +1078,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         if (ValOK)
         {
           Double_2_ieee4(DVal, (Byte *) SwapField, HostBigEndian);
-          if (HostBigEndian)
-            DWSwap((Byte *) SwapField, 4);
+          DWSwapLittleEndianToHost((Byte *) SwapField, 4);
           pResult->Vals[0] = SwapField[1];
           pResult->Vals[1] = SwapField[0];
         }
@@ -1090,8 +1089,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         if (ValOK)
         {
           Double_2_ieee8(DVal, (Byte *) SwapField, HostBigEndian);
-          if (HostBigEndian)
-            QWSwap((Byte *) SwapField, 8);
+          QWSwapLittleEndianToHost((Byte *) SwapField, 8);
           pResult->Vals[0] = SwapField[3];
           pResult->Vals[1] = SwapField[2];
           pResult->Vals[2] = SwapField[1];
@@ -1104,8 +1102,7 @@ static Byte DecodeAdr(const tStrComp *pArg, Word Erl, tAdrResult *pResult)
         if (ValOK)
         {
           Double_2_ieee10(DVal, (Byte *) SwapField, False);
-          if (HostBigEndian)
-            WSwap((Byte *) SwapField, 10);
+          WSwapLittleEndianToHost((Byte *) SwapField, 10);
           pResult->Vals[0] = SwapField[4];
           pResult->Vals[1] = 0;
           pResult->Vals[2] = SwapField[3];

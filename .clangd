@@ -13,15 +13,16 @@ CompileFlags:
       -Wno-declaration-after-statement,
       -Wno-used-but-marked-unused,
       -Wno-missing-variable-declarations,
+      -D_CLANGD=1,
     ]
   Remove: -W*
 ---
 If:
   PathMatch: [.*\.h, .*\.rsc]
 CompileFlags:
-  Add: [-xc-header, -std=c11]
+  Add: [-xc-header, -std=c11, -D_CLANGD=1, -Wno-unused-macros]
 ---
 If:
   PathMatch: [.*\.hpp]
 CompileFlags:
-  Add: [-xc++-header, -std=c++17]
+  Add: [-xc++-header, -std=c++17, -D_CLANGD=1]

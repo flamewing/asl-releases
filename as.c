@@ -4399,7 +4399,6 @@ int main(int argc, char **argv)
 
   if (First)
   {
-    endian_init();
     nls_init();
     bpemu_init();
     stdhandl_init();

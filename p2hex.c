@@ -527,8 +527,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
           switch (ActFormat)
           {
             case eHexFormatTiDSK:
-              if (HostBigEndian)
-                WSwap(WBuffer, TransLen);
+              WSwapLittleEndianToHost(WBuffer, TransLen);
               for (z = 0; z < (TransLen / 2); z++)
               {
                 errno = 0;
@@ -1127,7 +1126,6 @@ int main(int argc, char **argv)
   if (!NLS_Initialize(&argc, argv))
     exit(4);
 
-  endian_init();
   bpemu_init();
   chunks_init();
   cmdarg_init(*argv);

@@ -670,12 +670,11 @@ static Boolean DecodePseudo(void)
         if (!OK)
           break;
         Double_2_ieee8(Float, (Byte *) (DAsmCode + z2), HostBigEndian);
-        if (!HostBigEndian)
-        {
-          DAsmCode[z2 + 2] = DAsmCode[z2 + 0];
-          DAsmCode[z2 + 0] = DAsmCode[z2 + 1];
-          DAsmCode[z2 + 1] = DAsmCode[z2 + 2];
-        }
+#if HostBigEndian == 0
+        DAsmCode[z2 + 2] = DAsmCode[z2 + 0];
+        DAsmCode[z2 + 0] = DAsmCode[z2 + 1];
+        DAsmCode[z2 + 1] = DAsmCode[z2 + 2];
+#endif
       }
       if (OK)
         CodeLen = ArgCnt << 3;
