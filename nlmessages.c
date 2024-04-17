@@ -143,8 +143,8 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
       else
       {
         memcpy(str, Path, pSep - Path); str[pSep - Path] = '\0';
-        strcat(str, SPATHSEP);
-        strcat(str, File);
+        strmaxcat(str, SPATHSEP, sizeof(str));
+        strmaxcat(str, File, sizeof(str));
         MsgFile = myopen(str, MsgId1, MsgId2);
       }
     }
