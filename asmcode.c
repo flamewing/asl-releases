@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "version.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "chunks.h"
 #include "as.h"
 #include "asmdef.h"

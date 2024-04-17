@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "version.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "stdhandl.h"
 #include "bpemu.h"
 #include "strutil.h"

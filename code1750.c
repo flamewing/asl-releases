@@ -27,7 +27,7 @@
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "ieeefloat.h"
 #include "errmsg.h"
 

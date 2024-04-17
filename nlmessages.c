@@ -15,7 +15,7 @@
 #include <string.h>
 #include "strutil.h"
 
-#include "endian.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "nls.h"
 #include "chardefs.h"

@@ -10,7 +10,7 @@
 
 #include "stdinc.h"
 
-#include "endian.h"
+#include "as_endian.h"
 #include "vaxfloat.h"
 
 #ifdef VAXFLOAT

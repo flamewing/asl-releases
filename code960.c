@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "endian.h"
+#include "as_endian.h"
 #include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"

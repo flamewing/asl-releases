@@ -299,8 +299,8 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 if(NOT CMAKE_CROSSCOMPILING)
     set(RESCOMP_OBJECTS
         rescomp.c
-        endian.c
-        endian.h
+        as_endian.c
+        as_endian.h
         strutil.c
         strutil.h
         dynstr.c
@@ -667,8 +667,8 @@ set(AS_OBJECTS
     ${CMAKE_BINARY_DIR}/as.rsc
     version.c
     version.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     math64.c
@@ -712,8 +712,8 @@ set(DASM_OBJECTS
 set(DAS_OBJECTS
     version.c
     version.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     chunks.c
@@ -758,8 +758,8 @@ set(PLIST_OBJECTS
     addrspace.h
     headids.c
     headids.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     stringlists.c
@@ -790,8 +790,8 @@ set(ALINK_OBJECTS
     ${CMAKE_BINARY_DIR}/tools.rsc
     addrspace.c
     addrspace.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     stringlists.c
@@ -822,8 +822,8 @@ set(PBIND_OBJECTS
     ${CMAKE_BINARY_DIR}/tools.rsc
     addrspace.c
     addrspace.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     stringlists.c
@@ -858,8 +858,8 @@ set(P2HEX_OBJECTS
     addrspace.h
     headids.c
     headids.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     stringlists.c
@@ -892,8 +892,8 @@ set(P2BIN_OBJECTS
     ${CMAKE_BINARY_DIR}/tools.rsc
     addrspace.c
     addrspace.h
-    endian.c
-    endian.h
+    as_endian.c
+    as_endian.h
     bpemu.c
     bpemu.h
     stringlists.c
