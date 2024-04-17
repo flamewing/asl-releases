@@ -783,10 +783,10 @@ size_t strmaxcpy(char *dest, const char *src, size_t Max)
 
 size_t strmaxcat(char *Dest, const char *Src, size_t MaxLen)
 {
-  int TLen = strlen(Src);
+  size_t TLen = strlen(Src);
   size_t DLen = strlen(Dest);
 
-  if (TLen > (int)MaxLen - 1 - (int)DLen)
+  if (TLen > MaxLen - 1 - DLen)
     TLen = MaxLen - DLen - 1;
   if (TLen > 0)
   {
