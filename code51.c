@@ -564,7 +564,9 @@ chk:
 
 static void DissectBit_251(char *pDest, size_t DestSize, LargeWord Inp)
 {
-  as_snprintf(pDest, DestSize, "%~02.*u%s.%u",
+  // Original format string on the next line was "%~02.*u%s.%u"
+  // Trying without the non-standard '~' to see if there is a difference.
+  as_snprintf(pDest, DestSize, "%02.*u%s.%u",
               ListRadixBase, (unsigned)(Inp & 0xff), GetIntConstIntelSuffix((unsigned)ListRadixBase),
               (unsigned)(Inp >> 24));
 }
@@ -2409,12 +2411,16 @@ static void DecodeSFR(Word Index)
         }
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
-        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s-%~02.*u%s",
+        // Original format string on the next line was "=%~02.*u%s-%~02.*u%s"
+        // Trying without the non-standard '~' to see if there is a difference.
+        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s-%02.*u%s",
                     ListRadixBase, (unsigned)BitStart, GetIntConstIntelSuffix((unsigned)ListRadixBase),
                     ListRadixBase, (unsigned)BitStart + 7, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       }
       else
-        as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
+        // Original format string on the next line was "=%~02.*u%s"
+        // Trying without the non-standard '~' to see if there is a difference.
+        as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
                     ListRadixBase, (unsigned)AdrByte, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       LimitListLine();
       PopLocHandle();
@@ -2447,7 +2453,9 @@ static void DecodeBIT(Word Index)
       PushLocHandle(-1);
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
-      as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
+      // Original format string on the next line was "=%~02.*u%s"
+      // Trying without the non-standard '~' to see if there is a difference.
+      as_snprintf(ListLine, STRINGSIZE, "=%02.*u%s",
                   ListRadixBase, (unsigned)AdrLong, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       LimitListLine();
     }
