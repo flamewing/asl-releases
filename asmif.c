@@ -358,7 +358,7 @@ static void CodeCASE(void)
         while (!eq && (z <= ArgCnt));
         as_tempres_free(&t);
       }
-      IfAsm = (FirstIfSave->SaveIfAsm && eq & !FirstIfSave->CaseFound);
+      IfAsm = (FirstIfSave->SaveIfAsm && eq && !FirstIfSave->CaseFound);
       if (FirstIfSave->SaveIfAsm)
         AddBoolFlag(eq && !FirstIfSave->CaseFound);
       if (eq)
