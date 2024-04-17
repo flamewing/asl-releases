@@ -228,18 +228,18 @@ static void IntLine(char *pDest, size_t DestSize, LargeWord Inp, tIntConstMode T
   switch (ThisConstMode)
   {
     case eIntConstModeIntel:
-      as_snprintf(pDest, DestSize, "%lllx%s", Inp, GetIntConstIntelSuffix(16));
+      as_snprintf(pDest, DestSize, "%" PRIx64 "%s", Inp, GetIntConstIntelSuffix(16));
       if (*pDest > '9')
         strmaxprep(pDest, "0", DestSize);
       break;
     case eIntConstModeMoto:
-      as_snprintf(pDest, DestSize, "%s%lllx", GetIntConstMotoPrefix(16), Inp);
+      as_snprintf(pDest, DestSize, "%s%" PRIx64, GetIntConstMotoPrefix(16), Inp);
       break;
     case eIntConstModeC:
-      as_snprintf(pDest, DestSize, "0x%lllx", Inp);
+      as_snprintf(pDest, DestSize, "0x%" PRIx64, Inp);
       break;
     case eIntConstModeIBM:
-      as_snprintf(pDest, DestSize, "x'%lllx'", Inp);
+      as_snprintf(pDest, DestSize, "x'%" PRIx64 "'", Inp);
       break;
   }
 }

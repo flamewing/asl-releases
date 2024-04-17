@@ -289,7 +289,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   if (!QuietMode)
   {
     errno = 0; printf("  ("); ChkIO(OutName);
-    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+    errno = 0; printf("%" PRIu32, SumLen); ChkIO(OutName);
     errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
   }
   if (!SumLen)

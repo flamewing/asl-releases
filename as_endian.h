@@ -58,18 +58,6 @@ _Static_assert(sizeof(Double) == 8, "sizeof(Double) is not 8");
 
 #define HostBigEndian (BYTE_ORDER == BIG_ENDIAN)
 
-#define IntegerFormat "%" PRId32
-#define Integ16Format "%" PRId32
-
-#define LongIntFormat "%" PRId32
-#define Integ32Format "%" PRId32
-
-#define QuadIntFormat "%" PRId64
-#define Integ64Format "%" PRId64
-
-#define LargeIntFormat "%" PRId64
-#define LargeHIntFormat "%" PRIx64
-
 #ifdef __TINYC__
 # define INLINE extern
 #else

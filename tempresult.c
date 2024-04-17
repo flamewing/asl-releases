@@ -226,7 +226,7 @@ int as_tempres_append_dynstr(as_dynstr_t *p_dest, const TempResult *pResult)
   switch (pResult->Typ)
   {
     case TempInt:
-      as_sdprcatf(p_dest, "%llld", pResult->Contents.Int);
+      as_sdprcatf(p_dest, "%" PRId64, pResult->Contents.Int);
       break;
     case TempFloat:
       as_sdprcatf(p_dest, "%0.16e", pResult->Contents.Float);

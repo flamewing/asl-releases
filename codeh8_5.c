@@ -775,7 +775,7 @@ static void DissectBit_H8_5(char *pDest, size_t DestSize, LargeWord Inp)
 
   as_snprintf(pDest, DestSize, "#%u,$%llx", BitPos, (LargeWord)Address);
   if (AddrSize != eSymbolSizeUnknown)
-    as_snprcatf(pDest, DestSize, ":%u", AddrSize ? 16 : 8);
+    as_snprcatf(pDest, DestSize, ":%x", AddrSize ? 16U : 8U);
   if (OpSize != eSymbolSizeUnknown)
     as_snprcatf(pDest, DestSize, ".%c", "BW"[OpSize]);
 }

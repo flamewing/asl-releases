@@ -747,10 +747,10 @@ void StrSym(const TempResult *t, Boolean WithSystem, as_dynstr_t *p_dest, unsign
         switch (IntConstMode)
         {
           case eIntConstModeIntel:
-            as_sdprcatf(p_dest, GetIntConstIntelSuffix(Radix));
+            as_sdprcatf(p_dest, "%s", GetIntConstIntelSuffix(Radix));
             break;
           case eIntConstModeIBM:
-            as_sdprcatf(p_dest, GetIntConstIBMSuffix(Radix));
+            as_sdprcatf(p_dest, "%s", GetIntConstIBMSuffix(Radix));
             break;
           default:
             break;
@@ -837,7 +837,7 @@ void NewPage(ShortInt Level, Boolean WithFF)
 
   for (z = ChapDepth; z >= 0; z--)
   {
-    as_snprintf(s, sizeof(s), IntegerFormat, PageCounter[z]);
+    as_snprintf(s, sizeof(s), "%" PRId32, PageCounter[z]);
     strmaxcat(Header, s, STRINGSIZE);
     if (z != 0)
       strmaxcat(Header, ".", STRINGSIZE);

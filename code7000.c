@@ -156,9 +156,9 @@ static char *LiteralName(PLiteral Lit, char *Result, int ResultSize)
 {
   as_snprintf(Result, ResultSize, "LITERAL_");
   if (Lit->IsForward)
-    as_snprcatf(Result, ResultSize, "F_%08lllx", (LargeWord)Lit->FCount);
+    as_snprcatf(Result, ResultSize, "F_%08" PRIx64, (LargeWord)Lit->FCount);
   else if (Lit->Is32)
-    as_snprcatf(Result, ResultSize, "L_%08lllx", (LargeWord)Lit->Value);
+    as_snprcatf(Result, ResultSize, "L_%08" PRIx64, (LargeWord)Lit->Value);
   else
     as_snprcatf(Result, ResultSize, "W_%04x", (unsigned)Lit->Value);
   as_snprcatf(Result, ResultSize, "_%x", (unsigned)Lit->PassNo);

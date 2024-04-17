@@ -565,7 +565,7 @@ chk:
 static void DissectBit_251(char *pDest, size_t DestSize, LargeWord Inp)
 {
   as_snprintf(pDest, DestSize, "%~02.*u%s.%u",
-              ListRadixBase, (unsigned)(Inp & 0xff), GetIntConstIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)(Inp & 0xff), GetIntConstIntelSuffix((unsigned)ListRadixBase),
               (unsigned)(Inp >> 24));
 }
 
@@ -2410,12 +2410,12 @@ static void DecodeSFR(Word Index)
         if (MakeUseList)
           if (AddChunk(SegChunks + SegBData, BitStart, 8, False)) WrError(ErrNum_Overlap);
         as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s-%~02.*u%s",
-                    ListRadixBase, (unsigned)BitStart, GetIntConstIntelSuffix(ListRadixBase),
-                    ListRadixBase, (unsigned)BitStart + 7, GetIntConstIntelSuffix(ListRadixBase));
+                    ListRadixBase, (unsigned)BitStart, GetIntConstIntelSuffix((unsigned)ListRadixBase),
+                    ListRadixBase, (unsigned)BitStart + 7, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       }
       else
         as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
-                    ListRadixBase, (unsigned)AdrByte, GetIntConstIntelSuffix(ListRadixBase));
+                    ListRadixBase, (unsigned)AdrByte, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       LimitListLine();
       PopLocHandle();
     }
@@ -2448,7 +2448,7 @@ static void DecodeBIT(Word Index)
       EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
       PopLocHandle();
       as_snprintf(ListLine, STRINGSIZE, "=%~02.*u%s",
-                  ListRadixBase, (unsigned)AdrLong, GetIntConstIntelSuffix(ListRadixBase));
+                  ListRadixBase, (unsigned)AdrLong, GetIntConstIntelSuffix((unsigned)ListRadixBase));
       LimitListLine();
     }
   }

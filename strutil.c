@@ -254,7 +254,7 @@ static size_t append_pad(dest_format_context_t *p_dest_ctx, char src, size_t cnt
 }
 
 #if 0
-static int FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+static size_t FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
 {
   int DecPt;
   int Sign, Result = 0;
@@ -293,15 +293,26 @@ static int FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Bo
   return Result;
 }
 #else
-static int FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+static size_t FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
 {
-  char Format[10];
-
-  (void)DestSize;
-  (void)TruncateTrailingZeros;
-  strcpy(Format, "%0.*e");
-  Format[4] = (HexStartCharacter == 'a') ? FormatType : toupper(FormatType);
-  sprintf(pDest, Format, Digits, Src);
+  UNUSED(DestSize);
+  UNUSED(TruncateTrailingZeros);
+  const Boolean needUpperCaseFormat = HexStartCharacter != 'a';
+  switch (FormatType)
+  {
+    case 'e':
+      sprintf(pDest, needUpperCaseFormat ? "%0.*E" : "%0.*e", Digits, Src);
+      break;
+    case 'f':
+      sprintf(pDest, needUpperCaseFormat ? "%0.*F" : "%0.*f", Digits, Src);
+      break;
+    case 'g':
+      sprintf(pDest, needUpperCaseFormat ? "%0.*G" : "%0.*g", Digits, Src);
+      break;
+    default:
+      fprintf(stderr, "invalid format type: '%c' in FloatConvert\n", FormatType);
+      exit(255);
+  }
   return strlen(pDest);
 }
 #endif
@@ -503,10 +514,10 @@ static int vsprcatf_core(dest_format_context_t *p_dest_ctx, const char *pFormat,
         case 'g':
         {
           char Str[100];
-          int Cnt;
+          size_t Cnt;
 
           Cnt = FloatConvert(Str, sizeof(Str), va_arg(ap, double), FormatContext.Arg[1], False, *pFormat);
-          if (Cnt > (int)sizeof(Str))
+          if (Cnt > sizeof(Str))
             Cnt = sizeof(Str);
           Result += append(p_dest_ctx, Str, Cnt, &FormatContext);
           break;

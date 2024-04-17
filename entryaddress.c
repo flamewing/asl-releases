@@ -94,7 +94,7 @@ void PrintEntryAddress(FILE *pFile)
   fprintf(pFile, "(");
   for (pRun = pFirstEntryAddress; pRun; pRun = pRun->pNext)
   {
-    as_snprintf(Str, sizeof Str, " %lllx", pRun->Address);
+    as_snprintf(Str, sizeof Str, " %" PRIx64, pRun->Address);
     fprintf(pFile, "%s\n", Str);
   }
   fprintf(pFile, ")\n");

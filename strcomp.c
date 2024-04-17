@@ -375,5 +375,5 @@ void StrCompIncRefLeft(struct sStrComp *pComp, size_t Delta)
 
 void DumpStrComp(const char *pTitle, const struct sStrComp *pComp)
 {
-  fprintf(stderr, "%s: @ col %u len %u '%s'\n", pTitle, pComp->Pos.StartCol, pComp->Pos.Len, pComp->str.p_str);
+  fprintf(stderr, "%s: @ col %x len %x '%s'\n", pTitle, (unsigned)pComp->Pos.StartCol, pComp->Pos.Len, pComp->str.p_str);
 }

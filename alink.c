@@ -108,7 +108,7 @@ static LargeWord GetValue(LongInt Type, LargeWord Offset)
 #endif
   }
   fprintf(stderr, "unknown relocation type: 0x");
-  fprintf(stderr, LongIntFormat, Type);
+  fprintf(stderr, "%" PRId32, Type);
   fprintf(stderr, "\n");
   exit(3);
 }
@@ -142,7 +142,7 @@ static void PutValue(LargeWord Value, LongInt Type, LargeWord Offset)
 #endif
     default:
       fprintf(stderr, "unknown relocation type: 0x");
-      fprintf(stderr, LongIntFormat, Type);
+      fprintf(stderr, "%" PRId32, Type);
       fprintf(stderr, "\n");
       exit(3);
   }
@@ -388,7 +388,7 @@ static void ProcessFile(const char *pSrcName, int Index)
         if (Found)
         {
           if (Verbose >= 2)
-            printf("%s 0x%x...", getmessage(Num_InfoMsgReading), (int)PReloc->Addr);
+            printf("%s 0x%" PRIx64 "...", getmessage(Num_InfoMsgReading), (unsigned long long)PReloc->Addr);
           RelocVal = GetValue(PReloc->Type, PReloc->Addr - PartRun->CodeStart);
           NRelocVal = (PReloc->Type & RelocFlagSUB) ? RelocVal - Value : RelocVal + Value;
           PutValue(NRelocVal, PReloc->Type, PReloc->Addr - PartRun->CodeStart);
@@ -431,7 +431,7 @@ static void ProcessFile(const char *pSrcName, int Index)
   if (Verbose >= 1)
   {
     printf("(");
-    printf(Integ32Format, SumLen);
+    printf(PRIu32, SumLen);
     printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes));
   }
 }
@@ -579,7 +579,7 @@ int main(int argc, char **argv)
       Diff = SegStarts[PartRun->Segment] - PartRun->CodeStart;
       PartRun->CodeStart += Diff;
       if (Verbose >= 2)
-        printf("%s 0x%x\n", getmessage(Num_InfoMsgLocating), (int)PartRun->CodeStart);
+        printf("%s 0x%" PRIx64 "\n", getmessage(Num_InfoMsgLocating), PartRun->CodeStart);
       if (PartRun->RelocInfo)
       {
         PExportEntry ExpRun, ExpEnd;
@@ -631,7 +631,7 @@ int main(int argc, char **argv)
   if (UndefErr > 0)
   {
     fprintf(stderr, "\n");
-    fprintf(stderr, LongIntFormat, UndefErr);
+    fprintf(stderr, PRIu32, UndefErr);
     fprintf(stderr, " %s\n", getmessage((UndefErr == 1) ? Num_SumUndefSymbol : Num_SumUndefSymbols));
     return 1;
   }

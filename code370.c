@@ -353,7 +353,7 @@ static void DissectBit_370(char *pDest, size_t DestSize, LargeWord Symbol)
     as_snprintf(pDest, DestSize, "%c", HexStartCharacter + Addr);
   else
     as_snprintf(pDest, DestSize, "%~0.*u%s",
-                ListRadixBase, (unsigned)Addr, GetIntConstIntelSuffix(ListRadixBase));
+                ListRadixBase, (unsigned)Addr, GetIntConstIntelSuffix((unsigned)ListRadixBase));
   as_snprcatf(pDest, DestSize, ".%c", Bit + '0');
 }
 
