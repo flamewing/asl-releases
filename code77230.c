@@ -17,7 +17,7 @@
 
 #include "strutil.h"
 #include "nls.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "ieeefloat.h"
 #include "bpemu.h"
 

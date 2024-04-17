@@ -1696,7 +1696,7 @@ hexadezimal & Suffix H        & Pr"afix \$  & Pr"afix 0x  & X'..' oder H'..' \\
 bin"ar      & Suffix B        & Pr"afix \%  & Pr"afix 0b  & B'..' \\
 \ii{Kennung}& \tty{binb}      & \tty{\%bin} & \tty{0bbin} & \tty{b'bin'} \\
 oktal       & Suffix O oder Q & Pr"afix @   & Pr"afix 0   & O'..' \\
-\ii{Kennung}& \tty{octo}      & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\  
+\ii{Kennung}& \tty{octo}      & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\
             & \tty{octq}      &             &             & \\
 \hline
 \end{tabular}\end{center}
@@ -1845,7 +1845,7 @@ w"are z.B., \verb!\h! anstelle \verb!\'! zu schreiben.
 
 Fr"uhere Versionen von AS verfolgten eine strikte Trennung von Strings
 und sogenannten ''Zeichenkonstanten'': Eine Zeichenkonstante sieht
-auf den ersten Blick aus wie ein String, nur sind die Zeichen in 
+auf den ersten Blick aus wie ein String, nur sind die Zeichen in
 einfache Hochkommas statt doppelte eingeschlossen.  Ein solches
 Objekt hatte den Datentyp 'Integer', war also eine Zahl, deren Wert
 durch den (ASCII-)Wert des jeweiligen Zeichens definiert war, und wurde
@@ -2431,7 +2431,7 @@ FloatZwei EQU   2.0
 \end{verbatim}
 Einige Prozessoren besitzen leider bereits selber einen \tty{SET}-Befehl.
 Bei diesen mu"s \tty{EVAL} anstelle von \tty{SET} verwendet werden, falls
-sich der Maschinenbefehl nicht durch die andere Anzahl der Argumente 
+sich der Maschinenbefehl nicht durch die andere Anzahl der Argumente
 erkennen l"a"st.
 \par
 Anstelle von \tty{EQU} darf auch einfach ein Gleichheitszeichen geschrieben
@@ -2641,7 +2641,7 @@ symbolischen Namen geben:
 \end{verbatim}
 Die \tty{Adresse} mu"s in den ersten 4 KByte liegen, als Operandengr"o"se
 sind 8, 16 oder 32 Bit (\tty{Size}=b/w/l) zugelassen.
-Dementsprechend darf \tty{Position} maximal 7, 15 oder 31 sein. 
+Dementsprechend darf \tty{Position} maximal 7, 15 oder 31 sein.
 Falls keine Opoerandengr"o"se angegeben wird, werden 8 Bit (.b)
 angenommen.  Ein solcherma"sen definiertes Bit kann als Argument f"ur
 die Befehle {\tt BCLR, BSET, BTGL, BRSET} und {\tt BRCLR} verwendet
@@ -2941,7 +2941,7 @@ sind mit \tty{ENUM} definierte Symbole typenlos, man kann aber
 zum Beispiel mit einem
 \begin{verbatim}
       ENUMCONF 1,CODE
-\end{verbatim}  
+\end{verbatim}
 bestimmen, da"s sie im Instruktions-Adre"sraum liegen sollen.  Die
 Namen der Adre"sr"aume sind die gleichen wie beim
 \tty{SEGMENT}-Befehl (\ref{SEGMENT}), zus"atzlich ist als
@@ -3194,7 +3194,7 @@ i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
    S912ZVH128F2VLQ, S912ZVH128F2VLL,\\
    S912ZVH64F2VLQ, S912ZVHY64F1VLQ,\\
    S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
-   S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
+   S912ZVHY32F1VLL, S912ZVHL64F1VLQ
 \end{quote}
 Alle Derivate beinhalten den gleichen Prozessorkern und den
 gleichen Befehlssatz, lediglich die on-Chip-Peripherie und
@@ -3829,7 +3829,7 @@ bs) F3850, MK3850, \\
 Die gro"se Menge an Varianten ergibt sich zum Teil daraus, da"s
 Mostek Anfang der 80er-Jahre diversen Varianten neue Namen gegeben
 hat. Am neuen Benamungsschema kann man am Suffix die Menge internen
-ROMs (0 bis 4 f"ur 0..4 KByte) bzw. die Menge des eingebauten 
+ROMs (0 bis 4 f"ur 0..4 KByte) bzw. die Menge des eingebauten
 Executable RAM (0 oder 2 f"ur 0 oder 64 Byte) ablesen.  3850 und
 MK975xx unterst"utzen einen 64 KByte gro"sen Adre"sraum, beim Rest ist
 er 4 KByte gro"s. P-Varianten haben einen Piggyback-Sockel f"ur ein
@@ -5042,7 +5042,7 @@ SHLD, LHLD, LDAX, STAX} oder \tty{SPHL} schreiben mu"s.
 Weil einige Mnemonics in der 8008/8080- und Z80-Syntax unterschiedliche
 Bedeutung haben, kann man nicht zu 100\% im 'Z80-Stil' programmieren.
 Alternativ schaltet man mit einem \tty{EXCLUSIVE} als Argument die
-''8080-Syntax'' ganz ab.  Details zu dieser Betriebsart kann man 
+''8080-Syntax'' ganz ab.  Details zu dieser Betriebsart kann man
 im Abschnitt \ref{8080Spec} nachlesen.
 
 Ein eingebautes Symbol mit gleichem Namen gestattet es, die aktuelle
@@ -5248,7 +5248,7 @@ zur Adre"sablage vorgesehen waren, benutzen Big-Endian, \tty{BYTE} bzw.
 
 Wird \tty{DB} in einem Adre"sraum angewendet, der nicht byte-adressierbar
 ist (z.B. das \tty{CODE}-Segment des Atmel AVR), so werden immer zwei Bytes
-in ein 16-Bit-Wort gepackt, entsprechende der durch die Architektur gegebenen 
+in ein 16-Bit-Wort gepackt, entsprechende der durch die Architektur gegebenen
 Endinaness - das untere Byte wird bei Little-Endian also zuerst gef"ullt.  Ist
 die Gesamtmenge aller Bytes ungerade, so bleibt die andere Worth"alfte ungenutzt
 und ist quasi ''Padding''.  Sie wird auch nicht genutzt, falls im Quellcode
@@ -7980,8 +7980,8 @@ angegeben:
        mov.l     #4,r7     ; benutzt RQ-Format
        mov.l     #4,@r7    ; benutzt Q-Format
        mov.l     @r4,@r7   ; benutzt G-Format
-       mov:q.l   #4,r7     ; Q- statt RQ-Format erzwungen 
-       mov:g.l   #4,r7     ; G- statt RQ-Format erzwungen 
+       mov:q.l   #4,r7     ; Q- statt RQ-Format erzwungen
+       mov:g.l   #4,r7     ; G- statt RQ-Format erzwungen
 \end{verbatim}
 F"ur Immediate-Argumente wird die ,,nat"urliche'' Operandenl"ange
 benutzt, also z.B. 2 Bytes f"ur 16 Bits.  K"urzere oder l"angere
@@ -8533,7 +8533,7 @@ mitteilen, welche Speicherbank gerade f"ur Sprungziele gew"ahlt ist; wird auf
 eine Adresse gesprungen, die au"serhalb dieser Bank liegt, wird eine Warnung
 ausgegeben.
 
-Wenn der Sonderwert {\tt NOTHING} angegeben wird (dies ist auch der Default), 
+Wenn der Sonderwert {\tt NOTHING} angegeben wird (dies ist auch der Default),
 so greift eine in den Befehlen \tty{JMP} und \tty{CALL} eingebaute Automatik ,
 die den Wechsel zwischen den B"anken vereinfacht.  Sie f"ugt automatisch einen
 {\tt SEL MBx} Befehl ein, falls die Adresse des Sprungbefehles und das
@@ -10614,7 +10614,7 @@ konnte man den Code "uber die Schalterleiste per Hand in den Computer laden.
 
 Daraus resultiert leider, da"s die Assembler-Sprache des KENBAK zwar im
 Programming Manual beschrieben, aber nicht wirklich formal definiert ist.  Als
-Grant Stockly vor ein paar Jahren neue KENBAK-Kits herausbrachte, hat er 
+Grant Stockly vor ein paar Jahren neue KENBAK-Kits herausbrachte, hat er
 eine erste KENBAK-Portierung f"ur meinen Assembler gemacht, die hat ihren
 Weg jedoch leider nie wieder ''upstream'' gefunden.  In meiner Implementierung
 habe ich versucht, seine Ideen aufzugreifen, jedoch andererseits auch eine
@@ -11168,11 +11168,11 @@ Programm bekannt ist, kann man ihn mit der Option
 \end{verbatim}
 unterdr"ucken.
 \par
-Das C-Format f"allt insofern aus dem Rahmen, als da"s es immer explizit 
+Das C-Format f"allt insofern aus dem Rahmen, als da"s es immer explizit
 ausgew"ahlt werden mu"s.  Die Ausgabedatei stellt im Prinzip ein vollst"andiges
 St"uck C- oder C++-Code dar, das die Daten als eine Liste von C-Arrays
 enth"alt.  Neben den eigentlichen Daten wird noch eine Liste von Deskriptoren
-geschrieben, die Start, L"ange und Ende der Datenbl"ocke 
+geschrieben, die Start, L"ange und Ende der Datenbl"ocke
 beschreiben.  Was diese Deskriptoren enthalten, kann mit der Option
 \begin{verbatim}
  -cformat <Format>
@@ -11252,7 +11252,7 @@ ob Daten ins Code- oder Datensegment geh"oren.  In diesem Fall extrahiert
 P2HEX automatisch beide Segmente, solange kein Segment explizit angegeben
 ist.
 \par
-Analog zur \verb!-r! Option kann man mit der Option 
+Analog zur \verb!-r! Option kann man mit der Option
 \begin{verbatim}
  -d <Start>-<Ende>
 \end{verbatim}
@@ -11684,7 +11684,7 @@ Angaben:
                {Warnung}
                {Der Quelloperand ist l"anger oder gleich gro"s wie der
                 Zieloperand, gemessen in Bits.  Eine Null- oder Vorzeichenerweiterung
-                ergibt keinen Sinn mit diesen Argumenten.  Schlagen Sie im 
+                ergibt keinen Sinn mit diesen Argumenten.  Schlagen Sie im
                 Referenzhandbuch der CPU das Verhalten in diesem Fall nach.}
                {keines}
 \errentry{ 350}{TRAP-Nummer ist g"ultige Instruktion}
@@ -12149,7 +12149,7 @@ Angaben:
                {keines}
 \errentry{1503}{voller PMMU-Befehlssatz nicht freigeschaltet}
                {Fehler}
-               {Dieser Befehl ist nur im Befehlssatz der 
+               {Dieser Befehl ist nur im Befehlssatz der
                 68851-PMMU enthalten, nicht im reduzierten
                 Befehlssatz der integrierten PMMU.}
                {keines}
@@ -12700,7 +12700,7 @@ Angaben:
                {das fragliche Argument}
 \errentry{2253}{ung"ultige Config-Liste}
                {Fehler}
-               {Die Konfigurationsliste ist entweder insgesamt syntaktisch falsch oder 
+               {Die Konfigurationsliste ist entweder insgesamt syntaktisch falsch oder
                 enth"alt ung"ultige Elemente.}
                {Die fragliche Liste oder ein Element daraus.}
 \errentry{2254}{widerspr"uchliche Konfig-Optionen}
@@ -14147,7 +14147,7 @@ Aufruf den gr"o"sten Teil der Pseudobefehle erschlagen.
 Aus Speicherersparnisgr"unden sind hier einige von diversen
 Codegeneratoren benutzen Variablen gesammelt.
 
-\subsubsection{endian.c}
+\subsubsection{as_endian.c}
 
 Doch noch ein bi"schen Maschinenabh"angigkeit, jedoch ein Teil, um den man
 sich nicht zu k"ummern braucht: Ob eine Maschine Little- oder

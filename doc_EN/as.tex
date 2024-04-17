@@ -1650,7 +1650,7 @@ Hex       & Suffix H      & Prefix \$   & Prefix 0x   & X'..' or H'..' \\
 Binary    & Suffix B      & Prefix \%   & Prefix 0b   & O'..' \\
 \ii{Ident}& \tty{binb}    & \tty{\%bin} & \tty{0bbin} & \tty{b'bin'} \\
 Octal     & Suffix O or Q & Prefix @    & Prefix 0    & B'..' \\
-\ii{Ident}& \tty{octo}    & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\  
+\ii{Ident}& \tty{octo}    & \tty{@oct}  & \tty{0oct}  & \tty{o'oct'} \\
           & \tty{octq}    &             &             & \\
 \hline
 \end{tabular}\end{center}
@@ -2639,7 +2639,7 @@ to \tty{DEFBIT}, a bit field may be defined symbolically:
 <Name>     defbitfield[.size] <address>,<width>:<position>
 \end{verbatim}
 Opposed to individual bits, an operand size of 24 bits (.p) is also
-alloweed.  The range of \tty{position} and \tty{width} is accordingly 
+alloweed.  The range of \tty{position} and \tty{width} is accordingly
 0 to 23 resp. 1 to 24.  It is also allowed to define bit fields as
 parts of structures:
 \begin{verbatim}
@@ -3108,7 +3108,7 @@ i) S912ZVC19F0MKH, S912ZVC19F0MLF,\\
    S912ZVH128F2VLQ, S912ZVH128F2VLL,\\
    S912ZVH64F2VLQ, S912ZVHY64F1VLQ,\\
    S912ZVHY32F1VLQ, S912ZVHY64F1VL,\\
-   S912ZVHY32F1VLL, S912ZVHL64F1VLQ 
+   S912ZVHY32F1VLL, S912ZVHL64F1VLQ
 \end{quote}
 All variants contain the same processor core and the same
 instruction set, only the on-chip peripherals and the
@@ -3234,7 +3234,7 @@ w) 8021, 8022, \\
 For the ROM-less versions 8039 and 80C39, the commands which are
 using the BUS (port 0) are forbidden.  The 8021 and 8022 are special
 versions with a strongly shrinked instruction set, for which the 8022
-has two A/D- converters and the necessary control-commands.  The 
+has two A/D- converters and the necessary control-commands.  The
 instruction set of the MAB8401 to 8461 (designed by Philips) is
 somewhere in between the 8021/8022 and a ''complete'' MC-48 instruction
 set.  On the other hand, they provide serial ports and up to 8 KBytes
@@ -3728,7 +3728,7 @@ bs) F3850, MK3850, \\
 \end{quote}
 This huge amount of variants partially results from the fact that
 Mostek renamed some variants in the early 80s.  The new naming scheme
-allows to deduce the amount of internal ROM (0 to 4 for 0 to 4 Kbytes) 
+allows to deduce the amount of internal ROM (0 to 4 for 0 to 4 Kbytes)
 and executable RAM (0 or 2 for 0 or 64 bytes) from the suffix.  3850
 and MK975xx support a 64K address space, which is only 4 Kbytes for all
 other variants.  P variants have an EEPROM piggyback socket for prototyping,
@@ -4378,7 +4378,7 @@ sub-sections except for the 8086.
 \subsubsection{65CE02}
 
 The 65CE02 features a a register named 'B' that is used to set the 'base page'.
-In comparison to the original 6502, this allows the programmer to place the 
+In comparison to the original 6502, this allows the programmer to place the
 memory page addressable with short (8 bit) addresses anywhere in the 64K address
 space.  This register is set to zero after a reset, so the 65CE02 behaves like
 its predecessor.  A base page at zero is also the default assumption of the
@@ -4735,7 +4735,7 @@ of which only the first MByte may be used for program code.  The
 CPU-internal RAM and all special function registers may be
 positioned either at the top of the first MByte or the top of the
 first 64 KByte page.  Choice is made via the \tty{LOCATION}
-machine instruction that either takes a 0 or 15 as argument. 
+machine instruction that either takes a 0 or 15 as argument.
 Together with remapping RAM and SFRs, the processor also switches
 the address ranges that may be reached with short (8 bit)
 addresses.  Parallel to using \tty{LOCATION}, one has to inform
@@ -5509,7 +5509,7 @@ Example:
         align     2
 \end{verbatim}
 aligns to an even address (PC mod 2 = 0).  If Align is used in this form with
-only one argument, the contents of the skipped memory space is not defined. 
+only one argument, the contents of the skipped memory space is not defined.
 An optinal second argument may be used to define the (byte) value
 used to fill the area.
 
@@ -8908,14 +8908,14 @@ Like in this example,
 it may be used to instruct the assembler to treat the code segment (i.e.
 the internal flash ROM) as being organized in bytes instead of 16 bit words.
 This is the view when the {\tt LPM} instruction is used, and which some other
-(non Atmel) assemblers use in general.  It has the advantage that addresses 
+(non Atmel) assemblers use in general.  It has the advantage that addresses
 in the {\tt CODE} segment need not be multiplied by two if used for data
 accesses.  On the other hand, care has to be taken that instructions do
 not start on an odd address - this would be the equivalent of an instruction
 occupying fractions of flash words.  The {\tt PADDING} option is therefore
 enabled by default, while it remains possible to define arrays of bytes via
 multiple uses of {\tt DB} or {\tt DATA} without the risk of padding bytes
-inserted in between.  Target addresses for relative and absolute branches 
+inserted in between.  Target addresses for relative and absolute branches
 automatically get divided by two in this ''byte mode''.  The default is the
 organizazion in 16 bit word as used by the original Atmel assembler.  This
 may explicitly be selected by using the argument \verb!codesegsize=1!.
@@ -10379,7 +10379,7 @@ or short.  AS supports such 'pseudo instructions' as an extension:
 The KENBAK-1 was developed in 1970, at a time when the first microprocessor
 was still three years away.  One may assume that for the few hobbyists that
 could afford the kit back then, this was their first and only computer.  As
-a consequence, they had nothing they could run an assembler on, the KENBAK-1 
+a consequence, they had nothing they could run an assembler on, the KENBAK-1
 itself with its 256 bytes of memory was way too small for such a task.  The
 preferred method was to use pre-printed tables, which had fields to fill in
 instructions and machine codes.  Once this ''programming job'' was done, one
@@ -10957,7 +10957,7 @@ Each letter in \verb!format! defines an element of the descriptor:
       either as {\em unsigned} or {\em unsigned long}.}
 \item{An \verb!e! or \verb!E! defines the end address of the data,
       specifically the last address used by the data, either as
-      {\em unsigned} or {\em unsigned long}.} 
+      {\em unsigned} or {\em unsigned long}.}
 \end{itemize}
 \par
 In case a source file contains code record for different processors,
@@ -11450,7 +11450,7 @@ described by:
                {none}
 \errentry{ 350}{TRAP number represents valid instruction}
                {warning}
-               {A TRAP with this number uses the same machine code as a 
+               {A TRAP with this number uses the same machine code as a
                 machine instruction supported by the CPU.}
                {none}
 \errentry{ 360}{Padding added}
@@ -13767,7 +13767,7 @@ of the necessary pseudo instructions with one call to this module.
 For reasons of memory efficiency, some variables commonly used by diverse
 code generators.
 
-\subsubsection{endian.c}
+\subsubsection{as_endian.c}
 
 Yet another bit of machine dependence, however one you do not have to
 spend attention on: This module automatically checks at startup whether

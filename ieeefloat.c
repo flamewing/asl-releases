@@ -12,7 +12,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "endian.h"
+#include "as_endian.h"
 #ifdef VAXFLOAT
 # include "vaxfloat.h"
 #endif

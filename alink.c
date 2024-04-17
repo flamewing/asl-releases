@@ -21,7 +21,7 @@
 
 #include "version.h"
 
-#include "endian.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "strutil.h"
 #include "nls.h"

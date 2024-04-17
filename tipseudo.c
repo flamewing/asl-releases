@@ -18,7 +18,7 @@
 #include <math.h>
 
 #include "strutil.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "ieeefloat.h"
 #include "asmdef.h"
 #include "asmsub.h"

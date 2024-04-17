@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "nls.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "bpemu.h"
 #include "strutil.h"
 #include "chunks.h"

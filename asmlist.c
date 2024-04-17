@@ -10,7 +10,7 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include "endian.h"
+#include "as_endian.h"
 #include "strutil.h"
 #include "dynstr.h"
 #include "asmdef.h"

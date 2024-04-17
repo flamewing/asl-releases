@@ -15,7 +15,7 @@
 #include <assert.h>
 
 #include "version.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "bpemu.h"
 
 #include "stdhandl.h"

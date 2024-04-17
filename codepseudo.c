@@ -19,7 +19,7 @@
 
 #include "nls.h"
 #include "bpemu.h"
-#include "endian.h"
+#include "as_endian.h"
 #include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
