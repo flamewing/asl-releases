@@ -30,15 +30,11 @@ extern int SysString(char *pDest, size_t DestSize, LargeWord i, int System, int 
 
 extern char *as_strdup(const char *s);
 
-extern int as_vsnprcatf(char *pDest, size_t DestSize, const char *pFormat, va_list ap);
-extern int as_snprcatf(char *pDest, size_t DestSize, const char *pFormat, ...);
-extern int as_vsnprintf(char *pDest, size_t DestSize, const char *pFormat, va_list ap);
-extern int as_snprintf(char *pDest, size_t DestSize, const char *pFormat, ...);
+extern int as_snprcatf(char *pDest, size_t DestSize, PRINTF_FORMAT const char *pFormat, ...) PRINTF_FORMAT_ATTR(3, 4);
+extern int as_snprintf(char *pDest, size_t DestSize, PRINTF_FORMAT const char *pFormat, ...) PRINTF_FORMAT_ATTR(3, 4);
 
-extern int as_vsdprcatf(struct as_dynstr *p_dest, const char *pFormat, va_list ap);
-extern int as_sdprcatf(struct as_dynstr *p_dest, const char *pFormat, ...);
-extern int as_vsdprintf(struct as_dynstr *p_dest, const char *pFormat, va_list ap);
-extern int as_sdprintf(struct as_dynstr *p_dest, const char *pFormat, ...);
+extern int as_sdprcatf(struct as_dynstr *p_dest, PRINTF_FORMAT const char *pFormat, ...) PRINTF_FORMAT_ATTR(2, 3);
+extern int as_sdprintf(struct as_dynstr *p_dest, PRINTF_FORMAT const char *pFormat, ...) PRINTF_FORMAT_ATTR(2, 3);
 
 extern int as_strcasecmp(const char *src1, const char *src2);
 extern int as_strncasecmp(const char *src1, const char *src2, size_t maxlen);
