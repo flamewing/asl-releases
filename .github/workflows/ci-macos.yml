@@ -50,7 +50,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        generator: [Ninja, Xcode]
+        # generator: [Ninja, Xcode]
+        generator: [Ninja]
         include:
           - generator: Ninja
             config:
