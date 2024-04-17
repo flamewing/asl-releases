@@ -946,7 +946,7 @@ DirectOrImmediate:
   }
 
 chk:
-  if ((pAdrVals->Mode != eModNone) & !((ModeMask >> pAdrVals->Mode) & 1))
+  if ((pAdrVals->Mode != eModNone) && !((ModeMask >> pAdrVals->Mode) & 1))
   {
     WrStrErrorPos(ErrNum_InvAddrMode, pArg);
     ClearAdrVals(pAdrVals);

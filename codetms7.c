@@ -110,7 +110,7 @@ static void DecodeAdr(tStrComp *pArg, Word Mask)
 
     StrCompRefRight(&ImmComp, pArg, 1);
     l = strlen(ImmComp.str.p_str);
-    if ((l >= 3) & (!as_strcasecmp(ImmComp.str.p_str + l - 3,"(B)")))
+    if ((l >= 3) && (!as_strcasecmp(ImmComp.str.p_str + l - 3,"(B)")))
     {
       char Save;
 
