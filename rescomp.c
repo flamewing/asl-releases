@@ -266,7 +266,7 @@ int main(int argc, char **argv)
   LongInt RunPos, StrPos;
   const char *pSrcName = NULL, *pHFileName = NULL, *pMsgFileName = NULL;
 
-  endian_init(); strutil_init();
+  strutil_init();
 
   curridx = 0;
   nextidx = -1;

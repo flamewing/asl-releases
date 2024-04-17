@@ -181,7 +181,6 @@ int main(int argc, char **argv)
   if (!NLS_Initialize(&argc, argv))
     exit(4);
 
-  endian_init();
   bpemu_init();
   strutil_init();
   nlmessages_init("plist.msg", *argv, MsgId1, MsgId2); ioerrs_init(*argv);

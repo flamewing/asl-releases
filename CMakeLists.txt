@@ -125,7 +125,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
 
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wc11-c2x-compat>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wno-c90-c99-compat>)
-        add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wc99-c11-compat>)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wno-c99-c11-compat>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wc++-compat>)
 
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Waddress>)
@@ -293,6 +293,8 @@ endif(${CHECK_LOCALE})
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
 set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
 set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
+CHECK_INCLUDE_FILES("endian.h" HAVE_ENDIAN_H)
+CHECK_INCLUDE_FILES("sys/param.h" HAVE_SYS_PARAM_H)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 # only build the generator if not crosscompiling

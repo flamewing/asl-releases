@@ -560,7 +560,6 @@ int main(int argc, char **argv)
   if (!NLS_Initialize(&argc, argv))
     exit(4);
 
-  endian_init();
   strutil_init();
   bpemu_init();
   nlmessages_init("p2bin.msg", *argv, MsgId1, MsgId2);
