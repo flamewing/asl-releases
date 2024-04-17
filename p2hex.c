@@ -556,7 +556,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
             case eHexFormatMico8:
               if (TransLen >= 4)
               {
-                fprintf(TargFile, "%01X%02X%02X", Buffer[1] & 0x0f, Buffer[2] % 0xff, Buffer[3] & 0xff);
+                fprintf(TargFile, "%01X%02X%02X", Buffer[1] & 0x0fu, Buffer[2] % 0xffu, Buffer[3] & 0xffu);
                 SumLen += 4;
               }
               break;
@@ -642,7 +642,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
               ChkIO(TargName);
               for (z = 1; z <= 2 + MotRecType; z++)
               {
-                errno = 0; fprintf(TargFile, "%02X", 0); ChkIO(TargName);
+                errno = 0; fprintf(TargFile, "%02X", 0U); ChkIO(TargName);
               }
               errno = 0;
               fprintf(TargFile, "%02X\n", Lo(0xff - 3 - MotRecType));
@@ -687,7 +687,7 @@ static void ProcessFile(const char *FileName, LongWord Offset)
   if (!QuietMode)
   {
     errno = 0; printf("  ("); ChkIO(OutName);
-    errno = 0; printf(Integ32Format, SumLen); ChkIO(OutName);
+    errno = 0; printf(PRIu32, SumLen); ChkIO(OutName);
     errno = 0; printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes)); ChkIO(OutName);
   }
   if (!SumLen)

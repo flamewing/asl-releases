@@ -42,13 +42,13 @@ Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
 
   if (Value < Min)
   {
-    as_snprintf(s, sizeof(s), "%llld<%llld", Value, Min);
+    as_snprintf(s, sizeof(s), "%" PRId64 "<%" PRId64, Value, Min);
     WrXError(ErrNum_UnderRange, s);
     return False;
   }
   else if (Value > Max)
   {
-    as_snprintf(s, sizeof(s), "%llld>%llld", Value, Max);
+    as_snprintf(s, sizeof(s), "%" PRId64 ">%" PRId64, Value, Max);
     WrXError(ErrNum_OverRange, s);
     return False;
   }

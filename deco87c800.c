@@ -244,14 +244,14 @@ static void RegPrefix(LargeWord Address, tDisassInfo *pInfo, unsigned PrefixLen,
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "set\t%c.%u",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     case 0x48: case 0x49: case 0x4a: case 0x4b:
     case 0x4c: case 0x4d: case 0x4e: case 0x4f:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "clr\t%c.%u",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     case 0x58: case 0x59: case 0x5a: case 0x5b:
     case 0x5c: case 0x5d: case 0x5e: case 0x5f:
@@ -326,28 +326,28 @@ static void RegPrefix(LargeWord Address, tDisassInfo *pInfo, unsigned PrefixLen,
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "cpl\t%c.%u",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     case 0xc8: case 0xc9: case 0xca: case 0xcb:
     case 0xcc: case 0xcd: case 0xce: case 0xcf:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "ld\t%c.%u,cf",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     case 0xd0: case 0xd1: case 0xd2: case 0xd3:
     case 0xd4: case 0xd5: case 0xd6: case 0xd7:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "xor\tcf,%c.%u",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     case 0xd8: case 0xd9: case 0xda: case 0xdb:
     case 0xdc: case 0xdd: case 0xde: case 0xdf:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "ld\tcf,%c.%u",
-                  Reg8Names[SrcRegIndex], Opcode & 7);
+                  Reg8Names[SrcRegIndex], Opcode & 7U);
       break;
     inv16:
     case 0xfa:
@@ -476,14 +476,14 @@ static void MemPrefix(LargeWord Address, tDisassInfo *pInfo, unsigned PrefixLen,
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "set\t%s.%u",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0x48: case 0x49: case 0x4a: case 0x4b:
     case 0x4c: case 0x4d: case 0x4e: case 0x4f:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "clr\t%s.%u",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0x50: case 0x51: case 0x52: case 0x53:
     case 0x54: case 0x55: case 0x56: case 0x57:
@@ -535,28 +535,28 @@ static void MemPrefix(LargeWord Address, tDisassInfo *pInfo, unsigned PrefixLen,
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "cpl\t%s.%u",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0xc8: case 0xc9: case 0xca: case 0xcb:
     case 0xcc: case 0xcd: case 0xce: case 0xcf:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "ld\t%s.%u,cf",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0xd0: case 0xd1: case 0xd2: case 0xd3:
     case 0xd4: case 0xd5: case 0xd6: case 0xd7:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "xor\tcf,%s.%u",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0xd8: case 0xd9: case 0xda: case 0xdb:
     case 0xdc: case 0xdd: case 0xde: case 0xdf:
       pInfo->CodeLen = PrefixLen + 1;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "ld\tcf,%s.%u",
-                  pPrefixString, Opcode & 7);
+                  pPrefixString, Opcode & 7U);
       break;
     case 0xfc:
       pInfo->CodeLen = PrefixLen + 1;
@@ -843,7 +843,7 @@ static void Disassemble_87C800(LargeWord Address, tDisassInfo *pInfo, Boolean As
       pInfo->CodeLen = 2;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "set\t(%sh).%u",
-                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7);
+                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7U);
       break;
     case 0x48: case 0x49: case 0x4a: case 0x4b:
     case 0x4c: case 0x4d: case 0x4e: case 0x4f:
@@ -852,7 +852,7 @@ static void Disassemble_87C800(LargeWord Address, tDisassInfo *pInfo, Boolean As
       pInfo->CodeLen = 2;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "clr\t(%sh).%u",
-                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7);
+                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7U);
       break;
     case 0x50: case 0x51: case 0x52: case 0x53:
     case 0x54: case 0x55: case 0x56: case 0x57:
@@ -969,7 +969,7 @@ static void Disassemble_87C800(LargeWord Address, tDisassInfo *pInfo, Boolean As
       pInfo->CodeLen = 2;
       SimpleNextAddress(pInfo, Address);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "test\t(%sh).%u",
-                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7);
+                  ZeroHexString(NumBuf, sizeof(NumBuf), Data[0], 1), Opcode & 7U);
       break;
     case 0xe0:
     case 0xf0:

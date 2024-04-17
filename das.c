@@ -87,7 +87,7 @@ static void DumpChunks(const ChunkList *NChunk, FILE *pDestFile)
   Data.Sum = 0;
   fprintf(pDestFile, "\t\t; disassembled area:\n");
   IterateChunks(DumpIterator, &Data);
-  as_snprintf(Str, sizeof(Str), "\t\t; %lllu/%lllu bytes disassembled", Data.Sum, GetCodeChunksStored(&CodeChunks));
+  as_snprintf(Str, sizeof(Str), "\t\t; %" PRIx64 "/%" PRIx64 " bytes disassembled", Data.Sum, GetCodeChunksStored(&CodeChunks));
   fprintf(pDestFile, "%s\n", Str);
 }
 
@@ -391,7 +391,7 @@ static CMDResult CMD_EntryAddress(Boolean Negate, const char *pArg)
         Address <<= 8;
         Address |= VectorMSB ? Vector[z] : Vector[AddrLen - 1 - z];
       }
-      as_snprintf(Str, sizeof Str, "indirect address @ %lllx -> 0x%lllx", VectorAddress, Address);
+      as_snprintf(Str, sizeof Str, "indirect address @ %" PRIx64 " -> 0x%" PRIx64, VectorAddress, Address);
       printf("%s\n", Str);
       AddChunk(&UsedDataChunks, VectorAddress, AddrLen, True);
 

@@ -1964,7 +1964,7 @@ void EvalStrStringExpressionWithResult(const tStrComp *pExpr, tEvalResult *pResu
   EvalStrExpression(pExpr, &t);
   if (t.Typ == TempInt)
   {
-    as_snprintf(pEvalResult, STRINGSIZE, "%llld", t.Contents.Int);
+    as_snprintf(pEvalResult, STRINGSIZE, "%" PRId64, t.Contents.Int);
     pResult->Flags = t.Flags;
     pResult->AddrSpaceMask = t.AddrSpaceMask;
     pResult->DataSize = t.DataSize;
@@ -3218,7 +3218,7 @@ static void PrNoISection(PTree Tree, void *pData)
   if ((Node->SymWert.AddrSpaceMask & NoICEMask) && (Node->Tree.Attribute == pContext->Handle) && (Node->SymWert.Typ == TempInt))
   {
     errno = 0; fprintf(pContext->f, "DEFINE %s 0x", Node->Tree.Name); ChkIO(ErrNum_FileWriteError);
-    errno = 0; fprintf(pContext->f, LargeHIntFormat, Node->SymWert.Contents.Int); ChkIO(ErrNum_FileWriteError);
+    errno = 0; fprintf(pContext->f, "%" PRIx64, (LargeWord)Node->SymWert.Contents.Int); ChkIO(ErrNum_FileWriteError);
     errno = 0; fprintf(pContext->f, "\n"); ChkIO(ErrNum_FileWriteError);
   }
 }
@@ -3236,12 +3236,12 @@ void PrintNoISymbols(FILE *f)
    if (ChunkSum(&CurrSection->Usage)>0)
    {
      fprintf(f, "FUNCTION %s ", CurrSection->Name); ChkIO(ErrNum_FileWriteError);
-     fprintf(f, LargeIntFormat, ChunkMin(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, "%" PRIu64, ChunkMin(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
      fprintf(f, "\n"); ChkIO(ErrNum_FileWriteError);
      IterTree((PTree)FirstSymbol, PrNoISection, &Context);
      Context.Handle++;
      fprintf(f, "}FUNC "); ChkIO(ErrNum_FileWriteError);
-     fprintf(f, LargeIntFormat, ChunkMax(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
+     fprintf(f, "%" PRIu64, ChunkMax(&CurrSection->Usage)); ChkIO(ErrNum_FileWriteError);
      fprintf(f, "\n"); ChkIO(ErrNum_FileWriteError);
    }
 }
@@ -3779,11 +3779,11 @@ void PrintDebSections(FILE *f)
   while (Lauf)
   {
     fputs("\nInfo for Section ", f); ChkIO(ErrNum_FileWriteError);
-    fprintf(f, LongIntFormat, Cnt); ChkIO(ErrNum_FileWriteError);
+    fprintf(f, "%" PRId32, Cnt); ChkIO(ErrNum_FileWriteError);
     fputc(' ', f); ChkIO(ErrNum_FileWriteError);
     fputs(GetSectionName(Cnt), f); ChkIO(ErrNum_FileWriteError);
     fputc(' ', f); ChkIO(ErrNum_FileWriteError);
-    fprintf(f, LongIntFormat, Lauf->Parent); ChkIO(ErrNum_FileWriteError);
+    fprintf(f, "%" PRId32, Lauf->Parent); ChkIO(ErrNum_FileWriteError);
     fputc('\n', f); ChkIO(ErrNum_FileWriteError);
     for (z = 0; z < Lauf->Usage.RealLen; z++)
     {
@@ -3844,7 +3844,7 @@ static void PrintCrossList_PNode(PTree Node, void *pData)
     return;
 
   StrSym(&SymbolEntry->SymWert, False, p_val_str, ListRadixBase);
-  as_snprintf(LineStr, sizeof(LineStr), LongIntFormat, SymbolEntry->LineNum);
+  as_snprintf(LineStr, sizeof(LineStr), "%" PRId32, SymbolEntry->LineNum);
 
   as_snprintf(h, sizeof(h), "%s%s",
               getmessage(Num_ListCrossSymName), Node->Name);

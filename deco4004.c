@@ -419,7 +419,7 @@ static void Disassemble_4004(LargeWord Address, tDisassInfo *pInfo, Boolean AsDa
       OpAddr = ((Address + 2) & 0x0f00) | Data[0];
       pOp = MakeSymbolic(OpAddr, 2, "lab_", NumBuf, sizeof(NumBuf));
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\tr%u,%s",
-                  pOpcode->Memo, Opcode & 15, pOp);
+                  pOpcode->Memo, Opcode & 15U, pOp);
       break;
     case eFIM:
       if (!RetrieveData(Address + 1, Data, 1))
@@ -427,17 +427,17 @@ static void Disassemble_4004(LargeWord Address, tDisassInfo *pInfo, Boolean AsDa
       pInfo->CodeLen = 2;
       IntelHexString(NumBuf, sizeof(NumBuf), Data[0], 2);
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\tr%up,%s",
-                  pOpcode->Memo, (Opcode & 15) >> 1, NumBuf);
+                  pOpcode->Memo, (Opcode & 15U) >> 1, NumBuf);
       break;
     case eOneReg:
       pInfo->CodeLen = 1;
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\tr%u",
-                  pOpcode->Memo, Opcode & 15);
+                  pOpcode->Memo, Opcode & 15U);
       break;
     case eOneRReg:
       pInfo->CodeLen = 1;
       as_snprintf(pInfo->SrcLine, sizeof(pInfo->SrcLine), "%s\tr%up",
-                  pOpcode->Memo, (Opcode & 15) >> 1);
+                  pOpcode->Memo, (Opcode & 15U) >> 1);
       break;
     case eImm4:
       pInfo->CodeLen = 1;

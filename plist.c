@@ -257,7 +257,7 @@ int main(int argc, char **argv)
     {
       errno = 0;
       printf("%s", FirstSeg ? getmessage(Num_MessSum1) : Blanks(strlen(getmessage(Num_MessSum1))));
-      printf(LongIntFormat, Sums[z]);
+      printf(PRIu32, Sums[z]);
       printf("%s%s\n",
              getmessage((Sums[z] == 1) ? Num_MessSumSing : Num_MessSumPlur),
              SegNames[z]);

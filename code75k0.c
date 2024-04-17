@@ -288,14 +288,14 @@ static void DissectBit_75K0(char *pDest, size_t DestSize, LargeWord Inp)
   if (Hi(Inp))
     as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                 ListRadixBase, (unsigned)(((Inp >> 4) & 0xf00) + Lo(Inp)), GetIntConstIntelSuffix(ListRadixBase),
-                '0' + (Hi(Inp) & 3));
+                '0' + (char)(Hi(Inp) & 3));
   else switch ((Inp >> 6) & 3)
   {
     case 0:
       as_snprintf(pDest, DestSize, "@%c+%0.*u%s.%c",
                   HexStartCharacter + ('H' - 'A'),
                   ListRadixBase, (unsigned)(Inp & 0x0f), GetIntConstIntelSuffix(ListRadixBase),
-                  '0' + ((Inp >> 4) & 3));
+                  '0' + (char)((Inp >> 4) & 3));
       break;
     case 1:
       as_snprintf(pDest, DestSize, "%~03.*u%s.@%c",
@@ -305,12 +305,12 @@ static void DissectBit_75K0(char *pDest, size_t DestSize, LargeWord Inp)
     case 2:
       as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xfb0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
-                  '0' + ((Inp >> 4) & 3));
+                  '0' + (char)((Inp >> 4) & 3));
       break;
     case 3:
       as_snprintf(pDest, DestSize, "%~03.*u%s.%c",
                   ListRadixBase, (unsigned)(0xff0 + (Inp & 15)), GetIntConstIntelSuffix(ListRadixBase),
-                  '0' + ((Inp >> 4) & 3));
+                  '0' + (char)((Inp >> 4) & 3));
       break;
   }
 }

@@ -621,17 +621,17 @@ static void DecodeBIT(Word Index)
     switch ((BAdr & 0x3ff) >> 8)
     {
       case 0:
-        as_snprintf(ListLine, STRINGSIZE, "=R%d.%d",
+        as_snprintf(ListLine, STRINGSIZE, "=R%u.%u",
                     (unsigned)((BAdr >> 4) & 15),
                     (unsigned) (BAdr & 15));
         break;
       case 1:
-        as_snprintf(ListLine, STRINGSIZE, "=%x:%x.%d",
+        as_snprintf(ListLine, STRINGSIZE, "=%x:%x.%u",
                     (unsigned)((BAdr >> 16) & 255),
                     (unsigned)((BAdr & 0x1f8) >> 3), (unsigned)(BAdr & 7));
         break;
       default:
-        as_snprintf(ListLine, STRINGSIZE, "=S:%x.%d",
+        as_snprintf(ListLine, STRINGSIZE, "=S:%x.%u",
                     (unsigned)(((BAdr >> 3) & 0x3f) + 0x400),
                     (unsigned)(BAdr & 7));
         break;

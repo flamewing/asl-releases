@@ -354,7 +354,7 @@ static void ComputeMacroStrings(PInputTag Tag)
   /* recompute # of params */
 
   if (Tag->UsesNumArgs)
-    as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), Integ32Format, Tag->ParCnt);
+    as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), "%" PRId32, Tag->ParCnt);
 
   /* recompute 'all string' parameter */
 
@@ -2572,7 +2572,7 @@ static void Produce_Code(void)
     {
       ExpandMacro(OneMacro);
       if ((MacroNestLevel > 1) && (MacroNestLevel < 100))
-        as_snprintf(ListLine, STRINGSIZE, "%*s(MACRO-%u)", MacroNestLevel - 1, "", MacroNestLevel);
+        as_snprintf(ListLine, STRINGSIZE, "%*s(MACRO-%u)", (int)MacroNestLevel - 1, "", MacroNestLevel);
       else
         strmaxcpy(ListLine, "(MACRO)", STRINGSIZE);
 
@@ -2899,7 +2899,7 @@ static void ProcessFile(char *pFileName)
 
         Name = NamePart(CurrFileName);
         as_snprintf(Num, sizeof(Num), "%s(", Name);
-        as_snprcatf(Num, sizeof(Num), LongIntFormat, MomLineCounter);
+        as_snprcatf(Num, sizeof(Num), "%" PRId32, MomLineCounter);
         as_snprcatf(Num, sizeof(Num), ")");
         WrConsoleLine(Num, False);
         fflush(stdout);
@@ -3264,7 +3264,7 @@ static void AssembleFile(char *Name)
     if (!QuietMode)
     {
       as_snprintf(Tmp, sizeof(Tmp), "%s", getmessage(Num_InfoMessPass));
-      as_snprcatf(Tmp, sizeof(Tmp), IntegerFormat, PassNo);
+      as_snprcatf(Tmp, sizeof(Tmp), "%" PRId32, PassNo);
       WrConsoleLine(Tmp, True);
     }
 
@@ -3491,18 +3491,18 @@ static void AssembleFile(char *Name)
   }
 
   as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", LineSum,
-              getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines), STRINGSIZE);
+              getmessage((LineSum == 1) ? Num_InfoMessAssLine : Num_InfoMessAssLines));
   AssembleFile_WrSummary(s);
 
   if (LineSum != MacLineSum)
   {
     as_snprintf(s, sizeof(s), "%7" PRILongInt "%s", MacLineSum,
-                getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines), STRINGSIZE);
+                getmessage((MacLineSum == 1) ? Num_InfoMessMacAssLine : Num_InfoMessMacAssLines));
     AssembleFile_WrSummary(s);
   }
 
   as_snprintf(s, sizeof(s), "%7d%s", (int)PassNo,
-              getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt), STRINGSIZE);
+              getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt));
   AssembleFile_WrSummary(s);
 
   if ((ErrorCount > 0) && (Repass) && (ListMode != 0))

@@ -61,7 +61,7 @@ void MakeList(const char *pSrcLine)
       as_sdprintf(&list_buf, "   ");
     else
     {
-      as_snprintf(Tmp, sizeof(Tmp), IntegerFormat, IncDepth);
+      as_snprintf(Tmp, sizeof(Tmp), "%" PRId32, IncDepth);
       as_sdprintf(&list_buf, "(%s)", Tmp);
     }
     if (ListMask & ListMask_LineNums)
@@ -70,8 +70,8 @@ void MakeList(const char *pSrcLine)
       as_sdprcatf(&list_buf, "%5s/", h2);
     }
     ListPC = EProgCounter() - CodeLen;
-    as_sdprcatf(&list_buf, "%8.*lllu %c ",
-                ListRadixBase, ListPC, Retracted? 'R' : ':');
+    as_sdprcatf(&list_buf, "%8.*" PRIx64 " %c ",
+                ListRadixBase, ListPC, Retracted ? 'R' : ':');
 
     /* Extrawurst in Listing ? */
 
@@ -88,7 +88,7 @@ void MakeList(const char *pSrcLine)
     {
       Word Index = 0, CurrListGran, SystemListLen;
       Boolean First = True;
-      LargeInt ThisWord;
+      LargeWord ThisWord;
       int SumLen;
 
       /* Not enough code to display even on 16/32 bit word?
@@ -123,9 +123,9 @@ void MakeList(const char *pSrcLine)
         /* If not the first code line, prepend blanks to fill up space below line number: */
 
         if (!First)
-          as_sdprintf(&list_buf, "%*s%8.*lllu %c ",
+          as_sdprintf(&list_buf, "%*s%8.*" PRIx64 " %c ",
                       (ListMask & ListMask_LineNums) ? 9 : 3, "",
-                      ListRadixBase, ListPC, Retracted? 'R' : ':');
+                      ListRadixBase, ListPC, Retracted ? 'R' : ':');
 
         SumLen = 0;
         do
@@ -147,7 +147,7 @@ void MakeList(const char *pSrcLine)
               default:
                 ThisWord = BAsmCode[Index];
             }
-            as_sdprcatf(&list_buf, "%0*.*lllu ", (int)SystemListLen, (int)ListRadixBase, ThisWord);
+            as_sdprcatf(&list_buf, "%0*.*" PRIx64 " ", SystemListLen, ListRadixBase, ThisWord);
           }
           else
             as_sdprcatf(&list_buf, "%*s", SystemListLen + 1, "");

@@ -2502,12 +2502,12 @@ static void AddCondition(const char *pName, Word Code, InstProc Proc)
 {
   char InstrName[20];
 
-  as_snprintf(InstrName, sizeof(InstrName), pName, "NE"); AddInstTable(InstTable, InstrName, Code | (0 << 4), Proc);
-  as_snprintf(InstrName, sizeof(InstrName), pName, "EQ"); AddInstTable(InstTable, InstrName, Code | (1 << 4), Proc);
-  as_snprintf(InstrName, sizeof(InstrName), pName, "PL"); AddInstTable(InstTable, InstrName, Code | (2 << 4), Proc);
-  as_snprintf(InstrName, sizeof(InstrName), pName, "MI"); AddInstTable(InstTable, InstrName, Code | (3 << 4), Proc);
-  as_snprintf(InstrName, sizeof(InstrName), pName, "GT"); AddInstTable(InstTable, InstrName, Code | (4 << 4), Proc);
-  as_snprintf(InstrName, sizeof(InstrName), pName, "LE"); AddInstTable(InstTable, InstrName, Code | (5 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "NE"); AddInstTable(InstTable, InstrName, Code | (0 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "EQ"); AddInstTable(InstTable, InstrName, Code | (1 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "PL"); AddInstTable(InstTable, InstrName, Code | (2 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "MI"); AddInstTable(InstTable, InstrName, Code | (3 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "GT"); AddInstTable(InstTable, InstrName, Code | (4 << 4), Proc);
+  as_snprintf(InstrName, sizeof(InstrName), "%s%s", pName, "LE"); AddInstTable(InstTable, InstrName, Code | (5 << 4), Proc);
 }
 
 static void InitFields(void)
@@ -2588,7 +2588,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "CLR", 0x0000, DecodeCLR);
   AddInstTable(InstTable, "COM", 0x00cc, DecodeCOM_NEG);
   AddInstTable(InstTable, "NEG", 0x00dc, DecodeCOM_NEG);
-  AddCondition("DB%s", 0x0d80, DecodeDBcc);
+  AddCondition("DB", 0x0d80, DecodeDBcc);
   AddInstTable(InstTable, "DEC", 0x0040, DecodeINC_DEC);
   AddInstTable(InstTable, "INC", 0x0030, DecodeINC_DEC);
 
@@ -2627,7 +2627,7 @@ static void InitFields(void)
   AddInstTable(InstTable, "ROL", 0x1064, DecodeROL_ROR);
   AddInstTable(InstTable, "ROR", 0x1024, DecodeROL_ROR);
 
-  AddCondition("TB%s", 0x0b00, DecodeTBcc);
+  AddCondition("TB", 0x0b00, DecodeTBcc);
 
   AddInstTable(InstTable, "DEFBIT", 0, DecodeDEFBIT);
   AddInstTable(InstTable, "DEFBITFIELD", 0, DecodeDEFBITFIELD);

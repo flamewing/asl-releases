@@ -411,6 +411,7 @@ static void DissectBit_KENBAK(char *pDest, size_t DestSize, LargeWord Inp)
 
   as_snprintf(pDest, DestSize, "%~02.*u%s,%u",
               ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix((unsigned)ListRadixBase),
               (unsigned)BitPos);
 }
 

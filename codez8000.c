@@ -1139,7 +1139,7 @@ static void DissectBit_Z8000(char *pDest, size_t DestSize, LargeWord Inp)
     Attribute = as_toupper(Attribute);
   as_snprintf(pDest, DestSize, "%s%~.*u%s%s(%c).%u",
               ForceShort ? "|" : "",
-              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix(ListRadixBase),
+              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix((unsigned)ListRadixBase),
               ForceShort ? "|" : "",
               Attribute, (unsigned)BitPos);
 }

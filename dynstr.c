@@ -201,6 +201,6 @@ void as_dynstr_dump_hex(FILE *p_file, const as_dynstr_t *p_str)
   const char *p_run;
 
   fprintf(p_file, "[%u]", (unsigned)p_str->capacity);
-  for (p_run = p_str->p_str; *p_run; p_run++) fprintf(p_file, " %02x", *p_run & 0xff);
+  for (p_run = p_str->p_str; *p_run; p_run++) fprintf(p_file, " %02x", *p_run & 0xffU);
   fprintf(p_file, "\n");
 }

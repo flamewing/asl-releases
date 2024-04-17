@@ -742,9 +742,9 @@ static void DecodePRWINS(Word Code)
     printf("\nMMSIZ %02x MMWBR %02x MM1CR %02x MM2CR %02x",
            (unsigned)Reg_MMSIZ, (unsigned)Reg_MMWBR, (unsigned)Reg_MM1CR, (unsigned)Reg_MM2CR);
     printf("\nWindow 1: %lx...%lx --> %lx...%lx",
-           (long)Win1VStart, (long)Win1VEnd, (long)Win1PStart, (long)Win1PEnd);
+           (unsigned long)Win1VStart, (unsigned long)Win1VEnd, (unsigned long)Win1PStart, (unsigned long)Win1PEnd);
     printf("\nWindow 2: %lx...%lx --> %lx...%lx\n",
-           (long)Win2VStart, (long)Win2VEnd, (long)Win2PStart, (long)Win2PEnd);
+           (unsigned long)Win2VStart, (unsigned long)Win2VEnd, (unsigned long)Win2PStart, (unsigned long)Win2PEnd);
   }
 }
 

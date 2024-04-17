@@ -26,7 +26,7 @@
 
 static const char *IdentString = "AS Message Catalog - not readable\n\032\004";
 
-static const char *EOpenMsg = "cannot open msg file %s";
+static const char *EOpenMsg = "cannot open msg file";
 static const char *ERdMsg = "cannot read from msg file";
 static const char *EIndMsg = "string table index error";
 
@@ -199,7 +199,7 @@ void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt Ms
         MsgFile = myopen(str, MsgId1, MsgId2);
         if (!MsgFile)
         {
-          as_snprintf(str, sizeof(str), EOpenMsg, File);
+          as_snprintf(str, sizeof(str), "%s %s", EOpenMsg, File);
           error(str);
         }
       }
