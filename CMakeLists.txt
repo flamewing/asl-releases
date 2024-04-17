@@ -297,22 +297,40 @@ CHECK_INCLUDE_FILES("endian.h" HAVE_ENDIAN_H)
 CHECK_INCLUDE_FILES("sys/param.h" HAVE_SYS_PARAM_H)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+add_library(ST_OBJECTS
+    OBJECT
+        stringlists.c
+        stringlists.h
+        strutil.c
+        strutil.h
+        nonzstring.c
+        nonzstring.h
+        dynstr.c
+        dynstr.h
+        stdhandl.c
+        stdhandl.h
+        strcomp.c
+        strcomp.h
+        as_endian.c
+        as_endian.h
+        bpemu.c
+        bpemu.h
+)
+target_include_directories(ST_OBJECTS
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
 # only build the generator if not crosscompiling
 if(NOT CMAKE_CROSSCOMPILING)
     set(RESCOMP_OBJECTS
         rescomp.c
-        as_endian.c
-        as_endian.h
-        strutil.c
-        strutil.h
-        dynstr.c
-        dynstr.h
-        bpemu.c
-        bpemu.h
     )
 
     add_executable(rescomp
         ${RESCOMP_OBJECTS}
+        $<TARGET_OBJECTS:ST_OBJECTS>
     )
     target_include_directories(rescomp
         PRIVATE
@@ -352,9 +370,147 @@ define_rescomp_target(pbind tools2.res header.res)
 define_rescomp_target(p2hex tools2.res header.res)
 define_rescomp_target(p2bin tools2.res header.res)
 
-set(CODE_OBJECTS
+add_library(CMDLINE_COMMON
+    OBJECT
+        cmdarg.c
+        cmdarg.h
+        version.c
+        version.h
+        ${CMAKE_BINARY_DIR}/cmdarg.msg
+        ${CMAKE_BINARY_DIR}/cmdarg.rsc
+        ioerrs.c
+        ioerrs.h
+        ${CMAKE_BINARY_DIR}/ioerrs.msg
+        ${CMAKE_BINARY_DIR}/ioerrs.rsc
+)
+target_include_directories(CMDLINE_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(NLS_OBJECTS
+    OBJECT
+        nls.c
+        nls.h
+        nlmessages.c
+        nlmessages.h
+        chardefs.c
+        chardefs.h
+)
+target_include_directories(NLS_OBJECTS
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(ADDRSPACE_COMMON
+    addrspace.c
+    addrspace.h
+)
+target_include_directories(ADDRSPACE_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(AS_DAS_COMMON
+    console.c
+    console.h
+    cpulist.c
+    cpulist.h
+    trees.c
+    trees.h
+)
+target_include_directories(AS_DAS_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(TOOLS_COMMON
+    toolutils.c
+    toolutils.h
+    ${CMAKE_BINARY_DIR}/tools.msg
+    ${CMAKE_BINARY_DIR}/tools.rsc
+)
+target_include_directories(TOOLS_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(CHUNKS_COMMON
+    chunks.c
+    chunks.h
+)
+target_include_directories(CHUNKS_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(HEADIDS_COMMON
+    headids.c
+    headids.h
+)
+target_include_directories(HEADIDS_COMMON
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
+)
+
+add_library(AS_OBJECTS
+    as.c
+    as.h
     ${CMAKE_BINARY_DIR}/as.msg
     ${CMAKE_BINARY_DIR}/as.rsc
+    asmdef.c
+    asmdef.h
+    asmsub.c
+    asmsub.h
+    asmerr.c
+    asmerr.h
+    lstmacroexp.c
+    lstmacroexp.h
+    asmpars.c
+    asmpars.h
+    asmmac.c
+    asmmac.h
+    asmstructs.c
+    asmstructs.h
+    asmcode.c
+    asmcode.h
+    asmlist.c
+    asmlist.h
+    asmlabel.c
+    asmlabel.h
+    asmdebug.c
+    asmdebug.h
+    asmif.c
+    asmif.h
+    asmfnums.c
+    asmfnums.h
+    asmrelocs.c
+    asmrelocs.h
+    tempresult.c
+    tempresult.h
+    operator.c
+    operator.h
+    function.c
+    function.h
+    asminclist.c
+    asminclist.h
+    symbolsize.c
+    symbolsize.h
+    asmitree.c
+    asmitree.h
+    asmallg.c
+    asmallg.h
+    intformat.c
+    intformat.h
+    sha1.c
+    sha1.h
     codepseudo.c
     codepseudo.h
     intpseudo.c
@@ -580,340 +736,65 @@ set(CODE_OBJECTS
     codekenbak.h
     codecp1600.c
     codecp1600.h
+    math64.c
+    math64.h
+    errmsg.c
+    errmsg.h
+)
+target_include_directories(AS_OBJECTS
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
 )
 
-set(DECODE_OBJECTS
+set(DAS_OBJECTS
+    das.c
+    ${CMAKE_BINARY_DIR}/das.msg
+    ${CMAKE_BINARY_DIR}/das.rsc
+    dasmdef.c
+    dasmdef.h
     deco68.c
     deco68.h
     deco87c800.c
     deco87c800.h
     deco4004.c
     deco4004.h
-)
-
-set(ST_OBJECTS
-    strutil.c
-    strutil.h
-    stdhandl.c
-    stdhandl.h
-    stringlists.c
-    stringlists.h
-    strcomp.c
-    strcomp.h
-)
-
-set(NLS_OBJECTS
-    nls.c
-    nls.h
-    nlmessages.c
-    nlmessages.h
-    chardefs.c
-    chardefs.h
-)
-
-set(ASM_OBJECTS
-    as.c
-    as.h
-    ${CMAKE_BINARY_DIR}/as.msg
-    ${CMAKE_BINARY_DIR}/as.rsc
-    asmdef.c
-    asmdef.h
-    asmsub.c
-    asmsub.h
-    asmerr.c
-    asmerr.h
-    lstmacroexp.c
-    lstmacroexp.h
-    asmpars.c
-    asmpars.h
-    asmmac.c
-    asmmac.h
-    asmstructs.c
-    asmstructs.h
-    asmcode.c
-    asmcode.h
-    asmlist.c
-    asmlist.h
-    asmlabel.c
-    asmlabel.h
-    asmdebug.c
-    asmdebug.h
-    asmif.c
-    asmif.h
-    asmfnums.c
-    asmfnums.h
-    asmrelocs.c
-    asmrelocs.h
-    tempresult.c
-    tempresult.h
-    operator.c
-    operator.h
-    function.c
-    function.h
-    asminclist.c
-    asminclist.h
-    symbolsize.c
-    symbolsize.h
-    asmitree.c
-    asmitree.h
-    asmallg.c
-    asmallg.h
-    intformat.c
-    intformat.h
-    addrspace.c
-    addrspace.h
-)
-
-set(AS_OBJECTS
-    ${CMAKE_BINARY_DIR}/as.msg
-    ${CMAKE_BINARY_DIR}/as.rsc
-    version.c
-    version.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    math64.c
-    math64.h
-    chunks.c
-    chunks.h
-    console.c
-    console.h
-    cpulist.c
-    cpulist.h
-    errmsg.c
-    errmsg.h
-    trees.c
-    trees.h
-    nonzstring.c
-    nonzstring.h
-    dynstr.c
-    dynstr.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
-    headids.c
-    headids.h
-    sha1.c
-    sha1.h
-)
-
-set(DASM_OBJECTS
-    das.c
-    ${CMAKE_BINARY_DIR}/das.msg
-    ${CMAKE_BINARY_DIR}/das.rsc
-    dasmdef.c
-    dasmdef.h
-)
-
-set(DAS_OBJECTS
-    version.c
-    version.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    chunks.c
-    chunks.h
-    trees.c
-    trees.h
     codechunks.c
     codechunks.h
-    console.c
-    console.h
     entryaddress.c
     entryaddress.h
     invaddress.c
     invaddress.h
-    cpulist.c
-    cpulist.h
-    nonzstring.c
-    nonzstring.h
-    dynstr.c
-    dynstr.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 set(PLIST_OBJECTS
     plist.c
     ${CMAKE_BINARY_DIR}/plist.msg
     ${CMAKE_BINARY_DIR}/plist.rsc
-    version.c
-    version.h
-    toolutils.c
-    toolutils.h
-    ${CMAKE_BINARY_DIR}/tools.msg
-    ${CMAKE_BINARY_DIR}/tools.rsc
-    addrspace.c
-    addrspace.h
-    headids.c
-    headids.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    stringlists.c
-    stringlists.h
-    strutil.c
-    strutil.h
-    dynstr.c
-    dynstr.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 set(ALINK_OBJECTS
     alink.c
     ${CMAKE_BINARY_DIR}/alink.msg
     ${CMAKE_BINARY_DIR}/alink.rsc
-    version.c
-    version.h
-    toolutils.c
-    toolutils.h
-    ${CMAKE_BINARY_DIR}/tools.msg
-    ${CMAKE_BINARY_DIR}/tools.rsc
-    addrspace.c
-    addrspace.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    stringlists.c
-    stringlists.h
-    strutil.c
-    strutil.h
-    dynstr.c
-    dynstr.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 set(PBIND_OBJECTS
     pbind.c
     ${CMAKE_BINARY_DIR}/pbind.msg
     ${CMAKE_BINARY_DIR}/pbind.rsc
-    version.c
-    version.h
-    toolutils.c
-    toolutils.h
-    ${CMAKE_BINARY_DIR}/tools.msg
-    ${CMAKE_BINARY_DIR}/tools.rsc
-    addrspace.c
-    addrspace.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    stringlists.c
-    stringlists.h
-    strutil.c
-    strutil.h
-    dynstr.c
-    dynstr.h
-    stdhandl.c
-    stdhandl.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 set(P2HEX_OBJECTS
     p2hex.c
     ${CMAKE_BINARY_DIR}/p2hex.msg
     ${CMAKE_BINARY_DIR}/p2hex.rsc
-    version.c
-    version.h
-    toolutils.c
-    toolutils.h
-    ${CMAKE_BINARY_DIR}/tools.msg
-    ${CMAKE_BINARY_DIR}/tools.rsc
-    addrspace.c
-    addrspace.h
-    headids.c
-    headids.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    stringlists.c
-    stringlists.h
-    strutil.c
-    strutil.h
-    dynstr.c
-    dynstr.h
-    chunks.c
-    chunks.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 set(P2BIN_OBJECTS
     p2bin.c
     ${CMAKE_BINARY_DIR}/p2bin.msg
     ${CMAKE_BINARY_DIR}/p2bin.rsc
-    version.c
-    version.h
-    toolutils.c
-    toolutils.h
-    ${CMAKE_BINARY_DIR}/tools.msg
-    ${CMAKE_BINARY_DIR}/tools.rsc
-    addrspace.c
-    addrspace.h
-    as_endian.c
-    as_endian.h
-    bpemu.c
-    bpemu.h
-    stringlists.c
-    stringlists.h
-    strutil.c
-    strutil.h
-    dynstr.c
-    dynstr.h
-    chunks.c
-    chunks.h
-    cmdarg.c
-    cmdarg.h
-    ${CMAKE_BINARY_DIR}/cmdarg.msg
-    ${CMAKE_BINARY_DIR}/cmdarg.rsc
-    ioerrs.c
-    ioerrs.h
-    ${CMAKE_BINARY_DIR}/ioerrs.msg
-    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 
 function(define_executable NAME)
@@ -937,14 +818,28 @@ function(define_executable NAME)
 endfunction(define_executable)
 
 define_executable(asl
-    ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
+    $<TARGET_OBJECTS:AS_OBJECTS>
+    $<TARGET_OBJECTS:AS_DAS_COMMON>
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:CHUNKS_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(asl)
 add_dependencies(asl as_res cmdarg_res ioerrs_res)
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
     define_executable(asw
-        ${ASM_OBJECTS} ${AS_OBJECTS} ${ST_OBJECTS} ${CODE_OBJECTS} ${NLS_OBJECTS}
+        $<TARGET_OBJECTS:AS_OBJECTS>
+        $<TARGET_OBJECTS:AS_DAS_COMMON>
+        $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+        $<TARGET_OBJECTS:ST_OBJECTS>
+        $<TARGET_OBJECTS:NLS_OBJECTS>
+        $<TARGET_OBJECTS:CMDLINE_COMMON>
+        $<TARGET_OBJECTS:CHUNKS_COMMON>
+        $<TARGET_OBJECTS:HEADIDS_COMMON>
     )
     target_link_libm(asw)
     add_dependencies(asw as_res cmdarg_res ioerrs_res)
@@ -954,36 +849,70 @@ else()
 endif(DEFINED ENV{MSYSTEM_PREFIX})
 
 define_executable(dasl
-    ${DASM_OBJECTS} ${DAS_OBJECTS} ${ST_OBJECTS} ${DECODE_OBJECTS} ${NLS_OBJECTS}
+    ${DAS_OBJECTS}
+    $<TARGET_OBJECTS:AS_DAS_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:CHUNKS_COMMON>
 )
 add_dependencies(dasl das_res cmdarg_res ioerrs_res)
 
 define_executable(plist
-    ${PLIST_OBJECTS} ${NLS_OBJECTS}
+    ${PLIST_OBJECTS}
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(plist)
 add_dependencies(plist plist_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(alink
-    ${ALINK_OBJECTS} ${NLS_OBJECTS}
+    ${ALINK_OBJECTS}
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
 )
 target_link_libm(alink)
 add_dependencies(alink alink_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(pbind
-    ${PBIND_OBJECTS} ${NLS_OBJECTS}
+    ${PBIND_OBJECTS}
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
 )
 target_link_libm(pbind)
 add_dependencies(pbind pbind_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(p2hex
-    ${P2HEX_OBJECTS} ${NLS_OBJECTS}
+    ${P2HEX_OBJECTS}
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:CHUNKS_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(p2hex)
 add_dependencies(p2hex p2hex_res tools_res cmdarg_res ioerrs_res)
 
 define_executable(p2bin
-    ${P2BIN_OBJECTS} ${NLS_OBJECTS}
+    ${P2BIN_OBJECTS}
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:CHUNKS_COMMON>
 )
 target_link_libm(p2bin)
 add_dependencies(p2bin p2bin_res tools_res cmdarg_res ioerrs_res)
