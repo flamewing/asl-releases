@@ -9,9 +9,11 @@ project(asl-flamewing
 # Joins arguments and places the results in ${result_var}.
 function(join result_var)
     set(result "")
-    foreach (arg ${ARGN})
+
+    foreach(arg ${ARGN})
         set(result "${result}${arg}")
-    endforeach ()
+    endforeach()
+
     set(${result_var} "${result}" PARENT_SCOPE)
 endfunction()
 
@@ -25,18 +27,18 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_EXTENSIONS FALSE)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+
 # include(CheckIPOSupported)
 # check_ipo_supported(RESULT iposupported OUTPUT ipoerror)
 
 # if(iposupported)
-#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 # elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-#     add_link_options(-fuse-ld=lld)
-#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# add_link_options(-fuse-ld=lld)
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 # else()
-#     message(WARNING "IPO is not supported: ${ipoerror}")
+# message(WARNING "IPO is not supported: ${ipoerror}")
 # endif()
-
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     if(DEFINED ENV{MSYSTEM_PREFIX})
         set(CMAKE_INSTALL_PREFIX "$ENV{MSYSTEM_PREFIX}" CACHE PATH "Default install prefix" FORCE)
@@ -67,20 +69,22 @@ add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}")
 include(CheckFunctionExists)
 
 if(NOT POW_FUNCTION_EXISTS AND NOT NEED_LINKING_AGAINST_LIBM)
-  CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
-  if(NOT POW_FUNCTION_EXISTS)
-      unset(POW_FUNCTION_EXISTS CACHE)
-      list(APPEND CMAKE_REQUIRED_LIBRARIES m)
-      CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
-      if(POW_FUNCTION_EXISTS)
-          set(NEED_LINKING_AGAINST_LIBM True CACHE BOOL "" FORCE)
-      else()
-          message(FATAL_ERROR "Failed making the pow() function available")
-      endif()
-  endif()
+    CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
+
+    if(NOT POW_FUNCTION_EXISTS)
+        unset(POW_FUNCTION_EXISTS CACHE)
+        list(APPEND CMAKE_REQUIRED_LIBRARIES m)
+        CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
+
+        if(POW_FUNCTION_EXISTS)
+            set(NEED_LINKING_AGAINST_LIBM True CACHE BOOL "" FORCE)
+        else()
+            message(FATAL_ERROR "Failed making the pow() function available")
+        endif()
+    endif()
 endif()
 
-if (NEED_LINKING_AGAINST_LIBM)
+if(NEED_LINKING_AGAINST_LIBM)
     function(target_link_libm target)
         target_link_libraries(${target} PUBLIC m)
     endfunction()
@@ -135,15 +139,18 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wanalyzer-too-complex>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Warith-conversion>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wbad-function-cast>)
+
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wbidi-chars>)
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wbidi-chars=any>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcast-align>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcast-align=strict>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcast-qual>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wchkp>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcomments>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcomment>)
-        #add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wconversion>)
+
+        # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wconversion>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wdate-time>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wno-declaration-after-statement>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wdisabled-optimization>)
@@ -162,6 +169,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Winit-self>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Winline>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Winvalid-pch>)
+
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Winvalid-utf8>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wjump-misses-init>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wlogical-op>)
@@ -177,9 +185,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wnested-externs>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wnull-dereference>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wold-style-definition>)
+
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wopenacc-parallelism>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wpacked>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wpacked-bitfield-compat>)
+
         # add_compile_option$<COMPILE_LANGUAGE:C>:s($<$<COMPILE_LANGUAGE:C>:-Wpadded>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wredundant-decls>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wshadow>)
@@ -187,9 +197,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wshadow=global>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wshadow=local>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wshift-negative-value>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wsign-conversion>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wstack-protector>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wstrict-aliasing>)
+
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wstrict-flex-arrays>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wstrict-overflow>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes>)
@@ -201,12 +213,15 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wsuggest-attribute=pure>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wsuggest-final-methods>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wsuggest-final-types>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wswitch-default>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wswitch-enum>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wno-system-headers>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wtraditional>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wtraditional-conversion>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wtrampolines>)
+
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wtrivial-auto-var-init>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wundef>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wunreachable-code>)
@@ -220,12 +235,14 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Warray-bounds=1>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Warray-parameter=2>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wattribute-alias=1>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wcatch-value=1>)
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Wdangling-pointer=2>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wformat-overflow=1>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wformat-truncation=1>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wformat=1>)
         add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wimplicit-fallthrough=3>)
+
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Woverloaded-virtual>)
         # add_compile_options_safe($<$<COMPILE_LANGUAGE:C>:-Woverloaded-virtual=2>)
         # add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wplacement-new=1>)
@@ -272,17 +289,19 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
         ${CMAKE_MAKE_PROGRAM} -p:FrameworkPathOverride=\"${netfxpath}\" %*")
 endif()
 
-INCLUDE (CheckIncludeFiles)
+INCLUDE(CheckIncludeFiles)
 set(CHECK_LOCALE TRUE)
-if (CMAKE_CROSSCOMPILING)
-    if (DEFINED EMSCRIPTEN)
-        if (${EMSCRIPTEN})
+
+if(CMAKE_CROSSCOMPILING)
+    if(DEFINED EMSCRIPTEN)
+        if(${EMSCRIPTEN})
             set(CHECK_LOCALE FALSE)
         endif(${EMSCRIPTEN})
-    endif()
-endif()
+    endif(DEFINED EMSCRIPTEN)
+endif(CMAKE_CROSSCOMPILING)
+
 if(${CHECK_LOCALE})
-    CHECK_INCLUDE_FILES ("windef.h;winbase.h;winnls.h" W32_NLS)
+    CHECK_INCLUDE_FILES("windef.h;winbase.h;winnls.h" W32_NLS)
     CHECK_INCLUDE_FILES("locale.h;langinfo.h" LOCALE_NLS)
     CHECK_INCLUDE_FILES(os2.h OS2_NLS)
 else()
@@ -290,6 +309,7 @@ else()
     set(OS2_NLS FALSE)
     set(W32_NLS FALSE)
 endif(${CHECK_LOCALE})
+
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
 set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
 set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
@@ -299,27 +319,27 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 
 add_library(ST_OBJECTS
     OBJECT
-        stringlists.c
-        stringlists.h
-        strutil.c
-        strutil.h
-        nonzstring.c
-        nonzstring.h
-        dynstr.c
-        dynstr.h
-        stdhandl.c
-        stdhandl.h
-        strcomp.c
-        strcomp.h
-        as_endian.c
-        as_endian.h
-        bpemu.c
-        bpemu.h
+    stringlists.c
+    stringlists.h
+    strutil.c
+    strutil.h
+    nonzstring.c
+    nonzstring.h
+    dynstr.c
+    dynstr.h
+    stdhandl.c
+    stdhandl.h
+    strcomp.c
+    strcomp.h
+    as_endian.c
+    as_endian.h
+    bpemu.c
+    bpemu.h
 )
 target_include_directories(ST_OBJECTS
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 # only build the generator if not crosscompiling
@@ -334,8 +354,8 @@ if(NOT CMAKE_CROSSCOMPILING)
     )
     target_include_directories(rescomp
         PRIVATE
-            ${CMAKE_SOURCE_DIR}
-            ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
     )
     set_target_properties(rescomp
         PROPERTIES
@@ -372,37 +392,37 @@ define_rescomp_target(p2bin tools2.res header.res)
 
 add_library(CMDLINE_COMMON
     OBJECT
-        cmdarg.c
-        cmdarg.h
-        version.c
-        version.h
-        ${CMAKE_BINARY_DIR}/cmdarg.msg
-        ${CMAKE_BINARY_DIR}/cmdarg.rsc
-        ioerrs.c
-        ioerrs.h
-        ${CMAKE_BINARY_DIR}/ioerrs.msg
-        ${CMAKE_BINARY_DIR}/ioerrs.rsc
+    cmdarg.c
+    cmdarg.h
+    version.c
+    version.h
+    ${CMAKE_BINARY_DIR}/cmdarg.msg
+    ${CMAKE_BINARY_DIR}/cmdarg.rsc
+    ioerrs.c
+    ioerrs.h
+    ${CMAKE_BINARY_DIR}/ioerrs.msg
+    ${CMAKE_BINARY_DIR}/ioerrs.rsc
 )
 target_include_directories(CMDLINE_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 add_dependencies(CMDLINE_COMMON cmdarg_res ioerrs_res)
 
 add_library(NLS_OBJECTS
     OBJECT
-        nls.c
-        nls.h
-        nlmessages.c
-        nlmessages.h
-        chardefs.c
-        chardefs.h
+    nls.c
+    nls.h
+    nlmessages.c
+    nlmessages.h
+    chardefs.c
+    chardefs.h
 )
 target_include_directories(NLS_OBJECTS
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_library(ADDRSPACE_COMMON
@@ -411,8 +431,8 @@ add_library(ADDRSPACE_COMMON
 )
 target_include_directories(ADDRSPACE_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_library(AS_DAS_COMMON
@@ -425,8 +445,8 @@ add_library(AS_DAS_COMMON
 )
 target_include_directories(AS_DAS_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_library(TOOLS_COMMON
@@ -437,8 +457,8 @@ add_library(TOOLS_COMMON
 )
 target_include_directories(TOOLS_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 add_dependencies(TOOLS_COMMON tools_res)
 
@@ -448,8 +468,8 @@ add_library(CHUNKS_COMMON
 )
 target_include_directories(CHUNKS_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_library(HEADIDS_COMMON
@@ -458,8 +478,8 @@ add_library(HEADIDS_COMMON
 )
 target_include_directories(HEADIDS_COMMON
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_library(AS_OBJECTS
@@ -745,8 +765,8 @@ add_library(AS_OBJECTS
 )
 target_include_directories(AS_OBJECTS
     PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 add_dependencies(AS_OBJECTS as_res)
 
@@ -804,20 +824,21 @@ function(define_executable NAME)
     add_executable(${NAME} ${ARGN})
     target_include_directories(${NAME}
         PRIVATE
-            ${CMAKE_SOURCE_DIR}
-            ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}
     )
     set_target_properties(${NAME}
         PROPERTIES
         OUTPUT_NAME ${NAME}
     )
-    if (CMAKE_CROSSCOMPILING)
-        if (DEFINED EMSCRIPTEN)
-            if (${EMSCRIPTEN})
+
+    if(CMAKE_CROSSCOMPILING)
+        if(DEFINED EMSCRIPTEN)
+            if(${EMSCRIPTEN})
                 target_link_libraries(${NAME} PUBLIC nodefs.js noderawfs.js)
             endif(${EMSCRIPTEN})
-        endif()
-    endif()
+        endif(DEFINED EMSCRIPTEN)
+    endif(CMAKE_CROSSCOMPILING)
 endfunction(define_executable)
 
 define_executable(asl
@@ -945,50 +966,50 @@ install(
 # Source: https://github.com/rnpgp/cmake-modules/blob/main/PandocMan.cmake
 install(
     DIRECTORY
-        man/
+    man/
     DESTINATION
-        ${CMAKE_INSTALL_MANDIR}/man1
+    ${CMAKE_INSTALL_MANDIR}/man1
 )
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
     install(
         FILES
-            man/asl.1
+        man/asl.1
         RENAME
-            asw.1
+        asw.1
         DESTINATION
-            ${CMAKE_INSTALL_MANDIR}/man1
-        )
+        ${CMAKE_INSTALL_MANDIR}/man1
+    )
 endif(DEFINED ENV{MSYSTEM_PREFIX})
 
 install(
     TARGETS
-        alink
-        asl
-        ${ASW_TARGET}
-        dasl
-        pbind
-        p2bin
-        p2hex
-        plist
+    alink
+    asl
+    ${ASW_TARGET}
+    dasl
+    pbind
+    p2bin
+    p2hex
+    plist
     DESTINATION
-        ${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_INSTALL_BINDIR}
 )
 
 install(
     FILES
-        ${CMAKE_BINARY_DIR}/alink.msg
-        ${CMAKE_BINARY_DIR}/as.msg
-        ${CMAKE_BINARY_DIR}/das.msg
-        ${CMAKE_BINARY_DIR}/cmdarg.msg
-        ${CMAKE_BINARY_DIR}/ioerrs.msg
-        ${CMAKE_BINARY_DIR}/pbind.msg
-        ${CMAKE_BINARY_DIR}/p2bin.msg
-        ${CMAKE_BINARY_DIR}/p2hex.msg
-        ${CMAKE_BINARY_DIR}/plist.msg
-        ${CMAKE_BINARY_DIR}/tools.msg
+    ${CMAKE_BINARY_DIR}/alink.msg
+    ${CMAKE_BINARY_DIR}/as.msg
+    ${CMAKE_BINARY_DIR}/das.msg
+    ${CMAKE_BINARY_DIR}/cmdarg.msg
+    ${CMAKE_BINARY_DIR}/ioerrs.msg
+    ${CMAKE_BINARY_DIR}/pbind.msg
+    ${CMAKE_BINARY_DIR}/p2bin.msg
+    ${CMAKE_BINARY_DIR}/p2hex.msg
+    ${CMAKE_BINARY_DIR}/plist.msg
+    ${CMAKE_BINARY_DIR}/tools.msg
     DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/asl
+    ${CMAKE_INSTALL_LIBDIR}/asl
 )
 
 if(NOT CMAKE_CROSSCOMPILING)
@@ -1007,10 +1028,9 @@ endif(NOT CMAKE_CROSSCOMPILING)
 # - doc_COM/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
 # - doc_EN/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
 # - doc_DE/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_DE.{doc,html,dvi,ps,pdf}
-
 enable_testing()
 
-if (DEFINED ENV{VERBOSE})
+if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()
     set(VERBOSE_MODE "0")
@@ -1020,8 +1040,8 @@ file(GLOB test_dirs RELATIVE "${CMAKE_SOURCE_DIR}/tests" "${CMAKE_SOURCE_DIR}/te
 
 if(NOT DEFINED CMAKE_CROSSCOMPILING_EMULATOR)
     set(EMULATOR "")
-elseif (DEFINED EMSCRIPTEN)
-    if (${EMSCRIPTEN})
+elseif(DEFINED EMSCRIPTEN)
+    if(${EMSCRIPTEN})
         set(EMULATOR "${CMAKE_CROSSCOMPILING_EMULATOR} ")
     else()
         set(EMULATOR "")
@@ -1035,13 +1055,13 @@ foreach(TEST_TARGET ${test_dirs})
         add_test(
             NAME ${TEST_TARGET}
             COMMAND
-                test_driver ${VERBOSE_MODE} ${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET} ${TEST_TARGET} ${CMAKE_SOURCE_DIR}/include "${EMULATOR}$<TARGET_FILE:asl>" "${EMULATOR}$<TARGET_FILE:p2bin>" ${CMAKE_BINARY_DIR}/Testing
+            test_driver ${VERBOSE_MODE} ${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET} ${TEST_TARGET} ${CMAKE_SOURCE_DIR}/include "${EMULATOR}$<TARGET_FILE:asl>" "${EMULATOR}$<TARGET_FILE:p2bin>" ${CMAKE_BINARY_DIR}/Testing
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
         set_property(
             TEST ${TEST_TARGET}
             PROPERTY
-                ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR}"
+            ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR}"
         )
     endif()
 endforeach()
