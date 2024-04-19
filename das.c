@@ -191,10 +191,10 @@ static void ResizeBuffer(Byte* *ppBuffer, LargeWord *pAllocLen, LargeWord ReqLen
 {
   if (ReqLen > *pAllocLen)
   {
-    Byte *pNew = *ppBuffer ? realloc(*ppBuffer, ReqLen) : malloc(ReqLen);
+    void *pNew = *ppBuffer ? realloc(*ppBuffer, ReqLen) : malloc(ReqLen);
     if (pNew)
     {
-      *ppBuffer = pNew;
+      *ppBuffer = (Byte *)pNew;
       *pAllocLen = ReqLen;
     }
   }
