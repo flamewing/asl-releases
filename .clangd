@@ -25,4 +25,17 @@ CompileFlags:
 If:
   PathMatch: [.*\.hpp]
 CompileFlags:
-  Add: [-xc++-header, -std=c++17, -D_CLANGD=1]
+  Add:
+    [
+      -xc++-header,
+      -std=c++20,
+      -D_CLANGD=1,
+      -Wno-c++98-compat,
+      -Wno-c++98-compat-pedantic,
+      -Wno-c++11-compat,
+      -Wno-c++11-compat-pedantic,
+      -Wno-c++14-compat,
+      -Wno-c++14-compat-pedantic,
+      -Wno-c++17-compat,
+      -Wno-c++17-compat-pedantic,
+    ]
