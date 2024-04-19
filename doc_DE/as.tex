@@ -14254,67 +14254,15 @@ ben"otigt werden, z.B. f"ur das Lesen von Code-Dateien.
 
 \section{W"ahrend der Erzeugung von AS gebrauchte Module}
 
-\subsubsection{a2k.c}
-
-Dies ist ein Minimalfilter, das ANSI-C-Files in Kernighan-Ritchie
-umwandelt.  Um es genau zu sagen: es werden nur die Funktionsk"opfe
-umgewandelt, und auch nur dann, wenn sie ungef"ahr so formatiert sind, wie
-es mein Schreibstil eben ist.  Es komme also keiner auf die Idee, das
-w"are ein universeller C-Parser!
-
-\subsubsection{addcr.c}
-
-Ein kleiner Filter, der bei der Installation auf DOS- oder OS/2-Systemen
-gebraucht wird.  Da DOS und OS/2 den Zeilenvorschub mit CR/LF vornehmen,
-Unix-Systeme jedoch nur mit LF, werden s"amtliche mitgelieferten
-Assembler-Includes bei der Installation durch diesen Filter geschickt.
-
-\subsubsection{bincmp.c}
-
-F"ur DOS und OS/2 "ubernimmt dieses Modul die Funktion die Funktion des
-{\em cmp}-Befehls, d.h. den bin"aren Vergleich von Dateien w"ahrend des
-Testlaufes.  W"ahrend dies prinzipiell auch mit dem mitgelieferten {\em
-comp} m"oglich w"are, hat {\em bincmp} keine l"astigen interaktiven
-Abfragen (bei denen man erst einmal herausfinden mu"s, wie man sie auf
-allen Betriebssystemversionen abstellt...)
-
-\subsubsection{findhyphen.c}
-
-Dies ist das Untermodul in {\em tex2doc}, da"s f"ur die Silbentrennung von
-Worten sorgt.  Der verwendete Algorithmus is schamlos von TeX
-abgekupfert.
-
-\subsubsection{grhyph.c}
-
-Die Definition der Silbentrennungsregeln f"ur die deutsche Sprache.
-
 \subsubsection{rescomp.c}
 
 Dies ist der 'Resourcencompiler' von AS, d.h. das Werkzeug, das die
 lesbaren Dateien mit Stringresourcen in ein schnelles, indiziertes Format
 umsetzt.
 
-\subsubsection{tex2doc.c}
+\subsubsection{test_driver.c}
 
-Ein Werkzeug, da"s die LaTeX-Dokumentation von AS in ein ASCII-Format
-umsetzt.
-
-\subsubsection{tex2html.c}
-
-Ein Werkzeug, da"s die LaTeX-Dokumentation von AS in ein HTML-Dokument
-umsetzt.
-
-\subsubsection{umlaut.c und unumlaut.c}
-
-Diese Progr"ammchen besorgen die Wandlung zwischen Sonderzeichenkodierung
-im ISO-Format (alle AS-Dateien verwenden im Auslieferungszustand die
-ISO8859-1-Kodierung f"ur Sonderzeichen) und Sonderzeichenkodierung im
-systemspezifischen Format.  Neben einer Plain-ASCII7-Variante sind dies im
-Augenblick die IBM-Zeichens"atze 437 und 850.
-
-\subsubsection{ushyph.c}
-
-Die Definition der Silbentrennungsregeln f"ur die englische Sprache.
+Dies wird von \em{ctest} verwendet, um Tests durchzuführen.
 
 %%---------------------------------------------------------------------------
 

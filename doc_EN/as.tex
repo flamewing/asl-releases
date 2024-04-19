@@ -13868,60 +13868,14 @@ reading of code files.
 
 \section{Modules Needed During the Build of AS}
 
-\subsubsection{a2k.c}
-
-This is a minimal filter converting ANSI C source files to
-Kernighan-Ritchie style.  To be exact: only function heads are converted,
-even this only when they are roughly formatted like my programming style.
-Noone should therefore think this were a universal C parser!
-
-\subsubsection{addcr.c}
-
-A small filter needed during installation on DOS- or OS/2-systems.  Since
-DOS and OS/2 use a CR/LF for a newline, inc ontrast to the single LF of
-Unix systems, all assembly include files provided with AS are sent through
-this filter during assembly.
-
-\subsubsection{bincmp.c}
-
-For DOS and OS/2, this module takes the task of the {\em cmp} command,
-i.e. the binary comparison of files during the test run.  While this would
-principally be possible with the {\em comp} command provided with the OS,
-{\em bincmp} does not have any nasty interactive questions (which seem to
-be an adventure to get rid of...)
-
-\subsubsection{findhyphen.c}
-
-This is the submodule in {\em tex2doc} providing hyphenation of words.
-The algorithm used for this is shamelessly stolen from TeX.
-
-\subsubsection{grhyph.c}
-
-The definition of hyphenation rules for the german language.
-
 \subsubsection{rescomp.c}
 
 This is AS's 'resource compiler', i.e. the tool that converts a readable
 file with string resources into a fast, indexed format.
 
-\subsubsection{tex2doc.c}
+\subsubsection{test_driver.c}
 
-A tool that converts the LaTeX documentation of AS into an ASCII format.
-
-\subsubsection{tex2html.c}
-
-A tool that converts the LaTeX documentation of AS into an HTML document.
-
-\subsubsection{umlaut.c and unumlaut.c}
-
-These tiny programs convert national special characters between their
-coding in ISO8859-1 (all AS files use this format upon delivery) and their
-system-specific coding.  Apart from a plain ASCII7 variant, there are
-currently the IBM character sets 437 and 850.
-
-\subsubsection{ushyph.c}
-
-The definition of hyphenation rules for the english language.
+This is used by \em{ctest} to run tests.
 
 %%---------------------------------------------------------------------------
 
