@@ -7,6 +7,8 @@
 *.dep
 *.dtoc
 *.exe
+*.ilg
+*.ind
 *.haux
 *.htoc
 *.html
@@ -14,6 +16,7 @@
 *.log
 *.msg
 *.out
+*.pdf
 *.ps
 *.rsc
 *.toc
