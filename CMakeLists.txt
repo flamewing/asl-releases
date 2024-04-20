@@ -1023,11 +1023,10 @@ endif(NOT CMAKE_CROSSCOMPILING)
 # They should go to ${CMAKE_INSTALL_DOCDIR}
 # List of documents:
 # - COPYING                         -> ${CMAKE_INSTALL_DOCDIR}/COPYING
-# - doc_COM/biblio.tex              -> ${CMAKE_INSTALL_DOCDIR}/biblio.tex
-# - doc_COM/ps*.tex                 -> ${CMAKE_INSTALL_DOCDIR}/ps*.tex
-# - doc_COM/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
-# - doc_EN/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
-# - doc_DE/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_DE.{doc,html,dvi,ps,pdf}
+# - doc/biblio.tex              -> ${CMAKE_INSTALL_DOCDIR}/biblio.tex
+# - doc/ps*.tex                 -> ${CMAKE_INSTALL_DOCDIR}/ps*.tex
+# - doc/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
+# - doc/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
 enable_testing()
 
 if(DEFINED ENV{VERBOSE})
