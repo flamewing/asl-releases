@@ -64,7 +64,7 @@ function(add_compile_options_safe FLAG)
     endif(C_COMPILER_SUPPORTS_${FLAG_NO_SIGNS})
 endfunction()
 
-add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}")
+add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}/asl")
 
 include(CheckFunctionExists)
 
@@ -374,7 +374,7 @@ function(define_rescomp_target STEM)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS rescomp ${STEM}.res ${ARGN}
     )
-    add_custom_target(${STEM}_res
+    add_custom_target(${STEM}_res ALL
         SOURCES ${CMAKE_BINARY_DIR}/${STEM}.msg ${CMAKE_BINARY_DIR}/${STEM}.rsc
     )
 endfunction(define_rescomp_target)
