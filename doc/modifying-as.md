@@ -252,9 +252,9 @@ As already mentioned, source files are pure ASCII files; national special charac
 
 | Sequence...                           | results in...         |
 | :------------------------------------ | :-------------------- |
-| `&auml; &ouml; &uuml;`                | "a "o "u (Umlauts)    |
-| `&Auml; &Ouml; &Uuml;`                | "A "O "U              |
-| `&szlig;`                             | "s (sharp s)          |
+| `&auml; &ouml; &uuml;`                | ä ö ü (Umlauts)       |
+| `&Auml; &Ouml; &Uuml;`                | Ä Ö Ü                 |
+| `&szlig;`                             | ß (sharp s)           |
 | `&agrave; &egrave; &igrave; &ograve;` | á é í ó               |
 | `&ugrave;`                            | ú                     |
 | `&Agrave; &Egrave; &Igrave; &Ograve;` | Á É Í Ó               |
@@ -271,7 +271,7 @@ As already mentioned, source files are pure ASCII files; national special charac
 | `&ntilde; &Ntilde;`                   | ñ Ñ                   |
 | `&aring; &Aring;`                     | åÅ                    |
 | `&aelig; &Aelig;`                     | æÆ                    |
-| `&iquest; &iexcl;`                    | inverted ! or ?       |
+| `&iquest; &iexcl;`                    | ¿ ¡ (inverted ! or ?) |
 
 ## Creation of Documentation
 
