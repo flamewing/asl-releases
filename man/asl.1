@@ -4,7 +4,7 @@
 .B asl \- cross assembler for microprocessors and -controllers
 
 .SH SYNTAX
-.B asl 
+.B asl
 [ option(s) ] file(s) [ option(s) ] file(s) ...
 
 .SH DESCRIPTION
@@ -28,8 +28,8 @@ is automatically extended with the default extension '.asm'.
 Options are turned on with a parameter starting with
 a slash (/) or minus sign (-), whereas a parameter with a leading plus sign
 (+) turns an option off.  In the following list, all options will be shown in
-the form that is needed to change the default behaviour, which might be a 
-plus or minus sign, depening on wether the option is on or off by default.
+the form that is needed to change the default behaviour, which might be a
+plus or minus sign, depending on whether the option is on or off by default.
 
 .B asl
 accepts the following command-line parameters:
@@ -59,7 +59,7 @@ Define a CPU alias.  An alias is a name that can be used as an argument to the
 CPU pseudo-instruction just like an intrinsic CPU type.  Its usage will set
 the same target as the old name, however the predefined symbols MOMCPU and
 MOMCPUNAME will be set to the new name.  This option is primarily useful for
-adding a new member to a processor family that has the same core, but is 
+adding a new member to a processor family that has the same core, but is
 different in its internal peripherals, thus allowing to distinguish between
 them.
 .TP
@@ -91,20 +91,20 @@ target-specific details.
 Pre-define symbols.  Predefined symbols are entered into the global symbol
 table prior to assembly of the source file(s).  If no value is given for a
 symbol, it is assigned the integer value 1.  Value expressions may contain
-arithmetic expressions as described in the user manual, but they may not 
+arithmetic expressions as described in the user manual, but they may not
 reference any other predefined or internal symbols.
 .TP
 .B -E [file]
 Force AS to send warning and error messages to
 .B file
 rather than to the standard error output.  The file names !0 to !4 are used
-to refer to the standard input, output, error, auxilliary, and printer channels
+to refer to the standard input, output, error, auxillary, and printer channels
 predefined by the operating system (on some systems, some of these handles
 might not exist).  If the [file] specification is omitted, a name is constructed
 by replacing the source file's extension with '.log'.
 .TP
 .B +G
-Supress code generation, reducing the functionality of AS to macro
+Suppress code generation, reducing the functionality of AS to macro
 preprocessing.
 .TP
 .B -g [MAP|Atmel|NoICE]
@@ -126,14 +126,14 @@ standard format used by AS, locations inside macros are not reported!
 .TP
 .B -maxerrors <num>
 
-Force AS to terminate assembly after the given number of errors occured.
+Force AS to terminate assembly after the given number of errors occurred.
 .TP
 .B -maxinclevel <num>
 
 Limit the maximum nesting level of include statements to the given number.
 By default, this limit is set to 200.
 .TP
-.B -werror
+.B -Werror
 
 Force AS to treat warnings as errors.
 .TP
@@ -197,8 +197,8 @@ resp. warning number.
 .TP
 .B -noicemask [mask]
 By default, AS will only write symbols to the NoICE debug info that are
-located in the code segment.  By changing this binary mask, more and/or 
-different masks may be chosen.  The assignment is bit 1=code, 2=data, 
+located in the code segment.  By changing this binary mask, more and/or
+different masks may be chosen.  The assignment is bit 1=code, 2=data,
 3=idata, 4=xdata, 5=ydata, 6=bitdata, 7=io, 8=reg, 9=romdata .  Negating
 this option reverts the mask to code-only.
 .TP
@@ -207,12 +207,12 @@ Tell AS to write the code output to a file <name>.  By default, the code
 output file's name is constructed by replacing the source file's extension
 with '.p'.  If multiple files are assembled with one command, this parameter
 may also be given multiply.  If there are less output specifications than
-source file names, AS will switch back to the default naming convention after 
+source file names, AS will switch back to the default naming convention after
 all output specifications have been used up.
 .TP
 .B -olist <name>
 
-Tell AS to write the assembly lsting to a file <name>, instead of a file
+Tell AS to write the assembly listing to a file <name>, instead of a file
 with the standard name in the source file's directory.  This option only
 makes sense when an assembly listing has been requested via the '-L' option.
 .TP
@@ -243,7 +243,7 @@ do any console output except for warning and error messages.
 .B -r [pass number]
 Tell AS to output warnings when a situation appears in a source file that
 forces another pass of assembly.  Such situations either take place when a symbol
-is undefined in the first pass or a symbol's value has changed compared to the 
+is undefined in the first pass or a symbol's value has changed compared to the
 previous pass.  This option is useful to track down sources of excessive
 multi-passing, but be aware that it might yield a fairly large number of
 warnings, especially in the first pass.  Optionally, a pass number may be added
@@ -251,8 +251,8 @@ to this option to inhibit output until a certain pass is reached.
 .TP
 .B -relaxed
 Enable the relaxed mode by default, which allows all syntax variants
-for hexadecimal/binary/ocatal constants (Intel, Motorola, Hitachi, C),
-rahter than only the target-specific one.
+for hexadecimal/binary/octal constants (Intel, Motorola, Hitachi, C),
+rather than only the target-specific one.
 .TP
 .B -s
 
@@ -290,7 +290,7 @@ or
 .B -l
 parameters, it will also contain a list of all used memory areas.
 .TP
-.B -U 
+.B -U
 
 Force AS to operate in case-sensitive mode.  By default, names of symbols,
 macros, user-defined functions and sections are treated in a case-insensitive
@@ -304,27 +304,27 @@ Suppress output of warnings.
 
 Turn on extended error reporting.  With extended error reporting, several
 error and warning messages will also print the item that created the message,
-e.g. the name of an unknown instruction.  When this option is given twice, 
+e.g. the name of an unknown instruction.  When this option is given twice,
 the erroneous source line is additionally printed.
 .TP
 .B -warnranges
 
-Only warn about integer constants exceedings the given data type's range, instead
+Only warn about integer constants exceeding the given data type's range, instead
 of issuing an error.
 
 .SH PRESETTING PARAMETERS
 
-Parameters need not neccessarily be given in the command line itself.  Before
+Parameters need not necessarily be given in the command line itself.  Before
 processing of command line parameters starts, AS will look if the
 .B ASCMD
 environment variable is defined.  If it exists, its contents will be
-treated as additional command line parameters whose syntax is absolutely 
-equal to normal command line parameters.  An exception is made if the 
+treated as additional command line parameters whose syntax is absolutely
+equal to normal command line parameters.  An exception is made if the
 variable's contents start with a '@' sign; in such a case, the string after
 the '@' sign is treated as the name of a file that contains the options.
 Such a file (also called a 'key file') has the advantage that it allows
 the options to be written in different lines, and it does not have a size
-limit.  Some operating systems (like MS-DOS) have a length limit on 
+limit.  Some operating systems (like MS-DOS) have a length limit on
 command lines and environment variable contents, so the key file may be
 your only option if you have a lot of lengthy parameters for AS.
 
@@ -361,34 +361,34 @@ following directories:
 
 .SH RETURN CODES
 
-Depending on the assembly's turnout, 
+Depending on the assembly's turnout,
 .B asl
 will generate different return codes:
 .TP
 .B 0
-No errors, warnings might have occured.
+No errors, warnings might have occurred.
 .TP
 .B 1
 No command line parameters were given, AS printed a short list
 of possible command line parameters and terminated thereafter.
 .TP
 .B 2
-Errors occured during assembly of at least one source file, no 
+Errors occurred during assembly of at least one source file, no
 code file was generated for the corresponding source file(s).
 .TP
 .B 3
-A fatal error occured during assembly that forced immediate
+A fatal error occurred during assembly that forced immediate
 program termination.  Code files may be generated, but are probably
-unusuable.
+unusable.
 .TP
 .B 4
-Program termination already occured during initialization.  This
+Program termination already occurred during initialization.  This
 might be either due to a incorrect command line parameter or an error
 during loading the program's overlay file (only possible on MS-DOS).
 .TP
 .B 255
 During initialization, an internal error happened that should not
-occur.  If the reaction is reproducable, note down the situation and
+occur.  If the reaction is reproducible, note down the situation and
 send a bug report to the author.
 
 .SH EXAMPLES
@@ -427,13 +427,13 @@ plist(1), pbind(1), p2hex(1), p2bin(1)
 .SH HISTORY
 
 AS originally appeared as a DOS program in 1989, written in
-Borland-Pascal, and was ported to C and UNIX in 1996.  
+Borland-Pascal, and was ported to C and UNIX in 1996.
 
 .SH BUGS
 
 There are too many options.
 
-Command line interpreters of some operating systems reserve some 
+Command line interpreters of some operating systems reserve some
 characters for their own use, so it might be necessary to give
 command line parameters with certain tricks (e.g., with the help
 of escape characters).
