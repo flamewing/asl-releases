@@ -172,7 +172,7 @@ In this example, the displacement will be calculated correctly (of course, the s
 
 The instruction set of these 4 bit processors spontaneously reminded me of the 8080/8085 - many mnemonics, the addressing mode (e.g. direct or indirect) is coded into the instruction, and the instructions are sometimes hard to memorize. AS or course supports this syntax as Hitachi defined it. I however implemented another variant for most instructions that is - in my opinion - more beautiful and better to read. The approach is similar to what Zilog did back then for the Z80. For instance, all machine instructions that transfer data in some form, may the operands be constants, registers, or memory cells, may be used via the `LD` instruction. Similar 'meta instructions' exist for arithmetic and logical instructions. A complete list of all meta instructions and their operands can be found in the tables [Meta Instructions HMCS400](#table-meta-instructions-hmcs400) and [Operand Types for HMCS400 Meta Instructions](#table-operand-types-for-hmcs400-meta-instructions), their practical use can be seen in the file `t_hmcs4x.asm`.
 
-#### **Table:** Meta Instructions HMCS400
+##### **Table:** Meta Instructions HMCS400
 
 | Meta Instruction     | Replaces                                                                                                                                                              |
 | :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -190,7 +190,7 @@ The instruction set of these 4 bit processors spontaneously reminded me of the 8
 | `BCLR bit`           | `REC`, `REM`, `REMD`                                                                                                                                                  |
 | `BTST bit`           | `TC`, `TM`, `TMD`                                                                                                                                                     |
 
-#### **Table:** Operand Types for HMCS400 Meta Instructions
+##### **Table:** Operand Types for HMCS400 Meta Instructions
 
 | Operand       | Types                                                                                                                                                                                                                                                              |
 | :------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -225,18 +225,18 @@ Additionally, the following optimizations are performed:
 
 Similar to the HMCS400, addressing modes are largely encoded (or rather encrypted...) into into the mnemonics, and also here I decided to provide an alternate notation that is more modern and better to read. A complete list of all meta instructions and their operands can be found in the tables [Meta Instructions OLMS-40](#table-meta-instructions-olms-40) and [Operand Types for OLMS-40 Meta Instructions](#table-operand-types-for-olms-40-meta-instructions), their practical use can be seen in the file `t_olms4.asm`.
 
-#### **Table:** Meta Instructions OLMS-40
+##### **Table:** Meta Instructions OLMS-40
 
 | Meta Instruction | Replaces                                                                                                               |
 | :--------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| `LD dest, src`   | `LAI`, `LLI`, `LHI`, `L`, `LAL`, `LLA`, `LAW`, `LAX`, `LAY`, `LAZ`,<br>`LWA`, `LXA`, `LYA`, `LPA`, `LTI`, `RTH`, `RTL` |
+| `LD dest, src`   | `LAI`, `LLI`, `LHI`, `L`, `LAL`, `LLA`, `LAW`, `LAX`, `LAY`, `LAZ`, `LWA`, `LXA`, `LYA`, `LPA`, `LTI`, `RTH`, `RTL`    |
 | `DEC dest`       | `DCA`, `DCL`, `DCM`, `DCW`, `DCX`, `DCY`, `DCZ`, `DCH`                                                                 |
 | `INC dest`       | `INA`, `INL`, `INM`, `INW`, `INX`, `INY`, `INZ`                                                                        |
 | `BSET bit`       | `SPB`, `SMB`, `SC`                                                                                                     |
 | `BCLR bit`       | `RPB`, `RMB`, `RC`                                                                                                     |
 | `BTST bit`       | `TAB`, `TMB`, `Tc`                                                                                                     |
 
-#### **Table:** Operand Types for OLMS-40 Meta Instructions
+##### **Table:** Operand Types for OLMS-40 Meta Instructions
 
 | Operand       | Types                                                                                                                                                                                           |
 | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -718,7 +718,7 @@ Another big problem of these processors is their assembler syntax, which is some
 
 When using AS, an expression without brackets always is interpreted as immediate addressing. For example, when either a variable's address or its contents shall be loaded, the differences listed in table [MASM Concerning Addressing](#table-masm-concerning-addressing) are present between MASM and AS:
 
-#### **Table:** MASM Concerning Addressing
+##### **Table:** MASM Concerning Addressing
 
 | assembler | address                                                  | contents                         |
 | :-------- | :------------------------------------------------------- | :------------------------------- |
@@ -977,7 +977,7 @@ Due to the missing linker, AS lacks a couple of pseudo instructions needed for r
 
 The latter two have an extended functionality for AS. Some TAS900 pseudo instructions can be replaced with equivalent AS instructions (see table [equivalent instructions TAS900 to AS](#table-equivalent-instructions-tas900-to-as)).
 
-### **Table:** equivalent instructions TAS900 to AS
+##### **Table:** equivalent instructions TAS900 to AS
 
 | TAS900         | AS                    | meaning/function                    |
 | :------------- | :-------------------- | :---------------------------------- |
@@ -1151,7 +1151,7 @@ These processors have the ability to map their code ROM page-wise into the data 
 
 Some builtin "macros" show up when one analyzes the instruction set a bit more in detail. The instructions I found are listed in table [Hidden Macros in the ST62's Instruction Set](#table-hidden-macros-in-the-st62s-instruction-set) (there are probably even more...):
 
-#### **Table:** Hidden Macros in the ST62's Instruction Set
+##### **Table:** Hidden Macros in the ST62's Instruction Set
 
 | instruction | in reality   |
 | :---------- | :----------- |
@@ -1171,7 +1171,7 @@ The original assembler AST6 delivered by SGS-Thomson partially uses different ps
 
 Table [Equivalent Instructions AST6 ↔ AS](#table-equivalent-instructions-ast6--as) shows the instructions which have AS counterparts with similar function.
 
-#### **Table:** Equivalent Instructions AST6 ↔ AS
+##### **Table:** Equivalent Instructions AST6 ↔ AS
 
 | AST6       | AS                    | meaning/function             |
 | :--------- | :-------------------- | :--------------------------- |

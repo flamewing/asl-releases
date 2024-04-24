@@ -377,7 +377,7 @@ _valid for: all processors_
 
 **CAUTION**: If the `PHASE` instruction is also used, one has to keep in mind that the argument of `ORG` always is the _load address_ of the code. Expressions using the $ or symbol to refer to the current program counter however deliver the _execution address_ of the code and do not yield the desired result when used as argument for `ORG`. The `RORG` statement ([RORG](#rorg)) should be used in such cases.
 
-#### **Table:** Address Ranges for `ORG`
+##### **Table:** Address Ranges for `ORG`
 
 <!-- markdownlint-disable MD033-->
 
@@ -2589,7 +2589,7 @@ sym     EQU        15
 
 When looking up a symbol, AS first searches for a symbol assigned to the current section, and afterwards traverses the list of parent sections until the global symbols are reached. In our example, the individual sections see the values given in [Valid values for the Individual Sections table](#table-valid-values-for-the-individual-sections) for the symbol `sym`:
 
-#### **Table:** Valid values for the Individual Sections
+##### **Table:** Valid values for the Individual Sections
 
 | section   | value | from section... |
 | :-------- | :---- | :-------------- |
