@@ -37,7 +37,7 @@ This description does not express fully that the length of data fields is variab
 
 A record with a header byte of $81 is a record that may contain code or data from arbitrary segments. The first byte (`Header`) describes the processor family the following code resp. data was generated for, as shown in the following table.
 
-#### **Table:** Header Bytes for the Different Processor Families
+##### **Table:** Header Bytes for the Different Processor Families
 
 <!-- markdownlint-disable MD056 -->
 
@@ -101,7 +101,7 @@ A record with a header byte of $81 is a record that may contain code or data fro
 
 The `Segment` field signifies the address space the following code belongs to. The assignment is defined in the following table.
 
-#### **Table:** Codings of the `Segment` Field
+##### **Table:** Codings of the `Segment` Field
 
 | number | segment       | number | segment   |
 | :----: | :------------ | :----: | :-------- |

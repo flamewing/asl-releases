@@ -27,7 +27,7 @@ The contents of the archive is separated into several subdirectories, therefore 
 
 A list of the files found in every binary distribution is given in the following table. In case a file listed in one of these (or the following) tables is missing, someone took a nap during copying (probably me)...
 
-#### **Table:** Standard Contents of a Binary Distribution
+##### **Table:** Standard Contents of a Binary Distribution
 
 | File                  | Function                                                                                 |
 | :-------------------- | :--------------------------------------------------------------------------------------- |
@@ -500,7 +500,7 @@ Attr    equ     symtype(Label)  ; results in 1
 
 The individual segment types have the assigned numbers listed in the following table. Register symbols which do not really fit into the order of normal symbols are explained in [Register Symbols](#register-symbols). The `SYMTYPE` function delivers -1 as result when called with an undefined symbol as argument. However, if all you want to know is whether a symbol is defined or not, you may as well use the `DEFINED` function.
 
-### **Table:** return values of the `SYMTYPE` function
+##### **Table:** return values of the `SYMTYPE` function
 
 | segment             | return value |
 | :------------------ | :----------: |
@@ -611,7 +611,7 @@ In most places where the assembler expects numeric inputs, it is possible to spe
 
 Integer constants describe non-fractional numbers. They are written as a sequence of digits. This may be done in different numbering systems, as shown in the following table.
 
-#### **Table:** Defined Numbering Systems and Notations
+##### **Table:** Defined Numbering Systems and Notations
 
 | <!--  --> |    Intel Mode     | Motorola Mode |   C Mode    |       IBM Mode       |
 | :-------- | :---------------: | :-----------: | :---------: | :------------------: |
@@ -742,7 +742,7 @@ The assembler provides the operands listed in the following table for combinatio
 
 <!-- markdownlint-disable MD038 -->
 
-#### **Table:** Operators Predefined by AS
+##### **Table:** Operators Predefined by AS
 
 | operand | function         | #operands |  integer  |   float   |  string   |   rank    |
 | :-----: | :--------------- | :-------: | :-------: | :-------: | :-------: | :-------: |
@@ -788,7 +788,7 @@ A small pitfall is hidden in the binary complement: As the computation is always
 
 In addition to the operators, the assembler defines another line of primarily transcendental functions with floating point arguments which are listed in this table:
 
-#### **Table:** Functions Predefined by AS
+##### **Table:** Functions Predefined by AS
 
 | name        | meaning                                | argument                    | result                    |
 | :---------- | :------------------------------------- | :-------------------------- | :------------------------ |
