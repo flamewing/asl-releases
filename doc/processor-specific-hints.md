@@ -174,30 +174,42 @@ The instruction set of these 4 bit processors spontaneously reminded me of the 8
 
 ##### **Table:** Meta Instructions HMCS400
 
-| Meta Instruction     | Replaces                                                                                                                                                              |
-| :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LD src, dest`       | `LAI`, `LBI`, `LMID`, `LMIIY`, `LAB`, `LBA`, `LAY`, `LASPX`, `LASPY`, `LAMR`, `LWI`, `LXI`, `LYI`, `LXA`, `LYA`, `LAM`, `LAMD` `LBM`, `LMA`, `LMAD`, `LMAIY`, `LMADY` |
-| `XCH src, dest`      | `XMRA`, `XSPX`, `XSPY`, `XMA`, `XMAD`, `XMB`                                                                                                                          |
-| `ADD src, dest`      | `AYY`, `AI`, `AM`, `AMD`                                                                                                                                              |
-| `ADC src, dest`      | `AMC`, `AMCD`                                                                                                                                                         |
-| `SUB src, dest`      | `SYY`                                                                                                                                                                 |
-| `SBC src, dest`      | `SMC`, `SMCD`                                                                                                                                                         |
-| `OR src, dest`       | `OR`, `ORM`, `ORMD`                                                                                                                                                   |
-| `AND src, dest`      | `ANM`, `ANMD`                                                                                                                                                         |
-| `EOR src, dest`      | `EORM`, `EORMD`                                                                                                                                                       |
-| `CP cond, src, dest` | `INEM`, `INEMD`, `ANEM`, `ANEMD`, `BNEM`, `YNEI`, `ILEM`, `ILEMD`, `ALEM`, `ALEMD`, `BLEM`, `ALEI`                                                                    |
-| `BSET bit`           | `SEC`, `SEM`, `SEMD`                                                                                                                                                  |
-| `BCLR bit`           | `REC`, `REM`, `REMD`                                                                                                                                                  |
-| `BTST bit`           | `TC`, `TM`, `TMD`                                                                                                                                                     |
+| Meta Instruction     | Replaces                                                    |
+| :------------------- | :---------------------------------------------------------- |
+| `LD src, dest`       | `LAI`, `LBI`, `LMID`, `LMIIY`, `LAB`, `LBA`, `LAY`          |
+| `LD src, dest`       | `LASPX`, `LASPY`, `LAMR`, `LWI`, `LXI`, `LYI`, `LXA`, `LYA` |
+| `LD src, dest`       | `LAM`, `LAMD` `LBM`, `LMA`, `LMAD`, `LMAIY`, `LMADY`        |
+| `XCH src, dest`      | `XMRA`, `XSPX`, `XSPY`, `XMA`, `XMAD`, `XMB`                |
+| `ADD src, dest`      | `AYY`, `AI`, `AM`, `AMD`                                    |
+| `ADC src, dest`      | `AMC`, `AMCD`                                               |
+| `SUB src, dest`      | `SYY`                                                       |
+| `SBC src, dest`      | `SMC`, `SMCD`                                               |
+| `OR src, dest`       | `OR`, `ORM`, `ORMD`                                         |
+| `AND src, dest`      | `ANM`, `ANMD`                                               |
+| `EOR src, dest`      | `EORM`, `EORMD`                                             |
+| `CP cond, src, dest` | `INEM`, `INEMD`, `ANEM`, `ANEMD`, `BNEM`, `YNEI`            |
+| `CP cond, src, dest` | `ILEM`, `ILEMD`, `ALEM`, `ALEMD`, `BLEM`, `ALEI`            |
+| `BSET bit`           | `SEC`, `SEM`, `SEMD`                                        |
+| `BCLR bit`           | `REC`, `REM`, `REMD`                                        |
+| `BTST bit`           | `TC`, `TM`, `TMD`                                           |
 
 ##### **Table:** Operand Types for HMCS400 Meta Instructions
 
-| Operand       | Types                                                                                                                                                                                                                                                              |
-| :------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src`, `dest` | `A`, `B`, `X`, `Y`, `W`, `SPX`, `SPY` `(register)`<br>`M` (memory addressed by `X`/`Y`/`W`)<br>`M+` (ditto, with auto increment)<br>`M-` (ditto, with auto decrement)<br>`#val` (2/4 bits immediate)<br>`addr10` (memory direct)<br>`MRn` (memory register 0...15) |
-| `cond`        | `NE` (unequal)<br>`LE` (less or equal)                                                                                                                                                                                                                             |
-| `bit`         | `CA` (carry)<br>`bitpos`,`M`<br>`bitpos`,`addr10`                                                                                                                                                                                                                  |
-| `bitpos`      | `0...3`                                                                                                                                                                                                                                                            |
+| Operand       | Types                                              |
+| :------------ | :------------------------------------------------- |
+| `src`, `dest` | `A`, `B`, `X`, `Y`, `W`, `SPX`, `SPY` `(register)` |
+| `src`, `dest` | `M` (memory addressed by `X`/`Y`/`W`)              |
+| `src`, `dest` | `M+` (ditto, with auto increment)                  |
+| `src`, `dest` | `M-` (ditto, with auto decrement)                  |
+| `src`, `dest` | `#val` (2/4 bits immediate)                        |
+| `src`, `dest` | `addr10` (memory direct)                           |
+| `src`, `dest` | `MRn` (memory register 0...15)                     |
+| `cond`        | `NE` (unequal)                                     |
+| `cond`        | `LE` (less or equal)                               |
+| `bit`         | `CA` (carry)                                       |
+| `bit`         | `bitpos`,`M`                                       |
+| `bit`         | `bitpos`,`addr10`                                  |
+| `bitpos`      | `0...3`                                            |
 
 ## H16
 
@@ -227,22 +239,29 @@ Similar to the HMCS400, addressing modes are largely encoded (or rather encrypte
 
 ##### **Table:** Meta Instructions OLMS-40
 
-| Meta Instruction | Replaces                                                                                                               |
-| :--------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| `LD dest, src`   | `LAI`, `LLI`, `LHI`, `L`, `LAL`, `LLA`, `LAW`, `LAX`, `LAY`, `LAZ`, `LWA`, `LXA`, `LYA`, `LPA`, `LTI`, `RTH`, `RTL`    |
-| `DEC dest`       | `DCA`, `DCL`, `DCM`, `DCW`, `DCX`, `DCY`, `DCZ`, `DCH`                                                                 |
-| `INC dest`       | `INA`, `INL`, `INM`, `INW`, `INX`, `INY`, `INZ`                                                                        |
-| `BSET bit`       | `SPB`, `SMB`, `SC`                                                                                                     |
-| `BCLR bit`       | `RPB`, `RMB`, `RC`                                                                                                     |
-| `BTST bit`       | `TAB`, `TMB`, `Tc`                                                                                                     |
+| Meta Instruction | Replaces                                                                                                            |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------ |
+| `LD dest, src`   | `LAI`, `LLI`, `LHI`, `L`, `LAL`, `LLA`, `LAW`, `LAX`, `LAY`, `LAZ`, `LWA`, `LXA`, `LYA`, `LPA`, `LTI`, `RTH`, `RTL` |
+| `DEC dest`       | `DCA`, `DCL`, `DCM`, `DCW`, `DCX`, `DCY`, `DCZ`, `DCH`                                                              |
+| `INC dest`       | `INA`, `INL`, `INM`, `INW`, `INX`, `INY`, `INZ`                                                                     |
+| `BSET bit`       | `SPB`, `SMB`, `SC`                                                                                                  |
+| `BCLR bit`       | `RPB`, `RMB`, `RC`                                                                                                  |
+| `BTST bit`       | `TAB`, `TMB`, `Tc`                                                                                                  |
 
 ##### **Table:** Operand Types for OLMS-40 Meta Instructions
 
-| Operand       | Types                                                                                                                                                                                           |
-| :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src`, `dest` | `A`, `W`, `X`, `Y`, `Z`, `DPL`, `DPH` (Register)<br>`T`, `TL`, `TH` (Timer, upper/lower half)<br>`(DP)`, `M` (Memory addressed by DPH/DPL)<br>`#val` (4/8 bit immediate)<br>`PP` (Port-Pointer) |
-| `bit`         | `C` (Carry)<br>`(PP)`, `bitpos`<br>`(DP)`, `bitpos`<br>`(A)`, `bitpos`                                                                                                                          |
-| `bitpos`      | `0...3`                                                                                                                                                                                         |
+| Operand       | Types                                            |
+| :------------ | :----------------------------------------------- |
+| `src`, `dest` | `A`, `W`, `X`, `Y`, `Z`, `DPL`, `DPH` (Register) |
+| `src`, `dest` | `T`, `TL`, `TH` (Timer, upper/lower half)        |
+| `src`, `dest` | `(DP)`, `M` (Memory addressed by DPH/DPL)        |
+| `src`, `dest` | `#val` (4/8 bit immediate)                       |
+| `src`, `dest` | `PP` (Port-Pointer)                              |
+| `bit`         | `C` (Carry)                                      |
+| `bit`         | `(PP)`, `bitpos`                                 |
+| `bit`         | `(DP)`, `bitpos`                                 |
+| `bit`         | `(A)`, `bitpos`                                  |
+| `bitpos`      | `0...3`                                          |
 
 ## OLMS-50
 
@@ -716,14 +735,39 @@ Another big problem of these processors is their assembler syntax, which is some
         mov     ax,value
 ```
 
-When using AS, an expression without brackets always is interpreted as immediate addressing. For example, when either a variable's address or its contents shall be loaded, the differences listed in table [MASM Concerning Addressing](#table-masm-concerning-addressing) are present between MASM and AS:
+When using AS, an expression without brackets always is interpreted as immediate addressing. For example, when either a variable's address or its contents shall be loaded, the differences between MASM and AS are as follows:
 
-##### **Table:** MASM Concerning Addressing
+- To load address of variable `vari` into `ax`:
 
-| assembler | address                                                  | contents                         |
-| :-------- | :------------------------------------------------------- | :------------------------------- |
-| MASM      | `mov ax,offset vari`<br>`lea ax,vari`<br>`lea ax,[vari]` | `mov ax,vari`<br>`mov ax,[vari]` |
-| AS        | `mov ax,vari`<br>`lea ax,[vari]`                         | `mov ax,[vari]`                  |
+  - MASM: either of the following 3 variants have the same effect:
+
+    ```asm
+    mov ax,offset vari
+    lea ax,vari
+    lea ax,[vari]
+    ```
+
+  - AS: either of the following 2 variants have the same effect:
+
+    ```asm
+    mov ax,vari
+    lea ax,[vari]
+    ```
+
+- To load value of variable `vari` into `ax`:
+
+  - MASM: either of the following 2 variants have the same effect:
+
+    ```asm
+    mov ax,vari
+    mov ax,[vari]
+    ```
+
+  - AS:
+
+    ```asm
+    mov ax,[vari]
+    ```
 
 When addressing via a symbol, the assembler checks whether they are assigned to the data segment and tries to automatically insert an appropriate segment prefix. This happens for example when symbols from the code segment are accessed without specifying a `CS` segment prefix. However, this mechanism can only work if the `ASSUME` instruction (see there) has previously been applied correctly.
 

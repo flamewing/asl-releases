@@ -790,48 +790,48 @@ In addition to the operators, the assembler defines another line of primarily tr
 
 ##### **Table:** Functions Predefined by AS
 
-| name        | meaning                                | argument                    | result                    |
-| :---------- | :------------------------------------- | :-------------------------- | :------------------------ |
-| SQRT        | square root                            | _arg_ ≥ 0                   | floating point            |
-| SIN         | sine                                   | floating point              | floating point            |
-| COS         | cosine                                 | floating point              | floating point            |
-| TAN         | tangent                                | _arg_ ≠ (2*n*+1) \* _π_ / 2 | floating point            |
-| COT         | cotangent                              | _arg_ ≠ _n_ \* _π_          | floating point            |
-| ASIN        | inverse sine                           | ∣ _arg_ ∣ ≤ 1               | floating point            |
-| ACOS        | inverse cosine                         | ∣ _arg_ ∣ ≤ 1               | floating point            |
-| ATAN        | inverse tangent                        | floating point              | floating point            |
-| ACOT        | inverse cotangent                      | floating point              | floating point            |
-| EXP         | exponential function                   | floating point              | floating point            |
-| ALOG        | 10 power of argument                   | floating point              | floating point            |
-| ALD         | 2 power of argument                    | floating point              | floating point            |
-| SINH        | hyp. sine                              | floating point              | floating point            |
-| COSH        | hyp. cosine                            | floating point              | floating point            |
-| TANH        | hyp. tangent                           | floating point              | floating point            |
-| COTH        | hyp. cotangent                         | _arg_ ≠ 0                   | floating point            |
-| LN          | nat. logarithm                         | _arg_ > 0                   | floating point            |
-| LOG         | dec. logarithm                         | _arg_ > 0                   | floating point            |
-| LD          | bin. logarithm                         | _arg_ > 0                   | floating point            |
-| ASINH       | inv. hyp. Sine                         | floating point              | floating point            |
-| ACOSH       | inv. hyp. Cosine                       | _arg_ ≥ 1                   | floating point            |
-| ATANH       | inv. hyp. Tangent                      | _arg_ \< 1                  | floating point            |
-| ACOTH       | inv. hyp. Cotangent                    | _arg_ > 1                   | floating point            |
-| INT         | integer part                           | floating point              | floating point            |
-| BITCNT      | number of one's                        | integer                     | integer                   |
-| FIRSTBIT    | lowest 1-bit                           | integer                     | integer                   |
-| LASTBIT     | highest 1-bit                          | integer                     | integer                   |
-| BITPOS      | unique 1-bit                           | integer                     | integer                   |
-| SGN         | sign (0/1/-1)                          | floating point or integer   | integer                   |
-| ABS         | absolute value                         | integer or floating point   | integer or floating point |
-| TOUPPER     | matching capital                       | integer                     | integer                   |
-| TOLOWER     | matching lower case                    | integer                     | integer                   |
-| UPSTRING    | changes all characters into capitals   | string                      | string                    |
-| LOWSTRING   | changes all characters into lower case | string                      | string                    |
-| STRLEN      | returns the length of a string         | string                      | integer                   |
-| SUBSTR      | extracts parts of a string             | string, integer, integer    | string                    |
-| CHARFROMSTR | extracts a character from a string     | string, integer             | integer                   |
-| STRSTR      | searches a substring in a string       | string, string              | integer                   |
-| VAL         | evaluates contents as expression       | string                      | depends on argument       |
-| EXPRTYPE    | delivers type of argument              | integer<br>float<br>string  | 0<br>1<br>2               |
+| name        | meaning                                | argument                    | result                             |
+| :---------- | :------------------------------------- | :-------------------------- | :--------------------------------- |
+| SQRT        | square root                            | _arg_ ≥ 0                   | floating point                     |
+| SIN         | sine                                   | floating point              | floating point                     |
+| COS         | cosine                                 | floating point              | floating point                     |
+| TAN         | tangent                                | _arg_ ≠ (2*n*+1) \* _π_ / 2 | floating point                     |
+| COT         | cotangent                              | _arg_ ≠ _n_ \* _π_          | floating point                     |
+| ASIN        | inverse sine                           | ∣ _arg_ ∣ ≤ 1               | floating point                     |
+| ACOS        | inverse cosine                         | ∣ _arg_ ∣ ≤ 1               | floating point                     |
+| ATAN        | inverse tangent                        | floating point              | floating point                     |
+| ACOT        | inverse cotangent                      | floating point              | floating point                     |
+| EXP         | exponential function                   | floating point              | floating point                     |
+| ALOG        | 10 power of argument                   | floating point              | floating point                     |
+| ALD         | 2 power of argument                    | floating point              | floating point                     |
+| SINH        | hyp. sine                              | floating point              | floating point                     |
+| COSH        | hyp. cosine                            | floating point              | floating point                     |
+| TANH        | hyp. tangent                           | floating point              | floating point                     |
+| COTH        | hyp. cotangent                         | _arg_ ≠ 0                   | floating point                     |
+| LN          | nat. logarithm                         | _arg_ > 0                   | floating point                     |
+| LOG         | dec. logarithm                         | _arg_ > 0                   | floating point                     |
+| LD          | bin. logarithm                         | _arg_ > 0                   | floating point                     |
+| ASINH       | inv. hyp. Sine                         | floating point              | floating point                     |
+| ACOSH       | inv. hyp. Cosine                       | _arg_ ≥ 1                   | floating point                     |
+| ATANH       | inv. hyp. Tangent                      | _arg_ \< 1                  | floating point                     |
+| ACOTH       | inv. hyp. Cotangent                    | _arg_ > 1                   | floating point                     |
+| INT         | integer part                           | floating point              | floating point                     |
+| BITCNT      | number of one's                        | integer                     | integer                            |
+| FIRSTBIT    | lowest 1-bit                           | integer                     | integer                            |
+| LASTBIT     | highest 1-bit                          | integer                     | integer                            |
+| BITPOS      | unique 1-bit                           | integer                     | integer                            |
+| SGN         | sign (0/1/-1)                          | floating point or integer   | integer                            |
+| ABS         | absolute value                         | integer or floating point   | integer or floating point          |
+| TOUPPER     | matching capital                       | integer                     | integer                            |
+| TOLOWER     | matching lower case                    | integer                     | integer                            |
+| UPSTRING    | changes all characters into capitals   | string                      | string                             |
+| LOWSTRING   | changes all characters into lower case | string                      | string                             |
+| STRLEN      | returns the length of a string         | string                      | integer                            |
+| SUBSTR      | extracts parts of a string             | string, integer, integer    | string                             |
+| CHARFROMSTR | extracts a character from a string     | string, integer             | integer                            |
+| STRSTR      | searches a substring in a string       | string, string              | integer                            |
+| VAL         | evaluates contents as expression       | string                      | depends on argument                |
+| EXPRTYPE    | delivers type of argument              | integer, float, or string   | integer = 0, float = 1, string = 2 |
 
 The functions `FIRSTBIT` , `LASTBIT` , and `BITPOS` return -1 as result if no resp. not exactly one bit is set. `BITPOS` additionally issues an error message in such a case.
 
