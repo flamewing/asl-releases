@@ -1504,7 +1504,7 @@ Both the 7720 and 7725 are provided by the same code generator and are extremely
 
 They both have in common that in addition to the code and data segment, there is also a ROM for storage of constants. In the case of AS, it is mapped onto the `ROMDATA` segment!
 
-## F2MC16L
+## F<sup>2</sup>MC16L
 
 Along with the discussion of the `ASSUME` statement, it has already been mentioned that it is important to inform AS about the correct current values of all bank registers - if your program uses more than 64K RAM or 64K ROM. With these assumptions in mind, AS checks every direct memory access for attempts to access a memory location that is currently not in reach. Of course, standard situations only require knowledge of DTB and DPR for this purpose, since ADB resp. SSB/USB are only used for indirect accesses via RW2/RW6 resp. RW3/RW7 and this mechanism anyway doesn't work for indirect accesses. However, similar to the 8086, it is possible to place a prefix in front of an instruction to replace DTB by a different register. AS therefore keeps track of used segment prefixes and toggles appropriately for the next _machine instruction_. A pseudo instruction placed between the prefix and the machine instruction does _not_ reset the toggle. This is also true for pseudo instructions that store data or modify the program counter. Which doesn't make much sense anyway...
 
