@@ -44,7 +44,7 @@
 
 [^FujitsuCD]: Fujitsu Limited: _June 1998 Semiconductor Data Book._ CD00-00981-1E
 
-[^Fujitsu16]: Fujitsu Semiconductor: _F²MC16LX 16-Bit Microcontroller MB90500 Series Programming Manual._ CM44-00201-1E, 1998
+[^Fujitsu16]: Fujitsu Semiconductor: _F<sup>2</sup>MC16LX 16-Bit Microcontroller MB90500 Series Programming Manual._ CM44-00201-1E, 1998
 
 [^CP1600]: General Instrument Microelectronics: _Series 1600 Microprocessor System Documentation._ S16DOC-CP-1600-04, May 1975 <http://www.bitsavers.org/components/gi/CP1600/> CP-1600_Microprocessor_Users_Manual_May75.pdf
 
