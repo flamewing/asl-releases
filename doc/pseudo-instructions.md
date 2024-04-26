@@ -1366,7 +1366,7 @@ As all instruction words of this processor family are only 32 bits long (of whic
         ldi     @addr,r2
 ```
 
-#### uPD78(C)10
+#### μPD78(C)10
 
 These processors have a register (V) that allows to move the "zero page", i.e. page of memory that is addressable by just one byte, freely in the address space, within page limits. By reasons of comforts you don't want to work with expressions such as
 
