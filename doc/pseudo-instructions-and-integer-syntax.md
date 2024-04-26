@@ -456,7 +456,7 @@ _Default Integer Syntax: Intel_
 
 > `DB` `DD` `DN` `DQ` `DS` `DT` `DW` `PORT`
 
-#### NEC *μ*PD78(C)1x
+#### NEC μPD78(C)1x
 
 _Default Integer Syntax: Intel_
 
@@ -498,13 +498,13 @@ _Default Integer Syntax: Intel_
 
 > `BIT` `DB` `DD` `DN` `DQ` `DS` `DT` `DW`
 
-#### NEC *μ*PD772x
+#### NEC μPD772x
 
 _Default Integer Syntax: Intel_
 
 > `DATA` `RES`
 
-#### NEC *μ*PD77230
+#### NEC μPD77230
 
 _Default Integer Syntax: Intel_
 
