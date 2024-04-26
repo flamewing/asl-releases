@@ -5,13 +5,19 @@
 <!-- markdownlint-disable MD030 -->
 <!-- markdownlint-disable MD036 -->
 
-> _Scotty: Captain, we din' can reference it!
-> Kirk: Analysis, Mr. Spock?
-> Spock: Captain, it doesn't appear in the symbol table.
-> Kirk: Then it's of external origin?
-> Spock: Affirmative.
-> Kirk: Mr. Sulu, go to pass two.
-> Sulu: Aye aye, sir, going to pass two._
+> _Scotty: Captain, we din' can reference it!_
+>
+> _Kirk: Analysis, Mr. Spock?_
+>
+> _Spock: Captain, it doesn't appear in the symbol table._
+>
+> _Kirk: Then it's of external origin?_
+>
+> _Spock: Affirmative._
+>
+> _Kirk: Mr. Sulu, go to pass two._
+>
+> _Sulu: Aye aye, sir, going to pass two._
 
 ## Delivery
 

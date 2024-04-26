@@ -46,13 +46,15 @@ TRUE or FALSE:
 
 # Acknowledgments
 
-> _"If I have seen farther than other men, it is because I stood on the shoulders of giants."
-> –Sir Isaac Newton_
+> _"If I have seen farther than other men, it is because I stood on the shoulders of giants."_
+>
+> _–Sir Isaac Newton_
 
 <!-- Breaking block quote -->
 
-> _"If I haven't seen farther than other men, it is because I stood in the footsteps of giants."
-> –unknown_
+> _"If I haven't seen farther than other men, it is because I stood in the footsteps of giants."_
+>
+> _–unknown_
 
 If one decides to rewrite a chapter that has been out of date for two years, it is almost unavoidable that one forgets to mention some of the good ghosts who contributed to the success this project had up to now. The first "thank you" therefore goes to the people whose names I unwillingly forgot in the following enumeration!
 
