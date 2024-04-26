@@ -213,7 +213,7 @@ The instruction set of these 4 bit processors spontaneously reminded me of the 8
 
 ## H16
 
-The instruction set of the H16's core well deserves the label "CISC": complex addressing modes, instructions of extremely variable length, and there are many short forms for instructions with common operands. For instance, several instructions know different "formats", depending on the type of source and destination operand. The general rule is that AS will always use the shortest possible format, unless it was specified explicitly: angegeben:
+The instruction set of the H16's core well deserves the label "CISC": complex addressing modes, instructions of extremely variable length, and there are many short forms for instructions with common operands. For instance, several instructions know different "formats", depending on the type of source and destination operand. The general rule is that AS will always use the shortest possible format, unless it was specified explicitly:
 
 ```asm
         mov.l     r4,r7     ; uses R format
@@ -819,7 +819,7 @@ In contrast, nothing can stop AS's efforts to align potential branch targets to 
 
 ## AVR
 
-In contrast to the AVR assembler, AS by default uses the Intel format to write hexadecimal constants instead of the C syntax. All right, I did not look into the (free) AVR assembler before, but when I started with the AVR part, there was hardly mor einformation about the AVR than a preliminary manual describing processor types that were never sold...this problem can be solved with a simple RELAXED ON.
+In contrast to the AVR assembler, AS by default uses the Intel format to write hexadecimal constants instead of the C syntax. All right, I did not look into the (free) AVR assembler before, but when I started with the AVR part, there was hardly more information about the AVR than a preliminary manual describing processor types that were never sold...this problem can be solved with a simple RELAXED ON.
 
 Optionally, AS can generate so-called "object files" for the AVRs (it also works for other CPUs, but it does not make any sense for them...). These are files containing code and source line info what e.g. allows a step-by-step execution on source level with the WAVRSIM simulator delivered by Atmel. Unfortunately, the simulator seems to have trouble with source file names longer than approx. 20 characters: Names are truncated and/or extended by strange special characters when the maximum length is exceeded. AS therefore stores file name specifications in object files without a path specification. Therefore, problems may arise when files like includes are not in the current directory.
 
@@ -1363,7 +1363,7 @@ National unfortunately also decided to use the syntax well known from IBM mainfr
 
 Originally, National offered a relatively simple assembler for this series of DECT controllers. An much more powerful assembler has been announced by IAR, but it is not available up to now. However, since the development tools made by IAR are as much target-independent as possible, one can roughly estimate the pseudo instructions it will support by looking at other available target platforms. With this in mind, the (few) SC144xx-specific instructions `DC`, `DC8`, `DW16`, `DS`, `DS8`, `DS16`, `DW` were designed. Of course, I didn't want to reinvent the wheel for pseudo instructions whose functionality is already part of the AS core. Therefore, here is a little table with equivalences. The statements `ALIGN`, `END`, `ENDM`, `EXITM`, `MACRO`, `ORG`, `RADIX`, `SET`, and `REPT` both exist for the IAR assembler and AS and have same functionality. Changes are needed for the following instructions:
 
-| IAR                       | AS               | Funktion                              |
+| IAR                       | AS               | Function                              |
 | :------------------------ | :--------------- | :------------------------------------ |
 | `#include`                | `include`        | include file                          |
 | `#define`                 | `SET, EQU`       | define symbol                         |
