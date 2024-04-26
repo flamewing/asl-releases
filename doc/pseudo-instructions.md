@@ -553,7 +553,7 @@ _valid for: all processors_
 
 In case that different variations in a processor family have address spaces of different size, the maximum range is listed for each.
 
-`ORG` is mostly needed to give the code a new starting address or to put different, non-continuous code parts into one source file. In case there is no explicit other value listet in a table entry, the initial address for this segment (i.e. the start address used without `ORG`) is 0.
+`ORG` is mostly needed to give the code a new starting address or to put different, non-continuous code parts into one source file. In case there is no explicit other value listed in a table entry, the initial address for this segment (i.e. the start address used without `ORG`) is 0.
 
 ### RORG
 
