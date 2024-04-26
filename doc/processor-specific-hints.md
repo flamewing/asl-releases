@@ -327,7 +327,7 @@ The following symbols are used:
 
 | Instruction      | `ANC`                   |
 | :--------------- | :---------------------- |
-| Function         | `A ← (A) & (M), C ← A7` |
+| Function         | `A ← (A) & (M), C ← A7` |
 | Addressing Modes | immediate               |
 
 | Instruction      | `RLA`                                                                   |
@@ -347,7 +347,7 @@ The following symbols are used:
 
 | Instruction      | `RRA`                                                                   |
 | :--------------- | :---------------------------------------------------------------------- |
-| Function         | `M ← ((M) >>> 1)  +  (A) + (C)`                                         |
+| Function         | `M ← ((M) >>> 1)  +  (A) + (C)`                                         |
 | Addressing Modes | absolute long/short, X-indexed long/short, Y-indexed long, X/Y-indirect |
 
 | Instruction      | `ARR`                   |
@@ -372,7 +372,7 @@ The following symbols are used:
 
 | Instruction      | `SHS`                                         |
 | :--------------- | :-------------------------------------------- |
-| Function         | `X ← (A) & (X),  S ← (X),  M ← (X) & (PCH+1)` |
+| Function         | `X ← (A) & (X),  S ← (X),  M ← (X) & (PCH+1)` |
 | Addressing Modes | Y-indexed long                                |
 
 | Instruction      | `SHY`               |
@@ -387,7 +387,7 @@ The following symbols are used:
 
 | Instruction      | `LAX`                                                   |
 | :--------------- | :------------------------------------------------------ |
-| Function         | `A,  X ← (M)`                                           |
+| Function         | `A,  X ← (M)`                                           |
 | Addressing Modes | absolute long/short, Y-indexed long/short, X/Y-indirect |
 
 | Instruction      | `LXA`                                      |
@@ -397,22 +397,22 @@ The following symbols are used:
 
 | Instruction      | `LAE`                     |
 | :--------------- | :------------------------ |
-| Function         | `X,  S,  A ← ((S) & (M))` |
+| Function         | `X,  S,  A ← ((S) & (M))` |
 | Addressing Modes | Y-indexed long            |
 
 | Instruction      | `DCP`                                                                   |
 | :--------------- | :---------------------------------------------------------------------- |
-| Function         | `M ← (M) − 1, Flags ← ((A) − (M))`                                      |
+| Function         | `M ← (M) − 1, Flags ← ((A) − (M))`                                      |
 | Addressing Modes | absolute long/short, X-indexed long/short, Y-indexed long, X/Y-indirect |
 
 | Instruction      | `SBX`                   |
 | :--------------- | :---------------------- |
-| Function         | `X ← ((X) & (A)) − (M)` |
+| Function         | `X ← ((X) & (A)) − (M)` |
 | Addressing Modes | immediate               |
 
 | Instruction      | `ISB`                                                                   |
 | :--------------- | :---------------------------------------------------------------------- |
-| Function         | `M ← (M) + 1,  A ← (A) − (M) − (C)`                                     |
+| Function         | `M ← (M) + 1,  A ← (A) − (M) − (C)`                                     |
 | Addressing Modes | absolute long/short, X-indexed long/short, Y-indexed long, X/Y-indirect |
 
 ## MELPS-740
@@ -908,7 +908,7 @@ op2     equ     041h
         ld      op1,op2         ; equal to ld r0,r1
 ```
 
-Note that though the Super8 does not have an RP register (only RP0 and RP1), RP as argument to `ASSUME` is still allowed - it will set the assumed values of RP0 and RP1 to `value` resp. `value + 8`, as the `SRP` machine instruction does on the Super 8 core.
+Note that though the Super8 does not have an RP register (only RP0 and RP1), RP as argument to `ASSUME` is still allowed - it will set the assumed values of RP0 and RP1 to `value` resp. `value + 8`, as the `SRP` machine instruction does on the Super 8 core.
 
 Opposed to the original Zilog assembler, it is not necessary to explicitly specify 'work register addressing' with a prefixed exclamation mark. AS however also understands this syntax - a prefixed exclamation mark enforces 4-bit addressing, even when the address does not lie within the 16-address block defined by RP (AS will issue a warning in that case). Vice versa, a prefixed `>` character enforces 8-bit addressing even when the address is within the current 16-address block.
 
