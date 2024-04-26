@@ -192,7 +192,7 @@
 
 [^NEC78K2]: NEC Corp.: _78K/II Series 8-Bit Single-Chip Microcontroller User's Manual - Instructions._ Document No. U10228EJ6V0UM00 (6th edition), December 1995
 
-[^NEC78K3]: NEC Corp.: _uPD78310/312CW/G 8 Bit CMOS Microcomputer Product Description._
+[^NEC78K3]: NEC Corp.: _μPD78310/312CW/G 8 Bit CMOS Microcomputer Product Description._
 
 [^NECSig]: NEC Corp.: _Digital Signal Processor Product Description._ PDDSP.....067V20 (no year of release given)
 
