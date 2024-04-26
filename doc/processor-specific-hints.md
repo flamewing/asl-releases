@@ -1209,8 +1209,7 @@ Especially the last case is a bit astonishing... unfortunately, some instruction
 The original assembler AST6 delivered by SGS-Thomson partially uses different pseudo instructions than AS. Apart from the fact that AS does not mark pseudo instructions with a leading dot, the following instructions are identical:
 
 ```asm
-      ASCII, ASCIZ, BLOCK, BYTE, END, ENDM, EQU, ERROR, MACRO,
-      ORG, TITLE, WARNING
+ASCII, ASCIZ, BLOCK, BYTE, END, ENDM, EQU, ERROR, MACRO, ORG, TITLE, WARNING
 ```
 
 Table [Equivalent Instructions AST6 ↔ AS](#table-equivalent-instructions-ast6--as) shows the instructions which have AS counterparts with similar function.
