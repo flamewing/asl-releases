@@ -1438,7 +1438,7 @@ there is another supported syntax variant:
 
 which used to be common in UNIX environments.
 
-## uPD78(C)1x
+## μPD78(C)1x
 
 For relative, unconditional instructions, there is the `JR` instruction (branch distance -32...+31, one byte), and the `JRE` instruction (branch distance -256...+255, two bytes). AS furthermore knows the `J` pseudo instruction, which automatically selects the shortest possible variant.
 
@@ -1498,7 +1498,7 @@ Analogous to the 78K0, NEC here also uses dollar signs and exclamation marks to 
 
 An additional remark (which is also true for the 78K0): Those who want to use Motorola syntax via `RELAXED`, might have to put hexadecimal constants in parentheses, since the leading dollar sign might be misunderstood as relative addressing...
 
-## uPD772x
+## μPD772x
 
 Both the 7720 and 7725 are provided by the same code generator and are extremely similar in their instruction set. One should however not believe that they are binary compatible: To get space for the longer address fields and additional instructions, the bit positions of some fields in the instruction word have changed, and the instruction length has changed from 23 to 24 bits. The code format therefore uses different header ids for both CPUs.
 
