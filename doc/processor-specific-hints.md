@@ -1516,17 +1516,17 @@ This target is special because there are two different code generators one may c
 
 This family of processors supports both long and short branches: a short branch is only possible within the same 256 byte memory page, and a long branch is possible to any target in the 64K address space. The assembly syntax provides different mnemonics for both variants (the long variant with a leading 'L'), but there is no variant that would let the assembler decide itself between long or short. AS supports such 'pseudo instructions' as an extension:
 
-- `JMP` becomes `BR` oder `LBR`.
-- `JZ` becomes `BZ` oder `LBZ`.
-- `JNZ` becomes `BNZ` oder `LBNZ`.
-- `JDF` becomes `BDF` oder `LBDF`.
-- `JPZ` becomes `BPZ` oder `LBPZ`.
-- `JGE` becomes `BGE` oder `LBGE`.
-- `JNF` becomes `BNF` oder `LBNF`.
-- `JM` becomes `BM` oder `LBM`.
-- `JL` becomes `BL` oder `LBL`.
-- `JQ` becomes `BQ` oder `LBQ`.
-- `JNQ` becomes `BNQ` oder `LBNQ`.
+- `JMP` becomes `BR` or `LBR`.
+- `JZ` becomes `BZ` or `LBZ`.
+- `JNZ` becomes `BNZ` or `LBNZ`.
+- `JDF` becomes `BDF` or `LBDF`.
+- `JPZ` becomes `BPZ` or `LBPZ`.
+- `JGE` becomes `BGE` or `LBGE`.
+- `JNF` becomes `BNF` or `LBNF`.
+- `JM` becomes `BM` or `LBM`.
+- `JL` becomes `BL` or `LBL`.
+- `JQ` becomes `BQ` or `LBQ`.
+- `JNQ` becomes `BNQ` or `LBNQ`.
 
 ## KENBAK
 
