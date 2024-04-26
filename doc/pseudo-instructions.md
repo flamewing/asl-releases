@@ -2251,7 +2251,7 @@ Additional arguments allow to reserve memory for a whole array of structures. Th
 thisarray Rec [10],[2]
 ```
 
-In this example, space for 2 \* 10 = 20 structures is reserved. For each individual structure in the array, proper symbols are generated that have the array indices in their name.
+In this example, space for 2 \* 10 = 20 structures is reserved. For each individual structure in the array, proper symbols are generated that have the array indices in their name.
 
 ### Nested Structures
 
