@@ -249,7 +249,7 @@ Concerning effect and function of the SHARED-symbols please see [Share File](#sh
 
 As long as switches require no arguments and their concatenation does not result in a multi-letter switch, it is possible to specify several switches at one time, as in the following example :
 
-```sh
+```dosbat
 as test*.asm firstprog -cl /i c:\as\8051\include
 ```
 
@@ -259,7 +259,7 @@ This example shows that the assembler assumes `ASM` as the default extension for
 
 A bit of caution should be applied when using switches that have optional arguments: if a file specification immediately follows such a switch without the optional argument, AS will try to interpret the file specification as argument - what of course fails:
 
-```sh
+```dosbat
 as -g test.asm
 ```
 
@@ -267,7 +267,7 @@ The solution in this case would either be to move the -g option the end or to sp
 
 Beside from specifying options in the command line, permanently needed options may be placed in the environment variable `ASCMD` . For example, if someone always wants to have assembly listings and has a fixed directory for include files, he can save a lot of typing with the following command:
 
-```sh
+```dosbat
 set ascmd=-L -i c:\as\8051\include
 ```
 
@@ -275,13 +275,13 @@ The environment options are processed before the command line, so options in the
 
 In the case of very long path names, space in the `ASCMD` variable may become a problem. For such cases a key file may be the alternative, in which the options can be written in the same way as in the command line or the `ASCMD` -variable. But this file may contain several lines each with a maximum length of 255 characters. In a key file it is important, that for options which require an argument, switches and argument have to be written in the **same** line. AS gets informed of the name of the key file by a `@` ahead in the `ASCMD` variable, e.g.
 
-```sh
+```dosbat
 set ASCMD=@c:\as\as.key
 ```
 
 In order to neutralize options in the `ASCMD` variable (or in the key file), prefix the option with a plus sign. For example, if you do not want to generate an assembly listing in an individual case, the option can be retracted in this way:
 
-```sh
+```dosbat
 as +L <file>
 ```
 
@@ -289,7 +289,7 @@ Naturally it is not consequently logical to deny an option by a plus sign.... UN
 
 References to key files may not only come from the `ASCMD` variable, but also directly from the command line. Similarly to the `ASCMD` variable, prepend the file's name with a character:
 
-```sh
+```dosbat
 as @<file> ....
 ```
 
@@ -299,7 +299,7 @@ Referencing a key file from a key file itself is not allowed and will be answere
 
 In case that you like to start AS from another program or a shell and this shell hands over only lower-case or capital letters in the command line, the following workaround exists: if a tilde ( `~` ) is put in front of an option letter, the following letter is always interpreted as a lower-case letter. Similarly a `#` demands the interpretation as a capital letter. For example, the following transformations result for:
 
-```sh
+```dosbat
 /~I ---> /i
 -#u ---> -U
 ```
@@ -422,13 +422,13 @@ The parts mentioned so far as well as the list of all macros/functions defined c
 
 All bits are set to 1 by default, when using the switch
 
-```sh
+```dosbat
 -t <mask>
 ```
 
 Bits set in `<mask>` are cleared, so that the respective listing parts are suppressed. Accordingly it is possible to switch on single parts again with a plus sign, in case you had switched off too much with the `ASCMD` variable... If someone wants to have, for example, only the symbol table, it is enough to write:
 
-```sh
+```dosbat
 -t 2
 ```
 
@@ -554,7 +554,7 @@ Apart from plus and minus, _defining_ nameless temporary symbols also exists in 
 Nameless temporary symbols are usually used in constructs that fit on one screen page, like skipping a few machine instructions or tight loops - things would become too puzzling otherwise (this only a good advice, however...). An example for this is the following piece of code, this time as 65xx code:
 
 ```asm
-cpu     6502
+        cpu     6502
 
 -       ldx     #00
 -       dex

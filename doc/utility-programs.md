@@ -29,7 +29,7 @@ Address specifications always relate to the granularity of the processor current
 
 PLIST is the simplest one of the five programs supplied: its purpose is simply to list all records that are stored in a code file. As the program does not do very much, calling is quite simple:
 
-```asm
+```dosbat
     PLIST <file name>
 ```
 
@@ -37,7 +37,7 @@ The file name will automatically be extended with the extension `P` if it doesn'
 
 **CAUTION!** At this place, no wildcards are allowed! If there is a necessity to list several files with one command, use the following "mini batch":
 
-```asm
+```dosbat
     for %n in (*.p) do plist %n
 ```
 
@@ -60,7 +60,7 @@ BIND is a program that allows to concatenate the records of several code files i
 
 The general syntax of BIND is
 
-```asm
+```dosbat
     BIND <source file(s)> <target file> [options]
 ```
 
@@ -72,7 +72,7 @@ Currently, BIND defines only one command line option:
 
 For example, to filter all MCS-51 code out of a code file, use BIND in the following way:
 
-```asm
+```dosbat
     BIND <source name> <target name> -f $31
 ```
 
@@ -97,7 +97,7 @@ P2HEX knows nine different target formats, which can be selected via the command
 
 If no target format is explicitly specified, P2HEX will automatically choose one depending in the processor type: S-Records for Motorola CPUs, Hitachi, and TLCS-900, MOS for 65xx/MELPS, DSK for the 16 bit signal processors from Texas, Atmel Generic for the AVRs, and Intel Hex for the rest. Depending on the start addresses width, the S-Record format will use Records of type 1, 2, or 3, however, records in one group will always be of the same type. This automatism can be partially suppressed via the command line option
 
-```asm
+```dosbat
     -M <1|2|3>
 ```
 
@@ -105,7 +105,7 @@ A value of 2 resp. 3 assures that that S records with a minimum type of 2 resp. 
 
 Normally, the AVR format always uses an address length of 3 bytes. Some programs however do not like that...which is why there is a switch
 
-```asm
+```dosbat
     -avrlen <2|3>
 ```
 
@@ -117,13 +117,13 @@ The Intel, MOS and Tektronix formats are limited to 16 bit addresses, the 16-bit
 
 For the PIC microcontrollers, the switch
 
-```asm
+```dosbat
     -m <0...3>
 ```
 
 allows to generate the three different variants of the Intel Hex format. Format 0 is INHX8M which contains all bytes in a Lo-Hi-Order. Addresses become double as large because the PICs have a word-oriented address space that increments addresses only by one per word. This format is also the default. With Format 1 (INHX16M), bytes are stored in their natural order. This is the format Microchip uses for its own programming devices. Format 2 (INHX8L) resp. 3 (INHX8H) split words into their lower resp. upper bytes. With these formats, P2HEX has to be called twice to get the complete information, like in the following example:
 
-```asm
+```dosbat
     p2hex test -m 2
     rename test.hex test.obl
     p2hex test -m 3
@@ -132,13 +132,13 @@ allows to generate the three different variants of the Intel Hex format. Format 
 
 For the Motorola format, P2HEX additionally uses the S5 record type mentioned in [^CPM68k]. This record contains the number of data records (S1/S2/S3) to follow. As some programs might not know how to deal with this record, one can suppress it with the option
 
-```asm
+```dosbat
     +5
 ```
 
 The C format is different in the sense that it always has to be selected explicitly. The output file is basically a complete piece of C or C++ code that contains the data as a list of C arrays. Additionally to the data itself, a list of descriptors is written that describes the start, length, and end address of each data block. The contents of these descriptors may be configured via the option
 
-```asm
+```dosbat
     -cformat <format>
 ```
 
@@ -153,13 +153,13 @@ In case a source file contains code record for different processors, the differe
 
 Apart form this filter function, P2HEX also supports an address filter, which is useful to split the code into several parts (e.g. for a set of EPROMs):
 
-```asm
+```dosbat
     -r <start address>-<end address>
 ```
 
 The start address is the first address in the window, and the end address is the last address in the window, **not** the first address that is out of the window. For example, to split an 8051 program into 4 2764 EPROMs, use the following commands:
 
-```asm
+```dosbat
     p2hex <source file> eprom1 -f $31 -r $0000-$1fff
     p2hex <source file> eprom2 -f $31 -r $2000-$3fff
     p2hex <source file> eprom3 -f $31 -r $4000-$5fff
@@ -170,13 +170,13 @@ It is allowed to specify a single dollar character or '0x' as start or stop addr
 
 **CAUTION!** This type of splitting does not change the absolute addresses that will be written into the files! If the addresses in the individual hex files should rather start at 0, one can force this with the additional switch
 
-```asm
+```dosbat
     -a
 ```
 
 On the other hand, to move the addresses to a different location, one may use the switch
 
-```asm
+```dosbat
     -R <value>
 ```
 
@@ -186,14 +186,14 @@ By using an offset, it is possible to move a file's contents to an arbitrary pos
 
 In case the source file(s) not only contain data for the code segment, the switch
 
-```asm
+```dosbat
     -segment <name>
 ```
 
 allows to select the segment data is extracted from and converted to HEX format. The segment names are the same as for the `SEGMENT` pseudo instruction ([SEGMENT](pseudo-instructions.md#segment)). The TI DSK is a special case since it has the ability to distinguish between data and code in one file. If TI DSK is the output format, P2HEX will automatically extract data from both segments if no segment was specified explicitly.
 Similar to the `-r` option, the argument
 
-```asm
+```dosbat
     -d <start>-<end>
 ```
 
@@ -201,7 +201,7 @@ allows to designate the address range that should be written as data instead of 
 
 The option
 
-```asm
+```dosbat
     -e <address>
 ```
 
@@ -229,7 +229,7 @@ The allowed range of values goes from 2 to 254 data bytes; odd values will impli
 
 In most cases, the temporary code files generated by AS are not of any further need after P2HEX has been run. The command line option
 
-```asm
+```dosbat
     -k
 ```
 
@@ -237,7 +237,7 @@ allows to instruct P2HEX to erase them automatically after conversion.
 
 In contrast to BIND, P2HEX will not produce an empty target file if only one file name (i.e. the target name) has been given. Instead, P2HEX will use the corresponding code file. Therefore, a minimal call in the style of
 
-```asm
+```dosbat
     P2HEX <name>
 ```
 
@@ -263,7 +263,7 @@ To avoid confusions: If you use this option, the resulting binary file will beco
 
 In case the code file does not contain an entry address, one may set it via the `-e` command line option just like with P2HEX. Upon request, P2BIN prepends the resulting image with this address. The command line option
 
-```asm
+```dosbat
     -S
 ```
 
