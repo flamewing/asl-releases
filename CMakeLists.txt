@@ -19,7 +19,7 @@ endfunction()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
 
@@ -54,6 +54,28 @@ if(CMAKE_CROSSCOMPILING)
 endif(CMAKE_CROSSCOMPILING)
 
 include(CheckCCompilerFlag)
+
+function(add_compile_options_safe FLAG)
+    string(REGEX REPLACE "[-=+]" "" FLAG_NO_SIGNS ${FLAG}) # <- The variable recieving the result of the test can't have those signs in its name
+    check_c_compiler_flag(${FLAG} C_COMPILER_SUPPORTS_${FLAG_NO_SIGNS})
+
+    if(C_COMPILER_SUPPORTS_${FLAG_NO_SIGNS})
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:${FLAG}>)
+    endif(C_COMPILER_SUPPORTS_${FLAG_NO_SIGNS})
+endfunction()
+
+mark_as_advanced(add_compile_options_safe)
+
+# include(CheckIPOSupported)
+# check_ipo_supported(RESULT HAVE_IPO OUTPUT error)
+
+# if(HAVE_IPO)
+#     message(STATUS "IPO / LTO enabled")
+#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# else()
+#     message(STATUS "IPO / LTO not supported: <${error}>")
+#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+# endif()
 
 add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}/asl")
 
@@ -101,8 +123,18 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     endif()
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
-        add_compile_options(-Og)
-        add_compile_options(-g3)
+        add_compile_options_safe(-Og)
+        add_compile_options_safe(-g3)
+
+        if(NOT C_COMPILER_SUPPORTS_Og)
+            add_compile_options(-O0)
+        endif()
+
+        if(NOT C_COMPILER_SUPPORTS_g3)
+            add_compile_options(-g)
+        endif()
+    else()
+        add_compile_options(-O3)
     endif()
 
     if(CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -1019,15 +1051,15 @@ endif(NOT CMAKE_CROSSCOMPILING)
 # - doc/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
 # - doc/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
 # Command for generating html from command line:
-#   pandoc -f gfm+footnotes as.md introduction.md assembler-usage.md \
-#       pseudo-instructions.md processor-specific-hints.md file-formats.md \
-#       utility-programs.md error-messages.md \
-#       pseudo-instructions-and-integer-syntax.md predefined-symbols.md \
-#       shipped-include-files.md frequently-asked-questions.md modifying-as.md \
-#       bibliography.md -t html5 --toc --toc-depth=4 --wrap=preserve \
-#       --syntax-definition=dosbat.xml -c asl.css -o asl.html \
-#       -L convert-links.lua --metadata title="Macro Assembler AS" \
-#       --metadata lang="en" -s --self-contained
+# pandoc -f gfm+footnotes as.md introduction.md assembler-usage.md \
+# pseudo-instructions.md processor-specific-hints.md file-formats.md \
+# utility-programs.md error-messages.md \
+# pseudo-instructions-and-integer-syntax.md predefined-symbols.md \
+# shipped-include-files.md frequently-asked-questions.md modifying-as.md \
+# bibliography.md -t html5 --toc --toc-depth=4 --wrap=preserve \
+# --syntax-definition=dosbat.xml -c asl.css -o asl.html \
+# -L convert-links.lua --metadata title="Macro Assembler AS" \
+# --metadata lang="en" -s --self-contained
 enable_testing()
 
 if(DEFINED ENV{VERBOSE})
