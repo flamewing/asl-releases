@@ -1,4 +1,4 @@
-# Error Messages of AS
+# Error Messages
 
 <!-- markdownlint-disable MD025 -->
 <!-- markdownlint-disable MD030 -->

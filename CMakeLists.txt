@@ -1018,6 +1018,16 @@ endif(NOT CMAKE_CROSSCOMPILING)
 # - doc/ps*.tex                 -> ${CMAKE_INSTALL_DOCDIR}/ps*.tex
 # - doc/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
 # - doc/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
+# Command for generating html from command line:
+#   pandoc -f gfm+footnotes as.md introduction.md assembler-usage.md \
+#       pseudo-instructions.md processor-specific-hints.md file-formats.md \
+#       utility-programs.md error-messages.md \
+#       pseudo-instructions-and-integer-syntax.md predefined-symbols.md \
+#       shipped-include-files.md frequently-asked-questions.md modifying-as.md \
+#       bibliography.md -t html5 --toc --toc-depth=4 --wrap=preserve \
+#       --syntax-definition=dosbat.xml -c asl.css -o asl.html -s \
+#       -L convert-links.lua --metadata title="Macro Assembler AS" \
+#       --metadata lang="en"
 enable_testing()
 
 if(DEFINED ENV{VERBOSE})
