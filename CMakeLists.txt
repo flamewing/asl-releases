@@ -1025,9 +1025,9 @@ endif(NOT CMAKE_CROSSCOMPILING)
 #       pseudo-instructions-and-integer-syntax.md predefined-symbols.md \
 #       shipped-include-files.md frequently-asked-questions.md modifying-as.md \
 #       bibliography.md -t html5 --toc --toc-depth=4 --wrap=preserve \
-#       --syntax-definition=dosbat.xml -c asl.css -o asl.html -s \
+#       --syntax-definition=dosbat.xml -c asl.css -o asl.html \
 #       -L convert-links.lua --metadata title="Macro Assembler AS" \
-#       --metadata lang="en"
+#       --metadata lang="en" -s --self-contained
 enable_testing()
 
 if(DEFINED ENV{VERBOSE})
