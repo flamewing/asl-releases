@@ -1,9 +1,6 @@
 -- links-to-html.lua
 function Link(el)
-    el.target = string.gsub(el.target, ".+%.md#", "#")
-    if string.find(el.target, ".+%.md") then
-        el.target = '#' .. string.gsub(el.target, ".md", "")
-    end
+    el.target = string.gsub(el.target, "%.md", ".html")
     return el
 end
 
