@@ -71,7 +71,8 @@ jobs:
             base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
             mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
-      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
