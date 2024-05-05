@@ -9,13 +9,11 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include "bpemu.h"
 #include <string.h>
 #include <ctype.h>
 
 #include "nls.h"
 #include "strutil.h"
-#include "stringlists.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

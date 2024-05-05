@@ -10,11 +10,7 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
-#include "nls.h"
-#include "chunks.h"
-#include "bpemu.h"
 #include "strutil.h"
 
 #include "asmdef.h"

@@ -13,22 +13,17 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "bpemu.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "asmallg.h"
-#include "asmrelocs.h"
 #include "asmcode.h"
 #include "codepseudo.h"
 #include "tipseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
-#include "fileformat.h"
 #include "headids.h"
 #include "errmsg.h"
 

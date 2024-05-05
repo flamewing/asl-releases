@@ -13,13 +13,8 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
-#include <string.h>
-#include <math.h>
 
 #include "bpemu.h"
-#include "as_endian.h"
-#include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

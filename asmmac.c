@@ -10,14 +10,12 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "nls.h"
 #include "nlmessages.h"
 #include "as.rsc"
 #include "stringlists.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "trees.h"
 #include "asmdef.h"
 #include "asmsub.h"

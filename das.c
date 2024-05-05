@@ -2,7 +2,6 @@
 #include "stdinc.h"
 #include <string.h>
 #include "nlmessages.h"
-#include "stringlists.h"
 #include "codechunks.h"
 #include "entryaddress.h"
 #include "invaddress.h"

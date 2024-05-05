@@ -12,13 +12,12 @@
 #include "as_endian.h"
 #include <string.h>
 
+#include "addrspace.h"
+#include "fileformat.h"
 #include "strutil.h"
-#include "stringlists.h"
 #include "cmdarg.h"
-#include "stdhandl.h"
 #include "ioerrs.h"
 
-#include "nls.h"
 #include "nlmessages.h"
 #include "tools.rsc"
 

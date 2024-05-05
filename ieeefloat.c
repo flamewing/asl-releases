@@ -9,7 +9,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <math.h>
 #include <string.h>
 
 #include "as_endian.h"

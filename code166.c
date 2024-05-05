@@ -10,7 +10,6 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "nls.h"
 #include "strutil.h"
@@ -20,7 +19,6 @@
 #include "asmpars.h"
 #include "asmitree.h"
 #include "asmallg.h"
-#include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"

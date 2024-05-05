@@ -19,7 +19,6 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
-#include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"

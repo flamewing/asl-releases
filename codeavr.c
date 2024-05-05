@@ -10,11 +10,9 @@
 
 #include "stdinc.h"
 
-#include <ctype.h>
 #include <string.h>
 
 #include "bpemu.h"
-#include "nls.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"

@@ -12,7 +12,6 @@
 
 #include "stdinc.h"
 #include "errmsg.h"
-#include "asmdef.h"
 #include "asmerr.h"
 #include "asmpars.h"
 #include "asmrelocs.h"

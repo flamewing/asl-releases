@@ -10,18 +10,18 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "version.h"
+#include "addrspace.h"
 #include "as_endian.h"
 #include "bpemu.h"
+#include "fileformat.h"
 #include "strutil.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "p2bin.rsc"
 #include "ioerrs.h"
 #include "chunks.h"
-#include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
 

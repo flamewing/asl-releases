@@ -9,7 +9,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 #include "bpemu.h"
 

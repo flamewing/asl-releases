@@ -12,8 +12,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "bpemu.h"
-#include "as_endian.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmpars.h"

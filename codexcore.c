@@ -9,11 +9,8 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 
-#include "nls.h"
-#include "as_endian.h"
 #include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"
@@ -21,7 +18,6 @@
 #include "asmpars.h"
 #include "asmallg.h"
 #include "headids.h"
-#include "codepseudo.h"
 #include "intpseudo.h"
 #include "asmitree.h"
 #include "codevars.h"

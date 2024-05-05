@@ -10,9 +10,7 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
-#include "as_endian.h"
 #include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"

@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #include "chunks.h"
-#include "fileformat.h"
 #include "dynstr.h"
 #include "intformat.h"
 #include "strcomp.h"

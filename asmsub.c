@@ -11,12 +11,9 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 #include <stdarg.h>
 
 #include "version.h"
-#include "as_endian.h"
-#include "stdhandl.h"
 #include "console.h"
 #include "nls.h"
 #include "nlmessages.h"
@@ -24,13 +21,11 @@
 #include "strutil.h"
 #include "stringlists.h"
 #include "chunks.h"
-#include "ioerrs.h"
 #include "intformat.h"
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmdebug.h"
-#include "as.h"
 
 #include "asmsub.h"
 
@@ -1666,7 +1661,6 @@ long GTime(void)
 #ifndef _MSC_VER
 # include <sys/time.h>
 #endif
-#include "math64.h"
 
 /*time from 1 Jan 1601 to 1 Jan 1970 in 100ns units */
 

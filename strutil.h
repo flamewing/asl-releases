@@ -92,7 +92,7 @@ extern void strutil_init(void);
 
 /* avoid nasty "subscript has type char..." messages on some platforms */
 
-#include <ctype.h>
+#include <ctype.h>  // IWYU pragma: export
 
 #define chartouint(c) (((unsigned int)(c)) & 0xff)
 #define as_toupper(c) (toupper(chartouint(c)))

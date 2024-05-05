@@ -15,12 +15,10 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "strutil.h"
 #include "stringlists.h"
 #include "cmdarg.h"
-#include "nls.h"
 #include "nlmessages.h"
 #include "cmdarg.rsc"
 

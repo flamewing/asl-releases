@@ -9,22 +9,16 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "nls.h"
-#include "strutil.h"
-#include "bpemu.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
-#include "intpseudo.h"
 #include "codevars.h"
 #include "headids.h"
 #include "errmsg.h"
-#include "codepseudo.h"
 
 #include "codevector.h"
 

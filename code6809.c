@@ -9,7 +9,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 
 #include "nls.h"
@@ -19,9 +18,7 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "asmallg.h"
 #include "asmitree.h"
-#include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"

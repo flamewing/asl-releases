@@ -10,13 +10,10 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "strutil.h"
 #include "as_endian.h"
 #include "bpemu.h"
-#include "nls.h"
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

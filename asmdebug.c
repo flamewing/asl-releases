@@ -14,7 +14,6 @@
 #include "strutil.h"
 
 #include "as_endian.h"
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

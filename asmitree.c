@@ -15,10 +15,7 @@
 #include "stdinc.h"
 #include <string.h>
 
-#include "chunks.h"
 #include "strutil.h"
-#include "asmdef.h"
-#include "asmsub.h"
 
 #include "asmitree.h"
 

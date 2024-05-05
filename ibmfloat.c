@@ -13,7 +13,6 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <math.h>
 
 #include "ieeefloat.h"
 #include "errmsg.h"

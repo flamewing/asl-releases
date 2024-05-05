@@ -18,7 +18,6 @@
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "asmallg.h"
 #include "asmitree.h"
 #include "asmstructs.h"
 #include "codepseudo.h"

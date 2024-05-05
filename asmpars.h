@@ -13,7 +13,6 @@
 #include "addrspace.h"
 #include "errmsg.h"
 #include "intformat.h"
-#include "lstmacroexp.h"
 #include "strcomp.h"
 #include "symbolsize.h"
 #include "symflags.h"

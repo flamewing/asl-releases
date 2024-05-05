@@ -10,12 +10,9 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "bpemu.h"
-#include "chunks.h"
 #include "strutil.h"
-#include "stringlists.h"
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmmac.h"

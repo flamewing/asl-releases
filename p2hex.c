@@ -13,15 +13,16 @@
 #include <string.h>
 
 #include "version.h"
+#include "addrspace.h"
 #include "as_endian.h"
 #include "bpemu.h"
+#include "fileformat.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "p2hex.rsc"
 #include "ioerrs.h"
 #include "strutil.h"
 #include "chunks.h"
-#include "stringlists.h"
 #include "cmdarg.h"
 
 #include "toolutils.h"

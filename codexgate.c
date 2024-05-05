@@ -9,11 +9,8 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 
-#include "nls.h"
-#include "as_endian.h"
 #include "strutil.h"
 #include "bpemu.h"
 #include "asmdef.h"

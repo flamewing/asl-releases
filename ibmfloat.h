@@ -15,7 +15,6 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <math.h>
 
 Boolean Double2IBMFloat(Word *pDest, double Src, Boolean ToDouble);
 

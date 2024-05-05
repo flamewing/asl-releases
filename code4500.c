@@ -10,9 +10,6 @@
 
 #include "stdinc.h"
 
-#include <string.h>
-
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

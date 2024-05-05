@@ -14,7 +14,6 @@
 
 #include "datatypes.h"
 #include "asmdef.h"
-#include "asmpars.h"
 #include "strutil.h"
 #include "asmsub.h"
 #include "nlmessages.h"

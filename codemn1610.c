@@ -12,9 +12,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "nls.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
@@ -344,7 +342,7 @@ static void DecodeAdr(Word Index)
 	Boolean OK;
 	int disp = 0;
 	int l;
-	
+
 	if ((Index & 0x0700) == 0x0600)	/* IMS/DMS */
 	{
 		if (!ChkArgCnt(1,1)) return;
@@ -485,7 +483,7 @@ static void DecodeAdr(Word Index)
 		adr = EvalStrIntExpressionWithResult(sc, UInt16, &EvalResult);
 		if (!EvalResult.OK) return;
 		ChkSpace(SegCode, EvalResult.AddrSpaceMask);
-		
+
 		if (adr < 0x100)
 		{
 			mode = indirect ? 0x2 : 0x0;
@@ -502,7 +500,7 @@ static void DecodeAdr(Word Index)
 			else WrError(ErrNum_JmpDistTooBig);
 		}
 	}
-	
+
 	WAsmCode[0] = Index | (mode << 11 ) | (reg << 8) | (disp & 0xff);
 	CodeLen = 1;
 }
@@ -522,7 +520,7 @@ static void DecodeRegImm8(Word Index)
 {
 	Word reg;
 	Byte imm8;
-	
+
 	if (ChkArgCnt(2, 2))
 	{
 		if (DecReg(ArgStr[1].str.p_str, &reg, True))
@@ -532,9 +530,9 @@ static void DecodeRegImm8(Word Index)
 			if (reg == 7)
 			{
 				WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
-				return;				
+				return;
 			}
-			
+
 			imm8 = EvalStrIntExpressionWithResult(&ArgStr[2], Int8, &EvalResult);
 			if (EvalResult.OK)
 			{
@@ -551,7 +549,7 @@ static void DecodeRegImm8(Word Index)
 static void DecodeReg(Word Index)
 {
 	Word reg;
-	
+
 	if (!ChkArgCnt(1,1)) return;
 
 	if (!DecReg(ArgStr[1].str.p_str, &reg, True)) return;
@@ -560,7 +558,7 @@ static void DecodeReg(Word Index)
 		WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
 		return;
 	}
-	
+
 	WAsmCode[0] = Index | (reg << 8);
 	CodeLen = 1;
 }
@@ -586,7 +584,7 @@ static void DecodeRegRegSkip(Word Index)
 		WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
 		return;
 	}
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
@@ -610,7 +608,7 @@ static void DecodeShift(Word Index)
 		WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
 		return;
 	}
-	
+
 	switch (ArgCnt)
 	{
 	case 1:
@@ -639,7 +637,7 @@ static void DecodeShift(Word Index)
 	default:
 		return;
 	}
-	
+
 	WAsmCode[0] = Index | (reg << 8) | (skip << 4) | em;
 	CodeLen = 1;
 }
@@ -650,7 +648,7 @@ static void DecodeBit(Word Index)
 	Word skip = 0;
 	Byte imm4;
 	Boolean OK;
-	
+
 	if (!ChkArgCnt(2,3)) return;
 
 	if (!DecReg(ArgStr[1].str.p_str, &reg, True)) return;
@@ -659,7 +657,7 @@ static void DecodeBit(Word Index)
 		WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
 		return;
 	}
-	
+
 	imm4 = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
 	if (!OK) return;
 	if (/*imm4 < 0 ||*/ imm4 > 0x0f)
@@ -672,7 +670,7 @@ static void DecodeBit(Word Index)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
 	}
-	
+
 	WAsmCode[0] = Index | (reg << 8) | (skip << 4) | imm4;
 	CodeLen = 1;
 }
@@ -681,12 +679,12 @@ static void DecodeLevel(Word Index)
 {
 	Word l;
 	Boolean OK;
-	
+
 	if (!ChkArgCnt(1,1)) return;
 
 	l = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
 	if (!OK) return;
-	
+
 	WAsmCode[0] = Index | l;
 	CodeLen = 1;
 }
@@ -699,7 +697,7 @@ static void DecodeLD(Word Index)
 	Word br = 0x0;	/* CSBR when not specified */
 	Word exp;
 	tEvalResult EvalResult;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -719,7 +717,7 @@ static void DecodeLD(Word Index)
 	exp = EvalStrIntExpressionWithResult(&ArgStr[ArgCnt], Int16, &EvalResult);
 	if (!EvalResult.OK) return;
 	ChkSpace(SegCode, EvalResult.AddrSpaceMask);
-	
+
 	WAsmCode[0] = Index | (br << 4) | reg;
 	WAsmCode[1] = exp;
 	CodeLen = 2;
@@ -732,7 +730,7 @@ static void DecodeLR(Word Index)
 	Word br = 0x0;	/* CSBR when not specified */
 	Word mm;
 	Word ii;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -762,7 +760,7 @@ static void DecodeMVWR(Word Index)
 	Word mm;
 	Word ii;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -775,7 +773,7 @@ static void DecodeMVWR(Word Index)
 	}
 
 	if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
@@ -793,7 +791,7 @@ static void DecodeMVWI(Word Index)
 	Word exp;
 	Boolean OK;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -804,10 +802,10 @@ static void DecodeMVWI(Word Index)
 		WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
 		return;
 	}
-	
+
 	exp = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
 	if (!OK) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
@@ -837,7 +835,7 @@ static void DecodeNEG(Word Index)
 	Word reg;
 	Word c = 0;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(1,3)) return;
@@ -875,7 +873,7 @@ static void DecodeAD(Word Index)
 	Word ii;
 	Word c = 0;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,4)) return;
@@ -883,7 +881,7 @@ static void DecodeAD(Word Index)
 	if (!DecDReg(ArgStr[1].str.p_str, True)) return;
 
 	if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecC(ArgStr[3].str.p_str, &c, False))
@@ -909,7 +907,7 @@ static void DecodeM(Word Index)
 	Word mm;
 	Word ii;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -917,7 +915,7 @@ static void DecodeM(Word Index)
 	if (!DecDReg(ArgStr[1].str.p_str, True)) return;
 
 	if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
@@ -935,7 +933,7 @@ static void DecodeDAA(Word Index)
 	Word ii;
 	Word c = 0;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,4)) return;
@@ -948,7 +946,7 @@ static void DecodeDAA(Word Index)
 	}
 
 	if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecC(ArgStr[3].str.p_str, &c, False))
@@ -973,7 +971,7 @@ static void DecodeFIX(Word Index)
 {
 	Word reg;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
@@ -986,7 +984,7 @@ static void DecodeFIX(Word Index)
 	}
 
 	if (!DecDReg(ArgStr[2].str.p_str, True)) return;
-	
+
 	if (ArgCnt == 3)
 	{
 		if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) return;
@@ -1001,13 +999,13 @@ static void DecodeFLT(Word Index)
 {
 	Word reg;
 	Word skip = 0;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,3)) return;
 
 	if (!DecDReg(ArgStr[1].str.p_str, True)) return;
-	
+
 	if (!DecReg(ArgStr[2].str.p_str, &reg, True)) return;
 	if (reg != 0)
 	{
@@ -1029,7 +1027,7 @@ static void DecodeBD(Word Index)
 {
 	Word exp;
 	tEvalResult EvalResult;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(1,1)) return;
@@ -1049,7 +1047,7 @@ static void DecodeBL(Word Index)
 	int l;
 	Word exp;
 	tEvalResult EvalResult;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(1,1)) return;
@@ -1077,7 +1075,7 @@ static void DecodeBR(Word Index)
 {
 	Word mm;
 	Word ii;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(1,1)) return;
@@ -1126,7 +1124,7 @@ static void DecodeSRBT(Word Index)
 {
 	Word reg1;
 	Word reg2;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,2)) return;
@@ -1177,7 +1175,7 @@ static void DecodeBLK(Word Index)
 	Word ii1;
 	Word ii2;
 	Word reg;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(3,3)) return;
@@ -1188,7 +1186,7 @@ static void DecodeBLK(Word Index)
 		WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
 		return;
 	}
-	
+
 	if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii2, False)) return;
 	if (ii2 != 0)
 	{
@@ -1270,7 +1268,7 @@ static void DecodeCPYB(Word Index)
 {
 	Word reg1;
 	Word reg2;
-	
+
 	if (!ChkMinCPU(CPUMN1613)) return;
 
 	if (!ChkArgCnt(2,2)) return;
@@ -1312,7 +1310,7 @@ static void DecodeCPYB(Word Index)
 static void DecodeCLR(Word Index)
 {
 	Word reg;
-	
+
 	if (!ChkArgCnt(1,1)) return;
 
 	if (!DecReg(ArgStr[1].str.p_str, &reg, True)) return;
@@ -1355,7 +1353,7 @@ static void DecodeDC(Word Index)
 	int b = 0;
 	Boolean OK;
 	TempResult t;
-	
+
 	UNUSED(Index);
 
 	as_tempres_ini(&t);
@@ -1412,7 +1410,7 @@ static void DecodeDS(Word Index)
 	LongInt Size;
 	Boolean OK;
 	tSymbolFlags Flags;
-	
+
 	UNUSED(Index);
 
 	if (!ChkArgCnt(1, 1)) return;
@@ -1463,12 +1461,12 @@ static void AddShift(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeShift);
 }
-	
+
 static void AddBit(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeBit);
 }
-	
+
 static void AddLevel(const char *NName, Word NCode)
 {
 	AddInstTable(InstTable, NName, NCode, DecodeLevel);
@@ -1581,14 +1579,14 @@ static void InitFields(void)
 	InstTable = CreateInstTable(128);
 
 	/* Basic MN1610 Instructions */
-	
+
 	AddAdr("L",   0xc000);
 	AddAdr("ST",  0x8000);
 	AddAdr("B",   0xc700);
 	AddAdr("BAL", 0x8700);
 	AddAdr("IMS", 0xc600);
 	AddAdr("DMS", 0x8600);
-	
+
 	AddRegRegSkip("A",    0x5808);
 	AddRegRegSkip("S",    0x5800);
 	AddRegRegSkip("AND",  0x6808);
@@ -1610,7 +1608,7 @@ static void InitFields(void)
 	AddBit("TBIT", 0x2800);
 	AddBit("AI",   0x4800);
 	AddBit("SI",   0x4000);
-	
+
 	AddRegImm8("RD",  0x1800);
 	AddRegImm8("WR",  0x1000);
 	AddRegImm8("MVI", 0x0800);
@@ -1672,15 +1670,15 @@ static void InitFields(void)
 	AddDAA("DAS", 0x5704);
 
 	AddFIX("FIX", 0x1f0f);
-	
+
 	AddFLT("FLT", 0x1f07);
 
 	AddBD("BD",   0x2607);
 	AddBD("BALD", 0x2617);
-	
+
 	AddBL("BL",   0x270f);
 	AddBL("BALL", 0x271f);
-	
+
 	AddBR("BR",   0x2704);
 	AddBR("BALR", 0x2714);
 
@@ -1713,12 +1711,12 @@ static void InitFields(void)
 	AddInstTable(InstTable, "CLR",   0x6000, DecodeCLR);	/* EOR Rn,Rn */
 	AddInstTable(InstTable, "CLEAR", 0x6000, DecodeCLR);	/* EOR Rn,Rn */
 	AddInstTable(InstTable, "SKIP",  0x7808, DecodeSKIP);	/* MV  Rn,Rn,Skip */
-	
+
 	/* Pseudo Instructions */
 
 	AddInstTable(InstTable, "DC", 0, DecodeDC);
 	AddInstTable(InstTable, "DS", 0, DecodeDS);
-	
+
 	StrCompAlloc(&Inner, STRINGSIZE);
 	StrCompAlloc(&InnerZ, STRINGSIZE);
 }
@@ -1742,7 +1740,7 @@ static void MakeCode_MN1610(void)
 
 	/* if (DecodeIntelPseudo(False)) return; */
 	/* if (DecodeMoto16Pseudo(eSymbolSize16Bit, True)) return; */
-	
+
 	if (!LookupInstTable(InstTable, OpPart.str.p_str))
 		WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
 }

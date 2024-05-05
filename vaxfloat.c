@@ -8,12 +8,12 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "stdinc.h"
+#include "stdinc.h" // IWYU pragma: keep
+
+#ifdef VAXFLOAT
 
 #include "as_endian.h"
 #include "vaxfloat.h"
-
-#ifdef VAXFLOAT
 
 /*!------------------------------------------------------------------------
  * \fn     VAXF_2_Single(Byte *pDest, float inp)

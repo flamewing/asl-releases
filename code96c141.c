@@ -12,7 +12,6 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "nls.h"
 #include "bpemu.h"

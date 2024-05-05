@@ -11,7 +11,6 @@
 #include "stdinc.h"
 #include <string.h>
 #include <stdarg.h>
-#include <ctype.h>
 
 #include "cpulist.h"
 #include "headids.h"

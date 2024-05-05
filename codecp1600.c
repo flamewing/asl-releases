@@ -12,15 +12,11 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "nls.h"
-#include "strutil.h"
-#include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "codevars.h"
-#include "codepseudo.h"
 #include "headids.h"
 #include "errmsg.h"
 
@@ -63,7 +59,7 @@ static void DecodeRegAdrMVO(Word Index)
 	Boolean OK;
 
 	PrefixedSDBD = False;
-		
+
 	if (ChkArgCnt(2,2))
 	{
 		if (!DecReg(ArgStr[1].str.p_str, &reg, True)) return;
@@ -113,7 +109,7 @@ static void DecodeRegImmMVO(Word Index)
 	Boolean OK;
 
 	PrefixedSDBD = False;
-		
+
 	if (ChkArgCnt(2,2))
 	{
 		if (!DecReg(ArgStr[1].str.p_str, &reg, True)) return;
@@ -141,7 +137,7 @@ static void DecodeAdrReg(Word Index)
 	Boolean OK;
 
 	PrefixedSDBD = False;
-		
+
 	if (ChkArgCnt(2,2))
 	{
 		adr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
@@ -193,7 +189,7 @@ static void DecodeImmReg(Word Index)
 	Word regd;
 	Boolean OK;
 	Boolean prefixed = PrefixedSDBD;
-	
+
 	PrefixedSDBD = False;
 
 	if (ChkArgCnt(2,2))
@@ -349,7 +345,7 @@ static void DecodeShift(Word Index)
 		{
 			Word val;
 			Boolean OK;
-			
+
 			val = EvalStrIntExpression(&ArgStr[2], UInt16, &OK);
 			if (!OK) return;
 
@@ -438,7 +434,7 @@ static void DecodeJump(Word Index)
 
 		reg = 0;
 
-		adr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);		
+		adr = EvalStrIntExpression(&ArgStr[1], UInt16, &OK);
 	}
 	else
 	{

@@ -14,23 +14,15 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
-#include <math.h>
 
-#include "nls.h"
-#include "bpemu.h"
-#include "as_endian.h"
 #include "strutil.h"
 #include "chunks.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "asmallg.h"
-#include "asmitree.h"
 #include "errmsg.h"
 
 #include "codepseudo.h"
-#include "motpseudo.h"
 
 /*****************************************************************************
  * Global Functions

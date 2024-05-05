@@ -10,7 +10,6 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 #include "as_endian.h"
 
 #include "strutil.h"
@@ -22,11 +21,8 @@
 #include "asmcode.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
-#include "codepseudo.h"
 #include "asmitree.h"
 #include "codevars.h"
-#include "nlmessages.h"
-#include "as.rsc"
 
 /*---------------------------------------------------------------------------*/
 
