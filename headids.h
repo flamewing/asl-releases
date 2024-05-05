@@ -16,29 +16,27 @@
 
 #include "datatypes.h"
 
-typedef enum
-{
-  eHexFormatDefault,
-  eHexFormatMotoS,
-  eHexFormatIntel,
-  eHexFormatIntel16,
-  eHexFormatIntel32,
-  eHexFormatMOS,
-  eHexFormatTek,
-  eHexFormatTiDSK,
-  eHexFormatAtmel,
-  eHexFormatMico8,
-  eHexFormatC
+typedef enum {
+    eHexFormatDefault,
+    eHexFormatMotoS,
+    eHexFormatIntel,
+    eHexFormatIntel16,
+    eHexFormatIntel32,
+    eHexFormatMOS,
+    eHexFormatTek,
+    eHexFormatTiDSK,
+    eHexFormatAtmel,
+    eHexFormatMico8,
+    eHexFormatC
 } tHexFormat;
 
-typedef struct
-{
-  const char *Name;
-  Word Id;
-  tHexFormat HexFormat;
+typedef struct {
+    char const* Name;
+    Word        Id;
+    tHexFormat  HexFormat;
 } TFamilyDescr, *PFamilyDescr;
 
-extern PFamilyDescr FindFamilyByName(const char *Name);
+extern PFamilyDescr FindFamilyByName(char const* Name);
 
 extern PFamilyDescr FindFamilyById(Word Id);
 

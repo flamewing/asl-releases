@@ -13,16 +13,17 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
-
-#include "strutil.h"
-#include "chunks.h"
-#include "asmdef.h"
-#include "asmsub.h"
-#include "asmpars.h"
-#include "errmsg.h"
 
 #include "codepseudo.h"
+
+#include "asmdef.h"
+#include "asmpars.h"
+#include "asmsub.h"
+#include "chunks.h"
+#include "errmsg.h"
+#include "strutil.h"
+
+#include <string.h>
 
 /*****************************************************************************
  * Global Functions
@@ -35,29 +36,32 @@
  * Result:      TRUE if indirect
  *****************************************************************************/
 
-Boolean IsIndirectGen(const char *Asc, const char *pBeginEnd)
-{
-  int z,Level,l;
+Boolean IsIndirectGen(char const* Asc, char const* pBeginEnd) {
+    int z, Level, l;
 
-  if (((l = strlen(Asc)) <= 2)
-   || (Asc[0] != pBeginEnd[0])
-   || (Asc[l - 1] != pBeginEnd[1]))
-    return False;
+    if (((l = strlen(Asc)) <= 2) || (Asc[0] != pBeginEnd[0])
+        || (Asc[l - 1] != pBeginEnd[1])) {
+        return False;
+    }
 
-  Level = 0;
-  for (z = 1; z <= l - 2; z++)
-  {
-    if (Asc[z] == pBeginEnd[0]) Level++;
-    if (Asc[z] == pBeginEnd[1]) Level--;
-    if (Level < 0) return False;
-  }
+    Level = 0;
+    for (z = 1; z <= l - 2; z++) {
+        if (Asc[z] == pBeginEnd[0]) {
+            Level++;
+        }
+        if (Asc[z] == pBeginEnd[1]) {
+            Level--;
+        }
+        if (Level < 0) {
+            return False;
+        }
+    }
 
-  return True;
+    return True;
 }
 
-Boolean IsIndirect(const char *Asc)
-{
-  return IsIndirectGen(Asc, "()");
+Boolean IsIndirect(char const* Asc) {
+    return IsIndirectGen(Asc, "()");
 }
 
 /*!------------------------------------------------------------------------
@@ -69,58 +73,69 @@ Boolean IsIndirect(const char *Asc)
  * \return index to opening parenthese or -1 if not like pattern
  * ------------------------------------------------------------------------ */
 
-int FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier)
-{
-  int Nest = 0, Start, SplitPos = -1;
-  Boolean InSgl = False, InDbl = False;
+int FindDispBaseSplitWithQualifier(
+        char const* pArg, int* pArgLen, tDispBaseSplitQualifier Qualifier) {
+    int     Nest = 0, Start, SplitPos = -1;
+    Boolean InSgl = False, InDbl = False;
 
-  *pArgLen = strlen(pArg);
+    *pArgLen = strlen(pArg);
 
-  if (!*pArgLen || (pArg[*pArgLen - 1] != ')'))
-    return -1;
-
-  /* We are looking for expressions of the form xxx(yyy),
-     but we want to avoid false positives on things like
-     xxx+(yyy*zzz).  So we look at the (non-blank) character
-     right before opening parenthese in question.  If it is
-     something that might be the last letter of an identifier,
-     or another parenthized expression, and not an operator,
-     it might be OK... */
-
-  for (Start = *pArgLen - 1; Start >= 0; Start--)
-  {
-    switch (pArg[Start])
-    {
-      case '\'':
-        if (!InDbl) InSgl = !InSgl;
-        break;
-      case '"':
-        if (!InSgl) InDbl = !InDbl;
-        break;
-      case ')':
-        if (!InSgl && !InDbl) Nest++;
-        break;
-      case '(':
-        if (!InSgl && !InDbl) Nest--;
-        break;
-      default:
-        break;
+    if (!*pArgLen || (pArg[*pArgLen - 1] != ')')) {
+        return -1;
     }
-    if (!Nest && (SplitPos < 0))
-      SplitPos = Start;
-    else if (SplitPos >= 0)
-    {
-      if (as_isspace(pArg[Start])); /* delay decision to to next non-blank */
-      else if (as_isalnum(pArg[Start]) || (pArg[Start] == ')') || (pArg[Start] == '\'') || (pArg[Start] == '"'))
-        return SplitPos;
-      else
-        return Qualifier ? Qualifier(pArg, Start, SplitPos) : -1;
+
+    /* We are looking for expressions of the form xxx(yyy),
+       but we want to avoid false positives on things like
+       xxx+(yyy*zzz).  So we look at the (non-blank) character
+       right before opening parenthese in question.  If it is
+       something that might be the last letter of an identifier,
+       or another parenthized expression, and not an operator,
+       it might be OK... */
+
+    for (Start = *pArgLen - 1; Start >= 0; Start--) {
+        switch (pArg[Start]) {
+        case '\'':
+            if (!InDbl) {
+                InSgl = !InSgl;
+            }
+            break;
+        case '"':
+            if (!InSgl) {
+                InDbl = !InDbl;
+            }
+            break;
+        case ')':
+            if (!InSgl && !InDbl) {
+                Nest++;
+            }
+            break;
+        case '(':
+            if (!InSgl && !InDbl) {
+                Nest--;
+            }
+            break;
+        default:
+            break;
+        }
+        if (!Nest && (SplitPos < 0)) {
+            SplitPos = Start;
+        } else if (SplitPos >= 0) {
+            if (as_isspace(pArg[Start]))
+                ; /* delay decision to to next non-blank */
+            else if (
+                    as_isalnum(pArg[Start]) || (pArg[Start] == ')')
+                    || (pArg[Start] == '\'') || (pArg[Start] == '"')) {
+                return SplitPos;
+            } else {
+                return Qualifier ? Qualifier(pArg, Start, SplitPos) : -1;
+            }
+        }
     }
-  }
 
-  /* if SplitPos >= 0, and we end up here, xxx is empty string or only consists of spaces: */
+    /* if SplitPos >= 0, and we end up here, xxx is empty string or only consists of
+     * spaces: */
 
-  return SplitPos;
+    return SplitPos;
 }
 
 /*****************************************************************************
@@ -129,36 +144,37 @@ int FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSpli
  * Result:      -
  *****************************************************************************/
 
-void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max)
-{
-  Boolean OK;
-  tSymbolFlags Flags;
-  LargeInt Erg;
+void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max) {
+    Boolean      OK;
+    tSymbolFlags Flags;
+    LargeInt     Erg;
 
-  if (ChkArgCnt(1, 1))
-  {
-    Erg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
-    if (OK && !mFirstPassUnknown(Flags))
-    {
-      if (Min > Erg) WrError(ErrNum_UnderRange);
-      else if (Erg > Max) WrError(ErrNum_OverRange);
-      else
-      {
-        TempResult t;
+    if (ChkArgCnt(1, 1)) {
+        Erg = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &OK, &Flags);
+        if (OK && !mFirstPassUnknown(Flags)) {
+            if (Min > Erg) {
+                WrError(ErrNum_UnderRange);
+            } else if (Erg > Max) {
+                WrError(ErrNum_OverRange);
+            } else {
+                TempResult t;
 
-        PushLocHandle(-1);
-        EnterIntSymbol(&LabPart, Erg, DestSeg, False);
-        PopLocHandle();
-        if (MakeUseList)
-          if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) WrError(ErrNum_Overlap);
+                PushLocHandle(-1);
+                EnterIntSymbol(&LabPart, Erg, DestSeg, False);
+                PopLocHandle();
+                if (MakeUseList) {
+                    if (AddChunk(SegChunks + DestSeg, Erg, 1, False)) {
+                        WrError(ErrNum_Overlap);
+                    }
+                }
 
-        as_tempres_ini(&t);
-        as_tempres_set_int(&t, Erg);
-        SetListLineVal(&t);
-        as_tempres_free(&t);
-      }
+                as_tempres_ini(&t);
+                as_tempres_set_int(&t, Erg);
+                SetListLineVal(&t);
+                as_tempres_free(&t);
+            }
+        }
     }
-  }
 }
 
 /*!------------------------------------------------------------------------
@@ -169,58 +185,67 @@ void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max)
  * \return True if this is NO lead-in of int constant
  * ------------------------------------------------------------------------ */
 
-Boolean QualifyQuote_SingleQuoteConstant(const char *pStart, const char *pQuotePos)
-{
-  const char *pRun;
-  Boolean OK;
-  int Base;
+Boolean QualifyQuote_SingleQuoteConstant(char const* pStart, char const* pQuotePos) {
+    char const* pRun;
+    Boolean     OK;
+    int         Base;
 
-  /* previous character must be H X B O */
+    /* previous character must be H X B O */
 
-  if (pQuotePos == pStart)
-    return True;
-  switch (as_toupper(*(pQuotePos - 1)))
-  {
+    if (pQuotePos == pStart) {
+        return True;
+    }
+    switch (as_toupper(*(pQuotePos - 1))) {
     case 'B':
-      Base = 2; break;
+        Base = 2;
+        break;
     case 'O':
-      Base = 8; break;
+        Base = 8;
+        break;
     case 'X':
     case 'H':
-      Base = 16; break;
+        Base = 16;
+        break;
     default:
-      return True;
-  }
-
-  /* Scan for following valid (binary/octal/hex) character(s) */
-
-  for (pRun = pQuotePos + 1; *pRun; pRun++)
-  {
-    switch (Base)
-    {
-      case 16: OK = as_isxdigit(*pRun); break;
-      case 8: OK = as_isdigit(*pRun) && (*pRun < '8'); break;
-      case 2: OK = as_isdigit(*pRun) && (*pRun < '2'); break;
-      default: OK = False;
+        return True;
     }
-    if (!OK)
-      break;
-  }
 
-  /* none? -> bad */
+    /* Scan for following valid (binary/octal/hex) character(s) */
 
-  if (pRun <= pQuotePos + 1)
-    return True;
+    for (pRun = pQuotePos + 1; *pRun; pRun++) {
+        switch (Base) {
+        case 16:
+            OK = as_isxdigit(*pRun);
+            break;
+        case 8:
+            OK = as_isdigit(*pRun) && (*pRun < '8');
+            break;
+        case 2:
+            OK = as_isdigit(*pRun) && (*pRun < '2');
+            break;
+        default:
+            OK = False;
+        }
+        if (!OK) {
+            break;
+        }
+    }
 
-  /* If we've hit another ' after them, it is the "harmless" x'...' form,
-     and no special treatment is needed */
+    /* none? -> bad */
 
-  if ('\'' == *pRun)
-    return True;
+    if (pRun <= pQuotePos + 1) {
+        return True;
+    }
 
-  /* Other token or string continues -> cannot be such a constant, otherwise we
-     have a match and the ' does NOT lead in a character string: */
+    /* If we've hit another ' after them, it is the "harmless" x'...' form,
+       and no special treatment is needed */
 
-  return as_isalnum(*pRun);
+    if ('\'' == *pRun) {
+        return True;
+    }
+
+    /* Other token or string continues -> cannot be such a constant, otherwise we
+       have a match and the ' does NOT lead in a character string: */
+
+    return as_isalnum(*pRun);
 }
-

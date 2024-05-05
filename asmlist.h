@@ -10,7 +10,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern void MakeList(const char *pSrcLine);
+extern void MakeList(char const* pSrcLine);
 
 extern void asmlist_init(void);
 

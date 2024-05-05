@@ -8,15 +8,15 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdio.h>
-
 #include "texutil.h"
+
+#include <stdio.h>
 
 /*--------------------------------------------------------------------------*/
 
 Boolean DoRepass;
-char *pInFileName;
-int CurrLine, CurrColumn;
+char*   pInFileName;
+int     CurrLine, CurrColumn;
 
 /*--------------------------------------------------------------------------*/
 
@@ -26,7 +26,6 @@ int CurrLine, CurrColumn;
  * \param  pMsg warning message
  * ------------------------------------------------------------------------ */
 
-void Warning(const char *pMsg)
-{
-  fprintf(stderr, "%s:%d.%d: %s\n", pInFileName, CurrLine, CurrColumn, pMsg);
+void Warning(char const* pMsg) {
+    fprintf(stderr, "%s:%d.%d: %s\n", pInFileName, CurrLine, CurrColumn, pMsg);
 }

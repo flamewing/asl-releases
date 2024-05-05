@@ -14,17 +14,21 @@
 
 #include <stdio.h>
 
-typedef enum {NoRedir,RedirToDevice,RedirToFile} TRedirected;  /* Umleitung von Handles */
+typedef enum {
+    NoRedir,
+    RedirToDevice,
+    RedirToFile
+} TRedirected; /* Umleitung von Handles */
 
-#define NumStdIn 0
+#define NumStdIn  0
 #define NumStdOut 1
 #define NumStdErr 2
 
 extern TRedirected Redirected;
 
-extern void OpenWithStandard(FILE **ppFile, char *Path);
+extern void OpenWithStandard(FILE** ppFile, char* Path);
 
-extern void CloseIfOpen(FILE **ppFile);
+extern void CloseIfOpen(FILE** ppFile);
 
 extern void stdhandl_init(void);
 #endif /* STDHANDL_H */

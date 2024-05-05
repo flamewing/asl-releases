@@ -14,36 +14,36 @@
 
 #include "datatypes.h"
 
-typedef struct sStringRec
-{
-  struct sStringRec *Next;
-  char *Content;
+typedef struct sStringRec {
+    struct sStringRec* Next;
+    char*              Content;
 } StringRec, *StringRecPtr;
+
 typedef StringRecPtr StringList;
 
-extern void InitStringList(StringList *List);
+extern void InitStringList(StringList* List);
 
-extern void ClearStringEntry(StringRecPtr *Elem);
+extern void ClearStringEntry(StringRecPtr* Elem);
 
-extern void ClearStringList(StringList *List);
+extern void ClearStringList(StringList* List);
 
-extern void AddStringListFirst(StringList *List, const char *NewStr);
+extern void AddStringListFirst(StringList* List, char const* NewStr);
 
-extern void AddStringListLast(StringList *List, const char *NewStr);
+extern void AddStringListLast(StringList* List, char const* NewStr);
 
-extern void RemoveStringList(StringList *List, const char *OldStr);
+extern void RemoveStringList(StringList* List, char const* OldStr);
 
-extern const char *GetStringListFirst(StringList List, StringRecPtr *Lauf);
+extern char const* GetStringListFirst(StringList List, StringRecPtr* Lauf);
 
-extern const char *GetStringListNext(StringRecPtr *Lauf);
+extern char const* GetStringListNext(StringRecPtr* Lauf);
 
-extern char *GetAndCutStringList(StringList *List);
+extern char* GetAndCutStringList(StringList* List);
 
 extern Boolean StringListEmpty(StringList List);
 
 extern StringList DuplicateStringList(StringList Src);
 
-extern Boolean StringListPresent(StringList List, char *Search);
+extern Boolean StringListPresent(StringList List, char* Search);
 
 extern void DumpStringList(StringList List);
 #endif /* STRINGLISTS_H */

@@ -8,8 +8,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
-# include "as_endian.h" // IWYU pragma: keep
+#include "as_endian.h"    // IWYU pragma: keep
 
 #ifdef __TINYC__
-# include "as_endian.inl.h"
+#    include "as_endian.inl.h"
 #endif

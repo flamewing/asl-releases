@@ -12,9 +12,9 @@
 
 extern void InitToc(void);
 
-extern void AddToc(const char *pLine, unsigned Indent);
+extern void AddToc(char const* pLine, unsigned Indent);
 
-extern void PrintToc(char *pFileName);
+extern void PrintToc(char* pFileName);
 
 extern void FreeToc(void);
 

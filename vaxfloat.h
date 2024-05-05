@@ -12,10 +12,10 @@
 
 #include "datatypes.h"
 
-extern void VAXF_2_Single(Byte *pDest, float inp);
+extern void VAXF_2_Single(Byte* pDest, float inp);
 
-extern void VAXD_2_Double(Byte *pDest, Double inp);
+extern void VAXD_2_Double(Byte* pDest, Double inp);
 
-extern void VAXD_2_LongDouble(Byte *pDest, Double inp);
+extern void VAXD_2_LongDouble(Byte* pDest, Double inp);
 
 #endif /* VAXFLOAT_H */

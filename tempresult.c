@@ -9,11 +9,13 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
+
+#include "tempresult.h"
 
 #include "dynstr.h"
 #include "strutil.h"
-#include "tempresult.h"
+
+#include <string.h>
 
 /*!------------------------------------------------------------------------
  * \fn     as_tempres_ini(TempResult *p_res)
@@ -21,14 +23,13 @@
  * \param  p_res buffer to initialize
  * ------------------------------------------------------------------------ */
 
-void as_tempres_ini(TempResult *p_res)
-{
-  p_res->Typ = TempNone;
-  p_res->Flags = eSymbolFlag_None;
-  p_res->AddrSpaceMask = 0;
-  p_res->DataSize = eSymbolSizeUnknown;
-  p_res->Relocs = NULL;
-  memset(&p_res->Contents, 0, sizeof(p_res->Contents));
+void as_tempres_ini(TempResult* p_res) {
+    p_res->Typ           = TempNone;
+    p_res->Flags         = eSymbolFlag_None;
+    p_res->AddrSpaceMask = 0;
+    p_res->DataSize      = eSymbolSizeUnknown;
+    p_res->Relocs        = NULL;
+    memset(&p_res->Contents, 0, sizeof(p_res->Contents));
 }
 
 /*!------------------------------------------------------------------------
@@ -37,11 +38,11 @@ void as_tempres_ini(TempResult *p_res)
  * \param  p_res buffer to deinit
  * ------------------------------------------------------------------------ */
 
-void as_tempres_free(TempResult *p_res)
-{
-  if (p_res->Typ == TempString)
-    as_nonz_dynstr_free(&p_res->Contents.str);
-  p_res->Typ = TempNone;
+void as_tempres_free(TempResult* p_res) {
+    if (p_res->Typ == TempString) {
+        as_nonz_dynstr_free(&p_res->Contents.str);
+    }
+    p_res->Typ = TempNone;
 }
 
 /*!------------------------------------------------------------------------
@@ -50,11 +51,11 @@ void as_tempres_free(TempResult *p_res)
  * \param  p_res result to fill
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_none(TempResult *p_res)
-{
-  if (p_res->Typ == TempString)
-    as_nonz_dynstr_free(&p_res->Contents.str);
-  p_res->Typ = TempNone;
+void as_tempres_set_none(TempResult* p_res) {
+    if (p_res->Typ == TempString) {
+        as_nonz_dynstr_free(&p_res->Contents.str);
+    }
+    p_res->Typ = TempNone;
 }
 
 /*!------------------------------------------------------------------------
@@ -64,12 +65,12 @@ void as_tempres_set_none(TempResult *p_res)
  * \param  value integer value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_int(TempResult *p_res, LargeInt value)
-{
-  if (p_res->Typ == TempString)
-    as_nonz_dynstr_free(&p_res->Contents.str);
-  p_res->Typ = TempInt;
-  p_res->Contents.Int = value;
+void as_tempres_set_int(TempResult* p_res, LargeInt value) {
+    if (p_res->Typ == TempString) {
+        as_nonz_dynstr_free(&p_res->Contents.str);
+    }
+    p_res->Typ          = TempInt;
+    p_res->Contents.Int = value;
 }
 
 /*!------------------------------------------------------------------------
@@ -79,12 +80,12 @@ void as_tempres_set_int(TempResult *p_res, LargeInt value)
  * \param  value float value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_float(TempResult *p_res, Double value)
-{
-  if (p_res->Typ == TempString)
-    as_nonz_dynstr_free(&p_res->Contents.str);
-  p_res->Typ = TempFloat;
-  p_res->Contents.Float = value;
+void as_tempres_set_float(TempResult* p_res, Double value) {
+    if (p_res->Typ == TempString) {
+        as_nonz_dynstr_free(&p_res->Contents.str);
+    }
+    p_res->Typ            = TempFloat;
+    p_res->Contents.Float = value;
 }
 
 /*!------------------------------------------------------------------------
@@ -94,12 +95,12 @@ void as_tempres_set_float(TempResult *p_res, Double value)
  * \param  p_value string value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_str(TempResult *p_res, const as_nonz_dynstr_t *p_value)
-{
-  if (p_res->Typ != TempString)
-    as_nonz_dynstr_ini(&p_res->Contents.str, p_value->capacity);
-  p_res->Typ = TempString;
-  as_nonz_dynstr_copy(&p_res->Contents.str, p_value);
+void as_tempres_set_str(TempResult* p_res, as_nonz_dynstr_t const* p_value) {
+    if (p_res->Typ != TempString) {
+        as_nonz_dynstr_ini(&p_res->Contents.str, p_value->capacity);
+    }
+    p_res->Typ = TempString;
+    as_nonz_dynstr_copy(&p_res->Contents.str, p_value);
 }
 
 /*!------------------------------------------------------------------------
@@ -110,12 +111,12 @@ void as_tempres_set_str(TempResult *p_res, const as_nonz_dynstr_t *p_value)
  * \param  src_len length of source
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_str_raw(TempResult *p_res, const char *p_src, size_t src_len)
-{
-  if (p_res->Typ != TempString)
-    as_nonz_dynstr_ini(&p_res->Contents.str, as_nonz_dynstr_roundup_len(src_len));
-  p_res->Typ = TempString;
-  as_nonz_dynstr_append_raw(&p_res->Contents.str, p_src, src_len);
+void as_tempres_set_str_raw(TempResult* p_res, char const* p_src, size_t src_len) {
+    if (p_res->Typ != TempString) {
+        as_nonz_dynstr_ini(&p_res->Contents.str, as_nonz_dynstr_roundup_len(src_len));
+    }
+    p_res->Typ = TempString;
+    as_nonz_dynstr_append_raw(&p_res->Contents.str, p_src, src_len);
 }
 
 /*!------------------------------------------------------------------------
@@ -125,9 +126,8 @@ void as_tempres_set_str_raw(TempResult *p_res, const char *p_src, size_t src_len
  * \param  p_src string value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_c_str(TempResult *p_res, const char *p_src)
-{
-  as_tempres_set_str_raw(p_res, p_src, strlen(p_src));
+void as_tempres_set_c_str(TempResult* p_res, char const* p_src) {
+    as_tempres_set_str_raw(p_res, p_src, strlen(p_src));
 }
 
 /*!------------------------------------------------------------------------
@@ -137,12 +137,12 @@ void as_tempres_set_c_str(TempResult *p_res, const char *p_src)
  * \param  p_value register value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_reg(TempResult *p_res, const tRegDescr *p_value)
-{
-  if (p_res->Typ == TempString)
-    as_nonz_dynstr_free(&p_res->Contents.str);
-  p_res->Typ = TempReg;
-  p_res->Contents.RegDescr = *p_value;
+void as_tempres_set_reg(TempResult* p_res, tRegDescr const* p_value) {
+    if (p_res->Typ == TempString) {
+        as_nonz_dynstr_free(&p_res->Contents.str);
+    }
+    p_res->Typ               = TempReg;
+    p_res->Contents.RegDescr = *p_value;
 }
 
 /*!------------------------------------------------------------------------
@@ -152,25 +152,23 @@ void as_tempres_set_reg(TempResult *p_res, const tRegDescr *p_value)
  * \param  p_src source
  * ------------------------------------------------------------------------ */
 
-void as_tempres_copy_value(TempResult *p_dest, const TempResult *p_src)
-{
-  switch (p_src->Typ)
-  {
+void as_tempres_copy_value(TempResult* p_dest, TempResult const* p_src) {
+    switch (p_src->Typ) {
     case TempInt:
-      as_tempres_set_int(p_dest, p_src->Contents.Int);
-      break;
+        as_tempres_set_int(p_dest, p_src->Contents.Int);
+        break;
     case TempFloat:
-      as_tempres_set_float(p_dest, p_src->Contents.Float);
-      break;
+        as_tempres_set_float(p_dest, p_src->Contents.Float);
+        break;
     case TempString:
-      as_tempres_set_str(p_dest, &p_src->Contents.str);
-      break;
+        as_tempres_set_str(p_dest, &p_src->Contents.str);
+        break;
     case TempReg:
-      as_tempres_set_reg(p_dest, &p_src->Contents.RegDescr);
-      break;
+        as_tempres_set_reg(p_dest, &p_src->Contents.RegDescr);
+        break;
     default:
-      as_tempres_set_none(p_dest);
-  }
+        as_tempres_set_none(p_dest);
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -180,13 +178,12 @@ void as_tempres_copy_value(TempResult *p_dest, const TempResult *p_src)
  * \param  p_src source
  * ------------------------------------------------------------------------ */
 
-void as_tempres_copy(TempResult *p_dest, const TempResult *p_src)
-{
-  as_tempres_copy_value(p_dest, p_src);
-  p_dest->Flags = p_src->Flags;
-  p_dest->AddrSpaceMask = p_src->AddrSpaceMask;
-  p_dest->DataSize = p_src->DataSize;
-  p_dest->Relocs = p_src->Relocs;
+void as_tempres_copy(TempResult* p_dest, TempResult const* p_src) {
+    as_tempres_copy_value(p_dest, p_src);
+    p_dest->Flags         = p_src->Flags;
+    p_dest->AddrSpaceMask = p_src->AddrSpaceMask;
+    p_dest->DataSize      = p_src->DataSize;
+    p_dest->Relocs        = p_src->Relocs;
 }
 
 /*!------------------------------------------------------------------------
@@ -196,21 +193,19 @@ void as_tempres_copy(TempResult *p_dest, const TempResult *p_src)
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
-int TempResultToFloat(TempResult *pResult)
-{
-  switch (pResult->Typ)
-  {
+int TempResultToFloat(TempResult* pResult) {
+    switch (pResult->Typ) {
     case TempInt:
-      pResult->Contents.Float = pResult->Contents.Int;
-      pResult->Typ = TempFloat;
-      break;
+        pResult->Contents.Float = pResult->Contents.Int;
+        pResult->Typ            = TempFloat;
+        break;
     case TempFloat:
-      break;
+        break;
     default:
-      as_tempres_set_none(pResult);
-      return -1;
-  }
-  return 0;
+        as_tempres_set_none(pResult);
+        return -1;
+    }
+    return 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -221,37 +216,37 @@ int TempResultToFloat(TempResult *pResult)
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
-int as_tempres_append_dynstr(as_dynstr_t *p_dest, const TempResult *pResult)
-{
-  switch (pResult->Typ)
-  {
+int as_tempres_append_dynstr(as_dynstr_t* p_dest, TempResult const* pResult) {
+    switch (pResult->Typ) {
     case TempInt:
-      as_sdprcatf(p_dest, "%" PRId64, pResult->Contents.Int);
-      break;
+        as_sdprcatf(p_dest, "%" PRId64, pResult->Contents.Int);
+        break;
     case TempFloat:
-      as_sdprcatf(p_dest, "%0.16e", pResult->Contents.Float);
-      KillBlanks(p_dest->p_str);
-      break;
-    case TempString:
-    {
-      char quote_chr = (pResult->Flags & eSymbolFlag_StringSingleQuoted) ? '\'' : '"';
-      const char *p_run, *p_end;
+        as_sdprcatf(p_dest, "%0.16e", pResult->Contents.Float);
+        KillBlanks(p_dest->p_str);
+        break;
+    case TempString: {
+        char quote_chr = (pResult->Flags & eSymbolFlag_StringSingleQuoted) ? '\'' : '"';
+        char const *p_run, *p_end;
 
-      as_sdprcatf(p_dest, "%c", quote_chr);
-      for (p_run = pResult->Contents.str.p_str, p_end = p_run + pResult->Contents.str.len;
-           p_run < p_end; p_run++)
-        if ((*p_run == '\\') || (*p_run == quote_chr))
-          as_sdprcatf(p_dest, "\\%c", *p_run);
-        else if (!isprint(*p_run))
-          as_sdprcatf(p_dest, "\\%03d", *p_run);
-        else
-          as_sdprcatf(p_dest, "%c", *p_run);
+        as_sdprcatf(p_dest, "%c", quote_chr);
+        for (p_run = pResult->Contents.str.p_str,
+            p_end  = p_run + pResult->Contents.str.len;
+             p_run < p_end; p_run++) {
+            if ((*p_run == '\\') || (*p_run == quote_chr)) {
+                as_sdprcatf(p_dest, "\\%c", *p_run);
+            } else if (!isprint(*p_run)) {
+                as_sdprcatf(p_dest, "\\%03d", *p_run);
+            } else {
+                as_sdprcatf(p_dest, "%c", *p_run);
+            }
+        }
 
-      as_sdprcatf(p_dest, "%c", quote_chr);
-      break;
+        as_sdprcatf(p_dest, "%c", quote_chr);
+        break;
     }
     default:
-      return -1;
-  }
-  return 0;
+        return -1;
+    }
+    return 0;
 }

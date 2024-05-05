@@ -12,6 +12,6 @@
 
 #include "asmitree.h"
 
-int InstrZ;
-int AdrCnt;
+int        InstrZ;
+int        AdrCnt;
 PInstTable InstTable;

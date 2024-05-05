@@ -11,25 +11,33 @@
 /*****************************************************************************/
 
 #define MFontEmphasized (1 << FontEmphasized)
-#define MFontBold (1 << FontBold)
-#define MFontTeletype (1 << FontTeletype)
-#define MFontItalic (1 << FontItalic)
+#define MFontBold       (1 << FontBold)
+#define MFontTeletype   (1 << FontTeletype)
+#define MFontItalic     (1 << FontItalic)
 
 /*--------------------------------------------------------------------------*/
 
-typedef enum
-{
-  FontTiny, FontSmall, FontNormalSize, FontLarge, FontHuge
+typedef enum {
+    FontTiny,
+    FontSmall,
+    FontNormalSize,
+    FontLarge,
+    FontHuge
 } tFontSize;
 
-typedef enum
-{
-  FontStandard, FontEmphasized, FontBold, FontTeletype, FontItalic, FontSuper, FontCnt
+typedef enum {
+    FontStandard,
+    FontEmphasized,
+    FontBold,
+    FontTeletype,
+    FontItalic,
+    FontSuper,
+    FontCnt
 } tFontType;
 
 /*--------------------------------------------------------------------------*/
 
-extern int CurrFontFlags, FontNest;
+extern int       CurrFontFlags, FontNest;
 extern tFontSize CurrFontSize;
 extern tFontType CurrFontType;
 

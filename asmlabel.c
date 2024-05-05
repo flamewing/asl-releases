@@ -13,23 +13,24 @@
  * ------------------------------------------------------------------------ */
 
 #include "stdinc.h"
-#include <string.h>
-
-#include "asmdef.h"
-#include "asmsub.h"
-#include "asmpars.h"
-#include "asmstructs.h"
-#include "strcomp.h"
 
 #include "asmlabel.h"
+
+#include "asmdef.h"
+#include "asmpars.h"
+#include "asmstructs.h"
+#include "asmsub.h"
+#include "strcomp.h"
+
+#include <string.h>
 
 /* ------------------------------------------------------------------------
  * Local Variables
  * ------------------------------------------------------------------------ */
 
-static PStructElem pLabelElement;
-static struct sSymbolEntry *pLabelEntry;
-static LargeWord LabelValue;
+static PStructElem          pLabelElement;
+static struct sSymbolEntry* pLabelEntry;
+static LargeWord            LabelValue;
 
 /* ------------------------------------------------------------------------
  * Global Functions
@@ -40,11 +41,10 @@ static LargeWord LabelValue;
  * \brief  reset state about most recent label
  * ------------------------------------------------------------------------ */
 
-void LabelReset(void)
-{
-  pLabelElement = NULL;
-  pLabelEntry = NULL;
-  LabelValue = (LargeWord)-1;
+void LabelReset(void) {
+    pLabelElement = NULL;
+    pLabelEntry   = NULL;
+    LabelValue    = (LargeWord)-1;
 }
 
 /*!------------------------------------------------------------------------
@@ -53,36 +53,38 @@ void LabelReset(void)
  * \return True if label is present
  * ------------------------------------------------------------------------ */
 
-Boolean LabelPresent(void)
-{
-  if (!*LabPart.str.p_str)
-    return False;
-  if (IsDef())
-    return False;
-
-  switch (*OpPart.str.p_str)
-  {
-    case '=':
-      return (!Memo("="));
-    case ':':
-      return (!Memo(":="));
-    case 'M':
-      return (!Memo("MACRO"));
-    case 'F':
-      return (!Memo("FUNCTION"));
-    case 'L':
-      return (!Memo("LABEL"));
-    case 'S':
-      return (!Memo("SET") || SetIsOccupied()) && (!(Memo("STRUCT") || Memo("STRUC")));
-    case 'E':
-      if (Memo("EQU") || Memo("ENDSTRUCT") || Memo("ENDS") || Memo("ENDSTRUC") || Memo("ENDUNION"))
+Boolean LabelPresent(void) {
+    if (!*LabPart.str.p_str) {
         return False;
-      return !Memo("EVAL");
+    }
+    if (IsDef()) {
+        return False;
+    }
+
+    switch (*OpPart.str.p_str) {
+    case '=':
+        return (!Memo("="));
+    case ':':
+        return (!Memo(":="));
+    case 'M':
+        return (!Memo("MACRO"));
+    case 'F':
+        return (!Memo("FUNCTION"));
+    case 'L':
+        return (!Memo("LABEL"));
+    case 'S':
+        return (!Memo("SET") || SetIsOccupied()) && (!(Memo("STRUCT") || Memo("STRUC")));
+    case 'E':
+        if (Memo("EQU") || Memo("ENDSTRUCT") || Memo("ENDS") || Memo("ENDSTRUC")
+            || Memo("ENDUNION")) {
+            return False;
+        }
+        return !Memo("EVAL");
     case 'U':
-      return (!Memo("UNION"));
+        return (!Memo("UNION"));
     default:
-      return True;
-  }
+        return True;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -93,42 +95,44 @@ Boolean LabelPresent(void)
  * \param  ForceGlobal force visibility outside macro body
  * ------------------------------------------------------------------------ */
 
-void LabelHandle(const tStrComp *pName, LargeWord Value, Boolean ForceGlobal)
-{
-  pLabelElement = NULL;
-  pLabelEntry = NULL;
+void LabelHandle(tStrComp const* pName, LargeWord Value, Boolean ForceGlobal) {
+    pLabelElement = NULL;
+    pLabelEntry   = NULL;
 
-  /* structure element ? */
+    /* structure element ? */
 
-  if (pInnermostNamedStruct)
-  {
-    pLabelElement = CreateStructElem(pName);
-    if (!pLabelElement)
-      return;
+    if (pInnermostNamedStruct) {
+        pLabelElement = CreateStructElem(pName);
+        if (!pLabelElement) {
+            return;
+        }
 
-    pLabelElement->Offset = Value;
-    if (AddStructElem(pInnermostNamedStruct->StructRec, pLabelElement))
-      AddStructSymbol(pLabelElement->pElemName, Value);
-  }
-
-  /* normal label */
-
-  else
-  {
-    if (ForceGlobal)
-      PushLocHandle(-1);
-    if (RelSegs)
-      pLabelEntry = EnterRelSymbol(pName, Value, (as_addrspace_t)ActPC, False);
-    else
-    {
-      pLabelEntry = EnterIntSymbolWithFlags(pName, Value, (as_addrspace_t)ActPC, False,
-                              eSymbolFlag_Label |
-                              (Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR : eSymbolFlag_None));
+        pLabelElement->Offset = Value;
+        if (AddStructElem(pInnermostNamedStruct->StructRec, pLabelElement)) {
+            AddStructSymbol(pLabelElement->pElemName, Value);
+        }
     }
-    if (ForceGlobal)
-      PopLocHandle();
-  }
-  LabelValue = Value;
+
+    /* normal label */
+
+    else {
+        if (ForceGlobal) {
+            PushLocHandle(-1);
+        }
+        if (RelSegs) {
+            pLabelEntry = EnterRelSymbol(pName, Value, (as_addrspace_t)ActPC, False);
+        } else {
+            pLabelEntry = EnterIntSymbolWithFlags(
+                    pName, Value, (as_addrspace_t)ActPC, False,
+                    eSymbolFlag_Label
+                            | (Value == AfterBSRAddr ? eSymbolFlag_NextLabelAfterBSR
+                                                     : eSymbolFlag_None));
+        }
+        if (ForceGlobal) {
+            PopLocHandle();
+        }
+    }
+    LabelValue = Value;
 }
 
 /*!------------------------------------------------------------------------
@@ -138,16 +142,16 @@ void LabelHandle(const tStrComp *pName, LargeWord Value, Boolean ForceGlobal)
  * \param  NewValue new value to assign
  * ------------------------------------------------------------------------ */
 
-void LabelModify(LargeWord OldValue, LargeWord NewValue)
-{
-  if (OldValue == LabelValue)
-  {
-    if (pLabelElement)
-      pLabelElement->Offset = NewValue;
-    if (pLabelEntry)
-      ChangeSymbol(pLabelEntry, NewValue);
-    LabelValue = NewValue;
-  }
+void LabelModify(LargeWord OldValue, LargeWord NewValue) {
+    if (OldValue == LabelValue) {
+        if (pLabelElement) {
+            pLabelElement->Offset = NewValue;
+        }
+        if (pLabelEntry) {
+            ChangeSymbol(pLabelEntry, NewValue);
+        }
+        LabelValue = NewValue;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -155,9 +159,8 @@ void LabelModify(LargeWord OldValue, LargeWord NewValue)
  * \brief  Initializations before passing through sources
  * ------------------------------------------------------------------------ */
 
-void AsmLabelPassInit(void)
-{
-  LabelReset();
+void AsmLabelPassInit(void) {
+    LabelReset();
 }
 
 /*!------------------------------------------------------------------------
@@ -165,7 +168,6 @@ void AsmLabelPassInit(void)
  * \brief  Initializations once at startup
  * ------------------------------------------------------------------------ */
 
-void asmlabel_init(void)
-{
-  LabelReset();
+void asmlabel_init(void) {
+    LabelReset();
 }

@@ -19,7 +19,7 @@
 
 extern LongInt SectSymbolCounter;
 
-extern PPatchEntry PatchList, PatchLast;
+extern PPatchEntry  PatchList, PatchLast;
 extern PExportEntry ExportList, ExportLast;
 
 extern void DreheCodes(void);

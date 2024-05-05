@@ -14,156 +14,157 @@
 
 #include "stdinc.h"
 
-#include "bpemu.h"
-#include "asmdef.h"
-#include "asmsub.h"
-#include "asmpars.h"
-#include "errmsg.h"
-
 #include "fourpseudo.h"
 
-void DecodeRES(Word Code)
-{
-  UNUSED(Code);
+#include "asmdef.h"
+#include "asmpars.h"
+#include "asmsub.h"
+#include "bpemu.h"
+#include "errmsg.h"
 
-  if (ChkArgCnt(1, 1))
-  {
-    Boolean ValOK;
-    tSymbolFlags Flags;
-    Word Size;
+void DecodeRES(Word Code) {
+    UNUSED(Code);
 
-    Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
-    if (mFirstPassUnknown(Flags)) WrError(ErrNum_FirstPassCalc);
-    if (ValOK && !mFirstPassUnknown(Flags))
-    {
-      DontPrint = True;
-      if (!Size) WrError(ErrNum_NullResMem);
-      CodeLen = Size;
-      BookKeeping();
+    if (ChkArgCnt(1, 1)) {
+        Boolean      ValOK;
+        tSymbolFlags Flags;
+        Word         Size;
+
+        Size = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &Flags);
+        if (mFirstPassUnknown(Flags)) {
+            WrError(ErrNum_FirstPassCalc);
+        }
+        if (ValOK && !mFirstPassUnknown(Flags)) {
+            DontPrint = True;
+            if (!Size) {
+                WrError(ErrNum_NullResMem);
+            }
+            CodeLen = Size;
+            BookKeeping();
+        }
     }
-  }
 }
 
-void DecodeDATA(IntType CodeIntType, IntType DataIntType)
-{
-  Boolean ValOK;
-  TempResult t;
-  int z;
-  IntType ValIntType = (ActPC == SegData) ? DataIntType : CodeIntType;
-  LargeWord ValMask = IntTypeDefs[ValIntType].Mask;
-  Word MaxMultCharLen = (Lo(IntTypeDefs[ValIntType].SignAndWidth) + 7) / 8;
-  LargeWord UnknownMask = ValMask / 2;
+void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
+    Boolean    ValOK;
+    TempResult t;
+    int        z;
+    IntType    ValIntType     = (ActPC == SegData) ? DataIntType : CodeIntType;
+    LargeWord  ValMask        = IntTypeDefs[ValIntType].Mask;
+    Word       MaxMultCharLen = (Lo(IntTypeDefs[ValIntType].SignAndWidth) + 7) / 8;
+    LargeWord  UnknownMask    = ValMask / 2;
 
-  as_tempres_ini(&t);
-  if (ChkArgCnt(1, ArgCntMax))
-  {
-    ValOK = True;
-    for (z = 1; ValOK && (z <= ArgCnt); z++)
-    {
-      EvalStrExpression(&ArgStr[z], &t);
-      if ((t.Typ == TempInt) && mFirstPassUnknown(t.Flags))
-        t.Contents.Int &= UnknownMask;
-
-      switch (t.Typ)
-      {
-        case TempFloat:
-          WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
-          ValOK = False;
-          break;
-        case TempString:
-        {
-          unsigned char *cp;
-          unsigned z2;
-          int bpos;
-          LongWord TransCh;
-
-          if (MultiCharToInt(&t, MaxMultCharLen))
-            goto ToInt;
-
-          for (z2 = 0, cp = (unsigned char *)t.Contents.str.p_str, bpos = 0;
-               z2 < t.Contents.str.len;
-               z2++, cp++)
-          {
-            TransCh = CharTransTable[((usint)*cp) & 0xff];
-
-            /* word width 24..31 bits: pack three characters into one dword */
-
-            if (ValMask >= 0xfffffful)
-            {
-              if (!bpos)
-                DAsmCode[CodeLen++] = TransCh;
-              else if (1 == bpos)
-                DAsmCode[CodeLen - 1] |= TransCh << 8;
-              else
-                DAsmCode[CodeLen - 1] |= TransCh << 16;
-              if (++bpos >= 3)
-                bpos = 0;
+    as_tempres_ini(&t);
+    if (ChkArgCnt(1, ArgCntMax)) {
+        ValOK = True;
+        for (z = 1; ValOK && (z <= ArgCnt); z++) {
+            EvalStrExpression(&ArgStr[z], &t);
+            if ((t.Typ == TempInt) && mFirstPassUnknown(t.Flags)) {
+                t.Contents.Int &= UnknownMask;
             }
 
-            /* word width 17..23 bits: pack two characters into one dword */
+            switch (t.Typ) {
+            case TempFloat:
+                WrStrErrorPos(ErrNum_StringOrIntButFloat, &ArgStr[z]);
+                ValOK = False;
+                break;
+            case TempString: {
+                unsigned char* cp;
+                unsigned       z2;
+                int            bpos;
+                LongWord       TransCh;
 
-            else if (ValMask > 0xfffful)
-            {
-              if (!bpos)
-                DAsmCode[CodeLen++] = TransCh;
-              else
-                DAsmCode[CodeLen - 1] |= TransCh << 8;
-              if (++bpos >= 2)
-                bpos = 0;
+                if (MultiCharToInt(&t, MaxMultCharLen)) {
+                    goto ToInt;
+                }
+
+                for (z2 = 0, cp = (unsigned char*)t.Contents.str.p_str, bpos = 0;
+                     z2 < t.Contents.str.len; z2++, cp++) {
+                    TransCh = CharTransTable[((usint)*cp) & 0xff];
+
+                    /* word width 24..31 bits: pack three characters into one dword */
+
+                    if (ValMask >= 0xfffffful) {
+                        if (!bpos) {
+                            DAsmCode[CodeLen++] = TransCh;
+                        } else if (1 == bpos) {
+                            DAsmCode[CodeLen - 1] |= TransCh << 8;
+                        } else {
+                            DAsmCode[CodeLen - 1] |= TransCh << 16;
+                        }
+                        if (++bpos >= 3) {
+                            bpos = 0;
+                        }
+                    }
+
+                    /* word width 17..23 bits: pack two characters into one dword */
+
+                    else if (ValMask > 0xfffful) {
+                        if (!bpos) {
+                            DAsmCode[CodeLen++] = TransCh;
+                        } else {
+                            DAsmCode[CodeLen - 1] |= TransCh << 8;
+                        }
+                        if (++bpos >= 2) {
+                            bpos = 0;
+                        }
+                    }
+
+                    /* word width 16 bits: pack two characters into one word */
+
+                    else if (ValMask == 0xfffful) {
+                        if (!bpos) {
+                            WAsmCode[CodeLen++] = TransCh;
+                        } else {
+                            WAsmCode[CodeLen - 1] |= TransCh << 8;
+                        }
+                        if (++bpos >= 2) {
+                            bpos = 0;
+                        }
+                    }
+
+                    /* word width 9..15 bits: pack one character into one word */
+
+                    else if (ValMask > 0xff) {
+                        WAsmCode[CodeLen++] = TransCh;
+                    }
+
+                    /* word width 8 bits: pack one character into one byte */
+
+                    else if (ValMask == 0xff) {
+                        BAsmCode[CodeLen++] = TransCh;
+                    }
+
+                    /* word width 4...7 bits: pack one character into two nibbles */
+
+                    else {
+                        BAsmCode[CodeLen++] = TransCh >> 4;
+                        BAsmCode[CodeLen++] = TransCh & 15;
+                    }
+                }
+                break;
             }
-
-            /* word width 16 bits: pack two characters into one word */
-
-            else if (ValMask == 0xfffful)
-            {
-              if (!bpos)
-                WAsmCode[CodeLen++] = TransCh;
-              else
-                WAsmCode[CodeLen - 1] |= TransCh << 8;
-              if (++bpos >= 2)
-                bpos = 0;
+            case TempInt:
+            ToInt:
+                if (!mSymbolQuestionable(t.Flags)
+                    && !RangeCheck(t.Contents.Int, ValIntType)) {
+                    WrError(ErrNum_OverRange);
+                    ValOK = False;
+                } else if (ValMask <= 0xff) {
+                    BAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+                } else if (ValMask <= 0xfffful) {
+                    WAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+                } else {
+                    DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
+                }
+                break;
+            default:
+                ValOK = False;
             }
-
-            /* word width 9..15 bits: pack one character into one word */
-
-            else if (ValMask > 0xff)
-              WAsmCode[CodeLen++] = TransCh;
-
-            /* word width 8 bits: pack one character into one byte */
-
-            else if (ValMask == 0xff)
-              BAsmCode[CodeLen++] = TransCh;
-
-            /* word width 4...7 bits: pack one character into two nibbles */
-
-            else
-            {
-              BAsmCode[CodeLen++] = TransCh >> 4;
-              BAsmCode[CodeLen++] = TransCh & 15;
-            }
-          }
-          break;
         }
-        case TempInt:
-        ToInt:
-          if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, ValIntType))
-          {
-            WrError(ErrNum_OverRange);
-            ValOK = False;
-          }
-          else if (ValMask <= 0xff)
-            BAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          else if (ValMask <= 0xfffful)
-            WAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          else
-            DAsmCode[CodeLen++] = t.Contents.Int & ValMask;
-          break;
-        default:
-          ValOK = False;
-      }
+        if (!ValOK) {
+            CodeLen = 0;
+        }
     }
-    if (!ValOK)
-      CodeLen = 0;
-  }
-  as_tempres_free(&t);
+    as_tempres_free(&t);
 }

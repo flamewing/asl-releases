@@ -13,14 +13,13 @@
 #include "datatypes.h"
 #include "tempresult.h"
 
-typedef struct
-{
-  const char *pName;
-  Byte MinNumArgs, MaxNumArgs;
-  Byte ArgTypes[3];
-  void (*pFunc)(TempResult *pErg, const TempResult *pArgs, unsigned ArgCnt);
+typedef struct {
+    char const* pName;
+    Byte        MinNumArgs, MaxNumArgs;
+    Byte        ArgTypes[3];
+    void (*pFunc)(TempResult* pErg, TempResult const* pArgs, unsigned ArgCnt);
 } tFunction;
 
-extern const tFunction Functions[];
+extern tFunction const Functions[];
 
 #endif /* FUNCTION_H */

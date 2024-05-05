@@ -18,17 +18,17 @@ extern void InitFileList(void);
 
 extern void ClearFileList(void);
 
-extern void AddFile(char *FName);
+extern void AddFile(char* FName);
 
-extern Integer GetFileNum(char *Name);
+extern Integer GetFileNum(char* Name);
 
-extern const char *GetFileName(int Num);
+extern char const* GetFileName(int Num);
 
 extern Integer GetFileCount(void);
 
 extern void AddAddressRange(int File, LargeWord Start, LargeWord Len);
 
-extern void GetAddressRange(int File, LargeWord *Start, LargeWord *End);
+extern void GetAddressRange(int File, LargeWord* Start, LargeWord* End);
 
 extern void ResetAddressRanges(void);
 

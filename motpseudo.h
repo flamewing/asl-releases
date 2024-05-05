@@ -25,7 +25,7 @@ extern void DecodeMotoDFS(Word Code);
 
 extern Boolean DecodeMotoPseudo(Boolean Turn);
 
-extern void ConvertMotoFloatDec(Double F, Byte *pDest, Boolean NeedsBig);
+extern void ConvertMotoFloatDec(Double F, Byte* pDest, Boolean NeedsBig);
 
 extern void AddMoto16PseudoONOFF(void);
 
@@ -33,8 +33,9 @@ extern void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn);
 
 extern Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean Turn);
 
-extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize *pResult, Boolean Allow24);
+extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize* pResult, Boolean Allow24);
 
-extern Boolean DecodeMoto16AttrSizeStr(const struct sStrComp *pSizeSpec, tSymbolSize *pResult, Boolean Allow24);
+extern Boolean DecodeMoto16AttrSizeStr(
+        const struct sStrComp* pSizeSpec, tSymbolSize* pResult, Boolean Allow24);
 
 #endif /* MOTPSEUDO_H */

@@ -12,12 +12,11 @@
 
 #include "datatypes.h"
 
-typedef enum
-{
-  eSyntaxNeither = 0,
-  eSyntax808x = 1,
-  eSyntaxZ80 = 2,
-  eSyntaxBoth = 3
+typedef enum {
+    eSyntaxNeither = 0,
+    eSyntax808x    = 1,
+    eSyntaxZ80     = 2,
+    eSyntaxBoth    = 3
 } tZ80Syntax;
 
 extern tZ80Syntax CurrZ80Syntax;
@@ -26,12 +25,11 @@ extern tZ80Syntax CurrZ80Syntax;
  * Global Functions
  *****************************************************************************/
 
-enum
-{
-  eIntPseudoFlag_None = 0,
-  eIntPseudoFlag_BigEndian = 1 << 0,
-  eIntPseudoFlag_AllowInt = 1 << 1,
-  eIntPseudoFlag_AllowFloat = 1 << 2
+enum {
+    eIntPseudoFlag_None       = 0,
+    eIntPseudoFlag_BigEndian  = 1 << 0,
+    eIntPseudoFlag_AllowInt   = 1 << 1,
+    eIntPseudoFlag_AllowFloat = 1 << 2
 };
 
 extern void DecodeIntelDN(Word Flags);

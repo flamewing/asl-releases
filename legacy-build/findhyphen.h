@@ -10,11 +10,11 @@
 #define HYPHEN_CHR_UE "\334"
 #define HYPHEN_CHR_sz "\337"
 
-extern void BuildTree(char **Patterns);
+extern void BuildTree(char** Patterns);
 
-extern void AddException(char *Name);
+extern void AddException(char* Name);
 
-extern void DoHyphens(char *word, int **posis, int *posicnt);
+extern void DoHyphens(char* word, int** posis, int* posicnt);
 
 extern void DestroyTree(void);
 #endif /* FINDHYPHEN_H */

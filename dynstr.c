@@ -8,20 +8,18 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-
 #include "dynstr.h"
 
-static void check_dynamic(const as_dynstr_t *p_str)
-{
-  if (!p_str->dynamic)
-  {
-    fprintf(stderr, "attemt to resize non-dynamic string\n");
-    abort();
-  }
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static void check_dynamic(as_dynstr_t const* p_str) {
+    if (!p_str->dynamic) {
+        fprintf(stderr, "attemt to resize non-dynamic string\n");
+        abort();
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -31,12 +29,11 @@ static void check_dynamic(const as_dynstr_t *p_str)
  * \param  AllocLen initial alloc length
  * ------------------------------------------------------------------------ */
 
-void as_dynstr_ini(as_dynstr_t *p_str, size_t ini_capacity)
-{
-  p_str->p_str = (char*)malloc(ini_capacity);
-  p_str->capacity = p_str->p_str ? ini_capacity : 0;
-  p_str->dynamic = !!p_str->p_str;
-  memset(p_str->p_str, 0, p_str->capacity);
+void as_dynstr_ini(as_dynstr_t* p_str, size_t ini_capacity) {
+    p_str->p_str    = (char*)malloc(ini_capacity);
+    p_str->capacity = p_str->p_str ? ini_capacity : 0;
+    p_str->dynamic  = !!p_str->p_str;
+    memset(p_str->p_str, 0, p_str->capacity);
 }
 
 /*!------------------------------------------------------------------------
@@ -46,20 +43,16 @@ void as_dynstr_ini(as_dynstr_t *p_str, size_t ini_capacity)
  * \param  p_src string to clone
  * ------------------------------------------------------------------------ */
 
-void as_dynstr_ini_clone(as_dynstr_t *p_str, const as_dynstr_t *p_src)
-{
-  p_str->p_str = (char*)malloc(p_src->capacity);
-  if (p_str->p_str)
-  {
-    strcpy(p_str->p_str, p_src->p_str);
-    p_str->capacity = p_src->capacity;
-    p_str->dynamic = 1;
-  }
-  else
-  {
-    p_str->capacity = 0;
-    p_str->dynamic = 0;
-  }
+void as_dynstr_ini_clone(as_dynstr_t* p_str, as_dynstr_t const* p_src) {
+    p_str->p_str = (char*)malloc(p_src->capacity);
+    if (p_str->p_str) {
+        strcpy(p_str->p_str, p_src->p_str);
+        p_str->capacity = p_src->capacity;
+        p_str->dynamic  = 1;
+    } else {
+        p_str->capacity = 0;
+        p_str->dynamic  = 0;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -69,22 +62,18 @@ void as_dynstr_ini_clone(as_dynstr_t *p_str, const as_dynstr_t *p_src)
  * \param  p_src init source
  * ------------------------------------------------------------------------ */
 
-void as_dynstr_ini_c_str(as_dynstr_t *p_str, const char *p_src)
-{
-  size_t capacity = as_dynstr_roundup_len(strlen(p_src));
+void as_dynstr_ini_c_str(as_dynstr_t* p_str, char const* p_src) {
+    size_t capacity = as_dynstr_roundup_len(strlen(p_src));
 
-  p_str->p_str = (char*)malloc(capacity);
-  if (p_str->p_str)
-  {
-    strcpy(p_str->p_str, p_src);
-    p_str->capacity = capacity;
-    p_str->dynamic = 1;
-  }
-  else
-  {
-    p_str->capacity = 0;
-    p_str->dynamic = 0;
-  }
+    p_str->p_str = (char*)malloc(capacity);
+    if (p_str->p_str) {
+        strcpy(p_str->p_str, p_src);
+        p_str->capacity = capacity;
+        p_str->dynamic  = 1;
+    } else {
+        p_str->capacity = 0;
+        p_str->dynamic  = 0;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -95,26 +84,25 @@ void as_dynstr_ini_c_str(as_dynstr_t *p_str, const char *p_src)
  * \return 0 if success or error code
  * ------------------------------------------------------------------------ */
 
-int as_dynstr_realloc(as_dynstr_t *p_str, size_t new_capacity)
-{
-  char *p_new;
-  size_t old_capacity;
+int as_dynstr_realloc(as_dynstr_t* p_str, size_t new_capacity) {
+    char*  p_new;
+    size_t old_capacity;
 
-  check_dynamic(p_str);
-  p_new = (char*)realloc(p_str->p_str, new_capacity);
-  old_capacity = p_str->capacity;
-  if (p_new)
-  {
-    p_str->p_str = p_new;
-    p_str->capacity = new_capacity;
-    if (new_capacity > old_capacity)
-      memset(p_str->p_str + old_capacity, 0, new_capacity - old_capacity);
-    else if (new_capacity > 0)
-      p_str->p_str[new_capacity - 1] = '\0';
-    return 0;
-  }
-  else
-    return ENOMEM;
+    check_dynamic(p_str);
+    p_new        = (char*)realloc(p_str->p_str, new_capacity);
+    old_capacity = p_str->capacity;
+    if (p_new) {
+        p_str->p_str    = p_new;
+        p_str->capacity = new_capacity;
+        if (new_capacity > old_capacity) {
+            memset(p_str->p_str + old_capacity, 0, new_capacity - old_capacity);
+        } else if (new_capacity > 0) {
+            p_str->p_str[new_capacity - 1] = '\0';
+        }
+        return 0;
+    } else {
+        return ENOMEM;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -123,13 +111,13 @@ int as_dynstr_realloc(as_dynstr_t *p_str, size_t new_capacity)
  * \param  p_str string to handle
  * ------------------------------------------------------------------------ */
 
-void as_dynstr_free(as_dynstr_t *p_str)
-{
-  if (p_str->dynamic && p_str->p_str)
-    free(p_str->p_str);
-  p_str->p_str = NULL;
-  p_str->capacity = 0;
-  p_str->dynamic = 0;
+void as_dynstr_free(as_dynstr_t* p_str) {
+    if (p_str->dynamic && p_str->p_str) {
+        free(p_str->p_str);
+    }
+    p_str->p_str    = NULL;
+    p_str->capacity = 0;
+    p_str->dynamic  = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -140,9 +128,8 @@ void as_dynstr_free(as_dynstr_t *p_str)
  * \return actual # of characters copied
  * ------------------------------------------------------------------------ */
 
-size_t as_dynstr_copy(as_dynstr_t *p_dest, const as_dynstr_t *p_src)
-{
-  return as_dynstr_copy_c_str(p_dest, p_src->p_str);
+size_t as_dynstr_copy(as_dynstr_t* p_dest, as_dynstr_t const* p_src) {
+    return as_dynstr_copy_c_str(p_dest, p_src->p_str);
 }
 
 /*!------------------------------------------------------------------------
@@ -153,18 +140,19 @@ size_t as_dynstr_copy(as_dynstr_t *p_dest, const as_dynstr_t *p_src)
  * \return actual # of characters copied
  * ------------------------------------------------------------------------ */
 
-size_t as_dynstr_copy_c_str(as_dynstr_t *p_dest, const char *p_src)
-{
-  size_t len = strlen(p_src);
+size_t as_dynstr_copy_c_str(as_dynstr_t* p_dest, char const* p_src) {
+    size_t len = strlen(p_src);
 
-  if ((len >= p_dest->capacity) && p_dest->dynamic)
-    as_dynstr_realloc(p_dest, as_dynstr_roundup_len(len));
+    if ((len >= p_dest->capacity) && p_dest->dynamic) {
+        as_dynstr_realloc(p_dest, as_dynstr_roundup_len(len));
+    }
 
-  if (len >= p_dest->capacity)
-    len = p_dest->capacity - 1;
-  memcpy(p_dest->p_str, p_src, len);
-  p_dest->p_str[len] = '\0';
-  return len;
+    if (len >= p_dest->capacity) {
+        len = p_dest->capacity - 1;
+    }
+    memcpy(p_dest->p_str, p_src, len);
+    p_dest->p_str[len] = '\0';
+    return len;
 }
 
 /*!------------------------------------------------------------------------
@@ -175,18 +163,18 @@ size_t as_dynstr_copy_c_str(as_dynstr_t *p_dest, const char *p_src)
  * \return actual # of bytes transferred
  * ------------------------------------------------------------------------ */
 
-size_t as_dynstr_append_c_str(as_dynstr_t *p_dest, const char *p_src)
-{
-  size_t src_len = strlen(p_src),
-         dest_len = strlen(p_dest->p_str);
+size_t as_dynstr_append_c_str(as_dynstr_t* p_dest, char const* p_src) {
+    size_t src_len = strlen(p_src), dest_len = strlen(p_dest->p_str);
 
-  if (dest_len + src_len + 1 > p_dest->capacity)
-    as_dynstr_realloc(p_dest, as_dynstr_roundup_len(dest_len + src_len));
-  if (src_len >= p_dest->capacity - dest_len)
-    src_len = p_dest->capacity - dest_len - 1;
-  memcpy(p_dest->p_str + dest_len, p_src, src_len);
-  p_dest->p_str[dest_len + src_len] = '\0';
-  return src_len;
+    if (dest_len + src_len + 1 > p_dest->capacity) {
+        as_dynstr_realloc(p_dest, as_dynstr_roundup_len(dest_len + src_len));
+    }
+    if (src_len >= p_dest->capacity - dest_len) {
+        src_len = p_dest->capacity - dest_len - 1;
+    }
+    memcpy(p_dest->p_str + dest_len, p_src, src_len);
+    p_dest->p_str[dest_len + src_len] = '\0';
+    return src_len;
 }
 
 /*!------------------------------------------------------------------------
@@ -196,11 +184,12 @@ size_t as_dynstr_append_c_str(as_dynstr_t *p_dest, const char *p_src)
  * \param  p_str string to dump
  * ------------------------------------------------------------------------ */
 
-void as_dynstr_dump_hex(FILE *p_file, const as_dynstr_t *p_str)
-{
-  const char *p_run;
+void as_dynstr_dump_hex(FILE* p_file, as_dynstr_t const* p_str) {
+    char const* p_run;
 
-  fprintf(p_file, "[%u]", (unsigned)p_str->capacity);
-  for (p_run = p_str->p_str; *p_run; p_run++) fprintf(p_file, " %02x", *p_run & 0xffU);
-  fprintf(p_file, "\n");
+    fprintf(p_file, "[%u]", (unsigned)p_str->capacity);
+    for (p_run = p_str->p_str; *p_run; p_run++) {
+        fprintf(p_file, " %02x", *p_run & 0xffU);
+    }
+    fprintf(p_file, "\n");
 }

@@ -12,9 +12,9 @@
 
 #include "datatypes.h"
 
-extern void AddInvSymbol(const char *pSymbolName, LargeWord Value);
+extern void AddInvSymbol(char const* pSymbolName, LargeWord Value);
 
-extern const char *LookupInvSymbol(LargeWord Value);
+extern char const* LookupInvSymbol(LargeWord Value);
 
 extern int GetMaxInvSymbolNameLen(void);
 

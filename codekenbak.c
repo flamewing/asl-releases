@@ -10,52 +10,49 @@
 
 #include "stdinc.h"
 
-#include <string.h>
-#include "stdinc.h"
-#include "strutil.h"
-#include "intformat.h"
-#include "asmdef.h"
-#include "asmsub.h"
-#include "asmpars.h"
-#include "asmallg.h"
-#include "asmstructs.h"
-#include "headids.h"
-
-#include "asmitree.h"
-#include "codevars.h"
-#include "codepseudo.h"
-#include "intpseudo.h"
-
 #include "codekenbak.h"
+
+#include "asmallg.h"
+#include "asmdef.h"
+#include "asmitree.h"
+#include "asmpars.h"
+#include "asmstructs.h"
+#include "asmsub.h"
+#include "codepseudo.h"
+#include "codevars.h"
+#include "headids.h"
+#include "intformat.h"
+#include "intpseudo.h"
+#include "strutil.h"
+
+#include <string.h>
 
 /*---------------------------------------------------------------------------*/
 
 /* do not change enum values, they match the machine codings: */
 
-enum
-{
-  ModNone = 0,
-  ModImm = 3,
-  ModMemory = 4,
-  ModIndirect = 5,
-  ModIndexed = 6,
-  ModIndirectIndexed = 7
+enum {
+    ModNone            = 0,
+    ModImm             = 3,
+    ModMemory          = 4,
+    ModIndirect        = 5,
+    ModIndexed         = 6,
+    ModIndirectIndexed = 7
 };
 
-#define MModImm (1 << ModImm)
-#define MModMemory (1 << ModMemory)
-#define MModIndirect (1 << ModIndirect)
-#define MModIndexed (1 << ModIndexed)
+#define MModImm             (1 << ModImm)
+#define MModMemory          (1 << ModMemory)
+#define MModIndirect        (1 << ModIndirect)
+#define MModIndexed         (1 << ModIndexed)
 #define MModIndirectIndexed (1 << ModIndirectIndexed)
 
 #define MModAll (MModImm | MModMemory | MModIndirect | MModIndexed | MModIndirectIndexed)
 
-typedef struct
-{
-  Byte Mode, Val;
+typedef struct {
+    Byte Mode, Val;
 } tAdrData;
 
-static const char Regs[5] = "ABXP";
+static char const Regs[5] = "ABXP";
 
 /*---------------------------------------------------------------------------*/
 
@@ -67,16 +64,17 @@ static const char Regs[5] = "ABXP";
  * \return true if argument is a register
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeRegCore(const char *pArg, Byte *pResult)
-{
-  const char *pPos;
+static Boolean DecodeRegCore(char const* pArg, Byte* pResult) {
+    char const* pPos;
 
-  if (strlen(pArg) != 1)
-    return False;
-  pPos = strchr(Regs, as_toupper(*pArg));
-  if (pPos)
-    *pResult = pPos - Regs;
-  return !!pPos;
+    if (strlen(pArg) != 1) {
+        return False;
+    }
+    pPos = strchr(Regs, as_toupper(*pArg));
+    if (pPos) {
+        *pResult = pPos - Regs;
+    }
+    return !!pPos;
 }
 
 /*!------------------------------------------------------------------------
@@ -88,20 +86,18 @@ static Boolean DecodeRegCore(const char *pArg, Byte *pResult)
  * \param  InpSize register size
  * ------------------------------------------------------------------------ */
 
-static void DissectReg_KENBAK(char *pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize)
-{
-  switch (InpSize)
-  {
+static void DissectReg_KENBAK(
+        char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
+    switch (InpSize) {
     case eSymbolSize8Bit:
-      if (Value <= 3)
-      {
-        as_snprintf(pDest, DestSize, "%c", Regs[Value]);
-        break;
-      }
-      /* else fall-thru */
+        if (Value <= 3) {
+            as_snprintf(pDest, DestSize, "%c", Regs[Value]);
+            break;
+        }
+        /* else fall-thru */
     default:
-      as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
-  }
+        as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -114,28 +110,26 @@ static void DissectReg_KENBAK(char *pDest, size_t DestSize, tRegInt Value, tSymb
  * \return eval result
  * ------------------------------------------------------------------------ */
 
-static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, Word RegMask, Boolean MustBeReg)
-{
-  tRegDescr RegDescr;
-  tEvalResult EvalResult;
-  tRegEvalResult RegEvalResult;
+static tRegEvalResult DecodeReg(
+        tStrComp const* pArg, Byte* pResult, Word RegMask, Boolean MustBeReg) {
+    tRegDescr      RegDescr;
+    tEvalResult    EvalResult;
+    tRegEvalResult RegEvalResult;
 
-  if (DecodeRegCore(pArg->str.p_str, pResult))
-    RegEvalResult = eIsReg;
-  else
-  {
-    RegEvalResult = EvalStrRegExpressionAsOperand(pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
-    *pResult = RegDescr.Reg;
-  }
+    if (DecodeRegCore(pArg->str.p_str, pResult)) {
+        RegEvalResult = eIsReg;
+    } else {
+        RegEvalResult = EvalStrRegExpressionAsOperand(
+                pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
+        *pResult = RegDescr.Reg;
+    }
 
-  if ((RegEvalResult == eIsReg)
-   && !(1 & (RegMask >> *pResult)))
-  {
-    WrStrErrorPos(ErrNum_InvReg, pArg);
-    RegEvalResult = eRegAbort;
-  }
+    if ((RegEvalResult == eIsReg) && !(1 & (RegMask >> *pResult))) {
+        WrStrErrorPos(ErrNum_InvReg, pArg);
+        RegEvalResult = eRegAbort;
+    }
 
-  return RegEvalResult;
+    return RegEvalResult;
 }
 
 /*!------------------------------------------------------------------------
@@ -147,29 +141,26 @@ static tRegEvalResult DecodeReg(const tStrComp *pArg, Byte *pResult, Word RegMas
  * \return True if argument can be interpreted as register in some way
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeRegWithMemOpt(const tStrComp *pArg, Byte *pResult, Word RegMask)
-{
-  switch (DecodeReg(pArg, pResult, RegMask, False))
-  {
+static Boolean DecodeRegWithMemOpt(tStrComp const* pArg, Byte* pResult, Word RegMask) {
+    switch (DecodeReg(pArg, pResult, RegMask, False)) {
     case eIsReg:
-      return True;
+        return True;
     case eRegAbort:
-      return False;
-    default:
-    {
-      tEvalResult EvalResult;
+        return False;
+    default: {
+        tEvalResult EvalResult;
 
-      *pResult = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
-      if (!EvalResult.OK)
-        return False;
-      if (!(1 & (RegMask >> *pResult)))
-      {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
-        return False;
-      }
-      return True;
+        *pResult = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
+        if (!EvalResult.OK) {
+            return False;
+        }
+        if (!(1 & (RegMask >> *pResult))) {
+            WrStrErrorPos(ErrNum_InvReg, pArg);
+            return False;
+        }
+        return True;
     }
-  }
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -181,61 +172,55 @@ static Boolean DecodeRegWithMemOpt(const tStrComp *pArg, Byte *pResult, Word Reg
  * \return true if successfully decoded
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkMode(Word ModeMask, tAdrData *pAdrData)
-{
-  return !!((ModeMask >> pAdrData->Mode) & 1);
+static Boolean ChkMode(Word ModeMask, tAdrData* pAdrData) {
+    return !!((ModeMask >> pAdrData->Mode) & 1);
 }
 
-static Boolean DecodeAdr(tStrComp *pArg1, tStrComp *pArg2, tAdrData *pAdrData, Word ModeMask)
-{
-  tStrComp Arg;
+static Boolean DecodeAdr(
+        tStrComp* pArg1, tStrComp* pArg2, tAdrData* pAdrData, Word ModeMask) {
+    tStrComp Arg;
 
-  pAdrData->Mode = 0;
+    pAdrData->Mode = 0;
 
-  if (pArg2)
-  {
-    Byte IndexReg;
+    if (pArg2) {
+        Byte IndexReg;
 
-    if (DecodeReg(pArg2, &IndexReg, 4, True) != eIsReg)
-      return False;
-    pAdrData->Mode |= 2;
-  }
-  else
-  {
-    if (*pArg1->str.p_str == '#')
-    {
-      Boolean OK;
+        if (DecodeReg(pArg2, &IndexReg, 4, True) != eIsReg) {
+            return False;
+        }
+        pAdrData->Mode |= 2;
+    } else {
+        if (*pArg1->str.p_str == '#') {
+            Boolean OK;
 
-      pAdrData->Mode = 3;
-      pAdrData->Val = EvalStrIntExpressionOffs(pArg1, 1, Int8, &OK);
-      return OK && ChkMode(ModeMask, pAdrData);
+            pAdrData->Mode = 3;
+            pAdrData->Val  = EvalStrIntExpressionOffs(pArg1, 1, Int8, &OK);
+            return OK && ChkMode(ModeMask, pAdrData);
+        }
     }
-  }
 
-  if ((ModeMask & (MModIndirect | MModIndirectIndexed)) && IsIndirect(pArg1->str.p_str))
-  {
-    StrCompShorten(pArg1, 1);
-    StrCompRefRight(&Arg, pArg1, 1);
-    pAdrData->Mode |= 1;
-  }
-  else
-    StrCompRefRight(&Arg, pArg1, 0);
-  switch (DecodeReg(&Arg, &pAdrData->Val, 15, False))
-  {
+    if ((ModeMask & (MModIndirect | MModIndirectIndexed))
+        && IsIndirect(pArg1->str.p_str)) {
+        StrCompShorten(pArg1, 1);
+        StrCompRefRight(&Arg, pArg1, 1);
+        pAdrData->Mode |= 1;
+    } else {
+        StrCompRefRight(&Arg, pArg1, 0);
+    }
+    switch (DecodeReg(&Arg, &pAdrData->Val, 15, False)) {
     case eIsReg:
-      pAdrData->Mode |= 4;
-      return ChkMode(ModeMask, pAdrData);
+        pAdrData->Mode |= 4;
+        return ChkMode(ModeMask, pAdrData);
     case eRegAbort:
-      return False;
-    default:
-    {
-      Boolean OK;
+        return False;
+    default: {
+        Boolean OK;
 
-      pAdrData->Val = EvalStrIntExpression(&Arg, UInt8, &OK);
-      pAdrData->Mode |= 4;
-      return OK && ChkMode(ModeMask, pAdrData);
+        pAdrData->Val = EvalStrIntExpression(&Arg, UInt8, &OK);
+        pAdrData->Mode |= 4;
+        return OK && ChkMode(ModeMask, pAdrData);
     }
-  }
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -246,34 +231,28 @@ static Boolean DecodeAdr(tStrComp *pArg1, tStrComp *pArg2, tAdrData *pAdrData, W
  * \return True if valid key word
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeAddrKeyword(const char *pKeyword, Byte *pMode)
-{
-  if (!as_strcasecmp(pKeyword, "Constant"))
-  {
-    *pMode = ModImm;
-    return True;
-  }
-  if (!as_strcasecmp(pKeyword, "Memory"))
-  {
-    *pMode = ModMemory;
-    return True;
-  }
-  if (!as_strcasecmp(pKeyword, "Indexed"))
-  {
-    *pMode = ModIndexed;
-    return True;
-  }
-  if (!as_strcasecmp(pKeyword, "Indirect"))
-  {
-    *pMode = ModIndirect;
-    return True;
-  }
-  if (!as_strcasecmp(pKeyword, "Indirect-Indexed"))
-  {
-    *pMode = ModIndirectIndexed;
-    return True;
-  }
-  return False;
+static Boolean DecodeAddrKeyword(char const* pKeyword, Byte* pMode) {
+    if (!as_strcasecmp(pKeyword, "Constant")) {
+        *pMode = ModImm;
+        return True;
+    }
+    if (!as_strcasecmp(pKeyword, "Memory")) {
+        *pMode = ModMemory;
+        return True;
+    }
+    if (!as_strcasecmp(pKeyword, "Indexed")) {
+        *pMode = ModIndexed;
+        return True;
+    }
+    if (!as_strcasecmp(pKeyword, "Indirect")) {
+        *pMode = ModIndirect;
+        return True;
+    }
+    if (!as_strcasecmp(pKeyword, "Indirect-Indexed")) {
+        *pMode = ModIndirectIndexed;
+        return True;
+    }
+    return False;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -293,9 +272,8 @@ static Boolean DecodeAddrKeyword(const char *pKeyword, Byte *pMode)
  * \return numeric bit position
  * ------------------------------------------------------------------------ */
 
-static LongWord EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
-{
-  return EvalStrIntExpression(pArg, UInt3, pOK);
+static LongWord EvalBitPosition(tStrComp const* pArg, Boolean* pOK) {
+    return EvalStrIntExpression(pArg, UInt3, pOK);
 }
 
 /*!------------------------------------------------------------------------
@@ -306,11 +284,8 @@ static LongWord EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
-static LongWord AssembleBitSymbol(Byte BitPos, Word Address)
-{
-  return
-    (Address << 3)
-  | (BitPos << 0);
+static LongWord AssembleBitSymbol(Byte BitPos, Word Address) {
+    return (Address << 3) | (BitPos << 0);
 }
 
 /*!------------------------------------------------------------------------
@@ -322,21 +297,23 @@ static LongWord AssembleBitSymbol(Byte BitPos, Word Address)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrComp *pRegArg)
-{
-  Boolean OK;
-  LongWord BitPos;
-  tAdrData AdrData;
+static Boolean DecodeBitArg2(
+        LongWord* pResult, tStrComp const* pBitArg, tStrComp* pRegArg) {
+    Boolean  OK;
+    LongWord BitPos;
+    tAdrData AdrData;
 
-  BitPos = EvalBitPosition(pBitArg, &OK);
-  if (!OK)
-    return False;
+    BitPos = EvalBitPosition(pBitArg, &OK);
+    if (!OK) {
+        return False;
+    }
 
-  if (!DecodeAdr(pRegArg, NULL, &AdrData, MModMemory))
-    return False;
+    if (!DecodeAdr(pRegArg, NULL, &AdrData, MModMemory)) {
+        return False;
+    }
 
-  *pResult = AssembleBitSymbol(BitPos, AdrData.Val);
-  return True;
+    *pResult = AssembleBitSymbol(BitPos, AdrData.Val);
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -348,34 +325,33 @@ static Boolean DecodeBitArg2(LongWord *pResult, const tStrComp *pBitArg, tStrCom
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
-{
-  *pResult = 0;
+static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop) {
+    *pResult = 0;
 
-  /* Just one argument -> parse as bit argument */
+    /* Just one argument -> parse as bit argument */
 
-  if (Start == Stop)
-  {
-    tEvalResult EvalResult;
+    if (Start == Stop) {
+        tEvalResult EvalResult;
 
-    *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt32, &EvalResult);
-    if (EvalResult.OK)
-      ChkSpace(SegBData, EvalResult.AddrSpaceMask);
-    return EvalResult.OK;
-  }
+        *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt32, &EvalResult);
+        if (EvalResult.OK) {
+            ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+        }
+        return EvalResult.OK;
+    }
 
-  /* register & bit position are given as separate arguments */
+    /* register & bit position are given as separate arguments */
 
-  else if (Stop == Start + 1)
-    return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop]);
+    else if (Stop == Start + 1) {
+        return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop]);
+    }
 
-  /* other # of arguments not allowed */
+    /* other # of arguments not allowed */
 
-  else
-  {
-    WrError(ErrNum_WrongArgCnt);
-    return False;
-  }
+    else {
+        WrError(ErrNum_WrongArgCnt);
+        return False;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -387,11 +363,10 @@ static Boolean DecodeBitArg(LongWord *pResult, int Start, int Stop)
  * \return constant True
  * ------------------------------------------------------------------------ */
 
-static Boolean DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos)
-{
-  *pAddress = (BitSymbol >> 3) & 0xfful;
-  *pBitPos = BitSymbol & 7;
-  return True;
+static Boolean DissectBitSymbol(LongWord BitSymbol, Word* pAddress, Byte* pBitPos) {
+    *pAddress = (BitSymbol >> 3) & 0xfful;
+    *pBitPos  = BitSymbol & 7;
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -402,18 +377,17 @@ static Boolean DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPo
  * \param  Inp compact storage
  * ------------------------------------------------------------------------ */
 
-static void DissectBit_KENBAK(char *pDest, size_t DestSize, LargeWord Inp)
-{
-  Byte BitPos;
-  Word Address;
+static void DissectBit_KENBAK(char* pDest, size_t DestSize, LargeWord Inp) {
+    Byte BitPos;
+    Word Address;
 
-  DissectBitSymbol(Inp, &Address, &BitPos);
+    DissectBitSymbol(Inp, &Address, &BitPos);
 
-  // Original format string on the next line was "%~02.*u%s,%u"
-  // Trying without the non-standard '~' to see if there is a difference.
-  as_snprintf(pDest, DestSize, "%02.*u%s,%u",
-              ListRadixBase, (unsigned)Address, GetIntConstIntelSuffix((unsigned)ListRadixBase),
-              (unsigned)BitPos);
+    // Original format string on the next line was "%~02.*u%s,%u"
+    // Trying without the non-standard '~' to see if there is a difference.
+    as_snprintf(
+            pDest, DestSize, "%02.*u%s,%u", ListRadixBase, (unsigned)Address,
+            GetIntConstIntelSuffix((unsigned)ListRadixBase), (unsigned)BitPos);
 }
 
 /*!------------------------------------------------------------------------
@@ -424,26 +398,26 @@ static void DissectBit_KENBAK(char *pDest, size_t DestSize, LargeWord Inp)
  * \param  Base base address of instantiated structure
  * ------------------------------------------------------------------------ */
 
-static void ExpandBit_KENBAK(const tStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base)
-{
-  LongWord Address = Base + pStructElem->Offset;
+static void ExpandBit_KENBAK(
+        tStrComp const* pVarName, const struct sStructElem* pStructElem, LargeWord Base) {
+    LongWord Address = Base + pStructElem->Offset;
 
-  if (pInnermostNamedStruct)
-  {
-    PStructElem pElem = CloneStructElem(pVarName, pStructElem);
+    if (pInnermostNamedStruct) {
+        PStructElem pElem = CloneStructElem(pVarName, pStructElem);
 
-    if (!pElem)
-      return;
-    pElem->Offset = Address;
-    AddStructElem(pInnermostNamedStruct->StructRec, pElem);
-  }
-  else
-  {
-    PushLocHandle(-1);
-    EnterIntSymbol(pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData, False);
-    PopLocHandle();
-    /* TODO: MakeUseList? */
-  }
+        if (!pElem) {
+            return;
+        }
+        pElem->Offset = Address;
+        AddStructElem(pInnermostNamedStruct->StructRec, pElem);
+    } else {
+        PushLocHandle(-1);
+        EnterIntSymbol(
+                pVarName, AssembleBitSymbol(pStructElem->BitPos, Address), SegBData,
+                False);
+        PopLocHandle();
+        /* TODO: MakeUseList? */
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -454,34 +428,29 @@ static void ExpandBit_KENBAK(const tStrComp *pVarName, const struct sStructElem 
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeGen(Word Code)
-{
-  if (ChkArgCnt(2, 3))
-  {
-    int RegArg;
-    Boolean AddrOK;
-    Byte Reg;
-    tAdrData AdrData;
+static void CodeGen(Word Code) {
+    if (ChkArgCnt(2, 3)) {
+        int      RegArg;
+        Boolean  AddrOK;
+        Byte     Reg;
+        tAdrData AdrData;
 
-    /* addressing mode is either given by keyword or by addressing syntax: */
+        /* addressing mode is either given by keyword or by addressing syntax: */
 
-    if ((ArgCnt == 3) && DecodeAddrKeyword(ArgStr[1].str.p_str, &AdrData.Mode))
-    {
-      AdrData.Val = EvalStrIntExpression(&ArgStr[3], Int8, &AddrOK);
-      RegArg = 2;
-    }
-    else
-    {
-      AddrOK = DecodeAdr(&ArgStr[2], (ArgCnt == 3) ? &ArgStr[3] : NULL, &AdrData, MModAll);
-      RegArg = 1;
-    }
+        if ((ArgCnt == 3) && DecodeAddrKeyword(ArgStr[1].str.p_str, &AdrData.Mode)) {
+            AdrData.Val = EvalStrIntExpression(&ArgStr[3], Int8, &AddrOK);
+            RegArg      = 2;
+        } else {
+            AddrOK = DecodeAdr(
+                    &ArgStr[2], (ArgCnt == 3) ? &ArgStr[3] : NULL, &AdrData, MModAll);
+            RegArg = 1;
+        }
 
-    if (AddrOK && DecodeRegWithMemOpt(&ArgStr[RegArg], &Reg, Code & 0xc0 ? 1 : 7))
-    {
-      BAsmCode[CodeLen++] = (Reg << 6) | Code | AdrData.Mode;
-      BAsmCode[CodeLen++] = AdrData.Val;
+        if (AddrOK && DecodeRegWithMemOpt(&ArgStr[RegArg], &Reg, Code & 0xc0 ? 1 : 7)) {
+            BAsmCode[CodeLen++] = (Reg << 6) | Code | AdrData.Mode;
+            BAsmCode[CodeLen++] = AdrData.Val;
+        }
     }
-  }
 }
 
 /*!------------------------------------------------------------------------
@@ -489,20 +458,17 @@ static void CodeGen(Word Code)
  * \brief  decode CLEAR instruction
  * ------------------------------------------------------------------------ */
 
-static void CodeClear(Word Code)
-{
-  Byte Reg;
+static void CodeClear(Word Code) {
+    Byte Reg;
 
-  UNUSED(Code);
+    UNUSED(Code);
 
-  if (ChkArgCnt(1, 1)
-   && DecodeRegWithMemOpt(&ArgStr[1], &Reg, 7))
-  {
-    /* SUB reg,reg */
+    if (ChkArgCnt(1, 1) && DecodeRegWithMemOpt(&ArgStr[1], &Reg, 7)) {
+        /* SUB reg,reg */
 
-    BAsmCode[CodeLen++] = (Reg << 6) | 0x0c;
-    BAsmCode[CodeLen++] = Reg;
-  }
+        BAsmCode[CodeLen++] = (Reg << 6) | 0x0c;
+        BAsmCode[CodeLen++] = Reg;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -511,47 +477,47 @@ static void CodeClear(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeJumpCommon(Word Code, const tAdrData *pAdrData)
-{
-  Byte Reg;
-  int Cond;
-  static const char ShortConds[5][4] = { "NZ", "Z", "N", "P", "PNZ" };
-  static const char *LongConds[5] = { "Non-zero", "Zero", "Negative", "Positive", "Positive-Non-zero" };
+static void CodeJumpCommon(Word Code, tAdrData const* pAdrData) {
+    Byte               Reg;
+    int                Cond;
+    static char const  ShortConds[5][4] = {"NZ", "Z", "N", "P", "PNZ"};
+    static char const* LongConds[5]
+            = {"Non-zero", "Zero", "Negative", "Positive", "Positive-Non-zero"};
 
-  if ((ArgCnt == 1) || !as_strcasecmp(ArgStr[1].str.p_str, "Unconditional"))
-    Reg = 3;
-  else if (!DecodeRegWithMemOpt(&ArgStr[1], &Reg, 7))
-    return;
-
-  if (ArgCnt == 1)
-    Cond = 0;
-  else
-  {
-    for (Cond = 0; Cond < 5; Cond++)
-      if (!as_strcasecmp(ArgStr[ArgCnt - 1].str.p_str, ShortConds[Cond])
-       || !as_strcasecmp(ArgStr[ArgCnt - 1].str.p_str, LongConds[Cond]))
-        break;
-    if (Cond >= 5)
-    {
-      WrStrErrorPos(ErrNum_UndefCond, &ArgStr[ArgCnt - 1]);
-      return;
+    if ((ArgCnt == 1) || !as_strcasecmp(ArgStr[1].str.p_str, "Unconditional")) {
+        Reg = 3;
+    } else if (!DecodeRegWithMemOpt(&ArgStr[1], &Reg, 7)) {
+        return;
     }
-  }
-  BAsmCode[CodeLen++] = (Reg << 6) | Code | (Cond + 3);
-  BAsmCode[CodeLen++] = pAdrData->Val;
+
+    if (ArgCnt == 1) {
+        Cond = 0;
+    } else {
+        for (Cond = 0; Cond < 5; Cond++) {
+            if (!as_strcasecmp(ArgStr[ArgCnt - 1].str.p_str, ShortConds[Cond])
+                || !as_strcasecmp(ArgStr[ArgCnt - 1].str.p_str, LongConds[Cond])) {
+                break;
+            }
+        }
+        if (Cond >= 5) {
+            WrStrErrorPos(ErrNum_UndefCond, &ArgStr[ArgCnt - 1]);
+            return;
+        }
+    }
+    BAsmCode[CodeLen++] = (Reg << 6) | Code | (Cond + 3);
+    BAsmCode[CodeLen++] = pAdrData->Val;
 }
 
-static void CodeJump(Word Code)
-{
-  tAdrData AdrData;
+static void CodeJump(Word Code) {
+    tAdrData AdrData;
 
-  if ((ArgCnt != 1) && (ArgCnt != 3))
-  {
-    WrError(ErrNum_WrongArgCnt);
-    return;
-  }
-  if (DecodeAdr(&ArgStr[ArgCnt], NULL, &AdrData, MModMemory))
-    CodeJumpCommon(Code, &AdrData);
+    if ((ArgCnt != 1) && (ArgCnt != 3)) {
+        WrError(ErrNum_WrongArgCnt);
+        return;
+    }
+    if (DecodeAdr(&ArgStr[ArgCnt], NULL, &AdrData, MModMemory)) {
+        CodeJumpCommon(Code, &AdrData);
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -560,21 +526,20 @@ static void CodeJump(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeJumpGen(Word Code)
-{
-  tAdrData AdrData;
+static void CodeJumpGen(Word Code) {
+    tAdrData AdrData;
 
-  if ((ArgCnt != 1) && (ArgCnt != 3))
-  {
-    WrError(ErrNum_WrongArgCnt);
-      return;
-  }
+    if ((ArgCnt != 1) && (ArgCnt != 3)) {
+        WrError(ErrNum_WrongArgCnt);
+        return;
+    }
 
-  /* transport the addressing mode's indirect bit (bit 0) to the
-     corresponding instruction code's bit (bit 3): */
+    /* transport the addressing mode's indirect bit (bit 0) to the
+       corresponding instruction code's bit (bit 3): */
 
-  if (DecodeAdr(&ArgStr[ArgCnt], NULL, &AdrData, MModMemory | MModIndirect))
-    CodeJumpCommon(Code | ((AdrData.Mode & 1) << 3), &AdrData);
+    if (DecodeAdr(&ArgStr[ArgCnt], NULL, &AdrData, MModMemory | MModIndirect)) {
+        CodeJumpCommon(Code | ((AdrData.Mode & 1) << 3), &AdrData);
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -583,76 +548,73 @@ static void CodeJumpGen(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeSkipCore(Word Code, int ArgOffs)
-{
-  LongWord BitSpec;
-  tEvalResult DestEvalResult;
-  int HasDest;
-  Word Dest;
+static void CodeSkipCore(Word Code, int ArgOffs) {
+    LongWord    BitSpec;
+    tEvalResult DestEvalResult;
+    int         HasDest;
+    Word        Dest;
 
-  /* For two operands, we do not know whether it's <addr>,<bit>
-     or <bitsym>,<dest>.  If the third op is from code segment, we
-     assume it's the second: */
+    /* For two operands, we do not know whether it's <addr>,<bit>
+       or <bitsym>,<dest>.  If the third op is from code segment, we
+       assume it's the second: */
 
-  switch (ArgCnt - ArgOffs)
-  {
+    switch (ArgCnt - ArgOffs) {
     case 1:
-      HasDest = 0;
-      break;
+        HasDest = 0;
+        break;
     case 3:
-      HasDest = 1;
-      Dest = EvalStrIntExpressionWithResult(&ArgStr[ArgOffs + 3], UInt8, &DestEvalResult);
-      if (!DestEvalResult.OK)
-        return;
-      break;
-    case 2:
-    {
-      Dest = EvalStrIntExpressionWithResult(&ArgStr[ArgOffs + 2], UInt8, &DestEvalResult);
-      if (!DestEvalResult.OK)
-        return;
-      HasDest = !!(DestEvalResult.AddrSpaceMask & (1 << SegCode));
-      break;
+        HasDest = 1;
+        Dest    = EvalStrIntExpressionWithResult(
+                &ArgStr[ArgOffs + 3], UInt8, &DestEvalResult);
+        if (!DestEvalResult.OK) {
+            return;
+        }
+        break;
+    case 2: {
+        Dest = EvalStrIntExpressionWithResult(
+                &ArgStr[ArgOffs + 2], UInt8, &DestEvalResult);
+        if (!DestEvalResult.OK) {
+            return;
+        }
+        HasDest = !!(DestEvalResult.AddrSpaceMask & (1 << SegCode));
+        break;
     }
     default:
-      (void)ChkArgCnt(1 + ArgOffs, 3 + ArgOffs);
-      return;
-  }
-
-  if (DecodeBitArg(&BitSpec, 1 + ArgOffs, ArgCnt - HasDest))
-  {
-    Word Address;
-    Byte BitPos;
-
-    DissectBitSymbol(BitSpec, &Address, &BitPos);
-
-    if (HasDest)
-    {
-      if (!(DestEvalResult.Flags & (eSymbolFlag_FirstPassUnknown | eSymbolFlag_Questionable))
-       && (Dest != EProgCounter() + 4))
-      {
-        WrStrErrorPos(ErrNum_SkipTargetMismatch, &ArgStr[ArgCnt]);
+        (void)ChkArgCnt(1 + ArgOffs, 3 + ArgOffs);
         return;
-      }
     }
-    BAsmCode[CodeLen++] = Code | (BitPos << 3);
-    BAsmCode[CodeLen++] = Address;
-  }
+
+    if (DecodeBitArg(&BitSpec, 1 + ArgOffs, ArgCnt - HasDest)) {
+        Word Address;
+        Byte BitPos;
+
+        DissectBitSymbol(BitSpec, &Address, &BitPos);
+
+        if (HasDest) {
+            if (!(DestEvalResult.Flags
+                  & (eSymbolFlag_FirstPassUnknown | eSymbolFlag_Questionable))
+                && (Dest != EProgCounter() + 4)) {
+                WrStrErrorPos(ErrNum_SkipTargetMismatch, &ArgStr[ArgCnt]);
+                return;
+            }
+        }
+        BAsmCode[CodeLen++] = Code | (BitPos << 3);
+        BAsmCode[CodeLen++] = Address;
+    }
 }
 
-static void CodeSkip(Word Code)
-{
-  CodeSkipCore(Code, 0);
+static void CodeSkip(Word Code) {
+    CodeSkipCore(Code, 0);
 }
 
-static void CodeSkip2(Word Code)
-{
-  if (ChkArgCnt(2, 4))
-  {
-    Boolean OK;
-    Byte Value = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
-    if (OK)
-      CodeSkipCore(Code | (Value << 6), 1);
-  }
+static void CodeSkip2(Word Code) {
+    if (ChkArgCnt(2, 4)) {
+        Boolean OK;
+        Byte    Value = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
+        if (OK) {
+            CodeSkipCore(Code | (Value << 6), 1);
+        }
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -661,50 +623,47 @@ static void CodeSkip2(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeShiftCore(Word Code, int ArgOffs)
-{
-  Byte Reg;
+static void CodeShiftCore(Word Code, int ArgOffs) {
+    Byte Reg;
 
-  if (DecodeRegWithMemOpt(&ArgStr[ArgCnt], &Reg, 3))
-  {
-    Byte Count = 1;
+    if (DecodeRegWithMemOpt(&ArgStr[ArgCnt], &Reg, 3)) {
+        Byte Count = 1;
 
-    if (ArgCnt > ArgOffs)
-    {
-      tEvalResult EvalResult;
+        if (ArgCnt > ArgOffs) {
+            tEvalResult EvalResult;
 
-      Count = EvalStrIntExpressionWithResult(&ArgStr[ArgOffs], UInt3, &EvalResult);
-      if (!EvalResult.OK)
-        return;
-      if (mFirstPassUnknown(EvalResult.Flags))
-        Count = 1;
-      if ((Count < 1) || (Count > 4))
-      {
-        WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[ArgOffs]);
-        return;
-      }
+            Count = EvalStrIntExpressionWithResult(&ArgStr[ArgOffs], UInt3, &EvalResult);
+            if (!EvalResult.OK) {
+                return;
+            }
+            if (mFirstPassUnknown(EvalResult.Flags)) {
+                Count = 1;
+            }
+            if ((Count < 1) || (Count > 4)) {
+                WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[ArgOffs]);
+                return;
+            }
+        }
+        BAsmCode[CodeLen++] = Code | (Reg << 5) | ((Count & 3) << 3);
     }
-    BAsmCode[CodeLen++] = Code | (Reg << 5) | ((Count & 3) << 3);
-  }
 }
 
-static void CodeShift(Word Code)
-{
-  if (ChkArgCnt(1, 2))
-    CodeShiftCore(Code, 1);
+static void CodeShift(Word Code) {
+    if (ChkArgCnt(1, 2)) {
+        CodeShiftCore(Code, 1);
+    }
 }
 
-static void CodeShift2(Word Code)
-{
-  if (ChkArgCnt(2, 3))
-  {
-    if (!as_strcasecmp(ArgStr[1].str.p_str, "LEFT"))
-      CodeShiftCore(Code | 0x80, 2);
-    else if (!as_strcasecmp(ArgStr[1].str.p_str, "RIGHT"))
-      CodeShiftCore(Code, 2);
-    else
-      WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[1]);
-  }
+static void CodeShift2(Word Code) {
+    if (ChkArgCnt(2, 3)) {
+        if (!as_strcasecmp(ArgStr[1].str.p_str, "LEFT")) {
+            CodeShiftCore(Code | 0x80, 2);
+        } else if (!as_strcasecmp(ArgStr[1].str.p_str, "RIGHT")) {
+            CodeShiftCore(Code, 2);
+        } else {
+            WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[1]);
+        }
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -713,36 +672,33 @@ static void CodeShift2(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeBitCore(Word Code, int BitArgStart)
-{
-  LongWord BitSpec;
+static void CodeBitCore(Word Code, int BitArgStart) {
+    LongWord BitSpec;
 
-  if (DecodeBitArg(&BitSpec, BitArgStart, ArgCnt))
-  {
-    Word Address;
-    Byte BitPos;
+    if (DecodeBitArg(&BitSpec, BitArgStart, ArgCnt)) {
+        Word Address;
+        Byte BitPos;
 
-    DissectBitSymbol(BitSpec, &Address, &BitPos);
-    BAsmCode[CodeLen++] = Code | (BitPos << 3);
-    BAsmCode[CodeLen++] = Address;
-  }
+        DissectBitSymbol(BitSpec, &Address, &BitPos);
+        BAsmCode[CodeLen++] = Code | (BitPos << 3);
+        BAsmCode[CodeLen++] = Address;
+    }
 }
 
-static void CodeBit(Word Code)
-{
-  if (ChkArgCnt(1, 2))
-    CodeBitCore(Code, 1);
+static void CodeBit(Word Code) {
+    if (ChkArgCnt(1, 2)) {
+        CodeBitCore(Code, 1);
+    }
 }
 
-static void CodeBit2(Word Code)
-{
-  if (ChkArgCnt(2, 3))
-  {
-    Boolean OK;
-    Byte Value = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
-    if (OK)
-      CodeBitCore(Code | (Value << 6), 2);
-  }
+static void CodeBit2(Word Code) {
+    if (ChkArgCnt(2, 3)) {
+        Boolean OK;
+        Byte    Value = EvalStrIntExpression(&ArgStr[1], UInt1, &OK);
+        if (OK) {
+            CodeBitCore(Code | (Value << 6), 2);
+        }
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -751,10 +707,10 @@ static void CodeBit2(Word Code)
  * \param  Code instruction code in 1st byte
  * ------------------------------------------------------------------------ */
 
-static void CodeFixed(Word Code)
-{
-  if (ChkArgCnt(0, 0))
-    BAsmCode[CodeLen++] = Code;
+static void CodeFixed(Word Code) {
+    if (ChkArgCnt(0, 0)) {
+        BAsmCode[CodeLen++] = Code;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -762,46 +718,44 @@ static void CodeFixed(Word Code)
  * \brief  handle BIT instruction
  * ------------------------------------------------------------------------ */
 
-static void CodeBIT(Word Code)
-{
-  UNUSED(Code);
+static void CodeBIT(Word Code) {
+    UNUSED(Code);
 
-  /* if in structure definition, add special element to structure */
+    /* if in structure definition, add special element to structure */
 
-  if (ActPC == StructSeg)
-  {
-    Boolean OK;
-    Byte BitPos;
-    PStructElem pElement;
+    if (ActPC == StructSeg) {
+        Boolean     OK;
+        Byte        BitPos;
+        PStructElem pElement;
 
-    if (!ChkArgCnt(2, 2))
-      return;
-    BitPos = EvalBitPosition(&ArgStr[1], &OK);
-    if (!OK)
-      return;
-    pElement = CreateStructElem(&LabPart);
-    if (!pElement)
-      return;
-    pElement->pRefElemName = as_strdup(ArgStr[2].str.p_str);
-    pElement->OpSize = eSymbolSize8Bit;
-    pElement->BitPos = BitPos;
-    pElement->ExpandFnc = ExpandBit_KENBAK;
-    AddStructElem(pInnermostNamedStruct->StructRec, pElement);
-  }
-  else
-  {
-    LongWord BitSpec;
+        if (!ChkArgCnt(2, 2)) {
+            return;
+        }
+        BitPos = EvalBitPosition(&ArgStr[1], &OK);
+        if (!OK) {
+            return;
+        }
+        pElement = CreateStructElem(&LabPart);
+        if (!pElement) {
+            return;
+        }
+        pElement->pRefElemName = as_strdup(ArgStr[2].str.p_str);
+        pElement->OpSize       = eSymbolSize8Bit;
+        pElement->BitPos       = BitPos;
+        pElement->ExpandFnc    = ExpandBit_KENBAK;
+        AddStructElem(pInnermostNamedStruct->StructRec, pElement);
+    } else {
+        LongWord BitSpec;
 
-    if (DecodeBitArg(&BitSpec, 1, ArgCnt))
-    {
-      *ListLine = '=';
-      DissectBit_KENBAK(ListLine + 1, STRINGSIZE - 3, BitSpec);
-      PushLocHandle(-1);
-      EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
-      PopLocHandle();
-      /* TODO: MakeUseList? */
+        if (DecodeBitArg(&BitSpec, 1, ArgCnt)) {
+            *ListLine = '=';
+            DissectBit_KENBAK(ListLine + 1, STRINGSIZE - 3, BitSpec);
+            PushLocHandle(-1);
+            EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
+            PopLocHandle();
+            /* TODO: MakeUseList? */
+        }
     }
-  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -811,102 +765,99 @@ static void CodeBIT(Word Code)
  * \brief  fill instruction hash table
  * ------------------------------------------------------------------------ */
 
-static void InitFields(void)
-{
-  InstTable = CreateInstTable(51);
+static void InitFields(void) {
+    InstTable = CreateInstTable(51);
 
-  AddInstTable(InstTable, "ADD"  , 0 << 3, CodeGen);
-  AddInstTable(InstTable, "SUB"  , 1 << 3, CodeGen);
-  AddInstTable(InstTable, "LOAD" , 2 << 3, CodeGen);
-  AddInstTable(InstTable, "STORE", 3 << 3, CodeGen);
+    AddInstTable(InstTable, "ADD", 0 << 3, CodeGen);
+    AddInstTable(InstTable, "SUB", 1 << 3, CodeGen);
+    AddInstTable(InstTable, "LOAD", 2 << 3, CodeGen);
+    AddInstTable(InstTable, "STORE", 3 << 3, CodeGen);
 
-  AddInstTable(InstTable, "AND"  , 0xd0, CodeGen);
-  AddInstTable(InstTable, "OR"   , 0xc0, CodeGen);
-  AddInstTable(InstTable, "LNEG" , 0xd8, CodeGen);
+    AddInstTable(InstTable, "AND", 0xd0, CodeGen);
+    AddInstTable(InstTable, "OR", 0xc0, CodeGen);
+    AddInstTable(InstTable, "LNEG", 0xd8, CodeGen);
 
-  AddInstTable(InstTable, "JPD"  , 0x20, CodeJump);
-  AddInstTable(InstTable, "JPI"  , 0x28, CodeJump);
-  AddInstTable(InstTable, "JMD"  , 0x30, CodeJump);
-  AddInstTable(InstTable, "JMI"  , 0x38, CodeJump);
+    AddInstTable(InstTable, "JPD", 0x20, CodeJump);
+    AddInstTable(InstTable, "JPI", 0x28, CodeJump);
+    AddInstTable(InstTable, "JMD", 0x30, CodeJump);
+    AddInstTable(InstTable, "JMI", 0x38, CodeJump);
 
-  AddInstTable(InstTable, "JP"   , 0x20, CodeJumpGen);
-  AddInstTable(InstTable, "JM"   , 0x30, CodeJumpGen);
+    AddInstTable(InstTable, "JP", 0x20, CodeJumpGen);
+    AddInstTable(InstTable, "JM", 0x30, CodeJumpGen);
 
-  AddInstTable(InstTable, "SKP0" , 0x82, CodeSkip);
-  AddInstTable(InstTable, "SKP1" , 0xc2, CodeSkip);
-  AddInstTable(InstTable, "SKP"  , 0x82, CodeSkip2);
-  AddInstTable(InstTable, "SKIP" , 0x82, CodeSkip2);
+    AddInstTable(InstTable, "SKP0", 0x82, CodeSkip);
+    AddInstTable(InstTable, "SKP1", 0xc2, CodeSkip);
+    AddInstTable(InstTable, "SKP", 0x82, CodeSkip2);
+    AddInstTable(InstTable, "SKIP", 0x82, CodeSkip2);
 
-  AddInstTable(InstTable, "SET0" , 0x02, CodeBit);
-  AddInstTable(InstTable, "SET1" , 0x42, CodeBit);
-  AddInstTable(InstTable, "SET"  , 0x02, CodeBit2);
+    AddInstTable(InstTable, "SET0", 0x02, CodeBit);
+    AddInstTable(InstTable, "SET1", 0x42, CodeBit);
+    AddInstTable(InstTable, "SET", 0x02, CodeBit2);
 
-  AddInstTable(InstTable, "SFTL"  , 0x81, CodeShift);
-  AddInstTable(InstTable, "SFTR"  , 0x01, CodeShift);
-  AddInstTable(InstTable, "ROTL"  , 0xc1, CodeShift);
-  AddInstTable(InstTable, "ROTR"  , 0x41, CodeShift);
-  AddInstTable(InstTable, "SHIFT" , 0x01, CodeShift2);
-  AddInstTable(InstTable, "ROTATE", 0x41, CodeShift2);
+    AddInstTable(InstTable, "SFTL", 0x81, CodeShift);
+    AddInstTable(InstTable, "SFTR", 0x01, CodeShift);
+    AddInstTable(InstTable, "ROTL", 0xc1, CodeShift);
+    AddInstTable(InstTable, "ROTR", 0x41, CodeShift);
+    AddInstTable(InstTable, "SHIFT", 0x01, CodeShift2);
+    AddInstTable(InstTable, "ROTATE", 0x41, CodeShift2);
 
-  AddInstTable(InstTable, "CLEAR" , 0x00, CodeClear);
+    AddInstTable(InstTable, "CLEAR", 0x00, CodeClear);
 
-  AddInstTable(InstTable, "NOOP" , 0x80, CodeFixed);
-  AddInstTable(InstTable, "HALT" , 0x00, CodeFixed);
+    AddInstTable(InstTable, "NOOP", 0x80, CodeFixed);
+    AddInstTable(InstTable, "HALT", 0x00, CodeFixed);
 
-  AddInstTable(InstTable, "REG"  , 0   , CodeREG);
-  AddInstTable(InstTable, "BIT"  , 0   , CodeBIT);
+    AddInstTable(InstTable, "REG", 0, CodeREG);
+    AddInstTable(InstTable, "BIT", 0, CodeBIT);
 }
 
-static void DeinitFields(void)
-{
-  DestroyInstTable(InstTable);
+static void DeinitFields(void) {
+    DestroyInstTable(InstTable);
 }
 
 /*---------------------------------------------------------------------------*/
 
-static void MakeCode_KENBAK(void)
-{
-  CodeLen = 0; DontPrint = False;
+static void MakeCode_KENBAK(void) {
+    CodeLen   = 0;
+    DontPrint = False;
 
-  /* to be ignored */
+    /* to be ignored */
 
-  if (Memo("")) return;
+    if (Memo("")) {
+        return;
+    }
 
-  /* Pseudo Instructions */
+    /* Pseudo Instructions */
 
-  if (DecodeIntelPseudo(False)) return;
+    if (DecodeIntelPseudo(False)) {
+        return;
+    }
 
-  if (!LookupInstTable(InstTable, OpPart.str.p_str))
-    WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+    }
 }
 
-static void InternSymbol_KENBAK(char *pArg, TempResult *pResult)
-{
-  Byte RegNum;
+static void InternSymbol_KENBAK(char* pArg, TempResult* pResult) {
+    Byte RegNum;
 
-  if (DecodeRegCore(pArg, &RegNum))
-  {
-    pResult->Typ = TempReg;
-    pResult->DataSize = eSymbolSize8Bit;
-    pResult->Contents.RegDescr.Reg = RegNum;
-    pResult->Contents.RegDescr.Dissect = DissectReg_KENBAK;
-  }
+    if (DecodeRegCore(pArg, &RegNum)) {
+        pResult->Typ                       = TempReg;
+        pResult->DataSize                  = eSymbolSize8Bit;
+        pResult->Contents.RegDescr.Reg     = RegNum;
+        pResult->Contents.RegDescr.Dissect = DissectReg_KENBAK;
+    }
 }
 
-static Boolean IsDef_KENBAK(void)
-{
-  return Memo("REG")
-      || Memo("BIT");
+static Boolean IsDef_KENBAK(void) {
+    return Memo("REG") || Memo("BIT");
 }
 
-static void SwitchFrom_KENBAK(void)
-{
-  DeinitFields();
+static void SwitchFrom_KENBAK(void) {
+    DeinitFields();
 }
 
-static Boolean TrueFnc(void)
-{
-  return True;
+static Boolean TrueFnc(void) {
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -914,38 +865,36 @@ static Boolean TrueFnc(void)
  * \brief  initialize for KENBAK as target
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_KENBAK(void)
-{
-  PFamilyDescr Descr;
+static void SwitchTo_KENBAK(void) {
+    PFamilyDescr Descr;
 
-  TurnWords = False;
-  SetIntConstMode(eIntConstModeIntel);
+    TurnWords = False;
+    SetIntConstMode(eIntConstModeIntel);
 
-  Descr = FindFamilyByName("KENBAK");
-  PCSymbol = "$";
-  HeaderID = Descr->Id;
-  NOPCode = 0x80;
-  DivideChars = ",";
-  HasAttrs = False;
-  SetIsOccupiedFnc = TrueFnc;
-  ShiftIsOccupied = True;
+    Descr            = FindFamilyByName("KENBAK");
+    PCSymbol         = "$";
+    HeaderID         = Descr->Id;
+    NOPCode          = 0x80;
+    DivideChars      = ",";
+    HasAttrs         = False;
+    SetIsOccupiedFnc = TrueFnc;
+    ShiftIsOccupied  = True;
 
-  ValidSegs = (1 << SegCode);
-  Grans[SegCode] = 1;
-  ListGrans[SegCode] = 1;
-  SegLimits[SegCode] = 0xff;
-  SegInits[SegCode] = 0;
+    ValidSegs          = (1 << SegCode);
+    Grans[SegCode]     = 1;
+    ListGrans[SegCode] = 1;
+    SegLimits[SegCode] = 0xff;
+    SegInits[SegCode]  = 0;
 
-  MakeCode = MakeCode_KENBAK;
-  IsDef = IsDef_KENBAK;
-  DissectReg = DissectReg_KENBAK;
-  DissectBit = DissectBit_KENBAK;
-  SwitchFrom = SwitchFrom_KENBAK;
-  InternSymbol = InternSymbol_KENBAK;
-  InitFields();
+    MakeCode     = MakeCode_KENBAK;
+    IsDef        = IsDef_KENBAK;
+    DissectReg   = DissectReg_KENBAK;
+    DissectBit   = DissectBit_KENBAK;
+    SwitchFrom   = SwitchFrom_KENBAK;
+    InternSymbol = InternSymbol_KENBAK;
+    InitFields();
 }
 
-void codekenbak_init(void)
-{
-  (void)AddCPU("KENBAK", SwitchTo_KENBAK);
+void codekenbak_init(void) {
+    (void)AddCPU("KENBAK", SwitchTo_KENBAK);
 }

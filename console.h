@@ -12,6 +12,6 @@
 
 #include "datatypes.h"
 
-extern void WrConsoleLine(const char *pLine, Boolean NewLine);
+extern void WrConsoleLine(char const* pLine, Boolean NewLine);
 
 #endif /* CONSOLE_H */

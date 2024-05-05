@@ -12,18 +12,17 @@
 
 #include "datatypes.h"
 
-typedef struct
-{
-  LongWord low;
-  LongWord high;
+typedef struct {
+    LongWord low;
+    LongWord high;
 } t64;
 
-extern void add64(t64 *pRes, const t64 *pA, const t64 *pB);
+extern void add64(t64* pRes, t64 const* pA, t64 const* pB);
 
-extern void sub64(t64 *pRes, const t64 *pA, const t64 *pB);
+extern void sub64(t64* pRes, t64 const* pA, t64 const* pB);
 
-extern void mul64(t64 *pRes, const t64 *pA, const t64 *pB);
+extern void mul64(t64* pRes, t64 const* pA, t64 const* pB);
 
-extern void div64(t64 *pRes, const t64 *pA, const t64 *pB);
+extern void div64(t64* pRes, t64 const* pA, t64 const* pB);
 
 #endif /* MATH64_H */

@@ -1,0 +1,154 @@
+Language: Cpp
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AlignArrayOfStructures: Right
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveBitFields: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakTemplateDeclarations: Yes
+AttributeMacros:
+  - __capability
+BinPackArguments: true
+BinPackParameters: true
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: All
+BreakBeforeConceptDeclarations: true
+BreakBeforeBraces: Attach
+BreakInheritanceList: BeforeColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakStringLiterals: true
+ColumnLimit: 90
+CompactNamespaces: true
+ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
+Cpp11BracedListStyle: true
+DeriveLineEnding: true
+DerivePointerAlignment: false
+DisableFormat: false
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  # stdinc.h must come first.
+  - Regex: '["<]stdinc.h[>"]'
+    Priority: -2
+    SortPriority: 0
+    CaseSensitive: false
+  # Headers in <> without extension.
+  - Regex: '<([A-Za-z0-9\Q/-_\E])+>'
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: false
+  # "windef.h" must come before other headers.
+  - Regex: '<windef.h>'
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: false
+  # Headers in <> with extension.
+  - Regex: '<([A-Za-z0-9.\Q/-_\E])+>'
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: false
+  # Headers in "" with extension.
+  - Regex: '"([A-Za-z0-9.\Q/-_\E])+"'
+    Priority: 2
+    SortPriority: 0
+    CaseSensitive: false
+IncludeIsMainRegex: "$"
+IncludeIsMainSourceRegex: ""
+IndentAccessModifiers: false
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: AfterHash
+IndentExternBlock: AfterExternBlock
+IndentWidth: '4'
+IndentRequires: true
+IndentRequiresClause: false
+RequiresClausePosition: OwnLine
+InsertBraces: true
+SeparateDefinitionBlocks: Always
+IndentWrappedFunctionNames: true
+InsertTrailingCommas: None
+KeepEmptyLinesAtTheStartOfBlocks: false
+LambdaBodyIndentation: Signature
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: All
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 10000000
+PointerAlignment: Left
+PPIndentWidth: -1
+QualifierAlignment: Custom
+QualifierOrder: ["constexpr", "static", "inline", "type", "const", "volatile"]
+ReferenceAlignment: Pointer
+ReflowComments: true
+SortIncludes: true
+CommentPragmas: '^\\.+'
+ShortNamespaceLines: 1
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 4
+SpacesInAngles: Never
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceBeforeSquareBrackets: false
+BitFieldColonSpacing: Both
+Standard: Latest
+TabWidth: 4
+UseCRLF: false
+UseTab: Never

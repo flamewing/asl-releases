@@ -15,26 +15,26 @@
 #include "datatypes.h"
 #include "tempresult.h"
 
-typedef enum
-{
-  IfState_IFIF, IfState_IFELSE,
-  IfState_CASESWITCH, IfState_CASECASE, IfState_CASEELSE
+typedef enum {
+    IfState_IFIF,
+    IfState_IFELSE,
+    IfState_CASESWITCH,
+    IfState_CASECASE,
+    IfState_CASEELSE
 } tIfState;
 
-typedef struct tag_TIfSave
-{
-  struct tag_TIfSave *Next;
-  Integer NestLevel;
-  Boolean SaveIfAsm;
-  TempResult SaveExpr;
-  tIfState State;
-  Boolean CaseFound;
-  LongInt StartLine;
+typedef struct tag_TIfSave {
+    struct tag_TIfSave* Next;
+    Integer             NestLevel;
+    Boolean             SaveIfAsm;
+    TempResult          SaveExpr;
+    tIfState            State;
+    Boolean             CaseFound;
+    LongInt             StartLine;
 } TIfSave, *PIfSave;
 
 extern Boolean IfAsm;
 extern PIfSave FirstIfSave;
-
 
 extern Boolean CodeIFs(void);
 

@@ -8,16 +8,17 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <string.h>
-
-#include "strutil.h"
-#include "strcomp.h"
-#include "asmdef.h"
-#include "asmpars.h"
 #include "lstmacroexp.h"
 
-#define MODIFIER_CLR 0x80
-#define LstMacroExpName  "MACEXP"     /* expandierte Makros anzeigen */
+#include "asmdef.h"
+#include "asmpars.h"
+#include "strcomp.h"
+#include "strutil.h"
+
+#include <string.h>
+
+#define MODIFIER_CLR    0x80
+#define LstMacroExpName "MACEXP" /* expandierte Makros anzeigen */
 
 static tLstMacroExp LstMacroExp;
 
@@ -27,36 +28,32 @@ static tLstMacroExp LstMacroExp;
  * \param  NewLstMacroExp new value to be set
  * ------------------------------------------------------------------------ */
 
-void SetLstMacroExp(tLstMacroExp NewLstMacroExp)
-{
-  tStrComp TmpComp;
-  String TmpCompStr;
-  StrCompMkTemp(&TmpComp, TmpCompStr, sizeof(TmpCompStr));
+void SetLstMacroExp(tLstMacroExp NewLstMacroExp) {
+    tStrComp TmpComp;
+    String   TmpCompStr;
+    StrCompMkTemp(&TmpComp, TmpCompStr, sizeof(TmpCompStr));
 
-  LstMacroExp = NewLstMacroExp;
-  strmaxcpy(TmpCompStr, LstMacroExpName, sizeof(TmpCompStr)); EnterIntSymbol(&TmpComp, NewLstMacroExp, SegNone, True);
-  if (LstMacroExp == eLstMacroExpAll)
-    strcpy(ListLine, "ALL");
-  else if (LstMacroExp == eLstMacroExpNone)
-    strcpy(ListLine, "NONE");
-  else
-  {
-    if (LstMacroExp & eLstMacroExpMacro)
-    {
-      strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
-      strmaxcat(ListLine, "MACRO", STRINGSIZE);
+    LstMacroExp = NewLstMacroExp;
+    strmaxcpy(TmpCompStr, LstMacroExpName, sizeof(TmpCompStr));
+    EnterIntSymbol(&TmpComp, NewLstMacroExp, SegNone, True);
+    if (LstMacroExp == eLstMacroExpAll) {
+        strcpy(ListLine, "ALL");
+    } else if (LstMacroExp == eLstMacroExpNone) {
+        strcpy(ListLine, "NONE");
+    } else {
+        if (LstMacroExp & eLstMacroExpMacro) {
+            strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
+            strmaxcat(ListLine, "MACRO", STRINGSIZE);
+        }
+        if (LstMacroExp & eLstMacroExpIf) {
+            strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
+            strmaxcat(ListLine, "IF", STRINGSIZE);
+        }
+        if (LstMacroExp & eLstMacroExpRest) {
+            strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
+            strmaxcat(ListLine, "REST", STRINGSIZE);
+        }
     }
-    if (LstMacroExp & eLstMacroExpIf)
-    {
-      strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
-      strmaxcat(ListLine, "IF", STRINGSIZE);
-    }
-    if (LstMacroExp & eLstMacroExpRest)
-    {
-      strmaxcat(ListLine, *ListLine ? "+" : "=", STRINGSIZE);
-      strmaxcat(ListLine, "REST", STRINGSIZE);
-    }
-  }
 }
 
 /*!------------------------------------------------------------------------
@@ -65,9 +62,8 @@ void SetLstMacroExp(tLstMacroExp NewLstMacroExp)
  * \return value
  * ------------------------------------------------------------------------ */
 
-tLstMacroExp GetLstMacroExp(void)
-{
-  return LstMacroExp;
+tLstMacroExp GetLstMacroExp(void) {
+    return LstMacroExp;
 }
 
 /*!------------------------------------------------------------------------
@@ -77,9 +73,8 @@ tLstMacroExp GetLstMacroExp(void)
  * \return True of Mod1 is the exact inverse of Mod2
  * ------------------------------------------------------------------------ */
 
-static Boolean Inverse(Byte Mod1, Byte Mod2)
-{
-  return (Mod1 ^ Mod2) == MODIFIER_CLR;
+static Boolean Inverse(Byte Mod1, Byte Mod2) {
+    return (Mod1 ^ Mod2) == MODIFIER_CLR;
 }
 
 /*!------------------------------------------------------------------------
@@ -88,9 +83,8 @@ static Boolean Inverse(Byte Mod1, Byte Mod2)
  * \param  pLstMacroExpMod list to be initialized
  * ------------------------------------------------------------------------ */
 
-void InitLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod)
-{
-  pLstMacroExpMod->Count = 0;
+void InitLstMacroExpMod(tLstMacroExpMod* pLstMacroExpMod) {
+    pLstMacroExpMod->Count = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -102,27 +96,28 @@ void InitLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod)
  * \return True if modifier could be added, otherwise list is full (should not occur?)
  * ------------------------------------------------------------------------ */
 
-Boolean AddLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod, Boolean Set, tLstMacroExp Mod)
-{
-  Byte NewModifier = Mod | (Set ? 0 : MODIFIER_CLR);
-  unsigned z, dest;
+Boolean AddLstMacroExpMod(
+        tLstMacroExpMod* pLstMacroExpMod, Boolean Set, tLstMacroExp Mod) {
+    Byte     NewModifier = Mod | (Set ? 0 : MODIFIER_CLR);
+    unsigned z, dest;
 
-  /* trim out any inverse modifier that is totally neutralized by the new one */
+    /* trim out any inverse modifier that is totally neutralized by the new one */
 
-  for (z = dest = 0; z < pLstMacroExpMod->Count; z++)
-    if (!Inverse(pLstMacroExpMod->Modifiers[z], NewModifier))
-      pLstMacroExpMod->Modifiers[dest++] = pLstMacroExpMod->Modifiers[z];
-  pLstMacroExpMod->Count = dest;
+    for (z = dest = 0; z < pLstMacroExpMod->Count; z++) {
+        if (!Inverse(pLstMacroExpMod->Modifiers[z], NewModifier)) {
+            pLstMacroExpMod->Modifiers[dest++] = pLstMacroExpMod->Modifiers[z];
+        }
+    }
+    pLstMacroExpMod->Count = dest;
 
-  /* add the new one */
+    /* add the new one */
 
-  if (pLstMacroExpMod->Count >= LSTMACROEXPMOD_MAX)
-    return False;
-  else
-  {
-    pLstMacroExpMod->Modifiers[pLstMacroExpMod->Count++] = NewModifier;
-    return True;
-  }
+    if (pLstMacroExpMod->Count >= LSTMACROEXPMOD_MAX) {
+        return False;
+    } else {
+        pLstMacroExpMod->Modifiers[pLstMacroExpMod->Count++] = NewModifier;
+        return True;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -132,15 +127,17 @@ Boolean AddLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod, Boolean Set, tLstMac
  * \return True if list contains no contradictions
  * ------------------------------------------------------------------------ */
 
-Boolean ChkLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod)
-{
-  unsigned z1, z2;
+Boolean ChkLstMacroExpMod(tLstMacroExpMod const* pLstMacroExpMod) {
+    unsigned z1, z2;
 
-  for (z1 = 0; z1 < pLstMacroExpMod->Count; z1++)
-    for (z2 = z1 + 1; z2 < pLstMacroExpMod->Count; z2++)
-      if (Inverse(pLstMacroExpMod->Modifiers[z1], pLstMacroExpMod->Modifiers[z2]))
-        return False;
-  return True;
+    for (z1 = 0; z1 < pLstMacroExpMod->Count; z1++) {
+        for (z2 = z1 + 1; z2 < pLstMacroExpMod->Count; z2++) {
+            if (Inverse(pLstMacroExpMod->Modifiers[z1], pLstMacroExpMod->Modifiers[z2])) {
+                return False;
+            }
+        }
+    }
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -151,29 +148,34 @@ Boolean ChkLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod)
  * \param  DestLen size of dest buffer
  * ------------------------------------------------------------------------ */
 
-void DumpLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod, char *pDest, int DestLen)
-{
-  unsigned z;
+void DumpLstMacroExpMod(
+        tLstMacroExpMod const* pLstMacroExpMod, char* pDest, int DestLen) {
+    unsigned z;
 
-  for (z = 0; z < pLstMacroExpMod->Count; z++)
-  {
-    if (z)
-      strmaxcat(pDest, ",", DestLen);
-    strmaxcat(pDest, (pLstMacroExpMod->Modifiers[z] & MODIFIER_CLR) ? "NOEXP" : "EXP", DestLen);
-    switch (pLstMacroExpMod->Modifiers[z] & ~MODIFIER_CLR)
-    {
-      case eLstMacroExpRest:
-        strmaxcat(pDest, "REST", DestLen); break;
-      case eLstMacroExpIf:
-        strmaxcat(pDest, "IF", DestLen); break;
-      case eLstMacroExpMacro:
-        strmaxcat(pDest, "MACRO", DestLen); break;
-      case eLstMacroExpAll:
-        strmaxcat(pDest, "AND", DestLen); break;
-      default:
-        strmaxcat(pDest, "?", DestLen);
+    for (z = 0; z < pLstMacroExpMod->Count; z++) {
+        if (z) {
+            strmaxcat(pDest, ",", DestLen);
+        }
+        strmaxcat(
+                pDest, (pLstMacroExpMod->Modifiers[z] & MODIFIER_CLR) ? "NOEXP" : "EXP",
+                DestLen);
+        switch (pLstMacroExpMod->Modifiers[z] & ~MODIFIER_CLR) {
+        case eLstMacroExpRest:
+            strmaxcat(pDest, "REST", DestLen);
+            break;
+        case eLstMacroExpIf:
+            strmaxcat(pDest, "IF", DestLen);
+            break;
+        case eLstMacroExpMacro:
+            strmaxcat(pDest, "MACRO", DestLen);
+            break;
+        case eLstMacroExpAll:
+            strmaxcat(pDest, "AND", DestLen);
+            break;
+        default:
+            strmaxcat(pDest, "?", DestLen);
+        }
     }
-  }
 }
 
 /*!------------------------------------------------------------------------
@@ -184,16 +186,16 @@ void DumpLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod, char *pDest, int
  * \return resulting new mask
  * ------------------------------------------------------------------------ */
 
-tLstMacroExp ApplyLstMacroExpMod(tLstMacroExp Src, const tLstMacroExpMod *pLstMacroExpMod)
-{
-  unsigned z;
+tLstMacroExp ApplyLstMacroExpMod(
+        tLstMacroExp Src, tLstMacroExpMod const* pLstMacroExpMod) {
+    unsigned z;
 
-  for (z = 0; z < pLstMacroExpMod->Count; z++)
-  {
-    if (pLstMacroExpMod->Modifiers[z] & MODIFIER_CLR)
-      Src &= ~((tLstMacroExp)pLstMacroExpMod->Modifiers[z] & eLstMacroExpAll);
-    else
-      Src |= (tLstMacroExp)pLstMacroExpMod->Modifiers[z];
-  }
-  return Src;
+    for (z = 0; z < pLstMacroExpMod->Count; z++) {
+        if (pLstMacroExpMod->Modifiers[z] & MODIFIER_CLR) {
+            Src &= ~((tLstMacroExp)pLstMacroExpMod->Modifiers[z] & eLstMacroExpAll);
+        } else {
+            Src |= (tLstMacroExp)pLstMacroExpMod->Modifiers[z];
+        }
+    }
+    return Src;
 }

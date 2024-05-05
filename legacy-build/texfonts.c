@@ -8,23 +8,23 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdlib.h>
+#include "texfonts.h"
 
 #include "datatypes.h"
-#include "texfonts.h"
+
+#include <stdlib.h>
 
 /*--------------------------------------------------------------------------*/
 
-typedef struct sFontSave
-{
-  struct sFontSave *pNext;
-  int FontFlags;
-  tFontSize FontSize;
+typedef struct sFontSave {
+    struct sFontSave* pNext;
+    int               FontFlags;
+    tFontSize         FontSize;
 } tFontSave, *tpFontSave;
 
 /*--------------------------------------------------------------------------*/
 
-int CurrFontFlags, FontNest;
+int       CurrFontFlags, FontNest;
 tFontSize CurrFontSize;
 tFontType CurrFontType;
 
@@ -35,13 +35,12 @@ static tpFontSave pFontStack;
  * \brief  initialize font state
  * ------------------------------------------------------------------------ */
 
-void InitFont(void)
-{
-  pFontStack = NULL;
-  FontNest = 0;
-  CurrFontSize = FontNormalSize;
-  CurrFontType = FontStandard;
-  CurrFontFlags = 0;
+void InitFont(void) {
+    pFontStack    = NULL;
+    FontNest      = 0;
+    CurrFontSize  = FontNormalSize;
+    CurrFontType  = FontStandard;
+    CurrFontFlags = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -49,16 +48,15 @@ void InitFont(void)
  * \brief  push font size & flags to stack
  * ------------------------------------------------------------------------ */
 
-void SaveFont(void)
-{
-  tpFontSave pNewSave;
+void SaveFont(void) {
+    tpFontSave pNewSave;
 
-  pNewSave = (tpFontSave) malloc(sizeof(*pNewSave));
-  pNewSave->pNext = pFontStack;
-  pNewSave->FontSize = CurrFontSize;
-  pNewSave->FontFlags = CurrFontFlags;
-  pFontStack = pNewSave;
-  FontNest++;
+    pNewSave            = (tpFontSave)malloc(sizeof(*pNewSave));
+    pNewSave->pNext     = pFontStack;
+    pNewSave->FontSize  = CurrFontSize;
+    pNewSave->FontFlags = CurrFontFlags;
+    pFontStack          = pNewSave;
+    FontNest++;
 }
 
 /*!------------------------------------------------------------------------
@@ -69,22 +67,22 @@ void SaveFont(void)
 extern void PrFontDiff(int OldFlags, int NewFlags);
 extern void PrFontSize(tFontSize Type, Boolean On);
 
-void RestoreFont(void)
-{
-  tpFontSave pOldSave;
+void RestoreFont(void) {
+    tpFontSave pOldSave;
 
-  if (!pFontStack)
-    return;
+    if (!pFontStack) {
+        return;
+    }
 
-  PrFontDiff(CurrFontFlags, pFontStack->FontFlags);
-  PrFontSize(CurrFontSize, False);
+    PrFontDiff(CurrFontFlags, pFontStack->FontFlags);
+    PrFontSize(CurrFontSize, False);
 
-  pOldSave = pFontStack;
-  pFontStack = pFontStack->pNext;
-  CurrFontSize = pOldSave->FontSize;
-  CurrFontFlags = pOldSave->FontFlags;
-  free(pOldSave);
-  FontNest--;
+    pOldSave      = pFontStack;
+    pFontStack    = pFontStack->pNext;
+    CurrFontSize  = pOldSave->FontSize;
+    CurrFontFlags = pOldSave->FontFlags;
+    free(pOldSave);
+    FontNest--;
 }
 
 /*!------------------------------------------------------------------------
@@ -92,12 +90,10 @@ void RestoreFont(void)
  * \brief  dispose pushed font settings
  * ------------------------------------------------------------------------ */
 
-void FreeFontStack(void)
-{
-  while (pFontStack)
-  {
-    tpFontSave pOld = pFontStack;
-    pFontStack = pOld->pNext;
-    free(pOld);
-  }
+void FreeFontStack(void) {
+    while (pFontStack) {
+        tpFontSave pOld = pFontStack;
+        pFontStack      = pOld->pNext;
+        free(pOld);
+    }
 }

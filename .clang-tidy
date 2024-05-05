@@ -1,0 +1,154 @@
+Checks: >
+  -*,
+  bugprone-*,
+  cert-dcl50-cpp,
+  cert-env33-c,
+  cert-err33-c,
+  cert-err34-c,
+  cert-err52-cpp,
+  cert-err58-cpp,
+  cert-err60-cpp,
+  cert-flp30-c,
+  cert-mem57-cpp,
+  cert-msc50-cpp,
+  cert-msc51-cpp,
+  cert-oop57-cpp,
+  cert-oop58-cpp,
+  clang-diagnostic-*,
+  -clang-diagnostic-pre-c++*-compat*,
+  -clang-diagnostic-c++*-compat*,
+  -clang-diagnostic-ignored-optimization-argument,
+  -clang-diagnostic-undefined-var-template,
+  -clang-diagnostic-unused-macros,
+  clang-analyzer-*,
+  clang-analyzer-alpha*,
+  -cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  google-build-using-namespace,
+  google-default-arguments,
+  google-explicit-constructor,
+  google-global-names-in-headers,
+  google-readability-casting,
+  google-runtime-int,
+  google-runtime-operator,
+  hicpp-*,
+  -hicpp-exception-baseclass,
+  -hicpp-named-parameter,
+  misc-*,
+  -misc-no-recursion,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  performance-*,
+  portability-std-allocator-const,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-function-cognitive-complexity
+CheckOptions:
+  - key: bugprone-argument-comment.StrictMode
+    value: 1
+  - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: 1
+  - key: bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value: "int8_t"
+  - key: readability-identifier-naming.AggressiveDependentMemberLookup
+    value: true
+  - key: readability-identifier-naming.AbstractClassCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassMethodCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantPointerParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprFunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprMethodCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantPointerCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalFunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalPointerCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.InlineNamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalConstantPointerCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalPointerCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MethodCase
+    value: lower_case
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterPackCase
+    value: lower_case
+  - key: readability-identifier-naming.PointerParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMethodCase
+    value: lower_case
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ProtectedMethodCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMethodCase
+    value: lower_case
+  - key: readability-identifier-naming.ScopedEnumConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.StructCase
+    value: lower_case
+  - key: readability-identifier-naming.TypeAliasCase
+    value: lower_case
+  - key: readability-identifier-naming.TypedefCase
+    value: lower_case
+  - key: readability-identifier-naming.UnionCase
+    value: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.VirtualMethodCase
+    value: lower_case
+FormatStyle: "file"

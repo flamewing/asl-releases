@@ -12,39 +12,41 @@
 
 #include "datatypes.h"
 
-typedef enum
-{
-  eLstMacroExpNone = 0,
-  eLstMacroExpRest = 1,
-  eLstMacroExpIf = 2,
-  eLstMacroExpMacro = 4,
-  eLstMacroExpAll = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro
+typedef enum {
+    eLstMacroExpNone  = 0,
+    eLstMacroExpRest  = 1,
+    eLstMacroExpIf    = 2,
+    eLstMacroExpMacro = 4,
+    eLstMacroExpAll   = eLstMacroExpRest | eLstMacroExpIf | eLstMacroExpMacro
 } tLstMacroExp;
 
 #ifdef __cplusplus
-#include "cppops.h"
+#    include "cppops.h"
+
 DefCPPOps_Mask(tLstMacroExp)
 #endif
 
 #define LSTMACROEXPMOD_MAX 8
 
-typedef struct
-{
-  unsigned Count;
-  Byte Modifiers[LSTMACROEXPMOD_MAX];
+        typedef struct {
+    unsigned Count;
+    Byte     Modifiers[LSTMACROEXPMOD_MAX];
 } tLstMacroExpMod;
 
-extern void SetLstMacroExp(tLstMacroExp NewMacroExp);
+extern void         SetLstMacroExp(tLstMacroExp NewMacroExp);
 extern tLstMacroExp GetLstMacroExp(void);
 
-extern void InitLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod);
+extern void InitLstMacroExpMod(tLstMacroExpMod* pLstMacroExpMod);
 
-extern Boolean AddLstMacroExpMod(tLstMacroExpMod *pLstMacroExpMod, Boolean Set, tLstMacroExp Mod);
+extern Boolean AddLstMacroExpMod(
+        tLstMacroExpMod* pLstMacroExpMod, Boolean Set, tLstMacroExp Mod);
 
-extern Boolean ChkLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod);
+extern Boolean ChkLstMacroExpMod(tLstMacroExpMod const* pLstMacroExpMod);
 
-extern void DumpLstMacroExpMod(const tLstMacroExpMod *pLstMacroExpMod, char *pDest, int DestLen);
+extern void DumpLstMacroExpMod(
+        tLstMacroExpMod const* pLstMacroExpMod, char* pDest, int DestLen);
 
-extern tLstMacroExp ApplyLstMacroExpMod(tLstMacroExp Src, const tLstMacroExpMod *pLstMacroExpMod);
+extern tLstMacroExp ApplyLstMacroExpMod(
+        tLstMacroExp Src, tLstMacroExpMod const* pLstMacroExpMod);
 
 #endif /* LSTMACROEXP_H */
