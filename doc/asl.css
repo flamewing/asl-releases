@@ -174,7 +174,7 @@ dd:last-child {
 img {
     border: 0;
     -ms-interpolation-mode: bicubic;
-    vertical-align: middle;
+    vertical-align: baseline;
 }
 
 figure {
@@ -218,7 +218,7 @@ table td {
     border-top-style: solid;
     border-left-width: 1px;
     border-left-style: solid;
-    vertical-align: top;
+    vertical-align: baseline;
 }
 
 .author {
@@ -428,7 +428,7 @@ span.underline {
 
 div.column {
     display: inline-block;
-    vertical-align: top;
+    vertical-align: baseline;
     width: 50%;
 }
 
@@ -808,7 +808,7 @@ code span.wa {
 
     div.column {
         display: inline-block;
-        vertical-align: top;
+        vertical-align: baseline;
         width: 50%;
     }
 
