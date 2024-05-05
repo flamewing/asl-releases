@@ -77,9 +77,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
+        env:
+          MSYS2_PATH_TYPE: inherit
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG
       - name: Build
+        env:
+          MSYS2_PATH_TYPE: inherit
         run: |
           cmake --build build -j
       - name: Test

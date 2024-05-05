@@ -145,9 +145,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
+        env:
+          MSYS2_PATH_TYPE: inherit
         run: |
           cmake -S . -B build -G Ninja
       - name: Build
+        env:
+          MSYS2_PATH_TYPE: inherit
         run: |
           cmake --build build -j
       - name: Create package
