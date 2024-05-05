@@ -1109,6 +1109,9 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         --self-contained --standalone
         --reference-doc=doc/asl-template.odt
     )
+    # Note: making ODT depend arbitrarily on HTML to avoid a race condition when
+    # Pandocollogy copies the source files.
+    add_dependencies(odt_document html_document)
     install(
         FILES
         COPYING
