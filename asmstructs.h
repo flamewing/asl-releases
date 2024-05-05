@@ -16,39 +16,38 @@
 struct sStructElem;
 struct sStrComp;
 
-typedef void (*tStructElemExpandFnc)(const struct sStrComp *pVarName, const struct sStructElem *pStructElem, LargeWord Base);
+typedef void (*tStructElemExpandFnc)(
+        const struct sStrComp* pVarName, const struct sStructElem* pStructElem,
+        LargeWord Base);
 
-typedef struct sStructElem
-{
-  struct sStructElem *Next;
-  char *pElemName, *pRefElemName;
-  Boolean IsStruct;
-  tStructElemExpandFnc ExpandFnc;
-  LongInt Offset;
-  ShortInt BitPos; /* -1 -> no bit position */
-  ShortInt BitWidthM1; /* -1 -> no bit field, otherwise actual width minus one */
-  tSymbolSize OpSize;
+typedef struct sStructElem {
+    struct sStructElem*  Next;
+    char *               pElemName, *pRefElemName;
+    Boolean              IsStruct;
+    tStructElemExpandFnc ExpandFnc;
+    LongInt              Offset;
+    ShortInt             BitPos; /* -1 -> no bit position */
+    ShortInt    BitWidthM1; /* -1 -> no bit field, otherwise actual width minus one */
+    tSymbolSize OpSize;
 } TStructElem, *PStructElem;
 
-typedef struct sStructRec
-{
-  LongInt TotLen;
-  PStructElem Elems;
-  char ExtChar;
-  Boolean DoExt;
-  Boolean IsUnion;
+typedef struct sStructRec {
+    LongInt     TotLen;
+    PStructElem Elems;
+    char        ExtChar;
+    Boolean     DoExt;
+    Boolean     IsUnion;
 } TStructRec, *PStructRec;
 
-typedef struct sStructStack
-{
-  struct sStructStack *Next;
-  char *Name, *pBaseName;
-  LargeWord SaveCurrPC, SaveOffsetToInnermost;
-  PStructRec StructRec;
+typedef struct sStructStack {
+    struct sStructStack* Next;
+    char *               Name, *pBaseName;
+    LargeWord            SaveCurrPC, SaveOffsetToInnermost;
+    PStructRec           StructRec;
 } TStructStack, *PStructStack;
 
 extern PStructStack StructStack, pInnermostNamedStruct;
-extern int StructSaveSeg;
+extern int          StructSaveSeg;
 
 extern PStructRec CreateStructRec(void);
 
@@ -56,25 +55,27 @@ extern void DestroyStructElem(PStructElem pStructElem);
 
 extern void DestroyStructRec(PStructRec StructRec);
 
-extern void BuildStructName(char *pResult, unsigned ResultLen, const char *pName);
+extern void BuildStructName(char* pResult, unsigned ResultLen, char const* pName);
 
-extern PStructElem CreateStructElem(const struct sStrComp *pElemName);
+extern PStructElem CreateStructElem(const struct sStrComp* pElemName);
 
-extern PStructElem CloneStructElem(const struct sStrComp *pCloneElemName, const struct sStructElem *pSrc);
+extern PStructElem CloneStructElem(
+        const struct sStrComp* pCloneElemName, const struct sStructElem* pSrc);
 
 extern Boolean AddStructElem(PStructRec pStructRec, PStructElem pElement);
 
-extern void SetStructElemSize(PStructRec pStructRec, const char *pElemName, tSymbolSize Size);
+extern void SetStructElemSize(
+        PStructRec pStructRec, char const* pElemName, tSymbolSize Size);
 
-extern void AddStructSymbol(const char *pName, LargeWord Value);
+extern void AddStructSymbol(char const* pName, LargeWord Value);
 
 extern void ResolveStructReferences(PStructRec pStructRec);
 
 extern void BumpStructLength(PStructRec StructRec, LongInt Length);
 
-extern void AddStruct(PStructRec StructRec, char *Name, Boolean Protest);
+extern void AddStruct(PStructRec StructRec, char* Name, Boolean Protest);
 
-extern Boolean FoundStruct(PStructRec *Erg, const char *pName);
+extern Boolean FoundStruct(PStructRec* Erg, char const* pName);
 
 extern void ResetStructDefines(void);
 

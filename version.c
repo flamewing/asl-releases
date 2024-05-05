@@ -10,9 +10,9 @@
 
 #include "stdinc.h"
 
-const char *Version = "1.42 Beta [Bld 212]";
-const char *DebVersion = "1.42bld212-1";
-LongInt VerNo = 0x142f;
+char const* Version    = "1.42 Beta [Bld 212]";
+char const* DebVersion = "1.42bld212-1";
+LongInt     VerNo      = 0x142f;
 
-const char *InfoMessCopyright = "(C) 1992,2021 Alfred Arnold";
-const char *InfoNewCopyright = "(C) 2022-2024 flamewing";
+char const* InfoMessCopyright = "(C) 1992,2021 Alfred Arnold";
+char const* InfoNewCopyright  = "(C) 2022-2024 flamewing";

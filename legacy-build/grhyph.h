@@ -13,5 +13,5 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *GRHyphens[];
+extern char* GRHyphens[];
 #endif /* GRHYPH_H */

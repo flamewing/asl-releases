@@ -10,7 +10,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *GetErrorPos(void);
+extern char* GetErrorPos(void);
 
 extern void WriteCode(void);
 

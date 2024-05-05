@@ -12,7 +12,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *GetErrorMsg(int number);
+extern char* GetErrorMsg(int number);
 
-extern void ioerrs_init(char *ProgPath);
+extern void ioerrs_init(char* ProgPath);
 #endif /* IOERRS_H */

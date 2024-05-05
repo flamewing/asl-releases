@@ -3,8 +3,8 @@
 #define PASCSTYLE_H
 
 #ifndef False
-#define False 0
-#define True 1
+#    define False 0
+#    define True  1
 #endif
 
 #define Ord(b) ((b) ? 1L : 0L)

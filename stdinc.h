@@ -13,35 +13,36 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stddef.h>
-#include <stdio.h>  // IWYU pragma: export
-#include <stdlib.h> // IWYU pragma: export
 #include "config.h"
+
+#include <stddef.h>
+#include <stdio.h>     // IWYU pragma: export
+#include <stdlib.h>    // IWYU pragma: export
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#    include <unistd.h>
 #endif
 
-#include <math.h>   // IWYU pragma: export
-#include <errno.h>  // IWYU pragma: export
-#include <sys/types.h>
+#include <errno.h>    // IWYU pragma: export
+#include <math.h>     // IWYU pragma: export
 #include <memory.h>
-#if !defined (__FreeBSD__) && !defined(__APPLE__)
-#include <malloc.h>
+#include <sys/types.h>
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
+#    include <malloc.h>
 #endif
 
-#include "pascstyle.h"  // IWYU pragma: export
-#include "datatypes.h"  // IWYU pragma: export
-#include "chardefs.h"   // IWYU pragma: export
+#include "chardefs.h"     // IWYU pragma: export
+#include "datatypes.h"    // IWYU pragma: export
+#include "pascstyle.h"    // IWYU pragma: export
 
 #ifndef min
-#define min(a,b) ((a<b)?(a):(b))
+#    define min(a, b) ((a < b) ? (a) : (b))
 #endif
 #ifndef max
-#define max(a,b) ((a>b)?(a):(b))
+#    define max(a, b) ((a > b) ? (a) : (b))
 #endif
 
 #ifndef M_PI
-#define M_PI 3.1415926535897932385E0
+#    define M_PI 3.1415926535897932385E0
 #endif
 
 #endif /* STDINC_H */

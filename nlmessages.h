@@ -15,17 +15,19 @@
 
 #include "datatypes.h"
 
-typedef struct
-{
-  char *MsgBlock;
-  LongInt *StrPosis, MsgCount;
+typedef struct {
+    char*    MsgBlock;
+    LongInt *StrPosis, MsgCount;
 } TMsgCat, *PMsgCat;
 
-extern char *catgetmessage(PMsgCat Catalog, int Num);
+extern char* catgetmessage(PMsgCat Catalog, int Num);
 
-extern void opencatalog(PMsgCat Catalog, const char *File, const char *Path, LongInt File_MsgId1, LongInt File_MsgId2);
+extern void opencatalog(
+        PMsgCat Catalog, char const* File, char const* Path, LongInt File_MsgId1,
+        LongInt File_MsgId2);
 
-extern char *getmessage(int Num);
+extern char* getmessage(int Num);
 
-extern void nlmessages_init(const char *File, char *Path, LongInt File_MsgId1, LongInt File_MsgId2);
+extern void nlmessages_init(
+        char const* File, char* Path, LongInt File_MsgId1, LongInt File_MsgId2);
 #endif /* NLMESSAGES_H */

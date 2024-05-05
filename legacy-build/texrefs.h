@@ -11,15 +11,15 @@
 /*****************************************************************************/
 
 extern void InitLabels(void);
-extern void AddLabel(const char *pName, const char *pValue);
-extern void GetLabel(const char *pName, char *pDest);
-extern void PrintLabels(const char *pFileName);
+extern void AddLabel(char const* pName, char const* pValue);
+extern void GetLabel(char const* pName, char* pDest);
+extern void PrintLabels(char const* pFileName);
 extern void FreeLabels(void);
 
 extern void InitCites(void);
-extern void AddCite(const char *pName, const char *pValue);
-extern void GetCite(char *pName, char *pDest);
-extern void PrintCites(const char *pFileName);
+extern void AddCite(char const* pName, char const* pValue);
+extern void GetCite(char* pName, char* pDest);
+extern void PrintCites(char const* pFileName);
 extern void FreeCites(void);
 
 #endif /* TEXREFS_H */

@@ -17,28 +17,27 @@ extern Word ErrorCount, WarnCount;
 
 struct sLineComp;
 struct sStrComp;
-extern void WrErrorString(const char *Message, const char *Add, Boolean Warning, Boolean Fatal,
-                          const char *pExtendError, const struct sLineComp *pLineComp);
+extern void WrErrorString(
+        char const* Message, char const* Add, Boolean Warning, Boolean Fatal,
+        char const* pExtendError, const struct sLineComp* pLineComp);
 
 extern void WrError(tErrorNum Num);
 
-extern void WrXError(tErrorNum Num, const char *pExtError);
+extern void WrXError(tErrorNum Num, char const* pExtError);
 
-extern void WrXErrorPos(tErrorNum Num, const char *pExtError, const struct sLineComp *pLineComp);
+extern void WrXErrorPos(
+        tErrorNum Num, char const* pExtError, const struct sLineComp* pLineComp);
 
-extern void WrStrErrorPos(tErrorNum Num, const struct sStrComp *pStrComp);
-
+extern void WrStrErrorPos(tErrorNum Num, const struct sStrComp* pStrComp);
 
 extern void CodeEXPECT(Word Code);
 extern void CodeENDEXPECT(Word Code);
-
 
 extern void AsmErrPassInit(void);
 extern void AsmErrPassExit(void);
 
 extern void ChkIO(tErrorNum ErrNo);
-extern void ChkXIO(tErrorNum ErrNo, char *pExtError);
-extern void ChkStrIO(tErrorNum ErrNo, const struct sStrComp *pComp);
+extern void ChkXIO(tErrorNum ErrNo, char* pExtError);
+extern void ChkStrIO(tErrorNum ErrNo, const struct sStrComp* pComp);
 
 #endif /* ASMERR_H */
-

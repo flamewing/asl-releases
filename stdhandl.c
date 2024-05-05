@@ -11,109 +11,109 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
-#include <sys/stat.h>
+
 #include "stdhandl.h"
 
-#if defined ( __EMX__ ) || defined ( __IBMC__ )
-#include <os2.h>
+#include <string.h>
+#include <sys/stat.h>
+
+#if defined(__EMX__) || defined(__IBMC__)
+#    include <os2.h>
 #endif
 
 #ifndef S_ISCHR
-#ifdef __IBMC__
-#define S_ISCHR(m)    ((m) & S_IFCHR)
-#else
-#define S_ISCHR(m)    (((m) & S_IFMT) == S_IFCHR)
-#endif
+#    ifdef __IBMC__
+#        define S_ISCHR(m) ((m) & S_IFCHR)
+#    else
+#        define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
+#    endif
 #endif
 #ifndef S_ISREG
-#ifdef __IBMC__
-#define S_ISREG(m)    ((m) & S_IFREG)
-#else
-#define S_ISREG(m)    (((m) & S_IFMT) == S_IFREG)
-#endif
+#    ifdef __IBMC__
+#        define S_ISREG(m) ((m) & S_IFREG)
+#    else
+#        define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#    endif
 #endif
 
 TRedirected Redirected;
 
-static void AssignHandle(FILE **ppFile, Word Num)
-{
-  switch (Num)
-  {
+static void AssignHandle(FILE** ppFile, Word Num) {
+    switch (Num) {
     case NumStdIn:
-      *ppFile = stdin;
-      break;
+        *ppFile = stdin;
+        break;
     case NumStdOut:
-      *ppFile = stdout;
-      break;
+        *ppFile = stdout;
+        break;
     case NumStdErr:
-      *ppFile = stderr;
-      break;
+        *ppFile = stderr;
+        break;
     default:
-      *ppFile = NULL;
-  }
+        *ppFile = NULL;
+    }
 }
 
 /* Eine Datei unter Beruecksichtigung der Standardkanaele oeffnen */
 
-void OpenWithStandard(FILE **ppFile, String Path)
-{
-  if ((strlen(Path) == 2) && (Path[0] == '!') && (Path[1] >= '0') && (Path[1] <= '2'))
-    AssignHandle(ppFile, Path[1] - '0');
-  else
-    *ppFile = fopen(Path, "w");
+void OpenWithStandard(FILE** ppFile, String Path) {
+    if ((strlen(Path) == 2) && (Path[0] == '!') && (Path[1] >= '0') && (Path[1] <= '2')) {
+        AssignHandle(ppFile, Path[1] - '0');
+    } else {
+        *ppFile = fopen(Path, "w");
+    }
 }
 
-void CloseIfOpen(FILE **ppFile)
-{
-  if (*ppFile)
-  {
-    if ((*ppFile != stdin) && (*ppFile != stdout) && (*ppFile != stderr))
-      fclose(*ppFile);
-    *ppFile = NULL;
-  }
+void CloseIfOpen(FILE** ppFile) {
+    if (*ppFile) {
+        if ((*ppFile != stdin) && (*ppFile != stdout) && (*ppFile != stderr)) {
+            fclose(*ppFile);
+        }
+        *ppFile = NULL;
+    }
 }
 
-void stdhandl_init(void)
-{
+void stdhandl_init(void) {
 #ifdef __EMX__
-  ULONG HandType,DevAttr;
+    ULONG HandType, DevAttr;
 #else
-  struct stat stdout_stat;
+    struct stat stdout_stat;
 #endif
 
-   /* wohin zeigt die Standardausgabe ? */
+    /* wohin zeigt die Standardausgabe ? */
 
 #ifdef __EMX__
-  DosQueryHType(1, &HandType, &DevAttr);
-  if ((HandType & 0xff) == FHT_DISKFILE)
-    Redirected = RedirToFile;
-  else if ((DevAttr & 2) == 0)
-    Redirected = RedirToDevice;
-  else
-    Redirected = NoRedir;
+    DosQueryHType(1, &HandType, &DevAttr);
+    if ((HandType & 0xff) == FHT_DISKFILE) {
+        Redirected = RedirToFile;
+    } else if ((DevAttr & 2) == 0) {
+        Redirected = RedirToDevice;
+    } else {
+        Redirected = NoRedir;
+    }
 
 #else
-#ifndef S_IFIFO
-# ifdef _S_IFIFO
-#  define S_IFIFO _S_IFIFO
-# endif
-#endif
-#ifndef S_ISFIFO
-# ifndef S_IFIFO
-#  define	S_ISFIFO(m)	(((m) & S_IFMT) == S_IFIFO)
-# else
-#  define	S_ISFIFO(m)	(0)
-# endif
-#endif
+#    ifndef S_IFIFO
+#        ifdef _S_IFIFO
+#            define S_IFIFO _S_IFIFO
+#        endif
+#    endif
+#    ifndef S_ISFIFO
+#        ifndef S_IFIFO
+#            define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
+#        else
+#            define S_ISFIFO(m) (0)
+#        endif
+#    endif
 
-  fstat(NumStdOut, &stdout_stat);
-  if (S_ISREG(stdout_stat.st_mode))
-    Redirected = RedirToFile;
-  else if (S_ISFIFO(stdout_stat.st_mode))
-    Redirected = RedirToDevice;
-  else
-    Redirected = NoRedir;
+    fstat(NumStdOut, &stdout_stat);
+    if (S_ISREG(stdout_stat.st_mode)) {
+        Redirected = RedirToFile;
+    } else if (S_ISFIFO(stdout_stat.st_mode)) {
+        Redirected = RedirToDevice;
+    } else {
+        Redirected = NoRedir;
+    }
 
 #endif
 }

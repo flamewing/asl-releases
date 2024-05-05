@@ -10,22 +10,22 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "codechunks.h"
 #include "chunks.h"
+#include "codechunks.h"
 
-typedef struct sDisassInfo
-{
-  unsigned CodeLen;
-  unsigned NextAddressCount;
-  LargeWord NextAddresses[10];
-  String SrcLine;
-  const char *pRemark;
+typedef struct sDisassInfo {
+    unsigned    CodeLen;
+    unsigned    NextAddressCount;
+    LargeWord   NextAddresses[10];
+    String      SrcLine;
+    char const* pRemark;
 } tDisassInfo;
 
 extern tCodeChunkList CodeChunks;
-extern ChunkList UsedDataChunks, UsedCodeChunks;
+extern ChunkList      UsedDataChunks, UsedCodeChunks;
 
-extern void(*Disassemble)(LargeWord Address, tDisassInfo *pInfo, Boolean IsData, int DataSize);
+extern void (*Disassemble)(
+        LargeWord Address, tDisassInfo* pInfo, Boolean IsData, int DataSize);
 
 extern void dasmdef_init(void);
 

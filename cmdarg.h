@@ -16,15 +16,19 @@
 #include "datatypes.h"
 #include "stringlists.h"
 
-typedef enum {CMDErr, CMDFile, CMDOK, CMDArg} CMDResult;
+typedef enum {
+    CMDErr,
+    CMDFile,
+    CMDOK,
+    CMDArg
+} CMDResult;
 
-typedef CMDResult (*CMDCallback)(Boolean NegFlag, const char *Arg);
-typedef void (*CMDErrCallback)(Boolean InEnv, char *Arg);
+typedef CMDResult (*CMDCallback)(Boolean NegFlag, char const* Arg);
+typedef void (*CMDErrCallback)(Boolean InEnv, char* Arg);
 
-typedef struct
-{
-  const char *Ident;
-  CMDCallback Callback;
+typedef struct {
+    char const* Ident;
+    CMDCallback Callback;
 } CMDRec;
 
 #define MAXPARAM 256
@@ -34,13 +38,12 @@ extern StringList FileArgList;
 
 extern Boolean ProcessedEmpty(CMDProcessed Processed);
 
-extern void ProcessCMD(int argc, char **argv,
-                       const CMDRec *pCMDRecs, int CMDRecCnt,
-                       CMDProcessed Unprocessed,
-                       const char *EnvName, CMDErrCallback ErrProc);
+extern void ProcessCMD(
+        int argc, char** argv, CMDRec const* pCMDRecs, int CMDRecCnt,
+        CMDProcessed Unprocessed, char const* EnvName, CMDErrCallback ErrProc);
 
-extern const char *GetEXEName(const char *argv0);
+extern char const* GetEXEName(char const* argv0);
 
-extern void cmdarg_init(char *ProgPath);
+extern void cmdarg_init(char* ProgPath);
 
 #endif /* CMDARG_H */

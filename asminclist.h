@@ -12,7 +12,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern void PushInclude(char *S);
+extern void PushInclude(char* S);
 
 extern void PopInclude(void);
 

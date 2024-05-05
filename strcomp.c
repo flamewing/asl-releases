@@ -9,36 +9,36 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
-#include <ctype.h>
-#include "strutil.h"
+
 #include "strcomp.h"
 
-static void check_capacity(const tStrComp *pComp)
-{
-  if (!pComp->str.capacity)
-  {
-    fprintf(stderr, "copy to zero-capacity StrComp\n");
-    abort();
-  }
+#include "strutil.h"
+
+#include <ctype.h>
+#include <string.h>
+
+static void check_capacity(tStrComp const* pComp) {
+    if (!pComp->str.capacity) {
+        fprintf(stderr, "copy to zero-capacity StrComp\n");
+        abort();
+    }
 }
 
-static void check_no_capacity(const tStrComp *pComp)
-{
-  if (pComp->str.capacity)
-  {
-    fprintf(stderr, "ptr move on non-zero-capacity StrComp\n");
-    abort();
-  }
+static void check_no_capacity(tStrComp const* pComp) {
+    if (pComp->str.capacity) {
+        fprintf(stderr, "ptr move on non-zero-capacity StrComp\n");
+        abort();
+    }
 }
 
-static size_t check_realloc(as_dynstr_t *p_str, size_t req_count)
-{
-  if ((req_count >= p_str->capacity) && p_str->dynamic)
-    as_dynstr_realloc(p_str, as_dynstr_roundup_len(req_count));
-  if (req_count >= p_str->capacity)
-    req_count = p_str->capacity - 1;
-  return req_count;
+static size_t check_realloc(as_dynstr_t* p_str, size_t req_count) {
+    if ((req_count >= p_str->capacity) && p_str->dynamic) {
+        as_dynstr_realloc(p_str, as_dynstr_roundup_len(req_count));
+    }
+    if (req_count >= p_str->capacity) {
+        req_count = p_str->capacity - 1;
+    }
+    return req_count;
 }
 
 /*!------------------------------------------------------------------------
@@ -48,10 +48,9 @@ static size_t check_realloc(as_dynstr_t *p_str, size_t req_count)
  * \param  capacity requested capacity of buffer
  * ------------------------------------------------------------------------ */
 
-void StrCompAlloc(tStrComp *pComp, size_t capacity)
-{
-  as_dynstr_ini(&pComp->str, capacity);
-  StrCompReset(pComp);
+void StrCompAlloc(tStrComp* pComp, size_t capacity) {
+    as_dynstr_ini(&pComp->str, capacity);
+    StrCompReset(pComp);
 }
 
 /*!------------------------------------------------------------------------
@@ -60,10 +59,9 @@ void StrCompAlloc(tStrComp *pComp, size_t capacity)
  * \param  pComp component to set
  * ------------------------------------------------------------------------ */
 
-void StrCompReset(tStrComp *pComp)
-{
-  LineCompReset(&pComp->Pos);
-  *pComp->str.p_str = '\0';
+void StrCompReset(tStrComp* pComp) {
+    LineCompReset(&pComp->Pos);
+    *pComp->str.p_str = '\0';
 }
 
 /*!------------------------------------------------------------------------
@@ -72,10 +70,9 @@ void StrCompReset(tStrComp *pComp)
  * \param  pComp component to set
  * ------------------------------------------------------------------------ */
 
-void LineCompReset(tLineComp *pComp)
-{
-  pComp->StartCol = -1;
-  pComp->Len = 0;
+void LineCompReset(tLineComp* pComp) {
+    pComp->StartCol = -1;
+    pComp->Len      = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -84,10 +81,9 @@ void LineCompReset(tLineComp *pComp)
  * \param  pComp string component to be cleared
  * ------------------------------------------------------------------------ */
 
-void StrCompFree(tStrComp *pComp)
-{
-  LineCompReset(&pComp->Pos);
-  as_dynstr_free(&pComp->str);
+void StrCompFree(tStrComp* pComp) {
+    LineCompReset(&pComp->Pos);
+    as_dynstr_free(&pComp->str);
 }
 
 /*!------------------------------------------------------------------------
@@ -98,12 +94,11 @@ void StrCompFree(tStrComp *pComp)
  * \param  capacity string's capacity
  * ------------------------------------------------------------------------ */
 
-void StrCompMkTemp(tStrComp *pComp, char *pStr, size_t capacity)
-{
-  LineCompReset(&pComp->Pos);
-  pComp->str.p_str = pStr;
-  pComp->str.capacity = capacity;
-  pComp->str.dynamic = 0;
+void StrCompMkTemp(tStrComp* pComp, char* pStr, size_t capacity) {
+    LineCompReset(&pComp->Pos);
+    pComp->str.p_str    = pStr;
+    pComp->str.capacity = capacity;
+    pComp->str.dynamic  = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -114,13 +109,12 @@ void StrCompMkTemp(tStrComp *pComp, char *pStr, size_t capacity)
  * \param  StartOffs how many characters to omit at the left
  * ------------------------------------------------------------------------ */
 
-void StrCompRefRight(tStrComp *pDest, const tStrComp *pSrc, size_t StartOffs)
-{
-  pDest->str.p_str = pSrc->str.p_str + StartOffs;
-  pDest->str.capacity = 0;
-  pDest->str.dynamic = 0;
-  pDest->Pos.StartCol = pSrc->Pos.StartCol + StartOffs;
-  pDest->Pos.Len = pSrc->Pos.Len - StartOffs;
+void StrCompRefRight(tStrComp* pDest, tStrComp const* pSrc, size_t StartOffs) {
+    pDest->str.p_str    = pSrc->str.p_str + StartOffs;
+    pDest->str.capacity = 0;
+    pDest->str.dynamic  = 0;
+    pDest->Pos.StartCol = pSrc->Pos.StartCol + StartOffs;
+    pDest->Pos.Len      = pSrc->Pos.Len - StartOffs;
 }
 
 /*!------------------------------------------------------------------------
@@ -130,10 +124,9 @@ void StrCompRefRight(tStrComp *pDest, const tStrComp *pSrc, size_t StartOffs)
  * \param  pSrc source component
  * ------------------------------------------------------------------------ */
 
-void StrCompCopy(tStrComp *pDest, const tStrComp *pSrc)
-{
-  pDest->Pos = pSrc->Pos;
-  pDest->Pos.Len = as_dynstr_copy(&pDest->str, &pSrc->str);
+void StrCompCopy(tStrComp* pDest, tStrComp const* pSrc) {
+    pDest->Pos     = pSrc->Pos;
+    pDest->Pos.Len = as_dynstr_copy(&pDest->str, &pSrc->str);
 }
 
 /*!------------------------------------------------------------------------
@@ -145,20 +138,20 @@ void StrCompCopy(tStrComp *pDest, const tStrComp *pSrc)
  * \param  Count # of characters to copy
  * ------------------------------------------------------------------------ */
 
-void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, size_t Start, size_t Count)
-{
-  unsigned l = strlen(pSrc->str.p_str);
+void StrCompCopySub(tStrComp* pDest, tStrComp const* pSrc, size_t Start, size_t Count) {
+    unsigned l = strlen(pSrc->str.p_str);
 
-  if (Start >= l)
-    Count = 0;
-  else if (Start + Count > l)
-    Count = l - Start;
-  check_capacity(pDest);
-  Count = check_realloc(&pDest->str, Count);
-  memcpy(pDest->str.p_str, pSrc->str.p_str + Start, Count);
-  pDest->str.p_str[Count] = '\0';
-  pDest->Pos.StartCol = pSrc->Pos.StartCol + Start;
-  pDest->Pos.Len = Count;
+    if (Start >= l) {
+        Count = 0;
+    } else if (Start + Count > l) {
+        Count = l - Start;
+    }
+    check_capacity(pDest);
+    Count = check_realloc(&pDest->str, Count);
+    memcpy(pDest->str.p_str, pSrc->str.p_str + Start, Count);
+    pDest->str.p_str[Count] = '\0';
+    pDest->Pos.StartCol     = pSrc->Pos.StartCol + Start;
+    pDest->Pos.Len          = Count;
 }
 
 /*!------------------------------------------------------------------------
@@ -169,18 +162,17 @@ void StrCompCopySub(tStrComp *pDest, const tStrComp *pSrc, size_t Start, size_t 
  * \param  pSrcSplitPos split position (not included in source or dest any more)
  * ------------------------------------------------------------------------ */
 
-void StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
-{
-  size_t SrcLen = strlen(pSrcSplitPos + 1);
+void StrCompSplitRight(tStrComp* pSrc, tStrComp* pDest, char* pSrcSplitPos) {
+    size_t SrcLen = strlen(pSrcSplitPos + 1);
 
-  check_capacity(pDest);
-  SrcLen = check_realloc(&pDest->str, SrcLen);
-  memcpy(pDest->str.p_str, pSrcSplitPos + 1, SrcLen);
-  pDest->str.p_str[SrcLen] = '\0';
-  pDest->Pos.StartCol = pSrc->Pos.StartCol + pSrcSplitPos + 1 - pSrc->str.p_str;
-  pDest->Pos.Len = SrcLen;
-  *pSrcSplitPos = '\0';
-  pSrc->Pos.Len = pSrcSplitPos - pSrc->str.p_str;
+    check_capacity(pDest);
+    SrcLen = check_realloc(&pDest->str, SrcLen);
+    memcpy(pDest->str.p_str, pSrcSplitPos + 1, SrcLen);
+    pDest->str.p_str[SrcLen] = '\0';
+    pDest->Pos.StartCol      = pSrc->Pos.StartCol + pSrcSplitPos + 1 - pSrc->str.p_str;
+    pDest->Pos.Len           = SrcLen;
+    *pSrcSplitPos            = '\0';
+    pSrc->Pos.Len            = pSrcSplitPos - pSrc->str.p_str;
 }
 
 /*!------------------------------------------------------------------------
@@ -191,23 +183,22 @@ void StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
  * \param  pSrcSplitPos split position (not included in source or dest any more)
  * ------------------------------------------------------------------------ */
 
-void StrCompSplitLeft(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
-{
-  size_t SrcLen;
+void StrCompSplitLeft(tStrComp* pSrc, tStrComp* pDest, char* pSrcSplitPos) {
+    size_t SrcLen;
 
-  *pSrcSplitPos = '\0';
-  SrcLen = strlen(pSrc->str.p_str);
-  check_capacity(pDest);
-  SrcLen = check_realloc(&pDest->str, SrcLen);
+    *pSrcSplitPos = '\0';
+    SrcLen        = strlen(pSrc->str.p_str);
+    check_capacity(pDest);
+    SrcLen = check_realloc(&pDest->str, SrcLen);
 
-  memcpy(pDest->str.p_str, pSrc->str.p_str, SrcLen);
-  pDest->str.p_str[SrcLen] = '\0';
-  pDest->Pos.StartCol = pSrc->Pos.StartCol;
-  pDest->Pos.Len = pSrcSplitPos - pSrc->str.p_str;
+    memcpy(pDest->str.p_str, pSrc->str.p_str, SrcLen);
+    pDest->str.p_str[SrcLen] = '\0';
+    pDest->Pos.StartCol      = pSrc->Pos.StartCol;
+    pDest->Pos.Len           = pSrcSplitPos - pSrc->str.p_str;
 
-  strmov(pSrc->str.p_str, pSrcSplitPos + 1);
-  pSrc->Pos.StartCol += pSrcSplitPos - pSrc->str.p_str + 1;
-  pSrc->Pos.Len -= pSrcSplitPos - pSrc->str.p_str + 1;
+    strmov(pSrc->str.p_str, pSrcSplitPos + 1);
+    pSrc->Pos.StartCol += pSrcSplitPos - pSrc->str.p_str + 1;
+    pSrc->Pos.Len -= pSrcSplitPos - pSrc->str.p_str + 1;
 }
 
 /*!------------------------------------------------------------------------
@@ -219,23 +210,23 @@ void StrCompSplitLeft(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
  * \param  pSplitPos split position in source
  * ------------------------------------------------------------------------ */
 
-void StrCompSplitCopy(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, char *pSplitPos)
-{
-  /* pLeft may be equal to pSrc, use memmove() and save SrcLen */
+void StrCompSplitCopy(
+        tStrComp* pLeft, tStrComp* pRight, tStrComp const* pSrc, char* pSplitPos) {
+    /* pLeft may be equal to pSrc, use memmove() and save SrcLen */
 
-  size_t SrcLen = pSrc->Pos.Len;
+    size_t SrcLen = pSrc->Pos.Len;
 
-  check_capacity(pLeft);
-  pLeft->Pos.StartCol = pSrc->Pos.StartCol;
-  pLeft->Pos.Len = check_realloc(&pLeft->str, pSplitPos - pSrc->str.p_str);
-  memmove(pLeft->str.p_str, pSrc->str.p_str, pLeft->Pos.Len);
-  pLeft->str.p_str[pLeft->Pos.Len] = '\0';
+    check_capacity(pLeft);
+    pLeft->Pos.StartCol = pSrc->Pos.StartCol;
+    pLeft->Pos.Len      = check_realloc(&pLeft->str, pSplitPos - pSrc->str.p_str);
+    memmove(pLeft->str.p_str, pSrc->str.p_str, pLeft->Pos.Len);
+    pLeft->str.p_str[pLeft->Pos.Len] = '\0';
 
-  check_capacity(pRight);
-  pRight->Pos.StartCol = pSrc->Pos.StartCol + (pLeft->Pos.Len + 1);
-  pRight->Pos.Len = check_realloc(&pRight->str, SrcLen - (pLeft->Pos.Len + 1));
-  memcpy(pRight->str.p_str, pSplitPos + 1, pRight->Pos.Len);
-  pRight->str.p_str[pRight->Pos.Len] = '\0';
+    check_capacity(pRight);
+    pRight->Pos.StartCol = pSrc->Pos.StartCol + (pLeft->Pos.Len + 1);
+    pRight->Pos.Len      = check_realloc(&pRight->str, SrcLen - (pLeft->Pos.Len + 1));
+    memcpy(pRight->str.p_str, pSplitPos + 1, pRight->Pos.Len);
+    pRight->str.p_str[pRight->Pos.Len] = '\0';
 }
 
 /*!------------------------------------------------------------------------
@@ -247,28 +238,27 @@ void StrCompSplitCopy(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, c
  * \param  pSplitPos split position in source
  * ------------------------------------------------------------------------ */
 
-char StrCompSplitRef(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, char *pSplitPos)
-{
-  char Old = *pSplitPos;
-  /* save because pLeft and pSrc might be equal */
-  tLineComp SrcPos = pSrc->Pos;
+char StrCompSplitRef(
+        tStrComp* pLeft, tStrComp* pRight, tStrComp const* pSrc, char* pSplitPos) {
+    char Old = *pSplitPos;
+    /* save because pLeft and pSrc might be equal */
+    tLineComp SrcPos = pSrc->Pos;
 
-  *pSplitPos = '\0';
-  pLeft->str.p_str = pSrc->str.p_str;
-  if (pLeft != pSrc)
-  {
-    pLeft->str.capacity = 0;
-    pLeft->str.dynamic = 0;
-  }
-  pLeft->Pos.StartCol = SrcPos.StartCol;
-  pLeft->Pos.Len = pSplitPos - pLeft->str.p_str;
-  pRight->str.p_str = pSrc->str.p_str + (pLeft->Pos.Len + 1);
-  pRight->str.capacity = 0;
-  pRight->str.dynamic = 0;
-  pRight->Pos.StartCol = SrcPos.StartCol + (pLeft->Pos.Len + 1);
-  pRight->Pos.Len = SrcPos.Len - (pLeft->Pos.Len + 1);
+    *pSplitPos       = '\0';
+    pLeft->str.p_str = pSrc->str.p_str;
+    if (pLeft != pSrc) {
+        pLeft->str.capacity = 0;
+        pLeft->str.dynamic  = 0;
+    }
+    pLeft->Pos.StartCol  = SrcPos.StartCol;
+    pLeft->Pos.Len       = pSplitPos - pLeft->str.p_str;
+    pRight->str.p_str    = pSrc->str.p_str + (pLeft->Pos.Len + 1);
+    pRight->str.capacity = 0;
+    pRight->str.dynamic  = 0;
+    pRight->Pos.StartCol = SrcPos.StartCol + (pLeft->Pos.Len + 1);
+    pRight->Pos.Len      = SrcPos.Len - (pLeft->Pos.Len + 1);
 
-  return Old;
+    return Old;
 }
 
 /*!------------------------------------------------------------------------
@@ -277,11 +267,10 @@ char StrCompSplitRef(tStrComp *pLeft, tStrComp *pRight, const tStrComp *pSrc, ch
  * \param  pComp component to handle
  * ------------------------------------------------------------------------ */
 
-void KillPrefBlanksStrComp(struct sStrComp *pComp)
-{
-  int Delta = KillPrefBlanks(pComp->str.p_str);
-  pComp->Pos.StartCol += Delta;
-  pComp->Pos.Len -= Delta;
+void KillPrefBlanksStrComp(struct sStrComp* pComp) {
+    int Delta = KillPrefBlanks(pComp->str.p_str);
+    pComp->Pos.StartCol += Delta;
+    pComp->Pos.Len -= Delta;
 }
 
 /*!------------------------------------------------------------------------
@@ -290,17 +279,16 @@ void KillPrefBlanksStrComp(struct sStrComp *pComp)
  * \param  pComp component to handle
  * ------------------------------------------------------------------------ */
 
-void KillPrefBlanksStrCompRef(struct sStrComp *pComp)
-{
-  check_no_capacity(pComp);
-  while (isspace(*pComp->str.p_str))
-  {
-    pComp->str.p_str++;
-    if (pComp->str.capacity > 0)
-      pComp->str.capacity--;
-    pComp->Pos.StartCol++;
-    pComp->Pos.Len--;
-  }
+void KillPrefBlanksStrCompRef(struct sStrComp* pComp) {
+    check_no_capacity(pComp);
+    while (isspace(*pComp->str.p_str)) {
+        pComp->str.p_str++;
+        if (pComp->str.capacity > 0) {
+            pComp->str.capacity--;
+        }
+        pComp->Pos.StartCol++;
+        pComp->Pos.Len--;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -309,9 +297,8 @@ void KillPrefBlanksStrCompRef(struct sStrComp *pComp)
  * \param  pComp component to handle
  * ------------------------------------------------------------------------ */
 
-void KillPostBlanksStrComp(struct sStrComp *pComp)
-{
-  pComp->Pos.Len -= KillPostBlanks(pComp->str.p_str);
+void KillPostBlanksStrComp(struct sStrComp* pComp) {
+    pComp->Pos.Len -= KillPostBlanks(pComp->str.p_str);
 }
 
 /*!------------------------------------------------------------------------
@@ -321,10 +308,9 @@ void KillPostBlanksStrComp(struct sStrComp *pComp)
  * \param  Delta # of characters to chop off (no checks!)
  * ------------------------------------------------------------------------ */
 
-void StrCompShorten(struct sStrComp *pComp, size_t Delta)
-{
-  pComp->str.p_str[strlen(pComp->str.p_str) - Delta] = '\0';
-  pComp->Pos.Len -= Delta;
+void StrCompShorten(struct sStrComp* pComp, size_t Delta) {
+    pComp->str.p_str[strlen(pComp->str.p_str) - Delta] = '\0';
+    pComp->Pos.Len -= Delta;
 }
 
 /*!------------------------------------------------------------------------
@@ -335,18 +321,19 @@ void StrCompShorten(struct sStrComp *pComp, size_t Delta)
  * \return actual # of characters cut off
  * ------------------------------------------------------------------------ */
 
-size_t StrCompCutLeft(struct sStrComp *pComp, size_t Delta)
-{
-  size_t len = strlen(pComp->str.p_str);
+size_t StrCompCutLeft(struct sStrComp* pComp, size_t Delta) {
+    size_t len = strlen(pComp->str.p_str);
 
-  if (Delta > len)
-    Delta = len;
-  if (Delta > pComp->Pos.Len)
-    Delta = pComp->Pos.Len;
-  strmov(pComp->str.p_str, pComp->str.p_str + Delta);
-  pComp->Pos.StartCol += Delta;
-  pComp->Pos.Len -= Delta;
-  return Delta;
+    if (Delta > len) {
+        Delta = len;
+    }
+    if (Delta > pComp->Pos.Len) {
+        Delta = pComp->Pos.Len;
+    }
+    strmov(pComp->str.p_str, pComp->str.p_str + Delta);
+    pComp->Pos.StartCol += Delta;
+    pComp->Pos.Len -= Delta;
+    return Delta;
 }
 
 /*!------------------------------------------------------------------------
@@ -356,13 +343,12 @@ size_t StrCompCutLeft(struct sStrComp *pComp, size_t Delta)
  * \param  Delta # of characters to move by (no checks!)
  * ------------------------------------------------------------------------ */
 
-void StrCompIncRefLeft(struct sStrComp *pComp, size_t Delta)
-{
-  check_no_capacity(pComp);
-  pComp->str.p_str += Delta;
-  pComp->str.capacity = (pComp->str.capacity > Delta) ? pComp->str.capacity - Delta : 0;
-  pComp->Pos.StartCol += Delta;
-  pComp->Pos.Len -= Delta;
+void StrCompIncRefLeft(struct sStrComp* pComp, size_t Delta) {
+    check_no_capacity(pComp);
+    pComp->str.p_str += Delta;
+    pComp->str.capacity = (pComp->str.capacity > Delta) ? pComp->str.capacity - Delta : 0;
+    pComp->Pos.StartCol += Delta;
+    pComp->Pos.Len -= Delta;
 }
 
 /*!------------------------------------------------------------------------
@@ -372,7 +358,7 @@ void StrCompIncRefLeft(struct sStrComp *pComp, size_t Delta)
  * \param  pComp component to dump
  * ------------------------------------------------------------------------ */
 
-void DumpStrComp(const char *pTitle, const struct sStrComp *pComp)
-{
-  fprintf(stderr, "%s: @ col %x len %x '%s'\n", pTitle, (unsigned)pComp->Pos.StartCol, pComp->Pos.Len, pComp->str.p_str);
+void DumpStrComp(char const* pTitle, const struct sStrComp* pComp) {
+    fprintf(stderr, "%s: @ col %x len %x '%s'\n", pTitle, (unsigned)pComp->Pos.StartCol,
+            pComp->Pos.Len, pComp->str.p_str);
 }

@@ -17,13 +17,13 @@
 
 #define FileMagic 0x1489
 
-#define FileHeaderEnd       0x00   /* Dateiende */
-#define FileHeaderStartAdr  0x80   /* Einsprungadresse absolut */
-#define FileHeaderDataRec   0x81   /* normaler Datenrecord */
-#define FileHeaderRDataRec  0x82   /* Datenrecord mit Symbolen */
-#define FileHeaderRelocRec  0x83   /* relokatibler Datenrecord */
-#define FileHeaderRRelocRec 0x84   /* relokatibler Datenrecord mit Symbolen */
-#define FileHeaderRelocInfo 0x85   /* Relokationsinformationen */
+#define FileHeaderEnd       0x00 /* Dateiende */
+#define FileHeaderStartAdr  0x80 /* Einsprungadresse absolut */
+#define FileHeaderDataRec   0x81 /* normaler Datenrecord */
+#define FileHeaderRDataRec  0x82 /* Datenrecord mit Symbolen */
+#define FileHeaderRelocRec  0x83 /* relokatibler Datenrecord */
+#define FileHeaderRRelocRec 0x84 /* relokatibler Datenrecord mit Symbolen */
+#define FileHeaderRelocInfo 0x85 /* Relokationsinformationen */
 
 /* Definition der im Code liegenden, zu patchenden Typen:
 
@@ -43,7 +43,7 @@
    Daraus ergeben sich z. B. folgende einfachen Typen: */
 
 #define RelocTypeL8  0x00008008l
-#define RelocTypeB8  RelocTypeL8          /* :-) was wunder */
+#define RelocTypeB8  RelocTypeL8 /* :-) was wunder */
 #define RelocTypeL16 0x00008010l
 #define RelocTypeB16 0x00108010l
 #define RelocTypeL24 0x00008018l
@@ -53,10 +53,10 @@
 #define RelocTypeL64 0x00008040l
 #define RelocTypeB64 0x00108040l
 
-#define RelocFlagBig  0x00100000l
-#define RelocFlagSUB  0x00200000l
+#define RelocFlagBig      0x00100000l
+#define RelocFlagSUB      0x00200000l
 #define RelocBitCnt(Type) (Type & 0xff)
-#define RelocFlagPage 0x00400000l
+#define RelocFlagPage     0x00400000l
 
 /* this is an internal symbol name used to signify the start address
    of a segment */

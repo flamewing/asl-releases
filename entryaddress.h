@@ -10,15 +10,15 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <stdio.h>
-
 #include "datatypes.h"
+
+#include <stdio.h>
 
 void entryaddress_init(void);
 
-extern Boolean EntryAddressAvail(void);
-extern void AddEntryAddress(LargeWord Address);
-extern void PrintEntryAddress(FILE *pDestFile);
+extern Boolean   EntryAddressAvail(void);
+extern void      AddEntryAddress(LargeWord Address);
+extern void      PrintEntryAddress(FILE* pDestFile);
 extern LargeWord GetEntryAddress(Boolean UsePreferredAddress, LargeWord PreferredAddress);
 
 #endif /* ENTRYADDRESS_H */

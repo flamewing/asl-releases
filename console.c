@@ -9,9 +9,10 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
 
 #include "console.h"
+
+#include <string.h>
 
 /*!------------------------------------------------------------------------
  * \fn     WrConsoleLine(const char *pLine, Boolean NewLine)
@@ -20,23 +21,19 @@
  * \param  NewLine start new line or jump back to current line?
  * ------------------------------------------------------------------------ */
 
-void WrConsoleLine(const char *pLine, Boolean NewLine)
-{
-  static size_t LastLength;
-  size_t ThisLength = strlen(pLine);
+void WrConsoleLine(char const* pLine, Boolean NewLine) {
+    static size_t LastLength;
+    size_t        ThisLength = strlen(pLine);
 
-  printf("%s", pLine);
-  if (LastLength && (LastLength > ThisLength))
-    printf("%*s", (int)(LastLength - ThisLength), "");
-  if (NewLine)
-  {
-    printf("\n");
-    LastLength = 0;
-  }
-  else
-  {
-    printf("\r");
-    LastLength = ThisLength;
-  }
+    printf("%s", pLine);
+    if (LastLength && (LastLength > ThisLength)) {
+        printf("%*s", (int)(LastLength - ThisLength), "");
+    }
+    if (NewLine) {
+        printf("\n");
+        LastLength = 0;
+    } else {
+        printf("\r");
+        LastLength = ThisLength;
+    }
 }
-

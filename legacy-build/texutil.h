@@ -15,11 +15,11 @@
 /*---------------------------------------------------------------------------*/
 
 extern Boolean DoRepass;
-extern char *pInFileName;
-extern int CurrLine, CurrColumn;
+extern char*   pInFileName;
+extern int     CurrLine, CurrColumn;
 
 /*---------------------------------------------------------------------------*/
 
-extern void Warning(const char *pMsg);
+extern void Warning(char const* pMsg);
 
 #endif /* TEXUTIL_H */

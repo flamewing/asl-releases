@@ -8,22 +8,21 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include <string.h>
-#include <stdarg.h>
-#include "strutil.h"
-
-#include "datatypes.h"
-#include "asmdef.h"
-#include "strutil.h"
-#include "asmsub.h"
-#include "nlmessages.h"
-#include "cpulist.h"
-#include "as.rsc"
 #include "errmsg.h"
 
-static tErrorNum GetDefaultCPUErrorNum(tErrorNum ThisNum)
-{
-  return ThisNum ? ThisNum : ErrNum_InstructionNotSupported;
+#include "as.rsc"
+#include "asmdef.h"
+#include "asmsub.h"
+#include "cpulist.h"
+#include "datatypes.h"
+#include "nlmessages.h"
+#include "strutil.h"
+
+#include <stdarg.h>
+#include <string.h>
+
+static tErrorNum GetDefaultCPUErrorNum(tErrorNum ThisNum) {
+    return ThisNum ? ThisNum : ErrNum_InstructionNotSupported;
 }
 
 /*!------------------------------------------------------------------------
@@ -35,24 +34,20 @@ static tErrorNum GetDefaultCPUErrorNum(tErrorNum ThisNum)
  * \return TRUE if in-range and no error
  * ------------------------------------------------------------------------ */
 
-Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
-{
-  char s[100];
+Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max) {
+    char s[100];
 
-  if (Value < Min)
-  {
-    as_snprintf(s, sizeof(s), "%" PRId64 "<%" PRId64, Value, Min);
-    WrXError(ErrNum_UnderRange, s);
-    return False;
-  }
-  else if (Value > Max)
-  {
-    as_snprintf(s, sizeof(s), "%" PRId64 ">%" PRId64, Value, Max);
-    WrXError(ErrNum_OverRange, s);
-    return False;
-  }
-  else
-    return True;
+    if (Value < Min) {
+        as_snprintf(s, sizeof(s), "%" PRId64 "<%" PRId64, Value, Min);
+        WrXError(ErrNum_UnderRange, s);
+        return False;
+    } else if (Value > Max) {
+        as_snprintf(s, sizeof(s), "%" PRId64 ">%" PRId64, Value, Max);
+        WrXError(ErrNum_OverRange, s);
+        return False;
+    } else {
+        return True;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -65,33 +60,38 @@ Boolean ChkRange(LargeInt Value, LargeInt Min, LargeInt Max)
  * \return TRUE if in-range and no error
  * ------------------------------------------------------------------------ */
 
-Boolean ChkArgCntExtPos(int ThisCnt, int MinCnt, int MaxCnt, const struct sLineComp *pComp)
-{
-  if ((ThisCnt < MinCnt) || (ThisCnt > MaxCnt))
-  {
-    char Str[100];
+Boolean ChkArgCntExtPos(
+        int ThisCnt, int MinCnt, int MaxCnt, const struct sLineComp* pComp) {
+    if ((ThisCnt < MinCnt) || (ThisCnt > MaxCnt)) {
+        char Str[100];
 
-    if (MinCnt != MaxCnt)
-      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntFromTo), MinCnt, MaxCnt, ThisCnt);
-    else switch (MinCnt)
-    {
-      case 0:
-        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntZero), ThisCnt);
-        break;
-      case 1:
-        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntOne), ThisCnt);
-        break;
-      default:
-        as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntMulti), MinCnt, ThisCnt);
+        if (MinCnt != MaxCnt) {
+            as_snprintf(
+                    Str, sizeof(Str), getmessage(Num_ErrMsgArgCntFromTo), MinCnt, MaxCnt,
+                    ThisCnt);
+        } else {
+            switch (MinCnt) {
+            case 0:
+                as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntZero), ThisCnt);
+                break;
+            case 1:
+                as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntOne), ThisCnt);
+                break;
+            default:
+                as_snprintf(
+                        Str, sizeof(Str), getmessage(Num_ErrMsgArgCntMulti), MinCnt,
+                        ThisCnt);
+            }
+        }
+        if (pComp) {
+            WrXErrorPos(ErrNum_WrongArgCnt, Str, pComp);
+        } else {
+            WrXError(ErrNum_WrongArgCnt, Str);
+        }
+        return False;
+    } else {
+        return True;
     }
-    if (pComp)
-      WrXErrorPos(ErrNum_WrongArgCnt, Str, pComp);
-    else
-      WrXError(ErrNum_WrongArgCnt, Str);
-    return False;
-  }
-  else
-    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -103,18 +103,18 @@ Boolean ChkArgCntExtPos(int ThisCnt, int MinCnt, int MaxCnt, const struct sLineC
  * \return TRUE if count OK and no error
  * ------------------------------------------------------------------------ */
 
-Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt)
-{
-  if ((ThisCnt != EitherCnt) && (ThisCnt != OrCnt))
-  {
-    char Str[100];
+Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt) {
+    if ((ThisCnt != EitherCnt) && (ThisCnt != OrCnt)) {
+        char Str[100];
 
-    as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgArgCntEitherOr), EitherCnt, OrCnt, ThisCnt);
-    WrXError(ErrNum_WrongArgCnt, Str);
-    return False;
-  }
-  else
-    return True;
+        as_snprintf(
+                Str, sizeof(Str), getmessage(Num_ErrMsgArgCntEitherOr), EitherCnt, OrCnt,
+                ThisCnt);
+        WrXError(ErrNum_WrongArgCnt, Str);
+        return False;
+    } else {
+        return True;
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -125,26 +125,25 @@ Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt)
  * \return TRUE if currently selected CPU is OK and no error
  * ------------------------------------------------------------------------ */
 
-extern Boolean ChkMinCPUExt(CPUVar MinCPU, tErrorNum ErrorNum)
-{
-  if (MomCPU < MinCPU)
-  {
-    const tCPUDef *pCPUDef;
-    ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
+extern Boolean ChkMinCPUExt(CPUVar MinCPU, tErrorNum ErrorNum) {
+    if (MomCPU < MinCPU) {
+        tCPUDef const* pCPUDef;
+        ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
 
-    pCPUDef = LookupCPUDefByVar(MinCPU);
-    if (pCPUDef)
-    {
-      char Str[100];
+        pCPUDef = LookupCPUDefByVar(MinCPU);
+        if (pCPUDef) {
+            char Str[100];
 
-      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgMinCPUSupported), pCPUDef->Name);
-      WrXError(ErrorNum, Str);
+            as_snprintf(
+                    Str, sizeof(Str), getmessage(Num_ErrMsgMinCPUSupported),
+                    pCPUDef->Name);
+            WrXError(ErrorNum, Str);
+        } else {
+            WrError(ErrorNum);
+        }
+        return False;
     }
-    else
-      WrError(ErrorNum);
-    return False;
-  }
-  return True;
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -155,26 +154,25 @@ extern Boolean ChkMinCPUExt(CPUVar MinCPU, tErrorNum ErrorNum)
  * \return TRUE if currently selected CPU is OK and no error
  * ------------------------------------------------------------------------ */
 
-extern Boolean ChkMaxCPUExt(CPUVar MaxCPU, tErrorNum ErrorNum)
-{
-  if (MomCPU > MaxCPU)
-  {
-    const tCPUDef *pCPUDef;
-    ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
+extern Boolean ChkMaxCPUExt(CPUVar MaxCPU, tErrorNum ErrorNum) {
+    if (MomCPU > MaxCPU) {
+        tCPUDef const* pCPUDef;
+        ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
 
-    pCPUDef = LookupCPUDefByVar(MaxCPU);
-    if (pCPUDef)
-    {
-      char Str[100];
+        pCPUDef = LookupCPUDefByVar(MaxCPU);
+        if (pCPUDef) {
+            char Str[100];
 
-      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgMaxCPUSupported), pCPUDef->Name);
-      WrXError(ErrorNum, Str);
+            as_snprintf(
+                    Str, sizeof(Str), getmessage(Num_ErrMsgMaxCPUSupported),
+                    pCPUDef->Name);
+            WrXError(ErrorNum, Str);
+        } else {
+            WrError(ErrorNum);
+        }
+        return False;
     }
-    else
-      WrError(ErrorNum);
-    return False;
-  }
-  return True;
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -186,27 +184,26 @@ extern Boolean ChkMaxCPUExt(CPUVar MaxCPU, tErrorNum ErrorNum)
  * \return TRUE if currently selected CPU is OK and no error
  * ------------------------------------------------------------------------ */
 
-extern Boolean ChkRangeCPUExt(CPUVar MinCPU, CPUVar MaxCPU, tErrorNum ErrorNum)
-{
-  if ((MomCPU < MinCPU) || (MomCPU > MaxCPU))
-  {
-    const tCPUDef *pCPUDefMin, *pCPUDefMax;
-    ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
+extern Boolean ChkRangeCPUExt(CPUVar MinCPU, CPUVar MaxCPU, tErrorNum ErrorNum) {
+    if ((MomCPU < MinCPU) || (MomCPU > MaxCPU)) {
+        tCPUDef const *pCPUDefMin, *pCPUDefMax;
+        ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
 
-    pCPUDefMin = LookupCPUDefByVar(MinCPU);
-    pCPUDefMax = LookupCPUDefByVar(MaxCPU);
-    if (pCPUDefMin && pCPUDefMax)
-    {
-      char Str[100];
+        pCPUDefMin = LookupCPUDefByVar(MinCPU);
+        pCPUDefMax = LookupCPUDefByVar(MaxCPU);
+        if (pCPUDefMin && pCPUDefMax) {
+            char Str[100];
 
-      as_snprintf(Str, sizeof(Str), getmessage(Num_ErrMsgRangeCPUSupported), pCPUDefMin->Name, pCPUDefMax->Name);
-      WrXError(ErrorNum, Str);
+            as_snprintf(
+                    Str, sizeof(Str), getmessage(Num_ErrMsgRangeCPUSupported),
+                    pCPUDefMin->Name, pCPUDefMax->Name);
+            WrXError(ErrorNum, Str);
+        } else {
+            WrError(ErrorNum);
+        }
+        return False;
     }
-    else
-      WrError(ErrorNum);
-    return False;
-  }
-  return True;
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -217,26 +214,25 @@ extern Boolean ChkRangeCPUExt(CPUVar MinCPU, CPUVar MaxCPU, tErrorNum ErrorNum)
  * \return TRUE if currently selected CPU is OK and no error
  * ------------------------------------------------------------------------ */
 
-extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
-{
-  if (MomCPU != MatchCPU)
-  {
-    const tCPUDef *pCPUDef;
-    ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
+extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum) {
+    if (MomCPU != MatchCPU) {
+        tCPUDef const* pCPUDef;
+        ErrorNum = GetDefaultCPUErrorNum(ErrorNum);
 
-    pCPUDef = LookupCPUDefByVar(MatchCPU);
-    if (pCPUDef)
-    {
-      char Str[100];
+        pCPUDef = LookupCPUDefByVar(MatchCPU);
+        if (pCPUDef) {
+            char Str[100];
 
-      as_snprintf(Str, sizeof(Str), "%s%s%s", getmessage(Num_ErrMsgOnlyCPUSupported1), pCPUDef->Name, getmessage(Num_ErrMsgOnlyCPUSupported2));
-      WrXError(ErrorNum, Str);
+            as_snprintf(
+                    Str, sizeof(Str), "%s%s%s", getmessage(Num_ErrMsgOnlyCPUSupported1),
+                    pCPUDef->Name, getmessage(Num_ErrMsgOnlyCPUSupported2));
+            WrXError(ErrorNum, Str);
+        } else {
+            WrError(ErrorNum);
+        }
+        return False;
     }
-    else
-      WrError(ErrorNum);
-    return False;
-  }
-  return True;
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -247,64 +243,67 @@ extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
  * \return TRUE if currently selected CPU is OK and no error
  * ------------------------------------------------------------------------ */
 
-typedef struct
-{
-  const tCPUDef *pExcludeCPUDef;
-  const tCPUDef *pLastCPUDef;
-  String Str;
-  Boolean First;
-  Word ExcludeMask;
-  CPUVar ExcludeCPUFirst;
+typedef struct {
+    tCPUDef const* pExcludeCPUDef;
+    tCPUDef const* pLastCPUDef;
+    String         Str;
+    Boolean        First;
+    Word           ExcludeMask;
+    CPUVar         ExcludeCPUFirst;
 } tExcludeContext;
 
-static void IterateExclude(const tCPUDef *pThisCPUDef, void *pUser)
-{
-  tExcludeContext *pContext = (tExcludeContext*)pUser;
+static void IterateExclude(tCPUDef const* pThisCPUDef, void* pUser) {
+    tExcludeContext* pContext = (tExcludeContext*)pUser;
 
-  /* ignore other families or aliases */
+    /* ignore other families or aliases */
 
-  if (pThisCPUDef)
-  {
-    if ((pThisCPUDef->SwitchProc != pContext->pExcludeCPUDef->SwitchProc)
-     || ((1 << (pThisCPUDef->Number - pContext->ExcludeCPUFirst)) & pContext->ExcludeMask)
-     || (pThisCPUDef->Number != pThisCPUDef->Orig))
-      return;
-  }
+    if (pThisCPUDef) {
+        if ((pThisCPUDef->SwitchProc != pContext->pExcludeCPUDef->SwitchProc)
+            || ((1 << (pThisCPUDef->Number - pContext->ExcludeCPUFirst))
+                & pContext->ExcludeMask)
+            || (pThisCPUDef->Number != pThisCPUDef->Orig)) {
+            return;
+        }
+    }
 
-  if (pContext->pLastCPUDef)
-  {
-    if (!pContext->First)
-      strmaxcat(pContext->Str, pThisCPUDef ? ", " : getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(pContext->Str));
-    strmaxcat(pContext->Str, pContext->pLastCPUDef->Name, sizeof(pContext->Str));
-    pContext->First = False;
-  }
-  pContext->pLastCPUDef = pThisCPUDef;
+    if (pContext->pLastCPUDef) {
+        if (!pContext->First) {
+            strmaxcat(
+                    pContext->Str,
+                    pThisCPUDef ? ", " : getmessage(Num_ErrMsgOnlyCPUSupportedOr),
+                    sizeof(pContext->Str));
+        }
+        strmaxcat(pContext->Str, pContext->pLastCPUDef->Name, sizeof(pContext->Str));
+        pContext->First = False;
+    }
+    pContext->pLastCPUDef = pThisCPUDef;
 }
 
-extern Boolean ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
-{
-  tExcludeContext Context;
+extern Boolean ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum) {
+    tExcludeContext Context;
 
-  if (MomCPU != MatchCPU)
-    return True;
+    if (MomCPU != MatchCPU) {
+        return True;
+    }
 
-  Context.pExcludeCPUDef = LookupCPUDefByVar(MatchCPU);
+    Context.pExcludeCPUDef = LookupCPUDefByVar(MatchCPU);
 
-  if (Context.pExcludeCPUDef)
-  {
-    *Context.Str = '\0';
-    Context.First = True;
-    Context.pLastCPUDef = NULL;
-    Context.ExcludeMask = 1;
-    Context.ExcludeCPUFirst = MatchCPU;
-    strmaxcat(Context.Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Context.Str));
-    IterateCPUList(IterateExclude, &Context);
-    IterateExclude(NULL, &Context);
-    WrXError(GetDefaultCPUErrorNum(ErrorNum), Context.Str);
-  }
-  else
-    WrError(GetDefaultCPUErrorNum(ErrorNum));
-  return False;
+    if (Context.pExcludeCPUDef) {
+        *Context.Str            = '\0';
+        Context.First           = True;
+        Context.pLastCPUDef     = NULL;
+        Context.ExcludeMask     = 1;
+        Context.ExcludeCPUFirst = MatchCPU;
+        strmaxcat(
+                Context.Str, getmessage(Num_ErrMsgOnlyCPUSupported1),
+                sizeof(Context.Str));
+        IterateCPUList(IterateExclude, &Context);
+        IterateExclude(NULL, &Context);
+        WrXError(GetDefaultCPUErrorNum(ErrorNum), Context.Str);
+    } else {
+        WrError(GetDefaultCPUErrorNum(ErrorNum));
+    }
+    return False;
 }
 
 /*!------------------------------------------------------------------------
@@ -315,69 +314,65 @@ extern Boolean ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
  * \return Index (-1...-n) of matching CPU or 0 if current CPU does not match any
  * ------------------------------------------------------------------------ */
 
-int ChkExcludeCPUList(int ErrorNum, ...)
-{
-  va_list ap;
-  int Index = -1, FoundIndex = 0;
-  CPUVar ThisCPU;
+int ChkExcludeCPUList(int ErrorNum, ...) {
+    va_list ap;
+    int     Index = -1, FoundIndex = 0;
+    CPUVar  ThisCPU;
 
-  va_start(ap, ErrorNum);
-  while (True)
-  {
-    ThisCPU = va_arg(ap, CPUVar);
-    if (ThisCPU == CPUNone)
-      break;
-    if (MomCPU == ThisCPU)
-    {
-      FoundIndex = Index;
-      break;
-    }
-  }
-  va_end(ap);
-
-  if (FoundIndex < 0)
-  {
-    tExcludeContext Context;
-
-    *Context.Str = '\0';
-    Context.First = True;
-    Context.pExcludeCPUDef =
-    Context.pLastCPUDef = NULL;
-    strmaxcat(Context.Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Context.Str));
-
-    /* convert vararg list to bitmap */
-
-    Context.ExcludeMask = 0;
-    Context.ExcludeCPUFirst = CPUNone;
     va_start(ap, ErrorNum);
-    while (TRUE)
-    {
-      ThisCPU = va_arg(ap, CPUVar);
-      if (ThisCPU == CPUNone)
-        break;
-      if (!Context.pExcludeCPUDef)
-        Context.pExcludeCPUDef = LookupCPUDefByVar(ThisCPU);
-      if (Context.ExcludeCPUFirst == CPUNone)
-      {
-        Context.ExcludeCPUFirst = ThisCPU;
-        Context.ExcludeMask = 1;
-      }
-      else if (ThisCPU > Context.ExcludeCPUFirst)
-        Context.ExcludeMask |= 1 << (ThisCPU - Context.ExcludeCPUFirst);
-      else if (ThisCPU < Context.ExcludeCPUFirst)
-      {
-        Context.ExcludeMask <<= Context.ExcludeCPUFirst - ThisCPU;
-        Context.ExcludeMask |= 1;
-        Context.ExcludeCPUFirst = ThisCPU;
-      }
+    while (True) {
+        ThisCPU = va_arg(ap, CPUVar);
+        if (ThisCPU == CPUNone) {
+            break;
+        }
+        if (MomCPU == ThisCPU) {
+            FoundIndex = Index;
+            break;
+        }
     }
     va_end(ap);
-    IterateCPUList(IterateExclude, &Context);
-    IterateExclude(NULL, &Context);
-    WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Context.Str);
-  }
 
-  return FoundIndex;
+    if (FoundIndex < 0) {
+        tExcludeContext Context;
+
+        *Context.Str           = '\0';
+        Context.First          = True;
+        Context.pExcludeCPUDef = Context.pLastCPUDef = NULL;
+        strmaxcat(
+                Context.Str, getmessage(Num_ErrMsgOnlyCPUSupported1),
+                sizeof(Context.Str));
+
+        /* convert vararg list to bitmap */
+
+        Context.ExcludeMask     = 0;
+        Context.ExcludeCPUFirst = CPUNone;
+        va_start(ap, ErrorNum);
+        while (TRUE) {
+            ThisCPU = va_arg(ap, CPUVar);
+            if (ThisCPU == CPUNone) {
+                break;
+            }
+            if (!Context.pExcludeCPUDef) {
+                Context.pExcludeCPUDef = LookupCPUDefByVar(ThisCPU);
+            }
+            if (Context.ExcludeCPUFirst == CPUNone) {
+                Context.ExcludeCPUFirst = ThisCPU;
+                Context.ExcludeMask     = 1;
+            } else if (ThisCPU > Context.ExcludeCPUFirst) {
+                Context.ExcludeMask |= 1 << (ThisCPU - Context.ExcludeCPUFirst);
+            } else if (ThisCPU < Context.ExcludeCPUFirst) {
+                Context.ExcludeMask <<= Context.ExcludeCPUFirst - ThisCPU;
+                Context.ExcludeMask |= 1;
+                Context.ExcludeCPUFirst = ThisCPU;
+            }
+        }
+        va_end(ap);
+        IterateCPUList(IterateExclude, &Context);
+        IterateExclude(NULL, &Context);
+        WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Context.Str);
+    }
+
+    return FoundIndex;
 }
 
 /*!------------------------------------------------------------------------
@@ -388,50 +383,54 @@ int ChkExcludeCPUList(int ErrorNum, ...)
  * \return Index (0...) of matching CPU or -1 if current CPU does not match
  * ------------------------------------------------------------------------ */
 
-extern int ChkExactCPUList(int ErrorNum, ...)
-{
-  va_list ap;
-  String Str;
-  CPUVar ThisCPU, NextCPU;
-  const tCPUDef *pCPUDef;
-  Boolean First = True;
-  int FoundIndex = 0;
+extern int ChkExactCPUList(int ErrorNum, ...) {
+    va_list        ap;
+    String         Str;
+    CPUVar         ThisCPU, NextCPU;
+    tCPUDef const* pCPUDef;
+    Boolean        First      = True;
+    int            FoundIndex = 0;
 
-  va_start(ap, ErrorNum);
-  while (True)
-  {
-    ThisCPU = va_arg(ap, CPUVar);
-    if ((ThisCPU == CPUNone) || (MomCPU == ThisCPU))
-      break;
-    FoundIndex++;
-  }
-  va_end(ap);
-  if (ThisCPU != CPUNone)
-    return FoundIndex;
-
-  va_start(ap, ErrorNum);
-  *Str = '\0';
-  strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Str));
-  ThisCPU = CPUNone;
-  while (True)
-  {
-    NextCPU = va_arg(ap, CPUVar);
-    pCPUDef = (ThisCPU != CPUNone) ? LookupCPUDefByVar(ThisCPU) : NULL;
-    if (pCPUDef)
-    {
-      if (!First)
-        strmaxcat(Str, (NextCPU == CPUNone) ? getmessage(Num_ErrMsgOnlyCPUSupportedOr) : ", ", sizeof(Str));
-      strmaxcat(Str, pCPUDef->Name, sizeof(Str));
-      First = False;
+    va_start(ap, ErrorNum);
+    while (True) {
+        ThisCPU = va_arg(ap, CPUVar);
+        if ((ThisCPU == CPUNone) || (MomCPU == ThisCPU)) {
+            break;
+        }
+        FoundIndex++;
     }
-    if (NextCPU == CPUNone)
-      break;
-    ThisCPU = NextCPU;
-  }
-  va_end(ap);
-  strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
-  WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Str);
-  return -1;
+    va_end(ap);
+    if (ThisCPU != CPUNone) {
+        return FoundIndex;
+    }
+
+    va_start(ap, ErrorNum);
+    *Str = '\0';
+    strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Str));
+    ThisCPU = CPUNone;
+    while (True) {
+        NextCPU = va_arg(ap, CPUVar);
+        pCPUDef = (ThisCPU != CPUNone) ? LookupCPUDefByVar(ThisCPU) : NULL;
+        if (pCPUDef) {
+            if (!First) {
+                strmaxcat(
+                        Str,
+                        (NextCPU == CPUNone) ? getmessage(Num_ErrMsgOnlyCPUSupportedOr)
+                                             : ", ",
+                        sizeof(Str));
+            }
+            strmaxcat(Str, pCPUDef->Name, sizeof(Str));
+            First = False;
+        }
+        if (NextCPU == CPUNone) {
+            break;
+        }
+        ThisCPU = NextCPU;
+    }
+    va_end(ap);
+    strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
+    WrXError(GetDefaultCPUErrorNum((tErrorNum)ErrorNum), Str);
+    return -1;
 }
 
 /*!------------------------------------------------------------------------
@@ -444,36 +443,38 @@ extern int ChkExactCPUList(int ErrorNum, ...)
  * \return Index (0...) of matching CPU or -1 if current CPU does not match
  * ------------------------------------------------------------------------ */
 
-int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
-{
-  int Bit = MomCPU - FirstCPU;
-  String Str;
-  const tCPUDef *pCPUDef;
-  Boolean First = True;
-  CPUVar ThisCPU;
+int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum) {
+    int            Bit = MomCPU - FirstCPU;
+    String         Str;
+    tCPUDef const* pCPUDef;
+    Boolean        First = True;
+    CPUVar         ThisCPU;
 
-  if (CPUMask & (1 << Bit))
-    return Bit;
-
-  *Str = '\0';
-  strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Str));
-  for (Bit = 0, ThisCPU = FirstCPU; Bit < 16; Bit++, ThisCPU++)
-  {
-    if (!(CPUMask & (1 << Bit)))
-      continue;
-    CPUMask &= ~(1 << Bit);
-    pCPUDef = LookupCPUDefByVar(ThisCPU);
-    if (pCPUDef)
-    {
-      if (!First)
-        strmaxcat(Str, CPUMask ? ", " : getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(Str));
-      strmaxcat(Str, pCPUDef->Name, sizeof(Str));
-      First = False;
+    if (CPUMask & (1 << Bit)) {
+        return Bit;
     }
-  }
-  strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
-  WrXError(ErrorNum ? ErrorNum : ErrNum_InstructionNotSupported, Str);
-  return -1;
+
+    *Str = '\0';
+    strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Str));
+    for (Bit = 0, ThisCPU = FirstCPU; Bit < 16; Bit++, ThisCPU++) {
+        if (!(CPUMask & (1 << Bit))) {
+            continue;
+        }
+        CPUMask &= ~(1 << Bit);
+        pCPUDef = LookupCPUDefByVar(ThisCPU);
+        if (pCPUDef) {
+            if (!First) {
+                strmaxcat(
+                        Str, CPUMask ? ", " : getmessage(Num_ErrMsgOnlyCPUSupportedOr),
+                        sizeof(Str));
+            }
+            strmaxcat(Str, pCPUDef->Name, sizeof(Str));
+            First = False;
+        }
+    }
+    strmaxcat(Str, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Str));
+    WrXError(ErrorNum ? ErrorNum : ErrNum_InstructionNotSupported, Str);
+    return -1;
 }
 
 /*!------------------------------------------------------------------------
@@ -485,12 +486,14 @@ int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
  * \return TRUE if OK
  * ------------------------------------------------------------------------ */
 
-Boolean ChkSamePage(LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits, tSymbolFlags DestFlags)
-{
-  LargeWord Mask = ~((1ul << PageBits) - 1);
-  Boolean Result = ((CurrAddr & Mask) == (DestAddr & Mask))
-                || mFirstPassUnknownOrQuestionable(DestFlags);
-  if (!Result)
-    WrError(ErrNum_TargOnDiffPage);
-  return Result;
+Boolean ChkSamePage(
+        LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits,
+        tSymbolFlags DestFlags) {
+    LargeWord Mask   = ~((1ul << PageBits) - 1);
+    Boolean   Result = ((CurrAddr & Mask) == (DestAddr & Mask))
+                     || mFirstPassUnknownOrQuestionable(DestFlags);
+    if (!Result) {
+        WrError(ErrNum_TargOnDiffPage);
+    }
+    return Result;
 }

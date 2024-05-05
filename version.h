@@ -12,10 +12,10 @@
 
 #include "datatypes.h"
 
-extern const char *Version;
-extern LongInt VerNo;
+extern char const* Version;
+extern LongInt     VerNo;
 
-extern const char *InfoMessCopyright;
-extern const char *InfoNewCopyright;
+extern char const* InfoMessCopyright;
+extern char const* InfoNewCopyright;
 
 #endif /* VERSION_H */

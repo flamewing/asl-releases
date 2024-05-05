@@ -17,23 +17,20 @@
 
 #include "datatypes.h"
 
-struct sRelocEntry
-{
-  struct sRelocEntry *Next;
-  char *Ref;
-  Byte Add;
+struct sRelocEntry {
+    struct sRelocEntry* Next;
+    char*               Ref;
+    Byte                Add;
 };
 typedef struct sRelocEntry TRelocEntry, *PRelocEntry;
 
-
 extern PRelocEntry LastRelocs;
 
-extern PRelocEntry MergeRelocs(PRelocEntry *list1, PRelocEntry *list2,
-                                Boolean Add);
+extern PRelocEntry MergeRelocs(PRelocEntry* list1, PRelocEntry* list2, Boolean Add);
 
-extern void InvertRelocs(PRelocEntry *erg, PRelocEntry *src);
+extern void InvertRelocs(PRelocEntry* erg, PRelocEntry* src);
 
-extern void FreeRelocs(PRelocEntry *list);
+extern void FreeRelocs(PRelocEntry* list);
 
 extern PRelocEntry DupRelocs(PRelocEntry src);
 
@@ -45,5 +42,5 @@ extern void TransferRelocs2(PRelocEntry RelocList, LargeWord Addr, LongWord Type
 
 extern void SubPCRefReloc(void);
 
-extern void AddExport(char *Name, LargeInt Value, LongWord Flags);
+extern void AddExport(char* Name, LargeInt Value, LongWord Flags);
 #endif /* ASMRELOCS_H */

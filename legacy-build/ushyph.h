@@ -11,7 +11,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-extern char *USHyphens[];
+extern char* USHyphens[];
 
-extern char *USExceptions[];
+extern char* USExceptions[];
 #endif /* USHYPH_H */

@@ -15,36 +15,33 @@
 
 #include "datatypes.h"
 
-typedef struct
-{
-  LargeWord Start, Length;
+typedef struct {
+    LargeWord Start, Length;
 } OneChunk;
 
-typedef struct
-{
-  Word RealLen,AllocLen;
-  OneChunk *Chunks;
+typedef struct {
+    Word      RealLen, AllocLen;
+    OneChunk* Chunks;
 } ChunkList;
 
+extern Boolean AddChunk(
+        ChunkList* NChunk, LargeWord NewStart, LargeWord NewLen, Boolean Warn);
 
-extern Boolean AddChunk(ChunkList *NChunk, LargeWord NewStart, LargeWord NewLen, Boolean Warn);
+extern void DeleteChunk(ChunkList* NChunk, LargeWord DelStart, LargeWord DelLen);
 
-extern void DeleteChunk(ChunkList *NChunk, LargeWord DelStart, LargeWord DelLen);
+extern Boolean AddressInChunk(ChunkList* NChunk, LargeWord Address);
 
-extern Boolean AddressInChunk(ChunkList *NChunk, LargeWord Address);
+extern void SortChunks(ChunkList* NChunk);
 
-extern void SortChunks(ChunkList *NChunk);
+extern void InitChunk(ChunkList* NChunk);
 
-extern void InitChunk(ChunkList *NChunk);
+extern void ClearChunk(ChunkList* NChunk);
 
-extern void ClearChunk(ChunkList *NChunk);
+extern LargeWord ChunkMin(ChunkList* NChunk);
 
-extern LargeWord ChunkMin(ChunkList *NChunk);
+extern LargeWord ChunkMax(ChunkList* NChunk);
 
-extern LargeWord ChunkMax(ChunkList *NChunk);
-
-extern LargeWord ChunkSum(ChunkList *NChunk);
-
+extern LargeWord ChunkSum(ChunkList* NChunk);
 
 extern void chunks_init(void);
 #endif /* CHUNKS_H */

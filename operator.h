@@ -13,19 +13,18 @@
 #include "datatypes.h"
 #include "tempresult.h"
 
-#define OPERATOR_MAXCNT 30
+#define OPERATOR_MAXCNT  30
 #define OPERATOR_MAXCOMB 5
 
-typedef struct
-{
-  const char *Id;
-  int IdLen;
-  Boolean Dyadic;
-  Byte Priority;
-  Byte TypeCombinations[OPERATOR_MAXCOMB];
-  void (*pFunc)(TempResult *pErg, TempResult *pLVal, TempResult *pRVal);
+typedef struct {
+    char const* Id;
+    int         IdLen;
+    Boolean     Dyadic;
+    Byte        Priority;
+    Byte        TypeCombinations[OPERATOR_MAXCOMB];
+    void (*pFunc)(TempResult* pErg, TempResult* pLVal, TempResult* pRVal);
 } Operator;
 
-extern const Operator Operators[], MinusMonadicOperator, *pPotMonadicOperator;
+extern Operator const Operators[], MinusMonadicOperator, *pPotMonadicOperator;
 
 #endif /* OPERATOR_H */
