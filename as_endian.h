@@ -118,8 +118,8 @@ INLINE Boolean Write8(FILE *file, const void *Ptr);
 INLINE Word MRead2L(const Byte *Buffer);
 INLINE Word MRead2B(const Byte *Buffer);
 
-#define MWrite1L(Buffer, Value) (*((Byte*) (Buffer))) = Value;
-#define MWrite1B(Buffer, Value) (*((Byte*) (Buffer))) = Value;
+#define MWrite1L(Buffer, Value) (*((Byte*) (Buffer))) = Value
+#define MWrite1B(Buffer, Value) (*((Byte*) (Buffer))) = Value
 
 INLINE void MWrite2L(Byte *Buffer, Word Value);
 INLINE void MWrite2B(Byte *Buffer, Word Value);
