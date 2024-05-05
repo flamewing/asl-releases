@@ -13,6 +13,8 @@ CompileFlags:
       -Wno-declaration-after-statement,
       -Wno-used-but-marked-unused,
       -Wno-missing-variable-declarations,
+      -Wno-padded,
+      -Wno-unsafe-buffer-usage,
       -D_CLANGD=1,
     ]
   Remove: -W*
