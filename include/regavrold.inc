@@ -513,7 +513,7 @@ ocdr		 port	 osccal		; Debug Register
 		if eeend>=256
 eearl		 port	 0x1e		; Address Register
 eearh		 port	 0x1f
-		elseif 
+		elseif
 eear             port    0x1e
 		endif
 

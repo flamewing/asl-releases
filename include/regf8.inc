@@ -158,7 +158,7 @@ PORT7		port	7
 ; Serial In/Out
 
 		if	__hasserial
-		
+
 PORTC		port	12		; Baud Rate Control Port
 PORTD		port	13		; Serial Port Control & Status Register
 SI_EN		equ	1 << 0		;  (w) Serial Port Interrupt Enable
@@ -172,8 +172,8 @@ SER_N2		equ	1 << 7
 SER_OUFL	equ	1 << 6		;  (r) overflow/underflow
 SER_RDY		equ	1 << 7		;  (r) ready
 PORTE		port	14		; Shift Register Buffer Upper Half
-PORTF		port	15		; Shift Register Buffer Lower Half		
-		
+PORTF		port	15		; Shift Register Buffer Lower Half
+
 		endif			; __hasserial
 
 ;----------------------------------------------------------------------------

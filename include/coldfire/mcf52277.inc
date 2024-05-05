@@ -224,7 +224,7 @@ CWT		cffield		CWCR,0,5	;  Core watchdog time-out period.
 CWSR		equ		MBAR_SCM+$4001B	; Core Watchdog Service Register (8b)
 SCMISR		equ		MBAR_SCM+$4001F	; SCM Interrupt Status Register (8b)
 CFEI		cfbit		SCMISR,1	;  Core fault error interrupt flag.
-CWIC		cfbit		SCMISR,0	;  Core watchdog interrupt flag.	
+CWIC		cfbit		SCMISR,0	;  Core watchdog interrupt flag.
 BCR		equ		MBAR_SCM+$40024	; Burst Configuration Register (32b)
 GBR		cfbit		BCR,10		;  Global burst enable for reads.
 GBW		cfbit		BCR,9		;  Global burst enable for writes.
@@ -688,6 +688,5 @@ MBAR_I2C	equ		MBAR+$58000
 ;----------------------------------------------------------------------------
 
 		restore				; re-enable listing
-		
+
 		endif				; __mcf52277inc
-		

@@ -40,7 +40,7 @@ MODE	equ	REGBASE+$000b	; [A|B] Mode Register
 PUCR	equ	REGBASE+$000c	; [A|B] Pull Up Control Register
 RDRIV	equ	REGBASE+$000d	; [A|B] Reduced Drive of I/O Lines
 
-INITRM	equ	REGBASE+$0010	; [A|B] Initialization of Internal RAM Position Register 
+INITRM	equ	REGBASE+$0010	; [A|B] Initialization of Internal RAM Position Register
 INITRG	equ	REGBASE+$0011	; [A|B] Initialization of Internal Register Position Register
 INITEE	equ	REGBASE+$0012	; [A|B] Initialization of Internal EEPROM Position Register
 MISC	equ	REGBASE+$0013	; [A|B] Miscellaneous Mapping Register

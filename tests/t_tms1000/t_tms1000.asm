@@ -66,6 +66,3 @@
 	call	3dh
 	retn
 	ldp	5
-
-	
-	

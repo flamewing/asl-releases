@@ -76,7 +76,7 @@ CLKLOCK		 bit	 SYSCON2.15	; Main Oscillator/PLL stable?
 RSTCON		 equ	 0f1e0h		; Reset Control Register
 
 IDCHIP		 equ	 0f07ch		; Chip Identification Register
-IDMANUF		 equ	 0f07eh	
+IDMANUF		 equ	 0f07eh
 IDMEM2		 equ	 0f076h
 IDMEM		 equ	 0f07ah
 IDPROG		 equ	 0f078h
@@ -250,7 +250,7 @@ PLLIE		 bit	 ISNC.3		; Enable PLL Interrupt
                  DefIntBits XP0,0f186h  ; Interrupt Control Peripheral Device 0
                  DefIntBits XP1,0f18eh  ; Interrupt Control Peripheral Device 1
                  DefIntBits XP2,0f196h  ; Interrupt Control Peripheral Device 2
-					; Flash Termination (Flash Variants) 
+					; Flash Termination (Flash Variants)
                  DefIntBits XP3,0f19eh  ; Interrupt Control Peripheral Device 3
                 endif
 
@@ -288,7 +288,7 @@ POCON1H		 equ	 0f086h		; Port 1 Output Drivers
 POCON1L		 equ	 0f084h
 		endif
                 elseif
-P1               equ     0ff04h 
+P1               equ     0ff04h
 DP1              equ     0ff06h
                 endif
 
@@ -301,7 +301,7 @@ P2HIN		 bit	 PICON.1	; Port 2 Input Threshold Bits 8..15
 		if	 _n>=168
 POCON20		 equ	 0f0aah		; Port 2 Dedicated Pin Control Register
 					; /RSTOUT,CLKOUT/FOUT,ALE,
-					; /WH,/RD,/BHE,/WH		
+					; /WH,/RD,/BHE,/WH
 POCON2		 equ	 0f088h		; Port 2 Output Drivers
 		endif
                 endif
@@ -454,7 +454,7 @@ T8REL            equ     0f056h         ; Timer 8 Reload Register
 T8M		 bit	 T78CON.11	; Timer 8 Timer/Counter Mode
                  DefIntBits T8,0f17ch   ; Timer 8 Interrupt Control
 		if	 _n>=168
-T14		 equ	 0f0d2h		; RTC Timer 14 
+T14		 equ	 0f0d2h		; RTC Timer 14
 T14REL		 equ	 0f0d0h		; RTC Timer 14 Reload Register
 RTCL		 equ	 0f0d4h		; RTC Low Word
 RTCH		 equ	 0f0d6h		; RTC High Word
@@ -733,7 +733,7 @@ S0TBUF          equ     0feb0h          ; SIO0 Transmit Register
 S0RBUF          equ     0feb2h          ; SIO0 Receive Register
 S0BG            equ     0feb4h          ; SIO0 Baud Rate Selection
 		DefIntBits S0T,0ff6ch   ; SIO0 Interrupt Control Transmitter
-		DefIntBits S0R,0ff6eh   ; SIO0 Interrupt Control Receiver 
+		DefIntBits S0R,0ff6eh   ; SIO0 Interrupt Control Receiver
 		DefIntBits S0E,0ff70h   ; SIO0 Interrupt Control Errors
 
                 if      _n>=167
@@ -807,7 +807,7 @@ S1R              bit     S1CON.15       ; SIO1 Enable Baud Rate Generator
 
                 if      _n>=167
 
-;bitram;	 DefIntBits C1, 0ef02h	; CAN1 Interrupt Control Register 
+;bitram;	 DefIntBits C1, 0ef02h	; CAN1 Interrupt Control Register
 C1BTR		 equ	0ef04h		; CAN1 Bit Timing Register
 C1CSR		 equ	0ef00h		; CAN1 Control/Status Register
 C1GMS		 equ	0ef06h		; CAN1 Global Mask Short
@@ -837,13 +837,13 @@ C1MCFG6		 equ	0ef66h
 C1MCFG7		 equ	0ef76h
 C1MCFG8		 equ	0ef86h
 C1MCFG9		 equ	0ef96h
-C1MCFG10	 equ	0efa6h		
+C1MCFG10	 equ	0efa6h
 C1MCFG11	 equ	0efb6h
 C1MCFG12	 equ	0efc6h
 C1MCFG13	 equ	0efd6h
 C1MCFG14	 equ	0efe6h
 C1MCFG15	 equ	0eff6h
-C1MCR1		 equ	0ef10h		; CAN1 Message Control Register 
+C1MCR1		 equ	0ef10h		; CAN1 Message Control Register
 C1MCR2		 equ	0ef20h
 C1MCR3		 equ	0ef30h
 C1MCR4		 equ	0ef40h
@@ -858,7 +858,7 @@ C1MCR12		 equ	0efc0h
 C1MCR13		 equ	0efd0h
 C1MCR14		 equ	0efe0h
 C1MCR15		 equ	0eff0h
-C1PCIR		 equ	0ef02h		; CAN1 Port Control and Interrupt Register 
+C1PCIR		 equ	0ef02h		; CAN1 Port Control and Interrupt Register
 C1UAR1		 equ	0ef12h		; CAN1 Upper Arbitration Register
 C1UAR2		 equ	0ef22h
 C1UAR3		 equ	0ef32h
@@ -879,7 +879,7 @@ C1UMLM		 equ	0ef0ch		; CAN1 Upper Mask Of Last Message
 		endif
 		if	_n>=168
 
-;bitram;	 DefIntBits C2, 0ee02h	; CAN2 Interrupt Control Register 
+;bitram;	 DefIntBits C2, 0ee02h	; CAN2 Interrupt Control Register
 C2BTR		 equ	0ee04h		; CAN2 Bit Timing Register
 C2CSR		 equ	0ee00h		; CAN2 Control Status Register
 C2GMS		 equ	0ee06h		; CAN2 Global Mask Support
@@ -1039,7 +1039,7 @@ IRAM            equ     0f200h		; Start of Internal RAM
 IRAM            equ     0f600h
 		elsecase
 IRAM            equ     0fa00h
-		endcase	
+		endcase
 IRAMEND         equ     0fdffh          ; End   "   "      "
 
 
@@ -1064,7 +1064,7 @@ PECPTREND        equ     0fdffh
 
 SFRSTART         equ     0fe00h         ; Start of SFR-Bereich
 SFREND           equ     0ffffh         ; End SFR-Bereich
-	
+
                 if      _n>=167
 ESFRSTART        equ     0f000h         ; Start of Extended SFR Area
 ESFREND          equ     0f1ffh         ; End of Extended SFR Area
@@ -1076,7 +1076,7 @@ IROMEND          equ     07fffh         ; End of Internal ROM (not fully populat
                 elseif
 IROMEND          equ     01fffh
                 endif
-		
+
 		if	_n>=168
 EEPROM		 equ	 08000h		; Start of Internal 4 KByte EEprom
 EEPROMEND	 equ	 08fffh		; End of Internal EEprom
@@ -1089,7 +1089,7 @@ XRAM1END	 equ	 0e7ffh		; Internal XRAM 2 KByte End
 XRAM2		 equ	 0c000h		; Internal XRAM 6 KByte Start
 XRAM2END	 equ	 0d7ffh		; Internal XRAM 6 KByte End
 		endif
-                
+
 
 ;----------------------------------------------------------------------------
 ; Bequemlichkeitsmakros

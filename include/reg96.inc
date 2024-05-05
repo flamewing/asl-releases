@@ -312,7 +312,7 @@ P1_MODE          equ     1fd0h          ; Port 1 Special Functions vs. IO Port S
 P1_PIN           equ     1fd6h          ; Port 1 Pin Status
 P1_REG           equ     1fd4h          ; Port 1 Output Data
 
-P2_DIR           equ     1fd3h          ; the same for remaining ports 
+P2_DIR           equ     1fd3h          ; the same for remaining ports
 P2_MODE          equ     1fd1h
 P2_PIN           equ     1fd7h
 P2_REG           equ     1fd5h
