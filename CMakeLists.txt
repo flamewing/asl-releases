@@ -1089,7 +1089,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         --syntax-definition=doc/dosbat.xml
         -c doc/asl.css
         -L doc/convert-links.lua
-        --metadata title="Macro Assembler AS" --metadata lang="en"
+        --metadata title="Flamewing's Enhanced AS" --metadata lang="en"
         --self-contained --standalone
     )
     add_document(
@@ -1106,7 +1106,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         --syntax-definition=doc/dosbat.xml
         -c doc/asl.css
         -L doc/convert-links.lua
-        --metadata title="Macro Assembler AS" --metadata lang="en"
+        --metadata title="Flamewing's Enhanced AS" --metadata lang="en"
         --self-contained --standalone
         --reference-doc=doc/asl-template.odt
     )
@@ -1140,7 +1140,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
 # ##        -L doc/convert-links.lua
 # ##        --self-contained --standalone
 # ##        --pdf-engine=lualatex
-# ##        --variable lang="en"
+# ##        --metadata title="Flamewing's Enhanced AS" --variable lang="en"
 # ##        --variable fontsize="12pt"
 # ##        --variable papersize="a4"
 # ##        --variable mainfont="DejaVuSerif"
@@ -1150,7 +1150,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
 # ##        --variable margin-left="1cm"
 # ##        --variable margin-right="1cm"
 # ##        --variable margin-top="1cm"
-# ##        --variable margin-bottom="1cm"
+# ##        --variable margin-bottom="2cm"
 # ##    )
 # ##    install(
 # ##        FILES
