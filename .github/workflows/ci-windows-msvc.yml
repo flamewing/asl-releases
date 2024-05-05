@@ -50,6 +50,9 @@ jobs:
     strategy:
       fail-fast: false
     steps:
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
       - name: Checkout code
         uses: actions/checkout@master
       - name: Add MSBuild to PATH

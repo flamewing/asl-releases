@@ -59,6 +59,8 @@ jobs:
           copyback: false
           prepare: |
             # pkg update
+            # TODO: Figure out packages for building documentation.
+            # NOTE: It seems Pandoc is not available in OmniOS package list...
             pkg install gcc13 cmake ninja
           run: |
             export VERBOSE=1

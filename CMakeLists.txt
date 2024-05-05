@@ -70,13 +70,12 @@ mark_as_advanced(add_compile_options_safe)
 # check_ipo_supported(RESULT HAVE_IPO OUTPUT error)
 
 # if(HAVE_IPO)
-#     message(STATUS "IPO / LTO enabled")
-#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# message(STATUS "IPO / LTO enabled")
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 # else()
-#     message(STATUS "IPO / LTO not supported: <${error}>")
-#     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+# message(STATUS "IPO / LTO not supported: <${error}>")
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 # endif()
-
 add_compile_definitions(LIBDIR="${CMAKE_INSTALL_FULL_LIBDIR}/asl")
 
 include(CheckFunctionExists)
@@ -983,17 +982,6 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asl
 )
 
-# TODO: Convert man pages to Markdown and install them with
-# include(PandocMan)
-# add_pandoc_man("${CMAKE_SOURCE_DIR}/utility.1.md")
-# Source: https://github.com/rnpgp/cmake-modules/blob/main/PandocMan.cmake
-install(
-    DIRECTORY
-    man/
-    DESTINATION
-    ${CMAKE_INSTALL_MANDIR}/man1
-)
-
 if(DEFINED ENV{MSYSTEM_PREFIX})
     install(
         FILES
@@ -1042,6 +1030,20 @@ if(NOT CMAKE_CROSSCOMPILING)
     )
 endif(NOT CMAKE_CROSSCOMPILING)
 
+find_program(PANDOC_EXECUTABLE pandoc)
+mark_as_advanced(PANDOC_EXECUTABLE)
+
+# TODO: Convert man pages to Markdown and install them with
+# include(PandocMan)
+# add_pandoc_man("${CMAKE_SOURCE_DIR}/utility.1.md")
+# Source: https://github.com/rnpgp/cmake-modules/blob/main/PandocMan.cmake
+install(
+    DIRECTORY
+    man/
+    DESTINATION
+    ${CMAKE_INSTALL_MANDIR}/man1
+)
+
 # TODO: Add generation and installation of documents
 # They should go to ${CMAKE_INSTALL_DOCDIR}
 # List of documents:
@@ -1050,16 +1052,116 @@ endif(NOT CMAKE_CROSSCOMPILING)
 # - doc/ps*.tex                 -> ${CMAKE_INSTALL_DOCDIR}/ps*.tex
 # - doc/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
 # - doc/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
-# Command for generating html from command line:
-# pandoc -f gfm+footnotes as.md introduction.md assembler-usage.md \
-# pseudo-instructions.md processor-specific-hints.md file-formats.md \
-# utility-programs.md error-messages.md \
-# pseudo-instructions-and-integer-syntax.md predefined-symbols.md \
-# shipped-include-files.md frequently-asked-questions.md modifying-as.md \
-# bibliography.md -t html5 --toc --toc-depth=4 --wrap=preserve \
-# --syntax-definition=dosbat.xml -c asl.css -o asl.html \
-# -L convert-links.lua --metadata title="Macro Assembler AS" \
-# --metadata lang="en" -s --self-contained
+if(EXISTS ${PANDOC_EXECUTABLE})
+    message(STATUS "Pandoc found: ${PANDOC_EXECUTABLE}, documents will be generated.")
+    INCLUDE(pandocology)
+    set(DOCUMENT_SOURCES
+        doc/as.md
+        doc/introduction.md
+        doc/assembler-usage.md
+        doc/pseudo-instructions.md
+        doc/processor-specific-hints.md
+        doc/file-formats.md
+        doc/utility-programs.md
+        doc/error-messages.md
+        doc/pseudo-instructions-and-integer-syntax.md
+        doc/predefined-symbols.md
+        doc/shipped-include-files.md
+        doc/frequently-asked-questions.md
+        doc/modifying-as.md
+        doc/bibliography.md
+    )
+    set(DOCUMENT_DEPENDS
+        doc/asl.css
+        doc/dosbat.xml
+        doc/convert-links.lua
+    )
+    add_document(
+        TARGET html_document
+        OUTPUT_FILE asl.html
+        SOURCES ${DOCUMENT_SOURCES}
+        RESOURCE_DIRS
+        ${CMAKE_SOURCE_DIR}/doc
+        DEPENDS
+        ${DOCUMENT_DEPENDS}
+        PANDOC_DIRECTIVES
+        -f gfm+footnotes -t html5 --toc --toc-depth=4 --wrap=preserve
+        --syntax-definition=doc/dosbat.xml
+        -c doc/asl.css
+        -L doc/convert-links.lua
+        --metadata title="Macro Assembler AS" --metadata lang="en"
+        --self-contained --standalone
+    )
+    add_document(
+        TARGET odt_document
+        OUTPUT_FILE asl.odt
+        SOURCES ${DOCUMENT_SOURCES}
+        RESOURCE_DIRS
+        ${CMAKE_SOURCE_DIR}/doc
+        DEPENDS
+        ${DOCUMENT_DEPENDS} doc/asl-template.odt
+        ${DOCUMENT_DEPENDS}
+        PANDOC_DIRECTIVES
+        -f gfm+footnotes -t odt --toc --toc-depth=4 --wrap=preserve
+        --syntax-definition=doc/dosbat.xml
+        -c doc/asl.css
+        -L doc/convert-links.lua
+        --metadata title="Macro Assembler AS" --metadata lang="en"
+        --self-contained --standalone
+        --reference-doc=doc/asl-template.odt
+    )
+    install(
+        FILES
+        ${CMAKE_BINARY_DIR}/asl.html
+        ${CMAKE_BINARY_DIR}/asl.odt
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    )
+
+# ### PDF generation requires lualatex.
+# ### Also, PDF output needs some love to make it look good. Tables are not
+# ### rendered correctly because Pandoc uses Latex to convert to PDF, and
+# ### Latex simply does not wrap lines in tables.
+# ##find_package(LATEX COMPONENTS LUALATEX)
+# ##if(NOT LATEX_FOUND)
+# ##    message(STATUS "Lualatex not found: PDF document will not be generated.")
+# ##else()
+# ##    add_document(
+# ##        TARGET pdf_document
+# ##        OUTPUT_FILE asl.pdf
+# ##        SOURCES ${DOCUMENT_SOURCES}
+# ##        RESOURCE_DIRS
+# ##        ${CMAKE_SOURCE_DIR}/doc
+# ##        DEPENDS
+# ##        ${DOCUMENT_DEPENDS}
+# ##        PANDOC_DIRECTIVES
+# ##        -f gfm+footnotes -t pdf --toc --toc-depth=4 --wrap=preserve
+# ##        --syntax-definition=doc/dosbat.xml
+# ##        -c doc/asl.css
+# ##        -L doc/convert-links.lua
+# ##        --self-contained --standalone
+# ##        --pdf-engine=lualatex
+# ##        --variable lang="en"
+# ##        --variable fontsize="12pt"
+# ##        --variable papersize="a4"
+# ##        --variable mainfont="DejaVuSerif"
+# ##        --variable sansfont="DejaVuSans"
+# ##        --variable monofont="DejaVuSansMono"
+# ##        --variable mathfont="TeXGyreDejaVuMath-Regular"
+# ##        --variable margin-left="1cm"
+# ##        --variable margin-right="1cm"
+# ##        --variable margin-top="1cm"
+# ##        --variable margin-bottom="1cm"
+# ##    )
+# ##    install(
+# ##        FILES
+# ##        ${CMAKE_BINARY_DIR}/asl.pdf
+# ##        DESTINATION ${CMAKE_INSTALL_DOCDIR}
+# ##    )
+# ##endif()
+else()
+    message(STATUS "Pandoc not found: documents will not be generated.")
+endif()
+
 enable_testing()
 
 if(DEFINED ENV{VERBOSE})
