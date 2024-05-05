@@ -111,7 +111,7 @@ EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
 
 		include	"spmcsr37.inc"
-		
+
 SIGRD		avrbit	SPMCSR,5	; Signature Read
 
 RAMPZ		port	0x3b		; RAM Pointer
@@ -347,7 +347,7 @@ OC4OE4		avrbit	TCCR4E,4
 OC4OE5		avrbit	TCCR4E,5
 ENHC4		avrbit	TCCR4E,6	; Timer/Counter 4 Enhanced Compare/PWM Mode
 TLOCK4		avrbit	TCCR4E,7	; Timer/Counter 4 Register Update Lock
-TCNT4		sfr	0xbe		; Timer/Counter 4 Value 
+TCNT4		sfr	0xbe		; Timer/Counter 4 Value
 TC4H		sfr	0xbf		; Timer/Counter 4 Value MSB
 OCR4A		sfr	0xcf		; Timer/Counter 4 Output Compare Value A
 OCR4B		sfr	0xd0		; Timer/Counter 4 Output Compare Value B
@@ -405,7 +405,7 @@ TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 ; Watchdog Timer
 
 		include	"wdme.inc"
-		
+
 ;----------------------------------------------------------------------------
 ; USART
 
@@ -457,7 +457,7 @@ UBRR1L		sfr	0xcd		; Baud Rate Register Low
 ; TWI
 
 		include	"twimb8.inc"
-		
+
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
@@ -500,11 +500,11 @@ MSOFE		avrbit	UDIEN,1
 UHWCON		sfr	0xd7		; USB Hardware Control
 UVREGE		avrbit	UHWCON,0	; USB Pad Regulator Enable
 
-USBSTA		sfr	0xd9		; 
+USBSTA		sfr	0xd9		;
 VBUS		avrbit	USBSTA,0	; VBus Flag
 ID		avrbit	USBSTA,1	; ID status
 
-USBINT		sfr	0xda		; 
+USBINT		sfr	0xda		;
 VBUSTI		avrbit	USBINT,0	; IVBUS Transition Interrupt Flag
 
 UEBCHX		sfr	0xf3		; Byte Count High

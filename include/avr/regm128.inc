@@ -80,7 +80,7 @@ PIND		port	0x10		; Port D @ 0x10 (IO) ff.
 PINE            port	0x01		; Port E @ 0x01 (IO) ff.
 PINF            port	0x00		; Port F @ 0x00 (IO) ff.,
 DDRF		sfr	0x61		; Registers non-continuous
-PORTF		sfr	0x62	
+PORTF		sfr	0x62
 PING		sfr	0x63		; Port G @ 0x63 (DATA) ff.
 
 SFIOR		port	0x20		; Special Function I/O Register

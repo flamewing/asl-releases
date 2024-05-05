@@ -81,7 +81,7 @@ SRE		avrbit	XMCRA,7		; External SRAM/XMEM Enable
 XMCRB		sfr	0x75		; External Memory Access Register B
 XMM0		avrbit	XMCRB,0		; External Memory High Mask
 XMM1		avrbit	XMCRB,1
-XMM2		avrbit	XMCRB,2 
+XMM2		avrbit	XMCRB,2
 XMBK		avrbit	XMCRB,7		; External Memory Bus-keeper Enable
 
 ;----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ EEPM0		avrbit	EECR,4		; EEPROM Programming Mode
 EEPM1		avrbit	EECR,5
 
 		include	"spmcsr37.inc"
-		
+
 SIGRD		avrbit	SPMCSR,5	; Signature Read
 
 ;----------------------------------------------------------------------------
@@ -351,7 +351,7 @@ EXCLK		avrbit	ASSR,6		; Enable External Clock Input
 ; Watchdog Timer
 
 		include	"wdme.inc"
-		
+
 ;----------------------------------------------------------------------------
 ; USART
 
@@ -399,7 +399,7 @@ UBRR1L		sfr	0xcd		; Baud Rate Register Low
 ; TWI
 
 		include	"twimb8.inc"
-		
+
 ;----------------------------------------------------------------------------
 ; Analog Comparator
 
@@ -430,7 +430,7 @@ EPRST5		avrbit	UERST,5		; Endpoint 5 FIFO Reset
 EPRST6		avrbit	UERST,6		; Endpoint 6 FIFO Reset
 
 EPINT5		avrbit	UEINT,5		; Endpoint Interrupts Bits
-EPINT6		avrbit	UEINT,6		; 
+EPINT6		avrbit	UEINT,6		;
 
 UHWCON		sfr	0xd7		; USB Hardware Control
 UVREGE		avrbit	UHWCON,0	; USB Pad Regulator Enable
@@ -438,12 +438,12 @@ UVCONE		avrbit	UHWCON,4	; UVCON Pin Enable
 UIDE		avrbit	UHWCON,6	; UID Pin Enable
 UIMOD		avrbit	UHWCON,7	; USB Mode
 
-USBSTA		sfr	0xd9		; 
+USBSTA		sfr	0xd9		;
 VBUS		avrbit	USBSTA,0	; VBus Flag
 ID		avrbit	USBSTA,1	; ID status
 SPEED		avrbit	USBSTA,3	; Speed Status Flag
 
-USBINT		sfr	0xda		; 
+USBINT		sfr	0xda		;
 VBUSTI		avrbit	USBINT,0	; IVBUS Transition Interrupt Flag
 IDTI		avrbit	USBINT,1	; D Transition Interrupt Flag
 
@@ -482,7 +482,7 @@ UHFNUMH		sfr	0xa3		; USB Host Frame Number MSB
 
 UHFLEN		sfr	0xa4		; USB Host Frame Length
 
-UPINRQX		sfr	0xa5		; 
+UPINRQX		sfr	0xa5		;
 INRQ0		avrbit	UPINRQX,0	; IN Request Number Before Freeze
 INRQ1		avrbit	UPINRQX,1
 INRQ2		avrbit	UPINRQX,2
@@ -544,7 +544,7 @@ UPSTAX		sfr	0xac		; USB Status
 PNBUSYBK0	avrbit	UPSTAX,0	; Busy Bank Flag (also NBUSYBK0/1 from UESTA0X definition)
 PNBUSYBK1	avrbit	UPSTAX,1
 PDTSEQ0		avrbit	UPSTAX,2	; Toggle Sequencing Flag (also DTSEQ0/1 from UESTA0X definition)
-PDTSEQ1		avrbit	UPSTAX,3	
+PDTSEQ1		avrbit	UPSTAX,3
 PUNDERFI	avrbit	UPSTAX,5	; Underflow (also UNDERFI from UESTA0X definition)
 POVERFI		avrbit	UPSTAX,6	; Overflow (also OVERFI from UESTA0X definition)
 PCFGOK		avrbit	UPSTAX,7	; Configure Pipe Memory OK (also CFGOK from UESTA0X definition)

@@ -21,7 +21,7 @@ __P		set	0
 		  __decstr __NS,__N+1
 EXTI_CR{__NS}	  label	Base+__N
 		 endif
-__PS		 set	substr("ABCDEFGHI",__P,1)		 
+__PS		 set	substr("ABCDEFGHI",__P,1)
 P{__PS}IS	 bfield	ITC_SPR{__NS},__B,2
 __P		 set	__P+1
 __B		 set	__B+2

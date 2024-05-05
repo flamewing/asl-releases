@@ -199,7 +199,7 @@ OCR0B		port	0x15		; Timer/Counter 0 Output Compare Value B
 TCCR1A		port	0x24		; Timer/Counter 1 Control Register A
 CS10		avrbit	TCCR1A,0	; Timer/Counter 1 Clock Select
 CS11		avrbit	TCCR1A,1
-CS12		avrbit	TCCR1A,2		
+CS12		avrbit	TCCR1A,2
 CTC1		avrbit	TCCR1A,3	; Timer/Counter 1 Waveform Generation Mode
 ICES1		avrbit	TCCR1A,4	; Timer/Counter 1 Input Capture Edge Select
 ICNC1		avrbit	TCCR1A,5	; Timer/Counter 1 Input Capture Noise Canceler

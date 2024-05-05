@@ -46,7 +46,7 @@ OPT0		label	$4800		; Read-out protection
 ROP		bfield	OPT0,0,8	;  Memory readout protection
 OPT1		label	$4802		; User boot code size
 UBC		bfield	OPT1,0,8	;  Size of the user boot code area
-OPT2		label	$4807           ; 
+OPT2		label	$4807           ;
 PCODE		bfield	OPT2,0,8	;  Size of the proprietary code area
 OPT3		label	$4808		; Independent watchdog option
 IWDG_HW		bit	OPT3,0		;  Independent watchdog activated by SW/HW
