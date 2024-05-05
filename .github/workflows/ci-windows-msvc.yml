@@ -50,7 +50,8 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
