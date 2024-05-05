@@ -60,8 +60,7 @@ jobs:
           prepare: |
             pkg update
             pkg upgrade
-            # TODO: Figure out packages for building documentation.
-            pkg install -y cmake ninja
+            pkg install -y cmake ninja hs-pandoc
           run: |
             export VERBOSE=1
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG

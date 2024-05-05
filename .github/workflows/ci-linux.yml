@@ -60,8 +60,10 @@ jobs:
           else
             sudo apt-fast update
           fi
-          # TODO: Figure out packages for building documentation.
           sudo apt-fast install -y cmake ninja-build
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure

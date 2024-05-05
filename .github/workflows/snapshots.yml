@@ -139,7 +139,9 @@ jobs:
             base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
             mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
-            # TODO: Figure out packages for building documentation.
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
@@ -155,7 +157,7 @@ jobs:
           fi
           cp COPYING build/
           cd build
-          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING *.msg {alink,mkdepend,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
+          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg {alink,mkdepend,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
       - name: Upload snapshot
         uses: actions/upload-release-asset@v1
         env:
