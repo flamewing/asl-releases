@@ -965,7 +965,7 @@ define_executable(test_driver
     test_driver.c
 )
 
-file(GLOB_RECURSE ALL_RESOURCE_FILES *.c *.h *.hpp)
+file(GLOB_RECURSE ALL_SOURCE_FILES *.c *.h *.hpp)
 
 add_custom_target(
     asl-format
