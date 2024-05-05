@@ -944,7 +944,7 @@ static Boolean DecodeMOVE(int Start) {
 static Boolean DecodePseudo(void) {
     Boolean      OK;
     tSymbolFlags Flags;
-    Word         AdrWord, z, z2;
+    Word         AdrWord;
     /*   Byte Segment;*/
     LongInt HInt;
 
@@ -982,7 +982,7 @@ static Boolean DecodePseudo(void) {
         as_tempres_ini(&t);
         if (ChkArgCnt(1, ArgCntMax)) {
             OK = True;
-            for (z = 1; OK && (z <= ArgCnt); z++) {
+            for (int z = 1; OK && (z <= ArgCnt); z++) {
                 EvalStrExpression(&ArgStr[z], &t);
                 switch (t.Typ) {
                 case TempString: {
@@ -994,7 +994,7 @@ static Boolean DecodePseudo(void) {
 
                     BCount            = 2;
                     DAsmCode[CodeLen] = 0;
-                    for (z2 = 0; z2 < t.Contents.str.len; z2++) {
+                    for (size_t z2 = 0; z2 < t.Contents.str.len; z2++) {
                         HInt = t.Contents.str.p_str[z2];
                         HInt = CharTransTable[((usint)HInt) & 0xff];
                         HInt <<= (BCount * 8);
