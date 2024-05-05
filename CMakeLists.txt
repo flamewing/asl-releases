@@ -1100,7 +1100,6 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         ${CMAKE_SOURCE_DIR}/doc
         DEPENDS
         ${DOCUMENT_DEPENDS} doc/asl-template.odt
-        ${DOCUMENT_DEPENDS}
         PANDOC_DIRECTIVES
         -f gfm+footnotes -t odt --toc --toc-depth=4 --wrap=preserve
         --syntax-definition=doc/dosbat.xml
