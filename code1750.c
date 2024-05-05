@@ -17,17 +17,14 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "bpemu.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
-#include "codepseudo.h"
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "headids.h"
-#include "as_endian.h"
 #include "ieeefloat.h"
 #include "errmsg.h"
 

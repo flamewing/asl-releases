@@ -10,19 +10,16 @@
 
 #include "stdinc.h"
 
-#include <ctype.h>
 #include <string.h>
 #include <assert.h>
 
 #include "bpemu.h"
 #include "strutil.h"
-#include "nls.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
 #include "asmstructs.h"
-#include "asmallg.h"
 #include "codepseudo.h"
 #include "motpseudo.h"
 #include "codevars.h"

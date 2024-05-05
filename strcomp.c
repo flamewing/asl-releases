@@ -11,7 +11,6 @@
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
-#include "datatypes.h"
 #include "strutil.h"
 #include "strcomp.h"
 

@@ -11,11 +11,9 @@
 #include "stdinc.h"
 
 #include <string.h>
-#include <ctype.h>
 
 #include "bpemu.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "headids.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -25,8 +23,6 @@
 #include "fourpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
-
-#include "codef8.h"
 
 /*---------------------------------------------------------------------------*/
 

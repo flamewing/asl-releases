@@ -15,8 +15,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "addrspace.h"
-
 #define FileMagic 0x1489
 
 #define FileHeaderEnd       0x00   /* Dateiende */

@@ -11,7 +11,6 @@
 #include "stdinc.h"
 
 #include <string.h>
-#include <ctype.h>
 
 #include "bpemu.h"
 #include "strutil.h"
@@ -514,7 +513,7 @@ static void DecodeLDX(Word Index)
           BAsmCode[0] = 0x3e;
           BAsmCode[1] = AdrVals[0];
           BAsmCode[2] = 0x0f;
-	  break;	
+	  break;
 	case ModDir:
 	  if (Index == 0)
 	  {

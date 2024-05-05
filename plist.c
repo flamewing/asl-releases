@@ -12,10 +12,11 @@
 #include <string.h>
 
 #include "version.h"
+#include "addrspace.h"
 #include "as_endian.h"
 #include "bpemu.h"
-#include "stringlists.h"
 #include "cmdarg.h"
+#include "fileformat.h"
 #include "nls.h"
 #include "nlmessages.h"
 #include "plist.rsc"

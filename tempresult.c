@@ -11,8 +11,8 @@
 #include "stdinc.h"
 #include <string.h>
 
+#include "dynstr.h"
 #include "strutil.h"
-#include "asmdef.h"
 #include "tempresult.h"
 
 /*!------------------------------------------------------------------------

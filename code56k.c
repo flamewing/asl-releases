@@ -10,10 +10,8 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "strutil.h"
-#include "chunks.h"
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"

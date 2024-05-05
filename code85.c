@@ -10,15 +10,12 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
-#include "nls.h"
 #include "bpemu.h"
 #include "strutil.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "asmallg.h"
 #include "codepseudo.h"
 #include "intpseudo.h"
 #include "asmitree.h"

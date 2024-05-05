@@ -19,7 +19,6 @@
 #include "errmsg.h"
 #include "symbolsize.h"
 
-#include "as.h"
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"

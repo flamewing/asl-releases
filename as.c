@@ -11,11 +11,9 @@
 #include "stdinc.h"
 #include <string.h>
 #include <ctype.h>
-#include <setjmp.h>
 #include <assert.h>
 
 #include "version.h"
-#include "as_endian.h"
 #include "bpemu.h"
 
 #include "stdhandl.h"
@@ -46,7 +44,6 @@
 #include "asmdebug.h"
 #include "asmrelocs.h"
 #include "asmallg.h"
-#include "codepseudo.h"
 #include "intpseudo.h"
 #include "as.h"
 

@@ -7,12 +7,10 @@
 
 #include "stdinc.h"
 #include <string.h>
-#include <ctype.h>
 
 #include "nls.h"
 #include "bpemu.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "errmsg.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -21,7 +19,6 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "tipseudo.h"
-#include "as_endian.h"
 #include "errmsg.h"
 
 #include "code3205x.h"

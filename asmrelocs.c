@@ -20,8 +20,8 @@
 #include "stdinc.h"
 #include <string.h>
 #include "strutil.h"
+#include "asmerr.h"
 #include "asmdef.h"
-#include "asmsub.h"
 #include "asmcode.h"
 #include "asmrelocs.h"
 #include "errmsg.h"

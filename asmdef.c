@@ -13,11 +13,10 @@
 #include <errno.h>
 
 #include "strutil.h"
-#include "stringlists.h"
 #include "chunks.h"
 
 #include "asmdef.h"
-#include "asmsub.h"
+#include "asmerr.h"
 #include "errmsg.h"
 
 char SrcSuffix[] = ".asm";             /* Standardendungen: Hauptdatei */

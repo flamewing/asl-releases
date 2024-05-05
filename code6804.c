@@ -10,8 +10,6 @@
 
 #include "stdinc.h"
 
-#include <string.h>
-
 #include "bpemu.h"
 #include "strutil.h"
 #include "asmdef.h"

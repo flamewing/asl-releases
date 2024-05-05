@@ -9,10 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
-#include <ctype.h>
 
-#include "nls.h"
 #include "strutil.h"
 #include "headids.h"
 #include "bpemu.h"
@@ -20,7 +17,6 @@
 #include "asmsub.h"
 #include "asmpars.h"
 #include "asmitree.h"
-#include "codepseudo.h"
 #include "intpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"

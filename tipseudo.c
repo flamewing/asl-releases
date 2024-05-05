@@ -13,12 +13,10 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 #include <math.h>
 
 #include "strutil.h"
-#include "as_endian.h"
 #include "ieeefloat.h"
 #include "asmdef.h"
 #include "asmsub.h"

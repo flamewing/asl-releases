@@ -9,12 +9,10 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
 
 #include "asmdef.h"
 #include "asmsub.h"
 #include "asmpars.h"
-#include "codepseudo.h"
 #include "headids.h"
 #include "asmitree.h"
 #include "codevars.h"

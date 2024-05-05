@@ -9,7 +9,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <string.h>
 
 const char *Version = "1.42 Beta [Bld 212]";
 const char *DebVersion = "1.42bld212-1";

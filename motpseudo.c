@@ -13,9 +13,7 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
-#include <math.h>
 #include <assert.h>
 
 #include "bpemu.h"

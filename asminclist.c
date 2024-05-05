@@ -12,8 +12,6 @@
 #include <string.h>
 
 #include "strutil.h"
-#include "chunks.h"
-#include "nls.h"
 #include "nlmessages.h"
 #include "as.rsc"
 #include "asmfnums.h"

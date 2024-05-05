@@ -9,15 +9,14 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 
 #include "version.h"
 #include "as_endian.h"
 #include "stdhandl.h"
 #include "bpemu.h"
+#include "fileformat.h"
 #include "strutil.h"
-#include "stringlists.h"
 #include "cmdarg.h"
 #include "toolutils.h"
 #include "nls.h"

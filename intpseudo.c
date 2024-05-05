@@ -13,13 +13,10 @@
  *****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 #include <assert.h>
-#include <math.h>
 
 #include "bpemu.h"
-#include "as_endian.h"
 #include "strutil.h"
 #include "nls.h"
 #include "asmdef.h"

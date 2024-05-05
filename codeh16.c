@@ -15,7 +15,6 @@
 
 #include "bpemu.h"
 #include "strutil.h"
-#include "chunks.h"
 #include "headids.h"
 #include "asmdef.h"
 #include "asmsub.h"
@@ -27,7 +26,6 @@
 #include "motpseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
-#include "nls.h"
 
 #include "codeh16.h"
 

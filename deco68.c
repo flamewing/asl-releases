@@ -8,7 +8,6 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include <ctype.h>
 #include <string.h>
 
 #include "dasmdef.h"

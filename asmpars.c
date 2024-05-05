@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include "as_endian.h"
 #include "bpemu.h"
 #include "nls.h"
 #include "nlmessages.h"
@@ -24,6 +23,7 @@
 #include "asmdef.h"
 #include "asmsub.h"
 #include "errmsg.h"
+#include "fileformat.h"
 #include "asmfnums.h"
 #include "asmrelocs.h"
 #include "asmstructs.h"

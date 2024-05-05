@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include "nonzstring.h"
 #include "strutil.h"
-#include "asmdef.h"
 #include "errmsg.h"
 #include "asmerr.h"
 #include "asmpars.h"
