@@ -41,7 +41,7 @@ SIMBase           equ     $000000
                 endif
 
 ;=============================================================================
-; Since 68360, 68340, and 68332 differ significantly in their register set, 
+; Since 68360, 68340, and 68332 differ significantly in their register set,
 ; I did not bother to sort out common registers.
 
                 switch  MOMCPUNAME
@@ -140,7 +140,7 @@ CISR            equ     RegBase+$054c   ; [L] Interrupts Pending
 ; PIO:
 
 PADIR           equ     RegBase+$0550   ; [W] Port A Data Direction Register
-PAPAR           equ     RegBase+$0552   ; [W] Port A Assignment 
+PAPAR           equ     RegBase+$0552   ; [W] Port A Assignment
 PAODR           equ     RegBase+$0554   ; [W] Port A Open Drain Control
 PADAT           equ     RegBase+$0556   ; [W] Port A Data Register
 
@@ -465,7 +465,7 @@ RSR             equ     SIMBase+$007    ; [B] Reset Status
 PORTA           equ     SIMBase+$011    ; [B] Port A Data Register
 DDRA            equ     SIMBase+$013    ; [B] Port A Data Direction Register
 PPRA1           equ     SIMBase+$015    ; [B] Port A Pin Assignment
-PPRA2           equ     SIMBase+$017    ; [B] 
+PPRA2           equ     SIMBase+$017    ; [B]
 PORTB           equ     SIMBase+$019    ; [B] Port B Data Register
 PORTB1          equ     SIMBase+$01b    ; [B] ditto
 DDRB            equ     SIMBase+$01d    ; [B] Port B Data Direction Register

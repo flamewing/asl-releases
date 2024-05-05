@@ -3,7 +3,7 @@ __regcoldinc	equ	1
 
 		save
 		listing	off		; no listing over this file
-		
+
 ;****************************************************************************
 ;*                                                                          *
 ;*   AS 1.42 - File REGCOLD.INC                                             *
@@ -121,7 +121,7 @@ __N		set		__N+1
 		  include "coldfire/mcf5475.inc"
 		case "MCF51QM"
 		  include "coldfire/mcf51qm.inc"
-		  
+
 		elsecase
 		  error	"wrong processor type set: only MCF5204, MCF5206, MCF5208, MCF52274, MCF52277, MCF5307, MCF5329, MCF5373, MCF5407, MCF5470 to MCF5475, MCF51QM allowed!"
 		endcase

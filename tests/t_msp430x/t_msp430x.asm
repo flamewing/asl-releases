@@ -5966,5 +5966,3 @@ blah:
 	rptc	r6 rlcx r7
 	rptz	#5 rlcx r7
 	rptz	r6 rlcx r7
-
-	

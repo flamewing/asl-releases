@@ -77,5 +77,3 @@
 	vctr	(0, 0), s5, z0	; Ruhezeit
 	labs	(508, 508), s1
 	halt
-
-	
