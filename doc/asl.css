@@ -608,7 +608,7 @@ code span.er {
 }
 
 /* Error */
-code span.ex {}
+/* code span.ex {} */
 
 /* Extension */
 code span.fl {
@@ -621,7 +621,7 @@ code span.fu {
 }
 
 /* Function */
-code span.im {}
+/* code span.im {} */
 
 /* Import */
 code span.in {
