@@ -181,7 +181,7 @@ COM1A1		avrbit	TCCR1A,7
 TCCR1B		port	0x23		; Timer/Counter 1 Control Register B
 CS10		avrbit	TCCR1B,0	; Timer/Counter 1 Clock Select
 CS11		avrbit	TCCR1B,1
-CS12		avrbit	TCCR1B,2		
+CS12		avrbit	TCCR1B,2
 WGM12		avrbit	TCCR1B,3
 WGM13		avrbit	TCCR1B,4
 ICES1		avrbit	TCCR1B,6	; Timer/Counter 1 Input Capture Edge Select

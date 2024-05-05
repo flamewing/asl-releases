@@ -157,7 +157,7 @@ TSM		avrbit	GTCCR,7		; Timer Synchronization
 		include	"wdm21.inc"
 
 WDCE		avrbit	WDTCR,4		; Watchdog Change Enable
-WDP3		avrbit	WDTCR,5		; 
+WDP3		avrbit	WDTCR,5		;
 WDTIE		avrbit	WDTCR,6		; Watchdog Timer Interrupt Enable
 WDTIF		avrbit	WDTCR,7		; Watchdog Timer Interrupt Flag
 

@@ -217,7 +217,7 @@ TOIE2		avrbit	TIMSK2,0	; Timer/Counter 2 Overflow Interrupt Enable
 OCIE2A		avrbit	TIMSK2,1	; Timer/Counter 2 Output Compare Interrupt Enable A
 OCIE2B		avrbit	TIMSK2,2	; Timer/Counter 2 Output Compare Interrupt Enable B
 
-TIFR0		port	0x15		; Timer/Counter 0 Interrupt Status Register 
+TIFR0		port	0x15		; Timer/Counter 0 Interrupt Status Register
 TIFR1		port	0x16		; Timer/Counter 1 Interrupt Status Register
 TIFR2		port	0x17		; Timer/Counter 2 Interrupt Status Register
 

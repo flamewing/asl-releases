@@ -95,7 +95,7 @@ ADC2D		avrbit	DIDR,4		; ADC2 Digital Input Disable
 ADC0D		avrbit	DIDR,5		; ADC0 Digital Input Disable
 
 PCMSK		port	0x15		; Pin Change Interrupt Mask
-PCINT0		avrbit	PCMSK,0		; Enable Pin Change Interrupt 0 
+PCINT0		avrbit	PCMSK,0		; Enable Pin Change Interrupt 0
 PCINT1		avrbit	PCMSK,1		; Enable Pin Change Interrupt 1
 PCINT2		avrbit	PCMSK,2		; Enable Pin Change Interrupt 2
 PCINT3		avrbit	PCMSK,3		; Enable Pin Change Interrupt 3
@@ -207,7 +207,7 @@ PSR1		avrbit	GTCCR,1		; Prescaler Reset Timer/Counter 1
 FOC1A		avrbit	GTCCR,2		; Force Output Compare Match 1 A
 FOC1B		avrbit	GTCCR,3		; Force Output Compare Match 1 B
 COM1B0		avrbit	GTCCR,4		; Timer/Counter 1 Output Compare IMode B
-COM1B1		avrbit	GTCCR,5 
+COM1B1		avrbit	GTCCR,5
 PWM1B		avrbit	GTCCR,6		; Pulse Width Modulator B Enable
 TSM		avrbit	GTCCR,7		; Timer/Counter Synchronization Mode
 
@@ -281,7 +281,7 @@ USICLK		avrbit	USICR,1		; Clock Strobe
 USICS0		avrbit	USICR,2		; Clock Source Select
 USICS1		avrbit	USICR,3
 USIWM0		avrbit	USICR,4		; Wire Mode
-USIWM1		avrbit	USICR,5		
+USIWM1		avrbit	USICR,5
 USIOIE		avrbit	USICR,6		; Counter Overflow Interrupt Enable
 USISIE		avrbit	USICR,7		; Start Condition Interrupt Enable
 

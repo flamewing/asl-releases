@@ -250,11 +250,11 @@ WDIF		avrbit	WDTCR,7		; Watchdog Interrupt Occured?
 ACSRA		port	0x08		; Analog Comparator Control/Status Register A
 ACIS0		avrbit	ACSRA,0		; Analog Comparator Interrupt-Mode
 ACIS1		avrbit	ACSRA,1
-ACME		avrbit	ACSRA,2		; Analog Comparator Multiplexer Enable		
+ACME		avrbit	ACSRA,2		; Analog Comparator Multiplexer Enable
 ACIE		avrbit	ACSRA,3		; Analog Comparator Interrupt Enable
 ACI		avrbit	ACSRA,4		; Analog Comparator Interrupt Flag
 ACO		avrbit	ACSRA,5		; Analog Comparator Output
-ACBG		avrbit	ACSRA,6		
+ACBG		avrbit	ACSRA,6
 ACD		avrbit	ACSRA,7		; Analog Comparator Disable
 
 ACSRB		port	0x09		; Analog Comparator Control/Status Register B
@@ -320,7 +320,7 @@ USICLK		avrbit	USICR,1		; Clock Strobe
 USICS0		avrbit	USICR,2		; Clock Source Select
 USICS1		avrbit	USICR,3
 USIWM0		avrbit	USICR,4		; Wire Mode
-USIWM1		avrbit	USICR,5		
+USIWM1		avrbit	USICR,5
 USIOIE		avrbit	USICR,6		; Counter Overflow Interrupt Enable
 USISIE		avrbit	USICR,7		; Start Condition Interrupt Enable
 

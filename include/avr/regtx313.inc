@@ -318,7 +318,7 @@ USICLK		avrbit	USICR,1		; Clock Strobe
 USICS0		avrbit	USICR,2		; Clock Source Select
 USICS1		avrbit	USICR,3
 USIWM0		avrbit	USICR,4		; Wire Mode
-USIWM1		avrbit	USICR,5		
+USIWM1		avrbit	USICR,5
 USIOIE		avrbit	USICR,6		; Counter Overflow Interrupt Enable
 USISIE		avrbit	USICR,7		; Start Condition Interrupt Enable
 

@@ -337,7 +337,7 @@ ADTS0		avrbit	ADCSRB,0
 ADCH		port	0x01		; Data Register
 ADCL		port	0x00
 
-AREFD		avrbit	DIDR0,0		; 
+AREFD		avrbit	DIDR0,0		;
 ADC0D		avrbit	DIDR0,3		; ADC0 Digital Input Buffer Disable
 ADC1D		avrbit	DIDR0,4		; ADC1 Digital Input Buffer Disable
 ADC2D		avrbit	DIDR0,5		; ADC2 Digital Input Buffer Disable
@@ -484,7 +484,7 @@ USICLK		avrbit	USICR,1		; Clock Strobe
 USICS0		avrbit	USICR,2		; Clock Source Select
 USICS1		avrbit	USICR,3
 USIWM0		avrbit	USICR,4		; Wire Mode
-USIWM1		avrbit	USICR,5		
+USIWM1		avrbit	USICR,5
 USIOIE		avrbit	USICR,6		; Counter Overflow Interrupt Enable
 USISIE		avrbit	USICR,7		; Start Condition Interrupt Enable
 

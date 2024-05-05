@@ -362,7 +362,7 @@ LID3		avrbit	LINIDR,3
 LID4		avrbit	LINIDR,4
 LID5		avrbit	LINIDR,5
 LDL0		avrbit	LINIDR,4	; LIN 1.3 Data Length
-LDL1		avrbit	LINIDR,5	
+LDL1		avrbit	LINIDR,5
 LP0		avrbit	LINIDR,6	; Parity
 LP1		avrbit	LINIDR,7
 

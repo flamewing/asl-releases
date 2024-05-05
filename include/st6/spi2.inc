@@ -32,5 +32,3 @@ D0		bit	0,MISCR		;  Selects the Sout Pin as the SPI Output Line
 
 		restore
 		endif			; __spi2inc
-                                
-                                

@@ -280,7 +280,7 @@ TOCC1S1		avrbit	TOCPMSA0,3
 TOCC2S0		avrbit	TOCPMSA0,4	; Timer/Counter Output Compare Channel Select 2
 TOCC2S1		avrbit	TOCPMSA0,5
 TOCC3S0		avrbit	TOCPMSA0,6	; Timer/Counter Output Compare Channel Select 3
-TOCC3S1		avrbit	TOCPMSA0,7 
+TOCC3S1		avrbit	TOCPMSA0,7
 
 TOCPMSA1	sfr	0xe9		; Timer/Counter Output Compare Pin Mux Selection Register 1
 TOCC4S0		avrbit	TOCPMSA1,0	; Timer/Counter Output Compare Channel Select 4
@@ -290,7 +290,7 @@ TOCC5S1		avrbit	TOCPMSA1,3
 TOCC6S0		avrbit	TOCPMSA1,4	; Timer/Counter Output Compare Channel Select 6
 TOCC6S1		avrbit	TOCPMSA1,5
 TOCC7S0		avrbit	TOCPMSA1,6	; Timer/Counter Output Compare Channel Select 7
-TOCC7S1		avrbit	TOCPMSA1,7 
+TOCC7S1		avrbit	TOCPMSA1,7
 
 TOCPMCOE	sfr	0xe2		; Timer/Counter Output Compare Pin Mux Channel Output Enable
 TOCC0OE		avrbit	TOCPMCOE,0	; Timer/Counter Output Compare Channel 0 Output Enable
