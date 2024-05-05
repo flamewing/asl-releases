@@ -1112,6 +1112,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
     )
     install(
         FILES
+        COPYING
         ${CMAKE_BINARY_DIR}/asl.html
         ${CMAKE_BINARY_DIR}/asl.odt
         DESTINATION ${CMAKE_INSTALL_DOCDIR}
