@@ -70,7 +70,7 @@ jobs:
           install:
             base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
-            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-cninja
+            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-ninja
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:
