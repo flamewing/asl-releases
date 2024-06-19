@@ -1006,6 +1006,12 @@ Some targets define options or variants that are so fundamental for operation, t
 
 See the respective section with processor-specific hints to check whether a certain target supports such options.
 
+### ACCMODE
+
+_valid for: VAX_
+
+Select the access mode assumed for subsequent instructions: `KERNEL` (0), `EXECUTIVE` (1), `SUPERVISOR` (2), or `USER` (3). The default is user mode. Instructions requiring higher privilege are checked against this setting; the symbol `ACCMODE` reports its numeric value.
+
 ### SUPMODE, FPU, PMMU, CUSTOM
 
 _SUPMODE valid for: 680x0, i960, TLCS-900, SH7000, i960, 29K, XA, PowerPC, M\*Core, and TMS9900_
@@ -3050,3 +3056,18 @@ SC61860 has a 64 KiB code address space and supports Motorola-style `DC`/`DS`, b
 
 
 SC61860 is used in Sharp PC-12xx through PC-15xx pocket computers; SC62015 is used in the Sharp PC-E500.
+
+
+### DEC data and string directives
+
+On PDP-11, VAX and WD16, `BYTE` and `WORD` correspond to `DB` and `DW` but accept only integers. VAX `LONG`/`LWORD`, `QUAD` and `OCTA` store integer values of 4, 8 and 16 bytes. VAX `F_FLOATING`, `D_FLOATING`, `G_FLOATING` and `H_FLOATING` store DEC floating formats; `FLOAT` aliases F and `DOUBLE` aliases D. PDP-11 uses `FLT2` (F) and `FLT4` (D); WD16 uses its 48-bit `FLT3` format.
+
+VAX block directives reserve an element count at the corresponding size: `BLKB` (1 byte), `BLKW` (2), `BLKL`/`BLKF` (4), `BLKQ`/`BLKD`/`BLKG` (8), and `BLKO`/`BLKH` (16).
+
+`ASCII` writes strings; `ASCIZ` appends a zero byte; `ASCIC` prepends a length byte. `ASCII` is available on ST6, PDP-11, VAX, IMP-16 and IPC-16; `ASCIZ` on ST6, PDP-11 and VAX; `ASCIC` on PDP-11 and VAX.
+
+`PACKED` on PDP-11 and VAX stores a signed integer or decimal string as packed decimal, with at most 31 digits. A string may have a leading plus or minus sign. The final nibble is C for positive or D for negative; a leading zero nibble pads an odd total nibble count. An optional second argument names a symbol receiving the digit count, excluding sign and padding.
+
+`RADIX50` is a macro from `radix50.inc`, packing three characters into one 16-bit word; it is not a built-in directive.
+
+Supported VAX targets: `MICROVAX-I`, `MICROVAX-II`, `VAX-11/725`, `VAX-11/730`, `VAX-11/750`, `VAX-11/780`, `VAX-11/782`, `VAX-11/785`, `VAX-8200`, `VAX-8300`, `VAX-8500`, `VAX-8600`, `VAX-8650`, `VAX-8800`. All share the core architecture, but hardware availability of string, packed decimal and floating-point extensions differs. The code address space is 4 GiB.

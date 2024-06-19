@@ -319,20 +319,30 @@ void RemoveInstTable(PInstTable tab, char const* Name) {
     }
 }
 
-Boolean LookupInstTable(PInstTable tab, char const* Name) {
-    LongWord h0 = GetKey(Name, tab->Size);
+InstProc inst_fnc_table_search(PInstTable p_table, char const* p_name, Word* p_index) {
+    LongWord h0 = GetKey(p_name, p_table->Size);
 
     while (1) {
-        if (!tab->Entries[h0].Name) {
-            return False;
-        } else if (!strcmp(tab->Entries[h0].Name, Name)) {
-            tab->Entries[h0].Proc(tab->Entries[h0].Index);
-            return True;
+        if (!p_table->Entries[h0].Name) {
+            return NULL;
+        } else if (!strcmp(p_table->Entries[h0].Name, p_name)) {
+            *p_index = p_table->Entries[h0].Index;
+            return p_table->Entries[h0].Proc;
         }
-        if ((LongInt)(++h0) == tab->Size) {
+        if ((LongInt)(++h0) == p_table->Size) {
             h0 = 0;
         }
     }
+}
+
+Boolean LookupInstTable(PInstTable tab, char const* Name) {
+    Word     index;
+    InstProc proc = inst_fnc_table_search(tab, Name, &index);
+
+    if (proc) {
+        proc(index);
+    }
+    return !!proc;
 }
 
 /*!------------------------------------------------------------------------

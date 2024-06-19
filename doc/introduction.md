@@ -190,3 +190,6 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 
 
 Sharp SC61860 and SC62015 processors are also supported.
+
+
+DEC VAX targets are supported, including MicroVAX and the VAX-11, VAX-8xxx families.

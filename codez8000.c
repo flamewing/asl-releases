@@ -574,7 +574,7 @@ static LongWord DecodeAddrPartNum(
     } else {
         ThisIntType = GetImmIntType(OpSize);
     }
-    if (mFirstPassUnknown(pEvalResult->Flags)) {
+    if (mFirstPassUnknown(pEvalResult->Flags) && (ThisIntType < IntTypeCnt)) {
         Result &= IntTypeDefs[(int)ThisIntType].Mask;
     }
 

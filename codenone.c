@@ -53,7 +53,8 @@ static void switch_to_none(void) {
     HeaderID    = 0x00;
     NOPCode     = 0x00;
     DivideChars = ",";
-    HasAttrs    = False;
+    HasAttrs    = True;
+    AttrChars   = ".";
 
     ValidSegs          = 1 << SegCode;
     Grans[SegCode]     = 1;

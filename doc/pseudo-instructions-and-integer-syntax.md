@@ -649,3 +649,10 @@ Default integer syntax: Motorola. Directives: `ADR`, `BYT`, `DB`, `DC`, `DFS`, `
 #### Sharp SC62015
 
 Default integer syntax: Intel. Directives: `DN`, `DB`, `DD`, `DQ`, `DS`, `DT`, `DW`.
+
+
+#### DEC VAX
+
+Directives: `ACCMODE`, `ASCIC`, `ASCII`, `ASCIZ`, `BLKB`, `BLKD`, `BLKF`, `BLKG`, `BLKH`, `BLKL`, `BLKO`, `BLKQ`, `BLKW`, `BYTE`, `D_FLOATING`, `DOUBLE`, `F_FLOATING`, `FLOAT`, `G_FLOATING`, `H_FLOATING`, `LONG`, `OCTA`, `QUAD`, `WORD`.
+
+WD16 also supports `ASCII` and `ASCIZ`.

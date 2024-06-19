@@ -155,8 +155,8 @@ static void CloseTarget(void) {
             for (z = 0; z < Trans; Sum += Buffer[z++])
                 ;
         }
-        errno = 0;
-        printf("%s%08lX\n", getmessage(Num_InfoMessChecksum), LoDWord(Sum));
+        chkio_printf(
+                TargName, "%s%08lX\n", getmessage(Num_InfoMessChecksum), LoDWord(Sum));
         Buffer[0] = 0x100 - (Sum & 0xff);
 
         /* Some systems require fflush() between read & write operations.  And
@@ -201,11 +201,9 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
         FormatError(FileName, getmessage(Num_FormatInvHeaderMsg));
     }
 
-    errno = 0;
     if (msg_level >= e_msg_level_normal) {
-        printf("%s==>>%s", FileName, TargName);
+        chkio_printf(OutName, "%s==>>%s", FileName, TargName);
     }
-    ChkIO(OutName);
 
     SumLen = 0;
 
@@ -245,9 +243,8 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                 if (doit) {
                     ErgLen = (ErgStop + 1 - ErgStart) * Gran;
                     if (AddChunk(&UsedList, ErgStart, ErgStop - ErgStart + 1, True)) {
-                        errno = 0;
-                        fprintf(stderr, " %s\n", getmessage(Num_ErrMsgOverlap));
-                        ChkIO(OutName);
+                        chkio_fprintf(
+                                stderr, OutName, " %s\n", getmessage(Num_ErrMsgOverlap));
                     }
                 }
             }
@@ -304,20 +301,14 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
     } while (InpHeader != 0);
 
     if (msg_level >= e_msg_level_normal) {
-        errno = 0;
-        printf(" (");
-        ChkIO(OutName);
-        errno = 0;
-        printf("%" PRIu32, SumLen);
-        ChkIO(OutName);
-        errno = 0;
-        printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes));
-        ChkIO(OutName);
+        chkio_printf(OutName, " (");
+        chkio_printf(OutName, "%" PRIu32, SumLen);
+        chkio_printf(OutName, " %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes));
     }
     if (!SumLen) {
-        errno = 0;
-        fputs(getmessage(Num_WarnEmptyFile), stdout);
-        ChkIO(OutName);
+        if (EOF == fputs(getmessage(Num_WarnEmptyFile), stdout)) {
+            ChkIO(OutName);
+        }
     }
 
     if (fclose(SrcFile) == EOF) {
@@ -611,14 +602,13 @@ int main(int argc, char** argv) {
     if (cmd_results.write_help_exit) {
         char *ph1, *ph2;
 
-        errno = 0;
-        printf("%s%s%s\n", getmessage(Num_InfoMessHead1), as_cmdarg_get_executable_name(),
-               getmessage(Num_InfoMessHead2));
-        ChkIO(OutName);
+        chkio_printf(
+                OutName, "%s%s%s\n", getmessage(Num_InfoMessHead1),
+                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessHead2));
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
              ph1 = ph2 + 1, ph2 = strchr(ph1, '\n')) {
             *ph2 = '\0';
-            printf("%s\n", ph1);
+            chkio_printf(OutName, "%s\n", ph1);
             *ph2 = '\n';
         }
     }
@@ -639,9 +629,7 @@ int main(int argc, char** argv) {
             free(p_target_name);
         }
         p_target_name = NULL;
-        errno         = 0;
-        fprintf(stderr, "%s\n", getmessage(Num_ErrMsgTargMissing));
-        ChkIO(OutName);
+        chkio_fprintf(stderr, OutName, "%s\n", getmessage(Num_ErrMsgTargMissing));
         exit(1);
     }
 
@@ -678,9 +666,7 @@ int main(int argc, char** argv) {
             }
         }
         if (StartAdr > StopAdr) {
-            errno = 0;
-            fprintf(stderr, "%s\n", getmessage(Num_ErrMsgAutoFailed));
-            ChkIO(OutName);
+            chkio_fprintf(stderr, OutName, "%s\n", getmessage(Num_ErrMsgAutoFailed));
             exit(1);
         }
         if (msg_level >= e_msg_level_normal) {

@@ -81,6 +81,8 @@ extern void RemoveInstTable(PInstTable tab, char const* Name);
 
 extern Boolean LookupInstTable(PInstTable tab, char const* Name);
 extern Boolean inst_fnc_table_lookup(inst_fnc_table_t const* p_table, char const* p_name);
+extern InstProc inst_fnc_table_search(
+        PInstTable p_table, char const* p_name, Word* p_index);
 
 extern void PrintInstTable(FILE* stream, PInstTable tab);
 

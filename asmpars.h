@@ -72,12 +72,14 @@ typedef enum {
     Int30,
     SInt32,
     UInt32,
-    Int32,
+    Int32
 #ifdef HAS64
+            ,
     SInt64,
     UInt64,
-    Int64,
+    Int64
 #endif
+            ,
     IntTypeCnt
 } IntType;
 

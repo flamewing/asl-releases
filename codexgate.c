@@ -628,6 +628,9 @@ static void InternSymbol_XGATE(char* pArg, TempResult* pResult) {
 }
 
 static void MakeCode_XGATE(void) {
+    InstProc inst_proc;
+    Word     inst_index;
+
     CodeLen = 0;
 
     DontPrint = False;
@@ -644,6 +647,12 @@ static void MakeCode_XGATE(void) {
         return;
     }
 
+    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
+    if (!inst_proc) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+        return;
+    }
+
     /* Befehlszaehler ungerade ? */
 
     if (Odd(EProgCounter())) {
@@ -652,9 +661,7 @@ static void MakeCode_XGATE(void) {
 
     /* alles aus der Tabelle */
 
-    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-    }
+    inst_proc(inst_index);
 }
 
 static Boolean IsDef_XGATE(void) {

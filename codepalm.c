@@ -1460,6 +1460,9 @@ static void intern_symbol_palm(char* p_arg, TempResult* p_result) {
  * ------------------------------------------------------------------------ */
 
 static void make_code_palm(void) {
+    InstProc inst_proc;
+    Word     inst_index;
+
     CodeLen       = 0;
     DontPrint     = False;
     this_was_skip = False;
@@ -1481,6 +1484,12 @@ static void make_code_palm(void) {
         return;
     }
 
+    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
+    if (!inst_proc) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+        goto func_exit;
+    }
+
     /* machine instructions may not begin on odd addresses */
 
     if (Odd(EProgCounter())) {
@@ -1490,10 +1499,8 @@ static void make_code_palm(void) {
             WrError(ErrNum_AddrNotAligned);
         }
     }
+    inst_proc(inst_index);
 
-    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-    }
 func_exit:
     last_was_skip = this_was_skip;
 }

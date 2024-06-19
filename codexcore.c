@@ -678,6 +678,9 @@ static void DeinitFields(void) {
 /* Callbacks */
 
 static void MakeCode_XCore(void) {
+    InstProc inst_proc;
+    Word     inst_index;
+
     CodeLen = 0;
 
     DontPrint = False;
@@ -694,17 +697,23 @@ static void MakeCode_XCore(void) {
         return;
     }
 
+    /* machine instruction in hash table? */
+
+    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
+    if (!inst_proc) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+        return;
+    }
+
     /* Odd Program Counter ? */
 
     if (Odd(EProgCounter())) {
         WrError(ErrNum_AddrNotAligned);
     }
 
-    /* everything from hash table */
+    /* assemble */
 
-    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-    }
+    inst_proc(inst_index);
 }
 
 /*!------------------------------------------------------------------------

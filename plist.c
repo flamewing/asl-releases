@@ -77,22 +77,20 @@ static void ProcessSingle(char const* pFileName) {
             printf("%s", Blanks(strlen(getmessage(Num_MessHeaderLine1F))));
         }
         if (Header == FileHeaderEnd) {
-            errno = 0;
-            fputs(getmessage(Num_MessGenerator), stdout);
-            ChkIO(OutName);
+            if (fputs(getmessage(Num_MessGenerator), stdout) == EOF) {
+                ChkIO(OutName);
+            }
             do {
                 errno = 0;
                 Ch    = fgetc(ProgFile);
                 ChkIO(pFileName);
                 if (Ch != EOF) {
-                    errno = 0;
-                    putchar(Ch);
-                    ChkIO(OutName);
+                    if (EOF == putchar(Ch)) {
+                        ChkIO(OutName);
+                    }
                 }
             } while (Ch != EOF);
-            errno = 0;
-            printf("\n");
-            ChkIO(OutName);
+            chkio_printf(OutName, "\n");
             HeadFnd = True;
         }
 
@@ -100,9 +98,9 @@ static void ProcessSingle(char const* pFileName) {
             if (!Read4(ProgFile, &StartAdr)) {
                 chk_wr_read_error(pFileName);
             }
-            errno = 0;
-            printf("%s%08lX\n", getmessage(Num_MessEntryPoint), LoDWord(StartAdr));
-            ChkIO(OutName);
+            chkio_printf(
+                    "%s%08lX\n", OutName, getmessage(Num_MessEntryPoint),
+                    LoDWord(StartAdr));
         }
 
         else if (Header == FileHeaderRelocInfo) {
@@ -137,28 +135,24 @@ static void ProcessSingle(char const* pFileName) {
             errno   = 0;
             FoundId = FindFamilyById(CPU);
             if (!FoundId) {
-                printf("\?\?\?=%02x        ", Header);
+                chkio_printf(OutName, "\?\?\?=%02x        ", Header);
             } else {
-                printf("%-13s ", FoundId->Name);
+                chkio_printf(OutName, "%-13s ", FoundId->Name);
             }
-            ChkIO(OutName);
 
-            errno = 0;
-            printf("%-7s   ", SegNames[Segment]);
+            chkio_printf(OutName, "%-7s   ", SegNames[Segment]);
             ChkIO(OutName);
 
             if (!Read4(ProgFile, &StartAdr)) {
                 chk_wr_read_error(pFileName);
             }
-            errno = 0;
-            printf("%08lX          ", LoDWord(StartAdr));
+            chkio_printf(OutName, "%08lX          ", LoDWord(StartAdr));
             ChkIO(OutName);
 
             if (!Read2(ProgFile, &Len)) {
                 chk_wr_read_error(pFileName);
             }
-            errno = 0;
-            printf("%04X       ", LoWord(Len));
+            chkio_printf(OutName, "%04X       ", LoWord(Len));
             ChkIO(OutName);
 
             if (Len != 0) {
@@ -166,8 +160,7 @@ static void ProcessSingle(char const* pFileName) {
             } else {
                 StartAdr--;
             }
-            errno = 0;
-            printf("%08lX\n", LoDWord(StartAdr));
+            chkio_printf(OutName, "%08lX\n", LoDWord(StartAdr));
             ChkIO(OutName);
 
             Sums[Segment] += Len;
@@ -227,22 +220,19 @@ int main(int argc, char** argv) {
 
         as_snprintf(Ver, sizeof(Ver), "PLIST V%s", Version);
         WrCopyRight(Ver);
-        errno = 0;
-        printf("\n");
-        ChkIO(OutName);
+        chkio_printf(OutName, "\n");
     }
 
     if (cmd_results.write_help_exit) {
         char *ph1, *ph2;
 
-        errno = 0;
-        printf("%s%s%s\n", getmessage(Num_InfoMessHead1), as_cmdarg_get_executable_name(),
-               getmessage(Num_InfoMessHead2));
-        ChkIO(OutName);
+        chkio_printf(
+                OutName, "%s%s%s\n", getmessage(Num_InfoMessHead1),
+                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessHead2));
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
              ph1 = ph2 + 1, ph2 = strchr(ph1, '\n')) {
             *ph2 = '\0';
-            printf("%s\n", ph1);
+            chkio_printf(OutName, "%s\n", ph1);
             *ph2 = '\n';
         }
     }
@@ -258,14 +248,12 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    errno = 0;
-    printf("%s%s\n", (num_files > 1) ? getmessage(Num_MessHeaderLine1F) : "",
-           getmessage(Num_MessHeaderLine1));
-    ChkIO(OutName);
-    errno = 0;
-    printf("%s%s\n", (num_files > 1) ? getmessage(Num_MessHeaderLine2F) : "",
-           getmessage(Num_MessHeaderLine2));
-    ChkIO(OutName);
+    chkio_printf(
+            OutName, "%s%s\n", (num_files > 1) ? getmessage(Num_MessHeaderLine1F) : "",
+            getmessage(Num_MessHeaderLine1));
+    chkio_printf(
+            OutName, "%s%s\n", (num_files > 1) ? getmessage(Num_MessHeaderLine2F) : "",
+            getmessage(Num_MessHeaderLine2));
 
     for (z = 0; z < SegCount; Sums[z++] = 0)
         ;
@@ -285,19 +273,19 @@ int main(int argc, char** argv) {
         free(p_file_name);
     }
 
-    errno = 0;
-    printf("\n");
-    ChkIO(OutName);
+    chkio_printf(OutName, "\n");
     FirstSeg = True;
     for (z = 0; z < SegCount; z++) {
         if ((z == SegCode) || Sums[z]) {
-            errno = 0;
-            printf("%s", FirstSeg ? getmessage(Num_MessSum1)
-                                  : Blanks(strlen(getmessage(Num_MessSum1))));
-            printf(PRIu32, Sums[z]);
-            printf("%s%s\n",
-                   getmessage((Sums[z] == 1) ? Num_MessSumSing : Num_MessSumPlur),
-                   SegNames[z]);
+            chkio_printf(
+                    OutName, "%s",
+                    FirstSeg ? getmessage(Num_MessSum1)
+                             : Blanks(strlen(getmessage(Num_MessSum1))));
+            chkio_printf(OutName, "%" PRIu32, Sums[z]);
+            chkio_printf(
+                    OutName, "%s%s\n",
+                    getmessage((Sums[z] == 1) ? Num_MessSumSing : Num_MessSumPlur),
+                    SegNames[z]);
             FirstSeg = False;
         }
     }

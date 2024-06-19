@@ -1098,6 +1098,9 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_AVR(void) {
+    InstProc inst_proc;
+    Word     inst_index;
+
     CodeLen   = 0;
     DontPrint = False;
 
@@ -1119,19 +1122,21 @@ static void MakeCode_AVR(void) {
     /* All other instructions must be on an even address in byte mode.
        In other words, they may not cross flash word boundaries: */
 
-    if (!CodeSegSize) {
-        if (Odd(EProgCounter())) {
-            if (DoPadding) {
-                InsertPadding(1, False);
-            } else {
-                WrError(ErrNum_AddrNotAligned);
-            }
+    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
+    if (!inst_proc) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+        return;
+    }
+
+    if (!CodeSegSize && Odd(EProgCounter())) {
+        if (DoPadding) {
+            InsertPadding(1, False);
+        } else {
+            WrError(ErrNum_AddrNotAligned);
         }
     }
 
-    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-    }
+    inst_proc(inst_index);
 }
 
 static Boolean IsDef_AVR(void) {

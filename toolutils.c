@@ -21,6 +21,7 @@
 #include "strutil.h"
 #include "tools.rsc"
 
+#include <stdarg.h>
 #include <string.h>
 #ifdef _USE_MSH
 #    include "tools.msh"
@@ -105,6 +106,32 @@ void ChkIO(char const* Name) {
 
 void chk_wr_read_error(char const* p_name) {
     wr_io_str(p_name, errno ? GetErrorMsg(errno) : GetReadErrorMsg());
+}
+
+int chkio_fprintf(FILE* p_file, char const* p_name, char const* p_fmt, ...) {
+    va_list ap;
+    int     ret;
+
+    va_start(ap, p_fmt);
+    ret = vfprintf(p_file, p_fmt, ap);
+    va_end(ap);
+    if (ret < 0) {
+        ChkIO(p_name);
+    }
+    return ret;
+}
+
+int chkio_printf(char const* p_name, char const* p_fmt, ...) {
+    va_list ap;
+    int     ret;
+
+    va_start(ap, p_fmt);
+    ret = vprintf(p_fmt, ap);
+    va_end(ap);
+    if (ret < 0) {
+        ChkIO(p_name);
+    }
+    return ret;
 }
 
 Word Granularity(Byte Header, Byte Segment) {

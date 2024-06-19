@@ -362,6 +362,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_NeedShortIO:
         msgno = Num_ErrMsgNeedShortIO;
         break;
+    case ErrNum_CaseWrongArgCnt:
+        msgno = Num_ErrMsgCaseWrongArgCnt;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
@@ -461,6 +464,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_IntOrStringButReg:
         msgno = Num_ErrMsgIntOrStringButReg;
         break;
+    case ErrNum_StringTooLong:
+        msgno = Num_ErrMsgStringTooLong;
+        break;
     case ErrNum_IntButReg:
         msgno = Num_ErrMsgIntButReg;
         break;
@@ -487,6 +493,12 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
         break;
     case ErrNum_NotPwr2:
         msgno = Num_ErrMsgNotPwr2;
+        break;
+    case ErrNum_InvalidDecDigit:
+        msgno = Num_ErrMsgInvalidDecDigit;
+        break;
+    case ErrNum_DecStringTooLong:
+        msgno = Num_ErrMsgDecStringTooLong;
         break;
     case ErrNum_NotAligned:
         msgno = Num_ErrMsgNotAligned;
