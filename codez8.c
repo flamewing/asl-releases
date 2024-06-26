@@ -111,10 +111,11 @@ enum {
 #define MModWeird   (1 << ModWeird)
 #define MModDA      (1 << ModDA)
 
-static ShortInt AdrType, OpSize;
-static Byte     AdrVal;
-static Word     AdrWVal;
-static LongInt  AdrIndex;
+static ShortInt     AdrType, OpSize;
+static Byte         AdrVal;
+static Word         AdrWVal;
+static tSymbolFlags adr_val_flags;
+static LongInt      AdrIndex;
 
 static BaseOrder* FixedOrders;
 static BaseOrder* ALU2Orders;
@@ -480,17 +481,20 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
         Mask &= ~(MModXReg | MModWeird);
     }
 
-    AdrType = ModNone;
+    AdrType       = ModNone;
+    adr_val_flags = eSymbolFlag_None;
 
     /* immediate ? */
 
     if (*pArg->str.p_str == '#') {
         switch (OpSize) {
         case eSymbolSize8Bit:
-            AdrVal = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
+            AdrVal = EvalStrIntExpressionOffsWithFlags(
+                    pArg, 1, Int8, &OK, &adr_val_flags);
             break;
         case eSymbolSize16Bit:
-            AdrWVal = EvalStrIntExpressionOffs(pArg, 1, Int16, &OK);
+            AdrWVal = EvalStrIntExpressionOffsWithFlags(
+                    pArg, 1, Int16, &OK, &adr_val_flags);
             break;
         default:
             OK = False;
@@ -522,7 +526,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
                 && !IsWRegAddress(AdrWVal, &AdrVal)) {
                 WrError(ErrNum_InAccPage);
             }
-            AdrType = ModWReg;
+            AdrType       = ModWReg;
+            adr_val_flags = EvalResult.Flags;
             return ChkAdr(Mask, pArg);
         }
         return False;
@@ -539,7 +544,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
             && (IsIndirect(Comp.str.p_str + 3))) {
             AdrVal = EvalStrIntExpressionOffsWithResult(&Comp, 3, Int8, &EvalResult);
             if (EvalResult.OK) {
-                AdrType = ModWeird;
+                AdrType       = ModWeird;
+                adr_val_flags = EvalResult.Flags;
                 ChkSpace(SegData, EvalResult.AddrSpaceMask);
             }
         } else if (
@@ -652,7 +658,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
             (Mask & MModDA) ? UInt16 : RegSpaceType, &EvalResult);
     if (EvalResult.OK) {
         if (Mask & MModDA) {
-            AdrType = ModDA;
+            AdrType       = ModDA;
+            adr_val_flags = EvalResult.Flags;
             ChkSpace(SegCode, EvalResult.AddrSpaceMask);
         } else {
             if (mFirstPassUnknown(EvalResult.Flags) && !(Mask & ModXReg)) {
@@ -1550,9 +1557,13 @@ static void DecodeCALL(Word Index) {
             CodeLen     = 3;
             break;
         case ModImm:
-            BAsmCode[0] = 0xd4;
-            BAsmCode[1] = AdrVal;
-            CodeLen     = 2;
+            if (!mFirstPassUnknownOrQuestionable(adr_val_flags) && (AdrVal & 1)) {
+                WrStrErrorPos(ErrNum_AddrMustBeEven, &ArgStr[1]);
+            } else {
+                BAsmCode[0] = 0xd4;
+                BAsmCode[1] = AdrVal;
+                CodeLen     = 2;
+            }
             break;
         }
     }

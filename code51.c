@@ -79,10 +79,11 @@ static FixedOrder* AccOrders;
 static FixedOrder* CondOrders;
 static FixedOrder* BCondOrders;
 
-static Byte     AdrVals[5];
-static Byte     AdrPart, AdrSize;
-static ShortInt AdrMode, OpSize;
-static Boolean  MinOneIs0;
+static Byte         AdrVals[5];
+static Byte         AdrPart, AdrSize;
+static ShortInt     AdrMode, OpSize;
+static tSymbolFlags adr_flags;
+static Boolean      MinOneIs0;
 
 static Boolean SrcMode;
 
@@ -267,8 +268,9 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
     char        Save = '\0', *pSegSepPos;
     Word        ExtMask;
 
-    AdrMode = ModNone;
-    AdrCnt  = 0;
+    AdrMode   = ModNone;
+    AdrCnt    = 0;
+    adr_flags = eSymbolFlag_None;
 
     ExtMask = MMod251 & Mask;
     if (MomCPU < CPU80251) {
@@ -302,7 +304,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             WrError(ErrNum_UndefOpSizes);
             break;
         case 0:
-            AdrVals[0] = EvalStrIntExpression(&Comp, Int8, &OK);
+            AdrVals[0] = EvalStrIntExpressionWithFlags(&Comp, Int8, &OK, &adr_flags);
             if (OK) {
                 AdrMode = ModImm;
                 AdrCnt  = 1;
@@ -310,7 +312,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             }
             break;
         case 1:
-            H16 = EvalStrIntExpression(&Comp, Int16, &OK);
+            H16 = EvalStrIntExpressionWithFlags(&Comp, Int16, &OK, &adr_flags);
             if (OK) {
                 AdrVals[0] = Hi(H16);
                 AdrVals[1] = Lo(H16);
@@ -325,6 +327,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 H32 &= 0xffff;
             }
             if (EvalResult.OK) {
+                adr_flags  = EvalResult.Flags;
                 AdrVals[1] = H32 & 0xff;
                 AdrVals[0] = (H32 >> 8) & 0xff;
                 H32 >>= 16;
@@ -342,7 +345,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             }
             break;
         case 3:
-            H32 = EvalStrIntExpression(&Comp, Int24, &OK);
+            H32 = EvalStrIntExpressionWithFlags(&Comp, Int24, &OK, &adr_flags);
             if (OK) {
                 AdrVals[0] = (H32 >> 16) & 0xff;
                 AdrVals[1] = (H32 >> 8) & 0xff;
@@ -534,6 +537,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             AdrVals[1] = H32 & 0xff;
             AdrVals[0] = (H32 >> 8) & 0xff;
         }
+        adr_flags = EvalResult.Flags;
     }
 
 chk:
@@ -753,6 +757,10 @@ static void DecodeMOV(Word Index) {
                 CodeLen += AdrCnt;
                 break;
             case ModDir8:
+                if (!mFirstPassUnknownOrQuestionable(adr_flags) && (AdrVals[0] == 0xe0)
+                    && (MomCPU < CPU80251)) {
+                    WrStrErrorPos(ErrNum_Unpredictable, &ArgStr[2]);
+                }
                 PutCode(0xe5);
                 TransferAdrRelocs(CodeLen);
                 BAsmCode[CodeLen++] = AdrVals[0];

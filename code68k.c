@@ -4583,135 +4583,158 @@ static char* split_k(tStrComp* p_arg, tStrComp* p_k) {
 }
 
 static void DecodeFMOVE(Word Code) {
+    Word       DestMask, SrcMask;
+    tAdrResult DestAdrResult, SrcAdrResult;
+    tStrComp   KArg;
+    Boolean    op_size_implicit = !*AttrPart.str.p_str;
+
     UNUSED(Code);
 
-    if (!ChkArgCnt(2, 2))
-        ;
-    else if (!FPUAvail) {
+    if (!ChkArgCnt(2, 2)) {
+        return;
+    }
+    if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
-    } else if (!CheckFloatSize())
-        ;
-    else {
-        Word       DestMask, SrcMask;
-        tAdrResult AdrResult;
-        tStrComp   KArg;
+        return;
+    }
+    if (!CheckFloatSize()) {
+        return;
+    }
 
-        /* k-Faktor abspalten */
+    /* k-Faktor abspalten */
 
-        LineCompReset(&KArg.Pos);
-        if (OpSize == eSymbolSizeFloatDec96Bit) {
-            if (!split_k(&AttrPart, &KArg)) {
-                split_k(&ArgStr[2], &KArg);
-            }
+    LineCompReset(&KArg.Pos);
+    if (OpSize == eSymbolSizeFloatDec96Bit) {
+        if (!split_k(&AttrPart, &KArg)) {
+            split_k(&ArgStr[2], &KArg);
         }
+    }
 
-        DestMask = MModAdrI | MModPost | MModPre | MModDAdrI | MModFPCR | MModFPn;
+    DestMask = MModAdr | MModAdrI | MModPost | MModPre | MModDAdrI | MModFPCR | MModFPn;
+    if (pCurrCPUProps->Family != eColdfire) {
+        DestMask |= MModAIX | MModAbs | MModImm;
+    }
+    if (FloatOpSizeFitsDataReg(OpSize) || op_size_implicit) {
+        DestMask |= MModData;
+    }
+    switch (DecodeAdr(&ArgStr[2], DestMask, &DestAdrResult)) {
+    case ModFPn: /* FMOVE.x <ea>/FPm,FPn ? */
+    {
+        WAsmCode[0] = 0xf200;
+        WAsmCode[1] = DestAdrResult.AdrPart << 7;
+        RelPos      = 4;
+        SrcMask     = MModAdrI | MModPost | MModPre | MModDAdrI | MModPC | MModFPn;
         if (pCurrCPUProps->Family != eColdfire) {
-            DestMask |= MModAIX | MModAbs | MModImm;
+            SrcMask |= MModAIX | MModAbs | MModImm | MModPCIdx;
         }
         if (FloatOpSizeFitsDataReg(OpSize)) {
-            DestMask |= MModData;
+            SrcMask |= MModData;
         }
-        if (DecodeAdr(&ArgStr[2], DestMask, &AdrResult)
-            == ModFPn) /* FMOVE.x <ea>/FPm,FPn ? */
+        switch (DecodeAdr(&ArgStr[1], SrcMask, &SrcAdrResult)) {
+        case ModFPn: /* FMOVE.X FPm,FPn ? */
         {
-            WAsmCode[0] = 0xf200;
-            WAsmCode[1] = AdrResult.AdrPart << 7;
-            RelPos      = 4;
-            SrcMask     = MModAdrI | MModPost | MModPre | MModDAdrI | MModPC | MModFPn;
-            if (pCurrCPUProps->Family != eColdfire) {
-                SrcMask |= MModAIX | MModAbs | MModImm | MModPCIdx;
-            }
-            if (FloatOpSizeFitsDataReg(OpSize)) {
-                SrcMask |= MModData;
-            }
-            if (DecodeAdr(&ArgStr[1], SrcMask, &AdrResult)
-                == ModFPn) /* FMOVE.X FPm,FPn ? */
-            {
-                WAsmCode[1] |= AdrResult.AdrPart << 10;
-                if (OpSize == NativeFloatSize) {
-                    CodeLen = 4;
-                } else {
-                    WrError(ErrNum_InvOpSize);
-                }
-            } else if (AdrResult.AdrMode != ModNone) /* FMOVE.x <ea>,FPn ? */
-            {
-                CodeLen = 4 + AdrResult.Cnt;
-                CopyAdrVals(WAsmCode + 2, &AdrResult);
-                WAsmCode[0] |= AdrResult.AdrPart;
-                WAsmCode[1] |= 0x4000 | (((Word)FSizeCodes[OpSize]) << 10);
-            }
-        } else if (AdrResult.AdrMode == ModFPCR) /* FMOVE.L <ea>,FPcr ? */
-        {
-            if ((OpSize != eSymbolSize32Bit) && *AttrPart.str.p_str) {
+            if (OpSize != NativeFloatSize) {
                 WrError(ErrNum_InvOpSize);
-            } else {
-                RelPos      = 4;
-                WAsmCode[0] = 0xf200;
-                WAsmCode[1] = 0x8000 | (AdrResult.AdrPart << 10);
-                SrcMask = MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModPC;
-                if (pCurrCPUProps->Family != eColdfire) {
-                    SrcMask |= MModAIX | MModAbs | MModImm | MModPCIdx;
-                }
-                if (AdrResult.AdrMode != ModData) { /* only for FPIAR */
-                    SrcMask |= MModAdr;
-                }
-                if (DecodeAdr(&ArgStr[1], SrcMask, &AdrResult)) {
-                    WAsmCode[0] |= AdrResult.AdrPart;
-                    CodeLen = 4 + AdrResult.Cnt;
-                    CopyAdrVals(WAsmCode + 2, &AdrResult);
-                }
+                return;
             }
-        } else if (AdrResult.AdrMode != ModNone) /* FMOVE.x ????,<ea> ? */
+            WAsmCode[1] |= SrcAdrResult.AdrPart << 10;
+            CodeLen = 4;
+            break;
+        }
+        case ModNone:
+            break;
+        default: /* FMOVE.x <ea>,FPn ? */
+            CodeLen = 4 + SrcAdrResult.Cnt;
+            CopyAdrVals(WAsmCode + 2, &SrcAdrResult);
+            WAsmCode[0] |= SrcAdrResult.AdrPart;
+            WAsmCode[1] |= 0x4000 | (((Word)FSizeCodes[OpSize]) << 10);
+        }
+        break;
+    }
+    case ModFPCR: /* FMOVE.L <ea>,FPcr ? */
+    {
+        if ((OpSize != eSymbolSize32Bit) && !op_size_implicit) {
+            WrError(ErrNum_InvOpSize);
+            return;
+        }
+        RelPos      = 4;
+        WAsmCode[0] = 0xf200;
+        WAsmCode[1] = 0x8000 | (DestAdrResult.AdrPart << 10);
+        SrcMask     = MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModPC;
+        if (pCurrCPUProps->Family != eColdfire) {
+            SrcMask |= MModAIX | MModAbs | MModImm | MModPCIdx;
+        }
+        if (DestAdrResult.AdrPart == REG_FPIAR) { /* only for FPIAR */
+            SrcMask |= MModAdr;
+        }
+        if (DecodeAdr(&ArgStr[1], SrcMask, &SrcAdrResult)) {
+            WAsmCode[0] |= SrcAdrResult.AdrPart;
+            CodeLen = 4 + SrcAdrResult.Cnt;
+            CopyAdrVals(WAsmCode + 2, &SrcAdrResult);
+        }
+        break;
+    }
+    case ModNone:
+        break;
+    default: /* FMOVE.x ????,<ea> ? */
+    {
+        WAsmCode[0] = 0xf200 | DestAdrResult.AdrPart;
+        CodeLen     = 4 + DestAdrResult.Cnt;
+        CopyAdrVals(WAsmCode + 2, &DestAdrResult);
+        switch (DecodeAdr(
+                &ArgStr[1],
+                (DestAdrResult.AdrMode == ModAdr) ? MModFPCR : MModFPn | MModFPCR,
+                &SrcAdrResult)) {
+        case ModFPn: /* FMOVE.x FPn,<ea> ? */
         {
-            WAsmCode[0] = 0xf200 | AdrResult.AdrPart;
-            CodeLen     = 4 + AdrResult.Cnt;
-            CopyAdrVals(WAsmCode + 2, &AdrResult);
-            switch (DecodeAdr(
-                    &ArgStr[1],
-                    (AdrResult.AdrMode == ModAdr) ? MModFPCR : MModFPn | MModFPCR,
-                    &AdrResult)) {
-            case ModFPn: /* FMOVE.x FPn,<ea> ? */
-            {
-                WAsmCode[1] = 0x6000 | (((Word)FSizeCodes[OpSize]) << 10)
-                              | (AdrResult.AdrPart << 7);
-                if (OpSize == eSymbolSizeFloatDec96Bit) {
-                    if (KArg.Pos.Len > 0) {
-                        OpSize = eSymbolSize8Bit;
-                        switch (DecodeAdr(&KArg, MModData | MModImm, &AdrResult)) {
-                        case ModData:
-                            WAsmCode[1] |= (AdrResult.AdrPart << 4) | 0x1000;
-                            break;
-                        case ModImm:
-                            WAsmCode[1] |= (AdrResult.Vals[0] & 127);
-                            break;
-                        default:
-                            CodeLen = 0;
-                        }
-                    } else {
-                        WAsmCode[1] |= 17;
-                    }
-                }
-                break;
+            if (DestAdrResult.AdrMode == ModAdr) {
+                WrError(ErrNum_InvAddrMode);
+                CodeLen = 0;
+                return;
             }
-            case ModFPCR: /* FMOVE.L FPcr,<ea> ? */
-            {
-                if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-                    WrError(ErrNum_InvOpSize);
-                    CodeLen = 0;
-                } else {
-                    WAsmCode[1] = 0xa000 | (AdrResult.AdrPart << 10);
-                    if ((AdrResult.AdrPart != 1) && ((WAsmCode[0] & 0x38) == 8)) {
-                        WrError(ErrNum_InvAddrMode);
+            WAsmCode[1] = 0x6000 | (((Word)FSizeCodes[OpSize]) << 10)
+                          | (SrcAdrResult.AdrPart << 7);
+            if (OpSize == eSymbolSizeFloatDec96Bit) {
+                if (KArg.Pos.Len > 0) {
+                    tAdrResult KResult;
+
+                    OpSize = eSymbolSize8Bit;
+                    switch (DecodeAdr(&KArg, MModData | MModImm, &KResult)) {
+                    case ModData:
+                        WAsmCode[1] |= (KResult.AdrPart << 4) | 0x1000;
+                        break;
+                    case ModImm:
+                        WAsmCode[1] |= (KResult.Vals[0] & 127);
+                        break;
+                    default:
                         CodeLen = 0;
                     }
+                } else {
+                    WAsmCode[1] |= 17;
                 }
-                break;
             }
-            default:
-                CodeLen = 0;
-            }
+            break;
         }
+        case ModFPCR: /* FMOVE.L FPcr,<ea> ? */
+        {
+            if (!op_size_implicit && (OpSize != eSymbolSize32Bit)) {
+                WrError(ErrNum_InvOpSize);
+                CodeLen = 0;
+                return;
+            }
+            if ((SrcAdrResult.AdrPart != REG_FPIAR)
+                && (DestAdrResult.AdrMode == ModAdr)) {
+                WrError(ErrNum_InvAddrMode);
+                CodeLen = 0;
+                return;
+            }
+            WAsmCode[1] = 0xa000 | (SrcAdrResult.AdrPart << 10);
+            break;
+        }
+        default:
+            CodeLen = 0;
+        }
+    }
     }
 }
 
@@ -4878,86 +4901,121 @@ static void DecodeFDMOVE_FSMOVE(Word Code) {
     }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     DecodeFMOVEM(Word Code)
+ * \brief  handle FMOVEM instruction
+ * ------------------------------------------------------------------------ */
+
 static void DecodeFMOVEM(Word Code) {
-    Byte Typ, List;
-    Word Mask;
+    Byte       Typ, List;
+    Word       Mask;
+    tAdrResult AdrResult;
 
     UNUSED(Code);
 
-    if (!ChkArgCnt(2, 2))
-        ;
-    else if (!FPUAvail) {
+    if (!ChkArgCnt(2, 2)) {
+        return;
+    }
+    if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
-    } else {
-        tAdrResult AdrResult;
+        return;
+    }
 
-        DecodeFRegList(&ArgStr[2], &Typ, &List);
-        if (Typ != eFMovemTypNone) {
-            if (*AttrPart.str.p_str
-                && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
-                    || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
-                WrError(ErrNum_InvOpSize);
-            } else if (
-                    (Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
-            } else {
-                RelPos = 4;
-                Mask   = MModAdrI | MModDAdrI | MModPC;
-                if (pCurrCPUProps->Family != eColdfire) {
-                    Mask |= MModPost | MModAIX | MModPCIdx | MModAbs;
+    /* NOTE: An expression of 'Dn' may be the source or destination of a (single)
+       control register FMOVEM, but also a dynamic FPn data register list.  This
+       makes the decision tree a bit more complex: */
+
+    DecodeFRegList(&ArgStr[2], &Typ, &List);
+    switch (Typ) {
+    case eFMovemTypStatic:
+    case eFMovemTypCtrl:
+        goto fp_list_is_dest;
+
+    case eFMovemTypDyn: {
+        Byte src_typ, src_list;
+        DecodeFRegList(&ArgStr[1], &src_typ, &src_list);
+        switch (src_typ) {
+        case eFMovemTypStatic:
+        case eFMovemTypCtrl:
+            Typ  = src_typ;
+            List = src_list;
+            goto fp_list_is_src;
+        case eFMovemTypDyn:
+            WrError(ErrNum_InvRegList);
+            return;
+        default:
+            goto fp_list_is_dest;
+        }
+    }
+
+    default: /* eFMovemTypNone */
+        DecodeFRegList(&ArgStr[1], &Typ, &List);
+        if (Typ == eFMovemTypNone) {
+            WrError(ErrNum_InvRegList);
+            return;
+        }
+        /* Fall-Thru */
+
+    fp_list_is_src:
+        if (*AttrPart.str.p_str
+            && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
+                || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
+            WrError(ErrNum_InvOpSize);
+        } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
+            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        } else {
+            Mask = MModAdrI | MModDAdrI;
+            if (pCurrCPUProps->Family != eColdfire) {
+                Mask |= MModPre | MModAIX | MModAbs;
+            }
+            if (Typ == eFMovemTypCtrl) /* Steuerregister auch Postinkrement */
+            {
+                Mask |= MModPost;
+                if ((List == REG_FPCR) | (List == REG_FPSR)
+                    | (List == REG_FPIAR)) { /* nur ein Register */
+                    Mask |= MModData;
                 }
-                if (Typ == eFMovemTypCtrl) /* Steuerregister auch Predekrement */
-                {
-                    Mask |= MModPre;
-                    if ((List == REG_FPCR) | (List == REG_FPSR)
-                        | (List == REG_FPIAR)) { /* nur ein Register */
-                        Mask |= MModData | MModImm;
-                    }
-                    if (List == REG_FPIAR) { /* nur FPIAR */
-                        Mask |= MModAdr;
-                    }
-                }
-                if (DecodeAdr(&ArgStr[1], Mask, &AdrResult)) {
-                    WAsmCode[1] = 0x0000;
-                    GenerateMovem(Typ, List, &AdrResult);
+                if (List == REG_FPIAR) { /* nur FPIAR */
+                    Mask |= MModAdr;
                 }
             }
-        } else {
-            DecodeFRegList(&ArgStr[1], &Typ, &List);
-            if (Typ != eFMovemTypNone) {
-                if (*AttrPart.str.p_str
-                    && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
-                        || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
-                    WrError(ErrNum_InvOpSize);
-                } else if (
-                        (Typ != eFMovemTypStatic)
-                        && (pCurrCPUProps->Family == eColdfire)) {
-                    WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
-                } else {
-                    Mask = MModAdrI | MModDAdrI;
-                    if (pCurrCPUProps->Family != eColdfire) {
-                        Mask |= MModPre | MModAIX | MModAbs;
-                    }
-                    if (Typ == eFMovemTypCtrl) /* Steuerregister auch Postinkrement */
-                    {
-                        Mask |= MModPre;
-                        if ((List == REG_FPCR) | (List == REG_FPSR)
-                            | (List == REG_FPIAR)) { /* nur ein Register */
-                            Mask |= MModData;
-                        }
-                        if (List == REG_FPIAR) { /* nur FPIAR */
-                            Mask |= MModAdr;
-                        }
-                    }
-                    if (DecodeAdr(&ArgStr[2], Mask, &AdrResult)) {
-                        WAsmCode[1] = 0x2000;
-                        GenerateMovem(Typ, List, &AdrResult);
-                    }
-                }
-            } else {
-                WrError(ErrNum_InvRegList);
+            if (DecodeAdr(&ArgStr[2], Mask, &AdrResult)) {
+                WAsmCode[1] = 0x2000;
+                GenerateMovem(Typ, List, &AdrResult);
             }
         }
+        break;
+
+    fp_list_is_dest:
+        if (*AttrPart.str.p_str
+            && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
+                || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
+            WrError(ErrNum_InvOpSize);
+        } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
+            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+        } else {
+            RelPos = 4;
+            Mask   = MModAdrI | MModDAdrI | MModPC;
+            if (pCurrCPUProps->Family != eColdfire) {
+                Mask |= MModPost | MModAIX | MModPCIdx | MModAbs;
+            }
+            if (Typ == eFMovemTypCtrl) /* Steuerregister auch Predekrement */
+            {
+                Mask |= MModPre;
+                if ((List == REG_FPCR) | (List == REG_FPSR)
+                    | (List == REG_FPIAR)) { /* nur ein Register */
+                    Mask |= MModData | MModImm;
+                }
+                if (List == REG_FPIAR) { /* nur FPIAR */
+                    Mask |= MModAdr;
+                }
+            }
+            if (DecodeAdr(&ArgStr[1], Mask, &AdrResult)) {
+                WAsmCode[1] = 0x0000;
+                GenerateMovem(Typ, List, &AdrResult);
+            }
+        }
+        break;
     }
 }
 
