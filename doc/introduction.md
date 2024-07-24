@@ -79,7 +79,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Atmel (Mega-)AVR
 - AMD 29K
 - Siemens 80C166/167
-- Zilog Z80 (including undocumented instructions), Z180, Z380
+- Zilog Z80 (including undocumented instructions), Z180, Z380, eZ80
 - Sharp LR35902 (Game Boy Z80)[^GBZ80]
 - Zilog Z8, Super8, Z8 Encore
 - Zilog Z8000
@@ -193,3 +193,5 @@ Sharp SC61860 and SC62015 processors are also supported.
 
 
 DEC VAX targets are supported, including MicroVAX and the VAX-11, VAX-8xxx families.
+
+The eZ80 targets are `eZ80190`, `eZ80L92`, `eZ80F91`, `eZ80F92` and `eZ80F93`. They provide 24-bit registers and a 16 Mbyte address space. Some variants have an 8-bit I register, and eZ80190 omits several string I/O instructions.

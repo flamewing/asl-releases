@@ -327,3 +327,5 @@ Listing prefix format errors: **10010** (fatal), invalid placeholder; use `%i`, 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 
+
+Warning 470, **instruction assembled as NOP**: the nominal opcode has another purpose on the selected CPU. A no-operation instruction is emitted as NOP instead.

@@ -338,3 +338,9 @@
 
 
 [^VAXArch]: Digital Equipment Corporation: _VAX Architecture Reference Manual._ Order Number EY-3459E-DP, 1987.
+
+- Zilog: *eZ80 CPU User Manual*, 2015, UM007715-0415.
+- Zilog: *eZ80190 Product Specification*, 2008, PS006614-1208.
+- Zilog: *eZ80F91 MCU Product Specification*, 2022, PS019217-1222.
+- Zilog: *eZ80F92/eZ80F93 Product Specification*, 2020, PS015317-0120.
+- Zilog: *eZ80L92 MCU Product Specification*, 2016, PS013015-0316.

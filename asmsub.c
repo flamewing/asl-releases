@@ -606,7 +606,7 @@ ShortInt StrCaseCmp(char const* s1, char const* s2, LongInt Hand1, LongInt Hand2
 /****************************************************************************/
 /* an einen Dateinamen eine Endung anhaengen */
 
-void AddSuffix(char* s, char const* Suff) {
+Boolean AddSuffix(char* s, char const* Suff) {
     char *p, *z, *Part;
 
     p = NULL;
@@ -618,6 +618,9 @@ void AddSuffix(char* s, char const* Suff) {
     Part = p ? p : s;
     if (!strchr(Part, '.')) {
         strmaxcat(s, Suff, STRINGSIZE);
+        return True;
+    } else {
+        return False;
     }
 }
 

@@ -2250,7 +2250,9 @@ static void switch_to_pdp11(void* p_user) {
      | e_cpu_flag_mfpt | e_cpu_flag_eis | e_cpu_flag_mfp_mtp | e_cpu_flag_mfps_mtps)
 
 #define opt_cpu_flags_t11 0
-#define cpu_flags_t11     (e_cpu_flag_sob_sxt | e_cpu_flag_rtt | e_cpu_flag_mfps_mtps)
+#define cpu_flags_t11                                                            \
+    (e_cpu_flag_sob_sxt | e_cpu_flag_xor | e_cpu_flag_rtt | e_cpu_flag_mfps_mtps \
+     | e_cpu_flag_mfpt)
 
 #define opt_cpu_flags_j11 0
 #define cpu_flags_j11                                                             \

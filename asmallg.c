@@ -1574,6 +1574,7 @@ static void CodeLISTING(Word Index) {
 
 void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPath) {
     size_t l = strlen(pArg->str.p_str), offs = 0;
+    int    this_pass;
 
     if (pArg->str.p_str[0] == '"') {
         offs++;
@@ -1586,16 +1587,29 @@ void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPat
     }
     StrCompCopySub(pDest, pArg, offs, l);
 
-    AddSuffix(pDest->str.p_str, IncSuffix);
+    /* To keep existing functionality, first search for the file name
+       possibly expanded by a suffix.  If it was extened, and not found
+       with this extension, try the plain name in a second search: */
 
-    if (SearchPath) {
-        String FoundFileName;
+    this_pass = AddSuffix(pDest->str.p_str, IncSuffix) ? 0 : 1;
 
-        if (FSearch(FoundFileName, sizeof(FoundFileName), pDest->str.p_str, CurrFileName,
-                    SearchPath ? IncludeList : "")) {
-            ChkStrIO(ErrNum_OpeningFile, pArg);
+    for (; this_pass < 2; this_pass++) {
+        if (SearchPath) {
+            String FoundFileName;
+
+            if (FSearch(FoundFileName, sizeof(FoundFileName), pDest->str.p_str,
+                        CurrFileName, SearchPath ? IncludeList : "")) {
+                if (this_pass) {
+                    ChkStrIO(ErrNum_OpeningFile, pArg);
+                } else {
+                    StrCompCopySub(pDest, pArg, offs, l);
+                }
+            } else {
+                strmaxcpy(pDest->str.p_str, FExpand(FoundFileName), STRINGSIZE - 1);
+            }
+        } else {
+            return;
         }
-        strmaxcpy(pDest->str.p_str, FExpand(FoundFileName), STRINGSIZE - 1);
     }
 }
 

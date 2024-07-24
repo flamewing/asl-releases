@@ -69,7 +69,7 @@ static inline Boolean Memo(char const* s) {
 #    define Memo(s) (!strcmp(OpPart.str.p_str, (s)))
 #endif
 
-extern void AddSuffix(char* s, char const* Suff);
+extern Boolean AddSuffix(char* s, char const* Suff);
 
 extern void KillSuffix(char* s);
 

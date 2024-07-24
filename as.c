@@ -3608,8 +3608,8 @@ static void AssembleFile(char* Name) {
             getmessage((PassNo == 1) ? Num_InfoMessPassCnt : Num_InfoMessPPassCnt));
     AssembleFile_WrSummary(s);
 
-    if ((ErrorCount > 0) && (Repass) && (ListMode != 0)) {
-        WrLstLine(getmessage(Num_InfoMessNoPass));
+    if ((ErrorCount > 0) && Repass) {
+        AssembleFile_WrSummary(getmessage(Num_InfoMessNoPass));
     }
 
     as_snprintf(

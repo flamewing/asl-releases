@@ -453,6 +453,7 @@ _valid for: all processors_
 | GBZ80/LR35902      |       64K       |      ---      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
 | Z80                |       64K       |      ---      |   ---    |   ---    |  ---   |   ---    |      256      | --- |   ---    |   ---    |
 | Z180               |    512K[^O2]    |               |          |          |        |          |      256      |     |          |   ---    |
+| eZ80               |       16M       |      ---      |   ---    |   ---    |  ---   |   ---    |      64K      | --- |   ---    |   ---    |
 | Z380               |       4G        |               |          |          |        |          |      4G       |     |          |          |
 | Z8                 |       64K       |      256      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
 | eZ8                |       64K       |      256      |   ---    |   64K    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
@@ -712,7 +713,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     80C167 and 80C165/163 have an address space of 16 Mbytes instead of 256 Kbytes, and furthermore they know some additional instructions for extended addressing modes and atomic instruction sequences. They are 'second generation' processors and differ from each other only in the amount of on-chip peripherals.
 
-34. LR35902/GBZ80 → Z80 → Z80UNDOC → Z180 → Z380
+34. LR35902/GBZ80 → Z80 → Z80UNDOC → Z180 → eZ80190/eZ80L92/eZ80F91/eZ80F92/eZ80F93 → Z380
 
     While there are only a few additional instructions for the Z180, the Z380 owns 32-bit registers, a linear address space of 4 Gbytes, a couple of instruction set extensions that make the overall instruction set considerably more orthogonal, and new addressing modes (referring to index register halves, stack relative). These extensions partially already exist on the Z80 as undocumented extensions and may be switched on via the Z80UNDOC variant. A list with the additional instructions can be found in the chapter with processor specific hints.
 
@@ -1318,6 +1319,12 @@ Valid arguments behind the colon are `CODE`, `DATA` and `NOTHING`. The latter va
       CS:CODE, DS:DATA, ES:NOTHING, SS:NOTHING
 ```
 
+#### eZ80
+
+In Z80 mode (`ASSUME ADL:0`), BC, DE, HL, IX, IY and SP are 16 bits wide and address the 64 Kbyte page selected by MBASE. Absolute addresses and non-byte immediate operands use two bytes. In ADL mode (`ASSUME ADL:1`), these registers are 24 bits wide, the full 16 Mbyte address space is available, and these operands use three bytes. Instruction suffixes can override the assumed mode.
+
+`ASSUME MBASE:<0...0ffh>` describes the current memory page. Both ADL and MBASE default to zero, matching reset values.
+
 #### XA
 
 The XA family has a data address space of 16 Mbytes, a process however can always address within a 64K segment only that is given by the DS register. One has to inform AS about the current value of this register in order to enable it to check accesses to absolute addresses.
@@ -1577,7 +1584,7 @@ These commands are - one could say - the Intel counterpart to `DS` and `DC`, and
 - `DW`: 16-bit integer or half precision
 - `DD`: 32-bit integer or single precision
 - `DQ`: double precision (64 bits)
-- `DT`: extended precision (80 bits)
+- `DT`: packed BCD integer or extended precision float (80 bits)
 
 Second, the distinction between constant definition and memory
 reservation is done by the operand. A reservation of memory is marked by
@@ -2810,7 +2817,7 @@ _valid for: all processors_
 
 This instruction inserts the file given as a parameter into the just as if it would have been inserted with an editor (the file name may optionally be enclosed with " characters). This instruction is useful to split source files that would otherwise not fit into the editor or to create "tool boxes".
 
-In case that the file name does not have an extension, it will automatically be extended with `INC`.
+If the file name has no extension, AS first searches for it with `.INC` appended, then for the exact name. Names containing a period are searched for exactly as supplied.
 
 The assembler primarily tries to open the file in the directory containing the source file with the `INCLUDE` statement. This means that a path contained in the file specification is relative to this file's directory, not to the directory the assembler was called from. Via the `-i <path list>` option, one can specify a list of directories that will automatically be searched for the file. If the file is not found, a **fatal** error occurs, i.e. assembly terminates immediately.
 
@@ -2828,7 +2835,7 @@ and
 
 are equivalent. **CAUTION!** This freedom of choice is the reason why only a string constant but no string expression is allowed!
 
-The search list is ignored if the file name itself contains a path specification.
+Relative paths are also searched under the include directories.
 
 ### BINCLUDE
 
@@ -2854,7 +2861,7 @@ This way, the file's contents are included starting at `<offset>` up to the file
 
 This way, `<length>` bytes are included starting at `<offset>`.
 
-The same rules regarding search paths apply as for `INCLUDE`.
+The same search paths and assumed suffix rules apply as for `INCLUDE`.
 
 ### MESSAGE, WARNING, ERROR, and FATAL
 
