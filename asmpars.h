@@ -34,6 +34,7 @@ typedef enum {
     Int5,
     SInt6,
     UInt6,
+    Int6,
     SInt7,
     UInt7,
     SInt8,

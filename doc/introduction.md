@@ -119,6 +119,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Fairchild ACE
 - Fairchild F8
 - NEC μPD78(C)0x/μPD 78(C)1x
+- NEC μCOM-43/44/45
 - NEC μPD75xx
 - NEC μPD 75xxx (alias 75K0)
 - NEC 78K0

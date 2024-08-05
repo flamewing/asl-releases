@@ -1485,13 +1485,13 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 HVal = EvalStrIntExpression(&OutDisp, DispIntType, &ValOK);
                 if (ValOK) {
                     switch (OutDispLen) {
-                    case 0:
+                    case eSymbolSize8Bit:
                         if (!IsDisp8(HVal)) {
                             WrError(ErrNum_OverRange);
                             ValOK = FALSE;
                         }
                         break;
-                    case 1:
+                    case eSymbolSize16Bit:
                         if (!IsDisp16(HVal)) {
                             WrError(ErrNum_OverRange);
                             ValOK = FALSE;
@@ -1912,8 +1912,13 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
             /* aeusseres Displacement: */
 
-            HVal = EvalStrIntExpression(
-                    &OutDisp, (OutDispLen == 1) ? SInt16 : SInt32, &ValOK);
+            if (OutDisp.str.p_str[0]) {
+                HVal = EvalStrIntExpression(
+                        &OutDisp, (OutDispLen == 1) ? SInt16 : SInt32, &ValOK);
+            } else {
+                HVal  = 0;
+                ValOK = True;
+            }
             if (!ValOK) {
                 pResult->AdrMode = ModNone;
                 pResult->Cnt     = 0;
@@ -4159,7 +4164,7 @@ static void DecodeBcc(Word CondCode) {
         }
 
         if (ValOK) {
-            /* 16 Bit ? */
+            /* 16 Bit (.L or .W) ? */
 
             if ((OpSize == eSymbolSize32Bit) || (OpSize == eSymbolSize16Bit)) {
                 /* zu weit ? */
@@ -4176,7 +4181,7 @@ static void DecodeBcc(Word CondCode) {
                 }
             }
 
-            /* 8 Bit ? */
+            /* 8 Bit (.S or .B) ? */
 
             else if ((OpSize == eSymbolSizeFloat32Bit) || (OpSize == eSymbolSize8Bit)) {
                 /* zu weit ? */
@@ -4209,10 +4214,12 @@ static void DecodeBcc(Word CondCode) {
                 }
             }
 
-            /* 32 Bit ? */
+            /* 32 Bit ?  Complain about non-supported instructio only if .X
+               was requested explicitly: */
 
             else if (!(pCurrCPUProps->SuppFlags & eFlagBranch32)) {
-                WrError(ErrNum_InstructionNotSupported);
+                WrError(*AttrPart.str.p_str ? ErrNum_InstructionNotSupported
+                                            : ErrNum_JmpDistTooBig);
             } else {
                 CodeLen     = 6;
                 WAsmCode[0] = 0x60ff | (CondCode << 8);

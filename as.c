@@ -150,6 +150,7 @@
 #include "codesx20.h"
 #include "codetms1.h"
 #include "codetms7.h"
+#include "codeuc43.h"
 #include "codev60.h"
 #include "codevax.h"
 #include "codevector.h"
@@ -4505,6 +4506,7 @@ int main(int argc, char** argv) {
         code7720_init();
         code77230_init();
         codev60_init();
+        codeuc43_init();
         codescmp_init();
         codeimp16_init();
         code807x_init();

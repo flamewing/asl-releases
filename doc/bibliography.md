@@ -344,3 +344,5 @@
 - Zilog: *eZ80F91 MCU Product Specification*, 2022, PS019217-1222.
 - Zilog: *eZ80F92/eZ80F93 Product Specification*, 2020, PS015317-0120.
 - Zilog: *eZ80L92 MCU Product Specification*, 2016, PS013015-0316.
+
+- NEC: *μCOM-43 Single Chip Microcomputer Users’ Manual*, January 1978.

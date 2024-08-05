@@ -286,7 +286,12 @@ static void DecodeAdr(int StartInd, int StopInd, Byte Erl) {
 
         if (IsX || IsY) {
             if (MModInd & Erl) {
-                AdrWord = EvalStrIntExpression(pStartArg, UInt8, &OK);
+                if (pStartArg->str.p_str[0]) {
+                    AdrWord = EvalStrIntExpression(pStartArg, UInt8, &OK);
+                } else {
+                    AdrWord = 0;
+                    OK      = True;
+                }
                 if (OK) {
                     if (IsY && !ChkMinCPUExt(CPU6811, ErrNum_AddrModeNotSupported)) {
                         ErrOcc = True;

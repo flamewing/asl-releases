@@ -220,6 +220,15 @@ static tRegEvalResult DecodeReg(
     return RegEvalResult;
 }
 
+static LargeInt eval_outer_disp(tStrComp const* p_arg, IntType type, Boolean* p_ok) {
+    if (p_arg->str.p_str[0]) {
+        return EvalStrIntExpression(p_arg, type, p_ok);
+    } else {
+        *p_ok = True;
+        return 0;
+    }
+}
+
 static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) {
     LongInt     DispAcc;
     String      RegPartStr, DispPartStr;
@@ -274,7 +283,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
         StrCompSplitCopy(&DispPart, &RegPart, pArg, p);
         StrCompShorten(&RegPart, 1);
         if (!as_strcasecmp(RegPart.str.p_str, "SP")) {
-            DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
+            DispAcc = eval_outer_disp(&DispPart, SInt8, &OK);
             if (OK) {
                 pResult->Type    = ModSPRel;
                 pResult->Vals[0] = DispAcc & 0xff;
@@ -288,7 +297,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
             case eSymbolSize16Bit:
                 switch (pResult->Mode) {
                 case REG_SB:
-                    DispAcc = EvalStrIntExpression(&DispPart, Int16, &OK);
+                    DispAcc = eval_outer_disp(&DispPart, Int16, &OK);
                     if (OK) {
                         if ((DispAcc >= 0) && (DispAcc <= 255)) {
                             pResult->Type    = ModGen;
@@ -305,7 +314,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
                     }
                     break;
                 case REG_FB:
-                    DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
+                    DispAcc = eval_outer_disp(&DispPart, SInt8, &OK);
                     if (OK) {
                         pResult->Type    = ModGen;
                         pResult->Vals[0] = DispAcc & 0xff;
@@ -315,7 +324,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
                     break;
                 case 4:
                 case 5: {
-                    DispAcc = EvalStrIntExpression(
+                    DispAcc = eval_outer_disp(
                             &DispPart, (Mask & MModDisp20) ? Int20 : Int16, &OK);
                     if (OK) {
                         if ((DispAcc == 0) && (Mask & MModGen)) {
@@ -356,7 +365,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
                 if (pResult->Mode != 2) {
                     WrStrErrorPos(ErrNum_InvReg, &RegPart);
                 } else {
-                    DispAcc = EvalStrIntExpression(&DispPart, SInt8, &OK);
+                    DispAcc = eval_outer_disp(&DispPart, SInt8, &OK);
                     if (OK) {
                         if (DispAcc != 0) {
                             WrError(ErrNum_OverRange);
@@ -453,9 +462,9 @@ static Boolean DecodeCReg(char* Asc, Byte* Erg) {
 static void DecodeDisp(
         tStrComp* pArg, IntType Type1, IntType Type2, LongInt* DispAcc, Boolean* OK) {
     if (ArgCnt == 2) {
-        *DispAcc += EvalStrIntExpression(pArg, Type2, OK) * 8;
+        *DispAcc += eval_outer_disp(pArg, Type2, OK) * 8;
     } else {
-        *DispAcc = EvalStrIntExpression(pArg, Type1, OK);
+        *DispAcc = eval_outer_disp(pArg, Type1, OK);
     }
 }
 

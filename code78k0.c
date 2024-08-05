@@ -160,7 +160,12 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
                 AdrMode = ModIndex;
                 AdrPart = 0;
             } else {
-                AdrVals[0] = EvalStrIntExpression(&Arg, UInt8, &OK);
+                if (Arg.str.p_str[0]) {
+                    AdrVals[0] = EvalStrIntExpression(&Arg, UInt8, &OK);
+                } else {
+                    AdrVals[0] = 0;
+                    OK         = True;
+                }
                 if (OK) {
                     if (AdrVals[0] == 0) {
                         AdrMode = ModIReg;

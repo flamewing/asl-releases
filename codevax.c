@@ -616,7 +616,13 @@ static Boolean decode_adr(
                 WrStrErrorPos(ErrNum_UndefAttr, &len_spec_arg);
                 return reset_adr_vals(p_result);
             }
-            disp = EvalStrIntExpressionWithResult(&disp_arg, eval_int_type, &eval_result);
+            if (disp_arg.str.p_str[0]) {
+                disp = EvalStrIntExpressionWithResult(
+                        &disp_arg, eval_int_type, &eval_result);
+            } else {
+                disp           = 0;
+                eval_result.OK = True;
+            }
             if (!eval_result.OK) {
                 return reset_adr_vals(p_result);
             }

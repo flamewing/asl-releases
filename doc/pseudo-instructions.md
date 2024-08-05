@@ -3078,3 +3078,14 @@ VAX block directives reserve an element count at the corresponding size: `BLKB` 
 `RADIX50` is a macro from `radix50.inc`, packing three characters into one 16-bit word; it is not a built-in directive.
 
 Supported VAX targets: `MICROVAX-I`, `MICROVAX-II`, `VAX-11/725`, `VAX-11/730`, `VAX-11/750`, `VAX-11/780`, `VAX-11/782`, `VAX-11/785`, `VAX-8200`, `VAX-8300`, `VAX-8500`, `VAX-8600`, `VAX-8650`, `VAX-8800`. All share the core architecture, but hardware availability of string, packed decimal and floating-point extensions differs. The code address space is 4 GiB.
+
+#### NEC μCOM-43/44/45
+
+Select `uPD550`, `uPD554` or `uPD652` for μCOM-45; `uPD547`, `uPD552` or `uPD651` for μCOM-44; and `uPD546`, `uPD553`, `uPD556`, `uPD557` or `uPD650` for μCOM-43. The first two families implement subsets of the μCOM-43 instruction set. Devices also differ in ROM and RAM capacity:
+
+| Targets | Code bytes | Data bytes |
+| --- | ---: | ---: |
+| uPD550 | 640 | 32 |
+| uPD554, uPD652 | 1000 | 32 |
+| uPD547, uPD552, uPD651 | 1000 | 64 |
+| uPD546, uPD553, uPD556, uPD557, uPD650 | 2000 | 96 |

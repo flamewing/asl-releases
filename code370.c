@@ -164,7 +164,13 @@ static void DecodeAdrRel(tStrComp const* pArg, Word Mask, Boolean AddrRel) {
             tSymbolFlags Flags;
 
             StrCompSplitRef(&Left, &Right, &Arg, p);
-            HVal = EvalStrIntExpressionWithFlags(&Left, Int16, &OK, &Flags);
+            if (Left.str.p_str[0]) {
+                HVal = EvalStrIntExpressionWithFlags(&Left, Int16, &OK, &Flags);
+            } else {
+                HVal  = 0;
+                OK    = True;
+                Flags = eSymbolFlag_None;
+            }
             if (OK) {
                 *p = '(';
                 if (!as_strcasecmp(p, "(B)")) {

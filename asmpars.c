@@ -44,6 +44,10 @@
 #define LEAVE  goto func_exit
 #define LEAVE2 goto func_exit2
 
+/* Allow this for the moment: */
+
+#define NULLSTRING_EVAL_RESULT True
+
 /* Mask, Min & Max are computed at initialization */
 
 tIntTypeDef IntTypeDefs[IntTypeCnt] = {
@@ -59,6 +63,7 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] = {
         {0xc005, 0, 0, 0}, /* Int5 */
         {0x8006, 0, 0, 0}, /* SInt6 */
         {0x0006, 0, 0, 0}, /* UInt6 */
+        {0xc006, 0, 0, 0}, /* Int6 */
         {0x8007, 0, 0, 0}, /* SInt7 */
         {0x0007, 0, 0, 0}, /* UInt7 */
         {0x8008, 0, 0, 0}, /* SInt8 */
@@ -1048,7 +1053,7 @@ static LargeInt ConstIntVal(char const* pExpr, IntType Typ, Boolean* pResult) {
     /* empty string is interpreted as 0 */
 
     if (!*pExpr) {
-        *pResult = True;
+        *pResult = NULLSTRING_EVAL_RESULT;
         return 0;
     }
 
@@ -1175,7 +1180,7 @@ static Double ConstFloatVal(char const* pExpr, FloatType Typ, Boolean* pResult) 
         }
     } else {
         Erg      = 0.0;
-        *pResult = True;
+        *pResult = NULLSTRING_EVAL_RESULT;
     }
     return Erg;
 }
