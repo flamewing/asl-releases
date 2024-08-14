@@ -52,7 +52,7 @@ typedef float  Single;
 typedef Byte Boolean;
 
 #ifndef STRINGSIZE
-#    define STRINGSIZE 256
+#    define STRINGSIZE 1024
 #endif
 #define SHORTSTRINGSIZE 65
 
