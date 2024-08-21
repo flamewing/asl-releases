@@ -157,9 +157,6 @@ jobs:
           cmake --build build -j
       - name: Create package
         run: |
-          if [[ ${{ matrix.as }} != "asl" ]]; then
-            cp asl${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
-          fi
           cp COPYING build/
           cd build
           "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
