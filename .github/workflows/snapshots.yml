@@ -169,7 +169,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.activity-check.outputs.upload_url }}
-          asset_path: build/${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          asset_path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
           asset_name: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
           asset_content_type: application/zip
 
