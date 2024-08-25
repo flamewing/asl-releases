@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.273
+    VERSION 1.42.274
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -339,6 +339,20 @@ set(ARCHPRNAME "${CMAKE_SYSTEM_PROCESSOR}")
 set(ARCHSYSNAME "${CMAKE_SYSTEM_NAME}")
 CHECK_INCLUDE_FILES("endian.h" HAVE_ENDIAN_H)
 CHECK_INCLUDE_FILES("sys/param.h" HAVE_SYS_PARAM_H)
+if(MINGW)
+    # The CRT printf family treats long double as double without MinGW's wrappers.
+    add_compile_definitions(__USE_MINGW_ANSI_STDIO=1)
+endif()
+
+include(CheckTypeSize)
+include(CheckCSourceCompiles)
+check_type_size("long double" AS_LONG_DOUBLE_SIZE LANGUAGE C)
+# Select the supported x87 representation by precision, not by OS name.
+check_c_source_compiles("#include <float.h>
+#if LDBL_MANT_DIG != 64 || LDBL_MAX_EXP != 16384
+#error unsupported extended representation
+#endif
+int main(void) { return 0; }" AS_IEEE_EXTENDED)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_library(ST_OBJECTS
@@ -598,6 +612,14 @@ add_library(AS_OBJECTS
     fourpseudo.h
     ibmfloat.c
     ibmfloat.h
+    milfloat.c
+    milfloat.h
+    necfloat.c
+    necfloat.h
+    tifloat.c
+    tifloat.h
+    as_float.c
+    as_float.h
     ieeefloat.c
     ieeefloat.h
     decfloat.c

@@ -12,11 +12,12 @@
 
 #include "tempresult.h"
 
-#include "dynstr.h"
 #include "asmdef.h"
 #include "asmsub.h"
+#include "dynstr.h"
 #include "strutil.h"
 
+#include <float.h>
 #include <string.h>
 
 /*!------------------------------------------------------------------------
@@ -76,13 +77,13 @@ void as_tempres_set_int(TempResult* p_res, LargeInt value) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_tempres_set_float(TempResult *p_res, Double value)
+ * \fn     as_tempres_set_float(TempResult *p_res, as_float_t value)
  * \brief  set temp result to float value
  * \param  p_res result to fill
  * \param  value float value to set
  * ------------------------------------------------------------------------ */
 
-void as_tempres_set_float(TempResult* p_res, Double value) {
+void as_tempres_set_float(TempResult* p_res, as_float_t value) {
     if (p_res->Typ == TempString) {
         as_nonz_dynstr_free(&p_res->Contents.str);
     }
@@ -267,7 +268,7 @@ int as_tempres_append_dynstr(as_dynstr_t* p_dest, TempResult const* pResult) {
         as_sdprcatf(p_dest, "%" PRId64, pResult->Contents.Int);
         break;
     case TempFloat:
-        as_sdprcatf(p_dest, "%0.16e", pResult->Contents.Float);
+        as_sdprcatf(p_dest, "%0.*llle", AS_FLOAT_DIG + 2, pResult->Contents.Float);
         KillBlanks(p_dest->p_str);
         break;
     case TempString: {

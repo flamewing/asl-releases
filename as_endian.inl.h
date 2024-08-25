@@ -256,6 +256,17 @@ INLINE void TSwap(void* Field, int Cnt) {
     }
 }
 
+INLINE void OSwap(void* Field, int Cnt) {
+    Byte* Run = (Byte*)Field;
+    for (int offset = 0; offset + 16 <= Cnt; offset += 16) {
+        for (int j = 0; j < 8; ++j) {
+            Byte tmp             = Run[offset + j];
+            Run[offset + j]      = Run[offset + 15 - j];
+            Run[offset + 15 - j] = tmp;
+        }
+    }
+}
+
 INLINE void DWSwap(void* Field, int Cnt) {
     register unsigned char*       Run = (unsigned char*)Field;
     register unsigned char const* End = Run + Cnt;

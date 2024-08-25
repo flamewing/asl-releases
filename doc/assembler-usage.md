@@ -740,9 +740,7 @@ Important: using the correct quotation is not necessary if the character string 
 
 ### Evaluation
 
-The calculation of intermediary results within formula expressions is always done with the highest available resolution, i.e. 32 or 64 bits for integer numbers, 80 bit for floating point numbers and 255 characters for strings. An possible test of value range overflows is done only on the final result.
-
-The portable C version only supports floating point values up to 64 bits (resulting in a maximum value of roughly 10^308), but in turn features integer lengths of 64 bits on some platforms.
+Expressions use the highest supported host precision: 64-bit integers, and IEEE double or extended floating point. The approximate finite floating-point range is ±1.8 × 10^308 for double and ±1.1 × 10^4932 for extended precision. `FLOATMAX` reports the actual host limit. Range checks for the requested operand type apply to the final result.
 
 ### Operators
 

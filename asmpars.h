@@ -107,16 +107,6 @@ DefCPPOps_Enum(IntType)
 } tIntTypeDef;
 
 typedef enum {
-    Float32,
-    Float64,
-    Float80,
-    FloatDec,
-    FloatCo,
-    Float16,
-    FloatTypeCnt
-} FloatType;
-
-typedef enum {
     e_symbol_source_none,
     e_symbol_source_label,
     e_symbol_source_define
@@ -205,8 +195,6 @@ extern Boolean ChkRangeByType(
 extern Boolean ChkRangeWarnByType(
         LargeInt value, IntType type, const struct sStrComp* p_comp);
 
-extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
-
 extern Boolean IdentifySection(const struct sStrComp* pName, LongInt* Erg);
 
 extern struct sStrComp* ExpandStrSymbol(
@@ -230,7 +218,7 @@ extern struct sSymbolEntry* EnterRelSymbol(
         Boolean MayChange);
 
 extern void EnterFloatSymbol(
-        const struct sStrComp* pName, Double Wert, Boolean MayChange);
+        const struct sStrComp* pName, as_float_t Wert, Boolean MayChange);
 
 extern void EnterStringSymbol(
         const struct sStrComp* pName, char const* pValue, Boolean MayChange);
@@ -317,10 +305,9 @@ extern LargeInt EvalStrIntExprOffsWithResultAndCallback(
         const struct sStrComp* pExpr, int Offset, IntType Type,
         struct sEvalResult* pResult, as_eval_cb_data_t* p_callback_data);
 
-extern Double EvalStrFloatExpressionWithResult(
-        const struct sStrComp* pExpr, FloatType Typ, struct sEvalResult* pResult);
-extern Double EvalStrFloatExpression(
-        const struct sStrComp* pExpr, FloatType Typ, Boolean* pResult);
+extern as_float_t EvalStrFloatExpressionWithResult(
+        const struct sStrComp* pExpr, struct sEvalResult* pResult);
+extern as_float_t EvalStrFloatExpression(const struct sStrComp* pExpr, Boolean* pResult);
 
 extern void EvalStrStringExpressionWithResult(
         const struct sStrComp* pExpr, struct sEvalResult* pResult, char* pEvalResult);

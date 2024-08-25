@@ -12,9 +12,6 @@
 
 #include "datatypes.h"
 
-extern int Double_2_apl4(Double inp, Word* p_dest);
-
-struct sStrComp;
-extern Boolean check_apl_fp_dispose_result(int ret, const struct sStrComp* p_arg);
+extern int as_float_2_apl4(as_float_t inp, Word* p_dest);
 
 #endif /* APLFLOAT_H */

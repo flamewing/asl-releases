@@ -90,8 +90,9 @@ extern char SrcSuffix[], IncSuffix[], PrgSuffix[], LstSuffix[], MacSuffix[], Pre
 #define BranchExtName     "BRANCHEXT"   /* Spruenge autom. verlaengern */
 #define FlagTrueName      "TRUE"        /* Flagkonstanten */
 #define FlagFalseName     "FALSE"
-#define PiName            "CONSTPI" /* Zahl Pi */
-#define DateName          "DATE"    /* Datum & Zeit */
+#define PiName            "CONSTPI"  /* Zahl Pi */
+#define FloatMaxName      "FLOATMAX" /* largest floating point number */
+#define DateName          "DATE"     /* Datum & Zeit */
 #define TimeName          "TIME"
 #define VerName           "VERSION"       /* speichert Versionsnummer */
 #define CaseSensName      "CASESENSITIVE" /* zeigt Gross/Kleinunterscheidung an */

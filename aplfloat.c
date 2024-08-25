@@ -12,133 +12,112 @@
 
 #include "aplfloat.h"
 
+#include "as_float.h"
 #include "asmerr.h"
 #include "errmsg.h"
-#include "ieeefloat.h"
 #include "strcomp.h"
 
 #include <errno.h>
+#include <string.h>
 
 /*!------------------------------------------------------------------------
- * \fn     Double_2_apl4(Double inp, Word *p_dest)
+ * \fn     as_float_2_apl4(as_float_t inp, Word *p_dest)
  * \brief  convert from host to Apple II 4 byte float format
  * \param  inp value to dispose
  * \param  p_dest where to dispose
- * \return 0 or error code
+ * \return 0 or error code (<0)
  * ------------------------------------------------------------------------ */
 
-int Double_2_apl4(Double inp, Word* p_dest) {
-    Word     sign;
-    Integer  exponent;
-    LongWord mantissa, fraction;
-    Boolean  round_up;
+int as_float_2_apl4(as_float_t inp, Word* p_dest) {
+    Boolean            round_up;
+    as_float_dissect_t dissect;
 
-    /* Dissect IEEE number.  (Absolute of) mantissa is already in range 2.0 > M >= 1.0,
-       unless denormal. NaN and Infinity cannot be represented: */
+    /* Dissect number: */
 
-    ieee8_dissect(&sign, &exponent, &mantissa, &fraction, inp);
-    if (exponent == 2047) {
-        return EINVAL;
+    as_float_dissect(&dissect, inp);
+
+    /* NaN and Infinity cannot be represented: */
+
+    if ((dissect.fp_class == AS_FP_NAN) || (dissect.fp_class == AS_FP_INFINITE)) {
+        return -EINVAL;
     }
 
     /* (3) Denormalize small numbers: */
 
-#if 0
-  printf("0x%08x 0x%08x\n", (unsigned)mantissa, (unsigned)fraction);
-#endif
-    while ((exponent < -128) && (mantissa || fraction)) {
-        mantissa++;
-        fraction = ((fraction >> 1) & 0x7ffffful)
-                   | ((mantissa & 1) ? 0x800000ul : 0x000000ul);
-        mantissa = (mantissa >> 1) & 0x1fffffful;
+    while ((dissect.exponent < -128) && !as_float_mantissa_is_zero(&dissect)) {
+        dissect.exponent++;
+        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
-    /* Two's Complement of mantissa. Note mantissa afterwards has 30 bits, including sign:
-     */
+    /* Build Two's complement.  Note the sign becomes part of the
+       mantissa, which is afterwards one bit longer: */
 
-    if (sign) {
-        fraction = fraction ^ 0x00fffffful;
-        mantissa = mantissa ^ 0x7ffffffful;
-        if (++fraction >= 0x01000000ul) {
-            fraction = 0;
-            mantissa = (mantissa + 1) & 0x7ffffffful;
-        }
-    }
+    as_float_mantissa_twos_complement(&dissect);
 
     /* Normalize, so that topmost bits of mantissa are unequal.  This happens
-       for powers of two, after negating:  */
+       for powers of two, after negating: */
 
-    switch ((mantissa >> 28) & 3) {
+    switch (as_float_mantissa_extract(&dissect, 0, 2)) {
     case 0:
     case 3:
-        exponent--;
-        mantissa = ((mantissa << 1) & 0x7ffffffeul) | ((fraction >> 23) & 1);
-        fraction = (fraction << 1) & 0xfffffful;
+        if (dissect.exponent > -128) {
+            dissect.exponent--;
+            as_float_mantissa_shift_left(dissect.mantissa, 0, dissect.mantissa_bits);
+        }
         break;
     }
 
-    /* (4) Round mantissa.  The mantissa currently has 30 bits, and - including sign - we
-           will use 24 of them.  So the "half LSB" bit to look at is bit 5: */
+    /* (4) Round mantissa.  We will use 24 of them.  So the "half LSB" bit
+           to look at is bit 24, seen from left: */
 
-    if (mantissa & 0x20) /* >= 0.5 */
-    {
-        if ((mantissa & 0x1f) || fraction) { /* > 0.5 */
+    if (as_float_get_mantissa_bit(dissect.mantissa, dissect.mantissa_bits, 24)) {
+        if (!as_float_mantissa_is_zero_from(&dissect, 25)) { /* > 0.5 */
             round_up = True;
-        } else {                            /* == 0.5 */
-            round_up = !!(mantissa & 0x40); /* round towards even */
+        } else { /* == 0.5 */
+            round_up = as_float_get_mantissa_bit(
+                    dissect.mantissa, dissect.mantissa_bits, 23);
         }
     } else { /* < 0.5 */
         round_up = False;
     }
 
     if (round_up) {
-        LongWord new_mantissa = mantissa + 0x40;
+        as_float_mant_t round_sum;
+
+        (void)as_float_mantissa_add_bit(
+                round_sum, dissect.mantissa, 24, dissect.mantissa_bits);
 
         /* overflow during round-up? */
 
-        if ((new_mantissa ^ mantissa) & 0x40000000ul) {
-            /* arithmetic right shift, preserving sign */
-            mantissa = (mantissa & 0x40000000ul) | ((mantissa >> 1) & 0x3ffffffful);
-            exponent++;
+        if ((round_sum[0] ^ dissect.mantissa[0]) & 0x80000000ul) {
+            dissect.exponent++;
+            /* Arithmetic right shift of signed number to preserve sign: */
+            as_float_mantissa_shift_right(
+                    round_sum,
+                    as_float_get_mantissa_bit(dissect.mantissa, dissect.mantissa_bits, 0),
+                    dissect.mantissa_bits);
         }
-        mantissa += 0x40;
+
+        memcpy(dissect.mantissa, round_sum, sizeof(dissect.mantissa));
     }
 
     /* After knowing final exponent, check for overflow: */
 
-    if (exponent > 127) {
-        return E2BIG;
+    if (dissect.exponent > 127) {
+        return -E2BIG;
     }
 
     /* (5) mantissa zero means exponent is also zero */
 
-    if (!mantissa) {
-        exponent = 0;
+    if (as_float_mantissa_is_zero(&dissect)) {
+        dissect.exponent = 0;
     }
 
     /* (7) Assemble: */
 
-    p_dest[0] = (((exponent + 128) << 8) & 0xff00ul) | ((mantissa >> 22) & 0x00fful);
-    p_dest[1] = (mantissa >> 6) & 0xfffful;
+    p_dest[0] = (((dissect.exponent + 128) << 8) & 0xff00ul)
+                | as_float_mantissa_extract(&dissect, 0, 8);
+    p_dest[1] = as_float_mantissa_extract(&dissect, 8, 16);
+
     return 0;
-}
-
-/*!------------------------------------------------------------------------
- * \fn     check_apl_fp_dispose_result(int ret, const struct sStrComp *p_arg)
- * \brief  check the result of Double_2... and throw associated error messages
- * \param  ret return code
- * \param  p_arg associated source argument
- * ------------------------------------------------------------------------ */
-
-Boolean check_apl_fp_dispose_result(int ret, const struct sStrComp* p_arg) {
-    switch (ret) {
-    case 0:
-        return True;
-    case E2BIG:
-        WrStrErrorPos(ErrNum_OverRange, p_arg);
-        return False;
-    default:
-        WrXErrorPos(ErrNum_InvArg, "INF/NaN", &p_arg->Pos);
-        return False;
-    }
 }

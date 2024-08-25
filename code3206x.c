@@ -592,11 +592,20 @@ static Boolean DecodePseudo(void) {
         if (ChkArgCnt(1, ArgCntMax)) {
             OK = True;
             forallargs(pArg, OK) {
-                double Float = EvalStrFloatExpression(pArg, Float32, &OK);
+                as_float_t Float = EvalStrFloatExpression(pArg, &OK);
 
                 if (OK) {
+                    int ret;
+
                     dword_index = CodeLen >> 2;
-                    Double_2_ieee4(Float, (Byte*)(DAsmCode + dword_index), HostBigEndian);
+                    if ((ret = as_float_2_ieee4(
+                                 Float, (Byte*)(DAsmCode + dword_index), HostBigEndian))
+                        < 0) {
+                        asmerr_check_fp_dispose_result(ret, pArg);
+                        OK = False;
+                    }
+                }
+                if (OK) {
                     CodeLen += 4;
                 }
             }
@@ -609,18 +618,27 @@ static Boolean DecodePseudo(void) {
 
     if (Memo("DOUBLE")) {
         if (ChkArgCnt(1, ArgCntMax)) {
-            double Float;
-
             OK = True;
             forallargs(pArg, OK) {
-                Float = EvalStrFloatExpression(pArg, Float64, &OK);
+                as_float_t Float = EvalStrFloatExpression(pArg, &OK);
                 if (OK) {
+                    int ret;
+
                     dword_index = CodeLen >> 2;
-                    Double_2_ieee8(Float, (Byte*)(DAsmCode + dword_index), HostBigEndian);
+                    if ((ret = as_float_2_ieee8(
+                                 Float, (Byte*)(DAsmCode + dword_index), HostBigEndian))
+                        < 0) {
+                        asmerr_check_fp_dispose_result(ret, pArg);
+                        OK = False;
+                    }
+                }
+                if (OK) {
                     if (!HostBigEndian) {
-                        DAsmCode[dword_index + 2] = DAsmCode[dword_index + 0];
+                        LongWord swap;
+
+                        swap                      = DAsmCode[dword_index + 0];
                         DAsmCode[dword_index + 0] = DAsmCode[dword_index + 1];
-                        DAsmCode[dword_index + 1] = DAsmCode[dword_index + 2];
+                        DAsmCode[dword_index + 1] = swap;
                     }
                     CodeLen += 8;
                 }
@@ -679,16 +697,20 @@ static Boolean DecodePseudo(void) {
 #endif
                         DAsmCode[cnt++] = t.Contents.Int;
                     break;
-                case TempFloat:
-                    if (!FloatRangeCheck(t.Contents.Float, Float32)) {
+                case TempFloat: {
+                    int ret;
+
+                    if ((ret = as_float_2_ieee4(
+                                 t.Contents.Float, (Byte*)(DAsmCode + cnt),
+                                 HostBigEndian))
+                        < 0) {
+                        asmerr_check_fp_dispose_result(ret, pArg);
                         OK = False;
-                        WrStrErrorPos(ErrNum_OverRange, pArg);
                     } else {
-                        Double_2_ieee4(
-                                t.Contents.Float, (Byte*)(DAsmCode + cnt), HostBigEndian);
                         cnt++;
                     }
                     break;
+                }
                 default:
                     OK = False;
                 }

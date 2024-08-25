@@ -1573,18 +1573,21 @@ The default for the operand length is - as usual - `W`, i.e. 16 bits.
 
 For the 56xxx, the operand length is fixed to words (of 24 bit), attributes therefore do not exist just as in the case of `DC`.
 
-### DN,DB,DW,DD,DQ, and DT
+### DN,DB,DW,DD,DQ,DT, and DO
 
 _valid for: Intel (except for 4004/4040), Zilog, Toshiba, NEC, TMS370, Siemens, AMD, MELPS7700/65816, M16(C), National, ST9, Atmel, TMS70Cxx, TMS1000, Signetics, μPD77230, Fairchild, Intersil, XS1_
 
 These commands are - one could say - the Intel counterpart to `DS` and `DC`, and as expected, their logic is a little bit different: First, the specification of the operand length is moved into the mnemonic:
 
 - `DN`: 4-bit integer
-- `DB`: byte or ASCII string similar to `DC.B`
-- `DW`: 16-bit integer or half precision
-- `DD`: 32-bit integer or single precision
-- `DQ`: double precision (64 bits)
+- `DB`: 8-bit integer or ASCII string similar to `DC.B`
+- `DW`: 16-bit integer or half precision float
+- `DD`: 32-bit integer or single precision float
+- `DQ`: 64-bit integer or double precision float
 - `DT`: packed BCD integer or extended precision float (80 bits)
+- `DO`: quad precision float (128 bits)
+
+Stored floats cannot exceed the host’s precision or range, given by `FLOATMAX`. On a double-precision host, the lowest two bytes of `DT` and eight bytes of `DO` are zero-filled.
 
 Second, the distinction between constant definition and memory
 reservation is done by the operand. A reservation of memory is marked by

@@ -268,7 +268,7 @@ static tRegEvalResult DecodeIOrFPReg(
 
 static Boolean DecodeAdr(
         tStrComp const* pArg, Byte Mask, OpType Type, LongWord* Erg, LongWord* Mode) {
-    Double      FVal;
+    as_float_t  FVal;
     tEvalResult EvalResult;
     tSymbolSize DataSize;
 
@@ -298,7 +298,7 @@ static Boolean DecodeAdr(
     }
 
     if (Type != IntOp) {
-        FVal = EvalStrFloatExpressionWithResult(pArg, Float64, &EvalResult);
+        FVal = EvalStrFloatExpressionWithResult(pArg, &EvalResult);
         if (EvalResult.OK) {
             if (mFirstPassUnknown(EvalResult.Flags)) {
                 FVal = 0.0;

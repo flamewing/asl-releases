@@ -30,6 +30,8 @@
 #include "strutil.h"
 #include "version.h"
 
+#include <ctype.h>
+#include <float.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -686,8 +688,8 @@ char const* NamePart(char const* Name) {
 /****************************************************************************/
 /* eine Gleitkommazahl in einen String umwandeln */
 
-void FloatString(char* pDest, size_t DestSize, Double f) {
-#define MaxLen 18
+void FloatString(char* pDest, size_t DestSize, as_float_t f) {
+#define MaxLen (3 + AS_FLOAT_DIG)
     char *  p, *d, ExpChar = HexStartCharacter + ('E' - 'A');
     sint    n, ExpVal, nzeroes;
     Boolean WithE, OK;
@@ -695,7 +697,7 @@ void FloatString(char* pDest, size_t DestSize, Double f) {
     /* 1. mit Maximallaenge wandeln, fuehrendes Vorzeichen weg */
 
     (void)DestSize;
-    as_snprintf(pDest, DestSize, "%27.15e", f);
+    as_snprintf(pDest, DestSize, "%*.*llle", 12 + AS_FLOAT_DIG, AS_FLOAT_DIG, f);
     for (p = pDest; (*p == ' ') || (*p == '+'); p++)
         ;
     if (p != pDest) {
@@ -1863,7 +1865,7 @@ long GTime(void) {
 
 #    include <windows.h>
 
-#    ifdef NOLONGLONG
+#    if !AS_HAS_LONGLONG
 #        include "math64.h"
 #    endif
 
@@ -1871,7 +1873,7 @@ long GTime(void) {
     FILETIME ft;
 
     GetSystemTimeAsFileTime(&ft);
-#    ifdef NOLONGLONG
+#    if !AS_HAS_LONGLONG
     {
         static t64 const offs = {0xd53e8000, 0x019db1de}, div = {100000, 0},
                          mod = {8640000, 0};
@@ -1888,7 +1890,7 @@ long GTime(void) {
         mod64(&acc, &acc, &mod);
         return acc.low;
     }
-#    else /* !NOLONGLONG */
+#    else /* AS_HAS_LONGLONG */
 #        define _W32_FT_OFFSET (116444736000000000ULL)
     unsigned long long time_tot;
     /* time since 1 Jan 1601 in 100ns units */
@@ -1902,7 +1904,7 @@ long GTime(void) {
     /* -> time since 0:00:00.0 in 10ms units */
     time_tot %= 8640000ULL;
     return time_tot;
-#    endif /* NOLONGLONG */
+#    endif /* !AS_HAS_LONGLONG */
 }
 
 #    define GTIME_DEFINED

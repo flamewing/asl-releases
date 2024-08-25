@@ -39,6 +39,7 @@
 #include "strutil.h"
 
 #include <ctype.h>
+#include <float.h>
 #include <string.h>
 
 #define LEAVE goto func_exit
@@ -619,7 +620,7 @@ static void CodeSHARED(Word Index) {
                 }
                 break;
             case TempFloat:
-                as_snprintf(s, sizeof(s), "%0.17g", t.Contents.Float);
+                as_snprintf(s, sizeof(s), "%0.*lllg", AS_FLOAT_DIG + 3, t.Contents.Float);
                 break;
             case TempString:
                 as_nonz_dynstr_to_c_str(s + 1, &t.Contents.str, sizeof(s) - 1);

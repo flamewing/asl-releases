@@ -60,7 +60,7 @@ struct sTempResult {
 
     union {
         LargeInt         Int;
-        Double           Float;
+        as_float_t       Float;
         as_nonz_dynstr_t str;
         tRegDescr        RegDescr;
     } Contents;
@@ -75,7 +75,7 @@ extern void as_tempres_set_none(TempResult* p_res);
 
 extern void as_tempres_set_int(TempResult* p_res, LargeInt value);
 
-extern void as_tempres_set_float(TempResult* p_res, Double value);
+extern void as_tempres_set_float(TempResult* p_res, as_float_t value);
 
 extern void as_tempres_set_str(TempResult* p_res, as_nonz_dynstr_t const* p_value);
 

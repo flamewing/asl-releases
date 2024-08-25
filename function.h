@@ -24,4 +24,6 @@ typedef struct {
 
 extern tFunction const* function_find(char const* p_name);
 
+void function_init(void);
+
 #endif /* FUNCTION_H */

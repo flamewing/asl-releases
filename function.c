@@ -23,7 +23,10 @@
 #include "strutil.h"
 
 #include <ctype.h>
+#include <float.h>
 #include <string.h>
+
+static as_float_t log_max, log2_max, log10_max;
 
 static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     int cnt = pArgs[0].Contents.str.len - pArgs[1].Contents.Int;
@@ -278,7 +281,7 @@ static Boolean FuncABS(TempResult* pResult, TempResult const* pArgs, unsigned Ar
                                                      : pArgs[0].Contents.Int);
         break;
     case TempFloat:
-        as_tempres_set_float(pResult, fabs(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_fabs(pArgs[0].Contents.Float));
         break;
     default:
         pResult->Typ = TempNone;
@@ -312,7 +315,7 @@ static Boolean FuncSGN(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncINT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (fabs(pArgs[0].Contents.Float) > IntTypeDefs[LargeSIntType].Max) {
+    if (as_fabs(pArgs[0].Contents.Float) > IntTypeDefs[LargeSIntType].Max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_OverRange);
     } else {
@@ -329,7 +332,7 @@ static Boolean FuncSQRT(TempResult* pResult, TempResult const* pArgs, unsigned A
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, sqrt(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_sqrt(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -340,7 +343,7 @@ static Boolean FuncSQRT(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncSIN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    as_tempres_set_float(pResult, sin(pArgs[0].Contents.Float));
+    as_tempres_set_float(pResult, as_sin(pArgs[0].Contents.Float));
 
     return True;
 }
@@ -348,7 +351,7 @@ static Boolean FuncSIN(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncCOS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    as_tempres_set_float(pResult, cos(pArgs[0].Contents.Float));
+    as_tempres_set_float(pResult, as_cos(pArgs[0].Contents.Float));
 
     return True;
 }
@@ -356,25 +359,25 @@ static Boolean FuncCOS(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncTAN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (cos(pArgs[0].Contents.Float) == 0.0) {
+    if (as_cos(pArgs[0].Contents.Float) == 0.0) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, tan(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_tan(pArgs[0].Contents.Float));
     }
 
     return True;
 }
 
 static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    Double FVal = sin(pArgs[0].Contents.Float);
+    as_float_t FVal = as_sin(pArgs[0].Contents.Float);
     UNUSED(ArgCnt);
 
     if (FVal == 0.0) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, cos(pArgs[0].Contents.Float) / FVal);
+        as_tempres_set_float(pResult, as_cos(pArgs[0].Contents.Float) / FVal);
     }
 
     return True;
@@ -385,11 +388,11 @@ static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncASIN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (fabs(pArgs[0].Contents.Float) > 1) {
+    if (as_fabs(pArgs[0].Contents.Float) > 1) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, asin(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_asin(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -398,11 +401,11 @@ static Boolean FuncASIN(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncACOS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (fabs(pArgs[0].Contents.Float) > 1) {
+    if (as_fabs(pArgs[0].Contents.Float) > 1) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, acos(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_acos(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -411,7 +414,7 @@ static Boolean FuncACOS(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncATAN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    as_tempres_set_float(pResult, atan(pArgs[0].Contents.Float));
+    as_tempres_set_float(pResult, as_atan(pArgs[0].Contents.Float));
 
     return True;
 }
@@ -419,7 +422,7 @@ static Boolean FuncATAN(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncACOT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    as_tempres_set_float(pResult, M_PI / 2 - atan(pArgs[0].Contents.Float));
+    as_tempres_set_float(pResult, M_PI / 2 - as_atan(pArgs[0].Contents.Float));
 
     return True;
 }
@@ -427,11 +430,11 @@ static Boolean FuncACOT(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncEXP(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 709) {
+    if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, exp(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_exp(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -440,11 +443,11 @@ static Boolean FuncEXP(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncALOG(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 308) {
+    if (pArgs[0].Contents.Float > log10_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, exp(pArgs[0].Contents.Float * log(10.0)));
+        as_tempres_set_float(pResult, as_exp(pArgs[0].Contents.Float * log(10.0)));
     }
 
     return True;
@@ -453,11 +456,11 @@ static Boolean FuncALOG(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncALD(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 1022) {
+    if (pArgs[0].Contents.Float > log2_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, exp(pArgs[0].Contents.Float * log(2.0)));
+        as_tempres_set_float(pResult, as_exp(pArgs[0].Contents.Float * log(2.0)));
     }
 
     return True;
@@ -466,11 +469,11 @@ static Boolean FuncALD(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncSINH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 709) {
+    if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, sinh(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_sinh(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -479,11 +482,11 @@ static Boolean FuncSINH(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncCOSH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 709) {
+    if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, cosh(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_cosh(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -492,25 +495,25 @@ static Boolean FuncCOSH(TempResult* pResult, TempResult const* pArgs, unsigned A
 static Boolean FuncTANH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 709) {
+    if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
-        as_tempres_set_float(pResult, tanh(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_tanh(pArgs[0].Contents.Float));
     }
 
     return True;
 }
 
 static Boolean FuncCOTH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    Double FVal;
+    as_float_t FVal;
 
     UNUSED(ArgCnt);
 
-    if (pArgs[0].Contents.Float > 709) {
+    if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
-    } else if ((FVal = tanh(pArgs[0].Contents.Float)) == 0.0) {
+    } else if ((FVal = as_tanh(pArgs[0].Contents.Float)) == 0.0) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
@@ -529,7 +532,7 @@ static Boolean FuncLN(TempResult* pResult, TempResult const* pArgs, unsigned Arg
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, log(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_log(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -542,7 +545,7 @@ static Boolean FuncLOG(TempResult* pResult, TempResult const* pArgs, unsigned Ar
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, log10(pArgs[0].Contents.Float));
+        as_tempres_set_float(pResult, as_log10(pArgs[0].Contents.Float));
     }
 
     return True;
@@ -555,7 +558,7 @@ static Boolean FuncLD(TempResult* pResult, TempResult const* pArgs, unsigned Arg
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
-        as_tempres_set_float(pResult, log(pArgs[0].Contents.Float) / log(2.0));
+        as_tempres_set_float(pResult, as_log(pArgs[0].Contents.Float) / as_log(2.0));
     }
 
     return True;
@@ -565,8 +568,9 @@ static Boolean FuncASINH(TempResult* pResult, TempResult const* pArgs, unsigned 
     UNUSED(ArgCnt);
 
     as_tempres_set_float(
-            pResult, log(pArgs[0].Contents.Float
-                         + sqrt(pArgs[0].Contents.Float * pArgs[0].Contents.Float + 1)));
+            pResult,
+            as_log(pArgs[0].Contents.Float
+                   + as_sqrt(pArgs[0].Contents.Float * pArgs[0].Contents.Float + 1)));
 
     return True;
 }
@@ -580,8 +584,8 @@ static Boolean FuncACOSH(TempResult* pResult, TempResult const* pArgs, unsigned 
     } else {
         as_tempres_set_float(
                 pResult,
-                log(pArgs[0].Contents.Float
-                    + sqrt(pArgs[0].Contents.Float * pArgs[0].Contents.Float - 1)));
+                as_log(pArgs[0].Contents.Float
+                       + as_sqrt(pArgs[0].Contents.Float * pArgs[0].Contents.Float - 1)));
     }
 
     return True;
@@ -590,13 +594,15 @@ static Boolean FuncACOSH(TempResult* pResult, TempResult const* pArgs, unsigned 
 static Boolean FuncATANH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (fabs(pArgs[0].Contents.Float) >= 1) {
+    if (as_fabs(pArgs[0].Contents.Float) >= 1) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
         as_tempres_set_float(
-                pResult,
-                0.5 * log((1 + pArgs[0].Contents.Float) / (1 - pArgs[0].Contents.Float)));
+                pResult, 0.5
+                                 * as_log(
+                                         (1 + pArgs[0].Contents.Float)
+                                         / (1 - pArgs[0].Contents.Float)));
     }
 
     return True;
@@ -605,13 +611,15 @@ static Boolean FuncATANH(TempResult* pResult, TempResult const* pArgs, unsigned 
 static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (fabs(pArgs[0].Contents.Float) <= 1) {
+    if (as_fabs(pArgs[0].Contents.Float) <= 1) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
     } else {
         as_tempres_set_float(
-                pResult,
-                0.5 * log((pArgs[0].Contents.Float + 1) / (pArgs[0].Contents.Float - 1)));
+                pResult, 0.5
+                                 * as_log(
+                                         (pArgs[0].Contents.Float + 1)
+                                         / (pArgs[0].Contents.Float - 1)));
     }
 
     return True;
@@ -682,4 +690,15 @@ tFunction const* function_find(char const* p_name) {
         }
     }
     return NULL;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     function_init(void)
+ * \brief  module setup
+ * ------------------------------------------------------------------------ */
+
+void function_init(void) {
+    log_max   = as_log(AS_FLOAT_MAX);
+    log2_max  = log_max / log(2.0);
+    log10_max = as_log10(AS_FLOAT_MAX);
 }

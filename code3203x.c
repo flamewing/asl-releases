@@ -25,6 +25,7 @@
 #include "nls.h"
 #include "onoff_common.h"
 #include "strutil.h"
+#include "tifloat.h"
 #include "tipseudo.h"
 
 #include <string.h>
@@ -157,15 +158,15 @@ static Boolean DecodeExpReg(char const* Asc, Byte* Erg) {
 }
 
 static void DecodeAdr(tStrComp const* pArg, Byte Erl, Boolean ImmFloat) {
-    Byte    HReg;
-    Integer Disp;
-    char*   p;
-    int     l;
-    Double  f;
-    Word    fi;
-    LongInt AdrLong;
-    Boolean BitRev, Circ;
-    Boolean OK;
+    Byte       HReg;
+    Integer    Disp;
+    char*      p;
+    int        l;
+    as_float_t f;
+    Word       fi;
+    LongInt    AdrLong;
+    Boolean    BitRev, Circ;
+    Boolean    OK;
 
     enum {
         ModBase,
@@ -455,8 +456,15 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl, Boolean ImmFloat) {
     /* IV. immediate */
 
     if (ImmFloat) {
-        f = EvalStrFloatExpression(&Arg, Float64, &OK);
-        if ((OK) && (ExtToTIC34xShort(f, &fi))) {
+        f = EvalStrFloatExpression(&Arg, &OK);
+        if (OK) {
+            int ret = as_float_2_ti2(f, &fi);
+            if (ret < 0) {
+                asmerr_check_fp_dispose_result(ret, pArg);
+                OK = False;
+            }
+        }
+        if (OK) {
             AdrPart = fi;
             AdrMode = ModImm;
         }

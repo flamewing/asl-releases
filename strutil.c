@@ -305,7 +305,7 @@ static size_t append_pad(dest_format_context_t* p_dest_ctx, char src, size_t cnt
 }
 
 #if 0
-static size_t FloatConvert(char *pDest, size_t DestSize, double Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
+static int FloatConvert(char *pDest, size_t DestSize, as_float_t Src, int Digits, Boolean TruncateTrailingZeros, char FormatType)
 {
   int DecPt;
   int Sign, Result = 0;
@@ -344,26 +344,19 @@ static size_t FloatConvert(char *pDest, size_t DestSize, double Src, int Digits,
   return Result;
 }
 #else
-static size_t FloatConvert(
-        char* pDest, size_t DestSize, double Src, int Digits,
+static int FloatConvert(
+        char* pDest, size_t DestSize, as_float_t Src, int Digits,
         Boolean TruncateTrailingZeros, char FormatType) {
-    UNUSED(DestSize);
-    UNUSED(TruncateTrailingZeros);
-    Boolean const needUpperCaseFormat = HexStartCharacter != 'a';
-    switch (FormatType) {
-    case 'e':
-        sprintf(pDest, needUpperCaseFormat ? "%0.*E" : "%0.*e", Digits, Src);
-        break;
-    case 'f':
-        sprintf(pDest, needUpperCaseFormat ? "%0.*F" : "%0.*f", Digits, Src);
-        break;
-    case 'g':
-        sprintf(pDest, needUpperCaseFormat ? "%0.*G" : "%0.*g", Digits, Src);
-        break;
-    default:
-        fprintf(stderr, "invalid format type: '%c' in FloatConvert\n", FormatType);
-        exit(255);
-    }
+    char   Format[10];
+    size_t l;
+
+    (void)DestSize;
+    (void)TruncateTrailingZeros;
+    strcpy(Format, "%0.*" XPRIas_float_t);
+    l           = strlen(Format);
+    Format[l++] = (HexStartCharacter == 'a') ? FormatType : toupper(FormatType);
+    Format[l]   = '\0';
+    snprintf(pDest, DestSize, Format, Digits, Src);
     return strlen(pDest);
 }
 #endif
@@ -462,7 +455,7 @@ static int vsprcatf_core(
                 if (FormatContext.int_size >= 3) {
                     IntArg = va_arg(ap, LargeInt);
                 } else
-#ifndef NOLONGLONG
+#if AS_HAS_LONGLONG
                         if (FormatContext.int_size >= 2)
                     IntArg = va_arg(ap, long long);
                 else
@@ -482,7 +475,7 @@ static int vsprcatf_core(
                 if (FormatContext.int_size >= 3) {
                     UIntArg = va_arg(ap, LargeWord);
                 } else
-#ifndef NOLONGLONG
+#if AS_HAS_LONGLONG
                         if (FormatContext.int_size >= 2)
                     UIntArg = va_arg(ap, unsigned long long);
                 else
@@ -500,7 +493,7 @@ static int vsprcatf_core(
                 if (FormatContext.int_size >= 3) {
                     UIntArg = va_arg(ap, LargeWord);
                 } else
-#ifndef NOLONGLONG
+#if AS_HAS_LONGLONG
                         if (FormatContext.int_size >= 2)
                     UIntArg = va_arg(ap, unsigned long long);
                 else
@@ -551,9 +544,11 @@ static int vsprcatf_core(
                 size_t Cnt;
 
                 Cnt = FloatConvert(
-                        Str, sizeof(Str), va_arg(ap, double), FormatContext.arg[1], False,
-                        *pFormat);
-                if (Cnt > sizeof(Str)) {
+                        Str, sizeof(Str),
+                        (FormatContext.int_size >= 3) ? va_arg(ap, as_float_t)
+                                                      : va_arg(ap, double),
+                        FormatContext.arg[1], False, *pFormat);
+                if (Cnt > (int)sizeof(Str)) {
                     Cnt = sizeof(Str);
                 }
                 Result += append(p_dest_ctx, Str, Cnt, &FormatContext);

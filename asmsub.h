@@ -77,7 +77,7 @@ extern char const* NamePart(char const* Name);
 
 extern char* PathPart(char* Name);
 
-extern void FloatString(char* pDest, size_t DestSize, Double f);
+extern void FloatString(char* pDest, size_t DestSize, as_float_t f);
 
 struct sTempResult;
 extern void StrSym(

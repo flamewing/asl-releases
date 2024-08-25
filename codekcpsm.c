@@ -464,7 +464,7 @@ static void AddALU1(char const* NName, Word NCode) {
     AddInstTable(InstTable, NName, NCode, DecodeALU1);
 }
 
-static void AddIOop(Char const* NName, Word NCode) {
+static void AddIOop(char const* NName, Word NCode) {
     AddInstTable(InstTable, NName, NCode, DecodeIOop);
 }
 

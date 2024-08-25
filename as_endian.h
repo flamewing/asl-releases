@@ -31,8 +31,8 @@ _Static_assert(sizeof(LongWord) == 4, "sizeof(LongWord) is not 4");
 _Static_assert(sizeof(QuadInt) == 8, "sizeof(QuadInt) is not 8");
 _Static_assert(sizeof(QuadWord) == 8, "sizeof(QuadWord) is not 8");
 #endif
-_Static_assert(sizeof(Single) == 4, "sizeof(Single) is not 4");
-_Static_assert(sizeof(Double) == 8, "sizeof(Double) is not 8");
+_Static_assert(sizeof(float) == 4, "sizeof(float) is not 4");
+_Static_assert(sizeof(double) == 8, "sizeof(double) is not 8");
 
 #ifdef __BYTE_ORDER__
 #    ifndef BYTE_ORDER
@@ -69,6 +69,7 @@ INLINE void WSwap(void* Field, int Cnt);
 INLINE void DSwap(void* Field, int Cnt);
 INLINE void QSwap(void* Field, int Cnt);
 INLINE void TSwap(void* Field, int Cnt);
+INLINE void OSwap(void* Field, int Cnt);
 INLINE void DWSwap(void* Field, int Cnt);
 INLINE void QWSwap(void* Field, int Cnt);
 INLINE void TWSwap(void* Field, int Cnt);

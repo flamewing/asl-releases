@@ -60,3 +60,5 @@ The names listed here should be avoided for own symbols; either one can define b
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 <!-- markdownlint-enable MD001 -->
+
+`FLOATMAX` is the largest finite floating-point value representable on the host.
