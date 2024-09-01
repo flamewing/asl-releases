@@ -171,6 +171,8 @@ static Boolean DecodeReg(tStrComp const* pArg, Byte* pResult, tRegType type) {
         i   = 3;
         num = 4;
         break;
+    default:
+        return False;
     }
     *pResult = 0;
     for (; i < len; i++) {

@@ -289,3 +289,5 @@ I assume that AS and AS2MSG are located in a directory listed in the `PATH` vari
 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
+
+When P2BIN inserts a checksum, it warns if the final output byte contains source data that the checksum would overwrite. Reserve that byte explicitly or extend the output range with padding.

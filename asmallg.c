@@ -1182,10 +1182,12 @@ static void CodeMACEXP(Word Index) {
                 Mod = eLstMacroExpRest;
                 Set = True;
             } else {
-                OK = False;
+                Mod = eLstMacroExpNone;
+                Set = False;
             }
-            if (!OK) {
+            if (Mod == eLstMacroExpNone) {
                 WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
+                OK = False;
                 break;
             } else if (!AddLstMacroExpMod(&LstMacroExpMod, Set, Mod)) {
                 WrStrErrorPos(ErrNum_TooManyArgs, pArg);

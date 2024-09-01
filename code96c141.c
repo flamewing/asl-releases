@@ -680,15 +680,19 @@ static void DecodeAdrMem(tStrComp const* pArg) {
         case 5:
             if (!DispAcc) {
                 eval_cb_data.part_mask &= ~1;
-            } else if (
-                    RangeCheck(DispAcc, SInt8)
-                    && IsRegCurrent(
-                            eval_cb_data.base_reg, eval_cb_data.base_size, &AdrMode)) {
+                goto other;
+            }
+            if (RangeCheck(DispAcc, SInt8)
+                && IsRegCurrent(
+                        eval_cb_data.base_reg, eval_cb_data.base_size, &AdrMode)) {
                 disp_size = eSymbolSize8Bit;
             } else {
                 disp_size = eSymbolSize16Bit;
             }
             break;
+        other:
+        default:
+            disp_size = eSymbolSizeUnknown;
         }
     }
 

@@ -269,14 +269,14 @@ void DecodeMotoADR(Word big_endian) {
                     TransTableCheckRead();
                     if (as_chartrans_xlate_nonz_dynstr(
                                 CurrTransTable->p_table, &Res.Contents.str, &Arg)) {
-                        Res.Typ = TempNone;
-                    } else {
-                        Cnt = Res.Contents.str.len;
+                        goto none;
                     }
+                    Cnt = Res.Contents.str.len;
                     break;
                 case TempFloat:
                     WrStrErrorPos(ErrNum_StringOrIntButFloat, &Arg);
                     /* fall-through */
+                none:
                 default:
                     Res.Typ = TempNone;
                     Cnt     = 0;

@@ -45,7 +45,7 @@ static String TargName;
 
 static LongWord StartAdr, StopAdr, EntryAdr, RealFileLen;
 static LongWord MaxGran, Dummy;
-static Boolean  StartAuto, StopAuto, AutoErase, EntryAdrPresent;
+static Boolean  StartAuto, StopAuto, AutoErase, EntryAdrPresent, last_byte_no_pad;
 
 static Byte    FillVal, ValidSegment;
 static Boolean DoCheckSum;
@@ -112,7 +112,7 @@ static void CloseTarget(void) {
 
     /* write entry address to file? */
 
-    if ((EntryAdrPresent) && (StartHeader != 0)) {
+    if (EntryAdrPresent && (StartHeader != 0)) {
         LongWord bpos;
 
         rewind(TargFile);
@@ -134,6 +134,10 @@ static void CloseTarget(void) {
 
     if (DoCheckSum) {
         LongWord Sum, Size, Rest, Trans, Read;
+
+        if (last_byte_no_pad) {
+            chkio_printf(TargName, "%s\n", getmessage(Num_WarnMessChecksumOverlaysData));
+        }
 
         TargFile = fopen(TargName, OPENUPMODE);
         if (!TargFile) {
@@ -239,7 +243,10 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                 InpStart += Offset;
                 ErgStart = max(StartAdr, InpStart);
                 ErgStop  = min(StopAdr, InpStart + (InpLen / Gran) - 1);
-                doit     = (ErgStop >= ErgStart);
+                if (ErgStop == StopAdr) {
+                    last_byte_no_pad = True;
+                }
+                doit = (ErgStop >= ErgStart);
                 if (doit) {
                     ErgLen = (ErgStop + 1 - ErgStart) * Gran;
                     if (AddChunk(&UsedList, ErgStart, ErgStop - ErgStart + 1, True)) {
@@ -572,19 +579,20 @@ int main(int argc, char** argv) {
 
     InitChunk(&UsedList);
 
-    StartAdr        = 0;
-    StopAdr         = 0x7fff;
-    StartAuto       = True;
-    StopAuto        = True;
-    FillVal         = 0xff;
-    DoCheckSum      = False;
-    SizeDiv         = 1;
-    ANDEq           = 0;
-    EntryAdr        = -1;
-    EntryAdrPresent = False;
-    AutoErase       = False;
-    StartHeader     = 0;
-    ValidSegment    = SegCode;
+    StartAdr         = 0;
+    StopAdr          = 0x7fff;
+    StartAuto        = True;
+    StopAuto         = True;
+    FillVal          = 0xff;
+    DoCheckSum       = False;
+    last_byte_no_pad = False;
+    SizeDiv          = 1;
+    ANDEq            = 0;
+    EntryAdr         = -1;
+    EntryAdrPresent  = False;
+    AutoErase        = False;
+    StartHeader      = 0;
+    ValidSegment     = SegCode;
 
     as_cmd_register(P2BINParams, as_array_size(P2BINParams));
     if (e_cmd_err == as_cmd_process(argc, argv, "P2BINCMD", &cmd_results)) {
@@ -652,7 +660,7 @@ int main(int argc, char** argv) {
     p_target_name = NULL;
 
     MaxGran = 1;
-    if ((StartAuto) || (StopAuto)) {
+    if (StartAuto || StopAuto) {
         if (StartAuto) {
             StartAdr = 0xfffffffful;
         }

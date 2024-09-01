@@ -1279,6 +1279,8 @@ static void ConstStringVal(tStrComp const* pExpr, TempResult* pDest, Boolean* pR
                 break;
             default:
                 *pResult = True;
+                pStr     = NULL;
+                TLen     = 0;
                 OK       = False;
             }
             if (OK) {
