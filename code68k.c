@@ -1501,6 +1501,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         HVal &= 0x7fff;
                     }
                     OutDispLen = (IsDisp16(HVal)) ? 1 : 2;
+		    if (!CheckFamilyCore(ExtAddrFamilyMask))
+			    OutDispLen = 1;
                 }
                 switch (OutDispLen) {
                 case 1:
@@ -1542,6 +1544,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         HVal &= 0x7f;
                     }
                     OutDispLen = GetDispLen(HVal);
+		    if (!CheckFamilyCore(ExtAddrFamilyMask))
+			    OutDispLen = 0;
                 }
                 pResult->Mode = 0x3b;
                 switch (OutDispLen) {
