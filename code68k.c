@@ -1496,7 +1496,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     return ModNone;
                 }
                 if (OutDispLen < 0) {
-                    if (mSymbolQuestionable(Flags)
+                    if (mFirstPassUnknownOrQuestionable(Flags)
                         && !CheckFamilyCore(ExtAddrFamilyMask)) {
                         HVal &= 0x7fff;
                     }
@@ -1505,7 +1505,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 switch (OutDispLen) {
                 case 1:
                     pResult->Mode = 0x3a;
-                    if (!mSymbolQuestionable(Flags) && !IsDisp16(HVal)) {
+                    if (!mFirstPassUnknownOrQuestionable(Flags) && !IsDisp16(HVal)) {
                         WrError(ErrNum_DistTooBig);
                         return ModNone;
                     }
@@ -1537,7 +1537,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     return ModNone;
                 }
                 if (OutDispLen < 0) {
-                    if (mSymbolQuestionable(Flags)
+                    if (mFirstPassUnknownOrQuestionable(Flags)
                         && !CheckFamilyCore(ExtAddrFamilyMask)) {
                         HVal &= 0x7f;
                     }
@@ -1546,7 +1546,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 pResult->Mode = 0x3b;
                 switch (OutDispLen) {
                 case 0:
-                    if (!mSymbolQuestionable(Flags) && !IsDisp8(HVal)) {
+                    if (!mFirstPassUnknownOrQuestionable(Flags) && !IsDisp8(HVal)) {
                         WrError(ErrNum_DistTooBig);
                         return ModNone;
                     }
@@ -1560,7 +1560,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     }
                     goto chk;
                 case 1:
-                    if (!mSymbolQuestionable(Flags) && !IsDisp16(HVal)) {
+                    if (!mFirstPassUnknownOrQuestionable(Flags) && !IsDisp16(HVal)) {
                         WrError(ErrNum_DistTooBig);
                         return ModNone;
                     }
@@ -4094,7 +4094,7 @@ static void DecodeBcc(Word CondCode) {
                 /* zu weit ? */
 
                 HVal16 = HVal;
-                if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) {
+                if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     /* Code erzeugen */
@@ -4111,14 +4111,14 @@ static void DecodeBcc(Word CondCode) {
                 /* zu weit ? */
 
                 HVal8 = HVal;
-                if (!IsDisp8(HVal) && !mSymbolQuestionable(Flags)) {
+                if (!IsDisp8(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 }
 
                 /* cannot generate short BSR with zero displacement, and BSR cannot
                    be replaced with NOP -> error */
 
-                else if ((HVal == 0) && IsBSR && !mSymbolQuestionable(Flags)) {
+                else if ((HVal == 0) && IsBSR && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 }
 
@@ -4191,7 +4191,7 @@ static void DecodeDBcc(Word CondCode) {
         if (ValOK) {
             HVal -= (EProgCounter() + 2);
             HVal16 = HVal;
-            if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) {
+            if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 tAdrResult AdrResult;
@@ -4885,7 +4885,7 @@ static void DecodeFBcc(Word CondCode) {
             }
 
             if ((OpSize == eSymbolSize32Bit) || (OpSize == eSymbolSize16Bit)) {
-                if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) {
+                if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     CodeLen     = 4;
@@ -4931,7 +4931,7 @@ static void DecodeFDBcc(Word CondCode) {
                 if (ValOK) {
                     HVal16      = HVal;
                     WAsmCode[2] = HVal16;
-                    if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) {
+                    if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                         WrError(ErrNum_JmpDistTooBig);
                     } else {
                         CodeLen = 6;
@@ -5441,7 +5441,7 @@ static void DecodePBcc(Word CondCode) {
             }
 
             if ((OpSize == eSymbolSize32Bit) || (OpSize == eSymbolSize16Bit)) {
-                if (!IsDisp16(HVal) && !mSymbolQuestionable(Flags)) {
+                if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     CodeLen     = 4;
@@ -5486,7 +5486,7 @@ static void DecodePDBcc(Word CondCode) {
                 if (ValOK) {
                     HVal16      = HVal;
                     WAsmCode[2] = HVal16;
-                    if ((!IsDisp16(HVal)) && !mSymbolQuestionable(Flags)) {
+                    if ((!IsDisp16(HVal)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                         WrError(ErrNum_JmpDistTooBig);
                     } else {
                         CodeLen = 6;
@@ -5923,7 +5923,7 @@ static void DecodeCPBCBUSY(Word Code) {
         Dist = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags)
                - (EProgCounter() + 2);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && !IsDisp16(Dist)) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && !IsDisp16(Dist)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 WAsmCode[0] = Code;
