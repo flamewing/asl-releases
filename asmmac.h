@@ -70,6 +70,7 @@ typedef struct tag_TInputTag {
     PMacroRec                 Macro;
     struct sTokenReplacement* Replacements;
     Boolean                   SequentialTokens;
+    LongInt                   LocHandle;
 } TInputTag, *PInputTag;
 
 typedef struct tag_TOutputTag {

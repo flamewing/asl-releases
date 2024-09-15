@@ -62,3 +62,5 @@ The names listed here should be avoided for own symbols; either one can define b
 <!-- markdownlint-enable MD001 -->
 
 `FLOATMAX` is the largest finite floating-point value representable on the host.
+
+On hosts that parse infinity, `INF` is reserved as a floating-point infinity and cannot be a user-defined symbol.

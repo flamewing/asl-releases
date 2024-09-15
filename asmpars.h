@@ -262,8 +262,6 @@ extern Boolean  as_eval_cb_data_stackelem_mul(as_eval_cb_data_stack_t const* p_s
 
 extern void SetSymbolOrStructElemSize(const struct sStrComp* pName, tSymbolSize Size);
 
-extern ShortInt GetSymbolSize(const struct sStrComp* pName);
-
 extern Boolean IsSymbolDefined(const struct sStrComp* pName);
 
 extern Boolean IsSymbolUsed(const struct sStrComp* pName);

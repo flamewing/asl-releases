@@ -564,7 +564,7 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     /* before the first line, start a new local symbol space */
 
     if ((PInp->LineZ == 1) && (!PInp->GlobalSymbols)) {
-        PushLocHandle(GetLocHandle());
+        PushLocHandle(PInp->LocHandle);
     }
 
     /* signal the end of the macro */
@@ -877,7 +877,7 @@ static void MACRO_Restorer(PInputTag PInp) {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Dies initialisiert eine Makroexpansion */
 
-static void ExpandMacro(PMacroRec OneMacro) {
+static Boolean ExpandMacro(PMacroRec OneMacro) {
     int          z1, z2;
     StringRecPtr Lauf, pDefault, pParamName, pArg;
     PInputTag    Tag = NULL;
@@ -899,6 +899,7 @@ static void ExpandMacro(PMacroRec OneMacro) {
         Tag->Cleanup       = MACRO_Cleanup;
         Tag->GetPos        = MACRO_GetPos;
         Tag->Macro         = OneMacro;
+        Tag->LocHandle     = GetLocHandle();
         Tag->GlobalSymbols = OneMacro->GlobalSymbols;
         Tag->UsesNumArgs   = OneMacro->UsesNumArgs;
         Tag->UsesAllArgs   = OneMacro->UsesAllArgs;
@@ -1044,10 +1045,14 @@ static void ExpandMacro(PMacroRec OneMacro) {
             Tag->Next     = FirstInputTag;
             FirstInputTag = Tag;
             MacroNestLevel++;
+            return True;
         } else {
             ClearStringList(&(Tag->Params));
             free(Tag);
+            return False;
         }
+    } else {
+        return False;
     }
 }
 
@@ -2625,13 +2630,18 @@ static void Produce_Code(void) {
     else if (IsMacro) {
         ResetLastLabel = False;
         if (IfAsm) {
-            ExpandMacro(OneMacro);
+            Boolean expanded = ExpandMacro(OneMacro);
             if ((MacroNestLevel > 1) && (MacroNestLevel < 100)) {
                 as_snprintf(
                         ListLine, STRINGSIZE, "%*s(MACRO-%u)", (int)MacroNestLevel - 1,
                         "", MacroNestLevel);
             } else {
                 strmaxcpy(ListLine, "(MACRO)", STRINGSIZE);
+            }
+            if (expanded) {
+                as_snprcatf(
+                        ListLine, STRINGSIZE, "[%lu]",
+                        (unsigned long)FirstInputTag->LocHandle);
             }
 
             /* Macro call itself must not appear in expanded output.  However, a label
@@ -4015,6 +4025,12 @@ static as_cmd_result_t CMD_GNUErrors(Boolean Negate, char const* Arg) {
     return e_cmd_ok;
 }
 
+static as_cmd_result_t CMD_ListMacroHandles(Boolean negate, char const* p_arg) {
+    UNUSED(p_arg);
+    list_macro_handles = !negate;
+    return e_cmd_ok;
+}
+
 static as_cmd_result_t CMD_IncludeList(Boolean Negate, char const* Arg) {
     char*  p;
     String Copy, part;
@@ -4323,46 +4339,47 @@ static as_cmd_result_t CMD_MaxIncludeLevel(Boolean Negate, char const* pArg) {
 }
 
 static as_cmd_rec_t const ASParams[] = {
-        {           "A",     CMD_BalanceTree},
-        {       "alias",        CMD_CPUAlias},
-        {           "a",  CMD_ShareAssembler},
-        {           "C",       CMD_CrossList},
-        {           "c",          CMD_ShareC},
-        {         "CPU",          CMD_SetCPU},
-        {           "D",       CMD_DefSymbol},
-        {           "E",       CMD_ErrorPath},
-        {           "g",       CMD_DebugMode},
-        {           "G",      CMD_CodeOutput},
-        {   "gnuerrors",       CMD_GNUErrors},
-        {           "h",    CMD_HexLowerCase},
-        {           "i",     CMD_IncludeList},
-        {           "I", CMD_MakeIncludeList},
-        {           "L",        CMD_ListFile},
-        {           "l",     CMD_ListConsole},
-        {   "listradix",       CMD_ListRadix},
-        {   "splitbyte",       CMD_SplitByte},
-        {           "M",     CMD_MacroOutput},
-        {   "maxerrors",       CMD_MaxErrors},
-        { "maxinclevel", CMD_MaxIncludeLevel},
-        {           "n",   CMD_NumericErrors},
-        {   "noicemask",       CMD_NoICEMask},
-        {           "o",         CMD_OutFile},
-        {           "P",    CMD_MacProOutput},
-        {           "p",     CMD_SharePascal},
-        {           "r",     CMD_MsgIfRepass},
-        {   RelaxedName,         CMD_Relaxed},
-        {           "s",     CMD_SectionList},
-        {"screenheight",   CMD_screen_height},
-        {    "shareout",    CMD_ShareOutFile},
-        {       "olist",     CMD_ListOutFile},
-        {           "t",        CMD_ListMask},
-        {           "u",         CMD_UseList},
-        {           "U",   CMD_CaseSensitive},
-        {           "w",       CMD_SuppWarns},
-        {  "warnranges",      CMD_HardRanges},
-        {           "x",    CMD_ExtendErrors},
-        {           "X",       CMD_MakeDebug},
-        {           "Y",     CMD_ThrowErrors}
+        {                 "A",      CMD_BalanceTree},
+        {             "alias",         CMD_CPUAlias},
+        {                 "a",   CMD_ShareAssembler},
+        {                 "C",        CMD_CrossList},
+        {                 "c",           CMD_ShareC},
+        {               "CPU",           CMD_SetCPU},
+        {                 "D",        CMD_DefSymbol},
+        {                 "E",        CMD_ErrorPath},
+        {                 "g",        CMD_DebugMode},
+        {                 "G",       CMD_CodeOutput},
+        {         "gnuerrors",        CMD_GNUErrors},
+        {                 "h",     CMD_HexLowerCase},
+        {                 "i",      CMD_IncludeList},
+        {                 "I",  CMD_MakeIncludeList},
+        {                 "L",         CMD_ListFile},
+        {                 "l",      CMD_ListConsole},
+        {         "listradix",        CMD_ListRadix},
+        {         "splitbyte",        CMD_SplitByte},
+        {                 "M",      CMD_MacroOutput},
+        {         "maxerrors",        CMD_MaxErrors},
+        {       "maxinclevel",  CMD_MaxIncludeLevel},
+        {                 "n",    CMD_NumericErrors},
+        {         "noicemask",        CMD_NoICEMask},
+        {                 "o",          CMD_OutFile},
+        {                 "P",     CMD_MacProOutput},
+        {                 "p",      CMD_SharePascal},
+        {                 "r",      CMD_MsgIfRepass},
+        {         RelaxedName,          CMD_Relaxed},
+        {                 "s",      CMD_SectionList},
+        {      "screenheight",    CMD_screen_height},
+        {          "shareout",     CMD_ShareOutFile},
+        {             "olist",      CMD_ListOutFile},
+        {"list-macro-handles", CMD_ListMacroHandles},
+        {                 "t",         CMD_ListMask},
+        {                 "u",          CMD_UseList},
+        {                 "U",    CMD_CaseSensitive},
+        {                 "w",        CMD_SuppWarns},
+        {        "warnranges",       CMD_HardRanges},
+        {                 "x",     CMD_ExtendErrors},
+        {                 "X",        CMD_MakeDebug},
+        {                 "Y",      CMD_ThrowErrors}
 };
 
 /*--------------------------------------------------------------------------*/
@@ -4560,21 +4577,22 @@ int main(int argc, char** argv) {
         break;
     }
 
-    ShareMode       = 0;
-    ListMode        = 0;
-    IncludeList[0]  = '\0';
-    SuppWarns       = False;
-    MakeUseList     = False;
-    MakeCrossList   = False;
-    MakeSectionList = False;
-    MakeIncludeList = False;
-    ListMask        = 0x1ff;
-    MakeDebug       = False;
-    ExtendErrors    = 0;
-    DefRelaxedMode  = False;
-    MacroOutput     = False;
-    MacProOutput    = False;
-    CodeOutput      = True;
+    ShareMode          = 0;
+    ListMode           = 0;
+    IncludeList[0]     = '\0';
+    SuppWarns          = False;
+    MakeUseList        = False;
+    MakeCrossList      = False;
+    MakeSectionList    = False;
+    MakeIncludeList    = False;
+    ListMask           = 0x1ff;
+    list_macro_handles = False;
+    MakeDebug          = False;
+    ExtendErrors       = 0;
+    DefRelaxedMode     = False;
+    MacroOutput        = False;
+    MacProOutput       = False;
+    CodeOutput         = True;
     strcpy(ErrorPath, "!2");
     MsgIfRepass         = False;
     NumericErrors       = False;

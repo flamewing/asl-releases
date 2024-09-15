@@ -329,3 +329,5 @@ Listing prefix format errors: **10010** (fatal), invalid placeholder; use `%i`, 
 
 
 Warning 470, **instruction assembled as NOP**: the nominal opcode has another purpose on the selected CPU. A no-operation instruction is emitted as NOP instead.
+
+Error 1030, **reserved symbol name**: a syntactically valid name is reserved for another purpose and cannot be defined by the program.

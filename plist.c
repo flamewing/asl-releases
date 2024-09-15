@@ -99,7 +99,7 @@ static void ProcessSingle(char const* pFileName) {
                 chk_wr_read_error(pFileName);
             }
             chkio_printf(
-                    "%s%08lX\n", OutName, getmessage(Num_MessEntryPoint),
+                    OutName, "%s%08lX\n", getmessage(Num_MessEntryPoint),
                     LoDWord(StartAdr));
         }
 

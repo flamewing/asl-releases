@@ -18,6 +18,7 @@
 
 #include "aplfloat.h"
 #include "as_endian.h"
+#include "as_float.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -561,83 +562,97 @@ static void DigIns(char Ch, int Pos, Byte* pDest) {
 }
 
 int ConvertMotoFloatDec(as_float_t F, Byte* pDest, Boolean NeedsBig) {
-    char  s[30], Man[30], Exp[30];
-    char* pSplit;
-    int   z, ManLen, ExpLen;
-    Byte  epos;
+    as_float_dissect_t dissect;
 
     UNUSED(NeedsBig);
-
-    /* TODO: as_fabs(F) <= 9.22e18; */
-    /* convert to ASCII, split mantissa & exponent */
-
-    as_snprintf(s, sizeof(s), "%0.*lllle", AS_FLOAT_DIG + 1, F);
-    pSplit = strchr(s, HexStartCharacter + ('e' - 'a'));
-    if (!pSplit) {
-        strcpy(Man, s);
-        strcpy(Exp, "+0000");
-    } else {
-        *pSplit = '\0';
-        strcpy(Man, s);
-        strcpy(Exp, pSplit + 1);
-    }
-
     memset(pDest, 0, 12);
 
-    /* handle mantissa sign */
+    as_float_dissect(&dissect, F);
+    switch (dissect.fp_class) {
+    case AS_FP_NAN:
+        pDest[7] = 0x80;
+        /* FALL-THRU */
+    case AS_FP_INFINITE:
+        pDest[11] = dissect.negative ? 0xff : 0x7f;
+        pDest[10] = 0xff;
+        break;
+    default: {
+        char  s[30], Man[30], Exp[30];
+        char* pSplit;
+        int   z, ManLen, ExpLen;
+        Byte  epos;
 
-    if (*Man == '-') {
-        pDest[11] |= 0x80;
-        strmov(Man, Man + 1);
-    } else if (*Man == '+') {
-        strmov(Man, Man + 1);
-    }
+        /* TODO: as_fabs(F) <= 9.22e18; */
+        /* convert to ASCII, split mantissa & exponent */
 
-    /* handle exponent sign */
-
-    if (*Exp == '-') {
-        pDest[11] |= 0x40;
-        strmov(Exp, Exp + 1);
-    } else if (*Exp == '+') {
-        strmov(Exp, Exp + 1);
-    }
-
-    /* integral part of mantissa (one digit) */
-
-    DigIns(*Man, 16, pDest);
-    strmov(Man, Man + 2);
-
-    /* truncate mantissa if we have more digits than we can represent */
-
-    if (strlen(Man) > 16) {
-        Man[16] = '\0';
-    }
-
-    /* insert mantissa digits */
-
-    ManLen = strlen(Man);
-    for (z = 0; z < ManLen; z++) {
-        DigIns(Man[z], 15 - z, pDest);
-    }
-
-    /* truncate exponent if we have more digits than we can represent - this should
-       never occur since an extended float is limited to ~1E4932 and we have four digits
-     */
-
-    if (strlen(Exp) > 4) {
-        strmov(Exp, Exp + strlen(Exp) - 4);
-    }
-
-    /* insert exponent bits */
-
-    ExpLen = strlen(Exp);
-    for (z = ExpLen - 1; z >= 0; z--) {
-        epos = ExpLen - 1 - z;
-        if (epos == 3) {
-            DigIns(Exp[z], 19, pDest);
+        as_snprintf(s, sizeof(s), "%0.*lllle", AS_FLOAT_DIG + 1, F);
+        pSplit = strchr(s, HexStartCharacter + ('e' - 'a'));
+        if (!pSplit) {
+            strcpy(Man, s);
+            strcpy(Exp, "+0000");
         } else {
-            DigIns(Exp[z], epos + 20, pDest);
+            *pSplit = '\0';
+            strcpy(Man, s);
+            strcpy(Exp, pSplit + 1);
         }
+
+        /* handle mantissa sign */
+
+        if (*Man == '-') {
+            pDest[11] |= 0x80;
+            strmov(Man, Man + 1);
+        } else if (*Man == '+') {
+            strmov(Man, Man + 1);
+        }
+
+        /* handle exponent sign */
+
+        if (*Exp == '-') {
+            pDest[11] |= 0x40;
+            strmov(Exp, Exp + 1);
+        } else if (*Exp == '+') {
+            strmov(Exp, Exp + 1);
+        }
+
+        /* integral part of mantissa (one digit) */
+
+        DigIns(*Man, 16, pDest);
+        strmov(Man, Man + 2);
+
+        /* truncate mantissa if we have more digits than we can represent */
+
+        if (strlen(Man) > 16) {
+            Man[16] = '\0';
+        }
+
+        /* insert mantissa digits */
+
+        ManLen = strlen(Man);
+        for (z = 0; z < ManLen; z++) {
+            DigIns(Man[z], 15 - z, pDest);
+        }
+
+        /* truncate exponent if we have more digits than we can represent - this should
+           never occur since an extended float is limited to ~1E4932 and we have four
+           digits */
+
+        if (strlen(Exp) > 4) {
+            strmov(Exp, Exp + strlen(Exp) - 4);
+        }
+
+        /* insert exponent bits */
+
+        ExpLen = strlen(Exp);
+        for (z = ExpLen - 1; z >= 0; z--) {
+            epos = ExpLen - 1 - z;
+            if (epos == 3) {
+                DigIns(Exp[z], 19, pDest);
+            } else {
+                DigIns(Exp[z], epos + 20, pDest);
+            }
+        }
+        break;
+    }
     }
 
     WSwapLittleEndianToHost(pDest, 12);

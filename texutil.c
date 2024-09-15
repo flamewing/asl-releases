@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DBG_IF 0
+
 /*--------------------------------------------------------------------------*/
 
 Boolean DoRepass;
