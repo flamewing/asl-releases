@@ -2416,8 +2416,8 @@ The `ELSEIF` parts are optional, i.e. `IF` may directly be followed by an `ENDIF
 
 In addition to `IF`, the following further conditional statements are defined:
 
-- `IFDEF <symbol>`: true if the given symbol has been defined. The definition has to appear before `IFDEF`.
-- `IFNDEF <symbol>`: counterpart to `IFDEF`.
+- `IFDEF <expression>`: true if every symbol in the expression is already defined.
+- `IFNDEF <expression>`: counterpart to `IFDEF`.
 - `IFUSED <symbol>`: true if if the given symbol has been referenced at least once up to now.
 - `IFNUSED <symbol>`: counterpart to `IFUSED`.
 - `IFEXIST <name>`: true if the given file exists. The same rules for search paths and syntax apply as for the `INCLUDE` instruction (see section [INCLUDE](#include)).

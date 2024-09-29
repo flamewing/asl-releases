@@ -587,9 +587,10 @@ static void CodeSHARED_BuildComment(char* c, size_t DestSize) {
 }
 
 static void CodeSHARED(Word Index) {
-    tStrComp*  pArg;
-    String     s, c;
-    TempResult t;
+    tStrComp*               pArg;
+    String                  s, c;
+    TempResult              t;
+    as_symbol_entry_flags_t symbol_flags;
 
     UNUSED(Index);
     as_tempres_ini(&t);
@@ -603,7 +604,7 @@ static void CodeSHARED(Word Index) {
         ChkIO(ErrNum_FileWriteError);
     } else {
         forallargs(pArg, True) {
-            LookupSymbol(pArg, &t, False, TempAll);
+            LookupSymbol(pArg, &t, False, TempAll, e_eval_flag_none, &symbol_flags);
 
             switch (t.Typ) {
             case TempInt:
@@ -651,7 +652,10 @@ static void CodeSHARED(Word Index) {
                 fprintf(ShareFile, "#define %s %s%s\n", pArg->str.p_str, s, c);
                 break;
             case 3:
-                strmaxprep(s, IsSymbolChangeable(pArg) ? "set " : "equ ", STRINGSIZE);
+                strmaxprep(
+                        s,
+                        (symbol_flags & e_symbol_entry_flag_changeable) ? "set " : "equ ",
+                        STRINGSIZE);
                 fprintf(ShareFile, "%s %s%s\n", pArg->str.p_str, s, c);
                 break;
             }
@@ -669,7 +673,7 @@ static void CodeEXPORT(Word Index) {
     as_tempres_ini(&t);
 
     forallargs(pArg, True) {
-        LookupSymbol(pArg, &t, True, TempInt);
+        LookupSymbol(pArg, &t, True, TempInt, e_eval_flag_none, NULL);
         if (TempNone == t.Typ) {
             continue;
         }

@@ -3118,8 +3118,18 @@ static void AssembleFile_InitPass(void) {
     EnterIntSymbol(&TmpComp, 0, SegNone, True);
     strmaxcpy(TmpCompStr, PiName, sizeof(TmpCompStr));
     EnterFloatSymbol(&TmpComp, 4.0 * as_atan(1.0), True);
+
+    /* Valgrind breaks usage of long doubles on x86.  Limit
+       to double if using it: */
+
     strmaxcpy(TmpCompStr, FloatMaxName, sizeof(TmpCompStr));
-    EnterFloatSymbol(&TmpComp, AS_FLOAT_MAX, True);
+#if defined(IEEEFLOAT_10_16_LONG_DOUBLE) || defined(IEEEFLOAT_10_12_LONG_DOUBLE)
+    if (getenv("VALGRIND") && !strcmp(getenv("VALGRIND"), "1")) {
+        EnterFloatSymbol(&TmpComp, DBL_MAX, True);
+    } else
+#endif
+        EnterFloatSymbol(&TmpComp, AS_FLOAT_MAX, True);
+
     strmaxcpy(TmpCompStr, VerName, sizeof(TmpCompStr));
     EnterIntSymbol(&TmpComp, VerNo, SegNone, True);
     as_snprintf(ArchVal, sizeof(ArchVal), "%s-%s", ARCHPRNAME, ARCHSYSNAME);

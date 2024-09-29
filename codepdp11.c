@@ -1712,7 +1712,7 @@ static void add_cis(char const* p_name, Word code, InstProc inline_proc) {
 }
 
 static void init_fields_pdp11(void) {
-    InstTable = CreateInstTable(201);
+    InstTable = CreateInstTable(302);
     SetDynamicInstTable(InstTable);
 
     AddInstTable(InstTable, "BPT", 000003, decode_fixed);
@@ -1811,6 +1811,10 @@ static void init_fields_pdp11(void) {
             InstTable, "STEXP", 0175000 | CODE_FLAG_ARGSWAP | CODE_FLAG_16BIT,
             decode_fp11_f1_f3);
     add_fp11("LD", 0172400 | CODE_FLAG_GEN_IMM, decode_fp11_f1_f3);
+    AddInstTable(
+            InstTable, "STCFD", 0176000 | CODE_FLAG_ARGSWAP | CODE_FLAG_F64BIT,
+            decode_fp11_f1_f3);
+    AddInstTable(InstTable, "STCDF", 0176000 | CODE_FLAG_ARGSWAP, decode_fp11_f1_f3);
     add_fp11("ST", 0174000 | CODE_FLAG_ARGSWAP, decode_fp11_f1_f3);
     add_fp11("MOD", 0171400 | CODE_FLAG_GEN_IMM, decode_fp11_f1_f3);
     add_fp11("MUL", 0171000 | CODE_FLAG_GEN_IMM, decode_fp11_f1_f3);

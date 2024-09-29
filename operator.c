@@ -268,9 +268,14 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             LargeInt  RIntVal;
             tErrorNum error_num = NonZString2Int(&pRVal->Contents.str, &RIntVal);
 
+            RIntVal += pLVal->Contents.Int;
             if (ErrNum_None == error_num) {
-                as_tempres_set_c_str(pErg, "");
-                Int2NonZString(&pErg->Contents.str, RIntVal + pLVal->Contents.Int);
+                if (RIntVal >= 0) {
+                    as_tempres_set_c_str(pErg, "");
+                    Int2NonZString(&pErg->Contents.str, RIntVal);
+                } else {
+                    as_tempres_set_int(pErg, RIntVal);
+                }
             } else {
                 WrError(error_num);
             }
@@ -296,8 +301,13 @@ static void AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             tErrorNum error_num = NonZString2Int(&pLVal->Contents.str, &LIntVal);
 
             if (ErrNum_None == error_num) {
-                as_tempres_set_c_str(pErg, "");
-                Int2NonZString(&pErg->Contents.str, LIntVal + pRVal->Contents.Int);
+                LIntVal += pRVal->Contents.Int;
+                if (LIntVal >= 0) {
+                    as_tempres_set_c_str(pErg, "");
+                    Int2NonZString(&pErg->Contents.str, LIntVal);
+                } else {
+                    as_tempres_set_int(pErg, LIntVal);
+                }
             } else {
                 WrError(error_num);
             }

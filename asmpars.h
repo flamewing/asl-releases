@@ -112,7 +112,25 @@ typedef enum {
     e_symbol_source_define
 } as_symbol_source_t;
 
-typedef struct tag_TFunction {
+typedef enum {
+    e_eval_flag_none                 = 0,
+    e_eval_flag_undefined_is_unknown = 1 << 0
+} as_eval_flags_t;
+#ifdef __cplusplus
+DefCPPOps_Mask(as_eval_flags_t)
+#endif
+
+        typedef enum {
+    e_symbol_entry_flag_defined    = 1 << 0,
+    e_symbol_entry_flag_used       = 1 << 1,
+    e_symbol_entry_flag_changed    = 1 << 2,
+    e_symbol_entry_flag_changeable = 1 << 3
+} as_symbol_entry_flags_t;
+#ifdef __cplusplus
+DefCPPOps_Mask(as_symbol_entry_flags_t)
+#endif
+
+        typedef struct tag_TFunction {
     struct tag_TFunction* Next;
     Byte                  ArguCnt;
     StringPtr             Name, Definition;
@@ -236,7 +254,8 @@ extern void EnterRegSymbol(
 
 extern void LookupSymbol(
         const struct sStrComp* pName, TempResult* pValue, Boolean WantRelocs,
-        TempType ReqType);
+        TempType ReqType, as_eval_flags_t eval_flags,
+        as_symbol_entry_flags_t* p_symbol_entry_flags);
 
 extern void PrintSymbolList(void);
 
@@ -266,15 +285,13 @@ extern Boolean IsSymbolDefined(const struct sStrComp* pName);
 
 extern Boolean IsSymbolUsed(const struct sStrComp* pName);
 
-extern Boolean IsSymbolChangeable(const struct sStrComp* pName);
-
 extern Integer GetSymbolType(const struct sStrComp* pName);
 
 extern void EvalExpression(char const* pExpr, TempResult* Erg);
 
 extern void EvalStrExpression(const struct sStrComp* pExpr, TempResult* pErg);
 extern void EvalStrExpressionWithCallback(
-        const struct sStrComp* pExpr, TempResult* pErg,
+        const struct sStrComp* pExpr, TempResult* pErg, as_eval_flags_t eval_flags,
         as_eval_cb_data_t* p_callback_data);
 
 extern void SetIntConstModeByMask(LongWord Mask);

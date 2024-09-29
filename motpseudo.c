@@ -900,12 +900,21 @@ static void EnterMotoFloatDec(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 11] = Hi(pField[5]);
         }
     } else {
-        WAsmCode[(CodeLen >> 1)]     = pField[5];
-        WAsmCode[(CodeLen >> 1) + 1] = pField[4];
-        WAsmCode[(CodeLen >> 1) + 2] = pField[3];
-        WAsmCode[(CodeLen >> 1) + 3] = pField[2];
-        WAsmCode[(CodeLen >> 1) + 4] = pField[1];
-        WAsmCode[(CodeLen >> 1) + 5] = pField[0];
+        if (BigEndian) {
+            WAsmCode[(CodeLen >> 1)]     = pField[5];
+            WAsmCode[(CodeLen >> 1) + 1] = pField[4];
+            WAsmCode[(CodeLen >> 1) + 2] = pField[3];
+            WAsmCode[(CodeLen >> 1) + 3] = pField[2];
+            WAsmCode[(CodeLen >> 1) + 4] = pField[1];
+            WAsmCode[(CodeLen >> 1) + 5] = pField[0];
+        } else {
+            WAsmCode[(CodeLen >> 1)]     = pField[0];
+            WAsmCode[(CodeLen >> 1) + 1] = pField[1];
+            WAsmCode[(CodeLen >> 1) + 2] = pField[2];
+            WAsmCode[(CodeLen >> 1) + 3] = pField[3];
+            WAsmCode[(CodeLen >> 1) + 4] = pField[4];
+            WAsmCode[(CodeLen >> 1) + 5] = pField[5];
+        }
     }
     CodeLen += 12;
 }

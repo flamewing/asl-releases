@@ -1194,6 +1194,8 @@ static void if_num_consume(struct tex_output_consumer* p_consumer, char const** 
             condition = True;
         } else if (!as_strcasecmp(p_ctx->op, ">")) {
             condition = (p_ctx->num[0] > p_ctx->num[1]);
+        } else if (!as_strcasecmp(p_ctx->op, "<")) {
+            condition = (p_ctx->num[0] < p_ctx->num[1]);
         } else {
             tex_warning("unknown operator: '%s'", p_ctx->op);
             condition = True;
@@ -1452,7 +1454,7 @@ void TeXNewCommand(Word Index) {
 
     collect_arg_tokens(sum_token, sizeof(sum_token));
     if (!as_strcasecmp(command, "cpu") || !as_strcasecmp(command, "asname")
-        || !as_strcasecmp(command, "errentry")) {
+        || !as_strcasecmp(command, "errentry") || !as_strcasecmp(command, "headid")) {
         tex_newcommand_add(command, sum_token, num_args);
     }
 }
