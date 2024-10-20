@@ -142,7 +142,9 @@ static void ParseFile(
         }
         pCmd = strtok(line + 1, " \t");
 
-        if (!strcmp(pCmd, "include") && curr_if) {
+        if (!pCmd)
+            ;
+        else if (!strcmp(pCmd, "include") && curr_if) {
             pName = strtok(NULL, " \t");
             if (!pName) {
                 continue;

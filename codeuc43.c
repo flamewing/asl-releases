@@ -264,6 +264,10 @@ static void decode_czp(Word code) {
             address = (address >> 2) & 15;
         }
 
+        else {
+            WrStrErrorPos(ErrNum_TreatedAsVector, &ArgStr[1]);
+        }
+
         put_code(code | address);
     }
 }

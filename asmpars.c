@@ -1653,7 +1653,7 @@ static int operator_search_cb(
                        blank content right to unary op */
 
                 this_op_argcnt_match
-                        = (p_this_op->Dyadic)
+                        = (p_this_op->op_type != e_op_monadic)
                           == is_non_space_upto(p_data->p_after_last_op_start, p_pos);
                 if (!this_op_argcnt_match) {
                     continue;
@@ -1845,8 +1845,12 @@ void EvalStrExpressionWithCallback(
 
     if (operator_search_data.p_best_op) {
         int       ThisArgCnt, CompLen, z, z2;
+        int const op_arg_cnt
+                = (operator_search_data.p_best_op->op_type == e_op_monadic) ? 1 : 2,
+                first_op_index = 2 - op_arg_cnt;
         Byte      ThisOpMatch, BestOpMatch, SumCombinations, TypeMask;
         tLineComp op_line_pos;
+        Boolean   lhs_evaluated = False;
 
         /* Operandenzahl pruefen */
 
@@ -1863,13 +1867,11 @@ void EvalStrExpressionWithCallback(
         } else {
             ThisArgCnt = 2;
         }
-        if (!ChkArgCntExtPos(
-                    ThisArgCnt, operator_search_data.p_best_op->Dyadic ? 2 : 1,
-                    operator_search_data.p_best_op->Dyadic ? 2 : 1, &op_line_pos)) {
+        if (!ChkArgCntExtPos(ThisArgCnt, op_arg_cnt, op_arg_cnt, &op_line_pos)) {
             LEAVE;
         }
 
-        /* Teilausdruecke rekursiv auswerten */
+        /* Teilausdruecke rekursiv auswerten: */
 
         Save = StrCompSplitRef(
                 &InArgs[0], &InArgs[1], &CopyComp,
@@ -1879,15 +1881,34 @@ void EvalStrExpressionWithCallback(
         cb_data_stack.p_ident    = operator_search_data.p_best_op->Id;
         p_callback_data->p_stack = &cb_data_stack;
 
+        /* If short circuit evaluation is defined for the operator, evaluate
+           lhs first and exit if success: */
+
+        if (operator_search_data.p_best_op->op_type == e_op_dyadic_short) {
+            cb_data_stack.arg_index = 0;
+            EvalStrExpressionWithCallback(
+                    &InArgs[0], &InVals[0], eval_flags, p_callback_data);
+            lhs_evaluated = True;
+            if ((InVals[0].Typ == TempInt)
+                && operator_search_data.p_best_op->pFunc(pErg, &InVals[0], NULL)) {
+                CopyComp.str.p_str[operator_search_data.op_pos] = Save;
+                LEAVE;
+            }
+        }
+
+        /* OK, no short circuit.  But avoid evaluating lhs once again: */
+
         cb_data_stack.arg_index = 1;
         EvalStrExpressionWithCallback(
                 &InArgs[1], &InVals[1], eval_flags, p_callback_data);
-        if (operator_search_data.p_best_op->Dyadic) {
-            cb_data_stack.arg_index      = 0;
-            p_callback_data->p_other_arg = &InVals[1];
-            EvalStrExpressionWithCallback(
-                    &InArgs[0], &InVals[0], eval_flags, p_callback_data);
-            p_callback_data->p_other_arg = NULL;
+        if (op_arg_cnt == 2) {
+            if (!lhs_evaluated) {
+                cb_data_stack.arg_index      = 0;
+                p_callback_data->p_other_arg = &InVals[1];
+                EvalStrExpressionWithCallback(
+                        &InArgs[0], &InVals[0], eval_flags, p_callback_data);
+                p_callback_data->p_other_arg = NULL;
+            }
         } else if (InVals[1].Typ == TempFloat) {
             as_tempres_set_float(&InVals[0], 0.0);
         } else {
@@ -1922,7 +1943,7 @@ void EvalStrExpressionWithCallback(
             SumCombinations |= operator_search_data.p_best_op->TypeCombinations[z];
 
             ThisOpMatch = 0;
-            for (z2 = operator_search_data.p_best_op->Dyadic ? 0 : 1; z2 < 2; z2++) {
+            for (z2 = first_op_index; z2 < 2; z2++) {
                 ThisOpMatch |= TryConvert(
                         GetOpTypeMask(
                                 operator_search_data.p_best_op->TypeCombinations[z], z2),
@@ -1939,7 +1960,7 @@ void EvalStrExpressionWithCallback(
         /* did not find a way to satisfy restrictions, even by conversions? */
 
         if (BestOpMatch >= 255) {
-            for (z2 = operator_search_data.p_best_op->Dyadic ? 0 : 1; z2 < 2; z2++) {
+            for (z2 = first_op_index; z2 < 2; z2++) {
                 TypeMask = GetOpTypeMask(SumCombinations, z2);
                 if (!(TypeMask & InVals[z2].Typ)) {
                     WrStrErrorPos(
@@ -1952,7 +1973,7 @@ void EvalStrExpressionWithCallback(
 
         /* necessary conversions: */
 
-        for (z2 = operator_search_data.p_best_op->Dyadic ? 0 : 1; z2 < 2; z2++) {
+        for (z2 = first_op_index; z2 < 2; z2++) {
             TypeMask = (BestOpMatch >> (z2 * 4)) & 15;
             if (TypeMask & 2) { /* String -> Int */
                 TempResultToInt(&InVals[z2]);

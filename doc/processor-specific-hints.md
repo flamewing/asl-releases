@@ -1985,3 +1985,9 @@ With P1–P3 as the base register, displacement `-128` (`80` hex) selects the co
 `J` selects the shortest valid relative or absolute jump based on distance and condition. On Z80 and derived targets (Z80UNDOC, Z180, Rabbit2000 and LR35902), relative jumps reach -128 through +127 bytes and support only selected conditions. On Z380, the largest relative form reaches approximately ±8 MiB before an absolute form is needed. Choose this instruction carefully: relative code is position-independent, whereas absolute jumps require relocation.
 
 In 8080/8085 Z80 syntax, `J` is always translated to `JP`, since these processors have no relative jump instruction.
+
+## μCOM-43 CZP
+
+`CZP` performs a one-byte call to addresses 0, 4, 8, …, 60. Documentation differs on whether its operand is the address or the opcode vector (0…15). AS interprets values above 15 as addresses and values not divisible by four as vectors. Zero works either way. For 4, 8 and 12, a CODE-space symbol means an address; an untyped number means a vector and produces warning 480.
+
+Define an address with `dest LABEL 4` and use `CZP dest`. If a vector is intended, an `EXPECT 480` / `ENDEXPECT` block can acknowledge the ambiguity.

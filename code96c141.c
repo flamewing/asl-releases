@@ -539,8 +539,12 @@ DECLARE_AS_EVAL_CB(tlcs900_eval_cb) {
     }
 }
 
-static void force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
+static Boolean force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     tSymbolFlags add_flags = eSymbolFlag_None;
+
+    if (!pLVal || !pRVal) {
+        return False;
+    }
 
     switch (pRVal->Contents.Int) {
     case 8:
@@ -561,11 +565,12 @@ static void force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pRVal
         pErg->Flags |= add_flags;
         pErg->DataSize = pLVal->DataSize;
     }
+    return True;
 }
 
 static as_operator_t const tlcs900_operators[] = {
-        { ":", 1,  True, 1, {TempInt | (TempInt << 4), 0, 0, 0}, force_op_size},
-        {NULL, 0, False, 0,                     {0, 0, 0, 0, 0},          NULL}
+        { ":", 1,  e_op_dyadic, 1, {TempInt | (TempInt << 4), 0, 0, 0}, force_op_size},
+        {NULL, 0, e_op_monadic, 0,                     {0, 0, 0, 0, 0},          NULL}
 };
 
 static void DecodeAdrMem(tStrComp const* pArg) {
