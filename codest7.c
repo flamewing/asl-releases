@@ -359,7 +359,11 @@ static void DecideSize(
  * \return True if successfully parsed
  * ------------------------------------------------------------------------ */
 
-static Boolean DecideIndirectSize(
+// TODO(flamewing): This function was static before, but there seems to be a
+// bug in GCC 14.2 on MSYS2/Windows that causes a miscompilation. Adding a
+// "fprintf" to inspect the ModeXXXX variables causes the function to be
+// emitted correctly, as does removing the 'static' keyword.
+Boolean DecideIndirectSize(
         LongWord Mask, tStrComp const* pArg, tAdrMode Mode8_8, tAdrMode Mode8_16,
         tAdrMode Mode16_16, tAdrMode Mode16_24, Byte Part8_8, Byte Part8_16,
         Byte Part16_16, Byte Part16_24, tAdrVals* pAdrVals) {
