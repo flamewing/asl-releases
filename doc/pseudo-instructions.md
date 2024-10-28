@@ -1607,9 +1607,11 @@ By this instruction, byte constants or ASCII strings are placed in 65xx/68xx-mod
 
 ### BYTE
 
-_valid for: ST6, 320C2(0)x, 320C5x, MSP, TMS9900, CP-1600_
+_valid for: ST6, 320C2(0)x, 320C5x, MSP, TMS9900, CP-1600, 6502, 68xx_
 
-Ditto. Note that when in 320C2(0)x/5x mode, the assembler assumes that a label on the left side of this instruction has no type, i.e. it belongs to no address space. This behaviour is explained in the processor-specific hints.
+By this instruction, byte constants or ASCII strings are placed in 65xx/68xx-mode, it therefore corresponds to `DC.B` on the 68000 or `DB` on Intel. Similarly to `DC`, a repetition factor enclosed in brackets (\[...\]) may be prepended to every single parameter.
+
+Note that when in 320C2(0)x/5x mode, the assembler assumes that a label on the left side of this instruction has no type, i.e. it belongs to no address space. This behaviour is explained in the processor-specific hints.
 
 The `PADDING` instruction allows to set whether odd counts of bytes shall be padded with a zero byte in MSP/TMS9900 mode.
 

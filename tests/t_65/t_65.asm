@@ -50,10 +50,10 @@
 
 	bvc	*+9
 	bvs	*+10
-	
+
 	clb	2,a
 	clb	3,$12
-	
+
 	clc
 	cld
 	cli
@@ -113,7 +113,7 @@
 
 	inx
 	iny
-	
+
 	jmp	$1234
 	jmp	($1234)
 	jmp	($12)
@@ -132,7 +132,7 @@
 	lda	$1234,y
 	lda	($12,x)
 	lda	($12),y
-	
+
 	ldm	#$12,$34
 
 	ldx	#$12
@@ -186,7 +186,7 @@
 	ror	$12,x
 	ror	$1234
 	ror	$1234,x
-	
+
 	rrf	$12
 
 	rti
@@ -201,10 +201,10 @@
 	sbc	$1234,y
 	sbc	($12,x)
 	sbc	($12),y
-	
+
 	seb	2,a
 	seb	3,$12
-	
+
 	sec
 	sed
 	sei
@@ -225,15 +225,15 @@
 
 	stx	$12
 	stx	$12,y
-	stx	$1234	
+	stx	$1234
 
 	sty	$12
 	sty	$12,x
-	sty	$1234	
+	sty	$1234
 
 	tax
 	tay
-	
+
 	tst	$12
 
 	tsx
@@ -285,7 +285,7 @@
 
 	byt	0
 	byt	255
-	byt	-128
+	byte	-128
 	byt	'a'
 	byt	'ab'	; treated as "ab" due to length
 	byt	"a"

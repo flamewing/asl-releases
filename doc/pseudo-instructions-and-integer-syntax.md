@@ -44,49 +44,49 @@ _Default Integer Syntax: Motorola_
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DC[.<size>]` `DFS` `DS[.<size>]` `FCB` `FCC` `FDB` `PADDING` `REG` `RMB`
+> `ADR` `BYT` `BYTE` `DC[.<size>]` `DFS` `DS[.<size>]` `FCB` `FCC` `FDB` `PADDING` `REG` `RMB`
 
 #### Motorola 68xx/Hitachi 63xx
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### Motorola/Freescale 6805/68HC(S)08
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### Motorola 6809/Hitachi 6309
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `ASSUME` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `ASSUME` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### Motorola 68HC12
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### NXP S12Z
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DB` `DC[.<size>]` `DEFBIT` `DEFBITFIELD` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `BYT` `BYTE` `DB` `DC[.<size>]` `DEFBIT` `DEFBITFIELD` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### Motorola 68HC16
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `ASSUME` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
+> `ADR` `ASSUME` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING` `RMB`
 
 #### Freescale 68RS08
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `ASSUME` `BYT` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING`
+> `ADR` `ASSUME` `BYT` `BYTE` `DB` `DC[.<size>]` `DFS` `DS[.<size>]` `DW` `FCB` `FCC` `FDB` `PADDING`
 
 #### Hitachi H8/300(L/H)
 
@@ -122,13 +122,13 @@ _Default Integer Syntax: Motorola_
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `ASSUME` `BYT` `DFS` `FCB` `FCC` `FDB` `RMB`
+> `ADR` `ASSUME` `BYT` `BYTE` `DFS` `FCB` `FCC` `FDB` `RMB`
 
 #### 65816/MELPS-7700
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `ASSUME` `BYT` `DB` `DD` `DN` `DQ` `DS` `DT` `DW` `DFS` `FCB` `FCC` `FDB` `RMB`
+> `ADR` `ASSUME` `BYT` `BYTE` `DB` `DD` `DN` `DQ` `DS` `DT` `DW` `DFS` `FCB` `FCC` `FDB` `RMB`
 
 #### Mitsubishi MELPS-4500
 
@@ -348,7 +348,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Motorola_
 
-> `ADR` `BYT` `DB` `DFS` `DS` `DW` `FCB` `FCC` `FDB` `RMB` `SFR`
+> `ADR` `BYT` `BYTE` `DB` `DFS` `DS` `DW` `FCB` `FCC` `FDB` `RMB` `SFR`
 
 #### Texas Instruments TMS3201x
 

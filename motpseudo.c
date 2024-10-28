@@ -404,6 +404,7 @@ Boolean DecodeMotoPseudo(Boolean Turn) {
     if (!InstTable) {
         InstTable = CreateInstTable(17);
         AddInstTable(InstTable, "BYT", 0, DecodeMotoBYT);
+        AddInstTable(InstTable, "BYTE", 0, DecodeMotoBYT);
         AddInstTable(InstTable, "FCB", 0, DecodeMotoBYT);
         AddInstTable(InstTable, "ADR", 0, DecodeMotoADR);
         AddInstTable(InstTable, "FDB", 0, DecodeMotoADR);
