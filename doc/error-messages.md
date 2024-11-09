@@ -333,3 +333,5 @@ Warning 470, **instruction assembled as NOP**: the nominal opcode has another pu
 Error 1030, **reserved symbol name**: a syntactically valid name is reserved for another purpose and cannot be defined by the program.
 
 Warning 480, **argument treated as vector**: an ambiguous untyped numeric operand is interpreted as a vector rather than an address. Use a CODE-space label when an address is intended.
+
+Warning 490, **interpreting too large integer constant as float**: the integer syntax is valid but exceeds the internal integer range, so AS attempts a floating-point representation instead.

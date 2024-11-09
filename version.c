@@ -10,8 +10,8 @@
 
 #include "stdinc.h"
 
-char const* Version    = "1.42 Beta [Bld 278]";
-char const* DebVersion = "1.42bld278-1";
+char const* Version    = "1.42 Beta [Bld 279]";
+char const* DebVersion = "1.42bld279-1";
 LongInt     VerNo      = 0x142f;
 
 char const* InfoMessCopyright = "(C) 1992,2022 Alfred Arnold";

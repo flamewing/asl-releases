@@ -16,12 +16,12 @@
 
 #include "tipseudo.h"
 
+#include "as_endian.h"
 #include "as_float.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "chartrans.h"
 #include "codepseudo.h"
 #include "errmsg.h"
@@ -117,7 +117,7 @@ static void pseudo_lqxx(Integer num) {
     }
 }
 
-typedef void (*tcallback)(Boolean*, int*, LongInt, tSymbolFlags);
+typedef void (*tcallback)(Boolean*, int*, LargeInt, tSymbolFlags);
 
 static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
     Boolean    ok  = True;
@@ -185,7 +185,7 @@ func_exit:
     as_tempres_free(&t);
 }
 
-static void wr_code_byte(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags) {
+static void wr_code_byte(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
         WrError(ErrNum_OverRange);
         *ok = False;
@@ -195,7 +195,7 @@ static void wr_code_byte(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags)
     CodeLen            = *adr;
 }
 
-static void wr_code_word(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags) {
+static void wr_code_word(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int16)) {
         WrError(ErrNum_OverRange);
         *ok = False;
@@ -205,16 +205,18 @@ static void wr_code_word(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags)
     CodeLen            = *adr;
 }
 
-static void wr_code_long(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags) {
-    UNUSED(ok);
-    UNUSED(Flags);
-
+static void wr_code_long(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+    if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int32)) {
+        WrError(ErrNum_OverRange);
+        *ok = False;
+        return;
+    }
     WAsmCode[(*adr)++] = val & 0xffff;
     WAsmCode[(*adr)++] = val >> 16;
     CodeLen            = *adr;
 }
 
-static void wr_code_byte_hilo(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags) {
+static void wr_code_byte_hilo(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
         WrError(ErrNum_OverRange);
         *ok = False;
@@ -228,7 +230,7 @@ static void wr_code_byte_hilo(Boolean* ok, int* adr, LongInt val, tSymbolFlags F
     CodeLen = ((*adr) + 1) / 2;
 }
 
-static void wr_code_byte_lohi(Boolean* ok, int* adr, LongInt val, tSymbolFlags Flags) {
+static void wr_code_byte_lohi(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
         WrError(ErrNum_OverRange);
         *ok = False;

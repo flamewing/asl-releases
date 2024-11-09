@@ -371,6 +371,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_TreatedAsVector:
         msgno = Num_ErrMsgTreatedAsVector;
         break;
+    case ErrNum_LargeIntAsFloat:
+        msgno = Num_ErrMsgLargeIntAsFloat;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
