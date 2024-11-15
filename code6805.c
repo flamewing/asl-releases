@@ -19,6 +19,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "intpseudo.h"
 #include "motpseudo.h"
 #include "strutil.h"
 
@@ -1008,7 +1009,17 @@ static void InitFields(void) {
     add_brset_brclr("BRCLR", 0x01);
     add_brset_brclr("BRSET", 0x00);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be | e_moto_8_db | e_moto_8_dw);
+    init_moto8_pseudo(InstTable, e_moto_8_be);
+    AddInstTable(
+            InstTable, "DB",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDB);
+    AddInstTable(
+            InstTable, "DW",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDW);
 }
 
 static void DeinitFields(void) {

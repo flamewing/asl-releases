@@ -272,6 +272,7 @@ static POutputTag GenerateOUTProcessor(SimpProc Processor, tErrorNum OpenErrMsg)
     POut->DoExport     = False;
     POut->DoGlobCopy   = False;
     POut->UsesNumArgs = POut->UsesAllArgs = False;
+    POut->LstMacroExpMod                  = LstMacroExpModDefault;
     *POut->GName                          = '\0';
     POut->OpenErrMsg                      = OpenErrMsg;
 
@@ -362,6 +363,50 @@ static void AddWaitENDM_Processor(void (*Processor)(void)) {
     Neu            = GenerateOUTProcessor(Processor, ErrNum_OpenMacro);
     Neu->Next      = FirstOutputTag;
     FirstOutputTag = Neu;
+}
+
+static Boolean SearchMacroArg(char const* pTest, char const* pComp, Boolean* pErg) {
+    if (!as_strcasecmp(pTest, pComp)) {
+        *pErg = True;
+        return True;
+    } else if (
+            (strlen(pTest) > 2) && !as_strncasecmp(pTest, "NO", 2)
+            && !as_strcasecmp(pTest + 2, pComp)) {
+        *pErg = False;
+        return True;
+    } else {
+        return False;
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     SearchLstMacroExpArg(const tStrComp *p_arg, tLstMacroExpMod *p_exp_mod)
+ * \brief  check macro control argument for listing expansion directives
+ * \param  p_arg argument to check
+ * \param  p_exp_mod destination to possibly update
+ * \return True if this was a listing expansion directive
+ * ------------------------------------------------------------------------ */
+
+static Boolean SearchLstMacroExpArg(tStrComp const* p_arg, tLstMacroExpMod* p_exp_mod) {
+    tLstMacroExp macro_exp;
+    Boolean      do_mac_exp;
+
+    if (SearchMacroArg(p_arg->str.p_str, "EXPAND", &do_mac_exp)) {
+        macro_exp = eLstMacroExpAll;
+    } else if (SearchMacroArg(p_arg->str.p_str, "EXPIF", &do_mac_exp)) {
+        macro_exp = eLstMacroExpIf;
+    } else if (SearchMacroArg(p_arg->str.p_str, "EXPMACRO", &do_mac_exp)) {
+        macro_exp = eLstMacroExpMacro;
+    } else if (SearchMacroArg(p_arg->str.p_str, "EXPREST", &do_mac_exp)) {
+        macro_exp = eLstMacroExpRest;
+    } else {
+        return False;
+    }
+
+    if (!AddLstMacroExpMod(p_exp_mod, do_mac_exp, macro_exp)) {
+        WrStrErrorPos(ErrNum_TooManyMacExpMod, p_arg);
+    }
+    return True;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -580,20 +625,6 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Initialisierung des Makro-Einleseprozesses */
 
-static Boolean ReadMacro_SearchArg(char const* pTest, char const* pComp, Boolean* pErg) {
-    if (!as_strcasecmp(pTest, pComp)) {
-        *pErg = True;
-        return True;
-    } else if (
-            (strlen(pTest) > 2) && (!as_strncasecmp(pTest, "NO", 2))
-            && (!as_strcasecmp(pTest + 2, pComp))) {
-        *pErg = False;
-        return True;
-    } else {
-        return False;
-    }
-}
-
 static Boolean ReadMacro_SearchSect(
         char* Test_O, char const* Comp, Boolean* Erg, LongInt* Section) {
     char*  p;
@@ -649,40 +680,15 @@ static void ProcessMACROArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser)
     tReadMacroContext* pContext = (tReadMacroContext*)pUser;
 
     if (CtrlArg) {
-        Boolean DoMacExp;
-
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "EXPORT", &(pContext->pOutputTag->DoExport)))
+        if (SearchMacroArg(pArg->str.p_str, "EXPORT", &(pContext->pOutputTag->DoExport)))
             ;
         else if (
-                ReadMacro_SearchArg(
+                SearchMacroArg(
                         pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
             ;
-        else if (ReadMacro_SearchArg(pArg->str.p_str, "EXPAND", &DoMacExp)) {
-            if (!AddLstMacroExpMod(
-                        &pContext->LstMacroExpMod, DoMacExp, eLstMacroExpAll)) {
-                WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
-            }
+        else if (SearchLstMacroExpArg(pArg, &pContext->LstMacroExpMod)) {
             ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (ReadMacro_SearchArg(pArg->str.p_str, "EXPIF", &DoMacExp)) {
-            if (!AddLstMacroExpMod(&pContext->LstMacroExpMod, DoMacExp, eLstMacroExpIf)) {
-                WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
-            }
-            ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (ReadMacro_SearchArg(pArg->str.p_str, "EXPMACRO", &DoMacExp)) {
-            if (!AddLstMacroExpMod(
-                        &pContext->LstMacroExpMod, DoMacExp, eLstMacroExpMacro)) {
-                WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
-            }
-            ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (ReadMacro_SearchArg(pArg->str.p_str, "EXPREST", &DoMacExp)) {
-            if (!AddLstMacroExpMod(
-                        &pContext->LstMacroExpMod, DoMacExp, eLstMacroExpRest)) {
-                WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
-            }
-            ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (
-                ReadMacro_SearchArg(pArg->str.p_str, "INTLABEL", &pContext->DoIntLabel)) {
+        } else if (SearchMacroArg(pArg->str.p_str, "INTLABEL", &pContext->DoIntLabel)) {
             ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
         } else if (
                 ReadMacro_SearchSect(
@@ -1254,8 +1260,6 @@ static Boolean IRP_GetPos(
   Quellzeilen ein */
 
 static void IRP_OutProcessor(void) {
-    POutputTag Tmp;
-
     WasMACRO = True;
 
     /* Schachtelungen mitzaehlen */
@@ -1291,21 +1295,21 @@ static void IRP_OutProcessor(void) {
     /* alles zusammen? Dann umhaengen */
 
     if (FirstOutputTag->NestLevel == -1) {
-        Tmp               = FirstOutputTag;
-        FirstOutputTag    = FirstOutputTag->Next;
-        Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
+        POutputTag p_this_output_tag    = FirstOutputTag;
+        FirstOutputTag                  = FirstOutputTag->Next;
+        p_this_output_tag->Tag->IsEmpty = !p_this_output_tag->Tag->Lines;
         if (IfAsm) {
-            NextDoLst      = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
-            NextDoLst      = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
-            Tmp->Tag->Next = FirstInputTag;
-            FirstInputTag  = Tmp->Tag;
+            NextDoLst = ApplyLstMacroExpMod(DoLst, &p_this_output_tag->LstMacroExpMod);
+            NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
+            p_this_output_tag->Tag->Next = FirstInputTag;
+            FirstInputTag                = p_this_output_tag->Tag;
         } else {
-            ClearStringList(&(Tmp->Tag->Lines));
-            ClearStringList(&(Tmp->Tag->Params));
-            free(Tmp->Tag);
+            ClearStringList(&(p_this_output_tag->Tag->Lines));
+            ClearStringList(&(p_this_output_tag->Tag->Params));
+            free(p_this_output_tag->Tag);
         }
-        ClearStringList(&(Tmp->ParamNames));
-        free(Tmp);
+        ClearStringList(&(p_this_output_tag->ParamNames));
+        free(p_this_output_tag);
     }
 }
 
@@ -1324,8 +1328,9 @@ static void ProcessIRPArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) {
     tExpandIRPContext* pContext = (tExpandIRPContext*)pUser;
 
     if (CtrlArg) {
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        if (SearchMacroArg(pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+            ;
+        else if (SearchLstMacroExpArg(pArg, &pContext->pOutputTag->LstMacroExpMod))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
@@ -1428,8 +1433,9 @@ static void ProcessIRPNArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) 
     tExpandIRPNContext* pContext = (tExpandIRPNContext*)pUser;
 
     if (CtrlArg) {
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        if (SearchMacroArg(pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+            ;
+        else if (SearchLstMacroExpArg(pArg, &pContext->pOutputTag->LstMacroExpMod))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
@@ -1619,8 +1625,9 @@ static void ProcessIRPCArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) 
     tExpandIRPCContext* pContext = (tExpandIRPCContext*)pUser;
 
     if (CtrlArg) {
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        if (SearchMacroArg(pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+            ;
+        else if (SearchLstMacroExpArg(pArg, &pContext->pOutputTag->LstMacroExpMod))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
@@ -1769,8 +1776,6 @@ Boolean REPT_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 }
 
 static void REPT_OutProcessor(void) {
-    POutputTag Tmp;
-
     WasMACRO = True;
 
     /* Schachtelungen mitzaehlen */
@@ -1791,35 +1796,39 @@ static void REPT_OutProcessor(void) {
     /* alles zusammen? Dann umhaengen */
 
     if (FirstOutputTag->NestLevel == -1) {
-        Tmp               = FirstOutputTag;
-        FirstOutputTag    = FirstOutputTag->Next;
-        Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
-        if ((IfAsm) && (Tmp->Tag->ParCnt > 0)) {
-            NextDoLst      = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
-            NextDoLst      = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
-            Tmp->Tag->Next = FirstInputTag;
-            FirstInputTag  = Tmp->Tag;
+        POutputTag p_this_output_tag = FirstOutputTag;
+
+        FirstOutputTag                  = FirstOutputTag->Next;
+        p_this_output_tag->Tag->IsEmpty = !p_this_output_tag->Tag->Lines;
+        if (IfAsm && (p_this_output_tag->Tag->ParCnt > 0)) {
+            NextDoLst = ApplyLstMacroExpMod(DoLst, &p_this_output_tag->LstMacroExpMod);
+            NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
+            p_this_output_tag->Tag->Next = FirstInputTag;
+            FirstInputTag                = p_this_output_tag->Tag;
+            p_this_output_tag->Tag       = NULL;
         } else {
-            ClearStringList(&(Tmp->Tag->Lines));
-            free(Tmp->Tag);
+            ClearStringList(&(p_this_output_tag->Tag->Lines));
+            free(p_this_output_tag->Tag);
         }
-        free(Tmp);
+        free(p_this_output_tag);
     }
 }
 
 typedef struct {
-    Boolean ErrFlag;
-    Boolean GlobalSymbols;
-    int     ArgCnt;
-    LongInt ReptCount;
+    Boolean         ErrFlag;
+    Boolean         GlobalSymbols;
+    tLstMacroExpMod LstMacroExpMod;
+    int             ArgCnt;
+    LongInt         ReptCount;
 } tExpandREPTContext;
 
 static void ProcessREPTArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) {
     tExpandREPTContext* pContext = (tExpandREPTContext*)pUser;
 
     if (CtrlArg) {
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        if (SearchMacroArg(pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+            ;
+        else if (SearchLstMacroExpArg(pArg, &pContext->LstMacroExpMod))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
@@ -1857,10 +1866,11 @@ static Boolean ExpandREPT(void) {
 
     /* 1. Repetitionszahl ermitteln */
 
-    Context.GlobalSymbols = False;
-    Context.ReptCount     = 0;
-    Context.ErrFlag       = False;
-    Context.ArgCnt        = 0;
+    Context.LstMacroExpMod = LstMacroExpModDefault;
+    Context.GlobalSymbols  = False;
+    Context.ReptCount      = 0;
+    Context.ErrFlag        = False;
+    Context.ArgCnt         = 0;
     ProcessMacroArgs(ProcessREPTArgs, &Context);
 
     /* rept count must be present only once */
@@ -1888,10 +1898,11 @@ static Boolean ExpandREPT(void) {
 
     /* 3. einbetten */
 
-    Neu            = GenerateOUTProcessor(REPT_OutProcessor, ErrNum_OpenREPT);
-    Neu->Next      = FirstOutputTag;
-    Neu->Tag       = Tag;
-    FirstOutputTag = Neu;
+    Neu                 = GenerateOUTProcessor(REPT_OutProcessor, ErrNum_OpenREPT);
+    Neu->LstMacroExpMod = Context.LstMacroExpMod;
+    Neu->Next           = FirstOutputTag;
+    Neu->Tag            = Tag;
+    FirstOutputTag      = Neu;
 
     return True;
 }
@@ -1975,7 +1986,6 @@ Boolean WHILE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 }
 
 static void WHILE_OutProcessor(void) {
-    POutputTag   Tmp;
     Boolean      OK;
     tSymbolFlags SymbolFlags;
     LongInt      Erg;
@@ -2000,43 +2010,46 @@ static void WHILE_OutProcessor(void) {
     /* alles zusammen? Dann umhaengen */
 
     if (FirstOutputTag->NestLevel == -1) {
-        Tmp               = FirstOutputTag;
-        FirstOutputTag    = FirstOutputTag->Next;
-        Tmp->Tag->IsEmpty = !Tmp->Tag->Lines;
-        Erg               = EvalStrIntExpressionWithFlags(
-                &Tmp->Tag->SpecName, Int32, &OK, &SymbolFlags);
+        POutputTag p_this_output_tag;
+        p_this_output_tag               = FirstOutputTag;
+        FirstOutputTag                  = FirstOutputTag->Next;
+        p_this_output_tag->Tag->IsEmpty = !p_this_output_tag->Tag->Lines;
+        Erg                             = EvalStrIntExpressionWithFlags(
+                &p_this_output_tag->Tag->SpecName, Int32, &OK, &SymbolFlags);
         if (mFirstPassUnknown(SymbolFlags)) {
             WrError(ErrNum_FirstPassCalc);
             OK = False;
         }
         OK = (OK && (Erg != 0));
         if (IfAsm && OK) {
-            NextDoLst      = ApplyLstMacroExpMod(DoLst, &LstMacroExpModDefault);
-            NextDoLst      = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
-            Tmp->Tag->Next = FirstInputTag;
-            FirstInputTag  = Tmp->Tag;
+            NextDoLst = ApplyLstMacroExpMod(DoLst, &p_this_output_tag->LstMacroExpMod);
+            NextDoLst = ApplyLstMacroExpMod(NextDoLst, &LstMacroExpModOverride);
+            p_this_output_tag->Tag->Next = FirstInputTag;
+            FirstInputTag                = p_this_output_tag->Tag;
         } else {
-            ClearStringList(&(Tmp->Tag->Lines));
-            free(Tmp->Tag);
+            ClearStringList(&(p_this_output_tag->Tag->Lines));
+            free(p_this_output_tag->Tag);
         }
-        free(Tmp);
+        free(p_this_output_tag);
     }
 }
 
 typedef struct {
-    Boolean  ErrFlag;
-    Boolean  GlobalSymbols;
-    int      ArgCnt;
-    String   SpecNameStr;
-    tStrComp SpecName;
+    Boolean         ErrFlag;
+    Boolean         GlobalSymbols;
+    tLstMacroExpMod LstMacroExpMod;
+    int             ArgCnt;
+    String          SpecNameStr;
+    tStrComp        SpecName;
 } tExpandWHILEContext;
 
 static void ProcessWHILEArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) {
     tExpandWHILEContext* pContext = (tExpandWHILEContext*)pUser;
 
     if (CtrlArg) {
-        if (ReadMacro_SearchArg(
-                    pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        if (SearchMacroArg(pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+            ;
+        else if (SearchLstMacroExpArg(pArg, &pContext->LstMacroExpMod))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);
@@ -2064,9 +2077,10 @@ static Boolean ExpandWHILE(void) {
 
     /* 1. Bedingung ermitteln */
 
-    Context.GlobalSymbols = False;
-    Context.ErrFlag       = False;
-    Context.ArgCnt        = 0;
+    Context.LstMacroExpMod = LstMacroExpModDefault;
+    Context.GlobalSymbols  = False;
+    Context.ErrFlag        = False;
+    Context.ArgCnt         = 0;
     StrCompMkTemp(&Context.SpecName, Context.SpecNameStr, sizeof(Context.SpecNameStr));
     StrCompReset(&Context.SpecName);
     ProcessMacroArgs(ProcessWHILEArgs, &Context);
@@ -2096,10 +2110,11 @@ static Boolean ExpandWHILE(void) {
 
     /* 3. einbetten */
 
-    Neu            = GenerateOUTProcessor(WHILE_OutProcessor, ErrNum_OpenWHILE);
-    Neu->Next      = FirstOutputTag;
-    Neu->Tag       = Tag;
-    FirstOutputTag = Neu;
+    Neu                 = GenerateOUTProcessor(WHILE_OutProcessor, ErrNum_OpenWHILE);
+    Neu->LstMacroExpMod = Context.LstMacroExpMod;
+    Neu->Next           = FirstOutputTag;
+    Neu->Tag            = Tag;
+    FirstOutputTag      = Neu;
 
     return True;
 }

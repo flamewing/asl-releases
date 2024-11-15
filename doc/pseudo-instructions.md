@@ -3092,3 +3092,7 @@ Select `uPD550`, `uPD554` or `uPD652` for μCOM-45; `uPD547`, `uPD552` or `uPD65
 | uPD554, uPD652 | 1000 | 32 |
 | uPD547, uPD552, uPD651 | 1000 | 64 |
 | uPD546, uPD553, uPD556, uPD557, uPD650 | 2000 | 96 |
+
+`DB` and `DW` on 65xx and 68xx also accept Motorola repetition prefixes in square brackets, as well as Intel `DUP`. For example, `[3]5` repeats 5 three times. Target byte order is preserved.
+
+`IRP`, `IRPC`, `REPT` and `WHILE` accept the macro listing controls `{EXPAND}`/`{NOEXPAND}`, `{EXPIF}`/`{NOEXPIF}`, `{EXPMACRO}`/`{NOEXPMACRO}` and `{EXPREST}`/`{NOEXPREST}`, in addition to `{GLOBALSYMBOLS}`/`{NOGLOBALSYMBOLS}`.

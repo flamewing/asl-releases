@@ -20,6 +20,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "intpseudo.h"
 #include "motpseudo.h"
 #include "nlmessages.h"
 #include "nls.h"
@@ -1119,10 +1120,17 @@ static void InitFields(void) {
     AddInstTable(InstTable, "JSR", 1, DecodeJmpJsr);
     AddInstTable(InstTable, "BSR", 0, DecodeBsr);
 
-    AddInstTable(InstTable, "DB", 0, DecodeMotoBYT);
-    AddInstTable(InstTable, "DW", 0, DecodeMotoADR);
-
     init_moto8_pseudo(InstTable, e_moto_8_be);
+    AddInstTable(
+            InstTable, "DB",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDB);
+    AddInstTable(
+            InstTable, "DW",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDW);
 }
 
 static void DeinitFields(void) {

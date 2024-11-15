@@ -22,6 +22,7 @@
 #include "cpu2phys.h"
 #include "errmsg.h"
 #include "function.h"
+#include "intpseudo.h"
 #include "motpseudo.h"
 #include "nlmessages.h"
 #include "strutil.h"
@@ -837,7 +838,17 @@ static void InitFields(void) {
 
     AddInstTable(InstTable, "PRWINS", 0, DecodePRWINS);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be | e_moto_8_db | e_moto_8_dw);
+    init_moto8_pseudo(InstTable, e_moto_8_be);
+    AddInstTable(
+            InstTable, "DB",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDB);
+    AddInstTable(
+            InstTable, "DW",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDW);
 }
 
 static void DeinitFields(void) {

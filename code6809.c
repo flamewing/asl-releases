@@ -12,8 +12,8 @@
 
 #include "code6809.h"
 
-#include "asmdef.h"
 #include "asmallg.h"
+#include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -22,6 +22,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "intpseudo.h"
 #include "motpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -1464,7 +1465,17 @@ static void InitFields(void) {
     AddInstTable(InstTable, "LDBT", InstrZ++, DecodeBit);
     AddInstTable(InstTable, "STBT", InstrZ++, DecodeBit);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be | e_moto_8_db | e_moto_8_dw);
+    init_moto8_pseudo(InstTable, e_moto_8_be);
+    AddInstTable(
+            InstTable, "DB",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDB);
+    AddInstTable(
+            InstTable, "DW",
+            eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString | eIntPseudoFlag_MotoRep,
+            DecodeIntelDW);
 }
 
 static void DeinitFields(void) {

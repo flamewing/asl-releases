@@ -76,14 +76,15 @@ typedef struct tag_TInputTag {
 typedef struct tag_TOutputTag {
     struct tag_TOutputTag* Next;
     void (*Processor)(void);
-    Integer    NestLevel;
-    PInputTag  Tag;
-    PMacroRec  Mac;
-    StringList ParamNames, ParamDefVals;
-    LongInt    PubSect, GlobSect;
-    Boolean    DoExport, DoGlobCopy, UsesNumArgs, UsesAllArgs;
-    String     GName;
-    tErrorNum  OpenErrMsg;
+    Integer         NestLevel;
+    PInputTag       Tag;
+    PMacroRec       Mac;
+    StringList      ParamNames, ParamDefVals;
+    LongInt         PubSect, GlobSect;
+    Boolean         DoExport, DoGlobCopy, UsesNumArgs, UsesAllArgs;
+    String          GName;
+    tErrorNum       OpenErrMsg;
+    tLstMacroExpMod LstMacroExpMod;
 } TOutputTag, *POutputTag;
 
 extern PInputTag  FirstInputTag;
