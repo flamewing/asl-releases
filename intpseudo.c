@@ -56,10 +56,10 @@ struct sCurrCodeFill {
 typedef struct sCurrCodeFill tCurrCodeFill;
 
 struct sLayoutCtx {
-    tDSFlag     DSFlag;
-    Word        flags;
-    TLayoutFunc LayoutFunc;
-    int         BaseElemLenBits, FullWordSize, ElemsPerFullWord, ListGran;
+    tDSFlag            DSFlag;
+    int_pseudo_flags_t flags;
+    TLayoutFunc        LayoutFunc;
+    int                BaseElemLenBits, FullWordSize, ElemsPerFullWord, ListGran;
     Boolean (*Put4I)(Byte b, struct sLayoutCtx* pCtx);
     Boolean (*Put8I)(Byte b, struct sLayoutCtx* pCtx);
     Boolean (*Put16I)(Word w, struct sLayoutCtx* pCtx);
@@ -134,10 +134,6 @@ static Boolean IncMaxCodeLen(struct sLayoutCtx* pCtx, LongWord NumFullWords) {
     }
 }
 
-static LargeWord ByteInWord(Byte b, int Pos) {
-    return ((LargeWord)b) << (Pos << 3);
-}
-
 static Byte NibbleInByte(Byte n, int Pos) {
     return (n & 15) << (Pos << 2);
 }
@@ -146,8 +142,20 @@ static Word NibbleInWord(Byte n, int Pos) {
     return ((Word)(n & 15)) << (Pos << 2);
 }
 
-static Byte ByteFromWord(LargeWord w, int Pos) {
-    return (w >> (Pos << 3)) & 0xff;
+static LongWord NibbleInDWord(Byte n, int Pos) {
+    return ((LongWord)(n & 15)) << (Pos << 2);
+}
+
+static Word ByteInWord(Byte b, int Pos) {
+    return ((Word)b) << (Pos << 3);
+}
+
+static LongWord ByteInDWord(Byte b, int Pos) {
+    return ((LongWord)b) << (Pos << 3);
+}
+
+static LongWord WordInDWord(Word b, int Pos) {
+    return ((LongWord)b) << (Pos << 4);
 }
 
 static Byte NibbleFromByte(Byte b, int Pos) {
@@ -156,6 +164,22 @@ static Byte NibbleFromByte(Byte b, int Pos) {
 
 static Byte NibbleFromWord(Word w, int Pos) {
     return (w >> (Pos << 2)) & 0x0f;
+}
+
+static Byte NibbleFromDWord(LongWord w, int Pos) {
+    return (w >> (Pos << 2)) & 0x0f;
+}
+
+static Byte ByteFromWord(Word w, int Pos) {
+    return (w >> (Pos << 3)) & 0xff;
+}
+
+static Byte ByteFromDWord(LongWord w, int Pos) {
+    return (w >> (Pos << 3)) & 0xff;
+}
+
+static Word WordFromDWord(LongWord w, int Pos) {
+    return (w >> (Pos << 4)) & 0xffff;
 }
 
 /*!------------------------------------------------------------------------
@@ -223,7 +247,17 @@ static Boolean IncCurrCodeFill(struct sLayoutCtx* pCtx) {
     } else if (!IncMaxCodeLen(pCtx, 1)) {
         return False;
     } else {
-        WAsmCode[pCtx->CurrCodeFill.FullWordCnt] = 0;
+        switch (pCtx->FullWordSize) {
+        case 8:
+            BAsmCode[pCtx->CurrCodeFill.FullWordCnt] = 0;
+            break;
+        case 16:
+            WAsmCode[pCtx->CurrCodeFill.FullWordCnt] = 0;
+            break;
+        case 32:
+            DAsmCode[pCtx->CurrCodeFill.FullWordCnt] = 0;
+            break;
+        }
         return True;
     }
 }
@@ -319,6 +353,39 @@ static Boolean Replicate4_To_16(
     return True;
 }
 
+static Boolean Put4I_To_32(Byte b, struct sLayoutCtx* pCtx) {
+    tCurrCodeFill Pos = pCtx->CurrCodeFill;
+    if (!IncCurrCodeFill(pCtx)) {
+        return False;
+    }
+    if (!Pos.LastWordFill) {
+        DAsmCode[Pos.FullWordCnt] = NibbleInDWord(b, Pos.LastWordFill ^ pCtx->LoHiMap);
+    } else {
+        DAsmCode[Pos.FullWordCnt] |= NibbleInDWord(b, Pos.LastWordFill ^ pCtx->LoHiMap);
+    }
+    return True;
+}
+
+static Boolean Replicate4_To_32(
+        tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
+        struct sLayoutCtx* pCtx) {
+    Byte          b;
+    tCurrCodeFill CurrPos;
+
+    CurrPos = *pStartPos;
+    while ((CurrPos.FullWordCnt != pEndPos->FullWordCnt)
+           || (CurrPos.LastWordFill != pEndPos->LastWordFill)) {
+        b = NibbleFromDWord(
+                DAsmCode[CurrPos.FullWordCnt], CurrPos.LastWordFill ^ pCtx->LoHiMap);
+        if (!Put4I_To_32(b, pCtx)) {
+            return False;
+        }
+        IncCodeFill(&CurrPos, pCtx);
+    }
+
+    return True;
+}
+
 static Boolean LayoutNibble(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     Boolean    Result = False;
     TempResult t;
@@ -391,6 +458,19 @@ static Boolean Put8I_To_16(Byte b, struct sLayoutCtx* pCtx) {
     return True;
 }
 
+static Boolean Put8I_To_32(Byte b, struct sLayoutCtx* pCtx) {
+    tCurrCodeFill Pos = pCtx->CurrCodeFill;
+    if (!IncCurrCodeFill(pCtx)) {
+        return False;
+    }
+    if (!Pos.LastWordFill) {
+        DAsmCode[Pos.FullWordCnt] = ByteInDWord(b, Pos.LastWordFill ^ pCtx->LoHiMap);
+    } else {
+        DAsmCode[Pos.FullWordCnt] |= ByteInDWord(b, Pos.LastWordFill ^ pCtx->LoHiMap);
+    }
+    return True;
+}
+
 static Boolean Replicate8ToN_To_8(
         tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
         struct sLayoutCtx* pCtx) {
@@ -426,6 +506,26 @@ static Boolean Replicate8_To_16(
         b = ByteFromWord(
                 WAsmCode[CurrPos.FullWordCnt], CurrPos.LastWordFill ^ pCtx->LoHiMap);
         if (!Put8I_To_16(b, pCtx)) {
+            return False;
+        }
+        IncCodeFill(&CurrPos, pCtx);
+    }
+
+    return True;
+}
+
+static Boolean Replicate8_To_32(
+        tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
+        struct sLayoutCtx* pCtx) {
+    Byte          b;
+    tCurrCodeFill CurrPos;
+
+    CurrPos = *pStartPos;
+    while ((CurrPos.FullWordCnt != pEndPos->FullWordCnt)
+           || (CurrPos.LastWordFill != pEndPos->LastWordFill)) {
+        b = ByteFromDWord(
+                DAsmCode[CurrPos.FullWordCnt], CurrPos.LastWordFill ^ pCtx->LoHiMap);
+        if (!Put8I_To_32(b, pCtx)) {
             return False;
         }
         IncCodeFill(&CurrPos, pCtx);
@@ -584,6 +684,50 @@ static Boolean Put16F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
             = ByteInWord(Tmp[0], 0 ^ pCtx->LoHiMap)
               | ByteInWord(Tmp[1], 1 ^ pCtx->LoHiMap);
     pCtx->CurrCodeFill.FullWordCnt += 1;
+    return True;
+}
+
+static Boolean Put16I_To_32(Word w, struct sLayoutCtx* pCtx) {
+    tCurrCodeFill Pos = pCtx->CurrCodeFill;
+    if (!IncCurrCodeFill(pCtx)) {
+        return False;
+    }
+    if (!Pos.LastWordFill) {
+        DAsmCode[Pos.FullWordCnt] = WordInDWord(w, Pos.LastWordFill ^ pCtx->LoHiMap);
+    } else {
+        DAsmCode[Pos.FullWordCnt] |= WordInDWord(w, Pos.LastWordFill ^ pCtx->LoHiMap);
+    }
+    return True;
+}
+
+static Boolean Put16F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    Byte Tmp[2];
+    int  ret;
+
+    if ((ret = as_float_2_ieee2(t, Tmp, False)) < 0) {
+        asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+        return False;
+    }
+    return Put16I_To_32((((Word)Tmp[1]) << 8) | Tmp[0], pCtx);
+}
+
+static Boolean Replicate16_To_32(
+        tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
+        struct sLayoutCtx* pCtx) {
+    Word          w;
+    tCurrCodeFill CurrPos;
+
+    CurrPos = *pStartPos;
+    while ((CurrPos.FullWordCnt != pEndPos->FullWordCnt)
+           || (CurrPos.LastWordFill != pEndPos->LastWordFill)) {
+        w = WordFromDWord(
+                DAsmCode[CurrPos.FullWordCnt], CurrPos.LastWordFill ^ pCtx->LoHiMap);
+        if (!Put16I_To_32(w, pCtx)) {
+            return False;
+        }
+        IncCodeFill(&CurrPos, pCtx);
+    }
+
     return True;
 }
 
@@ -777,6 +921,59 @@ static Boolean Put32F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
     return True;
 }
 
+static Boolean Put32I_To_32(LongWord w, struct sLayoutCtx* pCtx) {
+    if (!IncMaxCodeLen(pCtx, 1)) {
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt++] = w;
+    return True;
+}
+
+static Boolean Put32F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    Byte Tmp[4];
+    int  ret;
+
+    if (!IncMaxCodeLen(pCtx, 1)) {
+        return False;
+    }
+
+    if ((ret = as_float_2_ieee4(t, Tmp, False)) < 0) {
+        asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0]
+            = ByteInDWord(Tmp[0], 0) | ByteInDWord(Tmp[1], 1) | ByteInDWord(Tmp[2], 2)
+              | ByteInDWord(Tmp[3], 3);
+    pCtx->CurrCodeFill.FullWordCnt += 1;
+    return True;
+}
+
+static Boolean Replicate32ToN_To_32(
+        tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
+        struct sLayoutCtx* pCtx) {
+    tCurrCodeFill Pos;
+    /* need roundup for DT since 80 bit value needs 3 dwords: */
+    size_t roundup_words_per_element = (pCtx->BaseElemLenBits + 31) / 32,
+           roundup_bytes_per_element = roundup_words_per_element * 4;
+
+    if (!IncMaxCodeLen(pCtx, pEndPos->FullWordCnt - pStartPos->FullWordCnt)) {
+        return False;
+    }
+
+    for (Pos = *pStartPos; Pos.FullWordCnt < pEndPos->FullWordCnt;
+         Pos.FullWordCnt += roundup_words_per_element) {
+        memcpy(&DAsmCode[pCtx->CurrCodeFill.FullWordCnt], &DAsmCode[Pos.FullWordCnt],
+               roundup_bytes_per_element);
+        pCtx->CurrCodeFill.FullWordCnt += roundup_words_per_element;
+    }
+    if (Pos.FullWordCnt != pEndPos->FullWordCnt) {
+        WrXError(ErrNum_InternalError, "DUP replication inconsistency");
+        return False;
+    }
+
+    return True;
+}
+
 static Boolean LayoutDoubleWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     TempResult    erg;
     Boolean       Result       = False;
@@ -881,7 +1078,7 @@ func_exit:
  *****************************************************************************/
 
 static Boolean Put48I_To_8(LargeWord l, struct sLayoutCtx* pCtx) {
-    if (!IncMaxCodeLen(pCtx, 8)) {
+    if (!IncMaxCodeLen(pCtx, 6)) {
         return False;
     }
     BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ pCtx->LoHiMap)] = (l) & 0xff;
@@ -958,6 +1155,46 @@ static Boolean Put48F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
         assert(0); /* no 6 byte IEEE float format */
     }
     pCtx->CurrCodeFill.FullWordCnt += 3;
+    return True;
+}
+
+static Boolean Put48I_To_32(LargeWord l, struct sLayoutCtx* pCtx) {
+    int LoHiMap = pCtx->LoHiMap ? 2 : 0; /* 5 or 0 -> 2 or 0 */
+
+    if (!IncMaxCodeLen(pCtx, 2)) {
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ LoHiMap)] = (l) & 0xfffffffful;
+#ifdef HAS64
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ LoHiMap)] = (l >> 32) & 0x0000fffful;
+#else
+    /* TempResult is TempInt, so sign-extend */
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ LoHiMap)]
+            = (l & 0x80000000ul) ? 0xfffful : 0x0000ul;
+#endif
+    pCtx->CurrCodeFill.FullWordCnt += 2;
+    return True;
+}
+
+static Boolean Put48F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    if (!IncMaxCodeLen(pCtx, 2)) {
+        return False;
+    }
+    if (pCtx->flags & eIntPseudoFlag_DECFormat) {
+        Word Tmp[4];
+        int  ret = as_float_2_dec_d(t, Tmp);
+        if (ret < 0) {
+            asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+            return False;
+        }
+        /* LoHiMap (endianess) is ignored */
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0] = WordInDWord(Tmp[0], 0);
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 1]
+                = WordInDWord(Tmp[1], 1) | WordInDWord(Tmp[2], 2);
+    } else {
+        assert(0); /* no 6 byte IEEE float format */
+    }
+    pCtx->CurrCodeFill.FullWordCnt += 2;
     return True;
 }
 
@@ -1133,6 +1370,45 @@ static Boolean Put64F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
     return True;
 }
 
+static Boolean Put64I_To_32(LargeWord l, struct sLayoutCtx* pCtx) {
+    if (!IncMaxCodeLen(pCtx, 2)) {
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ pCtx->LoHiMap)] = (l) & 0xfffffffful;
+#ifdef HAS64
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)]
+            = (l >> 32) & 0xfffffffful;
+#else
+    /* TempResult is TempInt, so sign-extend */
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)]
+            = (l & 0x80000000ul) ? 0xfffffffful : 0x00000000ul;
+#endif
+    pCtx->CurrCodeFill.FullWordCnt += 2;
+    return True;
+}
+
+static Boolean Put64F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    Byte Tmp[8];
+    int  ret;
+    int  LoHiMap = pCtx->LoHiMap ? 3 : 0;
+
+    if (!IncMaxCodeLen(pCtx, 2)) {
+        return False;
+    }
+    if ((ret = as_float_2_ieee8(t, Tmp, !!pCtx->LoHiMap)) < 0) {
+        asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0]
+            = ByteInDWord(Tmp[0], 0 ^ LoHiMap) | ByteInDWord(Tmp[1], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[2], 2 ^ LoHiMap) | ByteInDWord(Tmp[3], 3 ^ LoHiMap);
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 1]
+            = ByteInDWord(Tmp[4], 0 ^ LoHiMap) | ByteInDWord(Tmp[5], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[6], 2 ^ LoHiMap) | ByteInDWord(Tmp[7], 3 ^ LoHiMap);
+    pCtx->CurrCodeFill.FullWordCnt += 2;
+    return True;
+}
+
 static Boolean LayoutQuadWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     Boolean       Result       = False;
     Boolean const allow_string = !!(pCtx->flags & eIntPseudoFlag_AllowString),
@@ -1290,11 +1566,52 @@ static Boolean Put80I_To_16(
     }
     digit = !!orig_negative << 15;
     if (p_ctx->LoHiMap) {
-        WAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 4] |= digit;
-    } else {
         WAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 0] |= digit;
+    } else {
+        WAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 4] |= digit;
     }
     p_ctx->CurrCodeFill.FullWordCnt += 5;
+    return True;
+}
+
+static Boolean Put80I_To_32(
+        LargeWord t, Boolean orig_negative, struct sLayoutCtx* p_ctx) {
+    unsigned dest, bit_pos;
+    LongWord digit;
+
+    if (!IncMaxCodeLen(p_ctx, 3)) {
+        return False;
+    }
+    memset(&DAsmCode[p_ctx->CurrCodeFill.FullWordCnt], 0, 12);
+
+    if (orig_negative) {
+        t = (LargeWord)(0 - ((LargeInt)t));
+    }
+    dest = bit_pos = 0;
+    while (t) {
+        digit = (t % 10) << bit_pos;
+        t /= 10;
+        if (p_ctx->LoHiMap) {
+            DAsmCode[p_ctx->CurrCodeFill.FullWordCnt + (2 - dest)] |= digit;
+        } else {
+            DAsmCode[p_ctx->CurrCodeFill.FullWordCnt + dest] |= digit;
+        }
+        if ((bit_pos += 4) >= 32) {
+            bit_pos = 0;
+            dest++;
+        }
+        if ((dest >= 2) && (bit_pos >= 8) && t) {
+            WrError(orig_negative ? ErrNum_UnderRange : ErrNum_OverRange);
+            return False;
+        }
+    }
+    digit = ((LongWord) !!orig_negative) << 15;
+    if (p_ctx->LoHiMap) {
+        DAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 0] |= digit;
+    } else {
+        DAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 2] |= digit;
+    }
+    p_ctx->CurrCodeFill.FullWordCnt += 3;
     return True;
 }
 
@@ -1337,6 +1654,40 @@ static Boolean Put80F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
     WAsmCode[pCtx->CurrCodeFill.FullWordCnt + 4]
             = ByteInWord(Tmp[8], 0 ^ LoHiMap) | ByteInWord(Tmp[9], 1 ^ LoHiMap);
     pCtx->CurrCodeFill.FullWordCnt += 5;
+    return True;
+}
+
+static Boolean Put80F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    int  ret;
+    Byte Tmp[10];
+
+    if (!IncMaxCodeLen(pCtx, 3)) {
+        return False;
+    }
+    if ((ret = as_float_2_ieee10(t, Tmp, !!pCtx->LoHiMap)) < 0) {
+        asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+        return False;
+    }
+    if (pCtx->LoHiMap) {
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0]
+                = ByteInDWord(Tmp[0], 1) | ByteInDWord(Tmp[1], 0);
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 1]
+                = ByteInDWord(Tmp[2], 3) | ByteInDWord(Tmp[3], 2) | ByteInDWord(Tmp[4], 1)
+                  | ByteInDWord(Tmp[5], 0);
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 2]
+                = ByteInDWord(Tmp[6], 3) | ByteInDWord(Tmp[7], 2) | ByteInDWord(Tmp[8], 1)
+                  | ByteInDWord(Tmp[9], 0);
+    } else {
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0]
+                = ByteInDWord(Tmp[0], 0) | ByteInDWord(Tmp[1], 1) | ByteInDWord(Tmp[2], 2)
+                  | ByteInDWord(Tmp[3], 3);
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 1]
+                = ByteInDWord(Tmp[4], 0) | ByteInDWord(Tmp[5], 1) | ByteInDWord(Tmp[6], 2)
+                  | ByteInDWord(Tmp[7], 3);
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 2]
+                = ByteInDWord(Tmp[8], 0) | ByteInDWord(Tmp[9], 1);
+    }
+    pCtx->CurrCodeFill.FullWordCnt += 3;
     return True;
 }
 
@@ -1547,6 +1898,58 @@ static Boolean Put128F_To_16(as_float_t t, struct sLayoutCtx* pCtx) {
     WAsmCode[pCtx->CurrCodeFill.FullWordCnt + 7]
             = ByteInWord(Tmp[14], 0 ^ LoHiMap) | ByteInWord(Tmp[15], 1 ^ LoHiMap);
     pCtx->CurrCodeFill.FullWordCnt += 8;
+    return True;
+}
+
+static Boolean Put128I_To_32(
+        LargeWord l, Boolean orig_negative, struct sLayoutCtx* pCtx) {
+    if (!IncMaxCodeLen(pCtx, 4)) {
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (0 ^ pCtx->LoHiMap)] = (l) & 0xfffffffful;
+#ifdef HAS64
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)]
+            = (l >> 32) & 0xfffffffful;
+    /* TempResult is TempInt, so sign-extend */
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (2 ^ pCtx->LoHiMap)]
+            = DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (3 ^ pCtx->LoHiMap)]
+            = orig_negative ? 0xfffffffful : 0x00000000ul;
+#else
+    /* TempResult is TempInt, so sign-extend */
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (1 ^ pCtx->LoHiMap)]
+            = DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (2 ^ pCtx->LoHiMap)]
+            = DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (3 ^ pCtx->LoHiMap)]
+            = orig_negative ? 0xfffffffful : 0x00000000ul;
+#endif
+    pCtx->CurrCodeFill.FullWordCnt += 4;
+    return True;
+}
+
+static Boolean Put128F_To_32(as_float_t t, struct sLayoutCtx* pCtx) {
+    Byte Tmp[16];
+    int  LoHiMap = pCtx->LoHiMap ? 3 : 0;
+    int  ret;
+
+    if (!IncMaxCodeLen(pCtx, 4)) {
+        return False;
+    }
+    if ((ret = as_float_2_ieee16(t, Tmp, !!pCtx->LoHiMap)) < 0) {
+        asmerr_check_fp_dispose_result(ret, pCtx->pCurrComp);
+        return False;
+    }
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 0]
+            = ByteInDWord(Tmp[0], 0 ^ LoHiMap) | ByteInDWord(Tmp[1], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[2], 2 ^ LoHiMap) | ByteInDWord(Tmp[3], 3 ^ LoHiMap);
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 1]
+            = ByteInDWord(Tmp[4], 0 ^ LoHiMap) | ByteInDWord(Tmp[5], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[6], 2 ^ LoHiMap) | ByteInDWord(Tmp[7], 3 ^ LoHiMap);
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 2]
+            = ByteInDWord(Tmp[8], 0 ^ LoHiMap) | ByteInDWord(Tmp[9], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[10], 2 ^ LoHiMap) | ByteInDWord(Tmp[11], 3 ^ LoHiMap);
+    DAsmCode[pCtx->CurrCodeFill.FullWordCnt + 3]
+            = ByteInDWord(Tmp[12], 0 ^ LoHiMap) | ByteInDWord(Tmp[13], 1 ^ LoHiMap)
+              | ByteInDWord(Tmp[14], 2 ^ LoHiMap) | ByteInDWord(Tmp[15], 3 ^ LoHiMap);
+    pCtx->CurrCodeFill.FullWordCnt += 4;
     return True;
 }
 
@@ -1905,6 +2308,29 @@ static void DecodeIntelDx(tLayoutCtx* pLayoutCtx) {
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     resolve_flags(int_pseudo_flags_t flags)
+ * \brief  resolve actual endianess
+ * \param  flags given by caller
+ * \return effective flags
+ * ------------------------------------------------------------------------ */
+
+static int_pseudo_flags_t resolve_flags(int_pseudo_flags_t flags) {
+    switch (flags & eIntPseudoFlag_EndianMask) {
+    case eIntPseudoFlag_DynEndian:
+        flags &= ~eIntPseudoFlag_EndianMask;
+        flags |= TargetBigEndian ? eIntPseudoFlag_BigEndian : eIntPseudoFlag_LittleEndian;
+        break;
+    case eIntPseudoFlag_LittleEndian:
+    case eIntPseudoFlag_BigEndian:
+        break;
+    default:
+        fprintf(stderr, "%s: undefined endianess\n", OpPart.str.p_str);
+        abort();
+    }
+    return flags;
+}
+
+/*!------------------------------------------------------------------------
  * \fn     DecodeIntelDN(Word Flags)
  * \brief  Intel-style constant disposition - nibbles
  * \param  Flags Data Type & Endianess Flags
@@ -1916,17 +2342,26 @@ void DecodeIntelDN(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutNibble;
     LayoutCtx.BaseElemLenBits = 4;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put4I     = Put4I_To_8;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate4_To_8;
         break;
     case 2:
         LayoutCtx.Put4I     = Put4I_To_16;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
         LayoutCtx.Replicate = Replicate4_To_16;
         break;
+    case 4:
+        LayoutCtx.Put4I     = Put4I_To_32;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 7 : 0;
+        LayoutCtx.Replicate = Replicate4_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DN for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     DecodeIntelDx(&LayoutCtx);
 }
@@ -1943,7 +2378,7 @@ void DecodeIntelDB(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutByte;
     LayoutCtx.BaseElemLenBits = 8;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put8I     = Put8I_To_8;
@@ -1951,9 +2386,17 @@ void DecodeIntelDB(Word Flags) {
         break;
     case 2:
         LayoutCtx.Put8I     = Put8I_To_16;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate8_To_16;
         break;
+    case 4:
+        LayoutCtx.Put8I     = Put8I_To_32;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
+        LayoutCtx.Replicate = Replicate8_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DB for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize8Bit);
@@ -1973,19 +2416,32 @@ void DecodeIntelDW(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutWord;
     LayoutCtx.BaseElemLenBits = 16;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
-        LayoutCtx.Put16I    = (Flags & eIntPseudoFlag_AllowInt) ? Put16I_To_8 : NULL;
-        LayoutCtx.Put16F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put16F_To_8 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Put16I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put16I_To_8 : NULL;
+        LayoutCtx.Put16F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put16F_To_8 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
-        LayoutCtx.Put16I    = (Flags & eIntPseudoFlag_AllowInt) ? Put16I_To_16 : NULL;
-        LayoutCtx.Put16F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put16F_To_16 : NULL;
+        LayoutCtx.Put16I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put16I_To_16 : NULL;
+        LayoutCtx.Put16F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put16F_To_16 : NULL;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put16I    = (Flags & eIntPseudoFlag_AllowInt) ? Put16I_To_32 : NULL;
+        LayoutCtx.Put16F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put16F_To_32 : NULL;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Replicate = Replicate16_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DW for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize16Bit);
@@ -2005,20 +2461,32 @@ void DecodeIntelDD(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutDoubleWord;
     LayoutCtx.BaseElemLenBits = 32;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
-        LayoutCtx.Put32I    = (Flags & eIntPseudoFlag_AllowInt) ? Put32I_To_8 : NULL;
-        LayoutCtx.Put32F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put32F_To_8 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
+        LayoutCtx.Put32I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put32I_To_8 : NULL;
+        LayoutCtx.Put32F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put32F_To_8 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
-        LayoutCtx.Put32I    = (Flags & eIntPseudoFlag_AllowInt) ? Put32I_To_16 : NULL;
-        LayoutCtx.Put32F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put32F_To_16 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Put32I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put32I_To_16 : NULL;
+        LayoutCtx.Put32F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put32F_To_16 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put32I    = (Flags & eIntPseudoFlag_AllowInt) ? Put32I_To_32 : NULL;
+        LayoutCtx.Put32F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put32F_To_32 : NULL;
+        LayoutCtx.Replicate = Replicate32ToN_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DD for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize32Bit);
@@ -2038,20 +2506,33 @@ void DecodeIntelDM(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutMacAddr;
     LayoutCtx.BaseElemLenBits = 48;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
-        LayoutCtx.Put48I    = (Flags & eIntPseudoFlag_AllowInt) ? Put48I_To_8 : NULL;
-        LayoutCtx.Put48F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put48F_To_8 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 5 : 0;
+        LayoutCtx.Put48I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put48I_To_8 : NULL;
+        LayoutCtx.Put48F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put48F_To_8 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 5 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
-        LayoutCtx.Put48I    = (Flags & eIntPseudoFlag_AllowInt) ? Put48I_To_16 : NULL;
-        LayoutCtx.Put48F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put48F_To_16 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 2 : 0;
+        LayoutCtx.Put48I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put48I_To_16 : NULL;
+        LayoutCtx.Put48F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put48F_To_16 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 2 : 0;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put48I    = (Flags & eIntPseudoFlag_AllowInt) ? Put48I_To_32 : NULL;
+        LayoutCtx.Put48F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put48F_To_32 : NULL;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Replicate = Replicate32ToN_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DM for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize48Bit);
@@ -2071,20 +2552,33 @@ void DecodeIntelDQ(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutQuadWord;
     LayoutCtx.BaseElemLenBits = 64;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
-        LayoutCtx.Put64I    = (Flags & eIntPseudoFlag_AllowInt) ? Put64I_To_8 : NULL;
-        LayoutCtx.Put64F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put64F_To_8 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 7 : 0;
+        LayoutCtx.Put64I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put64I_To_8 : NULL;
+        LayoutCtx.Put64F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put64F_To_8 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 7 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
-        LayoutCtx.Put64I    = (Flags & eIntPseudoFlag_AllowInt) ? Put64I_To_16 : NULL;
-        LayoutCtx.Put64F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put64F_To_16 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
+        LayoutCtx.Put64I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put64I_To_16 : NULL;
+        LayoutCtx.Put64F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put64F_To_16 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put64I    = (Flags & eIntPseudoFlag_AllowInt) ? Put64I_To_32 : NULL;
+        LayoutCtx.Put64F    = (Flags & eIntPseudoFlag_AllowFloat) ? Put64F_To_32 : NULL;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Replicate = Replicate32ToN_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DQ for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize64Bit);
@@ -2104,20 +2598,29 @@ void DecodeIntelDT(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutTenBytes;
     LayoutCtx.BaseElemLenBits = 80;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
         LayoutCtx.Put80F    = Put80F_To_8;
         LayoutCtx.Put80I    = Put80I_To_8;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
         LayoutCtx.Put80F    = Put80F_To_16;
         LayoutCtx.Put80I    = Put80I_To_16;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put80F    = Put80F_To_32;
+        LayoutCtx.Put80I    = Put80I_To_32;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 1 : 0;
+        LayoutCtx.Replicate = Replicate32ToN_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DT for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize80Bit);
@@ -2137,20 +2640,33 @@ void DecodeIntelDO(Word Flags) {
     memset(&LayoutCtx, 0, sizeof(LayoutCtx));
     LayoutCtx.LayoutFunc      = LayoutOctaWord;
     LayoutCtx.BaseElemLenBits = 128;
-    LayoutCtx.flags           = Flags;
+    LayoutCtx.flags           = resolve_flags((int_pseudo_flags_t)Flags);
     switch (Grans[ActPC]) {
     case 1:
-        LayoutCtx.Put128I   = (Flags & eIntPseudoFlag_AllowInt) ? Put128I_To_8 : NULL;
-        LayoutCtx.Put128F   = (Flags & eIntPseudoFlag_AllowFloat) ? Put128F_To_8 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 15 : 0;
+        LayoutCtx.Put128I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put128I_To_8 : NULL;
+        LayoutCtx.Put128F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put128F_To_8 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 15 : 0;
         LayoutCtx.Replicate = Replicate8ToN_To_8;
         break;
     case 2:
-        LayoutCtx.Put128I   = (Flags & eIntPseudoFlag_AllowInt) ? Put128I_To_16 : NULL;
-        LayoutCtx.Put128F   = (Flags & eIntPseudoFlag_AllowFloat) ? Put128F_To_16 : NULL;
-        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 7 : 0;
+        LayoutCtx.Put128I
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowInt) ? Put128I_To_16 : NULL;
+        LayoutCtx.Put128F
+                = (LayoutCtx.flags & eIntPseudoFlag_AllowFloat) ? Put128F_To_16 : NULL;
+        LayoutCtx.LoHiMap   = (LayoutCtx.flags & eIntPseudoFlag_BigEndian) ? 7 : 0;
         LayoutCtx.Replicate = Replicate16ToN_To_16;
         break;
+    case 4:
+        LayoutCtx.Put128I   = (Flags & eIntPseudoFlag_AllowInt) ? Put128I_To_32 : NULL;
+        LayoutCtx.Put128F   = (Flags & eIntPseudoFlag_AllowFloat) ? Put128F_To_32 : NULL;
+        LayoutCtx.LoHiMap   = (Flags & eIntPseudoFlag_BigEndian) ? 3 : 0;
+        LayoutCtx.Replicate = Replicate32ToN_To_32;
+        break;
+    default:
+        fprintf(stderr, "implement DO for %u-bytes words\n", (unsigned)Grans[ActPC]);
+        exit(255);
     }
     if (*LabPart.str.p_str) {
         SetSymbolOrStructElemSize(&LabPart, eSymbolSize128Bit);
@@ -2184,50 +2700,43 @@ void DecodeIntelDS(Word item_size) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeIntelPseudo(Boolean BigEndian)
- * \brief  decode Intel-style pseudo instructions
- * \param  BigEndian target endianess
- * \return True if instruction found
+ * \fn     AddIntelPseudo(PInstTable p_inst_table, int_pseudo_flags_t flags)
+ * \brief  add Intelstyle pseudo instructions to hash table
+ * \param  p_inst_table table to augment
+ * \param  flags additional flags to parse to functions
  * ------------------------------------------------------------------------ */
 
-Boolean DecodeIntelPseudo(Boolean BigEndian) {
-    static PInstTable InstTables[2] = {NULL, NULL};
-    int               Idx           = !!BigEndian;
-
-    if (!InstTables[Idx]) {
-        PInstTable InstTable = CreateInstTable(17);
-        Word       Flag      = BigEndian ? eIntPseudoFlag_BigEndian : eIntPseudoFlag_None;
-
-        AddInstTable(InstTable, "DN", Flag | eIntPseudoFlag_AllowInt, DecodeIntelDN);
-        AddInstTable(
-                InstTable, "DB",
-                Flag | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString,
-                DecodeIntelDB);
-        AddInstTable(
-                InstTable, "DW",
-                Flag | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
-                        | eIntPseudoFlag_AllowFloat,
-                DecodeIntelDW);
-        AddInstTable(
-                InstTable, "DD",
-                Flag | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
-                        | eIntPseudoFlag_AllowFloat,
-                DecodeIntelDD);
-        AddInstTable(
-                InstTable, "DQ",
-                Flag | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
-                        | eIntPseudoFlag_AllowFloat,
-                DecodeIntelDQ);
-        AddInstTable(
-                InstTable, "DT",
-                Flag | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
-                        | eIntPseudoFlag_AllowFloat,
-                DecodeIntelDT);
-        AddInstTable(InstTable, "DO", Flag | eIntPseudoFlag_AllowFloat, DecodeIntelDO);
-        AddInstTable(InstTable, "DS", 1, DecodeIntelDS);
-        InstTables[Idx] = InstTable;
-    }
-    return LookupInstTable(InstTables[Idx], OpPart.str.p_str);
+void AddIntelPseudo(PInstTable p_inst_table, int_pseudo_flags_t flags) {
+    AddInstTable(p_inst_table, "DN", flags | eIntPseudoFlag_AllowInt, DecodeIntelDN);
+    AddInstTable(
+            p_inst_table, "DB",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString, DecodeIntelDB);
+    AddInstTable(
+            p_inst_table, "DW",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                    | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDW);
+    AddInstTable(
+            p_inst_table, "DD",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                    | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDD);
+    AddInstTable(
+            p_inst_table, "DQ",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                    | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDQ);
+    AddInstTable(
+            p_inst_table, "DT",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                    | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDT);
+    AddInstTable(
+            p_inst_table, "DO",
+            flags | eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString
+                    | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDO);
+    AddInstTable(p_inst_table, "DS", 1, DecodeIntelDS);
 }
 
 /*!------------------------------------------------------------------------

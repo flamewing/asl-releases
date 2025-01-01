@@ -38,4 +38,8 @@ extern int string_2_dasm_code(
 extern int string_2_wasm_code(
         const struct as_nonz_dynstr* p_str, int bytes_per_dword, Boolean big_endian);
 
+struct sInstTable;
+extern void decode_null(Word index);
+extern void add_null_pseudo(struct sInstTable* p_inst_table);
+
 #endif /* CODEPSEUDO_H */

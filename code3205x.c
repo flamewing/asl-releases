@@ -934,6 +934,8 @@ static void AddBit(char const* NName, CPUVar MinCPU, Word NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddFixed("ABS", CPU320203, 0xbe00);
     AddFixed("ADCB", CPU32050, 0xbe11);
@@ -1116,6 +1118,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "RPTZ", 0, DecodeRPTZ);
     AddInstTable(InstTable, "XC", 0, DecodeXC);
     AddInstTable(InstTable, "PORT", 0, DecodePORT);
+
+    add_ti_pseudo(InstTable);
 }
 
 static void DeinitFields(void) {
@@ -1132,18 +1136,9 @@ static void DeinitFields(void) {
 /* ---------------------------------------------------------------------- */
 
 static void MakeCode_3205x(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     /* Pseudoanweisungen */
 
-    if (DecodeTIPseudo()) {
+    if (decode_ti_qxx()) {
         return;
     }
 

@@ -346,6 +346,8 @@ static void AddALU(char const* NName, LongWord NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(97);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddReg("RL", 0x20002);
     AddReg("RR", 0x2000c);
@@ -387,6 +389,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "CONSTANT", 0, DecodeConstant);
 
     AddInstTable(InstTable, "NOP", 0, DecodeNop);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 static void DeinitFields(void) {
@@ -427,21 +431,6 @@ static void SwitchFrom_KCPSM3(void) {
 }
 
 static void MakeCode_KCPSM3(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

@@ -16,10 +16,11 @@
 
 #include "codepseudo.h"
 
+#include "as_endian.h"
 #include "asmdef.h"
+#include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "chunks.h"
 #include "errmsg.h"
@@ -311,3 +312,17 @@ Boolean QualifyQuote_SingleQuoteConstant(char const* pStart, char const* pQuoteP
 
 declare_string_2_xasm_code(string_2_dasm_code, LongWord, DAsmCode)
         declare_string_2_xasm_code(string_2_wasm_code, Word, WAsmCode)
+
+        /*!------------------------------------------------------------------------
+         * \fn     add_null_pseudo(struct sInstTable *p_inst_table)
+         * \brief  add handle to ignore empty instruction
+         * \param  p_inst_table table to augment
+         * ------------------------------------------------------------------------ */
+
+        void decode_null(Word code) {
+    UNUSED(code);
+}
+
+void add_null_pseudo(struct sInstTable* p_inst_table) {
+    AddInstTable(p_inst_table, "", 0, decode_null);
+}

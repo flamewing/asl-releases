@@ -17,6 +17,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "intpseudo.h"
@@ -65,9 +66,8 @@ enum {
 #define MModIX  (1 << ModIX)
 #define MModX   (1 << ModX)
 
-static ShortInt    AdrMode;
-static tSymbolSize OpSize;
-static Byte        AdrVals[2];
+static ShortInt AdrMode;
+static Byte     AdrVals[2];
 
 static IntType AdrIntType;
 
@@ -228,7 +228,6 @@ static void DecodeMOV(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(2, 2)) {
-        OpSize = eSymbolSize8Bit;
         DecodeAdr(1, 1, MModImm | MModDir | MModIX);
         switch (AdrMode) {
         case ModImm:
@@ -310,7 +309,6 @@ static void DecodeCBEQx(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(2, 2)) {
-        OpSize = eSymbolSize8Bit;
         DecodeAdr(1, 1, MModImm);
         if (AdrMode == ModImm) {
             BAsmCode[1] = AdrVals[0];
@@ -725,6 +723,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(177);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddFixed("SHA", CPU68RS08, 0x45);
     AddFixed("SLA", CPU68RS08, 0x42);
@@ -803,7 +803,8 @@ static void InitFields(void) {
     add_brset_brclr("BRCLR", 0x01);
     add_brset_brclr("BRSET", 0x00);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be);
+    add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",
             eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
@@ -839,20 +840,8 @@ static Boolean DecodeAttrPart_68rs08(void) {
 }
 
 static void MakeCode_68rs08(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = AttrPartOpSize[0];
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeMoto16Pseudo(OpSize, True)) {
-        return;
+    if (AttrPartOpSize[0] == eSymbolSizeUnknown) {
+        AttrPartOpSize[0] = eSymbolSize8Bit;
     }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {

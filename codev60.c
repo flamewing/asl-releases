@@ -2527,6 +2527,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(201);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "ABSF", 0x0a5c, DecodeArithF);
     AddInstTable(InstTable, "ADDF", 0x185c, DecodeArithF);
     AddInstTable(InstTable, "CMPF", 0x005c, DecodeArithF);
@@ -2709,6 +2711,7 @@ static void InitFields(void) {
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
     AddInstTable(InstTable, "PORT", 0, CodePORT);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_le);
 }
 
 /*!------------------------------------------------------------------------
@@ -2799,21 +2802,7 @@ static Boolean DecodeAttrPart_V60(void) {
  * ------------------------------------------------------------------------ */
 
 static void MakeCode_V60(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = eSymbolSizeUnknown;
-
-    /* to be ignored */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudo Instructions */
-
-    if (DecodeMoto16Pseudo(AttrPartOpSize[0], False)) {
-        return;
-    }
+    OpSize = eSymbolSizeUnknown;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

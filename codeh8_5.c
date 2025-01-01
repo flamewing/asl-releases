@@ -1786,12 +1786,6 @@ static void DecodeTRAPA(Word Dummy) {
     }
 }
 
-static void DecodeDATA(Word Dummy) {
-    UNUSED(Dummy);
-
-    DecodeMotoDC(OpSize, True);
-}
-
 static void DecodeBIT(Word Code) {
     UNUSED(Code);
 
@@ -1892,6 +1886,8 @@ static void InitFields(void) {
 
     InstTable = CreateInstTable(302);
 
+    add_null_pseudo(InstTable);
+
     AddFixed("NOP", 0x0000);
     AddFixed("PRTS", 0x1119);
     AddFixed("RTE", 0x000a);
@@ -1990,8 +1986,9 @@ static void InitFields(void) {
     AddBit("BTST", 0x70);
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
-    AddInstTable(InstTable, "DATA", 0, DecodeDATA);
+    AddInstTable(InstTable, "DATA", e_moto_pseudo_flags_be, DecodeMotoDC);
     AddInstTable(InstTable, "BIT", 0, DecodeBIT);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
 }
 
 static void DeinitFields(void) {
@@ -2071,26 +2068,12 @@ static Boolean DecodeAttrPart_H8_5(void) {
 }
 
 static void MakeCode_H8_5(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    AbsBank   = Reg_DP;
-
-    /* to be ignored */
-
-    if (Memo("")) {
-        return;
-    }
+    AbsBank = Reg_DP;
 
     OpSize = eSymbolSizeUnknown;
     if (*AttrPart.str.p_str) {
         SetOpSize(AttrPartOpSize[0]);
     }
-
-    if (DecodeMoto16Pseudo(OpSize, True)) {
-        return;
-    }
-
-    /* Sonderfaelle */
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

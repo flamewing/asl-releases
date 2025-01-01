@@ -87,7 +87,7 @@ static IntType  OpSize;
 static ShortInt AdrMode;
 static Word     AdrVals[3];
 
-static Boolean ThisPar;
+static Boolean ThisPar, ThisMachineInstruction;
 static Word    LastOpCode;
 
 /*-------------------------------------------------------------------------*/
@@ -2313,16 +2313,26 @@ static void DecodePort(Word Index) {
     }
 }
 
+static void prep_machine_insn(Word index) {
+    UNUSED(index);
+    ThisMachineInstruction = True;
+}
+
+static void prep_pseudo_insn(Word index) {
+    UNUSED(index);
+    ThisMachineInstruction = False;
+    if (ThisPar) {
+        WrError(ErrNum_ParNotPossible);
+    }
+}
+
 /*-------------------------------------------------------------------------*/
 /* Pseudo Instructions */
 
-static Boolean DecodePseudo(void) {
-    if (Memo("PORT")) {
-        CodeEquate(SegIO, 0, 65535);
-        return True;
-    }
+static void decode_port(Word code) {
+    UNUSED(code);
 
-    return False;
+    CodeEquate(SegIO, 0, 65535);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2424,6 +2434,8 @@ static void AddCondition(char const* NName, Word NClass, Word NCode, Word NMask)
 
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
+
+    inst_table_set_prefix_proc(InstTable, prep_machine_insn, 0);
 
     AddInstTable(InstTable, "LD", 0, DecodeLD);
     AddInstTable(InstTable, "ST", 0, DecodeST);
@@ -2632,6 +2644,11 @@ static void InitFields(void) {
     AddCondition("BOV", 2, 0x0078, 0x00f0);
     AddCondition("BNOV", 2, 0x0068, 0x00f0);
     AddCondition("UNC", 3, 0x0000, 0x00ff);
+
+    inst_table_set_prefix_proc(InstTable, prep_pseudo_insn, 0);
+    AddInstTable(InstTable, "", 0, decode_null);
+    AddInstTable(InstTable, "PORT", 0, decode_port);
+    add_ti_pseudo(InstTable);
 }
 
 static void DeinitFields(void) {
@@ -2651,38 +2668,33 @@ static void DeinitFields(void) {
 /* Linking Routines */
 
 static void MakeCode_32054x(void) {
-    CodeLen   = 0;
-    DontPrint = False;
+    Boolean found;
 
-    ThisPar = !strcmp(LabPart.str.p_str, "||");
-    if ((strlen(OpPart.str.p_str) > 2) && (!strncmp(OpPart.str.p_str, "||", 2))) {
+    if (!strcmp(LabPart.str.p_str, "||")) {
+        ThisPar = True;
+    } else if (!strncmp(OpPart.str.p_str, "||", 2)) {
         ThisPar = True;
         strmov(OpPart.str.p_str, OpPart.str.p_str + 2);
+    } else {
+        ThisPar = False;
     }
-
-    /* zu ignorierendes */
-
-    if (*OpPart.str.p_str == '\0') {
-        return;
-    }
-
-    if (DecodePseudo()) {
-        return;
-    }
-
-    if (DecodeTIPseudo()) {
-        return;
-    }
-
-    /* search */
 
     ThisRep       = False;
     ForcePageZero = False;
-    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+
+    found = decode_ti_qxx();
+    if (found) {
+        prep_pseudo_insn(0);
     } else {
+        found = LookupInstTable(InstTable, OpPart.str.p_str);
+    }
+
+    if (!found) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+    } else if (ThisMachineInstruction) {
         LastOpCode = *WAsmCode;
     }
+
     LastRep = ThisRep;
 }
 

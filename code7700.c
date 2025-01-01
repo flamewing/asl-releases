@@ -1148,6 +1148,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(403);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "BRK", 0, DecodeBRK);
     AddInstTable(InstTable, "PHB", 0, DecodePHB_PLB);
     AddInstTable(InstTable, "PLB", 0x20, DecodePHB_PLB);
@@ -1294,7 +1296,8 @@ static void InitFields(void) {
     AddMulDiv("DIV", 0x0020, 14);
     AddMulDiv("DIVS", 0x00a0, 12); /*???*/
 
-    init_moto8_pseudo(InstTable, e_moto_8_le | e_moto_8_ddb);
+    add_moto8_pseudo(InstTable, e_moto_pseudo_flags_le | e_moto_pseudo_flags_ddb);
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -1305,21 +1308,7 @@ static void DeinitFields(void) {
 }
 
 static void MakeCode_7700(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    BankReg   = Reg_DT;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
+    BankReg = Reg_DT;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

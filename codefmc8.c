@@ -17,6 +17,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -811,6 +812,8 @@ static void AddRel(char const* NName, Byte NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(201);
 
+    add_null_pseudo(InstTable);
+
     AddFixed("SWAP", 0x10);
     AddFixed("DAA", 0x84);
     AddFixed("DAS", 0x94);
@@ -870,6 +873,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "CALLV", 0, DecodeCALLV);
     AddInstTable(InstTable, "PUSHW", 0, DecodeStack);
     AddInstTable(InstTable, "POPW", 1, DecodeStack);
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -880,18 +884,6 @@ static void DeinitFields(void) {
 /* Interface zu AS */
 
 static void MakeCode_F2MC8(void) {
-    /* Leeranweisung ignorieren */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

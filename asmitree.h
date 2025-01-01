@@ -16,23 +16,13 @@
 #include "datatypes.h"
 
 #include <stdio.h>
-
 typedef void (*InstProc)(Word Index);
-
 typedef Boolean (*inst_fnc_t)(Word index);
 
-typedef struct tag_TInstTreeNode {
-    struct tag_TInstTreeNode *Left, *Right;
-    InstProc                  Proc;
-    char*                     Name;
-    Word                      Index;
-    ShortInt                  Balance;
-} TInstTreeNode, *PInstTreeNode;
-
 typedef struct tag_TInstTableEntry {
-    InstProc Proc;
+    InstProc Procs[2];
     char*    Name;
-    Word     Index;
+    Word     Indices[2];
     int      Coll;
 } TInstTableEntry, *PInstTableEntry;
 
@@ -46,6 +36,8 @@ typedef struct inst_fnc_table_entry {
 struct sInstTable {
     int             Fill, Size;
     Boolean         Dynamic;
+    InstProc        prefix_proc;
+    Word            prefix_proc_index;
     PInstTableEntry Entries;
 };
 typedef struct sInstTable  TInstTable;
@@ -57,14 +49,6 @@ typedef struct inst_fnc_table {
     inst_fnc_table_entry_t* p_entries;
 } inst_fnc_table_t;
 
-extern void AddInstTree(PInstTreeNode* Root, char* NName, InstProc NProc, Word NIndex);
-
-extern void ClearInstTree(PInstTreeNode* Root);
-
-extern Boolean SearchInstTree(PInstTreeNode Root, char* OpPart);
-
-extern void PrintInstTree(PInstTreeNode Root);
-
 extern PInstTable        CreateInstTable(int TableSize);
 extern inst_fnc_table_t* inst_fnc_table_create(int table_size);
 
@@ -74,15 +58,17 @@ extern void DestroyInstTable(PInstTable tab);
 extern void inst_fnc_table_destroy(inst_fnc_table_t* p_table);
 
 extern void AddInstTable(PInstTable tab, char const* Name, Word Index, InstProc Proc);
+extern void inst_table_set_prefix_proc(
+        PInstTable tab, InstProc prefix_proc, Word prefix_proc_index);
 extern void inst_fnc_table_add(
         inst_fnc_table_t* p_table, char const* p_name, Word index, inst_fnc_t fnc);
 
 extern void RemoveInstTable(PInstTable tab, char const* Name);
 
-extern Boolean LookupInstTable(PInstTable tab, char const* Name);
+extern Boolean                LookupInstTable(PInstTable tab, char const* Name);
+extern TInstTableEntry const* inst_table_search(PInstTable p_table, char const* p_name);
+extern void                   inst_table_exec(TInstTableEntry const* p_entry);
 extern Boolean inst_fnc_table_lookup(inst_fnc_table_t const* p_table, char const* p_name);
-extern InstProc inst_fnc_table_search(
-        PInstTable p_table, char const* p_name, Word* p_index);
 
 extern void PrintInstTable(FILE* stream, PInstTable tab);
 

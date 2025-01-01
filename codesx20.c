@@ -513,6 +513,8 @@ static void DecodeZERO(Word Code) {
 static void InitFields(void) {
     InstTable = CreateInstTable(103);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "NOP", NOPCode, DecodeFixed);
     AddInstTable(InstTable, "RET", 0x00c, DecodeFixed);
     AddInstTable(InstTable, "RETP", 0x00d, DecodeFixed);
@@ -575,15 +577,6 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_SX20(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

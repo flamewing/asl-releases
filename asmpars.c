@@ -23,6 +23,7 @@
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
+#include "cmdarg.h"
 #include "dynstr_nls.h"
 #include "errmsg.h"
 #include "fileformat.h"
@@ -229,6 +230,7 @@ static char*        LastGlobSymbol;
 static PFunction    FirstFunction; /* Liste definierter Funktionen */
 static char const   inf_name[] = "INF";
 static Boolean      inf_reserved;
+static int          def_radix_base;
 
 static void SymbolHashTableInit(PSymbolHashTable* ppHash) {
     if (!*ppHash) {
@@ -373,7 +375,7 @@ static void DestroySymbolHashTable(
 }
 
 void InitPass_AsmPars(void) {
-    RadixBase    = 10;
+    RadixBase    = def_radix_base;
     OutRadixBase = 16;
 }
 
@@ -1727,6 +1729,32 @@ static void test_found_op(
     }
 }
 
+typedef struct {
+    as_eval_cb_data_t cb_data;
+    PFunction         p_function;
+    TempResult**      p_arg_vals;
+} function_eval_cb_data_t;
+
+DECLARE_AS_EVAL_CB(function_eval_cb) {
+    function_eval_cb_data_t* p_function_eval_cb_data = (function_eval_cb_data_t*)p_data;
+    int                      z;
+    char const*              p_arg_name;
+    StringRecPtr             p_run;
+
+    for (z = 0, p_arg_name = GetStringListFirst(
+                        p_function_eval_cb_data->p_function->p_arg_list, &p_run);
+         z < p_function_eval_cb_data->p_function->ArguCnt;
+         z++, p_arg_name = GetStringListNext(&p_run)) {
+        Boolean match = CaseSensitive ? !strcmp(p_arg->str.p_str, p_arg_name)
+                                      : !as_strcasecmp(p_arg->str.p_str, p_arg_name);
+        if (match) {
+            as_tempres_copy(p_res, p_function_eval_cb_data->p_arg_vals[z]);
+            return e_eval_ok;
+        }
+    }
+    return e_eval_none;
+}
+
 void EvalStrExpressionWithCallback(
         tStrComp const* pExpr, TempResult* pErg, as_eval_flags_t eval_flags,
         as_eval_cb_data_t* p_callback_data) {
@@ -2064,19 +2092,21 @@ void EvalStrExpressionWithCallback(
 
         ValFunc = FindFunction(FName.str.p_str);
         if (ValFunc) {
-            as_dynstr_t CompArgStr;
-            tStrComp    CompArg;
-            as_dynstr_t stemp;
+            tStrComp                func_def_arg;
+            function_eval_cb_data_t fnc_cb_data;
 
-            PromotedFlags         = eSymbolFlag_None;
-            PromotedAddrSpaceMask = 0;
-            PromotedDataSize      = eSymbolSizeUnknown;
-            as_dynstr_ini_c_str(&CompArgStr, ValFunc->Definition);
-            as_dynstr_ini(&stemp, STRINGSIZE);
+            as_eval_cb_data_ini(&fnc_cb_data.cb_data, function_eval_cb);
+            fnc_cb_data.p_function = ValFunc;
+            fnc_cb_data.p_arg_vals = (TempResult**)calloc(
+                    ValFunc->ArguCnt, sizeof(*fnc_cb_data.p_arg_vals));
+
+            PromotedFlags            = eSymbolFlag_None;
+            PromotedAddrSpaceMask    = 0;
+            PromotedDataSize         = eSymbolSizeUnknown;
             cb_data_stack.type       = e_function;
             cb_data_stack.p_ident    = FName.str.p_str;
             p_callback_data->p_stack = &cb_data_stack;
-            for (z1 = 1, cb_data_stack.arg_index = 0; z1 <= ValFunc->ArguCnt;
+            for (z1 = 0, cb_data_stack.arg_index = 0; z1 < ValFunc->ArguCnt;
                  z1++, cb_data_stack.arg_index++) {
                 if (!*FArg.str.p_str) {
                     WrError(ErrNum_InvFuncArgCnt);
@@ -2088,17 +2118,29 @@ void EvalStrExpressionWithCallback(
                     StrCompSplitRef(&FArg, &Remainder, &FArg, p_arg_split_pos);
                 }
 
+                fnc_cb_data.p_arg_vals[z1] = (z1 < (int)as_array_size(InVals))
+                                                     ? &InVals[z1]
+                                                     : as_tempres_dyn_ini();
+
                 EvalStrExpressionWithCallback(
-                        &FArg, &InVals[0], eval_flags, p_callback_data);
-                if (InVals[0].Relocs) {
-                    WrStrErrorPos(ErrNum_NoRelocs, &FArg);
-                    FreeRelocs(&InVals[0].Relocs);
+                        &FArg, fnc_cb_data.p_arg_vals[z1], eval_flags, p_callback_data);
+                /* Preserve the legacy function argument domain. Register values
+                   previously stopped evaluation without a diagnostic; conditional
+                   macros use this to select their register operand path. */
+                if (!(fnc_cb_data.p_arg_vals[z1]->Typ
+                      & (TempInt | TempFloat | TempString))) {
                     LEAVE2;
                 }
-                PromotedFlags |= InVals[0].Flags & eSymbolFlags_Promotable;
-                PromotedAddrSpaceMask |= InVals[0].AddrSpaceMask;
+                if (fnc_cb_data.p_arg_vals[z1]->Relocs) {
+                    WrStrErrorPos(ErrNum_NoRelocs, &FArg);
+                    FreeRelocs(&fnc_cb_data.p_arg_vals[z1]->Relocs);
+                    LEAVE2;
+                }
+                PromotedFlags
+                        |= fnc_cb_data.p_arg_vals[z1]->Flags & eSymbolFlags_Promotable;
+                PromotedAddrSpaceMask |= fnc_cb_data.p_arg_vals[z1]->AddrSpaceMask;
                 if (PromotedDataSize == eSymbolSizeUnknown) {
-                    PromotedDataSize = InVals[0].DataSize;
+                    PromotedDataSize = fnc_cb_data.p_arg_vals[z1]->DataSize;
                 }
 
                 if (p_arg_split_pos) {
@@ -2106,28 +2148,28 @@ void EvalStrExpressionWithCallback(
                 } else {
                     StrCompReset(&FArg);
                 }
-
-                as_sdprintf(&stemp, "(");
-                if (as_tempres_append_dynstr(&stemp, &InVals[0])) {
-                    LEAVE2;
-                }
-                as_sdprcatf(&stemp, ")");
-                ExpandLine(stemp.p_str, z1, &CompArgStr);
             }
             if (*FArg.str.p_str) {
                 WrError(ErrNum_InvFuncArgCnt);
                 LEAVE2;
             }
-            StrCompMkTemp(&CompArg, CompArgStr.p_str, CompArgStr.capacity);
-            EvalStrExpressionWithCallback(&CompArg, pErg, eval_flags, p_callback_data);
+            StrCompMkTemp(
+                    &func_def_arg, ValFunc->Definition, strlen(ValFunc->Definition));
+            EvalStrExpressionWithCallback(
+                    &func_def_arg, pErg, eval_flags, &fnc_cb_data.cb_data);
             pErg->Flags |= PromotedFlags;
             pErg->AddrSpaceMask |= PromotedAddrSpaceMask;
             if (pErg->DataSize == eSymbolSizeUnknown) {
                 pErg->DataSize = PromotedDataSize;
             }
         func_exit2:
-            as_dynstr_free(&stemp);
-            as_dynstr_free(&CompArgStr);
+            for (z1 = 0; z1 < ValFunc->ArguCnt; z1++) {
+                if (z1 >= (int)as_array_size(InVals) && fnc_cb_data.p_arg_vals[z1]) {
+                    as_tempres_dyn_free(fnc_cb_data.p_arg_vals[z1]);
+                }
+                fnc_cb_data.p_arg_vals[z1] = NULL;
+            }
+            free(fnc_cb_data.p_arg_vals);
             LEAVE;
         }
 
@@ -4044,7 +4086,9 @@ void ClearStacks(void) {
 /*-------------------------------------------------------------------------*/
 /* Funktionsverwaltung */
 
-void EnterFunction(tStrComp const* pComp, char* FDefinition, Byte NewCnt) {
+void EnterFunction(
+        tStrComp const* pComp, char const* FDefinition, Byte NewCnt,
+        StringList* p_arg_list) {
     PFunction   Neu;
     String      FName_N;
     char const* pFName;
@@ -4059,6 +4103,7 @@ void EnterFunction(tStrComp const* pComp, char* FDefinition, Byte NewCnt) {
 
     if (!ChkSymbName(pFName)) {
         WrStrErrorPos(ErrNum_InvSymName, pComp);
+        ClearStringList(p_arg_list);
         return;
     }
 
@@ -4066,6 +4111,7 @@ void EnterFunction(tStrComp const* pComp, char* FDefinition, Byte NewCnt) {
         if (PassNo == 1) {
             WrStrErrorPos(ErrNum_DoubleDef, pComp);
         }
+        ClearStringList(p_arg_list);
         return;
     }
 
@@ -4074,6 +4120,8 @@ void EnterFunction(tStrComp const* pComp, char* FDefinition, Byte NewCnt) {
     Neu->ArguCnt    = NewCnt;
     Neu->Name       = as_strdup(pFName);
     Neu->Definition = as_strdup(FDefinition);
+    Neu->p_arg_list = *p_arg_list;
+    *p_arg_list     = NULL;
     FirstFunction   = Neu;
 }
 
@@ -4087,7 +4135,7 @@ PFunction FindFunction(char const* Name) {
         Name = Name_N;
     }
 
-    while ((Lauf) && (strcmp(Lauf->Name, Name))) {
+    while (Lauf && (strcmp(Lauf->Name, Name))) {
         Lauf = Lauf->Next;
     }
     return Lauf;
@@ -4138,6 +4186,7 @@ void ClearFunctionList(void) {
         Lauf = FirstFunction->Next;
         free(FirstFunction->Name);
         free(FirstFunction->Definition);
+        ClearStringList(&FirstFunction->p_arg_list);
         free(FirstFunction);
         FirstFunction = Lauf;
     }
@@ -4730,6 +4779,28 @@ void PrintCodepages(void) {
 
 /*--------------------------------------------------------------------------*/
 
+static as_cmd_result_t cmd_radix(Boolean negate, char const* p_arg) {
+    if (negate) {
+        def_radix_base = 10;
+        return e_cmd_ok;
+    } else if (!p_arg) {
+        return e_cmd_err;
+    } else {
+        Boolean ok;
+        int     new_def_radix_base = ConstLongInt(p_arg, &ok, 10);
+
+        if (!ok || (new_def_radix_base < 2) || (new_def_radix_base > 36)) {
+            return e_cmd_err;
+        }
+        def_radix_base = new_def_radix_base;
+        return e_cmd_arg;
+    }
+}
+
+static as_cmd_rec_t const asmpars_params[] = {
+        {"radix", cmd_radix},
+};
+
 void asmpars_init(void) {
     tIntTypeDef* pCurr;
     char*        p_end;
@@ -4772,4 +4843,7 @@ void asmpars_init(void) {
 
     (void)strtod(inf_name, &p_end);
     inf_reserved = !*p_end;
+
+    def_radix_base = 10;
+    as_cmd_register(asmpars_params, as_array_size(asmpars_params));
 }

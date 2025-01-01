@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
@@ -394,6 +395,8 @@ static void AddImm4(char const* NName, Byte NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(101);
 
+    add_null_pseudo(InstTable);
+
     AddFixed("NOP", 0x00, CPU4004);
     AddFixed("WRM", 0xe0, CPU4004);
     AddFixed("WMP", 0xe1, CPU4004);
@@ -504,15 +507,6 @@ static void InternSymbol_4004(char* pArg, TempResult* pResult) {
 }
 
 static void MakeCode_4004(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

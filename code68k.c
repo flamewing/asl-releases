@@ -6246,6 +6246,18 @@ static void DecodeSTR(Word Index) {
     }
 }
 
+static void assure_pc_even(Word index) {
+    UNUSED(index);
+
+    if (Odd(EProgCounter())) {
+        if (DoPadding) {
+            InsertPadding(1, False);
+        } else {
+            WrError(ErrNum_AddrNotAligned);
+        }
+    }
+}
+
 /*-------------------------------------------------------------------------*/
 /* Codetabellenverwaltung */
 
@@ -6318,6 +6330,8 @@ static void AddPMMUReg(char const* Name, tSymbolSize Size, Word Code) {
 static void InitFields(void) {
     InstTable = CreateInstTable(607);
     SetDynamicInstTable(InstTable);
+
+    inst_table_set_prefix_proc(InstTable, assure_pc_even, 0);
 
     AddInstTable(InstTable, "MOVE", Std_Variant, DecodeMOVE);
     AddInstTable(InstTable, "MOVEA", A_Variant, DecodeMOVE);
@@ -6647,7 +6661,10 @@ static void InitFields(void) {
     AddPMMUReg("MMUSR", eSymbolSize16Bit, 24);
     AddPMMUReg(NULL, eSymbolSizeUnknown, 0);
 
+    inst_table_set_prefix_proc(InstTable, NULL, 0);
+
     AddInstTable(InstTable, "REG", 0, CodeREG);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
 }
 
 static void DeinitFields(void) {
@@ -6689,16 +6706,13 @@ static Boolean DecodeAttrPart_68K(void) {
 }
 
 static void MakeCode_68K(void) {
-    InstProc inst_proc;
-    Word     inst_index;
-
-    CodeLen   = 0;
-    OpSize    = (AttrPartOpSize[0] != eSymbolSizeUnknown)
-                        ? AttrPartOpSize[0]
-                        : ((pCurrCPUProps->Family == eColdfire) ? eSymbolSize32Bit
-                                                                : eSymbolSize16Bit);
-    DontPrint = False;
-    RelPos    = 2;
+    if (AttrPartOpSize[0] == eSymbolSizeUnknown) {
+        AttrPartOpSize[0]
+                = ((pCurrCPUProps->Family == eColdfire) ? eSymbolSize32Bit
+                                                        : eSymbolSize16Bit);
+    }
+    OpSize = AttrPartOpSize[0];
+    RelPos = 2;
 
     /* Nullanweisung */
 
@@ -6706,29 +6720,9 @@ static void MakeCode_68K(void) {
         return;
     }
 
-    /* Pseudoanweisungen */
-
-    if (DecodeMoto16Pseudo(OpSize, True)) {
-        return;
-    }
-
-    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
-    if (!inst_proc) {
+    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-        return;
     }
-
-    /* Befehlszaehler ungerade ? */
-
-    if (Odd(EProgCounter())) {
-        if (DoPadding) {
-            InsertPadding(1, False);
-        } else {
-            WrError(ErrNum_AddrNotAligned);
-        }
-    }
-
-    inst_proc(inst_index);
 }
 
 static Boolean IsDef_68K(void) {

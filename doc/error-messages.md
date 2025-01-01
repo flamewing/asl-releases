@@ -335,3 +335,5 @@ Error 1030, **reserved symbol name**: a syntactically valid name is reserved for
 Warning 480, **argument treated as vector**: an ambiguous untyped numeric operand is interpreted as a vector rather than an address. Use a CODE-space label when an address is intended.
 
 Warning 490, **interpreting too large integer constant as float**: the integer syntax is valid but exceeds the internal integer range, so AS attempts a floating-point representation instead.
+
+Error 1491, **duplicate function argument name**: two parameters of one function use the same name. Give each parameter a distinct name.

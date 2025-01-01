@@ -1062,7 +1062,7 @@ static void DecodeFixed(Word Index) {
 
 static void DecodePar(Word Index) {
     ParOrder const* pOrder = ParOrders + Index;
-    Boolean         OK, DontAdd;
+    Boolean         OK, DontAdd, is_cmpm = (pOrder->Code == 0x07);
     tSymbolFlags    Flags;
     tStrComp        LeftRegComp;
     LargeInt        LAddVal;
@@ -1176,7 +1176,7 @@ static void DecodePar(Word Index) {
             if (!DecodeALUReg(RightComp.str.p_str, &Reg2, False, False, True)) {
                 SetXError(ErrNum_InvReg, &RightComp);
             } else if (*LeftComp.str.p_str == '#') {
-                if (Memo("CMPM")) {
+                if (is_cmpm) {
                     SetError(ErrNum_InvAddrMode);
                 } else if (MomCPU < CPU56300) {
                     SetError(ErrNum_InstructionNotSupported);
@@ -1201,11 +1201,11 @@ static void DecodePar(Word Index) {
                     SetXError(ErrNum_InvReg, &LeftComp);
                 } else if ((Reg1 ^ Reg2) == 1) {
                     SetError(ErrNum_InvRegPair);
-                } else if ((Memo("CMPM")) && ((Reg1 & 6) == 2)) {
+                } else if (is_cmpm && ((Reg1 & 6) == 2)) {
                     SetXError(ErrNum_InvReg, &LeftComp);
                 } else {
                     if (Reg1 < 2) {
-                        Reg1 = Ord(!Memo("CMPM"));
+                        Reg1 = !is_cmpm;
                     }
                     h = (Reg2 << 3) + (Reg1 << 4);
                 }
@@ -2628,6 +2628,9 @@ static void AddCondition(char const* pName, InstProc Proc) {
 static void InitFields(void) {
     InstTable = CreateInstTable(307);
     SetDynamicInstTable(InstTable);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "DIV", 0, DecodeDIV);
     AddInstTable(InstTable, "INC", 0x0008, DecodeINC_DEC);
     AddInstTable(InstTable, "DEC", 0x000a, DecodeINC_DEC);
@@ -2775,15 +2778,6 @@ static void DeinitFields(void) {
 }
 
 static void MakeCode_56K(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

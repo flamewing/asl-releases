@@ -13,7 +13,9 @@
 #include "addrspace.h"
 #include "errmsg.h"
 #include "intformat.h"
+#include "lstmacroexp.h"
 #include "strcomp.h"
+#include "stringlists.h"
 #include "symbolsize.h"
 #include "symflags.h"
 #include "tempresult.h"
@@ -134,6 +136,7 @@ DefCPPOps_Mask(as_symbol_entry_flags_t)
     struct tag_TFunction* Next;
     Byte                  ArguCnt;
     StringPtr             Name, Definition;
+    StringList            p_arg_list;
 } TFunction, *PFunction;
 
 typedef struct sEvalResult {
@@ -180,6 +183,7 @@ struct sStrComp;
 struct as_nonz_dynstr;
 struct sRelocEntry;
 struct sSymbolEntry;
+struct sStringRec;
 
 extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern LongInt     MomLocHandle;
@@ -351,7 +355,9 @@ extern Boolean PopSymbol(
 
 extern void ClearStacks(void);
 
-extern void EnterFunction(const struct sStrComp* pComp, char* FDefinition, Byte NewCnt);
+extern void EnterFunction(
+        const struct sStrComp* pComp, char const* FDefinition, Byte NewCnt,
+        StringList* p_arg_list);
 
 extern PFunction FindFunction(char const* Name);
 

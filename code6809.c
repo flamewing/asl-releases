@@ -1218,6 +1218,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(307);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "SWI", 0, DecodeSWI);
     AddInstTable(InstTable, "LDQ", 0, DecodeLDQ);
     AddInstTable(InstTable, "TFR", 0x1f, DecodeTFR_TFM);
@@ -1465,7 +1467,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "LDBT", InstrZ++, DecodeBit);
     AddInstTable(InstTable, "STBT", InstrZ++, DecodeBit);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be);
+    add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",
             eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
@@ -1503,23 +1506,8 @@ static Boolean DecodeAttrPart_6809(void) {
 }
 
 static void MakeCode_6809(void) {
-    tSymbolSize OpSize;
-
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = (AttrPartOpSize[0] != eSymbolSizeUnknown) ? AttrPartOpSize[0]
-                                                          : eSymbolSize8Bit;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeMoto16Pseudo(OpSize, True)) {
-        return;
+    if (AttrPartOpSize[0] == eSymbolSizeUnknown) {
+        AttrPartOpSize[0] = eSymbolSize8Bit;
     }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {

@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
@@ -239,6 +240,8 @@ static void decode_data_pps4(Word code) {
 static void init_fields(void) {
     InstTable = CreateInstTable(101);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "AD", 0x0b, decode_fixed);
     AddInstTable(InstTable, "ADC", 0x0a, decode_fixed);
     AddInstTable(InstTable, "ADSK", 0x09, decode_fixed);
@@ -315,17 +318,6 @@ static void deinit_fields(void) {
  * ------------------------------------------------------------------------ */
 
 static void make_code_pps4(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* to be ignored */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* pseudo instructions */
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

@@ -509,6 +509,8 @@ static void DecodeDATA_1750(Word Code) {
 static void InitFields(void) {
     InstTable = CreateInstTable(403);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "AISP", 0xA200, DecodeIS);
     AddInstTable(InstTable, "AIM", 0x4A01, DecodeImOcx);
     AddInstTable(InstTable, "AR", 0xA100, DecodeR);
@@ -740,15 +742,6 @@ static void DeinitFields(void) {
 /* interface to common layer */
 
 static void MakeCode_1750(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

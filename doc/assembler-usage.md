@@ -1018,3 +1018,6 @@ The listing learns maximum include depth in the first pass and retains it across
 `DEFINED(expression)` returns true when all symbols in the expression have been defined before this point. It also accepts a single symbol name.
 
 Binary operand evaluation order is unspecified, except for logical AND and OR: they evaluate the left operand first and skip the right operand when the result is already determined.
+
+- `-radix <2...36>` selects the initial base for unmarked integer constants; `RADIX` can override it within the source.
+- `-intsyntax <formats>` adjusts the accepted integer syntaxes from the start of assembly, using the same arguments as `INTSYNTAX`.

@@ -326,6 +326,8 @@ static void AddReg(char const* NName, LongWord NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(97);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddFixed("CLRC", 0x2c000);
     AddFixed("SETC", 0x2c001);
@@ -421,6 +423,7 @@ static void InitFields(void) {
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
     AddInstTable(InstTable, "PORT", 0, DecodePort);
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 static void DeinitFields(void) {
@@ -465,21 +468,6 @@ static void SwitchFrom_Mico8(void) {
 }
 
 static void MakeCode_Mico8(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

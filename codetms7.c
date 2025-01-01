@@ -17,6 +17,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "intpseudo.h"
@@ -434,34 +435,35 @@ static void DecodeJmp(Word Index) {
     }
 }
 
-static void DecodeABReg(Word Index) {
-    if (!ChkArgCnt(Memo("DJNZ") ? 2 : 1, Memo("DJNZ") ? 2 : 1))
-        ;
-    else if (!as_strcasecmp(ArgStr[1].str.p_str, "ST")) {
-        if ((Memo("PUSH")) || (Memo("POP"))) {
-            BAsmCode[0] = 8 | (Ord(Memo("PUSH")) * 6);
-            CodeLen     = 1;
-        } else {
-            WrError(ErrNum_InvAddrMode);
-        }
-    } else {
-        DecodeAdr(&ArgStr[1], MModAccA | MModAccB | MModReg);
-        switch (AdrType) {
-        case ModAccA:
-            BAsmCode[0] = 0xb0 | Index;
-            CodeLen     = 1;
-            break;
-        case ModAccB:
-            BAsmCode[0] = 0xc0 | Index;
-            CodeLen     = 1;
-            break;
-        case ModReg:
-            BAsmCode[0] = 0xd0 | Index;
-            BAsmCode[1] = AdrVals[0];
-            CodeLen     = 2;
-            break;
-        }
-        if ((Memo("DJNZ")) && (CodeLen != 0)) {
+static void DecodeABRegCore(Word code) {
+    DecodeAdr(&ArgStr[1], MModAccA | MModAccB | MModReg);
+    switch (AdrType) {
+    case ModAccA:
+        BAsmCode[0] = 0xb0 | code;
+        CodeLen     = 1;
+        break;
+    case ModAccB:
+        BAsmCode[0] = 0xc0 | code;
+        CodeLen     = 1;
+        break;
+    case ModReg:
+        BAsmCode[0] = 0xd0 | code;
+        BAsmCode[1] = AdrVals[0];
+        CodeLen     = 2;
+        break;
+    }
+}
+
+static void DecodeABReg(Word code) {
+    if (ChkArgCnt(1, 1)) {
+        DecodeABRegCore(code);
+    }
+}
+
+static void DecodeDJNZ(Word code) {
+    if (ChkArgCnt(2, 2)) {
+        DecodeABRegCore(code);
+        if (CodeLen > 0) {
             Boolean      OK;
             tSymbolFlags Flags;
             Integer      AdrInt
@@ -473,11 +475,25 @@ static void DecodeABReg(Word Index) {
             } else if (
                     !mSymbolQuestionable(Flags) & ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
+                OK = False;
+            }
+            if (!OK) {
                 CodeLen = 0;
             } else {
                 BAsmCode[CodeLen++] = AdrInt & 0xff;
             }
         }
+    }
+}
+
+static void DecodePUSH_POP(Word code) {
+    if (!ChkArgCnt(1, 1))
+        ;
+    else if (!as_strcasecmp(ArgStr[1].str.p_str, "ST")) {
+        BAsmCode[0] = (code & 1) ? 0x08 : 0x0e;
+        CodeLen     = 1;
+    } else {
+        DecodeABRegCore(code);
     }
 }
 
@@ -865,6 +881,8 @@ static void InitABReg(char const* NName, Word NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(107);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "MOV", 0, DecodeMOV);
     AddInstTable(InstTable, "MOVP", 1, DecodeMOV);
     AddInstTable(InstTable, "LDA", 0, DecodeLDA);
@@ -934,15 +952,17 @@ static void InitFields(void) {
     InitABReg("DECD", 11);
     InitABReg("INC", 3);
     InitABReg("INV", 4);
-    InitABReg("POP", 9);
-    InitABReg("PUSH", 8);
     InitABReg("RL", 14);
     InitABReg("RLC", 15);
     InitABReg("RR", 12);
     InitABReg("RRC", 13);
     InitABReg("SWAP", 7);
     InitABReg("XCHB", 6);
-    InitABReg("DJNZ", 10);
+    AddInstTable(InstTable, "DJNZ", 10, DecodeDJNZ);
+    AddInstTable(InstTable, "PUSH", 8, DecodePUSH_POP);
+    AddInstTable(InstTable, "POP", 9, DecodePUSH_POP);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 static void DeinitFields(void) {
@@ -950,23 +970,7 @@ static void DeinitFields(void) {
 }
 
 static void MakeCode_TMS7(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = 0;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
-
-    /* remainder */
+    OpSize = eSymbolSize8Bit;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

@@ -9,6 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include "codepseudo.h"
 
 #include "code6816.h"
 
@@ -61,10 +62,9 @@ enum {
 #define MModDisp20 MModDisp16
 #define MModAbs20  MModAbs
 
-static tSymbolSize OpSize;
-static ShortInt    AdrMode;
-static Byte        AdrPart;
-static Byte        AdrVals[4];
+static ShortInt AdrMode;
+static Byte     AdrPart;
+static Byte     AdrVals[4];
 
 static LongInt Reg_EK;
 
@@ -99,7 +99,8 @@ static unsigned SplitSize(char* Asc, DispType* pErg) {
     }
 }
 
-static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask) {
+static void DecodeAdr(
+        int Start, int Stop, tSymbolSize op_size, Boolean LongAdr, Byte Mask) {
     Integer  V16;
     LongInt  V32;
     Boolean  OK;
@@ -124,7 +125,7 @@ static void DecodeAdr(int Start, int Stop, Boolean LongAdr, Byte Mask) {
 
     if (*ArgStr[Start].str.p_str == '#') {
         Offset = SplitSize(ArgStr[Start].str.p_str + 1, &Size);
-        switch (OpSize) {
+        switch (op_size) {
         case eSymbolSizeUnknown:
             WrError(ErrNum_UndefOpSizes);
             break;
@@ -342,8 +343,7 @@ static void DecodeGen(Word Index) {
     GenOrder* pOrder = GenOrders + Index;
 
     if (ChkArgCnt(1, 2)) {
-        OpSize = pOrder->Size;
-        DecodeAdr(1, ArgCnt, False, pOrder->AdrMask);
+        DecodeAdr(1, ArgCnt, pOrder->Size, False, pOrder->AdrMask);
         switch (AdrMode) {
         case ModDisp8:
             BAsmCode[0] = pOrder->Code + AdrPart;
@@ -352,7 +352,7 @@ static void DecodeGen(Word Index) {
             break;
         case ModDisp16:
             BAsmCode[0] = 0x17 + pOrder->ExtShift;
-            BAsmCode[1] = pOrder->Code + (OpSize << 6) + AdrPart;
+            BAsmCode[1] = pOrder->Code + (pOrder->Size << 6) + AdrPart;
             memcpy(BAsmCode + 2, AdrVals, AdrCnt);
             CodeLen = 2 + AdrCnt;
             break;
@@ -363,12 +363,12 @@ static void DecodeGen(Word Index) {
             break;
         case ModAbs:
             BAsmCode[0] = 0x17 + pOrder->ExtShift;
-            BAsmCode[1] = pOrder->Code + (OpSize << 6) + 0x30;
+            BAsmCode[1] = pOrder->Code + (pOrder->Size << 6) + 0x30;
             memcpy(BAsmCode + 2, AdrVals, AdrCnt);
             CodeLen = 2 + AdrCnt;
             break;
         case ModImm:
-            if (OpSize == eSymbolSize8Bit) {
+            if (pOrder->Size == eSymbolSize8Bit) {
                 BAsmCode[0] = pOrder->Code + 0x30;
                 BAsmCode[1] = AdrVals[0];
                 CodeLen     = 2;
@@ -390,9 +390,8 @@ static void DecodeGen(Word Index) {
 
 static void DecodeAux(Word Code) {
     if (ChkArgCnt(1, 2)) {
-        OpSize = eSymbolSize16Bit;
         DecodeAdr(
-                1, ArgCnt, False,
+                1, ArgCnt, eSymbolSize16Bit, False,
                 (*OpPart.str.p_str == 'S' ? 0 : MModImm) | MModDisp8 | MModDisp16
                         | MModAbs);
         switch (AdrMode) {
@@ -428,8 +427,7 @@ static void DecodeAux(Word Code) {
 
 static void DecodeImm(Word Code) {
     if (ChkArgCnt(1, 1)) {
-        OpSize = eSymbolSize16Bit;
-        DecodeAdr(1, 1, False, MModImm | MModImmExt);
+        DecodeAdr(1, 1, eSymbolSize16Bit, False, MModImm | MModImmExt);
         switch (AdrMode) {
         case ModImm:
             BAsmCode[0] = 0x37;
@@ -448,8 +446,7 @@ static void DecodeImm(Word Code) {
 
 static void DecodeExt(Word Code) {
     if (ChkArgCnt(1, 1)) {
-        OpSize = eSymbolSize16Bit;
-        DecodeAdr(1, 1, False, MModAbs);
+        DecodeAdr(1, 1, eSymbolSize16Bit, False, MModAbs);
         switch (AdrMode) {
         case ModAbs:
             BAsmCode[0] = Hi(Code);
@@ -495,10 +492,10 @@ static void DecodeMov(Word Index) {
     Boolean OK;
 
     if (ArgCnt == 2) {
-        DecodeAdr(1, 1, False, MModAbs);
+        DecodeAdr(1, 1, eSymbolSizeUnknown, False, MModAbs);
         if (AdrMode == ModAbs) {
             memcpy(BAsmCode + 2, AdrVals, 2);
-            DecodeAdr(2, 2, False, MModAbs);
+            DecodeAdr(2, 2, eSymbolSizeUnknown, False, MModAbs);
             if (AdrMode == ModAbs) {
                 memcpy(BAsmCode + 4, AdrVals, 2);
                 BAsmCode[0] = 0x37;
@@ -511,7 +508,7 @@ static void DecodeMov(Word Index) {
     else if (!as_strcasecmp(ArgStr[2].str.p_str, "X")) {
         BAsmCode[1] = EvalStrIntExpression(&ArgStr[1], SInt8, &OK);
         if (OK) {
-            DecodeAdr(3, 3, False, MModAbs);
+            DecodeAdr(3, 3, eSymbolSizeUnknown, False, MModAbs);
             if (AdrMode == ModAbs) {
                 memcpy(BAsmCode + 2, AdrVals, 2);
                 BAsmCode[0] = 0x30 | Index;
@@ -521,7 +518,7 @@ static void DecodeMov(Word Index) {
     } else if (!as_strcasecmp(ArgStr[3].str.p_str, "X")) {
         BAsmCode[3] = EvalStrIntExpression(&ArgStr[2], SInt8, &OK);
         if (OK) {
-            DecodeAdr(1, 1, False, MModAbs);
+            DecodeAdr(1, 1, eSymbolSizeUnknown, False, MModAbs);
             if (AdrMode == ModAbs) {
                 memcpy(BAsmCode + 1, AdrVals, 2);
                 BAsmCode[0] = 0x32 | Index;
@@ -535,8 +532,7 @@ static void DecodeMov(Word Index) {
 
 static void DecodeLogp(Word Index) {
     if (ChkArgCnt(1, 1)) {
-        OpSize = eSymbolSize16Bit;
-        DecodeAdr(1, 1, False, MModImm);
+        DecodeAdr(1, 1, eSymbolSize16Bit, False, MModImm);
         switch (AdrMode) {
         case ModImm:
             BAsmCode[0] = 0x37;
@@ -569,12 +565,13 @@ static void DecodeBit8(Word Index) {
     Byte Mask;
 
     if (ChkArgCnt(2, 3)) {
-        OpSize = eSymbolSize8Bit;
-        DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
+        DecodeAdr(ArgCnt, ArgCnt, eSymbolSize8Bit, False, MModImm);
         switch (AdrMode) {
         case ModImm:
             Mask = AdrVals[0];
-            DecodeAdr(1, ArgCnt - 1, False, MModDisp8 | MModDisp16 | MModAbs);
+            DecodeAdr(
+                    1, ArgCnt - 1, eSymbolSizeUnknown, False,
+                    MModDisp8 | MModDisp16 | MModAbs);
             switch (AdrMode) {
             case ModDisp8:
                 BAsmCode[0] = 0x17;
@@ -603,12 +600,11 @@ static void DecodeBit8(Word Index) {
 
 static void DecodeBit16(Word Index) {
     if (ChkArgCnt(2, 3)) {
-        OpSize = eSymbolSize16Bit;
-        DecodeAdr(ArgCnt, ArgCnt, False, MModImm);
+        DecodeAdr(ArgCnt, ArgCnt, eSymbolSize16Bit, False, MModImm);
         switch (AdrMode) {
         case ModImm:
             memcpy(BAsmCode + 2, AdrVals, AdrCnt);
-            DecodeAdr(1, ArgCnt - 1, False, MModDisp16 | MModAbs);
+            DecodeAdr(1, ArgCnt - 1, eSymbolSizeUnknown, False, MModDisp16 | MModAbs);
             switch (AdrMode) {
             case ModDisp16:
                 BAsmCode[0] = 0x27;
@@ -633,14 +629,15 @@ static void DecodeBrBit(Word Index) {
     LongInt      AdrLong;
 
     if (ChkArgCnt(3, 4)) {
-        OpSize = eSymbolSize8Bit;
-        DecodeAdr(ArgCnt - 1, ArgCnt - 1, False, MModImm);
+        DecodeAdr(ArgCnt - 1, ArgCnt - 1, eSymbolSize8Bit, False, MModImm);
         if (AdrMode == ModImm) {
             BAsmCode[1] = AdrVals[0];
             AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt20, &OK, &Flags)
                       - EProgCounter() - 6;
             if (OK) {
-                DecodeAdr(1, ArgCnt - 2, False, MModDisp8 | MModDisp16 | MModAbs);
+                DecodeAdr(
+                        1, ArgCnt - 2, eSymbolSizeUnknown, False,
+                        MModDisp8 | MModDisp16 | MModAbs);
                 switch (AdrMode) {
                 case ModDisp8:
                     if ((AdrLong >= -128) && (AdrLong < 127)) {
@@ -693,8 +690,7 @@ static void DecodeBrBit(Word Index) {
 
 static void DecodeJmpJsr(Word Index) {
     if (ChkArgCnt(1, 2)) {
-        OpSize = eSymbolSize16Bit;
-        DecodeAdr(1, ArgCnt, True, MModAbs20 | MModDisp20);
+        DecodeAdr(1, ArgCnt, eSymbolSize16Bit, True, MModAbs20 | MModDisp20);
         switch (AdrMode) {
         case ModAbs20:
             BAsmCode[0] = 0x7a + (Index << 7);
@@ -781,6 +777,8 @@ static void AddEmu(char const* NName, Word NCode1, Word NCode2) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(405);
+
+    add_null_pseudo(InstTable);
 
     AddFixed("ABA", 0x370b);
     AddFixed("ABX", 0x374f);
@@ -1120,7 +1118,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "JSR", 1, DecodeJmpJsr);
     AddInstTable(InstTable, "BSR", 0, DecodeBsr);
 
-    init_moto8_pseudo(InstTable, e_moto_8_be);
+    add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",
             eIntPseudoFlag_BigEndian | eIntPseudoFlag_AllowInt
@@ -1151,25 +1150,13 @@ static Boolean DecodeAttrPart_6816(void) {
 }
 
 static void MakeCode_6816(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    AdrCnt    = 0;
+    AdrCnt = 0;
 
     /* Operandengroesse festlegen. ACHTUNG! Das gilt nur fuer die folgenden
        Pseudobefehle! Die Maschinenbefehle ueberschreiben diesen Wert! */
 
-    OpSize = AttrPartOpSize[0];
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeMoto16Pseudo(OpSize, True)) {
-        return;
+    if (AttrPartOpSize[0] == eSymbolSizeUnknown) {
+        AttrPartOpSize[0] = eSymbolSize8Bit;
     }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {

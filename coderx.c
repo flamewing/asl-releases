@@ -3383,22 +3383,6 @@ static void DecodeENDIAN(Word Index) {
     }
 }
 
-static void DecodeWORD(Word flags) {
-    DecodeIntelDW(flags | (TargetBigEndian ? eIntPseudoFlag_BigEndian : 0));
-}
-
-static void DecodeLWORD(Word flags) {
-    DecodeIntelDD(flags | (TargetBigEndian ? eIntPseudoFlag_BigEndian : 0));
-}
-
-static void DecodeFLOAT(Word flags) {
-    DecodeIntelDD(flags | (TargetBigEndian ? eIntPseudoFlag_BigEndian : 0));
-}
-
-static void DecodeDOUBLE(Word flags) {
-    DecodeIntelDQ(flags | (TargetBigEndian ? eIntPseudoFlag_BigEndian : 0));
-}
-
 #endif /* COMPAT */
 
 /*---------------------------------------------------------------------------*/
@@ -3601,6 +3585,8 @@ static Boolean TrueFnc(void) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(201);
+
+    add_null_pseudo(InstTable);
 
     /* RXv1 */
     AddABS("ABS", 0x200F);
@@ -3805,12 +3791,22 @@ static void InitFields(void) {
     AddBLK("BLKL", 4);
     AddBLK("BLKD", 8);
     AddInstTable(
-            InstTable, "BYTE", eIntPseudoFlag_AllowInt | eIntPseudoFlag_AllowString,
+            InstTable, "BYTE",
+            eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString,
             DecodeIntelDB);
-    AddInstTable(InstTable, "WORD", eIntPseudoFlag_AllowInt, DecodeWORD);
-    AddInstTable(InstTable, "LWORD", eIntPseudoFlag_AllowInt, DecodeLWORD);
-    AddInstTable(InstTable, "FLOAT", eIntPseudoFlag_AllowFloat, DecodeFLOAT);
-    AddInstTable(InstTable, "DOUBLE", eIntPseudoFlag_AllowFloat, DecodeDOUBLE);
+    AddInstTable(
+            InstTable, "WORD", eIntPseudoFlag_DynEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDW);
+    AddInstTable(
+            InstTable, "LWORD", eIntPseudoFlag_DynEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDD);
+    AddInstTable(
+            InstTable, "FLOAT", eIntPseudoFlag_DynEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDD);
+    AddInstTable(
+            InstTable, "DOUBLE", eIntPseudoFlag_DynEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDQ);
 #endif
 
     StrCompAlloc(&Temp1, STRINGSIZE);
@@ -3827,13 +3823,6 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_RX(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

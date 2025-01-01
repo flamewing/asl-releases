@@ -22,6 +22,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -69,7 +70,7 @@ static BitOrder*  BitOrders;
 static ShortInt AdrMode;
 static Byte     AdrVal;
 static Word     WAdrVal;
-static Boolean  BigFlag, OpSize;
+static Boolean  OpSize;
 
 /*---------------------------------------------------------------------------*/
 
@@ -601,6 +602,8 @@ static void AddBit(char const* NName, Byte NAcc, Byte NIndX, Byte NDir) {
 static void InitFields(void) {
     InstTable = CreateInstTable(101);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddFixed("IFC", 0x19);
     AddFixed("IFNC", 0x1f);
@@ -644,6 +647,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "RRC", 1, DecodeRotate);
     AddInstTable(InstTable, "ST", 0, DecodeST);
     AddInstTable(InstTable, "SFR", 0, DecodeSFR);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_DynEndian);
 }
 
 static void DeinitFields(void) {
@@ -656,22 +661,7 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_ACE(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    BigFlag   = False;
-    OpSize    = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(BigFlag)) {
-        return;
-    }
+    OpSize = False;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
@@ -716,6 +706,7 @@ static void SwitchTo_ACE(void) {
     MakeCode   = MakeCode_ACE;
     IsDef      = IsDef_ACE;
     SwitchFrom = SwitchFrom_ACE;
+    onoff_bigendian_add();
     InitFields();
 }
 

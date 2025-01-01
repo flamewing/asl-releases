@@ -2758,6 +2758,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(301);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "MOV", 0, DecodeMOV);
     AddInstTable(InstTable, "MVI", 0, DecodeMVI);
     AddInstTable(InstTable, "MVIW", 0, DecodeMVIW);
@@ -3055,6 +3057,8 @@ static void InitFields(void) {
     add_alu_z80("SKEQ", 15, IsLow ? ALUReg_Src : ALUImm_SR | ALUReg_Src | ALUReg_Dest);
     add_alu_z80("SKON", 9, IsLow ? ALUImm_SR : ALUImm_SR | ALUReg_Src | ALUReg_Dest);
     add_alu_z80("SKOFF", 11, IsLow ? ALUImm_SR : ALUImm_SR | ALUReg_Src | ALUReg_Dest);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -3075,21 +3079,7 @@ static void DeinitFields(void) {
  * ------------------------------------------------------------------------ */
 
 static void MakeCode_78C10(void) {
-    CodeLen     = 0;
-    DontPrint   = False;
     z80_op_size = z80_def_op_size = eSymbolSizeUnknown;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

@@ -2243,7 +2243,7 @@ When the function is called, all parameters are calculated once and are then ins
 
 **CAUTION!** Similar to macros, one can use user-defined functions to override builtin functions. This is a possible source for phase errors. Such definitions therefore should be done before the first call!
 
-The result's type may depend on the type of the input arguments as the arguments are textually inserted into the function's formula. For example, the function
+The result's type may depend on the input arguments. Function parameters are evaluated and passed as typed values. For example, the function
 
 ```asm
 double  function x,x+x
@@ -3096,3 +3096,5 @@ Select `uPD550`, `uPD554` or `uPD652` for μCOM-45; `uPD547`, `uPD552` or `uPD65
 `DB` and `DW` on 65xx and 68xx also accept Motorola repetition prefixes in square brackets, as well as Intel `DUP`. For example, `[3]5` repeats 5 three times. Target byte order is preserved.
 
 `IRP`, `IRPC`, `REPT` and `WHILE` accept the macro listing controls `{EXPAND}`/`{NOEXPAND}`, `{EXPIF}`/`{NOEXPIF}`, `{EXPMACRO}`/`{NOEXPMACRO}` and `{EXPREST}`/`{NOEXPREST}`, in addition to `{GLOBALSYMBOLS}`/`{NOGLOBALSYMBOLS}`.
+
+A `RADIX` statement overrides the `-radix` command-line setting; absent either, unmarked integers use decimal. Both support bases 2 through 36.

@@ -1885,9 +1885,6 @@ static void DeinitFields(void) {
 }
 
 static void MakeCode_3203X(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
     ThisPar = (!strcmp(LabPart.str.p_str, "||"));
     if ((strlen(OpPart.str.p_str) > 2) && (!strncmp(OpPart.str.p_str, "||", 2))) {
         ThisPar = True;

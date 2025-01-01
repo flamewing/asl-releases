@@ -836,6 +836,8 @@ static void InitFields(void) {
     InstTable = CreateInstTable(201);
     SetDynamicInstTable(InstTable);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "LD", 0, DecodeLD);
     AddInstTable(InstTable, "XCH", 0, DecodeXCH);
     AddInstTable(InstTable, "INC", 0x04c, DecodeINCDEC);
@@ -967,15 +969,7 @@ static void DeinitFields(void) {
 /*-------------------------------------------------------------------------*/
 
 static void MakeCode_HMCS400(void) {
-    CodeLen    = 0;
-    DontPrint  = False;
     OpSizeType = Int4;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

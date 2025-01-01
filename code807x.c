@@ -17,6 +17,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -640,6 +641,8 @@ static void AddShift(char const* NName, Byte NCode, Byte NCode16) {
 static void InitFields(void) {
     InstTable = CreateInstTable(53);
 
+    add_null_pseudo(InstTable);
+
     AddFixed("RET", 0x5c);
     AddFixed("NOP", 0x00);
 
@@ -682,6 +685,8 @@ static void InitFields(void) {
     AddBranch("BP", 0x64);
     AddBranch("BZ", 0x6c);
     AddBranch("BNZ", 0x7c);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -692,19 +697,7 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_807x(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = -1;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
+    OpSize = eSymbolSizeUnknown;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

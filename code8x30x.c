@@ -16,6 +16,9 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "bpemu.h"
+#include "chunks.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "strutil.h"
@@ -488,6 +491,9 @@ static void AddAri(char const* NName, Word NCode) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(103);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "NOP", 0, DecodeNOP);
     AddInstTable(InstTable, "HALT", 0, DecodeHALT);
     AddInstTable(InstTable, "XML", 0xca00, DecodeXML_XMR);
@@ -515,17 +521,6 @@ static void DeinitFields(void) {
 /*-------------------------------------------------------------------------*/
 
 static void MakeCode_8x30X(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

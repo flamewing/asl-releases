@@ -207,6 +207,9 @@ static void AddF(char const* NName, Word NCode) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(103);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "TRIS", 0, DecodeTRIS);
     AddInstTable(InstTable, "CALL", 0x0900, DecodeCALL_GOTO);
     AddInstTable(InstTable, "GOTO", 0x0a00, DecodeCALL_GOTO);
@@ -258,15 +261,6 @@ static void DeinitFields(void) {
 /*-------------------------------------------------------------------------*/
 
 static void MakeCode_16C5X(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

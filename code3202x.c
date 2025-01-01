@@ -453,6 +453,9 @@ static void AddAdrMode(char const* NName, Word NMode) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(307);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "CNFD", 0, DecodeCNFD);
     AddInstTable(InstTable, "CNFP", 0, DecodeCNFP);
     AddInstTable(InstTable, "CONF", 0, DecodeCONF);
@@ -610,6 +613,8 @@ static void InitFields(void) {
     AddAdrMode("*BR0+", 0xf0);
     AddAdrMode("*", 0x80);
     AddAdrMode(NULL, 0);
+
+    add_ti_pseudo(InstTable);
 }
 
 static void DeinitFields(void) {
@@ -625,18 +630,9 @@ static void DeinitFields(void) {
 /* ---------------------------------------------------------------------- */
 
 static void MakeCode_3202x(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     /* Pseudoanweisungen */
 
-    if (DecodeTIPseudo()) {
+    if (decode_ti_qxx()) {
         return;
     }
 

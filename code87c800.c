@@ -1302,6 +1302,9 @@ static void AddReg(char const* NName, Word NCode) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "LD", 0, DecodeLD);
     AddInstTable(InstTable, "XCH", 0, DecodeXCH);
     AddInstTable(InstTable, "CLR", 0, DecodeCLR);
@@ -1365,6 +1368,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "XOR", InstrZ++, DecodeALU);
     AddInstTable(InstTable, "OR", InstrZ++, DecodeALU);
     AddInstTable(InstTable, "CMP", InstrZ++, DecodeALU);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -1376,21 +1381,7 @@ static void DeinitFields(void) {
 /*--------------------------------------------------------------------------*/
 
 static void MakeCode_87C800(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = -1;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
+    OpSize = eSymbolSizeUnknown;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

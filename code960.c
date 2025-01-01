@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "as_endian.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -652,42 +653,27 @@ static void DecodeSPACE(Word Code) {
     }
 }
 
-/*--------------------------------------------------------------------------*/
+/*!------------------------------------------------------------------------
+ * \fn     void check_alignment(Word index)
+ * \brief  check dword alignment of program counter (required for machine insns)
+ * ------------------------------------------------------------------------ */
 
-static void MakeCode_960(void) {
-    InstProc inst_proc;
-    Word     inst_index;
-
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* Nullanweisung */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
-
-    /* CPU-Anweisungen */
-
-    inst_proc = inst_fnc_table_search(InstTable, OpPart.str.p_str, &inst_index);
-    if (!inst_proc) {
-        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
-        return;
-    }
+static void check_alignment(Word index) {
+    UNUSED(index);
 
     /* Befehlszaehler nicht ausgerichtet? */
 
     if (EProgCounter() & 3) {
         WrError(ErrNum_AddrNotAligned);
     }
+}
 
-    inst_proc(inst_index);
+/*--------------------------------------------------------------------------*/
+
+static void MakeCode_960(void) {
+    if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
+        WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -736,6 +722,9 @@ static void AddMem(char const* NName, LongWord NCode, OpType NType, int NPos) {
 static void InitFields(void) {
     InstTable = CreateInstTable(301);
 
+    add_null_pseudo(InstTable);
+
+    inst_table_set_prefix_proc(InstTable, check_alignment, 0);
     InstrZ = 0;
     AddFixed("FLUSHREG", 0x66000680);
     AddFixed("FMARK", 0x66000600);
@@ -936,6 +925,9 @@ static void InitFields(void) {
     AddInstTable(InstTable, "WORD", 0, DecodeWORD);
     AddInstTable(InstTable, "SPACE", 0, DecodeSPACE);
     AddInstTable(InstTable, "REG", 0, CodeREG);
+
+    inst_table_set_prefix_proc(InstTable, NULL, 0);
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {

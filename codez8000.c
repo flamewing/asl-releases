@@ -3120,8 +3120,10 @@ static void AddSizeInstTable(
 }
 
 static void InitFields(void) {
-    InstTable = CreateInstTable(201);
+    InstTable = CreateInstTable(302);
     SetDynamicInstTable(InstTable);
+
+    add_null_pseudo(InstTable);
 
     InstrZ = 0;
     AddFixed("HALT", 0x7a00, True);
@@ -3293,6 +3295,8 @@ static void InitFields(void) {
     AddInstTable(InstTable, "REG", 0, CodeREG);
     AddInstTable(InstTable, "DEFBIT", eSymbolSize16Bit, DecodeDEFBIT);
     AddInstTable(InstTable, "DEFBITB", eSymbolSize8Bit, DecodeDEFBIT);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 /*!------------------------------------------------------------------------
@@ -3316,21 +3320,7 @@ static void DeinitFields(void) {
  * ------------------------------------------------------------------------ */
 
 static void MakeCode_Z8000(void) {
-    CodeLen   = 0;
-    DontPrint = False;
     ImmOpSize = OpSize = eSymbolSizeUnknown;
-
-    /* to be ignored */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudo Instructions */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

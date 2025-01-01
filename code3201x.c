@@ -341,6 +341,9 @@ static void AddImm(
 
 static void InitFields(void) {
     InstTable = CreateInstTable(203);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "IN", 0x4000, DecodeIN_OUT);
     AddInstTable(InstTable, "OUT", 0x4800, DecodeIN_OUT);
     AddInstTable(InstTable, "LARP", 0, DecodeLARP);
@@ -438,15 +441,6 @@ static void InternSymbol_3201X(char* pArg, TempResult* pResult) {
 }
 
 static void MakeCode_3201X(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

@@ -770,6 +770,8 @@ static void CodeBIT(Word Code) {
 static void InitFields(void) {
     InstTable = CreateInstTable(51);
 
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "ADD", 0 << 3, CodeGen);
     AddInstTable(InstTable, "SUB", 1 << 3, CodeGen);
     AddInstTable(InstTable, "LOAD", 2 << 3, CodeGen);
@@ -810,6 +812,8 @@ static void InitFields(void) {
 
     AddInstTable(InstTable, "REG", 0, CodeREG);
     AddInstTable(InstTable, "BIT", 0, CodeBIT);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -819,21 +823,6 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_KENBAK(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* to be ignored */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudo Instructions */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

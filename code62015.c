@@ -1696,7 +1696,9 @@ static void AddPUSHU(char const* NName, Word NCode) {
 }
 
 static void InitFields(void) {
-    InstTable = CreateInstTable(64);
+    InstTable = CreateInstTable(128);
+
+    add_null_pseudo(InstTable);
 
     /* a. MV */
     AddInstTable(InstTable, "MV", 0, DecodeMV);
@@ -1782,6 +1784,8 @@ static void InitFields(void) {
     AddFixed("TCL", 0xce);
     AddFixed("IR", 0xfe);
     AddFixed("RESET", 0xff);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -1791,17 +1795,6 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_SC62015(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    if (Memo("")) {
-        return;
-    }
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

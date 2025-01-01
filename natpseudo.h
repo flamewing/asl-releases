@@ -15,7 +15,8 @@
  *****************************************************************************/
 
 #include "datatypes.h"
+struct sInstTable;
 
-extern Boolean DecodeNatPseudo(void);
+extern void AddNatPseudo(struct sInstTable* InstTable);
 
 #endif /* NATPSEUDO_H */

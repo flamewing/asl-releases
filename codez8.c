@@ -2314,6 +2314,8 @@ static void AddCondition(char const* NName, Byte NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(201);
 
+    add_null_pseudo(InstTable);
+
     InstrZ = 0;
     AddFixed("CCF", 0xef, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
     AddFixed("DI", 0x8f, eCoreZ8NMOS | eCoreZ8CMOS | eCoreSuper8 | eCoreZ8Encore);
@@ -2481,6 +2483,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "SFR", 0, DecodeSFR);
     AddInstTable(InstTable, "REG", 0, CodeREG);
     AddInstTable(InstTable, "DEFBIT", 0, DecodeDEFBIT);
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 static void DeinitFields(void) {
@@ -2521,21 +2524,7 @@ static void InternSymbol_Z8(char* pArg, TempResult* pResult) {
 }
 
 static void MakeCode_Z8(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = eSymbolSize8Bit;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudo Instructions */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
+    OpSize = eSymbolSize8Bit;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

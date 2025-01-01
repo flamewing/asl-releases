@@ -86,7 +86,7 @@ static void PutByte(Byte Value, Boolean big_endian) {
     CodeLen++;
 }
 
-void DecodeMotoBYT(Word big_endian) {
+void DecodeMotoBYT(Word flags) {
     if (ChkArgCnt(1, ArgCntMax)) {
         ShortInt  SpaceFlag = -1;
         tStrComp *pArg, Arg;
@@ -137,7 +137,7 @@ void DecodeMotoBYT(Word big_endian) {
                         LongInt z2;
 
                         for (z2 = 0; z2 < Rep; z2++) {
-                            PutByte(t.Contents.Int, big_endian);
+                            PutByte(t.Contents.Int, !!(flags & e_moto_pseudo_flags_be));
                         }
                     }
                     break;
@@ -170,7 +170,8 @@ void DecodeMotoBYT(Word big_endian) {
 
                             for (z2 = 0; z2 < Rep; z2++) {
                                 for (z3 = 0; z3 < l; z3++) {
-                                    PutByte(t.Contents.str.p_str[z3], big_endian);
+                                    PutByte(t.Contents.str.p_str[z3],
+                                            !!(flags & e_moto_pseudo_flags_be));
                                 }
                             }
                         }
@@ -212,7 +213,7 @@ static void PutADR(Word Value, Boolean big_endian) {
     }
 }
 
-void DecodeMotoADR(Word big_endian) {
+void DecodeMotoADR(Word flags) {
     if (ChkArgCnt(1, ArgCntMax)) {
         tStrComp *pArg, Arg;
         Boolean   OK = True;
@@ -297,13 +298,14 @@ void DecodeMotoADR(Word big_endian) {
                 for (z2 = 0; z2 < Rep; z2++) {
                     switch (Res.Typ) {
                     case TempInt:
-                        PutADR(Res.Contents.Int, big_endian);
+                        PutADR(Res.Contents.Int, !!(flags & e_moto_pseudo_flags_be));
                         break;
                     case TempString: {
                         unsigned z3;
 
                         for (z3 = 0; z3 < Res.Contents.str.len; z3++) {
-                            PutADR(Res.Contents.str.p_str[z3], big_endian);
+                            PutADR(Res.Contents.str.p_str[z3],
+                                   !!(flags & e_moto_pseudo_flags_be));
                         }
                         break;
                     }
@@ -328,7 +330,7 @@ void DecodeMotoADR(Word big_endian) {
     }
 }
 
-void DecodeMotoDCM(Word big_endian) {
+void DecodeMotoDCM(Word flags) {
     if (ChkArgCnt(1, ArgCntMax)) {
         tStrComp *pArg, Arg;
         Boolean   OK = True;
@@ -399,8 +401,8 @@ void DecodeMotoDCM(Word big_endian) {
                 }
 
                 for (z2 = 0; z2 < Rep; z2++) {
-                    PutADR(buf[0], big_endian);
-                    PutADR(buf[1], big_endian);
+                    PutADR(buf[0], !!(flags & e_moto_pseudo_flags_be));
+                    PutADR(buf[1], !!(flags & e_moto_pseudo_flags_be));
                 }
                 as_tempres_free(&Res);
             }
@@ -419,7 +421,7 @@ void DecodeMotoDCM(Word big_endian) {
     }
 }
 
-static void DecodeFCC(Word big_endian) {
+static void DecodeFCC(Word flags) {
     if (ChkArgCnt(1, ArgCntMax)) {
         Boolean    OK = True;
         tStrComp * pArg, Arg;
@@ -460,7 +462,8 @@ static void DecodeFCC(Word big_endian) {
 
                         for (z2 = 0; z2 < Rep; z2++) {
                             for (z3 = 0; z3 < l; z3++) {
-                                PutByte(t.Contents.str.p_str[z3], big_endian);
+                                PutByte(t.Contents.str.p_str[z3],
+                                        !!(flags & e_moto_pseudo_flags_be));
                             }
                         }
                     }
@@ -514,38 +517,31 @@ void DecodeMotoDFS(Word Index) {
  * Global Functions
  *****************************************************************************/
 
-static PInstTable inst_table_moto8 = NULL;
+/*!------------------------------------------------------------------------
+ * \fn     add_moto8_pseudo(PInstTable p_inst_table, moto_pseudo_flags_t flags)
+ * \brief  merge Motorola-style 8 bit pseudo ops into instruction hash table
+ * \param  p_inst_table table to augment
+ * \param  flags controls which instructions to add, and endianess
+ * ------------------------------------------------------------------------ */
 
-void init_moto8_pseudo(PInstTable p_inst_table, unsigned flags) {
-    if (!p_inst_table) {
-        p_inst_table = inst_table_moto8 = CreateInstTable(23);
+void add_moto8_pseudo(PInstTable p_inst_table, moto_pseudo_flags_t flags) {
+    AddInstTable(p_inst_table, "BYT", flags & e_moto_pseudo_flags_be, DecodeMotoBYT);
+    AddInstTable(p_inst_table, "BYTE", flags & e_moto_pseudo_flags_be, DecodeMotoBYT);
+    AddInstTable(p_inst_table, "FCB", flags & e_moto_pseudo_flags_be, DecodeMotoBYT);
+    AddInstTable(p_inst_table, "ADR", flags & e_moto_pseudo_flags_be, DecodeMotoADR);
+    AddInstTable(p_inst_table, "FDB", flags & e_moto_pseudo_flags_be, DecodeMotoADR);
+    if (flags & e_moto_pseudo_flags_ddb) {
+        AddInstTable(p_inst_table, "DDB", e_moto_pseudo_flags_be, DecodeMotoADR);
     }
-    AddInstTable(p_inst_table, "BYT", !!(flags & e_moto_8_be), DecodeMotoBYT);
-    AddInstTable(p_inst_table, "BYTE", !!(flags & e_moto_8_be), DecodeMotoBYT);
-    AddInstTable(p_inst_table, "FCB", !!(flags & e_moto_8_be), DecodeMotoBYT);
-    AddInstTable(p_inst_table, "ADR", !!(flags & e_moto_8_be), DecodeMotoADR);
-    AddInstTable(p_inst_table, "FDB", !!(flags & e_moto_8_be), DecodeMotoADR);
-    if (flags & e_moto_8_ddb) {
-        AddInstTable(p_inst_table, "DDB", True, DecodeMotoADR);
+    if (flags & e_moto_pseudo_flags_dcm) {
+        AddInstTable(p_inst_table, "DCM", e_moto_pseudo_flags_be, DecodeMotoDCM);
     }
-    if (flags & e_moto_8_dcm) {
-        AddInstTable(p_inst_table, "DCM", True, DecodeMotoDCM);
+    AddInstTable(p_inst_table, "FCC", flags & e_moto_pseudo_flags_be, DecodeFCC);
+    AddInstTable(p_inst_table, "DFS", e_moto_pseudo_flags_none, DecodeMotoDFS);
+    AddInstTable(p_inst_table, "RMB", e_moto_pseudo_flags_none, DecodeMotoDFS);
+    if (flags & e_moto_pseudo_flags_ds) {
+        AddInstTable(p_inst_table, "DS", e_moto_pseudo_flags_none, DecodeMotoDFS);
     }
-    AddInstTable(p_inst_table, "FCC", !!(flags & e_moto_8_be), DecodeFCC);
-    AddInstTable(p_inst_table, "DFS", 0, DecodeMotoDFS);
-    AddInstTable(p_inst_table, "RMB", 0, DecodeMotoDFS);
-    if (flags & e_moto_8_ds) {
-        AddInstTable(p_inst_table, "DS", 0, DecodeMotoDFS);
-    }
-}
-
-Boolean decode_moto8_pseudo(void) {
-    return LookupInstTable(inst_table_moto8, OpPart.str.p_str);
-}
-
-void deinit_moto8_pseudo(void) {
-    DestroyInstTable(inst_table_moto8);
-    inst_table_moto8 = NULL;
 }
 
 static void DigIns(char Ch, int Pos, Byte* pDest) {
@@ -960,11 +956,15 @@ static Word GetWSize(tSymbolSize OpSize) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeMotoDC(void)
+ * \fn     DecodeMotoDC(Word flags)
  * \brief  decode DC.x instruction
+ * \param  flags control flags
  * ------------------------------------------------------------------------ */
 
-void DecodeMotoDC(tSymbolSize OpSize, Boolean BigEndian) {
+void DecodeMotoDC(Word flags) {
+    tSymbolSize  OpSize = (AttrPartOpSize[0] == eSymbolSizeUnknown) ? eSymbolSize16Bit
+                                                                    : AttrPartOpSize[0];
+    Boolean      BigEndian = !!(flags & e_moto_pseudo_flags_be);
     ShortInt     SpaceFlag;
     tStrComp *   pArg, Arg;
     LongInt      z2, WSize, Rep = 0;
@@ -1227,73 +1227,69 @@ func_exit:
     as_tempres_free(&t);
 }
 
-Boolean DecodeMoto16Pseudo(tSymbolSize OpSize, Boolean BigEndian) {
-    LongInt      HVal;
-    Boolean      ValOK;
-    tSymbolFlags Flags;
-    Boolean      PadBeforeStart;
+void DecodeMotoDS(Word flags) {
+    tSymbolSize OpSize = (AttrPartOpSize[0] == eSymbolSizeUnknown) ? eSymbolSize16Bit
+                                                                   : AttrPartOpSize[0];
+    Word        WSize  = GetWSize(OpSize);
+    Boolean     PadBeforeStart
+            = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
 
-    if (OpSize < 0) {
-        OpSize = eSymbolSize16Bit;
-    }
+    UNUSED(flags);
 
-    PadBeforeStart = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
-    if (*OpPart.str.p_str != 'D') {
-        return False;
-    }
+    if (ChkArgCnt(1, 1)) {
+        Boolean      ValOK;
+        tSymbolFlags Flags;
+        LongInt HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags);
 
-    if (Memo("DC")) {
-        DecodeMotoDC(OpSize, BigEndian);
-        return True;
-    }
+        if (mFirstPassUnknown(Flags)) {
+            WrError(ErrNum_FirstPassCalc);
+        }
+        if (ValOK && !mFirstPassUnknown(Flags)) {
+            Boolean OddSize = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
 
-    if (Memo("DS")) {
-        Word WSize = GetWSize(OpSize);
-
-        if (ChkArgCnt(1, 1)) {
-            HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags);
-            if (mFirstPassUnknown(Flags)) {
-                WrError(ErrNum_FirstPassCalc);
+            if (PadBeforeStart) {
+                InsertPadding(1, True);
+                PadBeforeStart = False;
             }
-            if (ValOK && !mFirstPassUnknown(Flags)) {
-                Boolean OddSize
-                        = (eSymbolSize8Bit == OpSize) || (eSymbolSize24Bit == OpSize);
 
-                if (PadBeforeStart) {
-                    InsertPadding(1, True);
-                    PadBeforeStart = False;
-                }
+            DontPrint = True;
 
-                DontPrint = True;
+            /* value of 0 means aligning the PC.  Doesn't make sense for bytes and 24 bit
+             * values */
 
-                /* value of 0 means aligning the PC.  Doesn't make sense for bytes and 24
-                 * bit values */
-
-                if ((HVal == 0) && !OddSize) {
-                    LongWord NewPC = EProgCounter() + WSize - 1;
-                    NewPC -= NewPC % WSize;
-                    CodeLen = NewPC - EProgCounter();
-                    if (CodeLen == 0) {
-                        DontPrint = False;
-                        if (WSize == 1) {
-                            WrError(ErrNum_NullResMem);
-                        }
+            if ((HVal == 0) && !OddSize) {
+                LongWord NewPC = EProgCounter() + WSize - 1;
+                NewPC -= NewPC % WSize;
+                CodeLen = NewPC - EProgCounter();
+                if (CodeLen == 0) {
+                    DontPrint = False;
+                    if (WSize == 1) {
+                        WrError(ErrNum_NullResMem);
                     }
-                } else {
-                    CodeLen = HVal * WSize;
                 }
-                if (DontPrint) {
-                    BookKeeping();
-                }
+            } else {
+                CodeLen = HVal * WSize;
+            }
+            if (DontPrint) {
+                BookKeeping();
             }
         }
-        if (*LabPart.str.p_str) {
-            SetSymbolOrStructElemSize(&LabPart, OpSize);
-        }
-        return True;
     }
+    if (*LabPart.str.p_str) {
+        SetSymbolOrStructElemSize(&LabPart, OpSize);
+    }
+}
 
-    return False;
+/*!------------------------------------------------------------------------
+ * \fn     AddMoto16Pseudo(struct sInstTable *p_inst_table, moto_pseudo_flags_t flags)
+ * \brief  add 16 bit Motorola style pseudo instructions to hash table
+ * \param  p_inst_table instruction table to augment
+ * \param  flags BE/LE flag
+ * ------------------------------------------------------------------------ */
+
+void AddMoto16Pseudo(struct sInstTable* p_inst_table, moto_pseudo_flags_t flags) {
+    AddInstTable(p_inst_table, "DC", flags, DecodeMotoDC);
+    AddInstTable(p_inst_table, "DS", flags, DecodeMotoDS);
 }
 
 static Boolean DecodeMoto16AttrSizeCore(

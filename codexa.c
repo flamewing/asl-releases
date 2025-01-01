@@ -1849,17 +1849,15 @@ static Boolean DecodeAttrPart_XA(void) {
 }
 
 static void MakeCode_XA(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = eSymbolSizeUnknown;
-
     /* Operandengroesse */
 
+    OpSize = eSymbolSizeUnknown;
     if (*AttrPart.str.p_str) {
         SetOpSize(AttrPartOpSize[0]);
     }
 
-    /* Labels muessen auf geraden Adressen liegen */
+    /* Labels muessen auf geraden Adressen liegen.
+       TODO: Do not enforce for DB...DO, DC/DS */
 
     if ((ActPC == SegCode) && (!IsRealDef())
         && ((*LabPart.str.p_str != '\0')
@@ -1869,19 +1867,6 @@ static void MakeCode_XA(void) {
             EnterIntSymbol(
                     &LabPart, EProgCounter() + CodeLen, (as_addrspace_t)ActPC, False);
         }
-    }
-
-    if (DecodeMoto16Pseudo(OpSize, False)) {
-        return;
-    }
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
     }
 
     /* via Tabelle suchen */
@@ -1942,6 +1927,9 @@ static void SetInv(char const* Name1, char const* Name2, InvOrder* Orders) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(201);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "MOV", 0, DecodeMOV);
     AddInstTable(InstTable, "MOVC", 0, DecodeMOVC);
     AddInstTable(InstTable, "MOVX", 0, DecodeMOVX);
@@ -2037,6 +2025,9 @@ static void InitFields(void) {
     SetInv("BGE", "BLT", RelOrders);
     SetInv("BGT", "BLE", RelOrders);
     SetInv("JZ", "JNZ", RelOrders);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
+    AddInstTable(InstTable, "DC", e_moto_pseudo_flags_le, DecodeMotoDC);
 }
 
 static void DeinitFields(void) {

@@ -668,9 +668,6 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_6100(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
     if (Memo("")) {
         return;
     }

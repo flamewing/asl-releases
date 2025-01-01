@@ -9,6 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include "codepseudo.h"
 
 #include "code75xx.h"
 
@@ -290,6 +291,9 @@ static void AddAbs(char const* NewName, Word NewCode) {
 
 static void InitFields(void) {
     InstTable = CreateInstTable(103);
+
+    add_null_pseudo(InstTable);
+
     AddFixed("ST", 0x57);
     AddFixed("XAL", 0x7b);
     AddFixed("ASC", 0x7d);
@@ -419,6 +423,8 @@ static void InitFields(void) {
         AddInstTable(InstTable, "ANP", 0x4c00, DecodeLogPort);
         AddInstTable(InstTable, "ORP", 0x4d00, DecodeLogPort);
     }
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_BigEndian);
 }
 
 static void DeinitFields(void) {
@@ -428,21 +434,6 @@ static void DeinitFields(void) {
 /*-------------------------------------------------------------------------*/
 
 static void MakeCode_75xx(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(True)) {
-        return;
-    }
-
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

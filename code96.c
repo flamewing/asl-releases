@@ -9,6 +9,7 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
+#include "codepseudo.h"
 
 #include "code96.h"
 
@@ -1042,6 +1043,9 @@ static void AddRpt(char const* NName, Byte NCode) {
 static void InitFields(void) {
     InstTable = CreateInstTable(207);
     SetDynamicInstTable(InstTable);
+
+    add_null_pseudo(InstTable);
+
     AddInstTable(InstTable, "CMPL", 0, DecodeCMPL);
     AddInstTable(InstTable, "PUSH", 0, DecodePUSH_POP);
     AddInstTable(InstTable, "POP", 1, DecodePUSH_POP);
@@ -1180,6 +1184,8 @@ static void InitFields(void) {
     AddRpt("RPTIV", 0x3d);
     AddRpt("RPTILT", 0x3e);
     AddRpt("RPTIE", 0x3f);
+
+    AddIntelPseudo(InstTable, eIntPseudoFlag_LittleEndian);
 }
 
 static void DeinitFields(void) {
@@ -1189,21 +1195,7 @@ static void DeinitFields(void) {
 /*-------------------------------------------------------------------------*/
 
 static void MakeCode_96(void) {
-    CodeLen   = 0;
-    DontPrint = False;
-    OpSize    = -1;
-
-    /* zu ignorierendes */
-
-    if (Memo("")) {
-        return;
-    }
-
-    /* Pseudoanweisungen */
-
-    if (DecodeIntelPseudo(False)) {
-        return;
-    }
+    OpSize = eSymbolSizeUnknown;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
