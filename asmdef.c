@@ -46,15 +46,16 @@ LargeWord      AfterBSRAddr;                  /* address right behind last BSR *
 LargeWord*     Phases;                        /* Verschiebungen */
 Word           Grans[SegCountPlusStruct];     /* Groesse der Adressierungselemente */
 Word           ListGrans[SegCountPlusStruct]; /* Wortgroesse im Listing */
-ChunkList      SegChunks[SegCountPlusStruct]; /* Belegungen */
-as_addrspace_t ActPC;                         /* gewaehlter Programmzaehler */
-Boolean        PCsUsed[SegCountPlusStruct];   /* PCs bereits initialisiert ? */
-LargeWord*     SegInits;                      /* Segmentstartwerte */
-LargeWord*     SegLimits;                     /* Segmentgrenzwerte */
-LongInt        ValidSegs;                     /* erlaubte Segmente */
-Boolean        ENDOccured;                    /* END-Statement aufgetreten ? */
-Boolean        Retracted;                     /* Codes zurueckgenommen ? */
-Boolean        ListToStdout, ListToNull;      /* Listing auf Konsole/Nulldevice ? */
+Boolean        grans_bits_unused[SegCountPlusStruct]; /* word size is partially unused */
+ChunkList      SegChunks[SegCountPlusStruct];         /* Belegungen */
+as_addrspace_t ActPC;                                 /* gewaehlter Programmzaehler */
+Boolean        PCsUsed[SegCountPlusStruct];           /* PCs bereits initialisiert ? */
+LargeWord*     SegInits;                              /* Segmentstartwerte */
+LargeWord*     SegLimits;                             /* Segmentgrenzwerte */
+LongInt        ValidSegs;                             /* erlaubte Segmente */
+Boolean        ENDOccured;                            /* END-Statement aufgetreten ? */
+Boolean        Retracted;                             /* Codes zurueckgenommen ? */
+Boolean        ListToStdout, ListToNull; /* Listing auf Konsole/Nulldevice ? */
 
 unsigned         ASSUMERecCnt;
 ASSUMERec const* pASSUMERecs;
@@ -192,7 +193,8 @@ Word*     WAsmCode;
 Byte*     BAsmCode;
 
 Boolean DontPrint;   /* Flag:PC veraendert, aber keinen Code erzeugt */
-Word    ActListGran; /* uebersteuerte List-Granularitaet */
+Word    ActListGran, /* uebersteuerte List-Granularitaet */
+        act_list_gran_bits_unused;
 
 Byte StopfZahl; /* Anzahl der im 2.Pass festgestellten
                    ueberfluessigen Worte, die mit NOP ge-

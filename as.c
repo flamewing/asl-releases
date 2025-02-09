@@ -62,6 +62,7 @@
 #include "code3254x.h"
 #include "code370.h"
 #include "code4004.h"
+#include "code42c00.h"
 #include "code4500.h"
 #include "code47c00.h"
 #include "code48.h"
@@ -2497,7 +2498,8 @@ static void Produce_Code(void) {
     String          non_upper_case_op_part_buf;
     tStrComp const* p_search_op_part;
 
-    ActListGran = ListGran();
+    ActListGran               = ListGran();
+    act_list_gran_bits_unused = gran_bits_unused();
     WasIF = WasMACRO = False;
 
     /* Makrosuche unterdruecken ? */
@@ -4544,6 +4546,7 @@ int main(int argc, char** argv) {
         code87c800_init();
         code870c_init();
         code47c00_init();
+        code42c00_init();
         code97c241_init();
         code9331_init();
         code16c5x_init();

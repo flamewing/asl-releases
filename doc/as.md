@@ -5,7 +5,7 @@
 
 Welcome to the Flamewing's Enhanced AS documentation!
 
-Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 282]`.
+Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 283]`.
 
 # Macro Assembler AS V1.42
 
@@ -47,3 +47,23 @@ For historical reasons, the following are preserved:
 
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
+
+### Toshiba TLCS-42
+
+Supported models are `4240P`, `4250N`, `4260P`, `4270N`, `42C00Y`,
+`42C40P`, `42C50N`, `42C60P`, and `42C70N`. CMOS models add two
+instructions; the models otherwise differ in I/O ports and program memory.
+The default integer syntax is Intel. `ASSUME`, `PORT`, and the Intel
+`DB`, `DW`, `DD`, `DQ`, `DT`, `DO`, `DN`, and `DS` directives are available.
+
+### Symbol existence across passes
+
+`SYMEXIST(symbol)` and `IFSYMEXIST symbol` query whether a symbol is in the
+symbol table. A forward declaration is absent in the first pass and present
+in subsequent passes. `IFNSYMEXIST` reverses this condition. In contrast,
+`DEFINED(expression)` and `IFDEF expression` check definitions encountered
+up to the current point in the source, including every symbol in an expression.
+The fork also recognizes macro and function names in `IFDEF` and `IFNDEF`.
+
+Warning 500 reports instruction generation outside the `CODE` segment when
+that segment's word width is required.

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.282
+    VERSION 1.42.283
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -738,6 +738,8 @@ add_library(AS_OBJECTS
     code87c800.h
     code870c.c
     code870c.h
+    code42c00.c
+    code42c00.h
     code47c00.c
     code47c00.h
     code97c241.c

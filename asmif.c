@@ -124,20 +124,41 @@ static void CodeIFDEF(Word Negate) {
         Defined    = IsSymbolDefined(&ArgStr[1]) || FindFunction(Name)
                      || FoundMacroByName(&OneMacro, Name);
         if (IfAsm) {
-            strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
+            strmaxcpy(ListLine, Defined ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
         }
-        if (!Negate) {
-            IfExpr = (Defined) ? 1 : 0;
-        } else {
-            IfExpr = (Defined) ? 0 : 1;
-        }
+        IfExpr = Negate ^ Defined;
     }
     PushIF(IfExpr);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     code_ifsymexist(Word negate)
+ * \brief  handle IFSYMEXIST/IFSYMNEXIST instructions
+ * \param  negate 1 for IFSYMNEXIST
+ * ------------------------------------------------------------------------ */
+
+static void code_ifsymexist(Word negate) {
+    LongInt if_expr;
+
+    ActiveIF = IfAsm;
+
+    if (!IfAsm) {
+        if_expr = 1;
+    } else if (!ChkArgCnt(1, 1)) {
+        if_expr = 1;
+    } else {
+        Boolean existing = is_symbol_existing(&ArgStr[1]);
+
+        if (IfAsm) {
+            strmaxcpy(ListLine, existing ? "=>EXISTING" : "=>NOT EXISTING", STRINGSIZE);
+        }
+        if_expr = negate ^ existing;
+    }
+    PushIF(if_expr);
+}
+
 static void CodeIFUSED(Word Negate) {
     LongInt IfExpr;
-    Boolean Used;
 
     ActiveIF = IfAsm;
 
@@ -146,23 +167,17 @@ static void CodeIFUSED(Word Negate) {
     } else if (!ChkArgCnt(1, 1)) {
         IfExpr = 1;
     } else {
-        Used = IsSymbolUsed(&ArgStr[1]);
+        Boolean Used = IsSymbolUsed(&ArgStr[1]);
         if (IfAsm) {
-            strmaxcpy(ListLine, (Used) ? "=>USED" : "=>UNUSED", STRINGSIZE);
+            strmaxcpy(ListLine, Used ? "=>USED" : "=>UNUSED", STRINGSIZE);
         }
-        if (!Negate) {
-            IfExpr = (Used) ? 1 : 0;
-        } else {
-            IfExpr = (Used) ? 0 : 1;
-        }
+        IfExpr = Negate ^ Used;
     }
     PushIF(IfExpr);
 }
 
 void CodeIFEXIST(Word Negate) {
     LongInt IfExpr;
-    Boolean Found;
-    String  NPath;
 
     ActiveIF = IfAsm;
 
@@ -171,7 +186,9 @@ void CodeIFEXIST(Word Negate) {
     } else if (!ChkArgCnt(1, 1)) {
         IfExpr = 1;
     } else {
-        String FileName, Dummy;
+        String  FileName, Dummy;
+        Boolean Found;
+        String  NPath;
 
         strmaxcpy(
                 FileName,
@@ -189,21 +206,22 @@ void CodeIFEXIST(Word Negate) {
         if (IfAsm) {
             strmaxcpy(ListLine, Found ? "=>FOUND" : "=>NOT FOUND", STRINGSIZE);
         }
-        IfExpr = Negate ? !Found : Found;
+        IfExpr = Negate ^ Found;
     }
     PushIF(IfExpr);
 }
 
 static void CodeIFB(Word Negate) {
-    Boolean Blank = True;
     LongInt IfExpr;
-    int     z;
 
     ActiveIF = IfAsm;
 
     if (!IfAsm) {
         IfExpr = 1;
     } else {
+        Boolean Blank = True;
+        int     z;
+
         for (z = 1; z <= ArgCnt; z++) {
             if (strlen(ArgStr[z++].str.p_str) > 0) {
                 Blank = False;
@@ -212,7 +230,7 @@ static void CodeIFB(Word Negate) {
         if (IfAsm) {
             strmaxcpy(ListLine, (Blank) ? "=>BLANK" : "=>NOT BLANK", STRINGSIZE);
         }
-        IfExpr = Negate ? !Blank : Blank;
+        IfExpr = Negate ^ Blank;
     }
     PushIF(IfExpr);
 }
@@ -418,6 +436,10 @@ Boolean CodeIFs(void) {
             CodeIFDEF(False);
         } else if (Memo("IFNDEF")) {
             CodeIFDEF(True);
+        } else if (Memo("IFSYMEXIST")) {
+            code_ifsymexist(False);
+        } else if (Memo("IFSYMNEXIST")) {
+            code_ifsymexist(True);
         } else if (Memo("IFUSED")) {
             CodeIFUSED(False);
         } else if (Memo("IFNUSED")) {

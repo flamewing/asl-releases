@@ -239,6 +239,11 @@ Boolean SetCPUByName(tStrComp const* pName) {
  * ------------------------------------------------------------------------ */
 
 void UnsetCPU(void) {
+    as_addrspace_t seg;
+
+    for (seg = SegNone; seg < SegCountPlusStruct; seg++) {
+        grans_bits_unused[seg] = 0;
+    }
     literals_chk_alldone();
     if (SwitchFrom) {
         ClearONOFF();
