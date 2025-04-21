@@ -461,15 +461,14 @@ static as_cmd_result_t CMD_ByteMode(Boolean Negate, char const* pArg) {
 }
 
 static as_cmd_result_t CMD_StartHeader(Boolean Negate, char const* Arg) {
-    Boolean  err;
-    ShortInt Sgn;
-
     if (Negate) {
         StartHeader = 0;
         return e_cmd_ok;
     } else {
-        Sgn = 1;
-        if (*Arg == '\0') {
+        char const* p_end;
+        ShortInt    Sgn = 1;
+
+        if (!*Arg) {
             return e_cmd_err;
         }
         switch (as_toupper(*Arg)) {
@@ -479,8 +478,8 @@ static as_cmd_result_t CMD_StartHeader(Boolean Negate, char const* Arg) {
         case 'L':
             Arg++;
         }
-        StartHeader = ConstLongInt(Arg, &err, 10);
-        if ((!err) || (StartHeader > 4)) {
+        StartHeader = as_cmd_strtol(Arg, &p_end);
+        if (*p_end || (StartHeader > 4)) {
             return e_cmd_err;
         }
         StartHeader *= Sgn;
@@ -489,26 +488,28 @@ static as_cmd_result_t CMD_StartHeader(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_EntryAdr(Boolean Negate, char const* Arg) {
-    Boolean err;
-
     if (Negate) {
         EntryAdrPresent = False;
         return e_cmd_ok;
     } else {
-        EntryAdr = ConstLongInt(Arg, &err, 10);
-        if (err) {
+        char const* p_end;
+        EntryAdr = as_cmd_strtol(Arg, &p_end);
+        if (!*p_end) {
             EntryAdrPresent = True;
         }
-        return (err) ? e_cmd_arg : e_cmd_err;
+        return *p_end ? e_cmd_err : e_cmd_arg;
     }
 }
 
 static as_cmd_result_t CMD_FillVal(Boolean Negate, char const* Arg) {
-    Boolean err;
-    UNUSED(Negate);
+    char const* p_end;
 
-    FillVal = ConstLongInt(Arg, &err, 10);
-    return err ? e_cmd_arg : e_cmd_err;
+    if (Negate || !*Arg) {
+        return e_cmd_err;
+    }
+
+    FillVal = as_cmd_strtol(Arg, &p_end);
+    return *p_end ? e_cmd_err : e_cmd_arg;
 }
 
 static as_cmd_result_t CMD_CheckSum(Boolean Negate, char const* Arg) {

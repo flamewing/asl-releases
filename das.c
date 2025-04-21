@@ -123,6 +123,13 @@ static as_cmd_result_t ArgError(int MsgNum, char const* pArg) {
     return e_cmd_err;
 }
 
+static LargeInt ParseCommandInteger(char const* text, Boolean* ok) {
+    char const* end;
+    LargeInt    value = as_cmd_strtol(text, &end);
+    *ok               = (*text != '\0') && (*end == '\0');
+    return value;
+}
+
 static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     LargeWord  Start = 0, Len = 0, Gran = 1;
     char *     pStart = NULL, *pLen = NULL, *pGran = NULL;
@@ -146,7 +153,7 @@ static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     }
 
     if (pStart && *pStart) {
-        Start = ConstLongInt(pStart, &OK, 10);
+        Start = ParseCommandInteger(pStart, &OK);
         if (!OK) {
             return ArgError(Num_ErrMsgInvalidNumericValue, pStart);
         }
@@ -155,7 +162,7 @@ static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     }
 
     if (pLen && *pLen) {
-        Len = ConstLongInt(pLen, &OK, 10);
+        Len = ParseCommandInteger(pLen, &OK);
         if (!OK) {
             return ArgError(Num_ErrMsgInvalidNumericValue, pLen);
         }
@@ -164,7 +171,7 @@ static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     }
 
     if (pGran && *pGran) {
-        Gran = ConstLongInt(pGran, &OK, 10);
+        Gran = ParseCommandInteger(pGran, &OK);
         if (!OK) {
             return ArgError(Num_ErrMsgInvalidNumericValue, pGran);
         }
@@ -372,7 +379,7 @@ static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
             }
 
             if (pVectorAddress && *pVectorAddress) {
-                VectorAddress = ConstLongInt(pVectorAddress, &OK, 10);
+                VectorAddress = ParseCommandInteger(pVectorAddress, &OK);
                 if (!OK) {
                     return ArgError(Num_ErrMsgInvalidNumericValue, pVectorAddress);
                 }
@@ -381,7 +388,7 @@ static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
             }
 
             if (pAddrLen && *pAddrLen) {
-                AddrLen = ConstLongInt(pAddrLen, &OK, 10);
+                AddrLen = ParseCommandInteger(pAddrLen, &OK);
                 if (!OK || (AddrLen > sizeof(Vector))) {
                     return ArgError(Num_ErrMsgInvalidNumericValue, pAddrLen);
                 }
@@ -423,7 +430,7 @@ static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
                 AddInvSymbol(Str, VectorAddress);
             }
         } else {
-            Address = ConstLongInt(pArg, &OK, 10);
+            Address = ParseCommandInteger(pArg, &OK);
             if (!OK) {
                 return ArgError(Num_ErrMsgInvalidNumericValue, pArg);
             }
@@ -456,7 +463,7 @@ static as_cmd_result_t CMD_Symbol(Boolean Negate, char const* pArg) {
     }
 
     if (*Arg) {
-        Address = ConstLongInt(Arg, &OK, 10);
+        Address = ParseCommandInteger(Arg, &OK);
         if (!OK) {
             return ArgError(Num_ErrMsgInvalidNumericValue, Arg);
         }
@@ -530,7 +537,7 @@ static as_cmd_result_t CMD_screen_height(Boolean negate, char const* p_arg) {
         screen_height = 0;
         return e_cmd_ok;
     }
-    new_screen_height = ConstLongInt(p_arg, &ok, 10);
+    new_screen_height = ParseCommandInteger(p_arg, &ok);
     if (!ok) {
         return e_cmd_err;
     }

@@ -982,8 +982,8 @@ static Boolean IsDef_TMS7(void) {
 }
 
 static void InternSymbol_TMS7(char* pAsc, TempResult* pErg) {
-    String   h;
-    Boolean  OK;
+    char *   p_end, prefix;
+    unsigned base;
     LargeInt Num;
 
     as_tempres_set_none(pErg);
@@ -991,17 +991,20 @@ static void InternSymbol_TMS7(char* pAsc, TempResult* pErg) {
         || ((as_toupper(*pAsc) != 'R') && (as_toupper(*pAsc) != 'P'))) {
         return;
     }
+    prefix = *pAsc++;
 
-    strmaxcpy(h, pAsc + 1, STRINGSIZE);
-    if ((*h == '0') && (strlen(h) > 1)) {
-        *h = '$';
+    if ((*pAsc == '0') && (strlen(pAsc) > 1)) {
+        base = 16;
+        pAsc++;
+    } else {
+        base = 10;
     }
-    Num = ConstLongInt(h, &OK, 10);
-    if (!OK || (Num < 0) || (Num > 255)) {
+    Num = strtoul(pAsc, &p_end, base);
+    if (*p_end || (Num < 0) || (Num > 255)) {
         return;
     }
 
-    if (as_toupper(*pAsc) == 'P') {
+    if (as_toupper(prefix) == 'P') {
         Num += 0x100;
     }
     as_tempres_set_int(pErg, Num);

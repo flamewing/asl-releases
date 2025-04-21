@@ -5,7 +5,7 @@
 
 Welcome to the Flamewing's Enhanced AS documentation!
 
-Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 283]`.
+Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 284]`.
 
 # Macro Assembler AS V1.42
 
@@ -67,3 +67,12 @@ The fork also recognizes macro and function names in `IFDEF` and `IFNDEF`.
 
 Warning 500 reports instruction generation outside the `CODE` segment when
 that segment's word width is required.
+
+### Unknown values in listings
+
+Listing code is shown in units appropriate to the target and segment: bytes,
+16-bit or 32-bit words, or shorter instruction words such as the PDP-8's
+12-bit words. On supported targets, fields whose values are unknown in the
+first pass are shown as question marks. `-no-list-unknown-values` disables
+this marking; `-list-unknown-values` enables it. Support initially covers
+65xx, 8080/8085, Z80/eZ80/Z180/Z380, and MCS-51/251.

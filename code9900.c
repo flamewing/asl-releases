@@ -1223,7 +1223,7 @@ static Boolean IsDef_9900(void) {
 }
 
 static void InternSymbol_9900(char* Asc, TempResult* Erg) {
-    Boolean  OK;
+    char*    p_end;
     char*    h = Asc;
     LargeInt Num;
 
@@ -1236,8 +1236,8 @@ static void InternSymbol_9900(char* Asc, TempResult* Erg) {
         h = Asc + 2;
     }
 
-    Num = ConstLongInt(h, &OK, 10);
-    if (!OK || (Num < 0) || (Num > 15)) {
+    Num = strtoul(h, &p_end, 10);
+    if (*p_end || (Num < 0) || (Num > 15)) {
         return;
     }
 

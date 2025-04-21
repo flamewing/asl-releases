@@ -75,13 +75,23 @@ static Boolean CutRep(
     }
 }
 
-static void PutByte(Byte Value, Boolean big_endian) {
+static void PutByte(Byte Value, tSymbolFlags flags, Boolean big_endian) {
+    Word u = mFirstPassUnknownOrQuestionable(flags) ? 0xff : 0x00;
+
     if ((ListGran() == 1) || (!(CodeLen & 1))) {
         BAsmCode[CodeLen] = Value;
-    } else if (big_endian) {
-        WAsmCode[CodeLen >> 1] = (((Word)BAsmCode[CodeLen - 1]) << 8) | Value;
+        set_basmcode_guessed(CodeLen, 1, u);
     } else {
-        WAsmCode[CodeLen >> 1] = (((Word)Value) << 8) | BAsmCode[CodeLen - 1];
+        Word last_value = BAsmCode[CodeLen - 1],
+             last_u     = get_basmcode_guessed(CodeLen - 1);
+
+        if (big_endian) {
+            WAsmCode[CodeLen >> 1] = (last_value << 8) | Value;
+            set_wasmcode_guessed(CodeLen >> 1, 1, (last_u << 8) | u);
+        } else {
+            WAsmCode[CodeLen >> 1] = (((Word)Value) << 8) | last_value;
+            set_wasmcode_guessed(CodeLen >> 1, 1, (u << 8) | last_u);
+        }
     }
     CodeLen++;
 }
@@ -137,7 +147,8 @@ void DecodeMotoBYT(Word flags) {
                         LongInt z2;
 
                         for (z2 = 0; z2 < Rep; z2++) {
-                            PutByte(t.Contents.Int, !!(flags & e_moto_pseudo_flags_be));
+                            PutByte(t.Contents.Int, t.Flags,
+                                    !!(flags & e_moto_pseudo_flags_be));
                         }
                     }
                     break;
@@ -170,7 +181,7 @@ void DecodeMotoBYT(Word flags) {
 
                             for (z2 = 0; z2 < Rep; z2++) {
                                 for (z3 = 0; z3 < l; z3++) {
-                                    PutByte(t.Contents.str.p_str[z3],
+                                    PutByte(t.Contents.str.p_str[z3], t.Flags,
                                             !!(flags & e_moto_pseudo_flags_be));
                                 }
                             }
@@ -200,7 +211,8 @@ void DecodeMotoBYT(Word flags) {
     }
 }
 
-static void PutADR(Word Value, Boolean big_endian) {
+static void PutADR(Word Value, tSymbolFlags flags, Boolean big_endian) {
+    set_b_guessed(flags, CodeLen, 2, 0xff);
     if (ListGran() > 1) {
         WAsmCode[CodeLen >> 1] = Value;
         CodeLen += 2;
@@ -298,13 +310,14 @@ void DecodeMotoADR(Word flags) {
                 for (z2 = 0; z2 < Rep; z2++) {
                     switch (Res.Typ) {
                     case TempInt:
-                        PutADR(Res.Contents.Int, !!(flags & e_moto_pseudo_flags_be));
+                        PutADR(Res.Contents.Int, Res.Flags,
+                               !!(flags & e_moto_pseudo_flags_be));
                         break;
                     case TempString: {
                         unsigned z3;
 
                         for (z3 = 0; z3 < Res.Contents.str.len; z3++) {
-                            PutADR(Res.Contents.str.p_str[z3],
+                            PutADR(Res.Contents.str.p_str[z3], Res.Flags,
                                    !!(flags & e_moto_pseudo_flags_be));
                         }
                         break;
@@ -401,8 +414,8 @@ void DecodeMotoDCM(Word flags) {
                 }
 
                 for (z2 = 0; z2 < Rep; z2++) {
-                    PutADR(buf[0], !!(flags & e_moto_pseudo_flags_be));
-                    PutADR(buf[1], !!(flags & e_moto_pseudo_flags_be));
+                    PutADR(buf[0], Res.Flags, !!(flags & e_moto_pseudo_flags_be));
+                    PutADR(buf[1], Res.Flags, !!(flags & e_moto_pseudo_flags_be));
                 }
                 as_tempres_free(&Res);
             }
@@ -462,7 +475,7 @@ static void DecodeFCC(Word flags) {
 
                         for (z2 = 0; z2 < Rep; z2++) {
                             for (z3 = 0; z3 < l; z3++) {
-                                PutByte(t.Contents.str.p_str[z3],
+                                PutByte(t.Contents.str.p_str[z3], t.Flags,
                                         !!(flags & e_moto_pseudo_flags_be));
                             }
                         }

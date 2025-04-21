@@ -307,12 +307,12 @@ static Boolean decode_abs(tStrComp const* p_arg, adr_vals_t* p_result) {
     return ok;
 }
 
-static int index_qualifier(char const* p_arg, int next_non_blank_pos, int split_pos) {
+static int index_qualifier(char const* p_arg, int last_non_blank_pos, int split_pos) {
     /* extra check for post increment: good enough? */
 
-    int ret = ((next_non_blank_pos >= 4) && (p_arg[0] == '(')
-               && (p_arg[next_non_blank_pos - 1] == ')')
-               && (p_arg[next_non_blank_pos] == '+'))
+    int ret = ((last_non_blank_pos >= 4) && (p_arg[0] == '(')
+               && (p_arg[last_non_blank_pos - 1] == ')')
+               && (p_arg[last_non_blank_pos] == '+'))
                       ? split_pos
                       : -1;
     return ret;

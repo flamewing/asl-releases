@@ -90,8 +90,7 @@ static ASSUMERec ASSUMEST9s[ASSUMEST9Count] = {
 /* helper functions */
 
 static Boolean DecodeReg(char* Asc_O, Byte* Erg, Byte* Size) {
-    Boolean Res;
-    char*   Asc;
+    char *Asc, *p_end;
 
     *Size = 0;
     Asc   = Asc_O;
@@ -113,8 +112,8 @@ static Boolean DecodeReg(char* Asc_O, Byte* Erg, Byte* Size) {
         *Size = 0;
     }
 
-    *Erg = ConstLongInt(Asc, &Res, 10);
-    if ((!Res) || (*Erg > 15)) {
+    *Erg = strtoul(Asc, &p_end, 10);
+    if (*p_end || (*Erg > 15)) {
         return False;
     }
     if ((*Size == 1) && (Odd(*Erg))) {
@@ -1902,9 +1901,9 @@ static void SwitchFrom_ST9(void) {
 }
 
 static void InternSymbol_ST9(char* Asc, TempResult* Erg) {
-    Boolean  OK;
-    Boolean  Pair;
-    LargeInt Num;
+    char*     p_end;
+    Boolean   Pair;
+    LargeWord Num;
 
     as_tempres_set_none(Erg);
     if ((strlen(Asc) < 2) || (*Asc != 'R')) {
@@ -1922,8 +1921,8 @@ static void InternSymbol_ST9(char* Asc, TempResult* Erg) {
         Pair = False;
     }
 
-    Num = ConstLongInt(Asc, &OK, 10);
-    if (!OK || (Num < 0) || (Num > 255)) {
+    Num = strtoul(Asc, &p_end, 10);
+    if (*p_end || (Num > 255)) {
         return;
     }
     if ((Num & 0xf0) == 0xd0) {

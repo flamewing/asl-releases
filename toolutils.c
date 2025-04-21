@@ -372,11 +372,11 @@ void DestroyRelocInfo(PRelocInfo PInfo) {
 }
 
 as_cmd_result_t CMD_FilterList(Boolean Negate, char const* Arg) {
-    Byte    FTemp;
-    Boolean err;
-    char*   p;
-    int     Search;
-    String  Copy;
+    Byte        FTemp;
+    char const* p_end;
+    char*       p;
+    int         Search;
+    String      Copy;
 
     if (*Arg == '\0') {
         return e_cmd_err;
@@ -388,8 +388,8 @@ as_cmd_result_t CMD_FilterList(Boolean Negate, char const* Arg) {
         if (p != NULL) {
             *p = '\0';
         }
-        FTemp = ConstLongInt(Copy, &err, 10);
-        if (!err) {
+        FTemp = as_cmd_strtol(Copy, &p_end);
+        if (*p_end) {
             return e_cmd_err;
         }
 
@@ -420,9 +420,8 @@ as_cmd_result_t CMD_FilterList(Boolean Negate, char const* Arg) {
 as_cmd_result_t CMD_Range(
         LongWord* pStartAddr, LongWord* pStopAddr, Boolean* pStartAuto,
         Boolean* pStopAuto, char const* Arg) {
-    char const* p;
+    char const *p, *p_end;
     String      StartStr;
-    Boolean     ok;
 
     p = strchr(Arg, '-');
     if (!p) {
@@ -431,23 +430,19 @@ as_cmd_result_t CMD_Range(
 
     strmemcpy(StartStr, sizeof(StartStr), Arg, p - Arg);
     *pStartAuto = AddressWildcard(StartStr);
-    if (*pStartAuto) {
-        ok = True;
-    } else {
-        *pStartAddr = ConstLongInt(StartStr, &ok, 10);
-    }
-    if (!ok) {
-        return e_cmd_err;
+    if (!*pStartAuto) {
+        *pStartAddr = as_cmd_strtol(StartStr, &p_end);
+        if (*p_end) {
+            return e_cmd_err;
+        }
     }
 
     *pStopAuto = AddressWildcard(p + 1);
-    if (*pStopAuto) {
-        ok = True;
-    } else {
-        *pStopAddr = ConstLongInt(p + 1, &ok, 10);
-    }
-    if (!ok) {
-        return e_cmd_err;
+    if (!*pStopAuto) {
+        *pStopAddr = as_cmd_strtol(p + 1, &p_end);
+        if (*p_end) {
+            return e_cmd_err;
+        }
     }
 
     if (!*pStartAuto && !*pStopAuto && (*pStartAddr > *pStopAddr)) {
@@ -487,8 +482,7 @@ Boolean FilterOK(Byte Header) {
 }
 
 Boolean RemoveOffset(char* Name, LongWord* Offset) {
-    int     z, Nest;
-    Boolean err;
+    int z, Nest;
 
     *Offset = 0;
     if ((*Name) && (Name[strlen(Name) - 1] == ')')) {
@@ -510,10 +504,12 @@ Boolean RemoveOffset(char* Name, LongWord* Offset) {
         if (Nest != -1) {
             return False;
         } else {
+            char const* p_end;
+
             Name[strlen(Name) - 1] = '\0';
-            *Offset                = ConstLongInt(Name + z + 1, &err, 10);
+            *Offset                = as_cmd_strtol(Name + z + 1, &p_end);
             Name[z]                = '\0';
-            return err;
+            return !*p_end;
         }
     } else {
         return True;

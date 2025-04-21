@@ -146,8 +146,8 @@ static void SetOpSize(tSymbolSize Size) {
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
-    size_t  l;
-    Boolean OK;
+    size_t l;
+    char*  p_end;
 
     if (!as_strcasecmp(pArg, "SP")) {
         *pResult = REG_SP | REGSYM_FLAG_ALIAS;
@@ -159,8 +159,8 @@ static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
         return False;
     }
 
-    *pResult = ConstLongInt(pArg + 1, &OK, 10);
-    return OK && (*pResult <= 15);
+    *pResult = strtoul(pArg + 1, &p_end, 10);
+    return !*p_end && (*pResult <= 15);
 }
 
 /*!------------------------------------------------------------------------

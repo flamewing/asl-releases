@@ -797,19 +797,14 @@ static as_cmd_result_t CMD_RelAdr(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_AdrRelocate(Boolean Negate, char const* Arg) {
-    Boolean ok;
-    UNUSED(Arg);
-
     if (Negate) {
         Relocate = 0;
         return e_cmd_ok;
     } else {
-        Relocate = ConstLongInt(Arg, &ok, 10);
-        if (!ok) {
-            return e_cmd_err;
-        }
+        char const* p_end;
 
-        return e_cmd_arg;
+        Relocate = as_cmd_strtol(Arg, &p_end);
+        return *p_end ? e_cmd_err : e_cmd_arg;
     }
 }
 
@@ -828,14 +823,13 @@ static as_cmd_result_t CMD_SepMoto(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_IntelMode(Boolean Negate, char const* Arg) {
-    int     Mode;
-    Boolean ok;
-
-    if (*Arg == '\0') {
+    if (!*Arg) {
         return e_cmd_err;
     } else {
-        Mode = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (Mode < 0) || (Mode > 2)) {
+        char const* p_end;
+        int         Mode = as_cmd_strtol(Arg, &p_end);
+
+        if (*p_end || (Mode < 0) || (Mode > 2)) {
             return e_cmd_err;
         } else {
             if (!Negate) {
@@ -849,14 +843,13 @@ static as_cmd_result_t CMD_IntelMode(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_MultiMode(Boolean Negate, char const* Arg) {
-    int     Mode;
-    Boolean ok;
-
     if (*Arg == '\0') {
         return e_cmd_err;
     } else {
-        Mode = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (Mode < 0) || (Mode > 3)) {
+        char const* p_end;
+        int         Mode = as_cmd_strtol(Arg, &p_end);
+
+        if (*p_end || (Mode < 0) || (Mode > 3)) {
             return e_cmd_err;
         } else {
             if (!Negate) {
@@ -938,14 +931,15 @@ static as_cmd_result_t CMD_DataAdrRange(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_EntryAdr(Boolean Negate, char const* Arg) {
-    Boolean ok;
-
     if (Negate) {
         EntryAdrPresent = False;
         return e_cmd_ok;
+    } else if (!*Arg) {
+        return e_cmd_err;
     } else {
-        EntryAdr = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (EntryAdr > 0xffff)) {
+        char const* p_end;
+        EntryAdr = as_cmd_strtol(Arg, &p_end);
+        if (*p_end || (EntryAdr > 0xffff)) {
             return e_cmd_err;
         }
         EntryAdrPresent = True;
@@ -954,20 +948,19 @@ static as_cmd_result_t CMD_EntryAdr(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_LineLen(Boolean Negate, char const* Arg) {
-    Boolean ok;
-
     if (Negate) {
-        if (*Arg != '\0') {
+        if (*Arg) {
             return e_cmd_err;
         } else {
             LineLen = 16;
             return e_cmd_ok;
         }
-    } else if (*Arg == '\0') {
+    } else if (!*Arg) {
         return e_cmd_err;
     } else {
-        LineLen = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (LineLen < 1) || (LineLen > MaxLineLen)) {
+        char const* p_end;
+        LineLen = as_cmd_strtol(Arg, &p_end);
+        if (*p_end || (LineLen < 1) || (LineLen > MaxLineLen)) {
             return e_cmd_err;
         } else {
             LineLen += LineLen & 1;
@@ -977,20 +970,19 @@ static as_cmd_result_t CMD_LineLen(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_MinMoto(Boolean Negate, char const* Arg) {
-    Boolean ok;
-
     if (Negate) {
-        if (*Arg != '\0') {
+        if (*Arg) {
             return e_cmd_err;
         } else {
             MinMoto = 0;
             return e_cmd_ok;
         }
-    } else if (*Arg == '\0') {
+    } else if (!*Arg) {
         return e_cmd_err;
     } else {
-        MinMoto = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (MinMoto < 1) || (MinMoto > 3)) {
+        char const* p_end;
+        MinMoto = as_cmd_strtol(Arg, &p_end);
+        if (*p_end || (MinMoto < 1) || (MinMoto > 3)) {
             return e_cmd_err;
         } else {
             return e_cmd_arg;
@@ -1006,15 +998,13 @@ static as_cmd_result_t CMD_AutoErase(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_result_t CMD_AVRLen(Boolean Negate, char const* Arg) {
-    Word    Temp;
-    Boolean ok;
-
     if (Negate) {
         AVRLen = AVRLEN_DEFAULT;
         return e_cmd_ok;
     } else {
-        Temp = ConstLongInt(Arg, &ok, 10);
-        if ((!ok) || (Temp < 2) || (Temp > 3)) {
+        char const* p_end;
+        Word        Temp = as_cmd_strtol(Arg, &p_end);
+        if (*p_end || (Temp < 2) || (Temp > 3)) {
             return e_cmd_err;
         } else {
             AVRLen = Temp;

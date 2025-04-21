@@ -100,8 +100,6 @@ extern size_t ReadLnCont(FILE* Datei, struct as_dynstr* p_line);
 
 extern int DigitVal(char ch, int Base);
 
-extern LargeInt ConstLongInt(char const* inp, Boolean* pErr, LongInt Base);
-
 extern char* ParenthPos(char* pHaystack, char Needle);
 
 extern int KillPrefBlanks(char* s);
@@ -122,13 +120,15 @@ extern void strutil_init(void);
 
 #include <ctype.h>    // IWYU pragma: export
 
-#define chartouint(c)  (((unsigned int)(c)) & 0xff)
-#define as_toupper(c)  (toupper(chartouint(c)))
-#define as_tolower(c)  (tolower(chartouint(c)))
+#define chartouint(c) (((unsigned int)(c)) & 0xff)
+#define as_toupper(c) (toupper(chartouint(c)))
+#define as_tolower(c) (tolower(chartouint(c)))
+
 static inline int as_isspace(int c) {
     unsigned int byte = chartouint(c);
     return (byte == ' ') || (byte == '\t') || !!isspace(byte);
 }
+
 #define as_isdigit(c)  (!!isdigit(chartouint(c)))
 #define as_isxdigit(c) (!!isxdigit(chartouint(c)))
 #define as_isprint(c)  (!!isprint(chartouint(c)))
@@ -136,5 +136,7 @@ static inline int as_isspace(int c) {
 #define as_isupper(c)  (!!isupper(chartouint(c)))
 #define as_islower(c)  (!!islower(chartouint(c)))
 #define as_isalnum(c)  (!!isalnum(chartouint(c)))
+
+#define as_isalnum_ubar(c) (as_isalnum(c) || ((c) == '_'))
 
 #endif /* STRUTIL_H */

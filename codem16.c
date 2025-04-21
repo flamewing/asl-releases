@@ -159,10 +159,10 @@ static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
     } else if (!as_strcasecmp(pArg, "FP")) {
         *pResult = REG_FP | REGSYM_FLAG_ALIAS;
     } else if ((strlen(pArg) > 1) && (as_toupper(*pArg) == 'R')) {
-        Boolean OK;
+        char* p_end;
 
-        *pResult = ConstLongInt(pArg + 1, &OK, 10);
-        return OK && (*pResult <= 15);
+        *pResult = strtoul(pArg + 1, &p_end, 10);
+        return !*p_end && (*pResult <= 15);
     } else {
         return False;
     }

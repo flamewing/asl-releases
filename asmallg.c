@@ -24,6 +24,7 @@
 #include "asmsub.h"
 #include "bpemu.h"
 #include "chunks.h"
+#include "cmdarg.h"
 #include "codenone.h"
 #include "codepseudo.h"
 #include "console.h"
@@ -1323,13 +1324,14 @@ static void CodeREAD(Word Index) {
 }
 
 static void CodeRADIX(Word Index) {
-    Boolean   OK;
-    LargeWord tmp;
-
     if (ChkArgCnt(1, 1)) {
-        tmp = ConstLongInt(ArgStr[1].str.p_str, &OK, 10);
-        if (!OK) {
-            WrError(ErrNum_ExpectInt);
+        tEvalResult eval_result;
+        unsigned    tmp = EvalStrIntExpressionWithResult(&ArgStr[1], UInt8, &eval_result);
+
+        if (!eval_result.OK)
+            ;
+        else if (mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+            WrStrErrorPos(ErrNum_FirstPassCalc, &ArgStr[1]);
         } else if (ChkRange(tmp, 2, 36)) {
             if (Index == 1) {
                 OutRadixBase = tmp;

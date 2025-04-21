@@ -229,8 +229,8 @@ static Boolean check_mode_mask(
     }
 }
 
-static int BaseQualifier(char const* pArg, int NextNonBlankPos, int SplitPos) {
-    return (pArg[NextNonBlankPos] == ']') ? SplitPos : -1;
+static int BaseQualifier(char const* pArg, int LastNonBlankPos, int SplitPos) {
+    return (pArg[LastNonBlankPos] == ']') ? SplitPos : -1;
 }
 
 static void CutSize(tStrComp* pArg, tSymbolSize* pSize) {

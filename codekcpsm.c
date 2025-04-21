@@ -77,10 +77,10 @@ static Boolean IsWRegCore(char const* pArg, Word* pResult) {
     if ((strlen(pArg) < 2) || (as_toupper(*pArg) != 'S')) {
         retValue = False;
     } else {
-        Boolean OK;
+        char* p_end;
 
-        *pResult = ConstLongInt(pArg + 1, &OK, 10);
-        if (!OK) {
+        *pResult = strtoul(pArg + 1, &p_end, 10);
+        if (*p_end) {
             retValue = False;
         } else {
             retValue = (*pResult <= 15);
