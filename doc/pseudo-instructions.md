@@ -2580,6 +2580,10 @@ For the Epson printer already mentioned above, a title line shall be written in 
 
 ### RADIX
 
+The argument is a plain numeric literal (decimal by default), parsed independently
+of the current expression radix. Expressions are not accepted. This also applies
+to `OUTRADIX`.
+
 `RADIX` with a numerical argument between 2 and 36 sets the default numbering system for integer constants, i.e. the numbering system used if nothing else has been stated explicitly. The default is 10, and there are some possible pitfalls to keep in mind which are described in [Integer Constants](assembler-usage.md#integer-constants).
 
 Independent of the current setting, the argument of `RADIX` is _always decimal_; furthermore, no symbolic or formula expressions may be used as argument. Only use simple constant numbers!

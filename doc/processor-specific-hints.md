@@ -1091,6 +1091,14 @@ Toshiba defined an "extended instruction set" for this processor family to facil
 - `LD` in the variant of `HL` with an immediate operand;
 - `ROLC` and `RORC` with a shift amplitude higher than one.
 
+## TLCS-42
+
+Supported models are `4240P`, `4250N`, `4260P`, `4270N`, `42C00Y`,
+`42C40P`, `42C50N`, `42C60P`, and `42C70N`. CMOS models add two
+instructions; the models otherwise differ in I/O ports and program memory.
+The default integer syntax is Intel. `ASSUME`, `PORT`, and the Intel
+`DB`, `DW`, `DD`, `DQ`, `DT`, `DO`, `DN`, and `DS` directives are available.
+
 ## TLCS-9000
 
 This was the first time that I implemented a processor for AS which was not yet available at that point of time. And unfortunately, I received back then information that Toshiba had decided no to market this processor at all. This of course had the result that the TLCS-9000 part of the assembler

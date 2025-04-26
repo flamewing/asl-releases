@@ -337,3 +337,8 @@ Warning 480, **argument treated as vector**: an ambiguous untyped numeric operan
 Warning 490, **interpreting too large integer constant as float**: the integer syntax is valid but exceeds the internal integer range, so AS attempts a floating-point representation instead.
 
 Error 1491, **duplicate function argument name**: two parameters of one function use the same name. Give each parameter a distinct name.
+
+### 500: code generation outside of CODE segment
+
+Warning: an instruction needs the word width of the `CODE` segment and cannot
+be generated in the selected address space.

@@ -173,8 +173,8 @@ static void DecodeAdrRel(tStrComp const* pArg, Word Mask, Boolean AddrRel) {
                 Flags = eSymbolFlag_None;
             }
             if (OK) {
-                *p = '(';
-                if (!as_strcasecmp(p, "(B)")) {
+                StrCompShorten(&Right, 1);
+                if (!as_strcasecmp(Right.str.p_str, "B")) {
                     AdrVals[0] = Hi(HVal);
                     AdrVals[1] = Lo(HVal);
                     AdrCnt     = 2;
@@ -186,7 +186,7 @@ static void DecodeAdrRel(tStrComp const* pArg, Word Mask, Boolean AddrRel) {
                     if (ChkRange(HVal, -128, 127)) {
                         AdrVals[0] = HVal & 0xff;
                         AdrCnt     = 1;
-                        AdrVals[1] = EvalStrIntExpression(&Arg, UInt8, &OK);
+                        AdrVals[1] = EvalStrIntExpression(&Right, UInt8, &OK);
                         if (OK) {
                             AdrCnt  = 2;
                             AdrType = ModImmRegRel;

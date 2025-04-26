@@ -452,6 +452,15 @@ The cross reference list lists for every symbol in which files and lines it has 
 
 **CAUTION!** AS can only print the listing correctly if it was previously informed about the output media's page length and width! This has to be done with the `PAGE` instruction (see there). The preset default is a length of 60 lines and an unlimited line width.
 
+### Unknown values in listings
+
+Listing code is shown in units appropriate to the target and segment: bytes,
+16-bit or 32-bit words, or shorter instruction words such as the PDP-8's
+12-bit words. On supported targets, fields whose values are unknown in the
+first pass are shown as question marks. `-no-list-unknown-values` disables
+this marking; `-list-unknown-values` enables it. Support initially covers
+65xx, 8080/8085, Z80/eZ80/Z180/Z380, and MCS-51/251.
+
 ## Symbol Conventions
 
 Symbols are allowed to be up to 255 characters long (as hinted already in the introduction) and are being distinguished on the whole length, but the symbol names have to meet some conventions:
@@ -507,6 +516,15 @@ Attr    equ     symtype(Label)  ; results in 1
 ```
 
 The individual segment types have the assigned numbers listed in the following table. Register symbols which do not really fit into the order of normal symbols are explained in [Register Symbols](#register-symbols). The `SYMTYPE` function delivers -1 as result when called with an undefined symbol as argument. However, if all you want to know is whether a symbol is defined or not, you may as well use the `DEFINED` function.
+
+### Symbol existence across passes
+
+`SYMEXIST(symbol)` and `IFSYMEXIST symbol` query whether a symbol is in the
+symbol table. A forward declaration is absent in the first pass and present
+in subsequent passes. `IFNSYMEXIST` reverses this condition. In contrast,
+`DEFINED(expression)` and `IFDEF expression` check definitions encountered
+up to the current point in the source, including every symbol in an expression.
+The fork also recognizes macro and function names in `IFDEF` and `IFNDEF`.
 
 ##### **Table:** return values of the `SYMTYPE` function
 
