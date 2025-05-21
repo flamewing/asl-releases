@@ -3653,10 +3653,11 @@ static void DecodeCache(Word Index) {
 
 static void DecodeMUL_DIV(Word Code) {
     tAdrResult AdrResult;
+    Boolean    is_mul = !(Code & 1);
 
     if (!ChkArgCnt(2, 2))
         ;
-    else if ((*OpPart.str.p_str == 'D') && !CheckNoFamily(1 << eColdfire))
+    else if (!is_mul && !CheckNoFamily(1 << eColdfire))
         ;
     else if (OpSize == eSymbolSize16Bit) {
         if (DecodeAdr(&ArgStr[2], MModData, &AdrResult)) {
@@ -3675,35 +3676,40 @@ static void DecodeMUL_DIV(Word Code) {
             }
         }
     } else if (OpSize == eSymbolSize32Bit) {
-        Word    w1, w2;
-        Boolean OK;
+        Word    dh, dl;
+        Boolean dest_reg_pair = !!strchr(ArgStr[2].str.p_str, ':');
 
-        if (strchr(ArgStr[2].str.p_str, ':')) {
-            OK = DecodeRegPair(&ArgStr[2], &w1, &w2);
+        if (dest_reg_pair) {
+            if (!DecodeRegPair(&ArgStr[2], &dh, &dl)) {
+                WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+                return;
+            }
+            if ((dh == dl) && is_mul) {
+                WrStrErrorPos(ErrNum_Unpredictable, &ArgStr[2]);
+            }
         } else {
-            OK = DecodeReg(&ArgStr[2], &w1, True) && (w1 < 8);
-            w2 = w1;
+            if (!DecodeReg(&ArgStr[2], &dl, True) || (dl >= 8)) {
+                WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+                return;
+            }
+            dh = 0;
         }
-        if (!OK) {
-            WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
-        } else {
-            WAsmCode[1] = w1 | (w2 << 12) | ((Code & 0x0100) << 3);
-            RelPos      = 4;
-            if (w1 != w2) {
-                WAsmCode[1] |= 0x400;
-            }
-            if (DecodeAdr(
-                        &ArgStr[1],
-                        MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX
-                                | MModPC | MModPCIdx | MModAbs | MModImm,
-                        &AdrResult)) {
-                WAsmCode[0] = 0x4c00 + AdrResult.AdrPart + (Lo(Code) << 6);
-                CopyAdrVals(WAsmCode + 2, &AdrResult);
-                CodeLen = 4 + AdrResult.Cnt;
-                CheckFamily(
-                        (1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)
-                        | ((w1 == w2) ? (1 << eColdfire) : 0));
-            }
+        WAsmCode[1] = (dl << 12) | ((Code & 0x0100) << 3);
+        if (dest_reg_pair) {
+            WAsmCode[1] |= 0x400 | dh;
+        }
+        RelPos = 4;
+        if (DecodeAdr(
+                    &ArgStr[1],
+                    MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX
+                            | MModPC | MModPCIdx | MModAbs | MModImm,
+                    &AdrResult)) {
+            WAsmCode[0] = 0x4c00 + AdrResult.AdrPart + (Lo(Code) << 6);
+            CopyAdrVals(WAsmCode + 2, &AdrResult);
+            CodeLen = 4 + AdrResult.Cnt;
+            CheckFamily(
+                    (1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)
+                    | (dest_reg_pair ? 0 : (1 << eColdfire)));
         }
     } else {
         WrError(ErrNum_InvOpSize);
@@ -4208,7 +4214,7 @@ static void DecodeFBits(Word Index) {
                     MModData | MModAdrI | MModDAdrI | MModAIX | MModAbs
                             | (Memo("BFTST") ? (MModPC | MModPCIdx) : 0),
                     &AdrResult)) {
-            WAsmCode[0] = 0xe8c0 | AdrResult.AdrPart | (Index << 10);
+            WAsmCode[0] = 0xe8c0 | AdrResult.AdrPart | (Index << 9);
             CopyAdrVals(WAsmCode + 2, &AdrResult);
             CodeLen = 4 + AdrResult.Cnt;
         }
@@ -5437,10 +5443,10 @@ static void DecodePRESTORE(Word Code) {
     } else {
         tAdrResult AdrResult;
 
-        RelPos = 4;
+        RelPos = 2;
         if (DecodeAdr(
                     &ArgStr[1],
-                    MModAdrI | MModPre | MModDAdrI | MModAIX | MModPC | MModPCIdx
+                    MModAdrI | MModPost | MModDAdrI | MModAIX | MModPC | MModPCIdx
                             | MModAbs,
                     &AdrResult)) {
             CodeLen     = 2 + AdrResult.Cnt;
@@ -5559,7 +5565,7 @@ static void DecodePFLUSHN(Word Code) {
 static void DecodePFLUSHR(Word Code) {
     UNUSED(Code);
 
-    if (*AttrPart.str.p_str) {
+    if (!*AttrPart.str.p_str) {
         OpSize = eSymbolSize64Bit;
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
@@ -5630,7 +5636,7 @@ static void DecodePMOVE_PMOVEFD(Word Code) {
             } else {
                 Mask = MModAdrI | MModDAdrI | MModAIX | MModAbs;
                 if (FullPMMU) {
-                    Mask *= MModPost | MModPre;
+                    Mask += MModPost | MModPre;
                     if (RegSize != eSymbolSize64Bit) {
                         Mask += MModData | MModAdr;
                     }
@@ -5738,7 +5744,7 @@ static void DecodePVALID(Word Code) {
             WAsmCode[0] = 0xf000 | AdrResult.AdrPart;
             WAsmCode[1] = 0x2800;
             CodeLen     = 4 + AdrResult.Cnt;
-            CopyAdrVals(WAsmCode + 1, &AdrResult);
+            CopyAdrVals(WAsmCode + 2, &AdrResult);
             if (!as_strcasecmp(ArgStr[1].str.p_str, "VAL"))
                 ;
             else {
@@ -6736,6 +6742,7 @@ static void InitFields(void) {
     AddFPUCond("SEQ", 0x11);
     AddFPUCond("SNE", 0x1e);
 
+    InstrZ = 0;
     AddPMMUCond("BS");
     AddPMMUCond("BC");
     AddPMMUCond("LS");
