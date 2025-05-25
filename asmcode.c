@@ -522,7 +522,7 @@ void set_basmcode_guessed(LongWord start, LongWord count, Byte value) {
 
 /*!------------------------------------------------------------------------
  * \fn     copy_basmcode_guessed(LongWord dest, LongWord src, size_t count)
- * \brief  replicate guessed mask of bytes
+ * \brief  replicate or move guessed mask of bytes
  * \param  dest where to replicate to
  * \param  src where to replicate from
  * \param  count # of bytes to replicate
@@ -535,7 +535,7 @@ void copy_basmcode_guessed(LongWord dest, LongWord src, size_t count) {
         return;
     }
     extend_zero_basmcode_guessed_len((dest_end > src_end) ? dest_end : src_end);
-    memcpy(&basmcode_guessed[dest], &basmcode_guessed[src], count);
+    memmove(&basmcode_guessed[dest], &basmcode_guessed[src], count);
 }
 
 /*!------------------------------------------------------------------------
@@ -591,7 +591,7 @@ void set_wasmcode_guessed(LongWord start, LongWord count, Word value) {
 
 /*!------------------------------------------------------------------------
  * \fn     copy_wasmcode_guessed(LongWord dest, LongWord src, size_t count)
- * \brief  replicate guessed mask of 16-bit words
+ * \brief  replicate/move guessed mask of 16-bit words
  * \param  dest where to replicate to
  * \param  src where to replicate from
  * \param  count # of words to replicate
@@ -604,7 +604,7 @@ void copy_wasmcode_guessed(LongWord dest, LongWord src, size_t count) {
         return;
     }
     extend_zero_wasmcode_guessed_len((dest_end > src_end) ? dest_end : src_end);
-    memcpy(&wasmcode_guessed[dest], &wasmcode_guessed[src], count * 2);
+    memmove(&wasmcode_guessed[dest], &wasmcode_guessed[src], count * 2);
 }
 
 /*!------------------------------------------------------------------------
@@ -687,7 +687,7 @@ void set_dasmcode_guessed(LongWord start, LongWord count, LongWord value) {
 
 /*!------------------------------------------------------------------------
  * \fn     copy_dasmcode_guessed(LongWord dest, LongWord src, size_t count)
- * \brief  replicate guessed mask of 32-bit words
+ * \brief  replicate/move guessed mask of 32-bit words
  * \param  dest where to replicate to
  * \param  src where to replicate from
  * \param  count # of dwords to replicate
@@ -700,7 +700,7 @@ void copy_dasmcode_guessed(LongWord dest, LongWord src, size_t count) {
         return;
     }
     extend_zero_dasmcode_guessed_len((dest_end > src_end) ? dest_end : src_end);
-    memcpy(&dasmcode_guessed[dest], &dasmcode_guessed[src], count * 4);
+    memmove(&dasmcode_guessed[dest], &dasmcode_guessed[src], count * 4);
 }
 
 /*!------------------------------------------------------------------------

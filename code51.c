@@ -584,7 +584,8 @@ static void DissectBit_251(char* pDest, size_t DestSize, LargeWord Inp) {
             GetIntConstIntelSuffix((unsigned)ListRadixBase), (unsigned)(Inp >> 24));
 }
 
-static ShortInt DecodeBitAdr(tStrComp* pArg, LongInt* Erg, Boolean MayShorten) {
+static ShortInt DecodeBitAdr(
+        tStrComp* pArg, LongInt* Erg, tSymbolFlags* p_symbol_flags, Boolean MayShorten) {
     tEvalResult EvalResult;
     char *      pPos, Save = '\0';
     tStrComp    RegPart, BitPart;
@@ -597,6 +598,7 @@ static ShortInt DecodeBitAdr(tStrComp* pArg, LongInt* Erg, Boolean MayShorten) {
         if (!pPos) {
             *Erg = EvalStrIntExpressionWithResult(pArg, UInt8, &EvalResult);
             if (EvalResult.OK) {
+                *p_symbol_flags = EvalResult.Flags;
                 ChkSpace(SegBData, EvalResult.AddrSpaceMask);
                 return ModBit51;
             } else {
@@ -611,11 +613,13 @@ static ShortInt DecodeBitAdr(tStrComp* pArg, LongInt* Erg, Boolean MayShorten) {
             if (!EvalResult.OK) {
                 return ModNone;
             } else {
+                *p_symbol_flags = EvalResult.Flags;
                 ChkSpace(SegData, EvalResult.AddrSpaceMask);
                 Save = EvalStrIntExpressionWithResult(&BitPart, UInt3, &EvalResult);
                 if (!EvalResult.OK) {
                     return ModNone;
                 } else {
+                    *p_symbol_flags |= EvalResult.Flags;
                     if (*Erg > 0x7f) {
                         if ((*Erg) & 7) {
                             WrError(ErrNum_NotBitAddressable);
@@ -643,6 +647,7 @@ static ShortInt DecodeBitAdr(tStrComp* pArg, LongInt* Erg, Boolean MayShorten) {
                 WrError(ErrNum_InvBitPos);
                 EvalResult.OK = False;
             }
+            *p_symbol_flags = EvalResult.Flags;
         } else {
             adr_vals_t adr_vals;
             ShortInt   adr_mode;
@@ -652,9 +657,11 @@ static ShortInt DecodeBitAdr(tStrComp* pArg, LongInt* Erg, Boolean MayShorten) {
             if (adr_mode == ModNone) {
                 EvalResult.OK = False;
             } else {
+                *p_symbol_flags = adr_vals.flags;
                 *Erg = EvalStrIntExpressionWithResult(&BitPart, UInt3, &EvalResult) << 24;
                 if (EvalResult.OK) {
                     (*Erg) += adr_vals.values[0];
+                    *p_symbol_flags |= EvalResult.Flags;
                 }
             }
         }
@@ -710,32 +717,35 @@ static void DecodeMOV(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (IsCarry(ArgStr[1].str.p_str)) {
-        switch (DecodeBitAdr(&ArgStr[2], &AdrLong, True)) {
+        switch (DecodeBitAdr(&ArgStr[2], &AdrLong, &adr_vals.flags, True)) {
         case ModBit51:
             PutCode(0xa2);
-            BAsmCode[CodeLen] = AdrLong & 0xff;
-            CodeLen++;
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0xff);
+            BAsmCode[CodeLen++] = AdrLong & 0xff;
             break;
         case ModBit251:
             PutCode(0x1a9);
-            BAsmCode[CodeLen]     = 0xa0 + (AdrLong >> 24);
-            BAsmCode[CodeLen + 1] = AdrLong & 0xff;
-            CodeLen += 2;
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0x07);
+            BAsmCode[CodeLen++] = 0xa0 + (AdrLong >> 24);
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0xff);
+            BAsmCode[CodeLen++] = AdrLong & 0xff;
             break;
         }
     } else if (
             (!as_strcasecmp(ArgStr[2].str.p_str, "C"))
             || (!as_strcasecmp(ArgStr[2].str.p_str, "CY"))) {
-        switch (DecodeBitAdr(&ArgStr[1], &AdrLong, True)) {
+        switch (DecodeBitAdr(&ArgStr[1], &AdrLong, &adr_vals.flags, True)) {
         case ModBit51:
             PutCode(0x92);
-            BAsmCode[CodeLen] = AdrLong & 0xff;
-            CodeLen++;
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0xff);
+            BAsmCode[CodeLen++] = AdrLong & 0xff;
             break;
         case ModBit251:
             PutCode(0x1a9);
-            BAsmCode[CodeLen]     = 0x90 + (AdrLong >> 24);
-            BAsmCode[CodeLen + 1] = AdrLong & 0xff;
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0x07);
+            BAsmCode[CodeLen++] = 0x90 + (AdrLong >> 24);
+            set_b_guessed(adr_vals.flags, CodeLen, 1, 0xff);
+            BAsmCode[CodeLen++] = AdrLong & 0xff;
             CodeLen += 2;
             break;
         }
@@ -1030,19 +1040,22 @@ static void DecodeLogic(Word Index) {
                 tStrComp Comp;
 
                 StrCompRefRight(&Comp, &ArgStr[2], 1);
-                Result = DecodeBitAdr(&Comp, &AdrLong, True);
+                Result = DecodeBitAdr(&Comp, &AdrLong, &adr_vals.flags, True);
             } else {
-                Result = DecodeBitAdr(&ArgStr[2], &AdrLong, True);
+                Result = DecodeBitAdr(&ArgStr[2], &AdrLong, &adr_vals.flags, True);
             }
             switch (Result) {
             case ModBit51:
                 PutCode(InvFlag ? 0xa0 + dest_reg : 0x72 + dest_reg);
+                set_b_guessed(CodeLen, adr_vals.flags, 1, 0xff);
                 BAsmCode[CodeLen++] = AdrLong & 0xff;
                 break;
             case ModBit251:
                 PutCode(0x1a9);
+                set_b_guessed(CodeLen, adr_vals.flags, 1, 0x07);
                 BAsmCode[CodeLen++]
                         = (InvFlag ? 0xe0 : 0x70) + dest_reg + (AdrLong >> 24);
+                set_b_guessed(CodeLen, adr_vals.flags, 1, 0xff);
                 BAsmCode[CodeLen++] = AdrLong & 0xff;
                 break;
             }
@@ -2029,6 +2042,7 @@ static void DecodeINCDEC(Word Index) {
                         WrError(ErrNum_OverRange);
                     } else {
                         PutCode(0x10b + z);
+                        set_b_guessed(Flags, CodeLen, 1, 0x03);
                         BAsmCode[CodeLen++] = (AccReg << 4) + increment;
                     }
                     break;
@@ -2042,6 +2056,7 @@ static void DecodeINCDEC(Word Index) {
                         PutCode(0x08 + z + adr_vals.part);
                     } else if (ChkMinCPUExt(CPU80251, ErrNum_AddrModeNotSupported)) {
                         PutCode(0x10b + z);
+                        set_b_guessed(Flags, CodeLen, 1, 0x03);
                         BAsmCode[CodeLen++]
                                 = (adr_vals.part << 4) + (OpSize << 2) + increment;
                         if (OpSize == eSymbolSize32Bit) {
@@ -2127,14 +2142,18 @@ static void DecodeBits(Word Index) {
     } else if (IsCarry(ArgStr[1].str.p_str)) {
         PutCode(0xb3 + z);
     } else {
-        switch (DecodeBitAdr(&ArgStr[1], &AdrLong, True)) {
+        tSymbolFlags flags;
+        switch (DecodeBitAdr(&ArgStr[1], &AdrLong, &flags, True)) {
         case ModBit51:
             PutCode(0xb2 + z);
+            set_b_guessed(flags, CodeLen, 1, 0xff);
             BAsmCode[CodeLen++] = AdrLong & 0xff;
             break;
         case ModBit251:
             PutCode(0x1a9);
+            set_b_guessed(flags, CodeLen, 1, 0x07);
             BAsmCode[CodeLen++] = 0xb0 + z + (AdrLong >> 24);
+            set_b_guessed(flags, CodeLen, 1, 0xff);
             BAsmCode[CodeLen++] = AdrLong & 0xff;
             break;
         }
@@ -2188,15 +2207,18 @@ static void DecodeCond(Word Index) {
 
 static void DecodeBCond(Word Index) {
     FixedOrder* FixedZ = BCondOrders + Index;
-    LongInt     AdrLong, BitLong;
-    tEvalResult EvalResult;
 
     if (ChkArgCnt(2, 2)) {
-        AdrLong = EvalStrIntExpressionWithResult(&ArgStr[2], UInt24, &EvalResult);
+        tEvalResult EvalResult;
+        LongInt AdrLong = EvalStrIntExpressionWithResult(&ArgStr[2], UInt24, &EvalResult);
+
         SubPCRefReloc();
         if (EvalResult.OK) {
+            LongInt      BitLong;
+            tSymbolFlags bit_flags;
+
             ChkSpace(SegCode, EvalResult.AddrSpaceMask);
-            switch (DecodeBitAdr(&ArgStr[1], &BitLong, True)) {
+            switch (DecodeBitAdr(&ArgStr[1], &BitLong, &bit_flags, True)) {
             case ModBit51:
                 AdrLong -= EProgCounter() + 3 + Ord(NeedsPrefix(FixedZ->Code));
                 if (((AdrLong < -128) || (AdrLong > 127))
@@ -2204,6 +2226,7 @@ static void DecodeBCond(Word Index) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     PutCode(FixedZ->Code);
+                    set_b_guessed(bit_flags, CodeLen, 1, 0xff);
                     BAsmCode[CodeLen++] = BitLong & 0xff;
                     set_b_guessed(EvalResult.Flags, CodeLen, 1, 0xff);
                     BAsmCode[CodeLen++] = AdrLong & 0xff;
@@ -2216,7 +2239,9 @@ static void DecodeBCond(Word Index) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     PutCode(0x1a9);
+                    set_b_guessed(bit_flags, CodeLen, 1, 0x07);
                     BAsmCode[CodeLen++] = FixedZ->Code + (BitLong >> 24);
+                    set_b_guessed(bit_flags, CodeLen, 1, 0xff);
                     BAsmCode[CodeLen++] = BitLong & 0xff;
                     set_b_guessed(EvalResult.Flags, CodeLen, 1, 0xff);
                     BAsmCode[CodeLen++] = AdrLong & 0xff;
@@ -2307,13 +2332,14 @@ static void DecodeSFR(Word is_sfrb) {
 }
 
 static void DecodeBIT(Word Index) {
-    LongInt AdrLong;
+    LongInt      AdrLong;
+    tSymbolFlags flags;
     UNUSED(Index);
 
     if (!ChkArgCnt(1, 1))
         ;
     else if (MomCPU >= CPU80251) {
-        if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit251) {
+        if (DecodeBitAdr(&ArgStr[1], &AdrLong, &flags, False) == ModBit251) {
             PushLocHandle(-1);
             EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
             PopLocHandle();
@@ -2321,7 +2347,7 @@ static void DecodeBIT(Word Index) {
             DissectBit_251(ListLine + 1, STRINGSIZE - 1, AdrLong);
         }
     } else {
-        if (DecodeBitAdr(&ArgStr[1], &AdrLong, False) == ModBit51) {
+        if (DecodeBitAdr(&ArgStr[1], &AdrLong, &flags, False) == ModBit51) {
             PushLocHandle(-1);
             EnterIntSymbol(&LabPart, AdrLong, SegBData, False);
             PopLocHandle();

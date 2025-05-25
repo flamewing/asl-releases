@@ -205,19 +205,23 @@ static Boolean DecodeMem(char* Asc, Word* Erg) {
 }
 
 static Boolean DecodeBitArg2(
-        tStrComp const* pRegArg, tStrComp const* pBitArg, LongWord* pResult) {
+        tStrComp const* pRegArg, tStrComp const* pBitArg, LongWord* pResult,
+        tSymbolFlags* p_flags) {
     tEvalResult EvalResult;
     LongWord    Addr;
 
+    *p_flags = eSymbolFlag_None;
     *pResult = EvalStrIntExpressionWithResult(pBitArg, UInt3, &EvalResult);
     if (!EvalResult.OK) {
         return False;
     }
+    *p_flags |= EvalResult.Flags;
 
     Addr = EvalStrIntExpressionWithResult(pRegArg, DataAdrIntType, &EvalResult);
     if (!EvalResult.OK) {
         return False;
     }
+    *p_flags |= EvalResult.Flags;
 
     if (EvalResult.AddrSpaceMask & (1 << SegIO)) {
         if (!mFirstPassUnknown(EvalResult.Flags)
@@ -239,7 +243,8 @@ static Boolean DecodeBitArg2(
     }
 }
 
-static Boolean DecodeBitArg(int Start, int Stop, LongWord* pResult) {
+static Boolean DecodeBitArg(
+        int Start, int Stop, LongWord* pResult, tSymbolFlags* p_flags) {
     if (Start == Stop) {
         char*       pPos = QuotPos(ArgStr[Start].str.p_str, '.');
         tEvalResult EvalResult;
@@ -248,15 +253,16 @@ static Boolean DecodeBitArg(int Start, int Stop, LongWord* pResult) {
             tStrComp RegArg, BitArg;
 
             StrCompSplitRef(&RegArg, &BitArg, &ArgStr[Start], pPos);
-            return DecodeBitArg2(&RegArg, &BitArg, pResult);
+            return DecodeBitArg2(&RegArg, &BitArg, pResult, p_flags);
         }
         *pResult = EvalStrIntExpressionWithResult(&ArgStr[Start], UInt16, &EvalResult);
         if (EvalResult.OK) {
             ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+            *p_flags = EvalResult.Flags;
         }
         return EvalResult.OK;
     } else if (Stop == Start + 1) {
-        return DecodeBitArg2(&ArgStr[Start], &ArgStr[Stop], pResult);
+        return DecodeBitArg2(&ArgStr[Start], &ArgStr[Stop], pResult, p_flags);
     } else {
         WrError(ErrNum_WrongArgCnt);
         return False;
@@ -349,6 +355,16 @@ static void AppendCode(Word Code) {
     }
 }
 
+static void append_code_with_guess_flags(Word code, tSymbolFlags flags, Word guess_mask) {
+    if (CodeSegSize) {
+        set_w_guessed(flags, CodeLen, 1, guess_mask);
+    } else {
+        set_b_guessed(flags, CodeLen, 1, Lo(guess_mask));
+        set_b_guessed(flags, CodeLen + 1, 1, Hi(guess_mask));
+    }
+    AppendCode(code);
+}
+
 /* No Argument */
 
 static void DecodeFixed(Word Index) {
@@ -380,48 +396,60 @@ static void DecodeRES(Word Index) {
     }
 }
 
-static Word    WordAcc;
-static Boolean WordAccFull;
+typedef struct {
+    Word    data_acc, guess_acc;
+    Boolean word_acc_full;
+} value_ctx_t;
 
-static void PlaceValue(Word Value, Boolean IsByte) {
+static void PlaceValue(
+        Word Value, tSymbolFlags flags, Boolean IsByte, value_ctx_t* p_ctx) {
     if (ActPC != SegCode) {
-        BAsmCode[CodeLen++] = Value;
-        WordAccFull         = False;
+        set_b_guessed(flags, CodeLen, 1, 0xff);
+        BAsmCode[CodeLen++]  = Value;
+        p_ctx->word_acc_full = False;
     } else if (IsByte) {
         if (CodeSegSize) {
+            Word this_guess_value = mFirstPassUnknownOrQuestionable(flags) ? 0xff : 0x00;
             Value &= 0xff;
-            if (WordAccFull) {
-                AppendCode(WordAcc |= (Value << 8));
+            if (p_ctx->word_acc_full) {
+                set_wasmcode_guessed(
+                        CodeLen, 1, p_ctx->guess_acc |= (this_guess_value << 8));
+                AppendCode(p_ctx->data_acc |= (Value << 8));
             } else {
-                WordAcc = Value;
+                p_ctx->data_acc  = Value;
+                p_ctx->guess_acc = this_guess_value;
             }
-            WordAccFull = !WordAccFull;
+            p_ctx->word_acc_full = !p_ctx->word_acc_full;
         } else {
-            BAsmCode[CodeLen++] = Value;
-            WordAccFull         = False;
+            set_b_guessed(flags, CodeLen, 1, 0xff);
+            BAsmCode[CodeLen++]  = Value;
+            p_ctx->word_acc_full = False;
         }
     } else {
         if (CodeSegSize) {
-            AppendCode(Value);
+            append_code_with_guess_flags(Value, flags, 0xffff);
         } else {
+            set_b_guessed(flags, CodeLen, 2, 0xff);
             BAsmCode[CodeLen++] = Lo(Value);
             BAsmCode[CodeLen++] = Hi(Value);
         }
-        WordAccFull = False;
+        p_ctx->word_acc_full = False;
     }
 }
 
 static void DecodeDATA_AVR(Word Index) {
-    Integer    Trans;
-    TempResult t;
-    LongInt    MinV, MaxV;
+    Integer     Trans;
+    TempResult  t;
+    LongInt     MinV, MaxV;
+    value_ctx_t ctx;
 
     UNUSED(Index);
 
     as_tempres_ini(&t);
-    MaxV        = ((ActPC == SegCode) && !Packing) ? 65535 : 255;
-    MinV        = (-((MaxV + 1) >> 1));
-    WordAccFull = FALSE;
+    MaxV         = ((ActPC == SegCode) && !Packing) ? 65535 : 255;
+    MinV         = (-((MaxV + 1) >> 1));
+    ctx.data_acc = ctx.guess_acc = 0;
+    ctx.word_acc_full            = False;
     if (ChkArgCnt(1, ArgCntMax)) {
         Boolean         OK = True;
         tStrComp const* pArg;
@@ -446,7 +474,7 @@ static void DecodeDATA_AVR(Word Index) {
                 } else {
                     for (z2 = 0; z2 < (int)t.Contents.str.len; z2++) {
                         Trans = ((usint)t.Contents.str.p_str[z2]) & 0xff;
-                        PlaceValue(Trans, True);
+                        PlaceValue(Trans, t.Flags, True, &ctx);
                     }
                 }
                 break;
@@ -454,7 +482,7 @@ static void DecodeDATA_AVR(Word Index) {
             ToInt:
             case TempInt:
                 if (ChkRange(t.Contents.Int, MinV, MaxV)) {
-                    PlaceValue(t.Contents.Int, Packing);
+                    PlaceValue(t.Contents.Int, t.Flags, Packing, &ctx);
                 }
                 break;
             case TempFloat:
@@ -466,9 +494,9 @@ static void DecodeDATA_AVR(Word Index) {
         }
         if (!OK) {
             CodeLen = 0;
-        } else if (WordAccFull) {
+        } else if (ctx.word_acc_full) {
             WrError(ErrNum_PaddingAdded);
-            AppendCode(WordAcc);
+            PlaceValue(0x00, eSymbolFlag_None, True, &ctx);
         }
     }
     as_tempres_free(&t);
@@ -511,29 +539,33 @@ static void DecodeReg3(Word Code) {
 /* immediate with register */
 
 static void DecodeImm(Word Code) {
-    Word    Reg, Const;
-    Boolean OK;
+    Word Reg;
 
     if (ChkArgCnt(2, 2) && DecodeArgReg(1, &Reg, UpperHalfRegMask)) {
-        Const = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
+        Boolean      OK;
+        tSymbolFlags flags;
+        Word         Const = EvalStrIntExpressionWithFlags(&ArgStr[2], Int8, &OK, &flags);
         if (OK) {
-            AppendCode(
-                    Code | ((Const & 0xf0) << 4) | (Const & 0x0f) | ((Reg & 0x0f) << 4));
+            append_code_with_guess_flags(
+                    Code | ((Const & 0xf0) << 4) | (Const & 0x0f) | ((Reg & 0x0f) << 4),
+                    flags, 0x0f0f);
         }
     }
 }
 
 static void DecodeADIW(Word Index) {
-    Word    Reg, Const;
-    Boolean OK;
+    Word Reg;
 
     if (ChkArgCnt(2, 2) && ChkMinCore(eCoreClassic)
         && DecodeArgReg(1, &Reg, UpperEightEvenRegMask)) {
-        Const = EvalStrIntExpression(&ArgStr[2], UInt6, &OK);
+        Boolean      OK;
+        tSymbolFlags flags;
+        Word Const = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt6, &OK, &flags);
         if (OK) {
-            AppendCode(
+            append_code_with_guess_flags(
                     0x9600 | Index | ((Reg & 6) << 3) | (Const & 15)
-                    | ((Const & 0x30) << 2));
+                            | ((Const & 0x30) << 2),
+                    flags, 0x00cf);
         }
     }
 }
@@ -568,15 +600,13 @@ static void DecodeLDST(Word Index) {
 }
 
 static void DecodeLDDSTD(Word Index) {
-    int     RegI, MemI;
-    Word    Reg, Disp;
-    Boolean OK;
-
     if (ChkArgCnt(2, 2) && ChkMinCore(eCoreClassic)) {
-        char RegChar;
+        Word    Reg;
+        char    RegChar;
+        Boolean OK;
+        int     RegI = Index ? 2 : 1, /* STD */
+                MemI = 3 - RegI;
 
-        RegI    = Index ? 2 : 1; /* STD */
-        MemI    = 3 - RegI;
         RegChar = *ArgStr[MemI].str.p_str;
         OK      = True;
         if (as_toupper(RegChar) == 'Y') {
@@ -587,15 +617,19 @@ static void DecodeLDDSTD(Word Index) {
             OK = False;
         }
         if (!OK) {
-            WrError(ErrNum_InvAddrMode);
+            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[MemI]);
         } else if (DecodeArgReg(RegI, &Reg, AllRegMask)) {
+            tSymbolFlags flags;
+            Word         Disp;
+
             *ArgStr[MemI].str.p_str = '0';
-            Disp                    = EvalStrIntExpression(&ArgStr[MemI], UInt6, &OK);
+            Disp = EvalStrIntExpressionWithFlags(&ArgStr[MemI], UInt6, &OK, &flags);
             *ArgStr[MemI].str.p_str = RegChar;
             if (OK) {
-                AppendCode(
+                append_code_with_guess_flags(
                         0x8000 | Index | (Reg << 4) | (Disp & 7) | ((Disp & 0x18) << 7)
-                        | ((Disp & 0x20) << 8));
+                                | ((Disp & 0x20) << 8),
+                        flags, 0x2c07);
             }
         }
     }
@@ -614,8 +648,9 @@ static void DecodeINOUT(Word Index) {
             Mem = EvalStrIntExpressionWithResult(&ArgStr[MemI], UInt6, &EvalResult);
             if (EvalResult.OK) {
                 ChkSpace(SegIO, EvalResult.AddrSpaceMask);
-                AppendCode(
-                        0xb000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0xf0) << 5));
+                append_code_with_guess_flags(
+                        0xb000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0xf0) << 5),
+                        EvalResult.Flags, 0x060f);
             }
         }
     }
@@ -635,7 +670,7 @@ static void DecodeLDSSTS(Word Index) {
             if (EvalResult.OK) {
                 ChkSpace(SegData, EvalResult.AddrSpaceMask);
                 AppendCode(0x9000 | Index | (Reg << 4));
-                AppendCode(Address);
+                append_code_with_guess_flags(Address, EvalResult.Flags, 0xffff);
             }
         }
     }
@@ -644,13 +679,13 @@ static void DecodeLDSSTS(Word Index) {
 /* bit operations */
 
 static void DecodeBCLRSET(Word Index) {
-    Word    Bit;
-    Boolean OK;
-
     if (ChkArgCnt(1, 1)) {
-        Bit = EvalStrIntExpression(&ArgStr[1], UInt3, &OK);
+        Boolean      OK;
+        tSymbolFlags flags;
+        Word         Bit = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt3, &OK, &flags);
+
         if (OK) {
-            AppendCode(0x9408 | (Bit << 4) | Index);
+            append_code_with_guess_flags(0x9408 | (Bit << 4) | Index, flags, 0x0070);
         }
     }
 }
@@ -695,16 +730,17 @@ static void DecodeSER(Word Index) {
 }
 
 static void DecodePBit(Word Code) {
-    LongWord BitSpec;
+    LongWord     BitSpec;
+    tSymbolFlags flags;
 
-    if (DecodeBitArg(1, ArgCnt, &BitSpec)) {
+    if (DecodeBitArg(1, ArgCnt, &BitSpec, &flags)) {
         Word Bit = BitSpec & 7, Adr = (BitSpec >> 3) & 0xffff;
 
         if (BitSpec & BitFlag_Data) {
             WrError(ErrNum_WrongSegment);
         }
         if (ChkRange(Adr, 0, 31)) {
-            AppendCode(Code | Bit | (Adr << 3));
+            append_code_with_guess_flags(Code | Bit | (Adr << 3), flags, 0x00ff);
         }
     }
 }
@@ -725,7 +761,8 @@ static void DecodeRel(Word Code) {
                 && ((AdrInt < -64) || (AdrInt > 63))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
-                AppendCode(Code | ((AdrInt & 0x7f) << 3));
+                append_code_with_guess_flags(
+                        Code | ((AdrInt & 0x7f) << 3), EvalResult.Flags, 0x03f8);
             }
         }
     }
@@ -748,7 +785,9 @@ static void DecodeBRBSBC(Word Index) {
                     && ((AdrInt < -64) || (AdrInt > 63))) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
-                    AppendCode(0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit);
+                    append_code_with_guess_flags(
+                            0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit,
+                            EvalResult.Flags, 0x03f8);
                 }
             }
         }
@@ -762,10 +801,11 @@ static void DecodeJMPCALL(Word Index) {
     if (ChkArgCnt(1, 1) && ChkMinCore(eCoreTiny16K)) {
         AdrInt = GetWordCodeAddress(&ArgStr[1], &EvalResult);
         if (EvalResult.OK) {
-            AppendCode(
+            append_code_with_guess_flags(
                     0x940c | Index | ((AdrInt & 0x3e0000) >> 13)
-                    | ((AdrInt & 0x10000) >> 16));
-            AppendCode(AdrInt & 0xffff);
+                            | ((AdrInt & 0x10000) >> 16),
+                    EvalResult.Flags, 0x01f1);
+            append_code_with_guess_flags(AdrInt & 0xffff, EvalResult.Flags, 0xffff);
         }
     }
 }
@@ -784,7 +824,8 @@ static void DecodeRJMPCALL(Word Index) {
                 && ((AdrInt < -2048) || (AdrInt > 2047))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
-                AppendCode(0xc000 | Index | (AdrInt & 0xfff));
+                append_code_with_guess_flags(
+                        0xc000 | Index | (AdrInt & 0xfff), EvalResult.Flags, 0xfff);
             }
         }
     }
@@ -877,11 +918,12 @@ static void DecodeELPM(Word Index) {
 }
 
 static void DecodeBIT(Word Code) {
-    LongWord BitSpec;
+    LongWord     BitSpec;
+    tSymbolFlags flags;
 
     UNUSED(Code);
 
-    if (DecodeBitArg(1, ArgCnt, &BitSpec)) {
+    if (DecodeBitArg(1, ArgCnt, &BitSpec, &flags)) {
         *ListLine = '=';
         DissectBit_AVR(ListLine + 1, STRINGSIZE - 3, BitSpec);
         PushLocHandle(-1);
