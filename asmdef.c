@@ -57,8 +57,6 @@ Boolean        ENDOccured;                            /* END-Statement aufgetret
 Boolean        Retracted;                             /* Codes zurueckgenommen ? */
 Boolean        ListToStdout, ListToNull; /* Listing auf Konsole/Nulldevice ? */
 
-unsigned         ASSUMERecCnt;
-ASSUMERec const* pASSUMERecs;
 void (*pASSUMEOverride)(void);
 
 Integer     PassNo;             /* Durchlaufsnummer */

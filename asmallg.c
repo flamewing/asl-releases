@@ -22,6 +22,7 @@
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "chunks.h"
 #include "cmdarg.h"
@@ -185,10 +186,9 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
     DecodeAttrPart                                              = NULL;
     SwitchIsOccupied = PageIsOccupied = ShiftIsOccupied = False;
     ChkPC                                               = DefChkPC;
-    ASSUMERecCnt                                        = 0;
-    pASSUMERecs                                         = NULL;
-    pASSUMEOverride                                     = NULL;
-    pCommentLeadIn                                      = Default_CommentLeadIn;
+    assume_set(NULL, 0);
+    pASSUMEOverride = NULL;
+    pCommentLeadIn  = Default_CommentLeadIn;
     UnsetCPU();
     strmaxcpy(MomCPUArgs, pCPUArgs ? pCPUArgs->str.p_str : "", STRINGSIZE);
 
@@ -1378,15 +1378,15 @@ static void CodeALIGN(Word Index) {
 }
 
 static void CodeASSUME(Word Index) {
-    int          z1;
-    unsigned     z2, z3;
-    Boolean      OK;
-    tSymbolFlags Flags;
-    LongInt      HVal;
-    tStrComp     RegPart, ValPart;
-    char *       pSep, EmptyStr[] = "";
+    int                    z1;
+    Boolean                OK;
+    tSymbolFlags           Flags;
+    LongInt                HVal;
+    tStrComp               RegPart, ValPart;
+    char *                 pSep, EmptyStr[] = "";
+    as_assume_rec_t const* p_rec;
     void (*pPostProcs[5])(void);
-    unsigned PostProcCount = 0;
+    unsigned PostProcCount = 0, z3;
 
     UNUSED(Index);
 
@@ -1408,21 +1408,17 @@ static void CodeASSUME(Word Index) {
                 RegPart = ArgStr[z1];
                 StrCompMkTemp(&ValPart, EmptyStr, 0);
             }
-            z2 = 0;
             NLS_UpString(RegPart.str.p_str);
-            while ((z2 < ASSUMERecCnt)
-                   && (strcmp(pASSUMERecs[z2].Name, RegPart.str.p_str))) {
-                z2++;
-            }
-            OK = (z2 < ASSUMERecCnt);
-            if (!OK) {
+            p_rec = assume_lookup(RegPart.str.p_str);
+            if (!p_rec) {
                 WrStrErrorPos(ErrNum_InvRegName, &RegPart);
+                OK = False;
             } else {
                 if (!as_strcasecmp(ValPart.str.p_str, "NOTHING")) {
-                    if (pASSUMERecs[z2].NothingVal == -1) {
+                    if (p_rec->nothing_value == -1) {
                         WrError(ErrNum_InvAddrMode);
                     } else {
-                        *(pASSUMERecs[z2].Dest) = pASSUMERecs[z2].NothingVal;
+                        *(p_rec->p_dest) = p_rec->nothing_value;
                     }
                 } else {
                     HVal = EvalStrIntExpressionWithFlags(&ValPart, Int32, &OK, &Flags);
@@ -1430,17 +1426,15 @@ static void CodeASSUME(Word Index) {
                         if (mFirstPassUnknown(Flags)) {
                             WrError(ErrNum_FirstPassCalc);
                             OK = False;
-                        } else if (
-                                ChkRange(
-                                        HVal, pASSUMERecs[z2].Min, pASSUMERecs[z2].Max)) {
-                            *(pASSUMERecs[z2].Dest) = HVal;
+                        } else if (ChkRange(HVal, p_rec->min_value, p_rec->max_value)) {
+                            *(p_rec->p_dest) = HVal;
                         }
                     }
                 }
                 /* collect different post procs so same proc is called only once */
-                if (pASSUMERecs[z2].pPostProc) {
+                if (p_rec->p_post_proc) {
                     for (z3 = 0; z3 < PostProcCount; z3++) {
-                        if (pASSUMERecs[z2].pPostProc == pPostProcs[z3]) {
+                        if (p_rec->p_post_proc == pPostProcs[z3]) {
                             break;
                         }
                     }
@@ -1451,7 +1445,7 @@ static void CodeASSUME(Word Index) {
                             }
                             PostProcCount = 0;
                         }
-                        pPostProcs[PostProcCount++] = pASSUMERecs[z2].pPostProc;
+                        pPostProcs[PostProcCount++] = p_rec->p_post_proc;
                     }
                 }
             }
@@ -1605,7 +1599,7 @@ void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPat
     StrCompCopySub(pDest, pArg, offs, l);
 
     /* To keep existing functionality, first search for the file name
-       possibly expanded by a suffix.  If it was extened, and not found
+       possibly expanded by a suffix.  If it was extended, and not found
        with this extension, try the plain name in a second search: */
 
     this_pass = AddSuffix(pDest->str.p_str, IncSuffix) ? 0 : 1;

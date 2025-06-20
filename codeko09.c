@@ -16,6 +16,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "code6809.h"
 #include "codepseudo.h"
@@ -877,8 +878,8 @@ static Boolean is_def_ko09(void) {
  * ------------------------------------------------------------------------ */
 
 static void switch_to_ko09(void) {
-    TFamilyDescr const*    p_descr     = FindFamilyByName("052001");
-    static ASSUMERec const ASSUME09s[] = {
+    TFamilyDescr const*          p_descr     = FindFamilyByName("052001");
+    static as_assume_rec_t const ASSUME09s[] = {
             {"DPR", &DPRValue, 0, 0xff, 0x100, NULL}
     };
 
@@ -906,8 +907,7 @@ static void switch_to_ko09(void) {
     init_fields();
     AddMoto16PseudoONOFF(False);
 
-    pASSUMERecs  = ASSUME09s;
-    ASSUMERecCnt = as_array_size(ASSUME09s);
+    assume_set(ASSUME09s, as_array_size(ASSUME09s));
 }
 
 /*!------------------------------------------------------------------------

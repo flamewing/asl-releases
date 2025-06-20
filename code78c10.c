@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmstructs.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -3140,12 +3141,11 @@ static void SwitchTo_78C10(void* pUser) {
     SegLimits[SegCode] = 0xffff;
 
     if (pCurrCPUProps->Flags & eFlagHasV) {
-        static ASSUMERec ASSUME78C10s[] = {
+        static as_assume_rec_t ASSUME78C10s[] = {
                 {"V", &WorkArea, 0, 0xff, 0x100, NULL}
         };
 
-        pASSUMERecs  = ASSUME78C10s;
-        ASSUMERecCnt = sizeof(ASSUME78C10s) / sizeof(*ASSUME78C10s);
+        assume_set(ASSUME78C10s, as_array_size(ASSUME78C10s));
     } else {
         WorkArea = 0xff;
     }

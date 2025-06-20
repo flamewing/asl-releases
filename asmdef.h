@@ -176,14 +176,6 @@ typedef struct tag_TDefinement {
     Byte                    Compiled[256];
 } TDefinement, *PDefinement;
 
-typedef struct tag_ASSUMERec {
-    char const* Name;
-    LongInt*    Dest;
-    LongInt     Min, Max;
-    LongInt     NothingVal;
-    void (*pPostProc)(void);
-} ASSUMERec;
-
 extern StringPtr SourceFile;
 
 extern StringPtr CursUp;
@@ -207,8 +199,6 @@ extern Boolean        ENDOccured;
 extern Boolean        Retracted;
 extern Boolean        ListToStdout, ListToNull;
 
-extern unsigned         ASSUMERecCnt;
-extern ASSUMERec const* pASSUMERecs;
 extern void (*pASSUMEOverride)(void);
 
 extern Integer     PassNo;

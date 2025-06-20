@@ -16,6 +16,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -100,7 +101,7 @@ static XYOrder*  XYOrders;
 
 static CPUVar CPU65816, CPUM7700, CPUM7750, CPUM7751;
 
-static ASSUMERec ASSUME7700s[] = {
+static as_assume_rec_t ASSUME7700s[] = {
         { "PG",  &Reg_PG, 0,   0xff,   0x100, NULL},
         { "DT",  &Reg_DT, 0,   0xff,   0x100, NULL},
         {"PBR",  &Reg_PG, 0,   0xff,   0x100, NULL},
@@ -1347,8 +1348,7 @@ static void SwitchTo_7700(void) {
     SegInits[SegCode]  = 0;
     SegLimits[SegCode] = 0xffffffl;
 
-    pASSUMERecs  = ASSUME7700s;
-    ASSUMERecCnt = sizeof(ASSUME7700s) / sizeof(*ASSUME7700s);
+    assume_set(ASSUME7700s, as_array_size(ASSUME7700s));
 
     MakeCode   = MakeCode_7700;
     IsDef      = IsDef_7700;

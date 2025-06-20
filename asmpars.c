@@ -20,6 +20,7 @@
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
@@ -2195,15 +2196,13 @@ void EvalStrExpressionWithCallback(
         }
 
         else if (!strcmp(FName.str.p_str, "ASSUMEDVAL")) {
-            unsigned IdxAssume;
+            as_assume_rec_t const* p_rec = assume_lookup(FArg.str.p_str);
 
-            for (IdxAssume = 0; IdxAssume < ASSUMERecCnt; IdxAssume++) {
-                if (!as_strcasecmp(FArg.str.p_str, pASSUMERecs[IdxAssume].Name)) {
-                    as_tempres_set_int(pErg, *(pASSUMERecs[IdxAssume].Dest));
-                    LEAVE;
-                }
+            if (p_rec) {
+                as_tempres_set_int(pErg, *(p_rec->p_dest));
+            } else {
+                WrStrErrorPos(ErrNum_SymbolUndef, &FArg);
             }
-            WrStrErrorPos(ErrNum_SymbolUndef, &FArg);
             LEAVE;
         }
 

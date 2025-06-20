@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -1597,7 +1598,7 @@ static void SwitchFrom_78K2(void) {
 }
 
 static void SwitchTo_78K2(void) {
-    static ASSUMERec const ASSUME78K2s[] = {
+    static as_assume_rec_t const ASSUME78K2s[] = {
             { "P6",  &Reg_P6, 0, 0xf, 0x10, NULL},
             {"PM6", &Reg_PM6, 0, 0xf, 0x10, NULL}
     };
@@ -1620,8 +1621,7 @@ static void SwitchTo_78K2(void) {
     SegInits[SegCode]  = 0;
     SegLimits[SegCode] = 0xfffff;
 
-    pASSUMERecs  = ASSUME78K2s;
-    ASSUMERecCnt = sizeof(ASSUME78K2s) / sizeof(ASSUME78K2s[0]);
+    assume_set(ASSUME78K2s, as_array_size(ASSUME78K2s));
 
     MakeCode   = MakeCode_78K2;
     IsDef      = IsDef_78K2;

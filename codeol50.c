@@ -17,6 +17,8 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
+#include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -905,7 +907,7 @@ static void SwitchFrom_OLMS50(void) {
 }
 
 static void SwitchTo_OLMS50(void) {
-    static ASSUMERec ASSUMEs[] = {
+    static as_assume_rec_t ASSUMEs[] = {
             {"P", &PRegAssume, 0, 0x3, 0x8, NULL}
     };
 
@@ -963,8 +965,7 @@ static void SwitchTo_OLMS50(void) {
     SwitchFrom = SwitchFrom_OLMS50;
     InitFields();
 
-    pASSUMERecs  = ASSUMEs;
-    ASSUMERecCnt = sizeof(ASSUMEs) / sizeof(*ASSUMEs);
+    assume_set(ASSUMEs, as_array_size(ASSUMEs));
 }
 
 void codeolms50_init(void) {

@@ -18,6 +18,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -2958,15 +2959,14 @@ static void SwitchTo_65(void) {
     SegLimits[SegCode] = (MomCPU == CPUHUC6280) ? 0x1fffff : 0xffff;
 
     if (MomCPU == CPUM740) {
-        static ASSUMERec ASSUME740s[] = {
+        static as_assume_rec_t ASSUME740s[] = {
                 {"SP", &SpecPage, 0, 0xff, -1, NULL}
         };
 
-        pASSUMERecs      = ASSUME740s;
-        ASSUMERecCnt     = (sizeof(ASSUME740s) / sizeof(*ASSUME740s));
+        assume_set(ASSUME740s, as_array_size(ASSUME740s));
         SetIsOccupiedFnc = ChkZeroArgs;
     } else if (MomCPU == CPUHUC6280) {
-        static ASSUMERec ASSUME6280s[] = {
+        static as_assume_rec_t ASSUME6280s[] = {
                 {"MPR0", MPR + 0, 0, 0xff, -1, NULL},
                 {"MPR1", MPR + 1, 0, 0xff, -1, NULL},
                 {"MPR2", MPR + 2, 0, 0xff, -1, NULL},
@@ -2977,16 +2977,14 @@ static void SwitchTo_65(void) {
                 {"MPR7", MPR + 7, 0, 0xff, -1, NULL},
         };
 
-        pASSUMERecs      = ASSUME6280s;
-        ASSUMERecCnt     = (sizeof(ASSUME6280s) / sizeof(*ASSUME6280s));
+        assume_set(ASSUME6280s, as_array_size(ASSUME6280s));
         SetIsOccupiedFnc = ChkZeroArgs;
     } else if (MomCPU == CPU65CE02) {
-        static ASSUMERec ASSUME65CE02s[] = {
+        static as_assume_rec_t ASSUME65CE02s[] = {
                 {"B", &RegB, 0, 0xff, 0, NULL}
         };
 
-        pASSUMERecs  = ASSUME65CE02s;
-        ASSUMERecCnt = (sizeof(ASSUME65CE02s) / sizeof(*ASSUME65CE02s));
+        assume_set(ASSUME65CE02s, as_array_size(ASSUME65CE02s));
     } else {
         SetIsOccupiedFnc = NULL;
     }

@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -1320,10 +1321,9 @@ static void switch_to_imp16(void* p_user) {
     SegInits[SegCode]  = 0;
     SegLimits[SegCode] = 0xffff;
     if (is_pace) {
-        static ASSUMERec assume_pace = {"BPS", &bps_val, 0, 1, 0, NULL};
+        static as_assume_rec_t assume_pace = {"BPS", &bps_val, 0, 1, 0, NULL};
 
-        pASSUMERecs  = &assume_pace;
-        ASSUMERecCnt = 1;
+        assume_set(&assume_pace, 1);
     } else {
         ValidSegs |= 1 << SegIO;
         Grans[SegIO]     = 2;

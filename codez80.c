@@ -19,6 +19,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -4974,7 +4975,7 @@ static void SwitchTo_Z80(void* p_user) {
         AddONOFF(LWordModeCmdName, &LWordFlag, LWordModeSymName, False);
         break;
     case e_core_ez80: {
-        static ASSUMERec const assume_ez80[] = {
+        static as_assume_rec_t const assume_ez80[] = {
                 {  "ADL",   &Reg_ADL, 0,    1, 0, NULL},
                 {"MBASE", &Reg_MBASE, 0, 0xff, 0, NULL}
         };
@@ -4983,20 +4984,18 @@ static void SwitchTo_Z80(void* p_user) {
         AttrChars          = ".";
         HasAttrs           = True;
         DecodeAttrPart     = decode_attrpart_ez80;
-        pASSUMERecs        = assume_ez80;
-        ASSUMERecCnt       = as_array_size(assume_ez80);
+        assume_set(assume_ez80, as_array_size(assume_ez80));
         break;
     }
     case e_core_z180: {
-        static ASSUMERec const ASSUMEZ180s[] = {
+        static as_assume_rec_t const ASSUMEZ180s[] = {
                 {"CBAR", &Reg_CBAR, 0, 0xff, 0xf0,        check_cbar},
                 { "CBR",  &Reg_CBR, 0, 0xff,    0, update_z180_areas},
                 { "BBR",  &Reg_BBR, 0, 0xff,    0, update_z180_areas},
         };
 
         SegLimits[SegCode] = 0x7fffful;
-        pASSUMERecs        = ASSUMEZ180s;
-        ASSUMERecCnt       = as_array_size(ASSUMEZ180s);
+        assume_set(ASSUMEZ180s, as_array_size(ASSUMEZ180s));
         update_z180_areas();
         break;
     }

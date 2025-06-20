@@ -16,6 +16,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -1160,8 +1161,7 @@ static Boolean TrueFnc(void) {
 }
 
 static void SwitchTo_47C00(void) {
-#define ASSUME47Count (sizeof(ASSUME47s) / sizeof(*ASSUME47s))
-    static ASSUMERec ASSUME47s[] = {
+    static as_assume_rec_t ASSUME47s[] = {
             {"DMB", &DMBAssume, 0, 3, 4, NULL}
     };
 
@@ -1201,8 +1201,7 @@ static void SwitchTo_47C00(void) {
         SegLimits[SegIO]   = 0x1f;
     }
 
-    pASSUMERecs  = ASSUME47s;
-    ASSUMERecCnt = ASSUME47Count;
+    assume_set(ASSUME47s, as_array_size(ASSUME47s));
 
     MakeCode   = MakeCode_47C00;
     IsDef      = IsDef_47C00;

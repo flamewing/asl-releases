@@ -18,6 +18,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -1177,8 +1178,7 @@ static void SwitchFrom_6816(void) {
 }
 
 static void SwitchTo_6816(void) {
-#define ASSUME6816Count (sizeof(ASSUME6816s) / sizeof(*ASSUME6816s))
-    static ASSUMERec ASSUME6816s[11] = {
+    static as_assume_rec_t ASSUME6816s[11] = {
             {"EK", &Reg_EK, 0, 0xff, 0x100, NULL}
     };
 
@@ -1204,8 +1204,7 @@ static void SwitchTo_6816(void) {
     SwitchFrom     = SwitchFrom_6816;
     AddMoto16PseudoONOFF(False);
 
-    pASSUMERecs  = ASSUME6816s;
-    ASSUMERecCnt = ASSUME6816Count;
+    assume_set(ASSUME6816s, as_array_size(ASSUME6816s));
 
     InitFields();
 }

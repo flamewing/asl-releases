@@ -18,6 +18,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codevars.h"
 #include "cpu2phys.h"
@@ -924,7 +925,7 @@ static void SwitchTo_68(void) {
     AddMoto16PseudoONOFF(False);
 
     if (MomCPU == CPU68HC11K4) {
-        static ASSUMERec const ASSUMEHC11s[] = {
+        static as_assume_rec_t const ASSUMEHC11s[] = {
                 { "MMSIZ",  &Reg_MMSIZ, 0, 0xff, 0, SetK4Ranges},
                 { "MMWBR",  &Reg_MMWBR, 0, 0xff, 0, SetK4Ranges},
                 { "MM1CR",  &Reg_MM1CR, 0, 0xff, 0, SetK4Ranges},
@@ -934,8 +935,7 @@ static void SwitchTo_68(void) {
                 {"CONFIG", &Reg_CONFIG, 0, 0xff, 0, SetK4Ranges},
         };
 
-        pASSUMERecs  = ASSUMEHC11s;
-        ASSUMERecCnt = as_array_size(ASSUMEHC11s);
+        assume_set(ASSUMEHC11s, as_array_size(ASSUMEHC11s));
 
         SetK4Ranges();
     } else {

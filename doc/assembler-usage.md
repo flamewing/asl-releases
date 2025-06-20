@@ -1040,3 +1040,9 @@ Binary operand evaluation order is unspecified, except for logical AND and OR: t
 
 - `-radix <2...36>` selects the initial base for unmarked integer constants; `RADIX` can override it within the source.
 - `-intsyntax <formats>` adjusts the accepted integer syntaxes from the start of assembly, using the same arguments as `INTSYNTAX`.
+
+### File size queries
+
+`FSIZE("filename")` returns a file's size in bytes. It searches the current
+working directory and the directory containing the source being assembled.
+The include search path is not used.

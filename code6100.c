@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -64,7 +65,7 @@ static LongInt IBVal;
 static Boolean      PanelMode;
 static unsigned int mregistered = 0;
 
-static ASSUMERec ASSUME6100[] = {
+static as_assume_rec_t ASSUME6100[] = {
         {"IB", &IBVal, 0, 7, 0xff, NULL},
 };
 
@@ -199,7 +200,7 @@ static void DecodeMR(Word Index) {
         }
 
         if ((NCode == 04000 || NCode == 05000) && !Indirect) {
-            if (IBVal == ASSUME6100[0].NothingVal) {
+            if (IBVal == ASSUME6100[0].nothing_value) {
                 if ((Adr & 070000) != (EProgCounter() & 070000)) {
                     /* Address not in current field */
                     WrError(ErrNum_TargInDiffField);
@@ -722,8 +723,7 @@ static void SwitchTo_6100(void) {
     }
     AddONOFF("PANEL", &PanelMode, "INPANEL", False);
 
-    pASSUMERecs  = ASSUME6100;
-    ASSUMERecCnt = as_array_size(ASSUME6100);
+    assume_set(ASSUME6100, as_array_size(ASSUME6100));
 
     MakeCode   = MakeCode_6100;
     IsDef      = IsDef_6100;

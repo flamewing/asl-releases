@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
+#include <sys/stat.h>
 
 static as_float_t log_max, log2_max, log10_max;
 
@@ -625,6 +626,28 @@ static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned 
     return True;
 }
 
+static Boolean fnc_fsize(
+        TempResult* p_result, TempResult const* p_args, unsigned arg_cnt) {
+    char        found_file_name[STRINGSIZE];
+    struct stat status;
+    UNUSED(arg_cnt);
+
+    if (FSearch(found_file_name, sizeof(found_file_name), p_args[0].Contents.str.p_str,
+                CurrFileName, "")) {
+        WrXError(ErrNum_OpeningFile, p_args[0].Contents.str.p_str);
+        as_tempres_set_none(p_result);
+        return False;
+    }
+    if (stat(found_file_name, &status)) {
+        WrXError(ErrNum_OpeningFile, found_file_name);
+        as_tempres_set_none(p_result);
+        return False;
+    } else {
+        as_tempres_set_int(p_result, status.st_size);
+        return True;
+    }
+}
+
 #define TempAll (TempInt | TempFloat | TempString)
 
 static tFunction const Functions[] = {
@@ -671,6 +694,7 @@ static tFunction const Functions[] = {
         {       "ACOTH", 1, 1,              {TempFloat, 0, 0},        FuncACOTH},
         {    "PHYS2CPU", 1, 1,                {TempInt, 0, 0},   fnc_phys_2_cpu},
         {    "CPU2PHYS", 1, 1,                {TempInt, 0, 0},   fnc_cpu_2_phys},
+        {       "FSIZE", 1, 1,             {TempString, 0, 0},        fnc_fsize},
         {          NULL, 0, 0,                      {0, 0, 0},             NULL}
 };
 

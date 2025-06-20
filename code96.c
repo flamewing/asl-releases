@@ -17,6 +17,7 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
+#include "assume.h"
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -1217,7 +1218,7 @@ static void SwitchFrom_96(void) {
     DeinitFields();
 }
 
-static ASSUMERec ASSUME96s[] = {
+static as_assume_rec_t ASSUME96s[] = {
         { "WSR",  &WSRVal, 0, 0xff, 0x00,  CalcWSRWindow},
         {"WSR1", &WSR1Val, 0, 0xbf, 0x00, CalcWSR1Window},
 };
@@ -1245,9 +1246,7 @@ static void SwitchTo_96(void) {
     MemInt = (MomCPU >= CPU80196N) ? UInt24 : UInt16;
 
     if (MomCPU >= CPU80196) {
-        pASSUMERecs = ASSUME96s;
-        ASSUMERecCnt
-                = (MomCPU >= CPU80296) ? (sizeof(ASSUME96s) / sizeof(*ASSUME96s)) : 1;
+        assume_set(ASSUME96s, (MomCPU >= CPU80296) ? as_array_size(ASSUME96s) : 1);
     }
 
     InitFields();
