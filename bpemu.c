@@ -81,7 +81,7 @@ char* FExpand(char* Src) {
         Dummy = 255;
         DosQueryCurrentDir(DrvNum, (PBYTE)CurrentDir, &Dummy);
     }
-#elif (defined __MINGW32__)
+#elif (defined __MINGW32__) || (defined _MSC_VER) /* MinGW or MSVC */
     {
         int DrvNum;
 
