@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # generator: [make, msys, vs2019]
+        # generator: [make, msys]
         architecture: [i686, x86_64]
         include:
           - architecture: i686

@@ -46,17 +46,12 @@ concurrency:
 
 jobs:
   ci-macos:
-    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        # generator: [Ninja, Xcode]
+        os: [macos-latest, macos-13]  # macos-13 is the last x86_64 version.
         generator: [Ninja]
-        include:
-          - generator: Ninja
-            config:
-          # - generator: Xcode
-          #   config: -C Debug
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Install dependencies
         run: |
@@ -79,4 +74,4 @@ jobs:
         env:
           VERBOSE: 1
         run: |
-          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure ${{ matrix.config }}
+          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure

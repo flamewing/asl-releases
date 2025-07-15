@@ -47,8 +47,6 @@ concurrency:
 jobs:
   ci-windows-msvc:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
     steps:
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2

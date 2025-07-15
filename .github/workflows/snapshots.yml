@@ -55,18 +55,19 @@ jobs:
           release_name: Snapshot ${{ env.BUILD_ID }}
           draft: true
           prerelease: false
+          body: "Snapshot build for ${{ env.BUILD_ID }}.\n\nThis is an automated snapshot build, not a stable release. For Apple Silicon binaries, please use the macOS ARM64 build."
 
   snapshots:
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         architecture:
           - linux32
           - linux64
-          - macos64
+          - macos-x86_64
+          - macos-arm64
           - win32
           - win64
         include:
@@ -87,11 +88,19 @@ jobs:
             p7zip: 7z
             exe_ext: ""
             as: asl
-          - architecture: macos64
-            os: macos-latest
+          - architecture: macos-x86_64
+            os: macos-13 # macos-13 is the last x86_64 version.
             shell: bash
             arch: x86_64
             package: asl-osx-x86_64
+            p7zip: 7z
+            exe_ext: ""
+            as: asl
+          - architecture: macos-arm64
+            os: macos-latest # macos-latest is arm64.
+            shell: bash
+            arch: arm64
+            package: asl-osx-arm64
             p7zip: 7z
             exe_ext: ""
             as: asl
@@ -113,6 +122,7 @@ jobs:
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
             as: asw
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: ${{ matrix.shell }} {0}
@@ -121,28 +131,25 @@ jobs:
         if: ${{ matrix.architecture == 'linux32' || matrix.architecture == 'linux64' }}
         run: |
           sudo apt-fast update
-          # TODO: Figure out packages for building documentation.
           sudo apt-fast install -y cmake ninja-build
       - name: Install dependencies (Mac OS)
-        if: ${{ matrix.architecture == 'macos32' || matrix.architecture == 'macos64' }}
+        if: ${{ matrix.architecture == 'macos-x86_64' || matrix.architecture == 'macos-arm64' }}
         run: |
           brew update
           brew upgrade || true
-          # TODO: Figure out packages for building documentation.
           brew install cmake ninja
       - name: Install dependencies (Windows)
         if: ${{ matrix.architecture == 'win32' || matrix.architecture == 'win64' }}
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install:
-            base-devel git
+          install: base-devel git
             mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
             mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-ninja
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:
-          pandoc-version: '3.1.11'
+          pandoc-version: "3.1.11"
       - name: Checkout code
         uses: actions/checkout@master
       - name: Configure
