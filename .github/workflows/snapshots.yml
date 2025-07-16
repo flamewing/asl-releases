@@ -130,8 +130,17 @@ jobs:
       - name: Install dependencies (Linux)
         if: ${{ matrix.architecture == 'linux32' || matrix.architecture == 'linux64' }}
         run: |
-          sudo apt-fast update
-          sudo apt-fast install -y cmake ninja-build
+          if ! apt-fast -- help &> /dev/null; then
+            sudo add-apt-repository -u -y ppa:apt-fast/stable
+            sudo apt-get update
+            echo debconf apt-fast/maxdownloads string 16 | sudo debconf-set-selections
+            echo debconf apt-fast/dlflag boolean true | sudo debconf-set-selections
+            echo debconf apt-fast/aptmanager string apt-get | sudo debconf-set-selections
+            DEBIAN_FRONTEND=noninteractive sudo apt install -y apt-fast
+          else
+            sudo apt-fast update
+          fi
+          sudo apt-fast install -y libboost-all-dev ninja-build
       - name: Install dependencies (Mac OS)
         if: ${{ matrix.architecture == 'macos-x86_64' || matrix.architecture == 'macos-arm64' }}
         run: |
