@@ -89,3 +89,5 @@ The TMS320C2x/5x code generators and the file `STDDEF2x.INC` come from Thomas Sa
 ## REGEZ80.INC
 
 Defines register and bit addresses for the selected eZ80 target. Include `REGEZ80.INC` rather than the device files under `EZ80/` directly.
+
+`REGZ280.INC` supplies Z280 register addresses.

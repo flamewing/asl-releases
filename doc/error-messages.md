@@ -342,3 +342,8 @@ Error 1491, **duplicate function argument name**: two parameters of one function
 
 Warning: an instruction needs the word width of the `CODE` segment and cannot
 be generated in the selected address space.
+
+### 2271: current program counter in inaccessible page
+
+Error: the instruction's physical address is not mapped into the CPU's logical
+address space. PC-relative addressing needs a logical address to compute the displacement.

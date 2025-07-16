@@ -1319,6 +1319,25 @@ Valid arguments behind the colon are `CODE`, `DATA` and `NOTHING`. The latter va
       CS:CODE, DS:DATA, ES:NOTHING, SS:NOTHING
 ```
 
+#### Z280
+
+`ASSUME I:1` tells AS that I/O is forbidden in user mode; I/O instructions
+then issue a warning unless `SUPMODE` is enabled. Z280's MMU maps its 64 KB
+logical address space into 16 MB of physical memory. Use `ASSUME` to set
+`MMUMCR`, `UPD0`–`UPD15`, and `SPD0`–`SPD15`.
+
+| Register bits | Meaning |
+| --- | --- |
+| MMUMCR 15 (UTE) | Enable user-mode translation |
+| MMUMCR 14 (UPD) | Separate user program and data mappings |
+| MMUMCR 11 (STE) | Enable system-mode translation |
+| MMUMCR 10 (SPD) | Separate system program and data mappings |
+| UPDn/SPDn 3 (V) | Page descriptor valid |
+| UPDn/SPDn 15–4 or 15–5 | Physical page frame address, bits 23–12 or 23–13 |
+
+`SUPMODE` selects which mapping applies. `PRWINS` displays the mapped windows.
+The full physical address space can also be used through `PHASE`.
+
 #### eZ80
 
 In Z80 mode (`ASSUME ADL:0`), BC, DE, HL, IX, IY and SP are 16 bits wide and address the 64 Kbyte page selected by MBASE. Absolute addresses and non-byte immediate operands use two bytes. In ADL mode (`ASSUME ADL:1`), these registers are 24 bits wide, the full 16 Mbyte address space is available, and these operands use three bytes. Instruction suffixes can override the assumed mode.

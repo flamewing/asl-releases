@@ -73,6 +73,12 @@ static void ParamError(Boolean InEnv, char* Arg) {
             getmessage(Num_ErrMsgProgTerm));
 }
 
+static void UnknownError(Boolean InEnv, char* Arg) {
+    fprintf(stderr, "%s%s\n%s\n",
+            getmessage(InEnv ? Num_ErrMsgInvEnvOption : Num_ErrMsgInvOption), Arg,
+            getmessage(Num_ErrMsgProgTerm));
+}
+
 #define BufferSize 4096
 static Byte Buffer[BufferSize];
 
@@ -596,9 +602,15 @@ int main(int argc, char** argv) {
     ValidSegment     = SegCode;
 
     as_cmd_register(P2BINParams, as_array_size(P2BINParams));
-    if (e_cmd_err == as_cmd_process(argc, argv, "P2BINCMD", &cmd_results)) {
+    switch (as_cmd_process(argc, argv, "P2BINCMD", &cmd_results)) {
+    case e_cmd_err:
         ParamError(cmd_results.error_arg_in_env, cmd_results.error_arg);
         exit(1);
+    case e_cmd_unknown:
+        UnknownError(cmd_results.error_arg_in_env, cmd_results.error_arg);
+        exit(1);
+    default:
+        break;
     }
 
     if ((msg_level >= e_msg_level_verbose) || cmd_results.write_version_exit) {

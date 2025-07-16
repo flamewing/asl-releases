@@ -346,3 +346,5 @@
 - Zilog: *eZ80L92 MCU Product Specification*, 2016, PS013015-0316.
 
 - NEC: *μCOM-43 Single Chip Microcomputer Users’ Manual*, January 1978.
+
+- **ZilZ280:** Zilog Inc., _Z280 MPU Microprocessor Unit Technical Manual_, July 1987.

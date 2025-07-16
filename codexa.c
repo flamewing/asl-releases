@@ -198,6 +198,9 @@ static tRegEvalResult DecodeReg(
     if (RegEvalResult == eIsReg) {
         *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
         *pSize   = EvalResult.DataSize;
+    } else {
+        *pResult = 0;
+        *pSize   = eSymbolSizeUnknown;
     }
     return RegEvalResult;
 }

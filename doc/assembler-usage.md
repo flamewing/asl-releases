@@ -459,8 +459,8 @@ Listing code is shown in units appropriate to the target and segment: bytes,
 12-bit words. On supported targets, fields whose values are unknown in the
 first pass are shown as question marks. `-no-list-unknown-values` disables
 this marking; `-list-unknown-values` enables it. Support initially covers
-65xx, 8080/8085, Z80/eZ80/Z180/Z380, MCS-48/51/251,
-8086/V20–V55, AVR, and TMS370.
+65xx, 8080/8085, Z80/eZ80/Z180/Z280/Z380, MCS-48/51/251,
+8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/68HC11.
 
 ## Symbol Conventions
 

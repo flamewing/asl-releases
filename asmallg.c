@@ -29,6 +29,7 @@
 #include "codenone.h"
 #include "codepseudo.h"
 #include "console.h"
+#include "cpu2phys.h"
 #include "dyn_array.h"
 #include "errmsg.h"
 #include "fileformat.h"
@@ -186,6 +187,7 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
     DecodeAttrPart                                              = NULL;
     SwitchIsOccupied = PageIsOccupied = ShiftIsOccupied = False;
     ChkPC                                               = DefChkPC;
+    cpu_2_phys_set_current_check(NULL);
     assume_set(NULL, 0);
     pASSUMEOverride = NULL;
     pCommentLeadIn  = Default_CommentLeadIn;

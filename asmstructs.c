@@ -18,6 +18,7 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "codepseudo.h"
+#include "dyn_array.h"
 #include "errmsg.h"
 #include "nlmessages.h"
 #include "nls.h"
@@ -542,17 +543,23 @@ static void ExpandStruct_One(
 
 #define DIMENSION_MAX 3
 
+typedef struct {
+    LargeInt Dimension;
+    LargeInt Index;
+    int      CompVarNameLen;
+} dimension_t;
+
 void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
-    String      CompVarName, CompStructName;
-    int         z;
-    unsigned    DimensionCnt = 0, Dim;
-    LargeInt    Dimensions[DIMENSION_MAX];
-    tStrComp    Arg;
-    tEvalResult EvalResult;
+    String       CompVarName, CompStructName;
+    int          z;
+    unsigned     DimensionCnt = 0, Dim;
+    dimension_t* dimensions   = NULL;
+    tStrComp     Arg;
+    tEvalResult  EvalResult;
 
     if (!LabPart.str.p_str[0]) {
         WrError(ErrNum_StructNameMissing);
-        return;
+        goto func_exit;
     }
 
     /* currently, we only support array dimensions as arguments */
@@ -561,26 +568,30 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
         if (IsIndirectGen(ArgStr[z].str.p_str, "[]")) {
             if (DimensionCnt >= DIMENSION_MAX) {
                 WrStrErrorPos(ErrNum_TooManyArrayDimensions, &ArgStr[z]);
-                return;
+                goto func_exit;
             }
             StrCompRefRight(&Arg, &ArgStr[z], 1);
             StrCompShorten(&Arg, 1);
-            Dimensions[DimensionCnt++]
+            dyn_array_rsv_end(dimensions, dimension_t, DimensionCnt);
+            dimensions[DimensionCnt].CompVarNameLen = 0;
+            dimensions[DimensionCnt].Index          = 0;
+            dimensions[DimensionCnt].Dimension
                     = EvalStrIntExpressionWithResult(&Arg, UInt32, &EvalResult);
             if (!EvalResult.OK) {
-                return;
+                goto func_exit;
             }
             if (EvalResult.Flags & eSymbolFlag_FirstPassUnknown) {
                 WrStrErrorPos(ErrNum_FirstPassCalc, &Arg);
-                return;
+                goto func_exit;
             }
-            if (Dimensions[DimensionCnt - 1] <= 0) {
+            if (dimensions[DimensionCnt].Dimension <= 0) {
                 WrStrErrorPos(ErrNum_UnderRange, &Arg);
-                return;
+                goto func_exit;
             }
+            DimensionCnt++;
         } else {
             WrStrErrorPos(ErrNum_InvStructArgument, &ArgStr[z]);
-            return;
+            goto func_exit;
         }
     }
 
@@ -590,8 +601,6 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
         ExpandStruct_One(StructRec, CompVarName, CompStructName, EProgCounter());
         CodeLen = StructRec->TotLen;
     } else {
-        LargeInt Indices[DIMENSION_MAX];
-        int      CompVarNameLens[DIMENSION_MAX];
         tStrComp LabelComp;
 
         /* Start with element [0,...,0] and build associated names.
@@ -599,12 +608,13 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
            have to rebuild the name with all indices upon every elemnt: */
 
         for (Dim = 0; Dim < DimensionCnt; Dim++) {
-            Indices[Dim]         = 0;
-            CompVarNameLens[Dim] = strlen(CompVarName);
+            dimensions[Dim].Index          = 0;
+            dimensions[Dim].CompVarNameLen = strlen(CompVarName);
             as_snprcatf(
-                    CompVarName, sizeof(CompVarName), "_%llu", (LargeWord)Indices[Dim]);
+                    CompVarName, sizeof(CompVarName), "_%llu",
+                    (LargeWord)dimensions[Dim].Index);
         }
-        while (Indices[0] < Dimensions[0]) {
+        while (dimensions[0].Index < dimensions[0].Dimension) {
             StrCompMkTemp(&LabelComp, CompVarName, sizeof(CompVarName));
             LabelHandle(&LabelComp, EProgCounter() + CodeLen, True);
             ExpandStruct_One(
@@ -613,11 +623,11 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
 
             /* increase indices, ripple through 'carry' from minor to major indices */
 
-            Indices[DimensionCnt - 1]++;
+            dimensions[DimensionCnt - 1].Index++;
             for (Dim = DimensionCnt - 1; Dim > 0; Dim--) {
-                if (Indices[Dim] >= Dimensions[Dim]) {
-                    Indices[Dim] = 0;
-                    Indices[Dim - 1]++;
+                if (dimensions[Dim].Index >= dimensions[Dim].Dimension) {
+                    dimensions[Dim].Index = 0;
+                    dimensions[Dim - 1].Index++;
                 } else {
                     break;
                 }
@@ -626,19 +636,23 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
             /* Dim now holds the most major (leftmost) index that changed.  Build up new
                element name, starting from that: */
 
-            CompVarName[CompVarNameLens[Dim]] = '\0';
+            CompVarName[dimensions[Dim].CompVarNameLen] = '\0';
             for (; Dim < DimensionCnt; Dim++) {
                 as_snprcatf(
                         CompVarName, sizeof(CompVarName), "_%llu",
-                        (LargeWord)Indices[Dim]);
+                        (LargeWord)dimensions[Dim].Index);
                 if (Dim + 1 < DimensionCnt) {
-                    CompVarNameLens[Dim + 1] = strlen(CompVarName);
+                    dimensions[Dim + 1].CompVarNameLen = strlen(CompVarName);
                 }
             }
         }
     }
     BookKeeping();
     DontPrint = True;
+func_exit:
+    if (dimensions) {
+        free(dimensions);
+    }
 }
 
 void asmstruct_init(void) {
