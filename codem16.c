@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "codem16.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -19,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -3138,11 +3141,13 @@ static void SwitchFrom_M16(void) {
 }
 
 static void SwitchTo_M16(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("M16");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x13;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x1bd6;
     DivideChars = ",";
     HasAttrs    = True;

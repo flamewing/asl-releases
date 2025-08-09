@@ -21,6 +21,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "onoff_common.h"
@@ -1047,11 +1048,13 @@ static void SwitchTo_29K(void) {
     static as_assume_rec_t ASSUME29Ks[] = {
             {"RBP", &Reg_RBP, 0, 0xff, 0x00000000, NULL}
     };
+    TFamilyDescr const* p_descr = FindFamilyByName("29xxx");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeC);
 
     PCSymbol    = "$";
-    HeaderID    = 0x29;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x000000000;
     DivideChars = ",";
     HasAttrs    = False;

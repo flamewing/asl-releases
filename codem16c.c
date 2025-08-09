@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -2711,11 +2712,13 @@ static void SwitchFrom_M16C(void) {
 }
 
 static void SwitchTo_M16C(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("M16C");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x14;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x04;
     DivideChars = ",";
     HasAttrs    = True;

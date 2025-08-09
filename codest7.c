@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "motpseudo.h"
 #include "strutil.h"
 
@@ -2458,12 +2459,14 @@ static Boolean IsDef_ST7(void) {
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_ST7(void* pUser) {
+    TFamilyDescr const* p_descr = FindFamilyByName("ST7");
+
     pCurrCPUProps = (tCPUProps const*)pUser;
     TurnWords     = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "PC";
-    HeaderID    = 0x33;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x9d;
     DivideChars = ",";
     HasAttrs    = True;

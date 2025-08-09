@@ -34,6 +34,8 @@
 #include "errmsg.h"
 #include "fileformat.h"
 #include "function.h"
+#include "fwd_sym.h"
+#include "headids.h"
 #include "literals.h"
 #include "msg_level.h"
 #include "nlmessages.h"
@@ -197,6 +199,24 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
     ParseCPUArgs(pCPUArgs, pCPUDef->pArgs);
     pCPUDef->SwitchProc(pCPUDef->pUserData);
 
+#if 0
+  {
+    as_addrspace_t addr_space;
+    const TFamilyDescr *p_descr = FindFamilyById(HeaderID);
+
+    if (p_descr)
+    {
+      for (addr_space = SegCode; addr_space <= SegEEData; addr_space++)
+        if (((ValidSegs >> addr_space) & 1)
+         && (Grans[addr_space] != p_descr->get_granularity(addr_space)))
+        {
+          fprintf(stderr, "Family %s, segment %d, granularity inconsistent\n",
+                  p_descr->Name, addr_space);
+        }
+    }
+  }
+#endif
+
     if (pCPUDef->Number) {
         none_target_seglimit = SegLimits[SegCode];
     }
@@ -310,18 +330,18 @@ static void CodeSECTION(Word Index) {
     }
 }
 
-static void CodeENDSECTION_ChkEmptList(PForwardSymbol* Root) {
-    PForwardSymbol Tmp;
-    String         XError;
+static void CodeENDSECTION_ChkEmptList(as_fwd_sym_t** pp_root) {
+    as_fwd_sym_t* p_tmp;
+    String        XError;
 
-    while (*Root) {
-        Tmp   = (*Root);
-        *Root = Tmp->Next;
-        strmaxcpy(XError, Tmp->Name, STRINGSIZE);
+    while (*pp_root) {
+        p_tmp    = (*pp_root);
+        *pp_root = p_tmp->p_next;
+        strmaxcpy(XError, p_tmp->p_name, STRINGSIZE);
         strmaxcat(XError, ", ", STRINGSIZE);
-        strmaxcat(XError, Tmp->pErrorPos, STRINGSIZE);
+        strmaxcat(XError, p_tmp->p_error_pos, STRINGSIZE);
         WrXError(ErrNum_UndefdForward, XError);
-        free_forward_symbol(Tmp);
+        as_fwd_sym_free(p_tmp);
     }
 }
 
@@ -1737,16 +1757,6 @@ static void CodePOPV(Word Index) {
     }
 }
 
-static PForwardSymbol CodePPSyms_SearchSym(PForwardSymbol Root, char* Comp) {
-    PForwardSymbol Lauf = Root;
-    UNUSED(Comp);
-
-    while (Lauf && strcmp(Lauf->Name, Comp)) {
-        Lauf = Lauf->Next;
-    }
-    return Lauf;
-}
-
 static void CodeSTRUCT(Word IsUnion) {
     PStructStack NStruct;
     tStrComp*    pArg;
@@ -2017,48 +2027,59 @@ static void CodeSEGTYPE(Word Index) {
     }
 }
 
-static void CodePPSyms(PForwardSymbol* Orig, PForwardSymbol* Alt1, PForwardSymbol* Alt2) {
-    PForwardSymbol Lauf;
-    tStrComp *     pArg, SymArg, SectionArg, exp_sym, *p_exp_sym;
-    String         exp_sym_buf, Section;
-    char*          pSplit;
+static void CodePPSyms(
+        Boolean is_forward, as_fwd_sym_t** pp_orig, as_fwd_sym_t** pp_alt1,
+        as_fwd_sym_t** pp_alt2) {
+    tStrComp *p_arg, exp_sym;
+    String    exp_sym_buf;
+    LongInt   section;
 
     StrCompMkTemp(&exp_sym, exp_sym_buf, sizeof(exp_sym_buf));
     if (ChkArgCnt(1, ArgCntMax)) {
-        forallargs(pArg, True) {
-            pSplit = QuotPos(pArg->str.p_str, ':');
-            if (pSplit) {
-                StrCompSplitRef(&SymArg, &SectionArg, pArg, pSplit);
-                p_exp_sym = ExpandStrSymbol(&exp_sym, &SymArg, !CaseSensitive);
-                if (!p_exp_sym) {
-                    return;
-                }
-            } else {
-                p_exp_sym = ExpandStrSymbol(&exp_sym, pArg, !CaseSensitive);
-                if (!p_exp_sym) {
-                    return;
-                }
-                *Section = '\0';
-                StrCompMkTemp(&SectionArg, Section, sizeof(Section));
-            }
-            Lauf = CodePPSyms_SearchSym(*Alt1, p_exp_sym->str.p_str);
-            if (Lauf) {
-                WrStrErrorPos(ErrNum_ContForward, pArg);
-            } else {
-                Lauf = CodePPSyms_SearchSym(*Alt2, p_exp_sym->str.p_str);
-                if (Lauf) {
-                    WrStrErrorPos(ErrNum_ContForward, pArg);
-                } else {
-                    Lauf = CodePPSyms_SearchSym(*Orig, p_exp_sym->str.p_str);
-                    if (!Lauf) {
-                        Lauf            = (PForwardSymbol)malloc(sizeof(TForwardSymbol));
-                        Lauf->Next      = (*Orig);
-                        *Orig           = Lauf;
-                        Lauf->Name      = as_strdup(p_exp_sym->str.p_str);
-                        Lauf->pErrorPos = GetErrorPos();
+        forallargs(p_arg, True) {
+            char*           p_split = QuotPos(p_arg->str.p_str, ':');
+            tStrComp const* p_sym_arg;
+            tStrComp        sym_arg;
+
+            if (p_split) {
+                tStrComp section_arg;
+
+                StrCompSplitRef(&sym_arg, &section_arg, p_arg, p_split);
+                IdentifySection(&section_arg, &section);
+                if (is_forward) {
+                    if (section != MomSectionHandle) {
+                        WrStrErrorPos(ErrNum_ForwardNonCurrent, &section_arg);
                     }
-                    IdentifySection(&SectionArg, &Lauf->DestSection);
+                    section = -1;
                 }
+                p_sym_arg = &sym_arg;
+            } else {
+                section   = -1; /* SECTION_CURRENT */
+                p_sym_arg = p_arg;
+            }
+            if (pp_orig) {
+                if (!ExpandStrSymbol(&exp_sym, p_sym_arg, !CaseSensitive)) {
+                    return;
+                }
+
+                if (as_fwd_sym_search(*pp_alt1, exp_sym.str.p_str)
+                    || as_fwd_sym_search(*pp_alt2, exp_sym.str.p_str)) {
+                    WrStrErrorPos(ErrNum_ContForward, p_arg);
+                } else {
+                    as_fwd_sym_t* p_sym = as_fwd_sym_search(*pp_orig, exp_sym.str.p_str);
+                    if (!p_sym) {
+                        p_sym               = as_fwd_sym_create();
+                        p_sym->p_next       = *pp_orig;
+                        *pp_orig            = p_sym;
+                        p_sym->p_name       = as_strdup(exp_sym.str.p_str);
+                        p_sym->p_error_pos  = GetErrorPos();
+                        p_sym->dest_section = section;
+                    }
+                }
+            }
+
+            if (!p_split && is_forward) {
+                EnterNoneSymbol(p_arg);
             }
         }
     }
@@ -2280,16 +2301,13 @@ static Boolean code_restore_cond(Word arg) {
 static Boolean code_forward_cond(Word arg) {
     UNUSED(arg);
 
-    if (SectionStack) {
-        if (PassNo <= MaxSymPass) {
-            CodePPSyms(
-                    &(SectionStack->LocSyms), &(SectionStack->GlobSyms),
-                    &(SectionStack->ExportSyms));
-        }
-        return True;
-    } else {
-        return False;
+    if (PassNo <= MaxSymPass) {
+        CodePPSyms(
+                True, SectionStack ? &(SectionStack->LocSyms) : NULL,
+                SectionStack ? &(SectionStack->GlobSyms) : NULL,
+                SectionStack ? &(SectionStack->ExportSyms) : NULL);
     }
+    return True;
 }
 
 /*!------------------------------------------------------------------------
@@ -2304,7 +2322,7 @@ static Boolean code_public_cond(Word arg) {
 
     if (SectionStack) {
         CodePPSyms(
-                &(SectionStack->GlobSyms), &(SectionStack->LocSyms),
+                False, &(SectionStack->GlobSyms), &(SectionStack->LocSyms),
                 &(SectionStack->ExportSyms));
         return True;
     } else {
@@ -2324,7 +2342,7 @@ static Boolean code_global_cond(Word arg) {
 
     if (SectionStack) {
         CodePPSyms(
-                &(SectionStack->ExportSyms), &(SectionStack->LocSyms),
+                False, &(SectionStack->ExportSyms), &(SectionStack->LocSyms),
                 &(SectionStack->GlobSyms));
         return True;
     } else {

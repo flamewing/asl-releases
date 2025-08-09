@@ -24,6 +24,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "onoff_common.h"
@@ -2628,12 +2629,14 @@ static Boolean ChkMoreOneArg(void) {
 }
 
 static void SwitchTo_96C141(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TLCS-900");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
     SetIsOccupiedFnc = ChkMoreOneArg;
 
     PCSymbol    = "$";
-    HeaderID    = 0x52;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;

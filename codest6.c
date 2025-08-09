@@ -22,6 +22,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intformat.h"
 #include "motpseudo.h"
 #include "strutil.h"
@@ -802,7 +803,8 @@ static void InternSymbol_ST6(char* pArg, TempResult* pErg) {
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_ST6(void* pUser) {
-    int ASSUMEOffset;
+    TFamilyDescr const* p_descr = FindFamilyByName("ST6");
+    int                 ASSUMEOffset;
 
     pCurrCPUProps = (tCPUProps const*)pUser;
     TurnWords     = False;
@@ -810,7 +812,7 @@ static void SwitchTo_ST6(void* pUser) {
     SetIsOccupiedFnc = TrueFnc;
 
     PCSymbol    = "PC";
-    HeaderID    = 0x78;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x04;
     DivideChars = ",";
     HasAttrs    = False;

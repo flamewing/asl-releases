@@ -23,6 +23,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -2031,14 +2032,15 @@ static void SwitchFrom_166(void) {
 }
 
 static void SwitchTo_166(void) {
-    Byte z;
+    TFamilyDescr const* p_descr = FindFamilyByName("80C166/167");
+    Byte                z;
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
     OpSize = eSymbolSize16Bit;
 
     PCSymbol    = "$";
-    HeaderID    = 0x4c;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0xcc00;
     DivideChars = ",";
     HasAttrs    = False;

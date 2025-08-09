@@ -23,6 +23,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "ieeefloat.h"
 #include "motpseudo.h"
 #include "nls.h"
@@ -6925,12 +6926,14 @@ static Boolean ChkPC_68k(LargeWord Addr) {
 }
 
 static void SwitchTo_68K(void* pUser) {
+    TFamilyDescr const* p_descr = FindFamilyByName("680x0");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PhaseSignExtend = True;
     PCSymbol        = "*";
-    HeaderID        = 0x01;
+    HeaderID        = p_descr->Id;
     NOPCode         = 0x4e71;
     DivideChars     = ",";
     HasAttrs        = True;

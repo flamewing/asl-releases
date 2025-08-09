@@ -22,6 +22,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "operator.h"
@@ -2379,11 +2380,13 @@ static void SwitchFrom_97C241(void) {
 }
 
 static void SwitchTo_97C241(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TLCS-9000");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x56;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x7fa0;
     DivideChars = ",";
     HasAttrs    = True;

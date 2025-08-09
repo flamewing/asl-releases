@@ -22,6 +22,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "nlmessages.h"
@@ -1181,12 +1182,13 @@ static void SwitchTo_6816(void) {
     static as_assume_rec_t ASSUME6816s[11] = {
             {"EK", &Reg_EK, 0, 0xff, 0x100, NULL}
     };
+    TFamilyDescr const* p_descr = FindFamilyByName("68HC16");
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x65;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x274c;
     DivideChars = ",";
     HasAttrs    = True;

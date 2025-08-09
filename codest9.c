@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "strutil.h"
 
@@ -1940,11 +1941,13 @@ static void InternSymbol_ST9(char* Asc, TempResult* Erg) {
 }
 
 static void SwitchTo_ST9(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("ST9");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "PC";
-    HeaderID    = 0x32;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0xff;
     DivideChars = ",";
     HasAttrs    = False;

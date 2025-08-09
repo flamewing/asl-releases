@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -2792,11 +2793,13 @@ static void SwitchFrom_56K(void) {
 }
 
 static void SwitchTo_56K(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("DSP56000");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x09;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x000000;
     DivideChars = " \t";
     HasAttrs    = False;

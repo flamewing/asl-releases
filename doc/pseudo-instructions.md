@@ -3121,3 +3121,11 @@ Select `uPD550`, `uPD554` or `uPD652` for μCOM-45; `uPD547`, `uPD552` or `uPD65
 `IRP`, `IRPC`, `REPT` and `WHILE` accept the macro listing controls `{EXPAND}`/`{NOEXPAND}`, `{EXPIF}`/`{NOEXPIF}`, `{EXPMACRO}`/`{NOEXPMACRO}` and `{EXPREST}`/`{NOEXPREST}`, in addition to `{GLOBALSYMBOLS}`/`{NOGLOBALSYMBOLS}`.
 
 A `RADIX` statement overrides the `-radix` command-line setting; absent either, unmarked integers use decimal. Both support bases 2 through 36.
+
+### Forward declarations outside sections
+
+`FORWARD symbol` also works outside a section. It creates a placeholder that
+allows early references to record the symbol's use for `SYMUSED` or `IFUSED`.
+The placeholder has no value; evaluating it still counts as an undefined
+reference until the symbol is defined. A section-qualified `FORWARD` declaration
+must name the current section, rather than a higher section.

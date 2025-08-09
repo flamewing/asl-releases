@@ -23,6 +23,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -1297,6 +1298,7 @@ static void SwitchTo_48(void* pUser) {
     static as_assume_rec_t ASSUME48s[] = {
             {"MB", &Reg_MB, 0, 1, MB_NOTHING, NULL},
     };
+    TFamilyDescr const* p_descr = FindFamilyByName("MCS-48");
 
     pCurrCPUProps          = (tCPUProps const*)pUser;
     ASSUME48s[0].max_value = (pCurrCPUProps->CodeSize >> 11) & 3;
@@ -1305,7 +1307,7 @@ static void SwitchTo_48(void* pUser) {
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x21;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;

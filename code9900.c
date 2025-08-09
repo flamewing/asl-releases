@@ -26,6 +26,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "ibmfloat.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -1245,11 +1246,13 @@ static void InternSymbol_9900(char* Asc, TempResult* Erg) {
 }
 
 static void SwitchTo_9900(void* pUser) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS9900");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x48;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x0000;
     DivideChars = ",";
     HasAttrs    = False;

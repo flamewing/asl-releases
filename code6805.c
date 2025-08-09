@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "strutil.h"
@@ -1098,11 +1099,13 @@ static void SwitchFrom_6805(void) {
 }
 
 static void SwitchTo_6805(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("6805/HC08");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x62;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x9d;
     DivideChars = ",";
     HasAttrs    = True;

@@ -20,6 +20,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "strutil.h"
 
@@ -1311,11 +1312,12 @@ static void SwitchFrom_78K0(void) {
 }
 
 static void SwitchTo_78K0(void) {
-    TurnWords = False;
+    TFamilyDescr const* p_descr = FindFamilyByName("78K0");
+    TurnWords                   = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "PC";
-    HeaderID    = 0x7c;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;

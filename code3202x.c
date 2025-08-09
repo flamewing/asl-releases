@@ -20,6 +20,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "strutil.h"
 #include "tipseudo.h"
 
@@ -656,11 +657,13 @@ static void SwitchFrom_3202x(void) {
 /* ---------------------------------------------------------------------- */
 
 static void SwitchTo_3202x(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS3202x");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x75;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x5500;
     DivideChars = ",";
     HasAttrs    = False;

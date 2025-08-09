@@ -1046,3 +1046,10 @@ Binary operand evaluation order is unspecified, except for logical AND and OR: t
 `FSIZE("filename")` returns a file's size in bytes. It searches the current
 working directory and the directory containing the source being assembled.
 The include search path is not used.
+
+### Symbol use queries
+
+`SYMUSED(symbol)` reports whether a symbol has been referenced up to this point.
+Use is recorded in its symbol-table entry. Without a `FORWARD` declaration,
+a first-pass reference before the symbol exists cannot record that use.
+`IFUSED` and `IFNUSED` query the same information.

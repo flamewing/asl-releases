@@ -26,6 +26,7 @@
 #include "cpu2phys.h"
 #include "errmsg.h"
 #include "function.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "nlmessages.h"
@@ -922,11 +923,13 @@ static Boolean IsDef_68(void) {
 }
 
 static void SwitchTo_68(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("68xx");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x61;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x01;
     DivideChars = ",";
     HasAttrs    = True;

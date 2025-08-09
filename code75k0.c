@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intformat.h"
 #include "intpseudo.h"
 #include "nls.h"
@@ -1603,15 +1604,16 @@ static as_assume_rec_t ASSUME75s[] = {
 };
 
 static void SwitchTo_75K0(void* pUser) {
-    char* p_end;
-    Word  ROMEnd;
+    TFamilyDescr const* p_descr = FindFamilyByName("75K0");
+    char*               p_end;
+    Word                ROMEnd;
 
     pCurrCPUProps = (tCPUProps const*)pUser;
     TurnWords     = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "PC";
-    HeaderID    = 0x7b;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x60;
     DivideChars = ",";
     HasAttrs    = False;

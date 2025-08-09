@@ -22,6 +22,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "strutil.h"
 
@@ -1316,11 +1317,13 @@ static as_assume_rec_t ASSUME96s[] = {
 };
 
 static void SwitchTo_96(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("MCS-96/196");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x39;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0xfd;
     DivideChars = ",";
     HasAttrs    = False;

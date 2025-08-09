@@ -10,18 +10,21 @@
 
 #include "stdinc.h"
 
+#include "code3206x.h"
+
+#include "as.rsc"
 #include "as_endian.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "ieeefloat.h"
 #include "nls.h"
 #include "onoff_common.h"
@@ -2860,12 +2863,14 @@ static Boolean Chk34Arg(void) {
 }
 
 static void SwitchTo_3206X(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS320C6x");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
     SetIsOccupiedFnc = Chk34Arg;
 
     PCSymbol    = "$";
-    HeaderID    = 0x47;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00000000;
     DivideChars = ",";
     HasAttrs    = True;

@@ -22,6 +22,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "motpseudo.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -910,11 +911,13 @@ static Boolean IsDef_MCORE(void) {
 }
 
 static void SwitchTo_MCORE(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("M-CORE");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x03;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x1200; /* ==MOV r0,r0 */
     DivideChars = ",";
     HasAttrs    = True;

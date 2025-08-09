@@ -12,6 +12,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "addrspace.h"
+#include "datatypes.h"
+
 /* Hex-Formate */
 
 #include "datatypes.h"
@@ -34,6 +37,7 @@ typedef struct {
     char const* Name;
     Word        Id;
     tHexFormat  HexFormat;
+    Word (*get_granularity)(as_addrspace_t addr_space);
 } TFamilyDescr, *PFamilyDescr;
 
 extern TFamilyDescr const* FindFamilyByName(char const* Name);

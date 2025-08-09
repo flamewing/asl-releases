@@ -347,3 +347,8 @@ be generated in the selected address space.
 
 Error: the instruction's physical address is not mapped into the CPU's logical
 address space. PC-relative addressing needs a logical address to compute the displacement.
+
+### 1482: FORWARD statement must reference current section
+
+Error: a section-qualified `FORWARD` declaration refers to a different,
+higher section. Use the current section for the declaration.

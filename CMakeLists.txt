@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.291
+    VERSION 1.42.292
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -534,6 +534,8 @@ add_library(AS_OBJECTS
     ${CMAKE_BINARY_DIR}/as.rsc
     onoff_common.c
     onoff_common.h
+    fwd_sym.c
+    fwd_sym.h
     assume.c
     assume.h
     asmdef.c
@@ -1003,6 +1005,7 @@ define_executable(alink
     $<TARGET_OBJECTS:NLS_OBJECTS>
     $<TARGET_OBJECTS:TOOLS_COMMON>
     $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(alink)
 add_dependencies(alink alink_res)
@@ -1014,6 +1017,7 @@ define_executable(pbind
     $<TARGET_OBJECTS:NLS_OBJECTS>
     $<TARGET_OBJECTS:TOOLS_COMMON>
     $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(pbind)
 add_dependencies(pbind pbind_res)
@@ -1039,6 +1043,7 @@ define_executable(p2bin
     $<TARGET_OBJECTS:TOOLS_COMMON>
     $<TARGET_OBJECTS:CMDLINE_COMMON>
     $<TARGET_OBJECTS:CHUNKS_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
 target_link_libm(p2bin)
 add_dependencies(p2bin p2bin_res)

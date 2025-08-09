@@ -23,6 +23,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
 #include "onoff_common.h"
@@ -2089,11 +2090,13 @@ static Boolean IsDef_XA(void) {
 }
 
 static void SwitchTo_XA(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("XA");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x3c;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = True;

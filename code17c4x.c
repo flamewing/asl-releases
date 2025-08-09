@@ -21,6 +21,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
+#include "headids.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -338,11 +339,13 @@ static void SwitchFrom_17c4x(void) {
 }
 
 static void SwitchTo_17c4x(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("17C4x");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x72;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x0000;
     DivideChars = ",";
     HasAttrs    = False;

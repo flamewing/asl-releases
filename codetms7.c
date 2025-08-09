@@ -20,6 +20,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "strutil.h"
 
@@ -1015,11 +1016,13 @@ static void SwitchFrom_TMS7(void) {
 }
 
 static void SwitchTo_TMS7(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS7000");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x73;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;

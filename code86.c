@@ -23,6 +23,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nlmessages.h"
 #include "onoff_common.h"
@@ -3667,13 +3668,15 @@ static void intern_symbol_86(char* p_arg, TempResult* p_result) {
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_86(void* p_user) {
+    TFamilyDescr const* p_descr = FindFamilyByName("8086");
+
     p_curr_cpu_props = (cpu_props_t const*)p_user;
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x42;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x90;
     DivideChars = ",";
     HasAttrs    = False;

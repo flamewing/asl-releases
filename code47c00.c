@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "strutil.h"
 
@@ -1164,13 +1165,14 @@ static void SwitchTo_47C00(void) {
     static as_assume_rec_t ASSUME47s[] = {
             {"DMB", &DMBAssume, 0, 3, 4, NULL}
     };
+    TFamilyDescr const* p_descr = FindFamilyByName("TLCS-47xx");
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
     SetIsOccupiedFnc = TrueFnc;
 
     PCSymbol    = "$";
-    HeaderID    = 0x55;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;

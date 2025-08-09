@@ -10,19 +10,23 @@
 
 #include "stdinc.h"
 
+#include "codemsp.h"
+
+#include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
+#include "nls.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -1579,11 +1583,13 @@ static Boolean IsDef_MSP(void) {
 }
 
 static void SwitchTo_MSP(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("MSP430");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x4a;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x4303; /* = MOV #0,#0 */
     DivideChars = ",";
     HasAttrs    = True;

@@ -16,6 +16,7 @@
 #include "as_endian.h"
 #include "cmdarg.h"
 #include "fileformat.h"
+#include "headids.h"
 #include "ioerrs.h"
 #include "nlmessages.h"
 #include "strutil.h"
@@ -134,33 +135,6 @@ int chkio_printf(char const* p_name, char const* p_fmt, ...) {
     return ret;
 }
 
-Word Granularity(Byte Header, Byte Segment) {
-    switch (Header) {
-    case 0x09:
-    case 0x76:
-    case 0x7d:
-        return 4;
-    case 0x36: /* MN161x */
-    case 0x70:
-    case 0x71:
-    case 0x72:
-    case 0x74:
-    case 0x75:
-    case 0x77:
-    case 0x12:
-    case 0x6d:
-        return 2;
-    case 0x3b: /* AVR */
-    case 0x1a: /* PDK13..16 */
-    case 0x1b:
-    case 0x1c:
-    case 0x1d:
-        return (Segment == SegCode) ? 2 : 1;
-    default:
-        return 1;
-    }
-}
-
 void ReadRecordHeader(
         Byte* Header, Byte* CPU, Byte* Segment, Byte* Gran, char const* Name, FILE* f) {
 #ifdef _WIN32
@@ -191,10 +165,13 @@ void ReadRecordHeader(
                 chk_wr_read_error(Name);
             }
         } else if (*Header <= 0x7f) {
+            TFamilyDescr const* p_descr;
+
             *CPU     = *Header;
+            p_descr  = FindFamilyById(*CPU);
             *Header  = FileHeaderDataRec;
             *Segment = SegCode;
-            *Gran    = Granularity(*CPU, *Segment);
+            *Gran    = p_descr->get_granularity((as_addrspace_t)*Segment);
         }
     }
 }
@@ -206,8 +183,11 @@ void WriteRecordHeader(
             ChkIO(Name);
         }
     } else if ((*Header == FileHeaderDataRec) || (*Header == FileHeaderRDataRec)) {
-        if ((*Segment != SegCode) || (*Gran != Granularity(*CPU, *Segment))
-            || (*CPU >= 0x80)) {
+        TFamilyDescr const* p_descr = FindFamilyById(*CPU);
+        Word                def_granularity
+                = p_descr ? p_descr->get_granularity((as_addrspace_t)*Segment) : 1;
+
+        if ((*Segment != SegCode) || (*Gran != def_granularity) || (*CPU >= 0x80)) {
             if (fwrite(Header, 1, 1, f)) {
                 ChkIO(Name);
             }
@@ -525,7 +505,6 @@ void EraseFile(char const* FileName, LongWord Offset) {
 }
 
 void toolutils_init(char const* ProgPath) {
-
 #ifdef _USE_MSH
     msg_catalog_open_buffer(
             &MsgCat, tools_msh_data, sizeof(tools_msh_data), MsgId1, MsgId2);

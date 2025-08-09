@@ -23,6 +23,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "motpseudo.h"
 #include "nls.h"
 #include "onoff_common.h"
@@ -2100,11 +2101,13 @@ static void InitCode_H8_5(void) {
 }
 
 static void SwitchTo_H8_5(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("H8/500");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x69;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = True;

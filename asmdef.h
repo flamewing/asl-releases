@@ -152,16 +152,11 @@ typedef struct tag_TSaveState {
     LongInt                SaveEnumCurrentValue, SaveEnumIncrement;
 } TSaveState, *PSaveState;
 
-typedef struct tag_TForwardSymbol {
-    struct tag_TForwardSymbol* Next;
-    StringPtr                  Name;
-    LongInt                    DestSection;
-    StringPtr                  pErrorPos;
-} TForwardSymbol, *PForwardSymbol;
+struct as_fwd_sym;
 
 typedef struct tag_TSaveSection {
     struct tag_TSaveSection* Next;
-    PForwardSymbol           LocSyms, GlobSyms, ExportSyms;
+    struct as_fwd_sym *      LocSyms, *GlobSyms, *ExportSyms;
     LongInt                  Handle;
 } TSaveSection, *PSaveSection;
 
@@ -369,8 +364,6 @@ extern Boolean is_restore_pseudo(void);
 extern Boolean memo_switch_pseudo(void);
 extern Boolean memo_shift_pseudo(void);
 extern Boolean is_page_pseudo(void);
-
-extern void free_forward_symbol(PForwardSymbol p_symbol);
 
 extern void asmdef_init(void);
 #endif /* ASMDEF_H */

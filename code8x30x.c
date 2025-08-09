@@ -21,6 +21,8 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
+#include "nls.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -535,11 +537,13 @@ static void SwitchFrom_8x30X(void) {
 }
 
 static void SwitchTo_8x30X(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("8X30x");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x3a;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x0000;
     DivideChars = ",";
     HasAttrs    = False;

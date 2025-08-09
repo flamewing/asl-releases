@@ -21,6 +21,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "fourpseudo.h"
+#include "headids.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -455,11 +456,13 @@ static void SwitchFrom_3201X(void) {
 }
 
 static void SwitchTo_3201X(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS3201x");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x74;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x7f80;
     DivideChars = ",";
     HasAttrs    = False;

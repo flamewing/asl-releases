@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "literals.h"
 #include "motpseudo.h"
 #include "onoff_common.h"
@@ -1429,11 +1430,13 @@ static void SwitchFrom_7000(void) {
 }
 
 static void SwitchTo_7000(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("SH7x00");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x6c;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x0009;
     DivideChars = ",";
     HasAttrs    = True;

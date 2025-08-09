@@ -22,6 +22,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "motpseudo.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -2165,11 +2166,13 @@ static Boolean IsDef_H8_3(void) {
 }
 
 static void SwitchTo_H8_3(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("H8/300(H)");
+
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";
-    HeaderID    = 0x68;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x0000;
     DivideChars = ",";
     HasAttrs    = True;

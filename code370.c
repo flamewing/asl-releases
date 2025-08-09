@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intformat.h"
 #include "intpseudo.h"
 #include "strutil.h"
@@ -1253,11 +1254,12 @@ static void SwitchFrom_370(void) {
 }
 
 static void SwitchTo_370(void) {
-    TurnWords = False;
+    TFamilyDescr const* p_descr = FindFamilyByName("TMS370xx");
+    TurnWords                   = False;
     SetIntConstMode(eIntConstModeIntel);
 
     PCSymbol    = "$";
-    HeaderID    = 0x49;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0xff;
     DivideChars = ",";
     HasAttrs    = False;

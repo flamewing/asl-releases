@@ -21,6 +21,7 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "headids.h"
 #include "intpseudo.h"
 #include "nls.h"
 #include "strutil.h"
@@ -1401,12 +1402,14 @@ static Boolean TrueFnc(void) {
 }
 
 static void SwitchTo_87C800(void) {
+    TFamilyDescr const* p_descr = FindFamilyByName("TLCS-870");
+
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);
     SetIsOccupiedFnc = TrueFnc;
 
     PCSymbol    = "$";
-    HeaderID    = 0x54;
+    HeaderID    = p_descr->Id;
     NOPCode     = 0x00;
     DivideChars = ",";
     HasAttrs    = False;
