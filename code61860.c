@@ -345,7 +345,9 @@ static void InitFields(void) {
     AddFixed("PTC", 0x7a);
     AddFixed("DTC", 0x69);
 
-    /* Undocumented Instruction described in ¡Ö¥Ý¥±¥³¥ó¡¦¥Þ¥·¥ó¸ì¥Ö¥Ã¥¯¡× */
+    /* Undocumented Instruction described in
+     https://www.oit.ac.jp/labs/rd/rssrv/kobayashi-lab/~yagshi/old_web/misc/pocketcom/extrom.html
+   */
     AddFixed("MVWP", 0x35);
     AddFixed("IPXL", 0x4f);
     AddFixed("IPXH", 0x6f);

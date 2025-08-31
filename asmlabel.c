@@ -157,11 +157,11 @@ void LabelModify(LargeWord OldValue, LargeWord NewValue) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     AsmLabelPassInit(void)
+ * \fn     initpass_asmlabel(void)
  * \brief  Initializations before passing through sources
  * ------------------------------------------------------------------------ */
 
-void AsmLabelPassInit(void) {
+static void initpass_asmlabel(void) {
     LabelReset();
 }
 
@@ -171,5 +171,6 @@ void AsmLabelPassInit(void) {
  * ------------------------------------------------------------------------ */
 
 void asmlabel_init(void) {
-    LabelReset();
+    initpass_asmlabel();
+    AddInitPassProc(initpass_asmlabel);
 }

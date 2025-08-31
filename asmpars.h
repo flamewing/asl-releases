@@ -23,6 +23,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define LOC_HANDLE_OFFSET 1000000
+
 typedef enum {
     UInt0,
     UInt1,
@@ -189,10 +191,11 @@ extern tIntTypeDef IntTypeDefs[IntTypeCnt];
 extern LongInt     MomLocHandle;
 extern LongInt     FwdSymCounter, BackSymCounter;
 extern String      TmpSymCounterVal;
-extern LongInt     LocHandleCnt;
 extern LongInt     MomLocHandle;
 
 extern void AsmParsInit(void);
+
+extern void AsmParsPassInit(void);
 
 extern void InitTmpSymbols(void);
 
@@ -258,6 +261,10 @@ extern void EnterRegSymbol(
 
 extern void EnterNoneSymbol(const struct sStrComp* pName);
 
+extern void LookupSymbolRet(
+        const struct sStrComp* pName, struct sStrComp* p_exp_name, TempResult* pValue,
+        Boolean WantRelocs, TempType ReqType, as_eval_flags_t eval_flags,
+        as_symbol_entry_flags_t* p_symbol_entry_flags);
 extern void LookupSymbol(
         const struct sStrComp* pName, TempResult* pValue, Boolean WantRelocs,
         TempType ReqType, as_eval_flags_t eval_flags,
@@ -386,6 +393,10 @@ extern LongInt GetSectionHandle(char const* SName, Boolean AddEmpt, LongInt Pare
 extern char const* GetSectionName(LongInt Handle);
 
 extern void SetMomSection(LongInt Handle);
+
+extern LongInt get_section_parent(LongInt section_handle);
+
+extern Boolean is_sub_section(LongInt child, LongInt parent);
 
 extern void AddSectionUsage(LongInt Start, LongInt Length);
 

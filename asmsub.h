@@ -24,8 +24,6 @@ struct as_dynstr;
 
 typedef void (*TSwitchProc)(void);
 
-extern void AsmSubPassInit(void);
-
 extern long GTime(void);
 
 extern void UpString(char* s);
@@ -178,8 +176,11 @@ extern void BookKeeping(void);
 
 extern long DTime(long t1, long t2);
 
-extern void InitPass(void);
+extern void exec_init_pass_fncs(void);
 extern void AddInitPassProc(SimpProc NewProc);
+
+extern void exec_exit_pass_fncs(void);
+extern void add_exit_pass_proc(SimpProc new_proc);
 
 extern void ClearUp(void);
 extern void AddClearUpProc(SimpProc NewProc);

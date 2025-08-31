@@ -13,6 +13,7 @@
 #include "code6809.h"
 
 #include "asmallg.h"
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -78,9 +79,10 @@ typedef enum {
 #define adr_mode_mask_all    (adr_mode_mask_imm | adr_mode_mask_no_imm)
 
 typedef struct {
-    adr_mode_t mode;
-    int        cnt;
-    Byte       vals[5];
+    adr_mode_t   mode;
+    int          cnt, guess_offset;
+    Byte         vals[5], guess_mask;
+    tSymbolFlags symbol_flags;
 } adr_vals_t;
 
 #define StackRegCnt 12
@@ -156,8 +158,11 @@ static Boolean IsZeroOrEmpty(tStrComp const* pArg) {
 }
 
 static void reset_adr_vals(adr_vals_t* p_vals) {
-    p_vals->mode = e_adr_mode_none;
-    p_vals->cnt  = 0;
+    p_vals->mode         = e_adr_mode_none;
+    p_vals->cnt          = 0;
+    p_vals->symbol_flags = eSymbolFlag_None;
+    p_vals->guess_mask   = 0xff;
+    p_vals->guess_offset = 0;
 }
 
 static Boolean check_plain_base_arg(int adr_arg_cnt, tStrComp const* p_start_arg) {
@@ -204,7 +209,8 @@ static adr_mode_t DecodeAdr(
     if ((*pStartArg->str.p_str == '#') && (AdrArgCnt == 1)) {
         switch (op_size) {
         case eSymbolSize32Bit:
-            AdrLong = EvalStrIntExpressionOffs(pStartArg, 1, Int32, &OK);
+            AdrLong = EvalStrIntExpressionOffsWithFlags(
+                    pStartArg, 1, Int32, &OK, &p_vals->symbol_flags);
             if (OK) {
                 p_vals->vals[0] = Lo(AdrLong >> 24);
                 p_vals->vals[1] = Lo(AdrLong >> 16);
@@ -214,7 +220,8 @@ static adr_mode_t DecodeAdr(
             }
             break;
         case eSymbolSize16Bit:
-            AdrWord = EvalStrIntExpressionOffs(pStartArg, 1, Int16, &OK);
+            AdrWord = EvalStrIntExpressionOffsWithFlags(
+                    pStartArg, 1, Int16, &OK, &p_vals->symbol_flags);
             if (OK) {
                 p_vals->vals[0] = Hi(AdrWord);
                 p_vals->vals[1] = Lo(AdrWord);
@@ -222,7 +229,8 @@ static adr_mode_t DecodeAdr(
             }
             break;
         case eSymbolSize8Bit:
-            p_vals->vals[0] = EvalStrIntExpressionOffs(pStartArg, 1, Int8, &OK);
+            p_vals->vals[0] = EvalStrIntExpressionOffsWithFlags(
+                    pStartArg, 1, Int8, &OK, &p_vals->symbol_flags);
             if (OK) {
                 p_vals->cnt = 1;
             }
@@ -412,15 +420,14 @@ static adr_mode_t DecodeAdr(
             AdrInt = 0;
             OK     = True;
         } else if (ZeroMode > 1) {
-            tSymbolFlags Flags;
-
             AdrInt = EvalStrIntExpressionOffsWithFlags(
-                    pStartArg, Offset, Int8, &OK, &Flags);
-            if (mFirstPassUnknown(Flags) && (ZeroMode == 3)) {
+                    pStartArg, Offset, Int8, &OK, &p_vals->symbol_flags);
+            if (mFirstPassUnknown(p_vals->symbol_flags) && (ZeroMode == 3)) {
                 AdrInt &= 0x0f;
             }
         } else {
-            AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
+            AdrInt = EvalStrIntExpressionOffsWithFlags(
+                    pStartArg, Offset, Int16, &OK, &p_vals->symbol_flags);
         }
         if (!OK) {
             goto chk_mode;
@@ -448,6 +455,7 @@ static adr_mode_t DecodeAdr(
                 p_vals->mode = e_adr_mode_ind;
                 p_vals->cnt  = 1;
                 p_vals->vals[0] += AdrInt & 0x1f;
+                p_vals->guess_mask = 0x1f;
             }
             goto chk_mode;
         }
@@ -461,7 +469,8 @@ static adr_mode_t DecodeAdr(
                 p_vals->mode = e_adr_mode_ind;
                 p_vals->cnt  = 2;
                 p_vals->vals[0] += 0x88;
-                p_vals->vals[1] = Lo(AdrInt);
+                p_vals->guess_offset = 1;
+                p_vals->vals[1]      = Lo(AdrInt);
             }
             goto chk_mode;
         }
@@ -472,8 +481,9 @@ static adr_mode_t DecodeAdr(
             p_vals->mode = e_adr_mode_ind;
             p_vals->cnt  = 3;
             p_vals->vals[0] += 0x89;
-            p_vals->vals[1] = Hi(AdrInt);
-            p_vals->vals[2] = Lo(AdrInt);
+            p_vals->guess_offset = 1;
+            p_vals->vals[1]      = Hi(AdrInt);
+            p_vals->vals[2]      = Lo(AdrInt);
             goto chk_mode;
         }
     }
@@ -498,7 +508,8 @@ static adr_mode_t DecodeAdr(
 
         Offset = ChkZero(pStartArg->str.p_str, &ZeroMode);
         if (pStartArg->str.p_str[0]) {
-            AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
+            AdrInt = EvalStrIntExpressionOffsWithFlags(
+                    pStartArg, Offset, Int16, &OK, &p_vals->symbol_flags);
         } else {
             AdrInt = 0;
             OK     = True;
@@ -518,8 +529,9 @@ static adr_mode_t DecodeAdr(
             p_vals->mode = e_adr_mode_ind;
             p_vals->cnt  = 3;
             p_vals->vals[0] += 0x20;
-            p_vals->vals[1] = Hi(AdrInt);
-            p_vals->vals[2] = Lo(AdrInt);
+            p_vals->guess_offset = 1;
+            p_vals->vals[1]      = Hi(AdrInt);
+            p_vals->vals[2]      = Lo(AdrInt);
             goto chk_mode;
         }
     }
@@ -531,7 +543,8 @@ static adr_mode_t DecodeAdr(
             || !as_strcasecmp(pEndArg->str.p_str, "PC"))) {
         p_vals->vals[0] = Ord(IndFlag) << 4;
         Offset          = ChkZero(pStartArg->str.p_str, &ZeroMode);
-        AdrInt          = EvalStrIntExpressionOffs(pStartArg, Offset, Int16, &OK);
+        AdrInt          = EvalStrIntExpressionOffsWithFlags(
+                pStartArg, Offset, Int16, &OK, &p_vals->symbol_flags);
         if (OK) {
             AdrInt -= EProgCounter() + 2 + OpcodeLen;
 
@@ -545,8 +558,9 @@ static adr_mode_t DecodeAdr(
                 } else {
                     p_vals->cnt = 2;
                     p_vals->vals[0] += 0x8c;
-                    p_vals->vals[1] = Lo(AdrInt);
-                    p_vals->mode    = e_adr_mode_ind;
+                    p_vals->guess_offset = 1;
+                    p_vals->vals[1]      = Lo(AdrInt);
+                    p_vals->mode         = e_adr_mode_ind;
                 }
             }
 
@@ -554,20 +568,20 @@ static adr_mode_t DecodeAdr(
                 AdrInt--;
                 p_vals->cnt = 3;
                 p_vals->vals[0] += 0x8d;
-                p_vals->vals[1] = Hi(AdrInt);
-                p_vals->vals[2] = Lo(AdrInt);
-                p_vals->mode    = e_adr_mode_ind;
+                p_vals->guess_offset = 1;
+                p_vals->vals[1]      = Hi(AdrInt);
+                p_vals->vals[2]      = Lo(AdrInt);
+                p_vals->mode         = e_adr_mode_ind;
             }
         }
         goto chk_mode;
     }
 
     if (AdrArgCnt == 1) {
-        tSymbolFlags Flags;
-
         Offset = ChkZero(pStartArg->str.p_str, &ZeroMode);
-        AdrInt = EvalStrIntExpressionOffsWithFlags(pStartArg, Offset, Int16, &OK, &Flags);
-        if (mFirstPassUnknown(Flags) && (ZeroMode == 2)) {
+        AdrInt = EvalStrIntExpressionOffsWithFlags(
+                pStartArg, Offset, Int16, &OK, &p_vals->symbol_flags);
+        if (mFirstPassUnknown(p_vals->symbol_flags) && (ZeroMode == 2)) {
             AdrInt = (AdrInt & 0xff) | (DPRValue << 8);
         }
 
@@ -665,7 +679,7 @@ static void SplitIncDec(char* s, int* Erg) {
     }
 }
 
-static Boolean SplitBit(tStrComp* pArg, int* Erg) {
+static Boolean SplitBit(tStrComp* pArg, int* Erg, tSymbolFlags* p_bit_flags) {
     char*    p;
     Boolean  OK;
     tStrComp BitArg;
@@ -676,7 +690,7 @@ static Boolean SplitBit(tStrComp* pArg, int* Erg) {
         return False;
     }
     StrCompSplitRef(pArg, &BitArg, pArg, p);
-    *Erg = EvalStrIntExpression(&BitArg, UInt3, &OK);
+    *Erg = EvalStrIntExpressionWithFlags(&BitArg, UInt3, &OK, p_bit_flags);
     if (!OK) {
         return False;
     }
@@ -685,6 +699,9 @@ static Boolean SplitBit(tStrComp* pArg, int* Erg) {
 }
 
 static void append_adr_vals(adr_vals_t const* p_vals) {
+    set_b_guessed(
+            p_vals->symbol_flags, CodeLen + p_vals->guess_offset,
+            p_vals->cnt - p_vals->guess_offset, p_vals->guess_mask);
     memcpy(&BAsmCode[CodeLen], p_vals->vals, p_vals->cnt);
     CodeLen += p_vals->cnt;
 }
@@ -728,6 +745,7 @@ static void DecodeSWI(Word Code) {
             Num = 2;
         }
         if (OK && ChkRange(Num, 2, 3)) {
+            set_b_guessed(Flags, 0, 1, 0x01);
             BAsmCode[0] = 0x10 | (Num & 1);
             BAsmCode[1] = 0x3f;
             CodeLen     = 2;
@@ -764,10 +782,12 @@ static void DecodeRel(Word Index) {
                     BAsmCode[0] = Lo(pOrder->Code8);
                 }
                 if (LongFlag) {
+                    set_b_guessed(Flags, CodeLen, 2, 0xff);
                     BAsmCode[CodeLen]     = Hi(AdrInt);
                     BAsmCode[CodeLen + 1] = Lo(AdrInt);
                     CodeLen += 2;
                 } else {
+                    set_b_guessed(Flags, CodeLen, 1, 0xff);
                     BAsmCode[CodeLen] = Lo(AdrInt);
                     CodeLen++;
                 }
@@ -870,8 +890,12 @@ static void DecodeFlag(Word Index) {
                     WrError(ErrNum_OnlyImmAddr);
                     OK = False;
                 } else {
-                    BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[z2], 1, Int8, &OK);
+                    tSymbolFlags flags;
+
+                    BAsmCode[2] = EvalStrIntExpressionOffsWithFlags(
+                            &ArgStr[z2], 1, Int8, &OK, &flags);
                     if (OK) {
+                        set_b_guessed(flags, 1, 1, 0xff);
                         if (pOrder->Inv) {
                             BAsmCode[1] &= BAsmCode[2];
                         } else {
@@ -900,9 +924,10 @@ static void DecodeImm(Word Index) {
     else if (*ArgStr[1].str.p_str != '#') {
         WrError(ErrNum_OnlyImmAddr);
     } else {
-        Boolean OK;
+        Boolean      OK;
+        tSymbolFlags flags;
 
-        BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int8, &OK);
+        BAsmCode[1] = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, Int8, &OK, &flags);
         if (OK) {
             adr_vals_t vals;
 
@@ -918,6 +943,7 @@ static void DecodeImm(Word Index) {
                 BAsmCode[0] = pOrder->Code + 0x60;
                 goto append;
             append:
+                set_b_guessed(flags, 1, 1, 0xff);
                 CodeLen = 2;
                 append_adr_vals(&vals);
                 break;
@@ -929,10 +955,12 @@ static void DecodeImm(Word Index) {
 }
 
 static void DecodeBit(Word Code) {
-    int z2, z3;
+    int          bit_num_1, bit_num_2;
+    tSymbolFlags bit_flags_1, bit_flags_2;
 
-    if (ChkArgCnt(2, 2) && ChkMinCPU(CPU6309) && SplitBit(&ArgStr[1], &z2)
-        && SplitBit(&ArgStr[2], &z3)) {
+    if (ChkArgCnt(2, 2) && ChkMinCPU(CPU6309)
+        && SplitBit(&ArgStr[1], &bit_num_1, &bit_flags_1)
+        && SplitBit(&ArgStr[2], &bit_num_2, &bit_flags_2)) {
         if (!CodeCPUReg(ArgStr[1].str.p_str, BAsmCode + 2)) {
             WrError(ErrNum_InvRegName);
         } else if ((BAsmCode[2] < 8) || (BAsmCode[2] > 11)) {
@@ -948,7 +976,12 @@ static void DecodeBit(Word Code) {
                 }
                 BAsmCode[0] = 0x11;
                 BAsmCode[1] = 0x30 + Code;
-                BAsmCode[2] = (BAsmCode[2] << 6) + (z3 << 3) + z2;
+                set_basmcode_guessed(
+                        2, 1,
+                        (mFirstPassUnknownOrQuestionable(bit_flags_1) ? 0x07 : 0x00)
+                                | (mFirstPassUnknownOrQuestionable(bit_flags_2) ? 0x38
+                                                                                : 0x00));
+                BAsmCode[2] = (BAsmCode[2] << 6) + (bit_num_2 << 3) + bit_num_1;
                 BAsmCode[3] = vals.vals[0];
                 CodeLen     = 4;
             }
@@ -1104,8 +1137,12 @@ void DecodeStack_6809(Word code) {
                     } else if (*ArgStr[z2].str.p_str != '#') {
                         OK = False;
                     } else {
-                        BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[z2], 1, Int8, &OK);
+                        tSymbolFlags flags;
+
+                        BAsmCode[2] = EvalStrIntExpressionOffsWithFlags(
+                                &ArgStr[z2], 1, Int8, &OK, &flags);
                         if (OK) {
+                            set_b_guessed(flags, 1, 1, 0xff);
                             BAsmCode[1] |= BAsmCode[2];
                         }
                     }
@@ -1135,13 +1172,15 @@ static void DecodeBITMD_LDMD(Word Code) {
     else if (*ArgStr[1].str.p_str != '#') {
         WrError(ErrNum_OnlyImmAddr);
     } else {
-        Boolean OK;
+        Boolean      OK;
+        tSymbolFlags flags;
 
-        BAsmCode[2] = EvalStrIntExpressionOffs(&ArgStr[1], 1, Int8, &OK);
+        BAsmCode[2] = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, Int8, &OK, &flags);
         if (OK) {
             BAsmCode[0] = 0x11;
             BAsmCode[1] = Code;
-            CodeLen     = 3;
+            set_b_guessed(flags, 2, 1, 0xff);
+            CodeLen = 3;
         }
     }
 }
@@ -1174,6 +1213,7 @@ static void DecodeHCF(Word Code) {
             WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
             return;
         }
+        set_b_guessed(flags, 0, 1, 0xff);
         CodeLen = 1;
         break;
     }

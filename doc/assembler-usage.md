@@ -460,7 +460,7 @@ Listing code is shown in units appropriate to the target and segment: bytes,
 first pass are shown as question marks. `-no-list-unknown-values` disables
 this marking; `-list-unknown-values` enables it. Support initially covers
 65xx, 8080/8085, Z80/eZ80/Z180/Z280/Z380, MCS-48/51/251,
-8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/68HC11.
+8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/6809/68HC11/68HC12.
 
 ## Symbol Conventions
 
@@ -1050,6 +1050,10 @@ The include search path is not used.
 ### Symbol use queries
 
 `SYMUSED(symbol)` reports whether a symbol has been referenced up to this point.
-Use is recorded in its symbol-table entry. Without a `FORWARD` declaration,
-a first-pass reference before the symbol exists cannot record that use.
-`IFUSED` and `IFNUSED` query the same information.
+`IFUSED` and `IFNUSED` query the same information. Forward references count when
+both reference and definition are global, when they are in the same macro
+expansion, or when a reference in a section and a definition in that section,
+a parent section, or global scope are both outside macro expansions.
+
+For uses outside these cases, a `FORWARD` declaration creates a placeholder
+that can store the usage flag before the symbol's value is defined.

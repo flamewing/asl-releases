@@ -23,8 +23,6 @@ extern void LabelHandle(
 
 extern void LabelModify(LargeWord OldValue, LargeWord NewValue);
 
-extern void AsmLabelPassInit(void);
-
 extern void asmlabel_init(void);
 
 #endif /* ASMLABEL_H */

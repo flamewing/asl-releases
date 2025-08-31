@@ -221,7 +221,7 @@ static tRegEvalResult DecodeReg(
 }
 
 static Boolean DecodeArgReg(int ArgIndex, LongWord* pRes) {
-    return DecodeReg(&ArgStr[ArgIndex], pRes, True);
+    return (DecodeReg(&ArgStr[ArgIndex], pRes, True) == eIsReg);
 }
 
 static Boolean DecodeSpReg(char* Asc_O, LongWord* Erg) {

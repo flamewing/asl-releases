@@ -164,6 +164,7 @@
 #include "codez8000.h"
 #include "console.h"
 #include "cpulist.h"
+#include "fwd_refs.h"
 #include "intpseudo.h"
 #include "ioerrs.h"
 #include "literals.h"
@@ -2658,7 +2659,7 @@ static void Produce_Code(void) {
             if (expanded) {
                 as_snprcatf(
                         ListLine, STRINGSIZE, "[%lu]",
-                        (unsigned long)FirstInputTag->LocHandle);
+                        (unsigned long)(FirstInputTag->LocHandle - LOC_HANDLE_OFFSET));
             }
 
             /* Macro call itself must not appear in expanded output.  However, a label
@@ -3081,7 +3082,6 @@ static void AssembleFile_InitPass(void) {
     FirstOutputTag = NULL;
 
     MomLocHandle      = -1;
-    LocHandleCnt      = 0;
     SectSymbolCounter = 0;
 
     SectionStack   = NULL;
@@ -3092,8 +3092,7 @@ static void AssembleFile_InitPass(void) {
         pPhaseStacks[z] = NULL;
     }
 
-    InitPass();
-    AsmLabelPassInit();
+    exec_init_pass_fncs();
 
     ActPC      = SegCode;
     PCs[ActPC] = 0;
@@ -3241,7 +3240,7 @@ static void AssembleFile_ExitPass(void) {
     UnsetCPU();
     ClearLocStack();
     ClearStacks();
-    AsmErrPassExit();
+    exec_exit_pass_fncs();
     for (z = 0; z < SegCount; z++) {
         while (pPhaseStacks[z]) {
             pSavePhase      = pPhaseStacks[z];
@@ -3398,8 +3397,6 @@ static void AssembleFile(char* Name) {
         /* Durchlauf initialisieren */
 
         AssembleFile_InitPass();
-        AsmSubPassInit();
-        AsmErrPassInit();
         if (msg_level >= e_msg_level_normal) {
             as_snprintf(Tmp, sizeof(Tmp), "%s", getmessage(Num_InfoMessPass));
             as_snprcatf(Tmp, sizeof(Tmp), "%" PRId32, PassNo);
@@ -4476,6 +4473,7 @@ int main(int argc, char** argv) {
         cpulist_init();
         asmsub_init();
         asmpars_init();
+        as_forward_ref_init();
         intformat_init();
 
         asmmac_init();
