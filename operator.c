@@ -106,7 +106,7 @@ static Boolean OneComplOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal
     }
 
     as_tempres_set_int(pErg, ~(pRVal->Contents.Int));
-    PromoteLValFlags();
+    PromoteRValFlags();
     return True;
 }
 
@@ -430,7 +430,7 @@ static Boolean LogNotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
     }
 
     as_tempres_set_int(pErg, pRVal->Contents.Int ? 0 : 1);
-    PromoteLValFlags();
+    PromoteRValFlags();
     return True;
 }
 

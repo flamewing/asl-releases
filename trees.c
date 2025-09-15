@@ -457,6 +457,7 @@ TTree* find_tree_next(char const* p_name, as_tree_path_t* p_path) {
 
 again:
     if (!p_path->length) {
+        tree_dbg_printf("-> no path left, return NULL\n");
         return NULL;
     }
     node_index = p_path->length - 1;
@@ -466,16 +467,29 @@ again:
     if (p_path->state[node_index] == 0) {
         p_ret = find_tree_next_sub(p_path->path[node_index]->Right, p_path);
         if (!p_ret) {
-            tree_dbg_printf("-> was on node self, and no right subtree\n");
             p_path->length--;
+            tree_dbg_printf(
+                    "-> was on node self, and no right subtree, reduce path length to "
+                    "%u\n",
+                    (unsigned)p_path->length);
             goto again;
         } else {
-            tree_dbg_printf("-> was on node self, and right subtree\n");
+            tree_dbg_printf(
+                    "-> was on node self, and right subtree exists, stepped down\n");
             p_path->state[node_index] = 1;
         }
     } else if (p_path->state[node_index] < 0) {
+        tree_dbg_printf("-> was on left subtree, return self\n");
         p_path->state[node_index] = 0;
         p_ret                     = p_path->path[node_index];
+    } else /* if (p_path->state[node_index] > 0) */
+    {
+        p_path->length--;
+        tree_dbg_printf(
+                "-> was on right subtree, node exhausted, reduce path length to %u\n",
+                (unsigned)p_path->length);
+        goto again;
+        ;
     }
 
     /* Successor in tree, but carrying different name: end of list of symbols
