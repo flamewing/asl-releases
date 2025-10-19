@@ -456,11 +456,11 @@ The cross reference list lists for every symbol in which files and lines it has 
 
 Listing code is shown in units appropriate to the target and segment: bytes,
 16-bit or 32-bit words, or shorter instruction words such as the PDP-8's
-12-bit words. On supported targets, fields whose values are unknown in the
+12-bit words. DSP56K listings use 24-bit words. On supported targets, fields whose values are unknown in the
 first pass are shown as question marks. `-no-list-unknown-values` disables
 this marking; `-list-unknown-values` enables it. Support initially covers
 65xx, 8080/8085, Z80/eZ80/Z180/Z280/Z380, MCS-48/51/251,
-8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/6809/68HC11/68HC12.
+8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/6809/68HC11/68HC12, 68xxx/ColdFire, PowerPC, and DSP56000/56300.
 
 ## Symbol Conventions
 

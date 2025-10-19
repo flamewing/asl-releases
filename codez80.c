@@ -3399,6 +3399,15 @@ static void DecodeADD(Word Index) {
 
             OpSize = eSymbolSize16Bit;
             switch (DecodeAdr(&ArgStr[ArgCnt], &adr_vals, MModAll)) {
+            case ModReg8:
+                if (adr_vals.part != AccReg) {
+                    WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+                } else if (chk_core_mask(e_core_mask_z280)) {
+                    append_prefix(0xed);
+                    append_opcode(0x6d);
+                    append_adr_vals(&adr_vals);
+                }
+                break;
             case ModReg16: {
                 prefix_store_t src_prefix;
                 store_prefix(&src_prefix, dest_prefix.cnt);

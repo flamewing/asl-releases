@@ -12,6 +12,7 @@
 
 #include "code56k.h"
 
+#include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -112,7 +113,7 @@ typedef struct {
     LongInt      Mode, Val;
     Byte         Seg, ShortMode;
     Boolean      ForceImmLong;
-    tSymbolFlags AbsSymFlags;
+    tSymbolFlags symbol_flags;
     int          Cnt;
 } tAdrResult;
 
@@ -381,7 +382,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl, Byte ErlSeg, tAdrResult* p
     pResult->Type         = ModNone;
     pResult->Val          = 0;
     pResult->Cnt          = 0;
-    pResult->AbsSymFlags  = eSymbolFlag_None;
+    pResult->symbol_flags = eSymbolFlag_None;
     pResult->ShortMode    = 0;
     pResult->ForceImmLong = False;
 
@@ -449,10 +450,12 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl, Byte ErlSeg, tAdrResult* p
     if (*Arg.str.p_str == '#') {
         if (Arg.str.p_str[1] == '>') {
             pResult->ForceImmLong = TRUE;
-            pResult->Val          = EvalStrIntExpressionOffs(&Arg, 2, Int24, &OK);
+            pResult->Val          = EvalStrIntExpressionOffsWithFlags(
+                    &Arg, 2, Int24, &OK, &pResult->symbol_flags);
         } else {
             pResult->ForceImmLong = FALSE;
-            pResult->Val          = EvalStrIntExpressionOffs(&Arg, 1, Int24, &OK);
+            pResult->Val          = EvalStrIntExpressionOffsWithFlags(
+                    &Arg, 1, Int24, &OK, &pResult->symbol_flags);
         }
         if (OK) {
             pResult->Type = ModImm;
@@ -488,7 +491,8 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl, Byte ErlSeg, tAdrResult* p
                     if (mFirstPassUnknown(EvalResult.Flags)) {
                         pResult->Val &= 63;
                     }
-                    pResult->Type = ModDisp;
+                    pResult->Type         = ModDisp;
+                    pResult->symbol_flags = EvalResult.Flags;
                 }
                 goto chk;
             }
@@ -501,10 +505,10 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl, Byte ErlSeg, tAdrResult* p
     Offset       = CutSize(&Arg, &pResult->ShortMode);
     pResult->Val = EvalStrIntExpressionOffsWithResult(&Arg, Offset, AdrInt, &EvalResult);
     if (EvalResult.OK) {
-        pResult->Type        = ModAbs;
-        pResult->AbsSymFlags = EvalResult.Flags;
-        pResult->Mode        = 0x30;
-        pResult->Cnt         = 1;
+        pResult->Type         = ModAbs;
+        pResult->symbol_flags = EvalResult.Flags;
+        pResult->Mode         = 0x30;
+        pResult->Cnt          = 1;
         if ((pResult->Seg & ((1 << SegCode) | (1 << SegXData) | (1 << SegYData))) != 0) {
             ChkSpace(pResult->Seg, EvalResult.AddrSpaceMask);
         }
@@ -714,12 +718,15 @@ static Boolean DecodeMOVE_1(int Start) {
                         DAsmCode[0] = 0x020090 + ((AdrResult.Val & 1) << 6)
                                       + ((AdrResult.Val & 0x7e) << 10)
                                       + (AdrResult.Mode << 8) + (IsY << 5) + RegErg;
-                        CodeLen     = 1;
+                        or_d_guessed(
+                                AdrResult.symbol_flags, 0, 1, (0x7e << 10) | (1 << 6));
+                        CodeLen = 1;
                     } else {
                         DAsmCode[0]
                                 = 0x0a70c0 + (AdrResult.Mode << 8) + (IsY << 16) + RegErg;
                         DAsmCode[1] = AdrResult.Val;
-                        CodeLen     = 2;
+                        set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
+                        CodeLen = 2;
                     }
                 } else if (
                         !AdrResult.ForceImmLong && (AdrResult.Type == ModImm)
@@ -727,18 +734,21 @@ static Boolean DecodeMOVE_1(int Start) {
                     Result = True;
                     DAsmCode[0]
                             = 0x200000 + (RegErg << 16) + ((AdrResult.Val & 0xff) << 8);
+                    or_d_guessed(AdrResult.symbol_flags, 0, 1, 0xff << 8);
                     CodeLen = 1;
                 } else if (
                         (AdrResult.Type == ModAbs) && (AdrResult.Val <= 63)
                         && (AdrResult.Val >= 0) && (AdrResult.ShortMode != 2)) {
                     Result      = True;
                     DAsmCode[0] = 0x408000 + MixErg + (AdrResult.Val << 8);
-                    CodeLen     = 1;
+                    or_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
+                    CodeLen = 1;
                 } else if (AdrResult.Type != ModNone) {
                     Result      = True;
                     DAsmCode[0] = 0x40c000 + MixErg + (AdrResult.Mode << 8);
                     DAsmCode[1] = AdrResult.Val;
-                    CodeLen     = 1 + AdrResult.Cnt;
+                    set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
+                    CodeLen = 1 + AdrResult.Cnt;
                 }
             }
         }
@@ -767,24 +777,29 @@ static Boolean DecodeMOVE_1(int Start) {
                     DAsmCode[0] = 0x020080 + ((RightAdrResult.Val & 1) << 6)
                                   + ((RightAdrResult.Val & 0x7e) << 10)
                                   + (RightAdrResult.Mode << 8) + (IsY << 5) + RegErg;
-                    CodeLen     = 1;
+                    or_d_guessed(
+                            RightAdrResult.symbol_flags, 0, 1, (1 << 6) | (0x7e << 10));
+                    CodeLen = 1;
                 } else {
                     DAsmCode[0] = 0x0a7080 + (RightAdrResult.Mode << 8) + (IsY << 16)
                                   + RegErg;
                     DAsmCode[1] = RightAdrResult.Val;
-                    CodeLen     = 2;
+                    set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
+                    CodeLen = 2;
                 }
             } else if (
                     (RightAdrResult.Type == ModAbs) && (RightAdrResult.Val <= 63)
                     && (RightAdrResult.Val >= 0) && (RightAdrResult.ShortMode != 2)) {
                 Result      = True;
                 DAsmCode[0] = 0x400000 + MixErg + (RightAdrResult.Val << 8);
-                CodeLen     = 1;
+                or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
+                CodeLen = 1;
             } else if (RightAdrResult.Type != ModNone) {
                 Result      = True;
                 DAsmCode[0] = 0x404000 + MixErg + (RightAdrResult.Mode << 8);
                 DAsmCode[1] = RightAdrResult.Val;
-                CodeLen     = 1 + RightAdrResult.Cnt;
+                set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
+                CodeLen = 1 + RightAdrResult.Cnt;
             }
             return Result;
         }
@@ -801,12 +816,14 @@ static Boolean DecodeMOVE_1(int Start) {
             && (LeftAdrResult.Val >= 0) && (LeftAdrResult.ShortMode != 2)) {
             Result      = True;
             DAsmCode[0] = 0x408000 + MixErg + (LeftAdrResult.Val << 8);
-            CodeLen     = 1;
+            or_d_guessed(LeftAdrResult.symbol_flags, 0, 1, 63 << 8);
+            CodeLen = 1;
         } else {
             Result      = True;
             DAsmCode[0] = 0x40c000 + MixErg + (LeftAdrResult.Mode << 8);
             DAsmCode[1] = LeftAdrResult.Val;
-            CodeLen     = 1 + LeftAdrResult.Cnt;
+            set_d_guessed(LeftAdrResult.symbol_flags, 1, 1, 0xffffff);
+            CodeLen = 1 + LeftAdrResult.Cnt;
         }
         return Result;
     }
@@ -822,12 +839,14 @@ static Boolean DecodeMOVE_1(int Start) {
             && (RightAdrResult.Val >= 0) && (RightAdrResult.ShortMode != 2)) {
             Result      = True;
             DAsmCode[0] = 0x400000 + MixErg + (RightAdrResult.Val << 8);
-            CodeLen     = 1;
+            or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
+            CodeLen = 1;
         } else {
             Result      = True;
             DAsmCode[0] = 0x404000 + MixErg + (RightAdrResult.Mode << 8);
             DAsmCode[1] = RightAdrResult.Val;
-            CodeLen     = 1 + RightAdrResult.Cnt;
+            set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
+            CodeLen = 1 + RightAdrResult.Cnt;
         }
         return Result;
     }
@@ -857,7 +876,8 @@ static Boolean DecodeMOVE_2(int Start) {
                 CodeLen     = 1 + AdrResult1.Cnt;
                 DAsmCode[0] = 0x080000 + (RegErg << 16) + (AdrResult1.Mode << 8);
                 DAsmCode[1] = AdrResult1.Val;
-                Result      = True;
+                set_d_guessed(AdrResult1.symbol_flags, 1, 1, 0xffffff);
+                Result = True;
             }
         }
         return Result;
@@ -875,6 +895,7 @@ static Boolean DecodeMOVE_2(int Start) {
             if (AdrResult2.Type != ModNone) {
                 CodeLen     = 1 + AdrResult2.Cnt;
                 DAsmCode[0] = 0x088000 + (RegErg << 16) + (AdrResult2.Mode << 8);
+                set_d_guessed(AdrResult2.symbol_flags, 1, 1, 0xffffff);
                 DAsmCode[1] = AdrResult2.Val;
                 Result      = True;
             }
@@ -1110,12 +1131,14 @@ static void DecodePar(Word Index) {
                 } else if (!DecodeALUReg(MidComp.str.p_str, &Reg2, False, False, True)) {
                     SetXError(ErrNum_InvReg, &MidComp);
                 } else if (*LeftComp.str.p_str == '#') {
-                    AddVal = EvalStrIntExpressionOffs(&LeftComp, 1, UInt6, &OK);
+                    AddVal = EvalStrIntExpressionOffsWithFlags(
+                            &LeftComp, 1, UInt6, &OK, &Flags);
                     if (OK) {
                         DAsmCode[0] = 0x0c1c00 + ((pOrder->Code & 0x10) << 4)
                                       + (Reg2 << 7) + (AddVal << 1) + Reg1;
-                        CodeLen     = 1;
-                        DontAdd     = True;
+                        set_d_guessed(Flags, 0, 1, 63 << 1);
+                        CodeLen = 1;
+                        DontAdd = True;
                     }
                 } else if (!DecodeXYAB1Reg(LeftComp.str.p_str, &Reg3)) {
                     SetXError(ErrNum_InvReg, &LeftComp);
@@ -1143,12 +1166,14 @@ static void DecodePar(Word Index) {
                 if (!DecodeALUReg(RightComp.str.p_str, &Reg1, False, False, True)) {
                     SetXError(ErrNum_InvReg, &RightComp);
                 } else if (*LeftComp.str.p_str == '#') {
-                    AddVal = EvalStrIntExpressionOffs(&LeftComp, 1, UInt5, &OK);
+                    AddVal = EvalStrIntExpressionOffsWithFlags(
+                            &LeftComp, 1, UInt5, &OK, &Flags);
                     if (OK) {
                         DAsmCode[0] = 0x0c1e80 + ((0x33 - pOrder->Code) << 2)
                                       + (AddVal << 1) + Reg1;
-                        CodeLen     = 1;
-                        DontAdd     = True;
+                        set_d_guessed(Flags, 0, 1, 31 << 1);
+                        CodeLen = 1;
+                        DontAdd = True;
                     }
                 } else if (!DecodeXYAB1Reg(LeftComp.str.p_str, &Reg3)) {
                     SetXError(ErrNum_InvReg, &LeftComp);
@@ -1184,17 +1209,20 @@ static void DecodePar(Word Index) {
                 } else if (ArgCnt != 1) {
                     SetError(ErrNum_ParNotPossible);
                 } else {
-                    AddVal = EvalStrIntExpressionOffs(&LeftComp, 1, Int24, &OK);
+                    AddVal = EvalStrIntExpressionOffsWithFlags(
+                            &LeftComp, 1, Int24, &OK, &Flags);
                     if (!OK) {
                         SetError((tErrorNum)-1);
                     } else if ((AddVal >= 0) && (AddVal <= 63)) {
                         DAsmCode[0] = 0x014000 + (AddVal << 8);
-                        h           = 0x80 + (Reg2 << 3);
+                        set_d_guessed(Flags, 0, 1, 63 << 8);
+                        h = 0x80 + (Reg2 << 3);
                     } else {
                         DAsmCode[0] = 0x014000;
                         h           = 0xc0 + (Reg2 << 3);
                         DAsmCode[1] = AddVal & 0xffffff;
-                        CodeLen     = 2;
+                        set_d_guessed(Flags, 1, 1, 0xffffff);
+                        CodeLen = 2;
                     }
                 }
             } else {
@@ -1231,19 +1259,22 @@ static void DecodePar(Word Index) {
                 } else if (ArgCnt != 1) {
                     SetError(ErrNum_ParNotPossible);
                 } else {
-                    AddVal = EvalStrIntExpressionOffs(&LeftComp, 1, Int24, &OK);
+                    AddVal = EvalStrIntExpressionOffsWithFlags(
+                            &LeftComp, 1, Int24, &OK, &Flags);
                     if (!OK) {
                         SetError((tErrorNum)-1);
                     } else if ((AddVal >= 0) && (AddVal <= 63)) {
                         DAsmCode[0] = 0x014080 + (AddVal << 8) + (Reg2 << 3)
                                       + (pOrder->Code & 7);
-                        CodeLen     = 1;
-                        DontAdd     = True;
+                        set_d_guessed(Flags, 0, 1, 63 << 8);
+                        CodeLen = 1;
+                        DontAdd = True;
                     } else {
                         DAsmCode[0] = 0x0140c0 + (Reg2 << 3) + (pOrder->Code & 7);
                         DAsmCode[1] = AddVal & 0xffffff;
-                        CodeLen     = 2;
-                        DontAdd     = True;
+                        set_d_guessed(Flags, 1, 1, 0xffffff);
+                        CodeLen = 2;
+                        DontAdd = True;
                     }
                 }
             } else {
@@ -1289,7 +1320,8 @@ static void DecodePar(Word Index) {
                         LAddVal     = 23 - LAddVal;
                         DAsmCode[0] = 0x010040 + (LAddVal << 8)
                                       + (Mac2Table[Reg1 & 3] << 4) + (Reg3 << 3);
-                        CodeLen     = 1;
+                        set_d_guessed(Flags, 0, 1, 31 << 8);
+                        CodeLen = 1;
                     }
                 }
             }
@@ -1565,6 +1597,7 @@ static void DecodeBit(Word Code) {
                         CodeLen = 1;
                         DAsmCode[0]
                                 = 0x0a0000 + h + (RightAdrResult.Val << 8) + Reg3 + Reg2;
+                        or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (
                             (RightAdrResult.Type == ModAbs)
                             && (RightAdrResult.Val >= MemLimit - 0x3f)
@@ -1573,6 +1606,7 @@ static void DecodeBit(Word Code) {
                         CodeLen     = 1;
                         DAsmCode[0] = 0x0a8000 + h + ((RightAdrResult.Val & 0x3f) << 8)
                                       + Reg3 + Reg2;
+                        or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (
                             (RightAdrResult.Type == ModAbs) && (MomCPU >= CPU56300)
                             && (RightAdrResult.Val >= MemLimit - 0x7f)
@@ -1582,11 +1616,13 @@ static void DecodeBit(Word Code) {
                         CodeLen     = 1;
                         DAsmCode[0] = 0x010000 + h + ((RightAdrResult.Val & 0x3f) << 8)
                                       + Reg3 + Reg2;
+                        or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (RightAdrResult.Type != ModNone) {
                         CodeLen = 1 + RightAdrResult.Cnt;
                         DAsmCode[0]
                                 = 0x0a4000 + h + (RightAdrResult.Mode << 8) + Reg3 + Reg2;
                         DAsmCode[1] = RightAdrResult.Val;
+                        set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                     }
                 }
             }
@@ -1748,11 +1784,13 @@ static void DecodeMOVEC(Word Code) {
                 if ((RightAdrResult.Type == ModAbs) && (RightAdrResult.Val <= 63)
                     && (RightAdrResult.ShortMode != 2)) {
                     DAsmCode[0] = 0x050020 + (RightAdrResult.Val << 8) + Reg3 + Reg1;
-                    CodeLen     = 1;
+                    or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
+                    CodeLen = 1;
                 } else {
                     DAsmCode[0] = 0x054020 + (RightAdrResult.Mode << 8) + Reg3 + Reg1;
                     DAsmCode[1] = RightAdrResult.Val;
-                    CodeLen     = 1 + RightAdrResult.Cnt;
+                    set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
+                    CodeLen = 1 + RightAdrResult.Cnt;
                 }
             }
         } else if (!DecodeCtrlReg(RightComp.str.p_str, &Reg1)) {
@@ -1769,7 +1807,8 @@ static void DecodeMOVEC(Word Code) {
                 if ((LeftAdrResult.Type == ModAbs) && (LeftAdrResult.Val <= 63)
                     && (LeftAdrResult.ShortMode != 2)) {
                     DAsmCode[0] = 0x058020 + (LeftAdrResult.Val << 8) + Reg3 + Reg1;
-                    CodeLen     = 1;
+                    or_d_guessed(LeftAdrResult.symbol_flags, 0, 1, 63 << 8);
+                    CodeLen = 1;
                 } else if (
                         !LeftAdrResult.ForceImmLong && (LeftAdrResult.Type == ModImm)
                         && (LeftAdrResult.Val <= 255)) {
@@ -1778,7 +1817,8 @@ static void DecodeMOVEC(Word Code) {
                 } else {
                     DAsmCode[0] = 0x05c020 + (LeftAdrResult.Mode << 8) + Reg3 + Reg1;
                     DAsmCode[1] = LeftAdrResult.Val;
-                    CodeLen     = 1 + LeftAdrResult.Cnt;
+                    set_d_guessed(LeftAdrResult.symbol_flags, 1, 1, 0xffffff);
+                    CodeLen = 1 + LeftAdrResult.Cnt;
                 }
             }
         }
@@ -1802,9 +1842,11 @@ static void DecodeMOVEM(Word Code) {
                 && (RightAdrResult.Val <= 63) && (RightAdrResult.ShortMode != 2)) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x070000 + Reg1 + (RightAdrResult.Val << 8);
+                or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
             } else if (RightAdrResult.Type != ModNone) {
                 CodeLen     = 1 + RightAdrResult.Cnt;
                 DAsmCode[1] = RightAdrResult.Val;
+                set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                 DAsmCode[0] = 0x074080 + Reg1 + (RightAdrResult.Mode << 8);
             }
         } else if (!DecodeGeneralReg(RightComp.str.p_str, &Reg2)) {
@@ -1817,9 +1859,11 @@ static void DecodeMOVEM(Word Code) {
                 && (LeftAdrResult.Val <= 63) && (LeftAdrResult.ShortMode != 2)) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x078000 + Reg2 + (LeftAdrResult.Val << 8);
+                or_d_guessed(LeftAdrResult.symbol_flags, 0, 1, 63 << 8);
             } else if (LeftAdrResult.Type != ModNone) {
                 CodeLen     = 1 + LeftAdrResult.Cnt;
                 DAsmCode[1] = LeftAdrResult.Val;
+                set_d_guessed(LeftAdrResult.symbol_flags, 1, 1, 0xffffff);
                 DAsmCode[0] = 0x07c080 + Reg2 + (LeftAdrResult.Mode << 8);
             }
         }
@@ -1845,6 +1889,7 @@ static void DecodeMOVEP(Word Code) {
                     CodeLen     = 1;
                     DAsmCode[0] = 0x08c000 + (Ord(RightAdrResult.Seg == SegYData) << 16)
                                   + (RightAdrResult.Val & 0x3f) + (Reg1 << 8);
+                    or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 63 << 8);
                 } else if (
                         (MomCPU >= CPU56300) && (RightAdrResult.Val <= MemLimit - 0x40)
                         && (RightAdrResult.Val >= MemLimit - 0x7f)) {
@@ -1853,6 +1898,7 @@ static void DecodeMOVEP(Word Code) {
                                   + (Ord(RightAdrResult.Seg == SegXData) << 7)
                                   + (RightAdrResult.Val & 0x1f)
                                   + ((RightAdrResult.Val & 0x20) << 1) + (Reg1 << 8);
+                    or_d_guessed(RightAdrResult.symbol_flags, 0, 1, 0x5f);
                 } else {
                     WrError(ErrNum_UnderRange);
                 }
@@ -1867,6 +1913,7 @@ static void DecodeMOVEP(Word Code) {
                     CodeLen     = 1;
                     DAsmCode[0] = 0x084000 + (Ord(LeftAdrResult.Seg == SegYData) << 16)
                                   + (LeftAdrResult.Val & 0x3f) + (Reg2 << 8);
+                    or_d_guessed(LeftAdrResult.symbol_flags, 0, 1, 63 << 8);
                 } else if (
                         (MomCPU >= CPU56300) && (LeftAdrResult.Val <= MemLimit - 0x40)
                         && (LeftAdrResult.Val >= MemLimit - 0x7f)) {
@@ -1875,6 +1922,7 @@ static void DecodeMOVEP(Word Code) {
                                   + (Ord(LeftAdrResult.Seg == SegXData) << 7)
                                   + (LeftAdrResult.Val & 0x1f)
                                   + ((LeftAdrResult.Val & 0x20) << 1) + (Reg2 << 8);
+                    or_d_guessed(LeftAdrResult.symbol_flags, 0, 1, 0x5f);
                 } else {
                     WrError(ErrNum_UnderRange);
                 }
@@ -1897,11 +1945,13 @@ static void DecodeMOVEP(Word Code) {
                     if (RightAdrResult.Seg == SegCode) {
                         CodeLen     = 1 + RightAdrResult.Cnt;
                         DAsmCode[1] = RightAdrResult.Val;
+                        set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                         DAsmCode[0] = 0x084040 + HVal + (RightAdrResult.Mode << 8)
                                       + (Ord(HSeg == SegYData) << 16);
                     } else {
                         CodeLen     = 1 + RightAdrResult.Cnt;
                         DAsmCode[1] = RightAdrResult.Val;
+                        set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                         DAsmCode[0] = 0x084080 + HVal + (RightAdrResult.Mode << 8)
                                       + (Ord(HSeg == SegYData) << 16)
                                       + (Ord(RightAdrResult.Seg == SegYData) << 6);
@@ -1923,11 +1973,13 @@ static void DecodeMOVEP(Word Code) {
                     if (RightAdrResult.Seg == SegCode) {
                         CodeLen     = 1 + RightAdrResult.Cnt;
                         DAsmCode[1] = RightAdrResult.Val;
+                        set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                         DAsmCode[0] = 0x008000 + HVal + (RightAdrResult.Mode << 8)
                                       + (Ord(HSeg == SegYData) << 6);
                     } else {
                         CodeLen     = 1 + RightAdrResult.Cnt;
                         DAsmCode[1] = RightAdrResult.Val;
+                        set_d_guessed(RightAdrResult.symbol_flags, 1, 1, 0xffffff);
                         DAsmCode[0] = 0x070000 + HVal + (RightAdrResult.Mode << 8)
                                       + (Ord(HSeg == SegYData) << 7)
                                       + (Ord(HSeg == SegXData) << 14)
@@ -1935,9 +1987,10 @@ static void DecodeMOVEP(Word Code) {
                     }
                 }
             } else if (LeftAdrResult.Type != ModNone) {
-                LongInt    HVal = LeftAdrResult.Val, HCnt = LeftAdrResult.Cnt,
-                           HMode = LeftAdrResult.Mode, HSeg = LeftAdrResult.Seg;
-                tAdrResult RightAdrResult;
+                LongInt      HVal = LeftAdrResult.Val, HCnt = LeftAdrResult.Cnt,
+                             HMode = LeftAdrResult.Mode, HSeg = LeftAdrResult.Seg;
+                tSymbolFlags h_flags = LeftAdrResult.symbol_flags;
+                tAdrResult   RightAdrResult;
 
                 DecodeAdr(&RightComp, MModAbs, MSegXData + MSegYData, &RightAdrResult);
                 if (RightAdrResult.Type != ModNone) {
@@ -1946,12 +1999,14 @@ static void DecodeMOVEP(Word Code) {
                         if (HSeg == SegCode) {
                             CodeLen     = 1 + HCnt;
                             DAsmCode[1] = HVal;
+                            set_d_guessed(h_flags, 1, 1, 0xffffff);
                             DAsmCode[0] = 0x08c040 + (RightAdrResult.Val & 0x3f)
                                           + (HMode << 8)
                                           + (Ord(RightAdrResult.Seg == SegYData) << 16);
                         } else {
                             CodeLen     = 1 + HCnt;
                             DAsmCode[1] = HVal;
+                            set_d_guessed(h_flags, 1, 1, 0xffffff);
                             DAsmCode[0] = 0x08c080 + (((Word)RightAdrResult.Val) & 0x3f)
                                           + (HMode << 8)
                                           + (Ord(RightAdrResult.Seg == SegYData) << 16)
@@ -1964,12 +2019,14 @@ static void DecodeMOVEP(Word Code) {
                         if (HSeg == SegCode) {
                             CodeLen     = 1 + HCnt;
                             DAsmCode[1] = HVal;
+                            set_d_guessed(h_flags, 1, 1, 0xffffff);
                             DAsmCode[0] = 0x00c000 + (RightAdrResult.Val & 0x3f)
                                           + (HMode << 8)
                                           + (Ord(RightAdrResult.Seg == SegYData) << 6);
                         } else {
                             CodeLen     = 1 + HCnt;
                             DAsmCode[1] = HVal;
+                            set_d_guessed(h_flags, 1, 1, 0xffffff);
                             DAsmCode[0] = 0x078000 + (((Word)RightAdrResult.Val) & 0x3f)
                                           + (HMode << 8)
                                           + (Ord(RightAdrResult.Seg == SegYData) << 7)
@@ -2059,7 +2116,7 @@ static void DecodeBitBr(Word Code) {
                     DecodeAdr(&MidComp, MModNoImm, MSegXData + MSegYData, &AdrResult);
                     Reg3 = Ord(AdrResult.Seg == SegYData) << 6;
                     if ((AdrResult.Type == ModAbs)
-                        && (mFirstPassUnknown(AdrResult.AbsSymFlags))) {
+                        && (mFirstPassUnknown(AdrResult.symbol_flags))) {
                         AdrResult.Val &= 0x3f;
                     }
                     if ((AdrResult.Type == ModAbs) && (AdrResult.Val <= 63)
@@ -2067,6 +2124,7 @@ static void DecodeBitBr(Word Code) {
                         CodeLen     = 1;
                         DAsmCode[0] = 0x0c8080 + AddVal + (AdrResult.Val << 8) + Reg3 + h
                                       + h2;
+                        set_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (
                             (AdrResult.Type == ModAbs)
                             && (AdrResult.Val >= MemLimit - 0x3f)
@@ -2074,6 +2132,7 @@ static void DecodeBitBr(Word Code) {
                         CodeLen     = 1;
                         DAsmCode[0] = 0x0cc000 + AddVal + ((AdrResult.Val & 0x3f) << 8)
                                       + Reg3 + h + h2;
+                        set_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (
                             (AdrResult.Type == ModAbs)
                             && (AdrResult.Val >= MemLimit - 0x7f)
@@ -2081,6 +2140,7 @@ static void DecodeBitBr(Word Code) {
                         CodeLen     = 1;
                         DAsmCode[0] = 0x048000 + AddVal + ((AdrResult.Val & 0x3f) << 8)
                                       + Reg3 + h + (h2 >> 9);
+                        set_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                     } else if (AdrResult.Type == ModAbs) {
                         WrError(ErrNum_InvAddrMode);
                     } else if (AdrResult.Type != ModNone) {
@@ -2092,11 +2152,14 @@ static void DecodeBitBr(Word Code) {
             }
         }
         if (CodeLen == 1) {
-            LongInt Dist = EvalStrIntExpression(&RightComp, AdrInt, &OK) - EProgCounter();
+            tSymbolFlags flags;
+            LongInt Dist = EvalStrIntExpressionWithFlags(&RightComp, AdrInt, &OK, &flags)
+                           - EProgCounter();
 
             if (OK) {
                 DAsmCode[1] = Dist & 0xffffff;
-                CodeLen     = 2;
+                set_d_guessed(flags, 1, 1, 0xffffff);
+                CodeLen = 2;
             } else {
                 CodeLen = 0;
             }
@@ -2134,13 +2197,15 @@ static void DecodeBRA_BSR(Word Code) {
                 Dist &= 0x1ff;
                 DAsmCode[0]
                         = 0x050800 + (Code << 4) + ((Dist & 0x1e0) << 1) + (Dist & 0x1f);
+                set_d_guessed(Flags, 0, 1, (0x1e0 << 1) | 0x1f);
                 CodeLen = 1;
             }
             break;
         case 2:
             DAsmCode[0] = 0x0d1080 + Code;
             DAsmCode[1] = Dist & 0xffffff;
-            CodeLen     = 2;
+            set_d_guessed(Flags, 1, 1, 0xffffff);
+            CodeLen = 2;
             break;
         }
     }
@@ -2176,13 +2241,15 @@ static void DecodeBcc(Word Condition) {
                 Dist &= 0x1ff;
                 DAsmCode[0] = 0x050400 + (Condition << 12) + ((Dist & 0x1e0) << 1)
                               + (Dist & 0x1f);
-                CodeLen     = 1;
+                set_d_guessed(Flags, 0, 1, (0x1e0 << 1) | 0x1f);
+                CodeLen = 1;
             }
             break;
         case 2:
             DAsmCode[0] = 0x0d1040 + Condition;
             DAsmCode[1] = Dist & 0xffffff;
-            CodeLen     = 2;
+            set_d_guessed(Flags, 1, 1, 0xffffff);
+            CodeLen = 2;
             break;
         }
     }
@@ -2219,13 +2286,15 @@ static void DecodeBScc(Word Condition) {
                 Dist &= 0x1ff;
                 DAsmCode[0] = 0x050000 + (Condition << 12) + ((Dist & 0x1e0) << 1)
                               + (Dist & 0x1f);
-                CodeLen     = 1;
+                set_d_guessed(Flags, 0, 1, (0x1e0 << 1) | 0x1f);
+                CodeLen = 1;
             }
             break;
         case 2:
             DAsmCode[0] = 0x0d1000 + Condition;
             DAsmCode[1] = Dist & 0xffffff;
-            CodeLen     = 2;
+            set_d_guessed(Flags, 1, 1, 0xffffff);
+            CodeLen = 2;
             break;
         }
     }
@@ -2257,7 +2326,8 @@ static void DecodeLUA_LEA(Word Code) {
                     DAsmCode[0] = 0x040000 + (Reg1 - 16) + (AdrResult.Mode << 8)
                                   + ((AdrResult.Val & 0x0f) << 4)
                                   + ((AdrResult.Val & 0x70) << 7);
-                    CodeLen     = 1;
+                    or_d_guessed(AdrResult.symbol_flags, 0, 1, (0x0f << 4) | (0x70 << 7));
+                    CodeLen = 1;
                 }
             } else if (AdrResult.Type != ModNone) {
                 CodeLen     = 1;
@@ -2289,10 +2359,14 @@ static void DecodeLRA(Word Code) {
                 CodeLen     = 1;
             }
         } else {
-            DAsmCode[1] = EvalStrIntExpression(&LeftComp, AdrInt, &OK) - EProgCounter();
+            tSymbolFlags flags;
+
+            DAsmCode[1] = EvalStrIntExpressionWithFlags(&LeftComp, AdrInt, &OK, &flags)
+                          - EProgCounter();
             if (OK) {
                 DAsmCode[0] = 0x044040 + Reg1;
-                CodeLen     = 2;
+                set_d_guessed(flags, 1, 0, 0xffffff);
+                CodeLen = 2;
             }
         }
     }
@@ -2308,20 +2382,24 @@ static void DecodePLOCK(Word Code) {
         if (AdrResult.Type != ModNone) {
             DAsmCode[0] = 0x0ac081 + (AdrResult.Mode << 8);
             DAsmCode[1] = AdrResult.Val;
-            CodeLen     = 2;
+            set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
+            CodeLen = 2;
         }
     }
 }
 
 static void DecodePLOCKR_PUNLOCKR(Word Code) {
     if (ChkArgCnt(1, 1) && ChkMinCPU(CPU56300)) {
-        Boolean OK;
+        Boolean      OK;
+        tSymbolFlags flags;
 
-        DAsmCode[1] = (EvalStrIntExpression(&ArgStr[1], AdrInt, &OK) - EProgCounter())
+        DAsmCode[1] = (EvalStrIntExpressionWithFlags(&ArgStr[1], AdrInt, &OK, &flags)
+                       - EProgCounter())
                       & 0xffffff;
         if (OK) {
             DAsmCode[0] = Code;
-            CodeLen     = 2;
+            set_d_guessed(flags, 1, 1, 0xffffff);
+            CodeLen = 2;
         }
     }
 }
@@ -2338,10 +2416,12 @@ static void DecodeJMP_JSR(Word Code) {
             if (((AdrResult.Val & 0xfff000) == 0) && (AdrResult.ShortMode != 2)) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x0c0000 + AddVal + (AdrResult.Val & 0xfff);
+                set_d_guessed(AdrResult.symbol_flags, 0, 1, 0xfff);
             } else {
                 CodeLen     = 2;
                 DAsmCode[0] = 0x0af080 + AddVal;
                 DAsmCode[1] = AdrResult.Val;
+                set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
             }
         } else if (AdrResult.Type != ModNone) {
             CodeLen     = 1;
@@ -2359,10 +2439,12 @@ static void DecodeJcc(Word Condition) {
             if (((AdrResult.Val & 0xfff000) == 0) && (AdrResult.ShortMode != 2)) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x0e0000 + (Condition << 12) + (AdrResult.Val & 0xfff);
+                set_d_guessed(AdrResult.symbol_flags, 0, 1, 0xfff);
             } else {
                 CodeLen     = 2;
                 DAsmCode[0] = 0x0af0a0 + Condition;
                 DAsmCode[1] = AdrResult.Val;
+                set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
             }
         } else if (AdrResult.Type != ModNone) {
             CodeLen     = 1;
@@ -2380,10 +2462,12 @@ static void DecodeJScc(Word Condition) {
             if (((AdrResult.Val & 0xfff000) == 0) && (AdrResult.ShortMode != 2)) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x0f0000 + (Condition << 12) + (AdrResult.Val & 0xfff);
+                set_d_guessed(AdrResult.symbol_flags, 0, 1, 0xfff);
             } else {
                 CodeLen     = 2;
                 DAsmCode[0] = 0x0bf0a0 + Condition;
                 DAsmCode[1] = AdrResult.Val;
+                set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
             }
         } else if (AdrResult.Type != ModNone) {
             CodeLen     = 1;
@@ -2406,8 +2490,9 @@ static void DecodeBitJmp(Word Code) {
         } else if (*LeftComp.str.p_str != '#') {
             WrError(ErrNum_OnlyImmAddr);
         } else {
-            DAsmCode[1] = EvalStrIntExpression(&RightComp, AdrInt, &OK);
+            DAsmCode[1] = EvalStrIntExpressionWithFlags(&RightComp, AdrInt, &OK, &Flags);
             if (OK) {
+                set_d_guessed(Flags, 1, 1, 0xffffff);
                 h = EvalStrIntExpressionOffsWithFlags(&LeftComp, 1, Int8, &OK, &Flags);
                 if (mFirstPassUnknown(Flags)) {
                     h &= 15;
@@ -2416,6 +2501,7 @@ static void DecodeBitJmp(Word Code) {
                     if ((h < 0) || (h > 23)) {
                         WrError(ErrNum_OverRange);
                     } else {
+                        or_d_guessed(Flags, 0, 1, 31);
                         Reg2 = ((Code & 1) << 5) + (((LongInt)(Code >> 1)) << 16);
                         if (DecodeGeneralReg(MidComp.str.p_str, &Reg1)) {
                             CodeLen     = 2;
@@ -2432,12 +2518,14 @@ static void DecodeBitJmp(Word Code) {
                                     CodeLen     = 2;
                                     DAsmCode[0] = 0x0a0080 + h + Reg2 + Reg3
                                                   + (AdrResult.Val << 8);
+                                    or_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                                 } else if (
                                         (AdrResult.Val >= MemLimit - 0x3f)
                                         && (AdrResult.Val <= MemLimit)) {
                                     CodeLen     = 2;
                                     DAsmCode[0] = 0x0a8080 + h + Reg2 + Reg3
                                                   + ((AdrResult.Val & 0x3f) << 8);
+                                    or_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                                 } else if (
                                         (MomCPU >= CPU56300)
                                         && (AdrResult.Val >= MemLimit - 0x7f)
@@ -2447,6 +2535,7 @@ static void DecodeBitJmp(Word Code) {
                                                   + (((LongInt)(Code >> 1)) << 14);
                                     DAsmCode[0] = 0x018080 + h + Reg2 + Reg3
                                                   + ((AdrResult.Val & 0x3f) << 8);
+                                    or_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                                 } else {
                                     WrError(ErrNum_OverRange);
                                 }
@@ -2476,6 +2565,7 @@ static void DecodeDO_DOR(Word Code) {
                     = EvalStrIntExpressionWithResult(&RightComp, AdrInt, &EvalResult) - 1;
             if (EvalResult.OK) {
                 ChkSpace(SegCode, EvalResult.AddrSpaceMask);
+                set_d_guessed(EvalResult.Flags, 1, 1, 0xffffff);
                 if (!as_strcasecmp(LeftComp.str.p_str, "FOREVER")) {
                     if (ChkMinCPU(CPU56300)) {
                         DAsmCode[0] = 0x000203 - Code;
@@ -2495,6 +2585,7 @@ static void DecodeDO_DOR(Word Code) {
                         CodeLen     = 2;
                         DAsmCode[0] = 0x060080 + (Reg1 >> 8) + ((Reg1 & 0xff) << 8)
                                       + (Code << 4);
+                        or_d_guessed(EvalResult.Flags, 0, 1, 0xff0f);
                     }
                 } else {
                     tAdrResult AdrResult;
@@ -2508,6 +2599,7 @@ static void DecodeDO_DOR(Word Code) {
                             DAsmCode[0] = 0x060000 + (AdrResult.Val << 8)
                                           + (Ord(AdrResult.Seg == SegYData) << 6)
                                           + (Code << 4);
+                            or_d_guessed(AdrResult.symbol_flags, 0, 1, 63 << 8);
                         }
                     } else {
                         CodeLen     = 2;
@@ -2563,6 +2655,7 @@ static void DecodeREP(Word Code) {
                 CodeLen = 1;
                 DAsmCode[0]
                         = 0x0600a0 + (AdrResult.Val >> 8) + ((AdrResult.Val & 0xff) << 8);
+                or_d_guessed(AdrResult.symbol_flags, 0, 1, 0xff << 8);
             }
         } else if (AdrResult.Type == ModAbs) {
             if ((AdrResult.Val < 0) || (AdrResult.Val > 63)) {
@@ -2571,10 +2664,12 @@ static void DecodeREP(Word Code) {
                 CodeLen     = 1;
                 DAsmCode[0] = 0x060020 + (AdrResult.Val << 8)
                               + (Ord(AdrResult.Seg == SegYData) << 6);
+                or_d_guessed(AdrResult.symbol_flags, 0, 1, 0xff << 8);
             }
         } else {
             CodeLen     = 1 + AdrResult.Cnt;
             DAsmCode[1] = AdrResult.Val;
+            set_d_guessed(AdrResult.symbol_flags, 1, 1, 0xffffff);
             DAsmCode[0] = 0x064020 + (AdrResult.Mode << 8)
                           + (Ord(AdrResult.Seg == SegYData) << 6);
         }
@@ -2812,19 +2907,22 @@ static void SwitchTo_56K(void) {
         MemLimit = 0xffff;
     }
 
-    ValidSegs           = (1 << SegCode) | (1 << SegXData) | (1 << SegYData);
-    Grans[SegCode]      = 4;
-    ListGrans[SegCode]  = 4;
-    SegInits[SegCode]   = 0;
-    SegLimits[SegCode]  = MemLimit;
-    Grans[SegXData]     = 4;
-    ListGrans[SegXData] = 4;
-    SegInits[SegXData]  = 0;
-    SegLimits[SegXData] = MemLimit;
-    Grans[SegYData]     = 4;
-    ListGrans[SegYData] = 4;
-    SegInits[SegYData]  = 0;
-    SegLimits[SegYData] = MemLimit;
+    ValidSegs                   = (1 << SegCode) | (1 << SegXData) | (1 << SegYData);
+    Grans[SegCode]              = 4;
+    ListGrans[SegCode]          = 4;
+    SegInits[SegCode]           = 0;
+    SegLimits[SegCode]          = MemLimit;
+    grans_bits_unused[SegCode]  = 8;
+    Grans[SegXData]             = 4;
+    ListGrans[SegXData]         = 4;
+    SegInits[SegXData]          = 0;
+    SegLimits[SegXData]         = MemLimit;
+    grans_bits_unused[SegXData] = 8;
+    Grans[SegYData]             = 4;
+    ListGrans[SegYData]         = 4;
+    SegInits[SegYData]          = 0;
+    SegLimits[SegYData]         = MemLimit;
+    grans_bits_unused[SegYData] = 8;
 
     onoff_packing_add(True);
 
