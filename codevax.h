@@ -1,6 +1,6 @@
 #ifndef CODEVAX_H
 #define CODEVAX_H
-/* codepdp11.h */
+/* codevax.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */

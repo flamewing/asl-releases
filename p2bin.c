@@ -557,12 +557,12 @@ static as_cmd_rec_t P2BINParams[] = {
         {      "e",     CMD_EntryAdr},
         {      "S",  CMD_StartHeader},
         {      "k",    CMD_AutoErase},
-        {"SEGMENT", CMD_ForceSegment}
+        {"SEGMENT", CMD_ForceSegment},
+        {      "o",  cmd_target_name}
 };
 
 int main(int argc, char** argv) {
     as_cmd_results_t cmd_results;
-    char*            p_target_name;
     char const*      p_src_name;
     StringRecPtr     p_src_run;
 
@@ -600,6 +600,7 @@ int main(int argc, char** argv) {
     AutoErase        = False;
     StartHeader      = 0;
     ValidSegment     = SegCode;
+    *target_name     = '\0';
 
     as_cmd_register(P2BINParams, as_array_size(P2BINParams));
     switch (as_cmd_process(argc, argv, "P2BINCMD", &cmd_results)) {
@@ -621,11 +622,19 @@ int main(int argc, char** argv) {
     }
 
     if (cmd_results.write_help_exit) {
-        char *ph1, *ph2;
+        char *      ph1, *ph2;
+        char const* p_usage_msg   = getmessage(Num_InfoMessUsage);
+        int         usage_msg_len = strlen(p_usage_msg);
 
         chkio_printf(
-                OutName, "%s%s%s\n", getmessage(Num_InfoMessHead1),
-                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessHead2));
+                OutName, "%s%s %s\n", p_usage_msg, as_cmdarg_get_executable_name(),
+                getmessage(Num_InfoMessUsage1));
+        chkio_printf(
+                OutName, "%*.*s%s %s\n", usage_msg_len, usage_msg_len, "",
+                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessUsage2));
+        chkio_printf(
+                OutName, "%*.*s%s %s\n", usage_msg_len, usage_msg_len, "",
+                as_cmdarg_get_executable_name(), getmessage(Num_InfoMessUsage3));
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
              ph1 = ph2 + 1, ph2 = strchr(ph1, '\n')) {
             *ph2 = '\0';
@@ -644,33 +653,33 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    p_target_name = MoveAndCutStringListLast(&cmd_results.file_arg_list);
-    if (!p_target_name || !*p_target_name) {
-        if (p_target_name) {
-            free(p_target_name);
+    if (!*target_name) {
+        char* p_target_name = MoveAndCutStringListLast(&cmd_results.file_arg_list);
+        if (!p_target_name || !*p_target_name) {
+            if (p_target_name) {
+                free(p_target_name);
+            }
+            p_target_name = NULL;
+            chkio_fprintf(stderr, OutName, "%s\n", getmessage(Num_ErrMsgTargMissing));
+            exit(1);
         }
-        p_target_name = NULL;
-        chkio_fprintf(stderr, OutName, "%s\n", getmessage(Num_ErrMsgTargMissing));
-        exit(1);
+        strmaxcpy(target_name, p_target_name, sizeof target_name);
+        free(p_target_name);
     }
 
-    strmaxcpy(TargName, p_target_name, STRINGSIZE);
+    strmaxcpy(TargName, target_name, STRINGSIZE);
     if (!RemoveOffset(TargName, &Dummy)) {
-        strmaxcpy(TargName, p_target_name, STRINGSIZE);
-        free(p_target_name);
-        p_target_name = NULL;
+        strmaxcpy(TargName, target_name, STRINGSIZE);
         ParamError(False, TargName);
     }
 
     /* special case: only one argument <name> treated like <name>.p -> <name).bin */
 
     if (StringListEmpty(cmd_results.file_arg_list)) {
-        AddStringListLast(&cmd_results.file_arg_list, p_target_name);
+        AddStringListLast(&cmd_results.file_arg_list, target_name);
         DelSuffix(TargName);
     }
     AddSuffix(TargName, STRINGSIZE, BinSuffix);
-    free(p_target_name);
-    p_target_name = NULL;
 
     MaxGran = 1;
     if (StartAuto || StopAuto) {

@@ -291,3 +291,11 @@ I assume that AS and AS2MSG are located in a directory listed in the `PATH` vari
 <!-- markdownlint-enable MD025 -->
 
 When P2BIN inserts a checksum, it warns if the final output byte contains source data that the checksum would overwrite. Reserve that byte explicitly or extend the output range with padding.
+
+### Explicit output filenames
+
+`PBIND`, `P2HEX`, and `P2BIN` accept `-o filename` to select the output file.
+Without `-o`, the last non-option filename is the output and earlier filenames
+are inputs. With `-o`, every non-option filename is an input, including wildcard
+matches. PBIND defaults missing extensions to `.p`; P2HEX and P2BIN keep their
+usual output extension rules. PBIND options may be stored in `PBINDCMD`.

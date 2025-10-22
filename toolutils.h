@@ -38,6 +38,8 @@ extern Word FileID;
 
 extern char const* OutName;
 
+extern String target_name;
+
 extern void WrCopyRight(char const* Msg);
 
 extern void DelSuffix(char* Name);
@@ -76,6 +78,8 @@ extern as_cmd_result_t CMD_FilterList(Boolean Negate, char const* Arg);
 extern as_cmd_result_t CMD_Range(
         LongWord* pStart, LongWord* pStop, Boolean* pStartAuto, Boolean* pStopAuto,
         char const* Arg);
+
+extern as_cmd_result_t cmd_target_name(Boolean negate, char const* p_arg);
 
 extern Boolean FilterOK(Byte Header);
 

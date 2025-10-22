@@ -2820,7 +2820,7 @@ static void DecodeLD(Word IsLDW) {
                     return;
                 }
                 append_prefix(0xdd);
-                append_opcode((OpSize == eSymbolSize16Bit) ? 0x21 : 0x3e);
+                append_opcode((OpSize == eSymbolSize16Bit) ? 0x11 : 0x3e);
                 append_adr_vals(&arg1_adr_vals);
                 append_adr_vals(&adr_vals);
                 break;

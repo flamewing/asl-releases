@@ -1,4 +1,4 @@
-/* codepdp11.c */
+/* codevax.c */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
 /*                                                                           */
@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "codevax.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -17,7 +19,6 @@
 #include "asmpars.h"
 #include "asmsub.h"
 #include "bpemu.h"
-#include "codepdp11.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "decfloat.h"
@@ -158,7 +159,7 @@ static Boolean decode_reg_core(char const* p_arg, Byte* p_result, tSymbolSize* p
 
 /*!------------------------------------------------------------------------
  * \fn     dissect_reg_vax(char *p_dest, size_t dest_size, tRegInt value, tSymbolSize inp_size)
- * \brief  dissect register symbols - PDP-11 variant
+ * \brief  dissect register symbols - VAX variant
  * \param  p_dest destination buffer
  * \param  dest_size destination buffer size
  * \param  value numeric register value
@@ -1683,6 +1684,8 @@ static void init_fields(void) {
             eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat
                     | eIntPseudoFlag_DECFormat,
             DecodeIntelDO);
+
+    AddInstTable(InstTable, "REG", 0, CodeREG);
 }
 
 /*!------------------------------------------------------------------------
@@ -1708,8 +1711,6 @@ static void deinit_fields(void) {
 
 static void intern_symbol_vax(char* p_arg, TempResult* p_result) {
     Byte reg_num;
-    (void)p_arg;
-    (void)p_result;
 
     if (decode_reg_core(p_arg, &reg_num, &p_result->DataSize)) {
         p_result->Typ                       = TempReg;
@@ -1777,13 +1778,11 @@ static void switch_to_vax(void* p_user) {
     SegInits[SegCode]  = 0;
     SegLimits[SegCode] = IntTypeDefs[UInt32].Max;
 
-    MakeCode     = make_code_vax;
-    IsDef        = is_def_vax;
-    SwitchFrom   = switch_from_vax;
-    InternSymbol = intern_symbol_vax;
-#if 0
-  DissectReg = dissect_reg_vax;
-#endif
+    MakeCode      = make_code_vax;
+    IsDef         = is_def_vax;
+    SwitchFrom    = switch_from_vax;
+    InternSymbol  = intern_symbol_vax;
+    DissectReg    = dissect_reg_vax;
     multi_char_le = True;
 
     init_fields();
