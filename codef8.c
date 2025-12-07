@@ -276,7 +276,7 @@ static void DecodeShift(Word Code) {
 static void DecodePORT(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegIO, 0, 0xff);
+    code_equate_type(SegIO, UInt8);
 }
 
 /*---------------------------------------------------------------------------*/

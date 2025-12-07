@@ -337,14 +337,14 @@ static LongInt GetNextCodeAddress(void) {
 static void DecodePORT(Word Index) {
     UNUSED(Index);
 
-    CodeEquate(SegIO, 0, 0x3f);
+    code_equate_type(SegIO, UInt6);
 }
 
 static void DecodeSFR(Word Index) {
     LargeWord Start = (pCurrCPUProps->RegistersMapped ? RegBankSize : 0);
     UNUSED(Index);
 
-    CodeEquate(SegData, Start, Start + pCurrCPUProps->IOAreaSize);
+    code_equate_range(SegData, Start, Start + pCurrCPUProps->IOAreaSize);
 }
 
 static void AppendCode(Word Code) {

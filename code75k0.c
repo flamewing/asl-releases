@@ -1480,7 +1480,7 @@ static void DecodeSEL(Word Code) {
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegData, 0, 0xfff);
+    code_equate_type(SegData, UInt12);
 }
 
 static void DecodeBIT(Word Code) {

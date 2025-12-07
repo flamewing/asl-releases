@@ -3026,7 +3026,7 @@ static void DecodeTCC(Word Code) {
 
 static void DecodePORT(Word Code) {
     UNUSED(Code);
-    CodeEquate(SegIO, 0, SegLimits[SegIO]);
+    code_equate_type(SegIO, UInt16);
 }
 
 /*!------------------------------------------------------------------------

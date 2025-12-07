@@ -1695,7 +1695,7 @@ static void DecodeSLAW(Word Code) {
 static void DecodeREG(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegReg, 0, 0x1ff);
+    code_equate_type(SegReg, UInt9);
 }
 
 static void DecodeBIT(Word Code) {

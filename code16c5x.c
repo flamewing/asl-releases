@@ -152,7 +152,7 @@ static void DecodeCALL_GOTO(Word Code) {
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegData, 0, 0x1f);
+    code_equate_type(SegData, UInt5);
 }
 
 static void DecodeDATA_16C5x(Word Code) {

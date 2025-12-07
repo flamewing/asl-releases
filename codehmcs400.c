@@ -807,7 +807,7 @@ static void DecodeDATA_HMCS400(Word Code) {
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegData, 0, SegLimits[SegData]);
+    code_equate_segment(SegData);
 }
 
 /*-------------------------------------------------------------------------*/

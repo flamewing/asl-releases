@@ -44,6 +44,15 @@
 
 #define AN_PCREL_OUTDISP_ALLOW_SIGNEXT 0
 
+/* If set to Int32 instead of SInt32, allow outer displacements of
+   0x80000000...0xffffffff on 68020++.  The displacement is signed, but
+   some people like to write negative displacements as positive hex constants,
+   or regard the (signed) displacement as an (unsigned) base address.
+   In this special case, we may tolerate this, since there is an address
+   space wraparound at 4 GBytes, and +0xffffffff and -1 yield the same result: */
+
+#define AN_DISPTYPE_32 Int32
+
 typedef enum {
     e68KGen1a, /* 68008/68000 */
     e68KGen1b, /* 68010/68012 */
@@ -483,6 +492,19 @@ static void append_adr_vals_16(tAdrResult* p_result, Word value, tSymbolFlags fl
 static void append_adr_vals_32(tAdrResult* p_result, LongWord value, tSymbolFlags flags) {
     append_adr_vals(p_result, value >> 16, 0xffff, flags);
     append_adr_vals(p_result, value & 0xffff, 0xffff, flags);
+}
+
+static void append_adr_vals_64(
+        tAdrResult* p_result, LargeWord value, tSymbolFlags flags) {
+    unsigned z;
+    Word     guess_mask = mFirstPassUnknownOrQuestionable(flags) ? 0xffff : 0x0000;
+
+    /* re-use core function to dispose 64 bit constant: */
+    mot_64_to_16(&p_result->Vals[p_result->Cnt >> 1], value, True);
+    for (z = 0; z < 4; z++) {
+        p_result->guess_masks[z] = guess_mask;
+    }
+    p_result->Cnt += 8;
 }
 
 static void CopyAdrVals(unsigned dest_index, tAdrResult const* p_adr_result) {
@@ -1109,6 +1131,19 @@ static int pc_outdisp_qualifier(
         char const* p_arg, int last_non_blank_pos, int split_pos) {
     int z;
 
+    /* Nameless temporary labels are valid displacement expressions. */
+    if ((last_non_blank_pos >= 0) && (last_non_blank_pos < LOCSYMSIGHT)
+        && ((p_arg[0] == '+') || (p_arg[0] == '-'))) {
+        for (z = 1; z <= last_non_blank_pos; z++) {
+            if (p_arg[z] != p_arg[0]) {
+                break;
+            }
+        }
+        if (z > last_non_blank_pos) {
+            return split_pos;
+        }
+    }
+
     if ((last_non_blank_pos < 0) || (p_arg[last_non_blank_pos] != '*')) {
         return -1;
     }
@@ -1199,18 +1234,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
             }
             break;
         case eSymbolSize64Bit: {
-            LargeInt QVal
-                    = EvalStrIntExpressionWithResult(&ImmArg, LargeIntType, &eval_result);
+            LargeInt QVal = EvalStrIntExpressionWithResult(&ImmArg, Int64, &eval_result);
             if (eval_result.OK) {
-                append_adr_vals_32(
-                        pResult,
-#ifdef HAS64
-                        QVal >> 32,
-#else
-                        (QVal & 0x80000000ul) ? 0xfffffffful : 0x00000000ul,
-#endif
-                        eval_result.Flags);
-                append_adr_vals_32(pResult, QVal & 0xfffffffful, eval_result.Flags);
+                append_adr_vals_64(pResult, QVal, eval_result.Flags);
             }
             break;
         }
@@ -1587,14 +1613,15 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                      * and no size given */
 
                     if (OutDispLen == eSymbolSizeUnknown) {
-                        DispIntType = CheckFamilyCore(ExtAddrFamilyMask) ? SInt32
+                        DispIntType = CheckFamilyCore(ExtAddrFamilyMask) ? AN_DISPTYPE_32
 #if AN_PCREL_OUTDISP_ALLOW_SIGNEXT
                                                                          : Int16;
 #else
                                                                          : SInt16;
 #endif
                     } else {
-                        DispIntType = (OutDispLen >= eSymbolSize32Bit) ? SInt32 : SInt16;
+                        DispIntType = (OutDispLen >= eSymbolSize32Bit) ? AN_DISPTYPE_32
+                                                                       : SInt16;
                     }
 
                     HVal = EvalStrIntExpressionWithResult(
@@ -3445,7 +3472,11 @@ static void DecodeMOVEQ(Word Index) {
                     char      str[40];
                     LargeWord v1 = Value, v2 = Value | 0xffffff00ul;
 
-                    as_snprintf(str, sizeof(str), "%" PRIx64 " -> %" PRIx64, v1, v2);
+                    as_snprintf(
+                            str, sizeof(str),
+                            "%lllx"
+                            " -> %lllx",
+                            v1, v2);
                     WrXErrorPos(ErrNum_SignExtension, str, &ArgStr[1].Pos);
                 }
                 CodeLen = 2;
@@ -6989,9 +7020,7 @@ static Boolean ChkPC_68k(LargeWord Addr) {
     if (!((1 << ActPC) & ValidSegs)) {
         return False;
     } else {
-        LargeWord ExtAddr = Addr & 0xfffffffful;
-        ExtAddr += 0xffffffff80000000ul;
-        ExtAddr ^= 0xffffffff80000000ul;
+        LargeWord ExtAddr = (LargeWord)(LargeInt)(LongInt)(LongWord)Addr;
         if (Addr == ExtAddr) {
             Addr &= 0xfffffffful;
         }

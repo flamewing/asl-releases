@@ -17,7 +17,6 @@
 #include "asmfnums.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "strutil.h"
@@ -338,7 +337,7 @@ static void DumpDebugInfo_NOICE(void) {
             if ((Run->Contents.Space == SegCode) && (Run->Contents.FileName == ActFile)) {
                 if (!HadLines) {
                     GetAddressRange(ActFile, &Start, &End);
-                    as_snprintf(Tmp1, sizeof(Tmp1), "%" PRIX64, Start);
+                    as_snprintf(Tmp1, sizeof(Tmp1), "%lllX", Start);
                     errno = 0;
                     fprintf(MAPFile, "FILE %s 0x%s\n",
                             GetFileName(Run->Contents.FileName), Tmp1);
@@ -347,7 +346,7 @@ static void DumpDebugInfo_NOICE(void) {
                 errno = 0;
                 as_snprintf(Tmp1, sizeof(Tmp1), "%" PRId32, Run->Contents.LineNum);
                 as_snprintf(
-                        Tmp2, sizeof(Tmp2), "%" PRIX64,
+                        Tmp2, sizeof(Tmp2), "%lllX",
                         (LargeInt)Run->Contents.Address - Start);
                 fprintf(MAPFile, "LINE %s 0x%s\n", Tmp1, Tmp2);
                 ChkIO(ErrNum_FileWriteError);
@@ -356,7 +355,7 @@ static void DumpDebugInfo_NOICE(void) {
             Run = Run->Next;
         }
         if (HadLines) {
-            as_snprintf(Tmp1, sizeof(Tmp1), "%" PRIX64, End);
+            as_snprintf(Tmp1, sizeof(Tmp1), "%lllX", End);
             errno = 0;
             fprintf(MAPFile, "ENDFILE 0x%s\n", Tmp1);
             ChkIO(ErrNum_FileWriteError);

@@ -255,9 +255,8 @@ Boolean WasIF, WasMACRO;
 void AsmDefInit(void) {
     LongInt z;
 
-    DoLst      = eLstMacroExpAll;
-    PassNo     = 1;
-    MaxSymPass = 1;
+    DoLst  = eLstMacroExpAll;
+    PassNo = 1;
 
     LineSum = 0;
 

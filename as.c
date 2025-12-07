@@ -156,6 +156,7 @@
 #include "codev60.h"
 #include "codevax.h"
 #include "codevector.h"
+#include "codewe32.h"
 #include "codexa.h"
 #include "codexcore.h"
 #include "codexgate.h"
@@ -3154,12 +3155,10 @@ static void AssembleFile_InitPass(void) {
     as_snprintf(ArchVal, sizeof(ArchVal), "%s-%s", ARCHPRNAME, ARCHSYSNAME);
     strmaxcpy(TmpCompStr, ArchName, sizeof(TmpCompStr));
     EnterStringSymbol(&TmpComp, ArchVal, True);
+    strmaxcpy(TmpCompStr, IntWidthName, sizeof(TmpCompStr));
+    EnterIntSymbol(&TmpComp, LARGEBITS, SegNone, True);
     strmaxcpy(TmpCompStr, Has64Name, sizeof(TmpCompStr));
-#ifdef HAS64
-    EnterIntSymbol(&TmpComp, 1, SegNone, True);
-#else
-    EnterIntSymbol(&TmpComp, 0, SegNone, True);
-#endif
+    EnterIntSymbol(&TmpComp, (LARGEBITS >= 64) ? 1 : 0, SegNone, True);
     strmaxcpy(TmpCompStr, CaseSensName, sizeof(TmpCompStr));
     EnterIntSymbol(&TmpComp, Ord(CaseSensitive), SegNone, True);
     if (PassNo == 0) {
@@ -4386,6 +4385,26 @@ static as_cmd_result_t CMD_MaxIncludeLevel(Boolean Negate, char const* pArg) {
     }
 }
 
+#define DEFAULT_MAXSYMPASS 1
+
+static as_cmd_result_t CMD_MaxSymPass(Boolean Negate, char const* pArg) {
+    if (Negate) {
+        MaxSymPass = DEFAULT_MAXSYMPASS;
+        return e_cmd_ok;
+    } else if (!pArg[0]) {
+        return e_cmd_err;
+    } else {
+        char const* p_end;
+        Integer     NewMaxSymPass = as_cmd_strtol(pArg, &p_end);
+
+        if (*p_end || (NewMaxSymPass < 0)) {
+            return e_cmd_err;
+        }
+        MaxSymPass = NewMaxSymPass;
+        return e_cmd_arg;
+    }
+}
+
 static as_cmd_rec_t const ASParams[] = {
         {                 "A",      CMD_BalanceTree},
         {             "alias",         CMD_CPUAlias},
@@ -4409,6 +4428,7 @@ static as_cmd_rec_t const ASParams[] = {
         {                 "M",      CMD_MacroOutput},
         {         "maxerrors",        CMD_MaxErrors},
         {       "maxinclevel",  CMD_MaxIncludeLevel},
+        {        "maxsympass",       CMD_MaxSymPass},
         {                 "n",    CMD_NumericErrors},
         {         "noicemask",        CMD_NoICEMask},
         {                 "o",          CMD_OutFile},
@@ -4585,6 +4605,7 @@ int main(int argc, char** argv) {
         codecop8_init();
         codesc14xxx_init();
         codens32k_init();
+        codewe32_init();
         codeace_init();
         codecp3f_init();
         codef8_init();
@@ -4659,6 +4680,7 @@ int main(int argc, char** argv) {
     ListPCZeroPad       = False;
     MaxIncludeLevel     = DEFAULT_MAXINCLUDELEVEL;
     write_cpu_list_exit = False;
+    MaxSymPass          = DEFAULT_MAXSYMPASS;
 
     LineZ         = 0;
     screen_height = 0;

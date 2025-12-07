@@ -197,3 +197,5 @@ It is possible that the file contains empty lines or comments (semi colon at lin
 Processor identifiers `$1f` and `$20` identify SC61860 and SC62015 respectively.
 
 The μCOM-43/44/45 family uses header ID `$28`.
+
+WE32xxx object records use processor header ID `$2c`.

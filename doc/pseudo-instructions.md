@@ -3129,3 +3129,11 @@ allows early references to record the symbol's use for `SYMUSED` or `IFUSED`.
 The placeholder has no value; evaluating it still counts as an undefined
 reference until the symbol is defined. A section-qualified `FORWARD` declaration
 must name the current section, rather than a higher section.
+
+### WE32xxx execution modes
+
+For WE32xxx, `EXECMODE` has the same role as VAX `ACCMODE`: arguments are
+`KERNEL`, `EXECUTIVE`, `SUPERVISOR`, `USER`, or the corresponding numbers 0–3.
+AS checks instructions and register accesses against the selected mode.
+
+WE32xxx uses C integer syntax, `.` as its program-counter symbol, and the `BYTE`, `HALF`, `WORD`, `DS` and `EXECMODE` directives. Its code address space is 4 GiB.

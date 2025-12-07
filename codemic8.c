@@ -130,7 +130,7 @@ static tRegEvalResult IsWReg(tStrComp const* pArg, LongWord* pValue, Boolean Mus
 static void DecodePort(Word Index) {
     UNUSED(Index);
 
-    CodeEquate(SegIO, 0, SegLimits[SegIO]);
+    code_equate_type(SegIO, UInt8);
 }
 
 static void DecodeFixed(Word Index) {

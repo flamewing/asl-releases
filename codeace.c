@@ -565,7 +565,7 @@ static void DecodeST(Word Index) {
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegCode, 0, 0xff);
+    code_equate_type(SegCode, UInt8);
 }
 
 /*---------------------------------------------------------------------------*/

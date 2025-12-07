@@ -605,7 +605,7 @@ int main(int argc, char** argv) {
             PartRun->CodeStart += Diff;
             if (msg_level >= e_msg_level_verbose) {
                 printf("%s 0x%" PRIx64 "\n", getmessage(Num_InfoMsgLocating),
-                       PartRun->CodeStart);
+                       (uint64_t)PartRun->CodeStart);
             }
             if (PartRun->RelocInfo) {
                 PExportEntry ExpRun, ExpEnd;

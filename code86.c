@@ -1818,7 +1818,7 @@ static void DecodeASSUME(void) {
 static void DecodePORT(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegIO, 0, 0xffff);
+    code_equate_type(SegIO, UInt16);
 }
 
 /*!------------------------------------------------------------------------

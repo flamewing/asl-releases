@@ -17,4 +17,5 @@
 #cmakedefine ARCHSYSNAME "@ARCHSYSNAME@"
 #cmakedefine AS_IEEE_EXTENDED
 #define AS_LONG_DOUBLE_SIZE @AS_LONG_DOUBLE_SIZE@
+#cmakedefine AS_HAVE_INT128 1
 #endif

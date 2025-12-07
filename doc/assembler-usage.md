@@ -1057,3 +1057,11 @@ a parent section, or global scope are both outside macro expansions.
 
 For uses outside these cases, a `FORWARD` declaration creates a placeholder
 that can store the usage flag before the symbol's value is defined.
+
+### Chained forward references
+
+`-maxsympass n` sets the last pass in which unresolved forward references are
+allowed; the default is 1. A larger value may be needed for chained references.
+`-maxinclevel n` sets the include nesting limit, whose default is 200.
+
+The CMake option `AS_USE_INT128` enables 128-bit expressions when the compiler supports them. It defaults to `OFF` to preserve existing 64-bit expression semantics, including comparisons between signed phase addresses and unsigned hexadecimal constants. Sources can query `INTWIDTH` to adapt to either mode. Listing addresses retain their 64-bit representation.

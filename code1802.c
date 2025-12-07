@@ -59,7 +59,7 @@ static Boolean PutCode(tOrder const* pOrder) {
 static void DecodePORT(Word Opcode) {
     UNUSED(Opcode);
 
-    CodeEquate(SegIO, 1, 0x7);
+    code_equate_range(SegIO, 1, 0x7);
 }
 
 static void DecodeFixed(Word Index) {

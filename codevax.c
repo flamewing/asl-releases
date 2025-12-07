@@ -227,7 +227,6 @@ static Boolean reset_adr_vals(adr_vals_t* p_vals) {
  * \param  p_vals where to append
  * \param  int_value value to append
  * \param  size integer size
- * \return
  * ------------------------------------------------------------------------ */
 
 static void append_adr_vals_int(
@@ -437,14 +436,14 @@ static Boolean decode_adr(
             case eSymbolSize16Bit:
                 eval_int_type = Int16;
                 goto int_common;
-            case eSymbolSize64Bit:
-            case eSymbolSize128Bit:
-#ifdef HAS64
-                eval_int_type = Int64;
-                goto int_common;
-#endif
             case eSymbolSize32Bit:
                 eval_int_type = Int32;
+                goto int_common;
+            case eSymbolSize64Bit:
+                eval_int_type = Int64;
+                goto int_common;
+            case eSymbolSize128Bit:
+                eval_int_type = Int128;
                 goto int_common;
 
             case eSymbolSizeFloat32Bit:

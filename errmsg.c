@@ -41,7 +41,11 @@ static Boolean report_error_range(
         tStrComp const* p_comp) {
     char s[100];
 
-    as_snprintf(s, sizeof(s), "%" PRId64 " %c %" PRId64, value, comp_op, ref);
+    as_snprintf(
+            s, sizeof(s),
+            "%llld"
+            " %c %llld",
+            value, comp_op, ref);
     if (p_comp) {
         WrXErrorPos(error_num, s, &p_comp->Pos);
     } else {

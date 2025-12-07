@@ -1938,13 +1938,13 @@ static Boolean DecodeSFR(tStrComp const* pArg, Byte* pCode) {
 /*==========================================================================*/
 /* Adressbereiche */
 
-static LargeWord PortEnd(void) {
+static IntType PortIntType(void) {
     if (is_z380()) {
-        return (LargeWord)IntTypeDefs[ExtFlag ? UInt32 : UInt16].Max;
+        return ExtFlag ? UInt32 : UInt16;
     } else if (is_ez80()) {
-        return 0xffff;
+        return UInt16;
     } else {
-        return 0xff;
+        return UInt8;
     }
 }
 
@@ -5971,7 +5971,7 @@ static void CodePEA(Word Code) {
 static void DecodePORT(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegIO, 0, PortEnd());
+    code_equate_type(SegIO, PortIntType());
 }
 
 static void DecodeLDI_LDD(Word Code) {
@@ -6723,7 +6723,7 @@ static void SwitchTo_Z80(void* p_user) {
         Grans[SegIO]     = 1;
         ListGrans[SegIO] = 1;
         SegInits[SegIO]  = 0;
-        SegLimits[SegIO] = PortEnd();
+        SegLimits[SegIO] = IntTypeDefs[PortIntType()].Max;
         Reg16Cnt         = 6;
     }
 

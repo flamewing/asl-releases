@@ -602,6 +602,12 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_InvCtrlReg:
         msgno = Num_ErrMsgInvCtrlReg;
         break;
+    case ErrNum_RegAccessibleOnlyInExecMode:
+        msgno = Num_ErrMsgRegAccessibleOnlyInExecMode;
+        break;
+    case ErrNum_RegReadOnlyInExecMode:
+        msgno = Num_ErrMsgRegReadOnlyInExecMode;
+        break;
     case ErrNum_InvReg:
         msgno = Num_ErrMsgInvReg;
         break;

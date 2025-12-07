@@ -79,11 +79,11 @@ char const* literals_get_name(
         as_literal_t const* p_lit, char* p_result, size_t result_size) {
     as_snprintf(p_result, result_size, "LITERAL_");
     if (p_lit->is_forward) {
-        as_snprcatf(p_result, result_size, "F_%" PRIx64, (LargeWord)p_lit->f_count);
+        as_snprcatf(p_result, result_size, "F_%lllx", (LargeWord)p_lit->f_count);
     } else {
         switch (p_lit->size) {
         case eSymbolSize32Bit:
-            as_snprcatf(p_result, result_size, "L_%08" PRIx64, (LargeWord)p_lit->value);
+            as_snprcatf(p_result, result_size, "L_%08lllx", (LargeWord)p_lit->value);
             break;
         case eSymbolSize16Bit:
             as_snprcatf(p_result, result_size, "W_%04x", (unsigned)p_lit->value);

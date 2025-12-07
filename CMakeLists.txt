@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(asl-flamewing
-    VERSION 1.42.297
+    VERSION 1.42.298
     DESCRIPTION "Improved/bugfixed version of Alfred Arnold's The Macro Assembler AS"
     LANGUAGES C
 )
@@ -346,6 +346,12 @@ endif()
 
 include(CheckTypeSize)
 include(CheckCSourceCompiles)
+check_c_source_compiles("int main(void) { __int128 n = 1; return (int)n; }" AS_COMPILER_HAS_INT128)
+option(AS_USE_INT128 "Use 128-bit expressions (changes signed address comparisons)." OFF)
+if(AS_USE_INT128 AND NOT AS_COMPILER_HAS_INT128)
+    message(FATAL_ERROR "128-bit expressions are unsupported by this compiler")
+endif()
+set(AS_HAVE_INT128 ${AS_USE_INT128})
 check_type_size("long double" AS_LONG_DOUBLE_SIZE LANGUAGE C)
 # Select the supported x87 representation by precision, not by OS name.
 check_c_source_compiles("#include <float.h>
@@ -652,6 +658,9 @@ add_library(AS_OBJECTS
     code6805.h
     codeuc43.c
     codeuc43.h
+    codewe32.c
+    codewe32.h
+    int_type.h
     codevax.c
     codevax.h
     coderx.c

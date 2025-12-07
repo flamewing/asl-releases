@@ -348,3 +348,6 @@
 - NEC: *μCOM-43 Single Chip Microcomputer Users’ Manual*, January 1978.
 
 - **ZilZ280:** Zilog Inc., _Z280 MPU Microprocessor Unit Technical Manual_, July 1987.
+
+- AT&T Technologies Inc.: *WE32100 Microprocessor Information Manual*, 1985, 451-000.
+- AT&T Technologies Inc.: *AT&T WE 32-Bit Microprocessors and Peripherals*, August 1987.

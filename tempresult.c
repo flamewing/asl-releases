@@ -267,8 +267,14 @@ int as_tempres_cmp(TempResult const* p_res1, TempResult const* p_res2) {
 int TempResultToFloat(TempResult* pResult) {
     switch (pResult->Typ) {
     case TempInt:
-        pResult->Contents.Float = pResult->Contents.Int;
-        pResult->Typ            = TempFloat;
+        pResult->Contents.Float =
+#ifdef HAS128
+                /* Weird problems converting negative int128_t values
+                   to long double when Valgrind is active: */
+                (QuadInt)
+#endif
+                        pResult->Contents.Int;
+        pResult->Typ = TempFloat;
         break;
     case TempFloat:
         break;
@@ -292,9 +298,7 @@ int as_tempres_append_dynstr(
         as_dynstr_t* p_dest, TempResult const* pResult, int int_radix) {
     switch (pResult->Typ) {
     case TempInt:
-        as_sdprcatf(
-                p_dest, (int_radix == 16) ? "%" PRIx64 : "%" PRId64,
-                pResult->Contents.Int);
+        as_sdprcatf(p_dest, (int_radix == 16) ? "%lllx" : "%llld", pResult->Contents.Int);
         break;
     case TempFloat:
         as_sdprcatf(p_dest, "%0.*llle", AS_FLOAT_DIG + 2, pResult->Contents.Float);

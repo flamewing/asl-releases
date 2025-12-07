@@ -12,6 +12,7 @@
 
 #include "addrspace.h"
 #include "datatypes.h"
+#include "int_type.h"
 
 struct tag_ASSUMERec;
 struct as_nonz_dynstr;
@@ -28,7 +29,10 @@ extern int FindDispBaseSplitWithQualifier(
 #define FindDispBaseSplit(pArg, pArgLen) \
     FindDispBaseSplitWithQualifier(pArg, pArgLen, NULL, "()")
 
-extern void CodeEquate(as_addrspace_t DestSeg, LargeInt Min, LargeInt Max);
+extern void code_equate_type(as_addrspace_t dest_seg, IntType int_type);
+extern void code_equate_range(
+        as_addrspace_t dest_seg, LargeInt min_value, LargeInt max_value);
+#define code_equate_segment(segment) code_equate_range(segment, 0, SegLimits[segment])
 
 extern Boolean QualifyQuote_SingleQuoteConstant(
         char const* pStart, char const* pQuotePos);

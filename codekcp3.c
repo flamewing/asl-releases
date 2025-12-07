@@ -149,7 +149,7 @@ static Boolean IsCond(int OtherArgCnt, LongWord* pErg) {
 static void DecodePort(Word Index) {
     UNUSED(Index);
 
-    CodeEquate(SegIO, 0, SegLimits[SegIO]);
+    code_equate_type(SegIO, UInt8);
 }
 
 static void DecodeConstant(Word Index) {

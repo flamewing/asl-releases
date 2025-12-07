@@ -71,7 +71,7 @@ void as_list_set_max_pc(LargeWord max_pc) {
                 (unsigned)((ListGran() * 8) - gran_bits_unused()));
     }
 
-    as_snprintf(tmp, sizeof(tmp), "%1.*" PRIu64, ListRadixBase, max_pc);
+    as_snprintf(tmp, sizeof(tmp), "%1.*lllu", ListRadixBase, max_pc);
     max_pc_len = strlen(tmp);
     if (max_pc_len > 8) {
         max_pc_len = 8;
@@ -112,7 +112,7 @@ void MakeList(char const* pSrcLine) {
     }
 
     if (!ListToNull && ThisDoLst && (ListMask & 1) && !IFListMask()) {
-        LargeWord ListPC = EProgCounter() - CodeLen;
+        LargeWord ListPC = (QuadWord)(EProgCounter() - CodeLen);
         size_t    sum_len;
         int       inc_column_len[3] = {-1, -1, -1}, lnum_column_len[3] = {-1, -1, -1};
         Word      Index = 0, CurrListGran, SystemListLen;
@@ -323,7 +323,7 @@ void MakeList(char const* pSrcLine) {
                             ThisWordGuessed = get_basmcode_guessed(Index);
                         }
                         as_sdprcatf(
-                                &list_buf, " %0*.*" PRIu64, (int)SystemListLen,
+                                &list_buf, " %0*.*lllu", (int)SystemListLen,
                                 (int)ListRadixBase, ThisWord);
                         if (list_unknown_values && (ThisWordGuessed != 0)) {
                             char  mask_buf[100];

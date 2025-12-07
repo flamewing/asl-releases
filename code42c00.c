@@ -555,7 +555,7 @@ static void decode_calls(Word code) {
 
 static void decode_port(Word code) {
     UNUSED(code);
-    CodeEquate(SegIO, 0, SegLimits[SegCode]);
+    code_equate_segment(SegIO);
 }
 
 /*!------------------------------------------------------------------------

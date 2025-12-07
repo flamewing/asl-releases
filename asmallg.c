@@ -279,19 +279,27 @@ static void IntLine(
         char* pDest, size_t DestSize, LargeWord Inp, tIntConstMode ThisConstMode) {
     switch (ThisConstMode) {
     case eIntConstModeIntel:
-        as_snprintf(pDest, DestSize, "%" PRIx64 "%s", Inp, GetIntConstIntelSuffix(16));
+        as_snprintf(
+                pDest, DestSize,
+                "%lllx"
+                "%s",
+                Inp, GetIntConstIntelSuffix(16));
         if (*pDest > '9') {
             strmaxprep(pDest, "0", DestSize);
         }
         break;
     case eIntConstModeMoto:
-        as_snprintf(pDest, DestSize, "%s%" PRIx64, GetIntConstMotoPrefix(16), Inp);
+        as_snprintf(pDest, DestSize, "%s%lllx", GetIntConstMotoPrefix(16), Inp);
         break;
     case eIntConstModeC:
-        as_snprintf(pDest, DestSize, "0x%" PRIx64, Inp);
+        as_snprintf(pDest, DestSize, "0x%lllx", Inp);
         break;
     case eIntConstModeIBM:
-        as_snprintf(pDest, DestSize, "x'%" PRIx64 "'", Inp);
+        as_snprintf(
+                pDest, DestSize,
+                "x'%lllx"
+                "'",
+                Inp);
         break;
     }
 }
@@ -586,11 +594,7 @@ static void CodeRORG(Word Index) {
     if (*AttrPart.str.p_str != '\0') {
         WrError(ErrNum_UseLessAttr);
     } else if (ChkArgCnt(1, 1)) {
-#ifndef HAS64
-        HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], SInt32, &ValOK, &Flags);
-#else
-        HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int64, &ValOK, &Flags);
-#endif
+        HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], LargeSIntType, &ValOK, &Flags);
         if (mFirstPassUnknown(Flags)) {
             WrError(ErrNum_FirstPassCalc);
         } else if (ValOK) {

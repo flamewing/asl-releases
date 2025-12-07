@@ -1454,7 +1454,8 @@ void TeXNewCommand(Word Index) {
 
     collect_arg_tokens(sum_token, sizeof(sum_token));
     if (!as_strcasecmp(command, "cpu") || !as_strcasecmp(command, "asname")
-        || !as_strcasecmp(command, "errentry") || !as_strcasecmp(command, "headid")) {
+        || !as_strcasecmp(command, "errentry") || !as_strcasecmp(command, "headid")
+        || !as_strcasecmp(command, "pcsymname")) {
         tex_newcommand_add(command, sum_token, num_args);
     }
 }

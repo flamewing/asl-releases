@@ -1995,3 +1995,14 @@ In 8080/8085 Z80 syntax, `J` is always translated to `JP`, since these processor
 `CZP` performs a one-byte call to addresses 0, 4, 8, …, 60. Documentation differs on whether its operand is the address or the opcode vector (0…15). AS interprets values above 15 as addresses and values not divisible by four as vectors. Zero works either way. For 4, 8 and 12, a CODE-space symbol means an address; an untyped number means a vector and produces warning 480.
 
 Define an address with `dest LABEL 4` and use `CZP dest`. If a vector is intended, an `EXPECT 480` / `ENDEXPECT` block can acknowledge the ambiguity.
+
+## AT&T WE32xxx (Bellmac32)
+
+`WE32100` and `WE32200` are supported. WE32200 adds sixteen CPU registers,
+indexed and auto-increment/decrement addressing, and additional instructions.
+`EXECMODE` selects Kernel, Executive, Supervisor, or User mode (0–3), allowing
+AS to check privileged instructions and register accesses.
+
+`BYTE`, `HALF`, and `WORD` correspond to integer `DB`, `DW`, and `DD`;
+`DS` reserves storage. Register access diagnostics 1442 and 1443 identify
+kernel-only registers and registers writable only in kernel mode.

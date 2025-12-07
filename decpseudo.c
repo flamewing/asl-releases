@@ -57,7 +57,7 @@ static void append_digit(Byte digit, Boolean* p_half) {
 void decode_dec_packed(Word index) {
     TempResult  value;
     char const* p_str = NULL;
-    char        tmp_dec_str[33];
+    char        tmp_dec_str[41];
 
     UNUSED(index);
 
@@ -71,7 +71,7 @@ void decode_dec_packed(Word index) {
     case TempNone:
         break;
     case TempInt:
-        as_snprintf(tmp_dec_str, sizeof(tmp_dec_str), "%lld", value.Contents.Int);
+        as_snprintf(tmp_dec_str, sizeof(tmp_dec_str), "%llld", value.Contents.Int);
         p_str = tmp_dec_str;
         goto writeout;
     case TempString:

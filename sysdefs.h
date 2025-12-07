@@ -104,6 +104,12 @@ typedef as_uint64_t Card64;
 #define HAS16
 #define HAS64
 
+#if defined(AS_HAVE_INT128)
+__extension__ typedef __int128          as_int128_t;
+__extension__ typedef unsigned __int128 as_uint128_t;
+#    define HAS128
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* We require C11, so we surely can use prototypes */
 

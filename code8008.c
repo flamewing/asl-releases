@@ -976,7 +976,7 @@ static void DecodeSingleReg(Word Index) {
 static void DecodePORT(Word Index) {
     UNUSED(Index);
 
-    CodeEquate(SegIO, 0, 0x7);
+    code_equate_type(SegIO, UInt3);
 }
 
 /*---------------------------------------------------------------------------*/

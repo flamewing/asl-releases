@@ -352,3 +352,11 @@ address space. PC-relative addressing needs a logical address to compute the dis
 
 Error: a section-qualified `FORWARD` declaration refers to a different,
 higher section. Use the current section for the declaration.
+
+### 1442: register is not accessible in current execution mode
+
+Error: the selected register can only be accessed in kernel mode.
+
+### 1443: register is read-only in current execution mode
+
+Error: the selected register can only be written in kernel mode.

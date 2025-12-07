@@ -34,7 +34,7 @@ static ConstOrder* ConstOrders;
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
 
-    CodeEquate(SegData, 0, 415);
+    code_equate_range(SegData, 0, 415);
 }
 
 static void DecodeDATA_4500(Word Code) {
