@@ -65,9 +65,9 @@ static void print_doc(
  * @param size The size of the buffer.
  */
 static void read_flags(
-        char* file_name, size_t file_size, char const* source_dir, char* buffer,
-        size_t size) {
-    snprintf(file_name, file_size, "%s" PATHSEP "asflags", source_dir);
+        char* file_name, size_t file_size, char const* source_dir, char const* flags_name,
+        char* buffer, size_t size) {
+    snprintf(file_name, file_size, "%s" PATHSEP "%s", source_dir, flags_name);
     FILE* flags = fopen(file_name, "r");
     if (flags == NULL) {
         *buffer = 0;
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
     }
 
     char flags[1024];
-    read_flags(file_name, sizeof(file_name), source_dir, flags, sizeof(flags));
+    read_flags(file_name, sizeof(file_name), source_dir, "asflags", flags, sizeof(flags));
 
     snprintf(
             io_buffer, sizeof(io_buffer),
@@ -262,9 +262,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    read_flags(
+            file_name, sizeof(file_name), source_dir, "p2binflags", flags, sizeof(flags));
     snprintf(
-            io_buffer, sizeof(io_buffer), "%s %s -k -l 0 -r 0x-0x %s" PATHSEP "%s",
-            p2bin_path, quiet, output_dir, test_name);
+            io_buffer, sizeof(io_buffer), "%s %s -k -l 0 -r 0x-0x %s %s" PATHSEP "%s",
+            p2bin_path, quiet, flags, output_dir, test_name);
     printf("Running: %s\n", io_buffer);
     int p2bin_ret = system(io_buffer);
 

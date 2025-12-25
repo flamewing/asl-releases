@@ -3137,3 +3137,7 @@ For WE32xxx, `EXECMODE` has the same role as VAX `ACCMODE`: arguments are
 AS checks instructions and register accesses against the selected mode.
 
 WE32xxx uses C integer syntax, `.` as its program-counter symbol, and the `BYTE`, `HALF`, `WORD`, `DS` and `EXECMODE` directives. Its code address space is 4 GiB.
+
+### MCS-51 bit data organization
+
+`CPU 8051:BITSEGSIZE=1` organizes the MCS-51 `BITDATA` segment in individual bits instead of bytes. The default `BITSEGSIZE=8` retains byte organization. Bit organization permits `D1` constants and bit-oriented allocation; select this segment with P2BIN’s `-segment bitdata` option when exporting it.
