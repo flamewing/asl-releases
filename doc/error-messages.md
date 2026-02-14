@@ -360,3 +360,5 @@ Error: the selected register can only be accessed in kernel mode.
 ### 1443: register is read-only in current execution mode
 
 Error: the selected register can only be written in kernel mode.
+
+Warning 510 reports that a double-length instruction result would overwrite SPt through the register following its destination. Error 1808 reports ENDM or ENDR outside a macro definition or repetition block (1806 and 1807 remain the fork's IRPN diagnostics).

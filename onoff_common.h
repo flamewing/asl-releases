@@ -10,26 +10,27 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#define FPUAvailName       "HASFPU"  /* FPU-Befehle erlaubt */
-#define PMMUAvailName      "HASPMMU" /* PMMU-Befehle erlaubt */
-#define FullPMMUName       "FULLPMMU"
-#define MaxModeSymName     "INMAXMODE" /* CPU in maximum mode */
-#define MaxModeCmdName     "MAXMODE"
-#define SrcModeCmdName     "SRCMODE"
-#define SrcModeSymName     "INSRCMODE" /* CPU im Quellcode-kompatiblen Modus */
-#define ExtModeCmdName     "EXTMODE"
-#define ExtModeSymName     "INEXTMODE"
-#define LWordModeCmdName   "LWORDMODE"
-#define LWordModeSymName   "INLWORDMODE"
-#define DSPCmdName         "DSP"
-#define DSPSymName         "HASDSP"
-#define CustomAvailCmdName "CUSTOM"
-#define CustomAvailSymName "CUSTOM"
-#define BranchExtCmdName   "BRANCHEXT"
-#define BranchExtSymName   "BRANCHEXT"
+#define FPUAvailName         "HASFPU"  /* FPU-Befehle erlaubt */
+#define PMMUAvailName        "HASPMMU" /* PMMU-Befehle erlaubt */
+#define FullPMMUName         "FULLPMMU"
+#define MaxModeSymName       "INMAXMODE" /* CPU in maximum mode */
+#define MaxModeCmdName       "MAXMODE"
+#define SrcModeCmdName       "SRCMODE"
+#define SrcModeSymName       "INSRCMODE" /* CPU im Quellcode-kompatiblen Modus */
+#define ExtModeCmdName       "EXTMODE"
+#define ExtModeSymName       "INEXTMODE"
+#define LWordModeCmdName     "LWORDMODE"
+#define LWordModeSymName     "INLWORDMODE"
+#define DSPCmdName           "DSP"
+#define DSPSymName           "HASDSP"
+#define CustomAvailCmdName   "CUSTOM"
+#define CustomAvailSymName   "CUSTOM"
+#define BranchExtCmdName     "BRANCHEXT"
+#define BranchExtSymName     "BRANCHEXT"
+#define default_regsyms_name "DEFAULT_REGSYMS"
 
 extern Boolean FPUAvail, PMMUAvail, SupAllowed, MaxMode, CompMode, TargetBigEndian,
-        DoPadding, Packing;
+        DoPadding, Packing, default_regsyms;
 
 /* NOTE: will have to switch this to #define as soon as
    everything up to 2**15 is used up - 16 bit compilers
@@ -53,7 +54,12 @@ enum {
     e_onoff_reg_z80syntax = 1 << 14
 };
 
+enum {
+    e_onoff_ext_reg_default_regsyms = 1 << 7
+};
+
 extern unsigned onoff_test_and_set(unsigned mask);
+extern unsigned onoff_ext_test_and_set(unsigned mask);
 
 extern void onoff_fpu_add(void);
 extern void onoff_pmmu_add(void);

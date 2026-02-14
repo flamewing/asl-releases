@@ -8,6 +8,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "stdinc.h"
+
 #include "symbolsize.h"
 
 #include <string.h>
@@ -72,4 +74,30 @@ unsigned GetSymbolSizeBytes(tSymbolSize Size) {
         }
     }
     return 0;
+}
+
+Boolean is_symbol_size_float(tSymbolSize size) {
+    switch (size) {
+    case eSymbolSize8Bit:
+    case eSymbolSize12Bit:
+    case eSymbolSize16Bit:
+    case eSymbolSize24Bit:
+    case eSymbolSize32Bit:
+    case eSymbolSize48Bit:
+    case eSymbolSize64Bit:
+    case eSymbolSizeFloatDec96Bit:
+    case eSymbolSize128Bit:
+        return False;
+    case eSymbolSizeFloat16Bit:
+    case eSymbolSizeFloat32Bit:
+    case eSymbolSizeFloat48Bit:
+    case eSymbolSize80Bit:
+    case eSymbolSizeFloat64Bit:
+    case eSymbolSizeFloat64Bit_G:
+    case eSymbolSizeFloat96Bit:
+    case eSymbolSizeFloat128Bit:
+        return True;
+    default:
+        as_abort("is_symbol_size_float: unknown symbol size\n");
+    }
 }

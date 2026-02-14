@@ -2649,18 +2649,17 @@ tErrorNum EvalStrRegExpressionWithResult(
 
     EvalResultClear(pEvalResult);
 
-    pEntry = ExpandAndFindNode(pExpr, TempReg, True, e_expand_chk_empty_upto, NULL);
+    pEntry = ExpandAndFindNode(pExpr, TempAll, True, e_expand_chk_empty_upto, NULL);
     if (!pEntry) {
         return ErrNum_SymbolUndef;
     }
-
-    set_symbol_entry_flag(pEntry, used, True);
-    pEvalResult->DataSize = pEntry->SymWert.DataSize;
-
     if (pEntry->SymWert.Typ != TempReg) {
         return ErrNum_ExpectReg;
     }
+
     *pResult = pEntry->SymWert.Contents.RegDescr;
+    set_symbol_entry_flag(pEntry, used, True);
+    pEvalResult->DataSize = pEntry->SymWert.DataSize;
 
     if (pEntry->SymWert.Contents.RegDescr.Dissect != DissectReg) {
         return ErrNum_RegWrongTarget;

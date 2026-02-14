@@ -176,16 +176,17 @@ extern StringPtr SourceFile;
 
 extern StringPtr CursUp;
 
-extern LargeWord*     PCs;
-extern Boolean        RelSegs;
-extern LargeWord      StartAdr;
-extern LargeWord      AfterBSRAddr;
-extern Boolean        StartAdrPresent;
-extern LargeWord*     Phases;
-extern Word           Grans[SegCountPlusStruct];
-extern Word           ListGrans[SegCountPlusStruct];
-extern ChunkList      SegChunks[SegCountPlusStruct];
-extern Boolean        grans_bits_unused[SegCountPlusStruct];
+extern LargeWord* PCs;
+extern Boolean    RelSegs;
+extern LargeWord  StartAdr;
+extern LargeWord  AfterBSRAddr;
+extern Boolean    StartAdrPresent;
+extern LargeWord* Phases;
+extern Word       Grans[SegCountPlusStruct];
+extern Word       ListGrans[SegCountPlusStruct];
+extern ChunkList  SegChunks[SegCountPlusStruct];
+extern Boolean    grans_bits_unused[SegCountPlusStruct],
+        list_grans_bits_unused[SegCountPlusStruct];
 extern as_addrspace_t ActPC;
 extern Boolean        PCsUsed[SegCountPlusStruct];
 extern LargeWord*     SegInits;
@@ -363,7 +364,6 @@ extern Boolean is_set_pseudo(void);
 extern Boolean is_save_pseudo(void);
 extern Boolean is_restore_pseudo(void);
 extern Boolean memo_switch_pseudo(void);
-extern Boolean memo_shift_pseudo(void);
 extern Boolean is_page_pseudo(void);
 
 extern void asmdef_init(void);

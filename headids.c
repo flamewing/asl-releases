@@ -43,6 +43,12 @@ static Word get_granularity_772x(as_addrspace_t addr_space) {
     return (addr_space == SegCode) ? 4 : 2;
 }
 
+static Word get_granularity_code_1(as_addrspace_t addr_space) {
+    UNUSED(addr_space);
+    /* TODO 7 bits unused */
+    return 1;
+}
+
 static TFamilyDescr const Descrs[] = {
         {        "680x0", 0x0001,   eHexFormatMotoS, get_granularity_default},
         {     "DSP56000", 0x0009,   eHexFormatMotoS,      get_granularity_32},
@@ -116,6 +122,7 @@ static TFamilyDescr const Descrs[] = {
         {    "TMS320C5x", 0x0077,   eHexFormatTiDSK,      get_granularity_16},
         {   "TMS320C54x", 0x004b,   eHexFormatTiDSK,      get_granularity_16},
         {    "TMS320C6x", 0x0047, eHexFormatIntel32, get_granularity_default},
+        {     "TMS340xx", 0x002d,   eHexFormatMotoS,  get_granularity_code_1},
         {      "TMS9900", 0x0048,   eHexFormatIntel, get_granularity_default},
         {      "TMS7000", 0x0073,   eHexFormatIntel, get_granularity_default},
         {     "TMS370xx", 0x0049,   eHexFormatIntel, get_granularity_default},

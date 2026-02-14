@@ -187,6 +187,7 @@ In theory, any platform with a reasonably modern C compiler (must support C11) s
 
 - Western Digital WD16
 - AT&T WE32100 and WE32200
+- Texas Instruments TMS34010 and TMS34020
 
 - Renesas RX
 

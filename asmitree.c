@@ -95,6 +95,10 @@ void SetDynamicInstTable(PInstTable Table) {
 void DestroyInstTable(PInstTable tab) {
     int z;
 
+    if (!tab) {
+        return;
+    }
+
     if (tab->Dynamic) {
         for (z = 0; z < tab->Size; z++) {
             free(tab->Entries[z].Name);

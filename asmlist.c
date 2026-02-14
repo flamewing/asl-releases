@@ -30,8 +30,8 @@
 
 #define LISTLINE_PREFIX_TOTAL 40
 
-static unsigned SystemListLen1, SystemListLen4, SystemListLen8, SystemListLen12,
-        SystemListLen16, SystemListLen24, SystemListLen32;
+#define system_list_len_max 32
+static unsigned* p_system_list_len;
 
 static as_dynstr_t list_buf;
 
@@ -47,33 +47,11 @@ static Boolean    list_unknown_values              = True;
  * ------------------------------------------------------------------------ */
 
 void as_list_set_max_pc(LargeWord max_pc) {
-    String tmp;
+    String   tmp;
+    unsigned num_bits = (ListGran() * 8) - list_gran_bits_unused();
 
-    switch (ListGran()) {
-    case 1:
-        if (gran_bits_unused() && (gran_bits_unused() != 4)
-            && (gran_bits_unused() != 7)) {
-            goto warn;
-        }
-        break;
-    case 2:
-        if (gran_bits_unused() && (gran_bits_unused() != 4)) {
-            goto warn;
-        }
-        break;
-    case 4:
-        if (gran_bits_unused() && (gran_bits_unused() != 8)) {
-            goto warn;
-        }
-        break;
-    default:
-        if (gran_bits_unused()) {
-            goto warn;
-        }
-        break;
-    warn:
-        fprintf(stderr, "define SystemListLen for %u bits\n",
-                (unsigned)((ListGran() * 8) - gran_bits_unused()));
+    if (num_bits > system_list_len_max) {
+        fprintf(stderr, "define SystemListLen for %u bits\n", num_bits);
     }
 
     as_snprintf(tmp, sizeof(tmp), "%1.*lllu", ListRadixBase, max_pc);
@@ -96,8 +74,8 @@ static void list_format_error(tErrorNum num, char fmt) {
 }
 
 void MakeList(char const* pSrcLine) {
-    Word    EffLen, Gran = Granularity();
-    Boolean ThisDoLst;
+    Word    EffLen, Gran               = Granularity();
+    Boolean ThisDoLst, bitwise_segment = (Gran == 1) && (gran_bits_unused() == 7);
 
     EffLen = CodeLen * Gran;
 
@@ -121,28 +99,18 @@ void MakeList(char const* pSrcLine) {
         size_t    sum_len;
         int       inc_column_len[3] = {-1, -1, -1}, lnum_column_len[3] = {-1, -1, -1};
         Word      Index = 0, CurrListGran, SystemListLen;
+        unsigned  num_bits;
         Boolean   First = True;
 
         /* Not enough code to display even on 16/32 bit word?
            Then start dumping bytes right away: */
 
-        CurrListGran = (EffLen < ActListGran) ? 1 : ActListGran;
-        switch (CurrListGran) {
-        case 4:
-            SystemListLen = act_list_gran_bits_unused ? SystemListLen24 : SystemListLen32;
-            break;
-        case 2:
-            SystemListLen = act_list_gran_bits_unused ? SystemListLen12 : SystemListLen16;
-            break;
-        default:
-            SystemListLen = act_list_gran_bits_unused
-                                    ? ((act_list_gran_bits_unused == 7) ? SystemListLen1
-                                                                        : SystemListLen4)
-                                    : SystemListLen8;
-        }
+        CurrListGran  = (EffLen < ActListGran) ? 1 : ActListGran;
+        num_bits      = (CurrListGran * 8) - act_list_gran_bits_unused;
+        SystemListLen = p_system_list_len[min(num_bits, system_list_len_max)];
 
         if (TurnWords && (Gran != ActListGran) && (1 == ActListGran)) {
-            DreheCodes();
+            as_code_swap_bytes();
         }
 
         do {
@@ -299,6 +267,8 @@ void MakeList(char const* pSrcLine) {
 
             else {
                 do {
+                    unsigned n_word_bits = (CurrListGran * 8) - act_list_gran_bits_unused;
+
                     /* We checked initially there is at least one full word,
                        and we check after every word whether there is another
                        full one: */
@@ -308,19 +278,28 @@ void MakeList(char const* pSrcLine) {
                     } else {
                         LargeWord ThisWord, ThisWordGuessed;
 
-                        switch (CurrListGran) {
-                        case 4:
-                            ThisWord        = DAsmCode[Index >> 2];
-                            ThisWordGuessed = get_dasmcode_guessed(Index >> 2);
-                            break;
-                        case 2:
-                            ThisWord        = WAsmCode[Index >> 1];
-                            ThisWordGuessed = get_wasmcode_guessed(Index >> 1);
-                            ;
-                            break;
-                        default:
-                            ThisWord        = BAsmCode[Index];
-                            ThisWordGuessed = get_basmcode_guessed(Index);
+                        if (bitwise_segment) {
+                            if ((int)n_word_bits > (EffLen - Index)) {
+                                n_word_bits = EffLen - Index;
+                            }
+                            ThisWord = get_basmcode_bit_field_ve(
+                                    Index, n_word_bits, last_basmcode_bit_field_set_be);
+                            ThisWordGuessed = get_basmcode_guessed_bit_field_ve(
+                                    Index, n_word_bits, last_basmcode_bit_field_set_be);
+                        } else {
+                            switch (CurrListGran) {
+                            case 4:
+                                ThisWord        = DAsmCode[Index >> 2];
+                                ThisWordGuessed = get_dasmcode_guessed(Index >> 2);
+                                break;
+                            case 2:
+                                ThisWord        = WAsmCode[Index >> 1];
+                                ThisWordGuessed = get_wasmcode_guessed(Index >> 1);
+                                break;
+                            default:
+                                ThisWord        = BAsmCode[Index];
+                                ThisWordGuessed = get_basmcode_guessed(Index);
+                            }
                         }
                         as_sdprcatf(
                                 &list_buf, " %0*.*lllu", (int)SystemListLen,
@@ -345,15 +324,17 @@ void MakeList(char const* pSrcLine) {
 
                     /* advance pointers & keep track of # of characters printed */
 
-                    ListPC += (Gran == CurrListGran) ? 1 : CurrListGran;
-                    Index += CurrListGran;
+                    ListPC += bitwise_segment
+                                      ? n_word_bits
+                                      : ((Gran == CurrListGran) ? 1 : CurrListGran);
+                    Index += bitwise_segment ? n_word_bits : CurrListGran;
                     sum_len += 1 + SystemListLen;
 
                     /* Less than one full word remaining? Then switch to dumping bytes. */
 
                     if (Index + CurrListGran > EffLen) {
                         CurrListGran  = 1;
-                        SystemListLen = SystemListLen8;
+                        SystemListLen = p_system_list_len[8];
                     }
                 } while (sum_len + 1 + SystemListLen < LISTLINE_PREFIX_TOTAL);
             }
@@ -374,7 +355,7 @@ void MakeList(char const* pSrcLine) {
         } while ((Index < EffLen) && !DontPrint);
 
         if (TurnWords && (Gran != ActListGran) && (1 == ActListGran)) {
-            DreheCodes();
+            as_code_swap_bytes();
         }
     } /* if (!ListToNull... */
 }
@@ -421,36 +402,20 @@ static as_cmd_rec_t const list_params[] = {
  * ------------------------------------------------------------------------ */
 
 void asmlist_setup(void) {
-    String Dummy;
+    LargeWord l;
+    int       z;
+    String    Dummy;
 
-    SysString(
-            Dummy, sizeof(Dummy), 0x1, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen1 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xf, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen4 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xff, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen8 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xfff, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen12 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xffffu, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen16 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xfffffful, ListRadixBase, 0, False, HexStartCharacter,
-            SplitByteCharacter);
-    SystemListLen24 = strlen(Dummy);
-    SysString(
-            Dummy, sizeof(Dummy), 0xfffffffful, ListRadixBase, 0, False,
-            HexStartCharacter, SplitByteCharacter);
-    SystemListLen32 = strlen(Dummy);
+    p_system_list_len
+            = (unsigned*)calloc(system_list_len_max + 1, sizeof(*p_system_list_len));
+    l = 0;
+    for (z = 0; z <= system_list_len_max; z++) {
+        SysString(
+                Dummy, sizeof(Dummy), l, ListRadixBase, 0, False, HexStartCharacter,
+                SplitByteCharacter);
+        p_system_list_len[z] = strlen(Dummy);
+        l                    = (l << 1) | 1;
+    }
 }
 
 /*!------------------------------------------------------------------------

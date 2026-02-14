@@ -114,6 +114,8 @@ extern char* strmov(char* pDest, char const* pSrc);
 
 extern int strmemcpy(char* pDest, size_t DestSize, char const* pSrc, size_t SrcLen);
 
+extern unsigned as_bit_count(LongWord i);
+
 extern void strutil_init(void);
 
 /* avoid nasty "subscript has type char..." messages on some platforms */

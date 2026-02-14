@@ -141,27 +141,25 @@ static void ProcessSingle(char const* pFileName) {
             }
 
             chkio_printf(OutName, "%-7s   ", SegNames[Segment]);
-            ChkIO(OutName);
 
             if (!Read4(ProgFile, &StartAdr)) {
                 chk_wr_read_error(pFileName);
             }
             chkio_printf(OutName, "%08lX          ", LoDWord(StartAdr));
-            ChkIO(OutName);
 
             if (!Read2(ProgFile, &Len)) {
                 chk_wr_read_error(pFileName);
             }
             chkio_printf(OutName, "%04X       ", LoWord(Len));
-            ChkIO(OutName);
 
             if (Len != 0) {
-                StartAdr += (Len / Gran) - 1;
+                chkio_printf(
+                        OutName, "%08lX",
+                        LoDWord(record_target_word_last_address(StartAdr, Len, Gran)));
             } else {
-                StartAdr--;
+                chkio_printf(OutName, "%8s", "");
             }
-            chkio_printf(OutName, "%08lX\n", LoDWord(StartAdr));
-            ChkIO(OutName);
+            chkio_printf(OutName, "\n");
 
             Sums[Segment] += Len;
 

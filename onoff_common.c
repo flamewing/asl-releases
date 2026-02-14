@@ -25,8 +25,9 @@ Boolean FPUAvail,        /* floating point co processor instructions allowed? */
         CompMode,        /* Enable Compatibility Mode */
         TargetBigEndian, /* Data storage Big Endian? */
         DoPadding,       /* align to even address? */
-        Packing;         /* packed data storage? */
-static unsigned registered;
+        Packing,         /* packed data storage? */
+        default_regsyms; /* built-in default register symbols? */
+static unsigned registered, ext_registered;
 
 #define SupAllowedCmdName "SUPMODE" /* Privileged instructions allowed */
 #define SupAllowedSymName "INSUPMODE"
@@ -54,6 +55,12 @@ static Boolean DefPacking, DefPackingSet;
 unsigned onoff_test_and_set(unsigned mask) {
     unsigned curr = registered;
     registered |= mask;
+    return curr & mask;
+}
+
+unsigned onoff_ext_test_and_set(unsigned mask) {
+    unsigned curr = ext_registered;
+    ext_registered |= mask;
     return curr & mask;
 }
 
@@ -148,7 +155,7 @@ void onoff_packing_add(Boolean def_value) {
  * ------------------------------------------------------------------------ */
 
 static void initpass_onoff(void) {
-    registered = 0;
+    registered = ext_registered = 0;
 }
 
 /*!------------------------------------------------------------------------

@@ -2006,3 +2006,11 @@ AS to check privileged instructions and register accesses.
 `BYTE`, `HALF`, and `WORD` correspond to integer `DB`, `DW`, and `DD`;
 `DS` reserves storage. Register access diagnostics 1442 and 1443 identify
 kernel-only registers and registers writable only in kernel mode.
+
+### TMS340xx
+
+Select `34010` or `34020`. The targets use Intel integer syntax and bit addresses: TMS34010 addresses 1 Gbit, TMS34020 4 Gbit. Instructions require 16-bit alignment. TMS34020 adds a coprocessor interface and additional instructions. `REG ON/OFF` controls the default aliases: SADDR=B0, SPTCH=B1, DADDR=B2, DPTCH=B3, OFFSET=B4, WSTART=B5, WEND=B6, DYDX=B7, COLOR0=B8, COLOR1=B9, COUNT=B10, INC1=B11, INC2=B12 and PATTRN1=B13. They are enabled by default.
+
+`iso650` is an FPGA implementation of the uPD650 with the full 2048-byte address space rather than the original's 2000 bytes.
+
+WE32xxx supports MAU instructions with `FPU ON`. Register aliases can be defined with `REG`. HALF and WORD data are big endian, while integer operands inside machine instructions are little endian.

@@ -1287,6 +1287,10 @@ Word gran_bits_unused(void) {
     return grans_bits_unused[ActPC];
 }
 
+Word list_gran_bits_unused(void) {
+    return list_grans_bits_unused[ActPC];
+}
+
 /*--------------------------------------------------------------------------*/
 /* pruefen, ob alle Symbole einer Formel im korrekten Adressraum lagen */
 

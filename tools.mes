@@ -1,3 +1,4 @@
+;SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only
 ;* tools.mes
 ;*****************************************************************************
 ;* AS-Portierung                                                             *
@@ -25,7 +26,7 @@ Message FormatErr2Msg
 Message IOErrAHeaderMsg
  "Bei Bearbeitung der Datei ""
  "the following error occured while processing ""
- 
+
 Message IOErrBHeaderMsg
  "" ist folgender Fehler aufgetreten:"
  "" :"

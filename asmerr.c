@@ -377,6 +377,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_CodeNotInCodeSegment:
         msgno = Num_ErrMsgCodeNotInCodeSegment;
         break;
+    case ErrNum_WillOverwriteSP:
+        msgno = Num_ErrMsgWillOverwriteSP;
+        break;
     case ErrNum_DoubleDef:
         msgno = Num_ErrMsgDoubleDef;
         break;
@@ -793,6 +796,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
         break;
     case ErrNum_InvalidParamCountIRPN:
         msgno = Num_ErrMsgInvalidParamCountIRPN;
+        break;
+    case ErrNum_ENDMOutsideMacro:
+        msgno = Num_ErrMsgENDMOutsideMacro;
         break;
     case ErrNum_TooManyMacParams:
         msgno = Num_ErrMsgTooManyMacParams;

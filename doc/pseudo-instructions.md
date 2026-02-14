@@ -3141,3 +3141,9 @@ WE32xxx uses C integer syntax, `.` as its program-counter symbol, and the `BYTE`
 ### MCS-51 bit data organization
 
 `CPU 8051:BITSEGSIZE=1` organizes the MCS-51 `BITDATA` segment in individual bits instead of bytes. The default `BITSEGSIZE=8` retains byte organization. Bit organization permits `D1` constants and bit-oriented allocation; select this segment with P2BIN’s `-segment bitdata` option when exporting it.
+
+### TMS340xx data directives
+
+`BYTE`, `WORD`, and `LONG`/`INT` store integers of 8, 16, and 32 bits; `STRING` stores character strings. `FLOAT` and `DOUBLE` store floating-point values of 32 and 64 bits. `FIELD value,length` stores a field of 1–32 bits, accepting both signed and unsigned representations (a 16-bit field accepts −32768 through 65535). `EVEN` aligns to a multiple of 16 bit addresses. TMS34020 `COPROC id` sets the default coprocessor ID, from 0 to 7, initially zero.
+
+WE32xxx `BYTE`, `HALF`, and `WORD` accept only integers. `FLT` accepts only IEEE single-precision floating-point values and `DOUBLE` only double-precision values.

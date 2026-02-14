@@ -38,6 +38,8 @@ extern PIfSave FirstIfSave;
 
 extern Boolean CodeIFs(void);
 
+extern void as_if_augment_main_inst_tables(void);
+
 extern void AsmIFInit(void);
 
 extern Integer SaveIFs(void);
