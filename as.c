@@ -114,6 +114,7 @@
 #include "codecop8.h"
 #include "codecp1600.h"
 #include "codecp3f.h"
+#include "codecr16.h"
 #include "codef8.h"
 #include "codefmc16.h"
 #include "codefmc8.h"
@@ -4630,6 +4631,7 @@ int main(int argc, char** argv) {
         codecop8_init();
         codesc14xxx_init();
         codens32k_init();
+        codecr16_init();
         codewe32_init();
         codeace_init();
         codecp3f_init();

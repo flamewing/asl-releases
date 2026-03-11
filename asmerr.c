@@ -605,6 +605,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_InvCtrlReg:
         msgno = Num_ErrMsgInvCtrlReg;
         break;
+    case ErrNum_UnknownVector:
+        msgno = Num_ErrMsgUnknownVector;
+        break;
     case ErrNum_RegAccessibleOnlyInExecMode:
         msgno = Num_ErrMsgRegAccessibleOnlyInExecMode;
         break;

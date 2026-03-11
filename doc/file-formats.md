@@ -201,3 +201,5 @@ The μCOM-43/44/45 family uses header ID `$28`.
 WE32xxx object records use processor header ID `$2c`.
 
 TMS340xx object records use processor ID `$2d`. Address granularity below one byte is encoded as `$f9` through `$ff`: `$ff` means one bit, `$fc` one nibble. Bit-oriented MCS-51 output packs eight bits per byte.
+
+CR16A/B uses processor header ID `$2e`.

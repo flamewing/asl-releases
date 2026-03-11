@@ -355,3 +355,5 @@
 - Texas Instruments: *TMS34010 Assembly Language Tools User's Guide*, SPVU004A, 1987; *TMS34010 C Compiler User's Guide*, SPVU005, December 1986.
 - Texas Instruments: *TMS34010 User's Guide*, SPVU001A, August 1988; *TMS34020 User's Guide*, SPVU019, August 1990.
 - AT&T Technologies Inc.: *WE32200 Microprocessor Information Manual*, preliminary, 307-705, November 1987; *AT&T 3B2/3B5/3B15 Computers Assembly Language Programming Manual*, 305-000, March 1986.
+
+- National Semiconductor: *CompactRISC CR16A Programmer’s Reference Manual*, 424521426-006, February 1997.

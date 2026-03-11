@@ -198,3 +198,5 @@ Sharp SC61860 and SC62015 processors are also supported.
 DEC VAX targets are supported, including MicroVAX and the VAX-11, VAX-8xxx families.
 
 The eZ80 targets are `eZ80190`, `eZ80L92`, `eZ80F91`, `eZ80F92` and `eZ80F93`. They provide 24-bit registers and a 16 Mbyte address space. Some variants have an 8-bit I register, and eZ80190 omits several string I/O instructions.
+
+National Semiconductor CR16A and CR16B are also supported.
