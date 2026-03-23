@@ -690,25 +690,21 @@ static void decode_br(Word code) {
     tSymbolFlags flags;
 
     if (ChkArgCnt(1, 1) && decode_code_addr(&ArgStr[1], &dest, &flags)) {
-        LongInt dist = dest - (EProgCounter() + 2);
+        LongInt dist = dest - EProgCounter();
 
         if ((dist >= -256) && (dist <= 254)) {
             set_w_guessed(flags, CodeLen >> 1, 1, 0x1e1e);
             append_word(0x4000 | code | ((dist & 0x1e0) << 4) | (dist & 0x1f));
+        } else if ((MomCPU == cpu_cr16b) && memory_model) {
+            set_w_guessed(flags, CodeLen >> 1, 1, 0x001e);
+            append_word(0x7400 | code | ((dist >> 12) & 0x10) | ((dist >> 16) & 0x0e));
+            set_w_guessed(flags, CodeLen >> 1, 1, 0xffff);
+            append_word((dist & 0xfffe) | ((dist >> 20) & 1));
         } else {
-            dist -= 2;
-            if ((MomCPU == cpu_cr16b) && memory_model) {
-                set_w_guessed(flags, CodeLen >> 1, 1, 0x001e);
-                append_word(
-                        0x7400 | code | ((dist >> 12) & 0x10) | ((dist >> 16) & 0x0e));
-                set_w_guessed(flags, CodeLen >> 1, 1, 0xffff);
-                append_word((dist & 0xfffe) | ((dist >> 20) & 1));
-            } else {
-                set_w_guessed(flags, CodeLen >> 1, 1, 0x0010);
-                append_word(0x140e | code | ((dist & 0x10000ul) >> 12));
-                set_w_guessed(flags, CodeLen >> 1, 1, 0xffff);
-                append_word(dist & 0xfffful);
-            }
+            set_w_guessed(flags, CodeLen >> 1, 1, 0x0010);
+            append_word(0x140e | code | ((dist & 0x10000ul) >> 12));
+            set_w_guessed(flags, CodeLen >> 1, 1, 0xffff);
+            append_word(dist & 0xfffful);
         }
     }
 }
@@ -726,7 +722,7 @@ static void decode_bal(Word code) {
 
     if (ChkArgCnt(2, 2) && decode_ireg_dest(&ArgStr[1], &Rlink)
         && decode_code_addr(&ArgStr[2], &dest, &flags)) {
-        LongInt dist = dest - (EProgCounter() + 4);
+        LongInt dist = dest - EProgCounter();
 
         if ((MomCPU == cpu_cr16b) && memory_model) {
             set_w_guessed(flags, CodeLen >> 1, 1, 0x001e);
@@ -954,7 +950,7 @@ static void decode_cmp_br(Word code) {
 
     if (ChkArgCnt(2, 2) && ChkMinCPU(cpu_cr16b) && decode_reg(&ArgStr[1], &Rdest, True)
         && decode_code_addr(&ArgStr[2], &dest, &flags)) {
-        LongInt dist = dest - (EProgCounter() + 2);
+        LongInt dist = dest - EProgCounter();
 
         if (!isreg_0189(Rdest)) {
             WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
