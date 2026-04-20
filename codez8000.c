@@ -830,7 +830,7 @@ static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAd
         if (eIsReg
             == DecodeReg(&RegComp, &pAdrVals->Val, &ArgSize, ChkRegSize_Addr, True)) {
             if (!pAdrVals->Val) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &RegComp);
+                WrStrErrorPos(ErrNum_InvBaseReg, &RegComp);
             } else {
                 pAdrVals->Mode = eModIReg;
             }
@@ -849,7 +849,7 @@ static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAd
             return pAdrVals->Mode;
         case eIsReg:
             if (!pAdrVals->Val) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &RegComp);
+                WrStrErrorPos(ErrNum_InvBaseReg, &RegComp);
             } else {
                 pAdrVals->Mode = eModIReg;
             }
@@ -877,7 +877,7 @@ static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAd
         switch (DecodeReg(&OutArg, &pAdrVals->Val, &ArgSize, ChkRegSize_Addr, False)) {
         case eIsReg: /* [R]Rx(...) */
             if (!pAdrVals->Val) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &OutArg);
+                WrStrErrorPos(ErrNum_InvBaseReg, &OutArg);
             } else if (*InArg.str.p_str == '#') {
                 Boolean OK;
 
@@ -891,16 +891,22 @@ static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAd
                             &InArg, &pAdrVals->Vals[pAdrVals->Cnt], &ArgSize,
                             ChkRegSize_Idx, True)
                     == eIsReg) {
-                pAdrVals->Vals[pAdrVals->Cnt] <<= 8;
-                pAdrVals->Cnt++;
-                pAdrVals->Mode = eModBaseIndexed;
+                if (!pAdrVals->Vals[pAdrVals->Cnt]) {
+                    WrStrErrorPos(ErrNum_InvIndexReg, &InArg);
+                } else {
+                    pAdrVals->Vals[pAdrVals->Cnt] <<= 8;
+                    pAdrVals->Cnt++;
+                    pAdrVals->Mode = eModBaseIndexed;
+                }
             }
             goto chk;
         case eIsNoReg: /* abs(...) */
         {
             switch (DecodeReg(&InArg, &pAdrVals->Val, &ArgSize, ChkRegSize_Idx, False)) {
             case eIsReg: /* abs(Rx) */
-                if (DecodeAddrPart(&OutArg, 0, pAdrVals, True, IsIO, NULL)) {
+                if (!pAdrVals->Val) {
+                    WrStrErrorPos(ErrNum_InvIndexReg, &InArg);
+                } else if (DecodeAddrPart(&OutArg, 0, pAdrVals, True, IsIO, NULL)) {
                     pAdrVals->Mode = eModIndexed;
                 }
                 break;

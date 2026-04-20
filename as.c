@@ -110,6 +110,7 @@
 #include "code9900.h"
 #include "codeace.h"
 #include "codeavr.h"
+#include "codec16c.h"
 #include "codecop4.h"
 #include "codecop8.h"
 #include "codecp1600.h"
@@ -4632,6 +4633,7 @@ int main(int argc, char** argv) {
         codesc14xxx_init();
         codens32k_init();
         codecr16_init();
+        codecr16c_init();
         codewe32_init();
         codeace_init();
         codecp3f_init();

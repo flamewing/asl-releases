@@ -2018,3 +2018,7 @@ WE32xxx supports MAU instructions with `FPU ON`. Register aliases can be defined
 ### CR16A/B
 
 CR16A supports 256 KiB, with only the first 128 KiB usable for executable code. CR16B extends the address space to 2 MiB. `CPU CR16B:MODEL=0` chooses the compatible small memory model, whose branch and jump instructions address only the first 128 KiB. `MODEL=1` selects the large model and is the default; it changes their encoding to reach all 2 MiB.
+
+### CR16C
+
+CR16C supports 16 MiB and is source-compatible with CR16A/B, with different binary encodings. It uses C integer syntax and supports `SUPMODE`. `ASSUME SR:1` announces compatibility mode, reducing R12 through SP to 16 bits, adding `(R13_L,R12_L)`, `(RA_L,R13_L)`, `(SP_L,RA_L)` and `(SP_H,SP_L)` pairs, and disabling index addressing. It also permits shorter displacement forms for zero or values below 0x4000. `ASSUME SR:0` is the default native-width mode.

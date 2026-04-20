@@ -53,6 +53,7 @@ typedef enum {
     SInt20,
     UInt20,
     Int20,
+    SInt21,
     UInt21,
     Int21,
     UInt22,

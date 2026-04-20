@@ -364,3 +364,5 @@ Error: the selected register can only be written in kernel mode.
 Warning 510 reports that a double-length instruction result would overwrite SPt through the register following its destination. Error 1808 reports ENDM or ENDR outside a macro definition or repetition block (1806 and 1807 remain the fork's IRPN diagnostics).
 
 Error 1441 reports an unknown vector name.
+
+Errors 1116–1118 report unknown, duplicate, or incompatible option lists. Errors 1437–1439 report invalid processor, base, or index registers.
