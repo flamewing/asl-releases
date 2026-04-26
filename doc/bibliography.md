@@ -357,3 +357,5 @@
 - AT&T Technologies Inc.: *WE32200 Microprocessor Information Manual*, preliminary, 307-705, November 1987; *AT&T 3B2/3B5/3B15 Computers Assembly Language Programming Manual*, 305-000, March 1986.
 
 - National Semiconductor: *CompactRISC CR16A Programmer’s Reference Manual*, 424521426-006, February 1997.
+
+- National Semiconductor: *CompactRISC CR16B Programmer’s Reference Manual*, 633150-001, September 1997; *CompactRISC CR16C Programmer’s Reference Manual*, 424521772-101, March 2002.
