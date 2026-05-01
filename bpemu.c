@@ -179,7 +179,11 @@ static int AssembleAndCheck(
     if (PathLen > DestSize - 1) {
         PathLen = DestSize - 1;
     }
-    memcpy(pDest, pPath, PathLen);
+    if (pPath) {
+        memcpy(pDest, pPath, PathLen);
+    } else {
+        PathLen = 0;
+    }
     pDest[PathLen] = '\0';
 #ifdef __CYGWIN32__
     DeCygwinPath(pDest);

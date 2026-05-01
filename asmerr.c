@@ -734,6 +734,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_OnlyOnOff:
         msgno = Num_ErrMsgOnlyOnOff;
         break;
+    case ErrNum_InvListingValue:
+        msgno = Num_ErrMsgInvListingValue;
+        break;
     case ErrNum_StackEmpty:
         msgno = Num_ErrMsgStackEmpty;
         break;

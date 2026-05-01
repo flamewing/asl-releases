@@ -11,6 +11,7 @@
 /*****************************************************************************/
 
 #include "addrspace.h"
+#include "asmlist.h"
 #include "chartrans.h"
 #include "chunks.h"
 #include "cpulist.h"
@@ -145,12 +146,13 @@ typedef struct tag_TSaveState {
     CPUVar                 SaveCPU;
     char*                  pSaveCPUArgs;
     as_addrspace_t         SavePC;
-    Byte                   SaveListOn;
+    as_liston_t            SaveListOn;
     tLstMacroExp           SaveLstMacroExp;
     tLstMacroExpMod        SaveLstMacroExpModDefault, SaveLstMacroExpModOverride;
     PTransTable            SaveTransTable;
     Integer                SaveEnumSegment;
     LongInt                SaveEnumCurrentValue, SaveEnumIncrement;
+
 } TSaveState, *PSaveState;
 
 struct as_fwd_sym;
@@ -207,7 +209,6 @@ extern Byte        ShareMode;
 extern DebugType   DebugMode;
 extern Word        NoICEMask;
 extern Byte        ListMode;
-extern Byte        ListOn;
 extern Integer     MaxIncludeLevel;
 extern Boolean     MakeUseList;
 extern Boolean     MakeCrossList;

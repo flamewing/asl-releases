@@ -981,7 +981,10 @@ void tex_newcommand_expand_push(tex_newcommand_t const* p_cmd) {
             new_expanded_len = expanded_len - holder_len + arg_len;
             if (new_expanded_len > expanded_len) {
                 p_expanded_line = (char*)realloc(p_expanded_line, new_expanded_len + 1);
-                p_pos           = p_expanded_line + pos;
+                if (!p_expanded_line) {
+                    abort();
+                }
+                p_pos = p_expanded_line + pos;
             }
             delta = arg_len - holder_len;
             memmove(p_pos + holder_len + delta, p_pos + holder_len,

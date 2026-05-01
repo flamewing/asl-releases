@@ -398,7 +398,7 @@ int ChkExcludeCPUList(int ErrorNum, ...) {
     if (FoundIndex < 0) {
         tExcludeContext Context;
 
-        *Context.Str           = '\0';
+        Context.Str[0]         = '\0';
         Context.First          = True;
         Context.pExcludeCPUDef = Context.pLastCPUDef = NULL;
         strmaxcat(

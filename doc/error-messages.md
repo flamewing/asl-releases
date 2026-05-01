@@ -366,3 +366,5 @@ Warning 510 reports that a double-length instruction result would overwrite SPt 
 Error 1441 reports an unknown vector name.
 
 Errors 1116–1118 report unknown, duplicate, or incompatible option lists. Errors 1437–1439 report invalid processor, base, or index registers.
+
+Error 1521 reports an invalid LISTING value; use ON, OFF, NOSKIPPED or PURECODE.

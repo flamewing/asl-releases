@@ -16,6 +16,7 @@
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmif.h"
+#include "asmpars.h"
 #include "asmsub.h"
 #include "cmdarg.h"
 #include "dynstr.h"
@@ -40,6 +41,9 @@ static int max_pc_len;
 static char*      p_listline_prefix_format         = NULL;
 static char const default_listline_prefix_format[] = "%i%n/%a";
 static Boolean    list_unknown_values              = True;
+
+as_liston_t        ListOn;
+static as_liston_t default_liston;
 
 /*!------------------------------------------------------------------------
  * \fn     as_list_set_max_pc(LargeWord max_pc)
@@ -361,6 +365,29 @@ void MakeList(char const* pSrcLine) {
 }
 
 /*!------------------------------------------------------------------------
+ * \fn     as_list_liston_to_enum(const char *p_arg, as_liston_t *p_liston)
+ * \brief  convert LISTING argument from name to enum
+ * \param  p_arg textual name
+ * \param  p_liston result buffer
+ * \return True if valid name
+ * ------------------------------------------------------------------------ */
+
+Boolean as_list_liston_to_enum(char const* p_arg, as_liston_t* p_liston) {
+    if (!as_strcasecmp(p_arg, "OFF")) {
+        *p_liston = e_liston_off;
+    } else if (!as_strcasecmp(p_arg, "ON")) {
+        *p_liston = e_liston_on;
+    } else if (!as_strcasecmp(p_arg, "NOSKIPPED")) {
+        *p_liston = e_liston_noskipped;
+    } else if (!as_strcasecmp(p_arg, "PURECODE")) {
+        *p_liston = e_liston_purecode;
+    } else {
+        return False;
+    }
+    return True;
+}
+
+/*!------------------------------------------------------------------------
  *
  * ------------------------------------------------------------------------ */
 
@@ -390,11 +417,37 @@ static as_cmd_result_t cmd_no_list_unknown_values(Boolean negate, char const* p_
     return e_cmd_ok;
 }
 
+static as_cmd_result_t cmd_listing(Boolean negate, char const* p_arg) {
+    if (negate) {
+        default_liston = e_liston_on;
+        return e_cmd_ok;
+    } else {
+        as_liston_t new_default_liston;
+
+        if (as_list_liston_to_enum(p_arg, &new_default_liston)) {
+            default_liston = new_default_liston;
+            return e_cmd_arg;
+        } else {
+            return e_cmd_err;
+        }
+    }
+}
+
 static as_cmd_rec_t const list_params[] = {
         {       "listline-prefix",        cmd_listline_prefix},
         {   "list-unknown-values",    cmd_list_unknown_values},
-        {"no-list-unknown-values", cmd_no_list_unknown_values}
+        {"no-list-unknown-values", cmd_no_list_unknown_values},
+        {               "listing",                cmd_listing}
 };
+
+static void initpass_asmlist(void) {
+    String   TmpCompStr;
+    tStrComp TmpComp;
+
+    StrCompMkTemp(&TmpComp, TmpCompStr, sizeof TmpCompStr);
+    strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr));
+    EnterIntSymbol(&TmpComp, ListOn = default_liston, SegNone, True);
+}
 
 /*!------------------------------------------------------------------------
  * \fn     asmlist_setup(void)
@@ -426,5 +479,8 @@ void asmlist_setup(void) {
 void asmlist_init(void) {
     as_dynstr_ini(&list_buf, STRINGSIZE);
 
+    default_liston = e_liston_on;
     as_cmd_register(list_params, as_array_size(list_params));
+
+    AddInitPassProc(initpass_asmlist);
 }

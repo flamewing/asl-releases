@@ -64,9 +64,11 @@ static int SetCodeChunkListAllocLen(
     } else {
         tCodeChunk* pNewChunks = (tCodeChunk*)realloc(
                 pCodeChunkList->Chunks, NewAllocLen * sizeof(tCodeChunk));
-        Result = pNewChunks ? 0 : ENOMEM;
-        if (!Result) {
+        if (pNewChunks) {
             pCodeChunkList->Chunks = pNewChunks;
+            Result                 = 0;
+        } else {
+            Result = ENOMEM;
         }
     }
 

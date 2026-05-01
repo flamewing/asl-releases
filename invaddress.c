@@ -61,7 +61,7 @@ void AddInvSymbol(char const* pSymbolName, LargeWord Value) {
     pNew->pSymbolName = as_strdup(pSymbolName);
 
     pTreeRoot = &(pInvSymbolRoot->Tree);
-    EnterTree(&pTreeRoot, &(pNew->Tree), InvSymbolAdder, NULL);
+    EnterTree(&pTreeRoot, (PTree)pNew, InvSymbolAdder, NULL);
     pInvSymbolRoot = (tInvSymbol*)pTreeRoot;
 }
 
