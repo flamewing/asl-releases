@@ -2022,3 +2022,7 @@ CR16A supports 256 KiB, with only the first 128 KiB usable for executable code. 
 ### CR16C
 
 CR16C supports 16 MiB and is source-compatible with CR16A/B, with different binary encodings. It uses C integer syntax and supports `SUPMODE`. `ASSUME SR:1` announces compatibility mode, reducing R12 through SP to 16 bits, adding `(R13_L,R12_L)`, `(RA_L,R13_L)`, `(SP_L,RA_L)` and `(SP_H,SP_L)` pairs, and disabling index addressing. It also permits shorter displacement forms for zero or values below 0x4000. `ASSUME SR:0` is the default native-width mode.
+
+### Tiny BASIC Intermediate Language
+
+The preliminary `TBIL` target emits Tiny BASIC IL bytecode. It uses Motorola integer syntax, `.` as its program counter, and a code address range of `$0000`–`$1fff`. A label starts with a colon.

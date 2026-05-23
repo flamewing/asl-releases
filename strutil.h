@@ -73,6 +73,7 @@ extern int as_strncasecmp(char const* src1, char const* src2, size_t maxlen);
 extern char* strstr(char const* haystack, char const* needle);
 #endif
 
+extern char* strmultchr(char const* p_haystack, char const* p_needles);
 extern char* strrmultchr(char const* haystack, char const* needles);
 
 extern size_t strmaxcpy(char* dest, char const* src, size_t Max);

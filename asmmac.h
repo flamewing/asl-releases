@@ -40,7 +40,7 @@ typedef struct tag_MacroRec {
 
 #define BufferArraySize 1024
 
-struct as_dynstr;
+struct sStrComp;
 struct sTokenReplacement;
 
 typedef struct tag_TInputTag {
@@ -51,9 +51,10 @@ typedef struct tag_TInputTag {
     Boolean               GlobalSymbols;
     tLstMacroExp          OrigDoLst;
     LongInt               StartLine;
-    Boolean (*Processor)(struct tag_TInputTag* P, struct as_dynstr* p_dest);
-    LongInt      ParCnt, ParZ, ParIter;
-    LongInt      MacroArgCnt; /* supplied argument count, excluding defaults */
+    Boolean (*Processor)(struct tag_TInputTag* P, struct sStrComp* p_dest);
+    LongInt ParCnt, ParZ, ParIter;
+    LongInt MacroArgCnt; /* supplied argument count, excluding defaults */
+
     StringList   Params;
     LongInt      LineCnt, ContLineCnt, LineZ;
     StringRecPtr Lines, LineRun;

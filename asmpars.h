@@ -262,9 +262,11 @@ extern as_float_t EvalStrFloatExpressionWithResult(
 extern as_float_t EvalStrFloatExpression(const struct sStrComp* pExpr, Boolean* pResult);
 
 extern void EvalStrStringExpressionWithResult(
-        const struct sStrComp* pExpr, struct sEvalResult* pResult, char* pEvalResult);
+        const struct sStrComp* pExpr, struct sEvalResult* pResult,
+        struct as_nonz_dynstr* pEvalResult);
 extern void EvalStrStringExpression(
-        const struct sStrComp* pExpr, Boolean* pResult, char* pEvalResult);
+        const struct sStrComp* pExpr, Boolean* pResult,
+        struct as_nonz_dynstr* pEvalResult);
 
 extern tErrorNum EvalStrRegExpressionWithResult(
         const struct sStrComp* pExpr, struct sRegDescr* pResult,

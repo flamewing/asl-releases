@@ -153,6 +153,7 @@
 #include "codest7.h"
 #include "codest9.h"
 #include "codesx20.h"
+#include "codetbil.h"
 #include "codetms1.h"
 #include "codetms7.h"
 #include "codeuc43.h"
@@ -220,7 +221,7 @@ static Boolean NULL_GetPos(
     return False;
 }
 
-static Boolean INCLUDE_Processor(PInputTag PInp, as_dynstr_t* p_dest);
+static Boolean INCLUDE_Processor(PInputTag PInp, struct sStrComp* p_dest);
 
 static PInputTag GenerateProcessor(void) {
     PInputTag PInp = (PInputTag)malloc(sizeof(TInputTag));
@@ -448,7 +449,7 @@ static void MACRO_OutProcessor(void) {
 
     if ((MacroOutput) && (FirstOutputTag->DoExport)) {
         errno = 0;
-        fprintf(MacroFile, "%s\n", OneLine.p_str);
+        fprintf(MacroFile, "%s\n", SrcLine.str.p_str);
         ChkIO(ErrNum_FileWriteError);
     }
 
@@ -466,7 +467,7 @@ static void MACRO_OutProcessor(void) {
         as_dynstr_t s;
         Boolean     NeedsExpansion = False;
 
-        as_dynstr_ini_clone(&s, &OneLine);
+        as_dynstr_ini_clone(&s, &SrcLine.str);
         KillCtrl(s.p_str);
 
         /* compress into tokens */
@@ -565,7 +566,7 @@ static void PrepareInputReplacements(
     }
 }
 
-Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean MACRO_Processor(PInputTag PInp, tStrComp* p_dest) {
     StringRecPtr Lauf = PInp->LineRun;
     Boolean      Result;
     unsigned     ParamCount = PInp->ParCnt > 0 ? PInp->ParCnt : 0;
@@ -594,10 +595,12 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
         }
         ExpandTokens(
                 Lauf->Content, PInp->Replacements, ParamCount, HasAttrs,
-                PInp->SequentialTokens, p_dest);
+                PInp->SequentialTokens, &p_dest->str);
     } else {
-        as_dynstr_copy_c_str(p_dest, Lauf->Content);
+        as_dynstr_copy_c_str(&p_dest->str, Lauf->Content);
     }
+
+    p_dest->Pos.Len = strlen(p_dest->str.p_str);
 
     CurrLine    = PInp->StartLine;
     InMacroFlag = True;
@@ -1126,7 +1129,7 @@ static void ExpandSHIFT(Word code) {
 /* Diese Routine liefert bei der Expansion eines IRP-Statements die expan-
   dierten Zeilen */
 
-Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean IRP_Processor(PInputTag PInp, tStrComp* p_dest) {
     StringRecPtr Lauf;
     int          z;
     Boolean      Result;
@@ -1163,8 +1166,10 @@ Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
     ExpandTokens(
             PInp->LineRun->Content, PInp->Replacements, ParIter, False,
-            PInp->SequentialTokens, p_dest);
+            PInp->SequentialTokens, &p_dest->str);
     PInp->LineRun = PInp->LineRun->Next;
+
+    p_dest->Pos.Len = strlen(p_dest->str.p_str);
 
     /* end of body? then reset to line 1 and exit if this was the last iteration */
 
@@ -1277,7 +1282,7 @@ static void IRP_OutProcessor(void) {
         char const*  p_first_param
                 = GetStringListFirst(FirstOutputTag->ParamNames, &Dummy);
 
-        as_dynstr_ini_clone(&s, &OneLine);
+        as_dynstr_ini_clone(&s, &SrcLine.str);
         KillCtrl(s.p_str);
         StringRecPtr l = FirstOutputTag->ParamNames;
         int          ParIter
@@ -1549,7 +1554,7 @@ static Boolean ExpandIRPN(void) {
 
     FirstOutputTag = Context.pOutputTag;
 
-    ResetLastLabel = False;
+    return True;
 }
 
 /*--- IRPC: dito fuer Zeichen eines Strings ---------------------------------*/
@@ -1558,7 +1563,7 @@ static Boolean ExpandIRPN(void) {
 /* Diese Routine liefert bei der Expansion eines IRPC-Statements die expan-
   dierten Zeilen */
 
-Boolean IRPC_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean IRPC_Processor(PInputTag PInp, tStrComp* p_dest) {
     Boolean Result;
     char    tmp[5];
 
@@ -1586,8 +1591,8 @@ Boolean IRPC_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
     /* extract line */
 
-    as_dynstr_copy_c_str(p_dest, PInp->LineRun->Content);
-    PInp->LineRun = PInp->LineRun->Next;
+    p_dest->Pos.Len = as_dynstr_copy_c_str(&p_dest->str, PInp->LineRun->Content);
+    PInp->LineRun   = PInp->LineRun->Next;
 
     /* extract iteration parameter */
 
@@ -1599,7 +1604,8 @@ Boolean IRPC_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
         tmp[term++] = *tmp;
     }
     tmp[term] = '\0';
-    ExpandLine(tmp, 1, p_dest);
+    ExpandLine(tmp, 1, &p_dest->str);
+    p_dest->Pos.Len = strlen(p_dest->str.p_str);
 
     /* end of body? then reset to line 1 and exit if this was the last iteration */
 
@@ -1646,13 +1652,17 @@ static void ProcessIRPCArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser) 
                 AddStringListFirst(&(pContext->pOutputTag->ParamNames), pArg->str.p_str);
             }
         } else {
-            Boolean OK;
+            Boolean          OK;
+            as_nonz_dynstr_t str;
 
-            EvalStrStringExpression(pArg, &OK, pContext->Parameter.str.p_str);
+            as_nonz_dynstr_ini(&str, 0);
+            EvalStrStringExpression(pArg, &OK, &str);
+            as_dynstr_copy_raw_str(&pContext->Parameter.str, str.p_str, str.len);
             pContext->Parameter.Pos = pArg->Pos;
             if (!OK) {
                 pContext->ErrFlag = True;
             }
+            as_nonz_dynstr_free(&str);
         }
         pContext->ArgCnt++;
     }
@@ -1740,7 +1750,7 @@ static Boolean REPT_GetPos(
     return False;
 }
 
-Boolean REPT_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean REPT_Processor(PInputTag PInp, tStrComp* p_dest) {
     Boolean Result;
 
     Result = True;
@@ -1767,8 +1777,8 @@ Boolean REPT_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
     /* extract line */
 
-    as_dynstr_copy_c_str(p_dest, PInp->LineRun->Content);
-    PInp->LineRun = PInp->LineRun->Next;
+    p_dest->Pos.Len = as_dynstr_copy_c_str(&p_dest->str, PInp->LineRun->Content);
+    PInp->LineRun   = PInp->LineRun->Next;
 
     /* last line of body? Then increment count and stop if last iteration */
 
@@ -1796,7 +1806,7 @@ static void REPT_OutProcessor(void) {
     /* falls noch nicht zuende, weiterzaehlen */
 
     if (FirstOutputTag->NestLevel > -1) {
-        AddStringListLast(&(FirstOutputTag->Tag->Lines), OneLine.p_str);
+        AddStringListLast(&(FirstOutputTag->Tag->Lines), SrcLine.str.p_str);
         FirstOutputTag->Tag->LineCnt++;
     }
 
@@ -1938,7 +1948,7 @@ static Boolean WHILE_GetPos(
     return False;
 }
 
-Boolean WHILE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean WHILE_Processor(PInputTag PInp, tStrComp* p_dest) {
     int     z;
     Boolean OK, Result;
 
@@ -1976,8 +1986,8 @@ Boolean WHILE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     if (Result) {
         /* get line of body */
 
-        as_dynstr_copy_c_str(p_dest, PInp->LineRun->Content);
-        PInp->LineRun = PInp->LineRun->Next;
+        p_dest->Pos.Len = as_dynstr_copy_c_str(&p_dest->str, PInp->LineRun->Content);
+        PInp->LineRun   = PInp->LineRun->Next;
 
         /* in case this is the last line of the body, reset counters */
 
@@ -1990,7 +2000,7 @@ Boolean WHILE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     /* nasty last line... */
 
     else {
-        *p_dest->p_str = '\0';
+        StrCompReset(p_dest);
     }
 
     return Result;
@@ -2014,7 +2024,7 @@ static void WHILE_OutProcessor(void) {
     /* falls noch nicht zuende, weiterzaehlen */
 
     if (FirstOutputTag->NestLevel > -1) {
-        AddStringListLast(&(FirstOutputTag->Tag->Lines), OneLine.p_str);
+        AddStringListLast(&(FirstOutputTag->Tag->Lines), SrcLine.str.p_str);
         FirstOutputTag->Tag->LineCnt++;
     }
 
@@ -2219,9 +2229,8 @@ static Boolean INCLUDE_GetPos(
     return !GNUErrors;
 }
 
-Boolean INCLUDE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
+Boolean INCLUDE_Processor(PInputTag PInp, struct sStrComp* p_dest) {
     Boolean Result;
-    int     Count = 1;
 
     /* add up # of continuation lines from previous source line */
 
@@ -2233,9 +2242,9 @@ Boolean INCLUDE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     Result = True;
 
     if (feof(PInp->Datei)) {
-        *p_dest->p_str = '\0';
+        StrCompReset(p_dest);
     } else {
-        Count = ReadLnCont(PInp->Datei, p_dest);
+        p_dest->Pos.Len = ReadLnCont(PInp->Datei, &p_dest->str);
         /**ChkIO(ErrNum_FileReadError);**/
     }
 
@@ -2243,10 +2252,10 @@ Boolean INCLUDE_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
        by one at this place so the first line's # is the number of the
        concatenated line: */
 
-    if (Count > 0) {
+    if (p_dest->Pos.Len > 0) {
         PInp->LineZ++;
         CurrLine          = PInp->LineZ;
-        PInp->ContLineCnt = Count - 1;
+        PInp->ContLineCnt = p_dest->Pos.Len - 1;
     }
     if (feof(PInp->Datei)) {
         Result = False;
@@ -2341,7 +2350,7 @@ static void ExpandINCLUDE(Word code) {
 /*=========================================================================*/
 /* Einlieferung von Zeilen */
 
-static void GetNextLine(as_dynstr_t* pLine) {
+static void GetNextLine(tStrComp* pLine) {
     PInputTag HTag;
 
     InMacroFlag = False;
@@ -2355,13 +2364,15 @@ static void GetNextLine(as_dynstr_t* pLine) {
     }
 
     if (!FirstInputTag) {
-        *pLine->p_str = '\0';
+        StrCompReset(pLine);
         return;
     }
 
     if (!FirstInputTag->Processor(FirstInputTag, pLine)) {
         FirstInputTag->IsEmpty = True;
     }
+    pLine->Pos.StartCol = 0;
+    /* pLine->Pos.Len set by Processor() */
 
     MacLineSum++;
 }
@@ -2654,7 +2665,8 @@ static void Produce_Code(void) {
                dump the source line with the OpPart (macro's name) muted out. */
 
             if (MacProOutput && (LabPart.Pos.StartCol >= 0) && !OneMacro->LocIntLabel) {
-                PrintOneLineMuted(MacProFile, OneLine.p_str, &OpPart.Pos, &ArgPart.Pos);
+                PrintOneLineMuted(
+                        MacProFile, SrcLine.str.p_str, &OpPart.Pos, &ArgPart.Pos);
             }
         }
     }
@@ -2688,7 +2700,7 @@ static void Produce_Code(void) {
                 && ((*OpPart.str.p_str != '\0') || (*LabPart.str.p_str != '\0')
                     || (*CommPart.str.p_str != '\0'))) {
                 errno = 0;
-                fprintf(MacProFile, "%s\n", OneLine.p_str);
+                fprintf(MacProFile, "%s\n", SrcLine.str.p_str);
                 ChkIO(ErrNum_ListWrError);
             }
         }
@@ -2798,97 +2810,167 @@ static void split_arguments(tStrComp* p_args, char const* p_divide_chars) {
         adjust_copy_comp(&ArgStr[ArgCnt], p_run, p_div_pos - p_run);
         ArgStr[ArgCnt].Pos.StartCol = p_args->Pos.StartCol + (p_run - p_args->str.p_str);
         trim_copied_comp(&ArgStr[ArgCnt]);
+
         p_run = (p_div_pos < p_end) ? p_div_pos + 1 : p_end;
     }
 }
 
 static void SplitLine(void) {
-    char const *pRun, *pEnd, *pPos;
+    char const *  pRun, *p_comment_start, *p_line_end, *pPos;
+    Boolean const colon_in_attrchars = AttrChars && !!strchr(AttrChars, ':');
 
     Retracted = False;
 
     /* run preprocessor */
 
-    ExpandDefines(OneLine.p_str);
-    pRun = OneLine.p_str;
-    pEnd = pRun + strlen(pRun);
+    ExpandDefines(SrcLine.str.p_str);
+    pRun       = SrcLine.str.p_str;
+    p_line_end = p_comment_start = pRun + strlen(pRun);
 
-    /* If comment is present, ignore everything after it: */
+    StrCompReset(&LabPart);
+    StrCompReset(&OpPart);
+    StrCompReset(&CommPart);
+    StrCompReset(&AttrPart);
+    StrCompReset(&ArgPart);
 
-    pPos = QuotSMultPosQualify(pRun, pCommentLeadIn, QualifyQuote);
+    /* If comment is present, ignore everything after it. The
+       comment lead-in may occur anywhwere, also within tokens,
+       so handle prior to token parsing: */
+
+    pPos = QuotSMultPosQualify(SrcLine.str.p_str, pCommentLeadIn, QualifyQuote);
     if (pPos) {
-        adjust_copy_comp(&CommPart, pPos, pEnd - pPos);
-        CommPart.Pos.StartCol = pPos - OneLine.p_str;
-        pEnd                  = pPos;
-    } else {
-        StrCompReset(&CommPart);
+        p_comment_start = pPos;
     }
 
-    /* Non-blank character in first column is always label: */
+    /* Extract possible label & OpPart: */
 
-    if ((pRun < pEnd) && *pRun && !as_isspace(*pRun)) {
-        for (pPos = pRun; pPos < pEnd; pPos++) {
-            if (as_isspace(*pPos) || (*pPos == ':')) {
+    pRun = SrcLine.str.p_str;
+    while (pRun < p_comment_start) {
+        Boolean include_split_character = False, colon_occured = False, to_label = False;
+        int     len;
+
+        /* To start of non-blank token */
+
+        for (; (pRun < p_comment_start) && as_isspace(*pRun); pRun++)
+            ;
+
+        /* To end of token: */
+
+        for (pPos = pRun; (pPos < p_comment_start) && !as_isspace(*pPos); pPos++) {
+            if (!colon_occured && (*pPos == ':')) {
+                /* Trailing colon only marks end of label if at beginning of line, or
+                 * oppart/attribute splitters contain no colon: */
+                colon_occured = True;
+                if (label_leading_colon && (pPos == pRun)) {
+                } else if (
+                        !label_leading_colon
+                        && ((pRun == SrcLine.str.p_str)
+                            || (!*LabPart.str.p_str && !colon_in_attrchars))) {
+                    include_split_character = True;
+                    break;
+                }
+            }
+        }
+
+        /* Length of token to copy out: */
+
+        len = (pPos + include_split_character) - pRun;
+
+        /* Special comment lead in ? */
+
+        if (extra_comments && p_extra_comment_leadin) {
+            int leadin_length = strlen(p_extra_comment_leadin);
+            if ((len >= leadin_length)
+                && !strncmp(pRun, p_extra_comment_leadin, leadin_length)) {
+                p_comment_start = pRun;
                 break;
             }
         }
-        LabPart.Pos.StartCol = pRun - OneLine.p_str;
-        if (pPos >= pEnd) {
-            LabPart.Pos.Len = strmemcpy(LabPart.str.p_str, STRINGSIZE, pRun, pEnd - pRun);
-            pRun            = pEnd;
-        } else {
-            LabPart.Pos.Len = strmemcpy(LabPart.str.p_str, STRINGSIZE, pRun, pPos - pRun);
-            pRun            = pPos + 1;
+
+        /* If token starts in first column, it is a label, regardless of colon at
+         * beginning or end: */
+
+        if (pRun == SrcLine.str.p_str) {
+            to_label = True;
         }
-        if ((LabPart.Pos.Len > 0)
-            && (LabPart.str.p_str[LabPart.Pos.Len - 1] == ':')) { /* needed? */
-            LabPart.str.p_str[--LabPart.Pos.Len] = '\0';
+
+        /* Not yet a label fetched, and label marker? */
+
+        else if (
+                !*LabPart.str.p_str && (len >= 1)
+                && (pRun[label_leading_colon ? 0 : (len - 1)] == ':')) {
+            to_label = True;
         }
-    } else {
-        StrCompReset(&LabPart);
-    }
 
-    /* Opcode & Argument trennen */
+        /* When extracting label, omit leading/trailing colon: */
 
-    while (True) {
-        for (; (pRun < pEnd) && as_isspace(*pRun); pRun++)
-            ;
-        for (pPos = pRun; (pPos < pEnd) && !as_isspace(*pPos); pPos++)
-            ;
+        if (to_label) {
+            if (label_leading_colon && (pRun[0] == ':')) {
+                StrCompCopySub(&LabPart, &SrcLine, pRun + 1 - SrcLine.str.p_str, len - 1);
+            } else if (!label_leading_colon && (pRun[len - 1] == ':')) {
+                StrCompCopySub(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len - 1);
+            } else {
+                StrCompCopySub(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len);
+            }
+        }
 
-        /* If potential OpPart starts with argument divider,
-           OpPart is empty and rest of line is all-arguments: */
+        else {
+            /* Here we end up if OpPart is deduced, and it's time to extract
+               OpPart and ArgPart and to leave the loop.
+               If potential OpPart starts with argument divider,
+               OpPart is empty and rest of line is all-arguments: */
 
-        if (strchr(DivideChars, *pRun)) {
-            StrCompReset(&OpPart);
-            adjust_copy_comp(&ArgPart, pRun, pEnd - pRun);
-            ArgPart.Pos.StartCol = pRun - OneLine.p_str;
-        } else {
-            /* copy out OpPart */
-
-            OpPart.Pos.StartCol = pRun - OneLine.p_str;
-            OpPart.Pos.Len
-                    = strmemcpy(OpPart.str.p_str, OpPart.str.capacity, pRun, pPos - pRun);
-
-            /* continue after OpPart separator */
-
-            pRun = (pPos < pEnd) ? pPos + 1 : pEnd;
-
-            /* Falls noch kein Label da war, kann es auch ein Label sein */
-
-            if ((*LabPart.str.p_str == '\0') && OpPart.Pos.Len
-                && (OpPart.str.p_str[OpPart.Pos.Len - 1] == ':')) {
-                OpPart.str.p_str[--OpPart.Pos.Len] = '\0';
-                StrCompCopy(&LabPart, &OpPart);
-                continue; /* -> retry finding opcode */
+            if (strchr(DivideChars, *pRun))
+                /* StrCompReset(&OpPart) */;
+            else {
+                StrCompCopySub(&OpPart, &SrcLine, pRun - SrcLine.str.p_str, len);
+                pRun += len;
             }
 
-            /* save remainder to ArgPart */
+            /* Before copying out argument list, skip any leading spaces... */
 
-            adjust_copy_comp(&ArgPart, pRun, pEnd - pRun);
-            ArgPart.Pos.StartCol = pRun - OneLine.p_str;
+            for (; (pRun < p_comment_start) && as_isspace(*pRun); pRun++)
+                ;
+
+            /* ...and optionally handle Motorola-style end-of-line comments.
+               In this mode, arguments must not contain any (unquoted) spaces.
+               Note that instructions not expecting any arguments must ignore
+               possible arguments, since we cannot distinguish between arguments
+               and comments at this place: */
+
+            if (extra_comments) {
+                char const  blanks[] = {' ', '\0', '\t', '\0', '\0'};
+                char const* p_arg_term;
+                char        save;
+
+                save                      = *p_comment_start;
+                *((char*)p_comment_start) = '\0';
+                p_arg_term                = QuotSMultPos(pRun, blanks);
+                *((char*)p_comment_start) = save;
+                if (p_arg_term) {
+                    p_comment_start = p_arg_term;
+                }
+            }
+
+            /* If Motorola end-of-line comments are used, ArgPart already ends on
+               a non-space character.  Otherwise, trim trailing spaces now: */
+
+            else {
+                while ((p_comment_start > pRun) && as_isspace(*(p_comment_start - 1))) {
+                    p_comment_start--;
+                }
+            }
+
+            /* Put the rest of the line up to the comment into argument list part: */
+
+            StrCompCopySub(
+                    &ArgPart, &SrcLine, pRun - SrcLine.str.p_str, p_comment_start - pRun);
+            break;
         }
-        break;
+
+        /* advance pointer for next iteration to beginning of remainder */
+
+        pRun += len;
     }
 
     ArgCnt = 0;
@@ -2904,53 +2986,50 @@ static void SplitLine(void) {
         ArgStr[ArgCnt].Pos = ArgPart.Pos;
     }
 
-    /* Attribut abspalten */
+    /* Separate attribute from mnemonic */
 
     oppart_leading_dot = False;
     if (HasAttrs) {
-        char const* pActAttrChar;
-        char *      pAttrPos, *pActAttrPos;
-        int         Tries = 0;
+        char*   p_attr_split_pos;
+        Boolean discard_leading_split = False;
 
-    again:
-        pAttrPos  = NULL;
-        AttrSplit = ' ';
-        for (pActAttrChar = AttrChars; *pActAttrChar; pActAttrChar++) {
-            pActAttrPos = strchr(OpPart.str.p_str, *pActAttrChar);
-            if (pActAttrPos && ((!pAttrPos) || (pActAttrPos < pAttrPos))) {
-                pAttrPos = pActAttrPos;
+        p_attr_split_pos = strmultchr(OpPart.str.p_str, AttrChars);
+
+        /* The dot-prefixed OpPart may itself contain an attribute (.instr.attr).  So
+           reiterate splitting off attribute, but only once ;-) */
+
+        if (p_attr_split_pos == OpPart.str.p_str) {
+            discard_leading_split = True;
+            if (*p_attr_split_pos == '.') {
+                oppart_leading_dot = True;
             }
+            p_attr_split_pos = strmultchr(OpPart.str.p_str + 1, AttrChars);
         }
-        if (pAttrPos) {
-            AttrSplit = (*pAttrPos);
-            AttrPart.Pos.StartCol
-                    = OpPart.Pos.StartCol + (pAttrPos + 1 - OpPart.str.p_str);
-            AttrPart.Pos.Len = strmemcpy(
-                    AttrPart.str.p_str, STRINGSIZE, pAttrPos + 1, strlen(pAttrPos + 1));
-            *pAttrPos      = '\0';
-            OpPart.Pos.Len = pAttrPos - OpPart.str.p_str;
 
-            /* The dot-prefixed OpPart may itself contain an attribute (.instr.attr).  So
-               reiterate splitting off attribute, but only once ;-) */
+        if (p_attr_split_pos) {
+            size_t attr_len = strlen(p_attr_split_pos + 1);
 
-            if ((*OpPart.str.p_str == '\0') && (*AttrPart.str.p_str != '\0')) {
-                StrCompCopy(&OpPart, &AttrPart);
-                StrCompReset(&AttrPart);
-                if (!Tries && (AttrSplit == '.')) {
-                    oppart_leading_dot = True;
-                }
-                if (++Tries < 2) {
-                    goto again;
-                }
-            }
+            AttrSplit = (*p_attr_split_pos);
+            StrCompCopySub(
+                    &AttrPart, &OpPart, p_attr_split_pos + 1 - OpPart.str.p_str,
+                    attr_len);
+            StrCompShorten(&OpPart, attr_len + 1);
         } else {
-            StrCompReset(&AttrPart);
+            AttrSplit = ' ';
         }
-    } else {
-        StrCompReset(&AttrPart);
+
+        if (discard_leading_split) {
+            StrCompCutLeft(&OpPart, 1);
+        }
     }
 
     trim_copied_comp(&ArgPart);
+
+    if (*p_comment_start) {
+        StrCompCopySub(
+                &CommPart, &SrcLine, p_comment_start - SrcLine.str.p_str,
+                p_line_end - p_comment_start);
+    }
 
     /* Argumente zerteilen: */
 
@@ -2968,7 +3047,8 @@ static void ProcessFile(char* pFileName) {
 
     dbgentry("ProcessFile");
 
-    *OneLine.p_str = *CurrFileName = '\0';
+    StrCompReset(&SrcLine);
+    *CurrFileName = '\0';
     StrCompMkTemp(&FileArg, pFileName, 0);
     ExpandINCLUDE_Core(&FileArg, False);
 
@@ -2977,7 +3057,9 @@ static void ProcessFile(char* pFileName) {
     while (!InputEnd() && !ENDOccured) {
         /* Zeile lesen */
 
-        GetNextLine(&OneLine);
+        GetNextLine(&SrcLine);
+        SrcLine.Pos.StartCol = 0;
+        SrcLine.Pos.Len      = strlen(SrcLine.str.p_str);
 
         /* Ergebnisfelder vorinitialisieren */
 
@@ -2988,7 +3070,7 @@ static void ProcessFile(char* pFileName) {
         NextDoLst    = DoLst;
         NextIncDepth = IncDepth;
 
-        for (Run = OneLine.p_str; *Run != '\0'; Run++) {
+        for (Run = SrcLine.str.p_str; *Run != '\0'; Run++) {
             if (!as_isspace(*Run)) {
                 break;
             }
@@ -3000,7 +3082,7 @@ static void ProcessFile(char* pFileName) {
             Produce_Code();
         }
 
-        MakeList(OneLine.p_str);
+        MakeList(SrcLine.str.p_str);
 
         /* Do the transfer of a partial byte in bitwise segment from end to (next)
            beginning after printing the listing: */
@@ -3042,13 +3124,13 @@ static void ProcessFile(char* pFileName) {
 
         if (ENDOccured) {
             while (FirstInputTag) {
-                GetNextLine(&OneLine);
+                GetNextLine(&SrcLine);
             }
         }
     }
 
     while (FirstInputTag) {
-        GetNextLine(&OneLine);
+        GetNextLine(&SrcLine);
     }
 
     /* irgendeine Makrodefinition nicht abgeschlossen ? */
@@ -4655,6 +4737,7 @@ int main(int argc, char** argv) {
         coderx_init();
         code61860_init();
         code62015_init();
+        codetbil_init();
         First = FALSE;
     }
 

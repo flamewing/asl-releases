@@ -30,7 +30,7 @@
 #define default_regsyms_name "DEFAULT_REGSYMS"
 
 extern Boolean FPUAvail, PMMUAvail, SupAllowed, MaxMode, CompMode, TargetBigEndian,
-        DoPadding, Packing, default_regsyms;
+        DoPadding, Packing, default_regsyms, extra_comments;
 
 /* NOTE: will have to switch this to #define as soon as
    everything up to 2**15 is used up - 16 bit compilers
@@ -55,7 +55,8 @@ enum {
 };
 
 enum {
-    e_onoff_ext_reg_default_regsyms = 1 << 7
+    e_onoff_ext_reg_default_regsyms = 1 << 7,
+    e_onoff_ext_reg_extra_comments  = 1 << 8
 };
 
 extern unsigned onoff_test_and_set(unsigned mask);
@@ -68,6 +69,7 @@ extern void onoff_maxmode_add(void);
 extern void onoff_compmode_add(void);
 extern void onoff_bigendian_add(void);
 extern void onoff_packing_add(Boolean def_value);
+extern void onoff_extra_comments_add(void);
 
 extern void onoff_common_init(void);
 

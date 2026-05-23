@@ -176,6 +176,7 @@ static TFamilyDescr const Descrs[] = {
         {           "RX", 0x001e, eHexFormatIntel32, get_granularity_default},
         {      "SC61860", 0x001f,   eHexFormatMotoS, get_granularity_default},
         {      "SC62015", 0x0020,   eHexFormatMotoS, get_granularity_default},
+        {         "TBIL", 0x0030,   eHexFormatMotoS, get_granularity_default},
         {           NULL, 0xffff, eHexFormatDefault,                    NULL}
 };
 

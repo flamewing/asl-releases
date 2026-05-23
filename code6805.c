@@ -284,7 +284,7 @@ static int append_adr_vals(int dest) {
 static void DecodeFixed(Word Index) {
     BaseOrder const* pOrder = FixedOrders + Index;
 
-    if (ChkArgCnt(0, 0) && ChkMinCPU(pOrder->MinCPU)) {
+    if (moto8_chk_no_args() && ChkMinCPU(pOrder->MinCPU)) {
         CodeLen     = 1;
         BAsmCode[0] = pOrder->Code;
     }
@@ -1045,6 +1045,7 @@ static void InitFields(void) {
     add_brset_brclr("BRSET", 0x00);
 
     add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    add_moto8_comment_onoff();
     AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",

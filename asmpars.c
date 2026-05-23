@@ -751,11 +751,12 @@ tStrComp* ExpandStrSymbol(
             p_dest->str.p_str[0] = '\0';
         }
         if (p_start) {
-            unsigned    ls = p_start - src_comp.str.p_str;
-            String      expr, result;
-            tStrComp    expr_comp;
-            tEvalResult eval_result;
-            char const* p_stop;
+            unsigned         ls = p_start - src_comp.str.p_str;
+            String           expr;
+            tStrComp         expr_comp;
+            tEvalResult      eval_result;
+            char const*      p_stop;
+            as_nonz_dynstr_t result;
 
             if (convert_upper) {
                 as_dynstr_append_upr(&p_dest->str, src_comp.str.p_str, ls);
@@ -772,18 +773,22 @@ tStrComp* ExpandStrSymbol(
             StrCompCopySub(
                     &expr_comp, &src_comp, p_start + 1 - src_comp.str.p_str,
                     p_stop - p_start - 1);
-            EvalStrStringExpressionWithResult(&expr_comp, &eval_result, result);
+            as_nonz_dynstr_ini(&result, 0);
+            EvalStrStringExpressionWithResult(&expr_comp, &eval_result, &result);
+            if (eval_result.OK && mFirstPassUnknown(eval_result.Flags)) {
+                WrStrErrorPos(ErrNum_FirstPassCalc, &expr_comp);
+                eval_result.OK = False;
+            }
+            if (eval_result.OK) {
+                if (CaseSensitive) {
+                    as_dynstr_append(&p_dest->str, result.p_str, result.len);
+                } else {
+                    as_dynstr_append_upr(&p_dest->str, result.p_str, result.len);
+                }
+            }
+            as_nonz_dynstr_free(&result);
             if (!eval_result.OK) {
                 return NULL;
-            }
-            if (mFirstPassUnknown(eval_result.Flags)) {
-                WrStrErrorPos(ErrNum_FirstPassCalc, &expr_comp);
-                return NULL;
-            }
-            if (CaseSensitive) {
-                as_dynstr_append_c_str(&p_dest->str, result);
-            } else {
-                as_dynstr_append_c_str_upr(&p_dest->str, result);
             }
             StrCompIncRefLeft(&src_comp, p_stop + 1 - src_comp.str.p_str);
             first = False;
@@ -2593,7 +2598,7 @@ as_float_t EvalStrFloatExpression(tStrComp const* pExpr, Boolean* pResult) {
 }
 
 void EvalStrStringExpressionWithResult(
-        tStrComp const* pExpr, tEvalResult* pResult, char* pEvalResult) {
+        tStrComp const* pExpr, tEvalResult* pResult, struct as_nonz_dynstr* pEvalResult) {
     TempResult t;
 
     as_tempres_ini(&t);
@@ -2601,16 +2606,19 @@ void EvalStrStringExpressionWithResult(
 
     EvalStrExpression(pExpr, &t);
     if (t.Typ == TempInt) {
-        as_snprintf(pEvalResult, STRINGSIZE, "%llld", t.Contents.Int);
+        String buf;
+        as_snprintf(buf, sizeof(buf), "%llld", t.Contents.Int);
+        as_nonz_dynstr_copy_c_str(pEvalResult, buf);
         pResult->Flags         = t.Flags;
         pResult->AddrSpaceMask = t.AddrSpaceMask;
         pResult->DataSize      = t.DataSize;
         pResult->OK            = True;
     } else if (t.Typ != TempString) {
-        *pEvalResult = '\0';
+        as_nonz_dynstr_copy_c_str(pEvalResult, "");
+
         if (t.Typ != TempNone) {
             if (mFirstPassUnknown(t.Flags)) {
-                *pEvalResult           = '\0';
+                as_nonz_dynstr_copy_c_str(pEvalResult, "");
                 pResult->Flags         = t.Flags;
                 pResult->AddrSpaceMask = t.AddrSpaceMask;
                 pResult->DataSize      = t.DataSize;
@@ -2620,7 +2628,7 @@ void EvalStrStringExpressionWithResult(
             }
         }
     } else {
-        as_nonz_dynstr_to_c_str(pEvalResult, &t.Contents.str, STRINGSIZE);
+        as_nonz_dynstr_swap(pEvalResult, &t.Contents.str);
         pResult->Flags         = t.Flags;
         pResult->AddrSpaceMask = t.AddrSpaceMask;
         pResult->DataSize      = t.DataSize;
@@ -2629,7 +2637,8 @@ void EvalStrStringExpressionWithResult(
     as_tempres_free(&t);
 }
 
-void EvalStrStringExpression(tStrComp const* pExpr, Boolean* pResult, char* pEvalResult) {
+void EvalStrStringExpression(
+        tStrComp const* pExpr, Boolean* pResult, struct as_nonz_dynstr* pEvalResult) {
     tEvalResult Result;
 
     EvalStrStringExpressionWithResult(pExpr, &Result, pEvalResult);

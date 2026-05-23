@@ -1058,7 +1058,7 @@ static void ExpandS12ZBitfield(
 static void DecodeFixed(Word Code) {
     if (*AttrPart.str.p_str) {
         WrError(ErrNum_UseLessAttr);
-    } else if (ChkArgCnt(0, 0)) {
+    } else if (moto8_chk_no_args()) {
         PutCode(Code);
     }
 }
@@ -2540,6 +2540,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "DEFBITFIELD", 0, DecodeDEFBITFIELD);
 
     add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    add_moto8_comment_onoff();
     AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",

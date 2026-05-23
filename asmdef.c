@@ -82,19 +82,20 @@ Boolean     list_macro_handles; /* add macros' symbol handles to listing? */
 ShortInt    ExtendErrors;       /* erweiterte Fehlermeldungen */
 Integer     EnumSegment;        /* ENUM state & config */
 LongInt     EnumIncrement, EnumCurrentValue;
-Boolean     NumericErrors;    /* Fehlermeldungen mit Nummer */
-Boolean     CodeOutput;       /* Code erzeugen */
-Boolean     MacProOutput;     /* Makroprozessorausgabe schreiben */
-Boolean     MacroOutput;      /* gelesene Makros schreiben */
-Boolean     HardRanges;       /* Bereichsfehler echte Fehler ? */
-char const* DivideChars;      /* Trennzeichen fuer Parameter. Inhalt Read Only! */
-Boolean     HasAttrs;         /* Opcode hat Attribut */
-char const* AttrChars;        /* Zeichen, mit denen Attribut abgetrennt wird */
-Boolean     MsgIfRepass;      /* Meldungen, falls neuer Pass erforderlich */
-Integer     PassNoForMessage; /* falls ja: ab welchem Pass ? */
-Boolean     CaseSensitive;    /* Gross/Kleinschreibung unterscheiden ? */
-LongInt     NestMax;          /* max. nesting level of a macro */
-Boolean     GNUErrors;        /* GNU-error-style messages ? */
+Boolean     NumericErrors;       /* Fehlermeldungen mit Nummer */
+Boolean     CodeOutput;          /* Code erzeugen */
+Boolean     MacProOutput;        /* Makroprozessorausgabe schreiben */
+Boolean     MacroOutput;         /* gelesene Makros schreiben */
+Boolean     HardRanges;          /* Bereichsfehler echte Fehler ? */
+Boolean     label_leading_colon; /* Labels have colon at beginning instead of end? */
+char const* DivideChars;         /* Trennzeichen fuer Parameter. Inhalt Read Only! */
+Boolean     HasAttrs;            /* Opcode hat Attribut */
+char const* AttrChars;           /* Zeichen, mit denen Attribut abgetrennt wird */
+Boolean     MsgIfRepass;         /* Meldungen, falls neuer Pass erforderlich */
+Integer     PassNoForMessage;    /* falls ja: ab welchem Pass ? */
+Boolean     CaseSensitive;       /* Gross/Kleinschreibung unterscheiden ? */
+LongInt     NestMax;             /* max. nesting level of a macro */
+Boolean     GNUErrors;           /* GNU-error-style messages ? */
 
 FILE* PrgFile = NULL; /* Codedatei */
 
@@ -152,15 +153,16 @@ char      MomCPUIdent[20],    /* dessen Name in ASCII */
 int         OutRadixBase;   /* dito fuer Ausgabe */
 int         ListRadixBase;  /* ditto for listing */
 Boolean     ListPCZeroPad;  /* PC with leading zeros? */
-char const* pCommentLeadIn; /* list of comment lead-in sequences */
+char const *pCommentLeadIn, /* list of comment lead-in sequences */
+        *p_extra_comment_leadin;
 
-tStrComp*   ArgStr; /* Komponenten der Zeile */
-tStrComp    LabPart, CommPart, ArgPart, OpPart, AttrPart;
-char        AttrSplit;
-Boolean     oppart_leading_dot;
-int         ArgCnt; /* Argumentzahl */
-int         AllocArgCnt;
-as_dynstr_t OneLine; /* eingelesene Zeile */
+tStrComp* ArgStr; /* Komponenten der Zeile */
+tStrComp  LabPart, CommPart, ArgPart, OpPart, AttrPart;
+char      AttrSplit;
+Boolean   oppart_leading_dot;
+int       ArgCnt; /* Argumentzahl */
+int       AllocArgCnt;
+tStrComp  SrcLine; /* eingelesene Zeile */
 #ifdef PROFILE_MEMO
 unsigned      NumMemo;
 unsigned long NumMemoCnt, NumMemoSum;
@@ -485,7 +487,7 @@ void asmdef_init(void) {
     StrCompAlloc(&AttrPart, STRINGSIZE);
     StrCompAlloc(&ArgPart, STRINGSIZE);
     StrCompAlloc(&CommPart, STRINGSIZE);
-    as_dynstr_ini(&OneLine, STRINGSIZE);
+    StrCompAlloc(&SrcLine, STRINGSIZE);
     ListLine       = GetString();
     PrtInitString  = GetString();
     PrtExitString  = GetString();

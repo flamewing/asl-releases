@@ -3149,3 +3149,7 @@ WE32xxx uses C integer syntax, `.` as its program-counter symbol, and the `BYTE`
 WE32xxx `BYTE`, `HALF`, and `WORD` accept only integers. `FLT` accepts only IEEE single-precision floating-point values and `DOUBLE` only double-precision values.
 
 CR16 provides `BYTE`/`DC8` for strings or integers; `WORD`/`DC16`, `DC24`, `LONG`/`DC32`, and `DC64` for integers of the corresponding bit width; `FLOAT`/`DF32` and `DOUBLE`/`DF64` for floating-point values. Like VAX, it supports `BLK` reservation directives.
+
+### EXTRACOMMENTS
+
+On 68xx targets, `EXTRACOMMENTS ON` permits labels or mnemonics beginning with `*` to introduce comments. It also ends the argument list at the first unquoted space and treats the remainder as a comment. Keep spaces out of instruction arguments in this mode. The default is OFF; `-extracomments` enables it initially, and the `EXTRACOMMENTS` symbol reports the current setting.

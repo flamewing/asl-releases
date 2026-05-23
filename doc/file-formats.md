@@ -205,3 +205,5 @@ TMS340xx object records use processor ID `$2d`. Address granularity below one by
 CR16A/B uses processor header ID `$2e`.
 
 CR16C uses processor header ID `$2f`.
+
+TBIL uses processor header ID `$30`.

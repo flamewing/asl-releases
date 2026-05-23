@@ -635,7 +635,7 @@ static void append_adr_vals(adr_vals_t const* p_adr_vals) {
 static void DecodeFixed(Word Index) {
     FixedOrder* pOrder = FixedOrders + Index;
 
-    if (!ChkArgCnt(0, 0))
+    if (!moto8_chk_no_args())
         ;
     else if (*AttrPart.str.p_str) {
         WrError(ErrNum_UseLessAttr);
@@ -1712,6 +1712,7 @@ static void InitFields(void) {
     AddReg("CCRW", eRegCCRW, 1, CPU6812X);
 
     add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    add_moto8_comment_onoff();
     AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",

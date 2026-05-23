@@ -200,3 +200,5 @@ DEC VAX targets are supported, including MicroVAX and the VAX-11, VAX-8xxx famil
 The eZ80 targets are `eZ80190`, `eZ80L92`, `eZ80F91`, `eZ80F92` and `eZ80F93`. They provide 24-bit registers and a 16 Mbyte address space. Some variants have an 8-bit I register, and eZ80190 omits several string I/O instructions.
 
 National Semiconductor CR16A, CR16B and CR16C are also supported.
+
+Tiny BASIC IL support was contributed by Jeff Epler.

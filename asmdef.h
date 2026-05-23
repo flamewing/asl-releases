@@ -241,6 +241,7 @@ extern Boolean     CodeOutput;
 extern Boolean     MacProOutput;
 extern Boolean     MacroOutput;
 extern Boolean     HardRanges;
+extern Boolean     label_leading_colon;
 extern char const* DivideChars;
 extern Boolean     HasAttrs;
 extern char const* AttrChars;
@@ -299,14 +300,14 @@ extern char         MomCPUIdent[20], MomFPUIdent[20], MomPMMUIdent[20];
 
 extern int         OutRadixBase, ListRadixBase;
 extern Boolean     ListPCZeroPad;
-extern char const* pCommentLeadIn;
+extern char const *pCommentLeadIn, *p_extra_comment_leadin;
 
-extern tStrComp*   ArgStr;
-extern tStrComp    LabPart, CommPart, ArgPart, OpPart, AttrPart;
-extern char        AttrSplit;
-extern Boolean     oppart_leading_dot;
-extern int         ArgCnt;
-extern as_dynstr_t OneLine;
+extern tStrComp* ArgStr;
+extern tStrComp  LabPart, CommPart, ArgPart, OpPart, AttrPart;
+extern char      AttrSplit;
+extern Boolean   oppart_leading_dot;
+extern int       ArgCnt;
+extern tStrComp  SrcLine;
 #ifdef PROFILE_MEMO
 extern unsigned      NumMemo;
 extern unsigned long NumMemoSum, NumMemoCnt;

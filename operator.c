@@ -336,7 +336,10 @@ static Boolean AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
                     as_tempres_set_int(pErg, RIntVal);
                 }
             } else {
-                WrError(error_num);
+                String arg;
+
+                as_nonz_dynstr_to_c_str(arg, &pRVal->Contents.str, sizeof(arg));
+                WrXError(error_num, arg);
             }
             break;
         }
@@ -368,7 +371,10 @@ static Boolean AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
                     as_tempres_set_int(pErg, LIntVal);
                 }
             } else {
-                WrError(error_num);
+                String arg;
+
+                as_nonz_dynstr_to_c_str(arg, &pLVal->Contents.str, sizeof(arg));
+                WrXError(error_num, arg);
             }
             break;
         }

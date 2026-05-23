@@ -295,10 +295,13 @@ void KillPrefBlanksStrCompRef(struct sStrComp* pComp) {
  * \fn     KillPostBlanksStrComp(struct sStrComp *pComp)
  * \brief  remove trailing spaces on string component
  * \param  pComp component to handle
+ * \return # of trailing spaces removed
  * ------------------------------------------------------------------------ */
 
-void KillPostBlanksStrComp(struct sStrComp* pComp) {
-    pComp->Pos.Len -= KillPostBlanks(pComp->str.p_str);
+int KillPostBlanksStrComp(struct sStrComp* pComp) {
+    int ret = KillPostBlanks(pComp->str.p_str);
+    pComp->Pos.Len -= ret;
+    return ret;
 }
 
 /*!------------------------------------------------------------------------

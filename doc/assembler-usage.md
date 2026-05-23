@@ -1067,3 +1067,5 @@ allowed; the default is 1. A larger value may be needed for chained references.
 The CMake option `AS_USE_INT128` enables 128-bit expressions when the compiler supports them. It defaults to `OFF` to preserve existing 64-bit expression semantics, including comparisons between signed phase addresses and unsigned hexadecimal constants. Sources can query `INTWIDTH` to adapt to either mode. Listing addresses retain their 64-bit representation.
 
 `-listing ON|OFF|NOSKIPPED|PURECODE` sets the initial listing mode using the same values as the `LISTING` statement. NOSKIPPED omits excluded source; PURECODE also omits conditional control lines.
+
+`-extracomments` enables the optional Motorola asterisk and end-of-line comment syntax from the start of assembly.

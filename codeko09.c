@@ -431,7 +431,7 @@ static void append_adr_vals(adr_vals_t const* p_vals) {
  * ------------------------------------------------------------------------ */
 
 static void decode_inh(Word code) {
-    if (ChkArgCnt(0, 0)) {
+    if (moto8_chk_no_args()) {
         BAsmCode[CodeLen++] = Lo(code);
     }
 }
@@ -810,6 +810,7 @@ static void init_fields(void) {
     AddInstTable(InstTable, "BSETD", 0xd0, decode_bset);
 
     add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
+    add_moto8_comment_onoff();
     AddMoto16Pseudo(InstTable, e_moto_pseudo_flags_be);
     AddInstTable(
             InstTable, "DB",
