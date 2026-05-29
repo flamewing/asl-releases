@@ -142,4 +142,6 @@ static inline int as_isspace(int c) {
 
 #define as_isalnum_ubar(c) (as_isalnum(c) || ((c) == '_'))
 
+#define as_isspace_or_nul(c) (as_isspace(c) || ((c) == '\0'))
+
 #endif /* STRUTIL_H */

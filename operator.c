@@ -53,17 +53,16 @@
     } while (0)
 
 /*!------------------------------------------------------------------------
- * \fn     reg_cmp(const tRegDescr *p_reg1, tSymbolSize data_size1,
-                   const tRegDescr *p_reg2, tSymbolSize data_size2)
+ * \fn     reg_cmp(const TempResult *p_val1, const TempResult *p_val2)
  * \brief  compare two register symbols
- * \param  p_reg1, p_reg2 registers to compare
+ * \param  p_val1, p_val2 registers to compare
  * \return -1 : reg1 < reg2
  *          0 : reg1 = reg2
  *         +1 : reg1 > reg2
  *         -2 : unequal, but no smaller/greater relation can be given
  * ------------------------------------------------------------------------ */
 
-static int reg_cmp(TempResult const* p_val1, TempResult const* p_val2) {
+int reg_cmp(TempResult const* p_val1, TempResult const* p_val2) {
     tRegInt num1, num2;
 
     /* If the two symbols are for different target architectures,

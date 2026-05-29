@@ -888,8 +888,15 @@ static void CodeMESSAGE(Word level) {
             } else if (
                     (level != e_level_error)
                     || !FindAndTakeExpectError(ErrNum_UserError)) {
+                char add[11];
+
+                if (NumericErrors) {
+                    as_snprintf(add, sizeof(add), " #%d", ErrNum_UserError);
+                } else {
+                    *add = '\0';
+                }
                 WrErrorString(
-                        mess.p_str, "", level == e_level_warning, level == e_level_fatal,
+                        mess.p_str, add, level == e_level_warning, level == e_level_fatal,
                         NULL, NULL);
             }
         }

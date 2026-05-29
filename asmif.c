@@ -21,6 +21,7 @@
 #include "chunks.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "operator.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -370,6 +371,9 @@ static void CodeCASE(Word code) {
                                           &t.Contents.str,
                                           &FirstIfSave->SaveExpr.Contents.str)
                                   == 0);
+                            break;
+                        case TempReg:
+                            eq = !reg_cmp(&t, &FirstIfSave->SaveExpr);
                             break;
                         default:
                             eq = False;

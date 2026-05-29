@@ -170,18 +170,19 @@ static void SetK4Ranges(void) {
 
 /*---------------------------------------------------------------------------*/
 
-static Boolean DecodeAcc(char const* pArg, Byte* pReg) {
+static Boolean IsAcc(char Arg, Byte* pReg) {
     static char const Regs[] = "AB";
+    char const*       pPos   = strchr(Regs, as_toupper(Arg));
 
-    if (strlen(pArg) == 1) {
-        char const* pPos = strchr(Regs, as_toupper(*pArg));
-
-        if (pPos) {
-            *pReg = pPos - Regs;
-            return True;
-        }
+    if (pPos) {
+        *pReg = pPos - Regs;
+        return True;
     }
     return False;
+}
+
+static Boolean DecodeAcc(char const* pArg, Byte* pReg) {
+    return (strlen(pArg) == 1) ? IsAcc(*pArg, pReg) : False;
 }
 
 static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) {
@@ -363,6 +364,29 @@ static void Try2Split(int Src) {
         StrCompSplitRight(&ArgStr[Src], &ArgStr[Src + 1], p);
         KillPostBlanksStrComp(&ArgStr[Src]);
         KillPrefBlanksStrComp(&ArgStr[Src + 1]);
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     extract_acc_arg(const char *p_src_arg, Byte *p_acc_reg)
+ * \brief  decode accumulator name from (beginning of) source arg
+ * \param  p_src_arg source argument
+ * \param  p_acc_reg dest buffer for accumulator #
+ * \return NULL if no accumulator given, otherwise * to remainder of argument
+ * ------------------------------------------------------------------------ */
+
+static char const* extract_acc_arg(char const* p_src_arg, Byte* p_acc_reg) {
+    int l = strlen(p_src_arg);
+
+    if ((l >= 1) && IsAcc(*p_src_arg, p_acc_reg) && as_isspace_or_nul(p_src_arg[1])) {
+        char const* p_remainder;
+
+        for (p_remainder = p_src_arg + 1; *p_remainder && as_isspace(*p_remainder);
+             p_remainder++)
+            ;
+        return p_remainder;
+    } else {
+        return NULL;
     }
 }
 
@@ -609,33 +633,53 @@ static void DecodeBTxx(Word Index) {
 }
 
 static void DecodeALU8(Word Code) {
-    Byte Reg;
-    int  MinArgCnt = Hi(Code) & 3;
+    Byte    acc_reg;
+    Boolean acc_set   = False;
+    int     MinArgCnt = Hi(Code) & 3, start_arg = 1;
 
-    /* dirty hack: LDA/STA/ORA, and first arg is not A or B, treat like LDAA/STAA/ORAA: */
+    /* Instruction already contains accumulator spec in mnemonic? */
 
-    if ((MinArgCnt == 2) && (as_toupper(OpPart.str.p_str[2]) == 'A') && (ArgCnt >= 1)
-        && !DecodeAcc(ArgStr[1].str.p_str, &Reg)) {
-        MinArgCnt = 1;
+    if (MinArgCnt == 1) {
+        acc_reg = (Code >> 14) & 1;
+        acc_set = True;
     }
 
-    if (ChkArgCnt(MinArgCnt, MinArgCnt + 1)) {
+    /* If not, accumulator spec may be the first argument or a
+       'prefix' of it: */
+
+    if (!acc_set && (ArgCnt >= 1)) {
+        char const* p_remainder = extract_acc_arg(ArgStr[1].str.p_str, &acc_reg);
+
+        if (p_remainder) {
+            acc_set = True;
+            if (!*p_remainder) {
+                start_arg = 2;
+            } else {
+                StrCompCutLeft(&ArgStr[1], p_remainder - ArgStr[1].str.p_str);
+            }
+        }
+    }
+
+    /* No accumulator arg detected. if mnemonic ends on 'A' or, 'B', assume respective
+       accumulator: */
+
+    if (!acc_set && IsAcc(OpPart.str.p_str[2], &acc_reg)) {
+        acc_set = True;
+    }
+
+    if (!acc_set) {
+        WrError(ErrNum_InvAddrMode);
+        return;
+    }
+
+    if (ChkArgCnt(start_arg, start_arg + 1)) {
         DecodeAdr(
-                MinArgCnt, ArgCnt, eSymbolSize8Bit,
+                start_arg, ArgCnt, eSymbolSize8Bit,
                 ((Code & 0x8000) ? MModImm : 0) | MModInd | MModExt | MModDir);
         if (AdrMode != ModNone) {
-            BAsmCode[PrefCnt] = Lo(Code) | (AdrPart << 4);
-            if (MinArgCnt == 1) {
-                AdrMode = ModAcc;
-                AdrPart = (Code & 0x4000) >> 14;
-            } else {
-                DecodeAdr(1, 1, eSymbolSizeUnknown, MModAcc);
-            }
-            if (AdrMode != ModNone) {
-                BAsmCode[PrefCnt] |= AdrPart << 6;
-                CodeLen = PrefCnt + 1 + AdrCnt;
-                append_adr_vals(1 + PrefCnt);
-            }
+            BAsmCode[PrefCnt] = Lo(Code) | (AdrPart << 4) | (acc_reg << 6);
+            append_adr_vals(1 + PrefCnt);
+            CodeLen = PrefCnt + 1 + AdrCnt;
         }
     }
 }
@@ -698,17 +742,15 @@ static void AddRel(char const* NName, CPUVar NMin, Word NCode) {
     AddInstTable(InstTable, NName, InstrZ++, DecodeRel);
 }
 
-static void AddALU8(
-        char const* NamePlain, char const* NameA, char const* NameB, char const* NameB2,
-        Boolean MayImm, Byte NCode) {
+static void AddALU8(char const* p_name, Boolean MayImm, Byte NCode) {
+    char name[10];
     Word BaseCode = NCode | (MayImm ? 0x8000 : 0);
 
-    AddInstTable(InstTable, NamePlain, BaseCode | (2 << 8), DecodeALU8);
-    AddInstTable(InstTable, NameA, BaseCode | (1 << 8), DecodeALU8);
-    AddInstTable(InstTable, NameB, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
-    if (NameB2) {
-        AddInstTable(InstTable, NameB2, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
-    }
+    AddInstTable(InstTable, p_name, BaseCode | (2 << 8), DecodeALU8);
+    as_snprintf(name, sizeof(name), "%sA", p_name);
+    AddInstTable(InstTable, name, BaseCode | (1 << 8), DecodeALU8);
+    as_snprintf(name, sizeof(name), "%sB", p_name);
+    AddInstTable(InstTable, name, BaseCode | (1 << 8) | 0x4000, DecodeALU8);
 }
 
 static void AddALU16(
@@ -721,15 +763,18 @@ static void AddALU16(
     AddInstTable(InstTable, NName, InstrZ++, DecodeALU16);
 }
 
-static void AddSing8(
-        char const* NamePlain, char const* NameA, char const* NameB, Byte NCode) {
-    AddInstTable(InstTable, NamePlain, NCode, DecodeSing8);
-    AddInstTable(InstTable, NameA, NCode | 0, DecodeSing8_Acc);
-    AddInstTable(InstTable, NameB, NCode | 0x10, DecodeSing8_Acc);
+static void AddSing8(char const* p_name, Byte NCode) {
+    char name[10];
+    AddInstTable(InstTable, p_name, NCode, DecodeSing8);
+    as_snprintf(name, sizeof(name), "%sA", p_name);
+    AddInstTable(InstTable, name, NCode | 0, DecodeSing8_Acc);
+    as_snprintf(name, sizeof(name), "%sB", p_name);
+    AddInstTable(InstTable, name, NCode | 0x10, DecodeSing8_Acc);
 }
 
 static void InitFields(void) {
     InstTable = CreateInstTable(317);
+    SetDynamicInstTable(InstTable);
 
     add_null_pseudo(InstTable);
 
@@ -811,17 +856,20 @@ static void InitFields(void) {
     AddRel("BVC", CPU6800, 0x28);
     AddRel("BVS", CPU6800, 0x29);
 
-    AddALU8("ADC", "ADCA", "ADCB", NULL, True, 0x89);
-    AddALU8("ADD", "ADDA", "ADDB", NULL, True, 0x8b);
-    AddALU8("AND", "ANDA", "ANDB", NULL, True, 0x84);
-    AddALU8("BIT", "BITA", "BITB", NULL, True, 0x85);
-    AddALU8("CMP", "CMPA", "CMPB", NULL, True, 0x81);
-    AddALU8("EOR", "EORA", "EORB", NULL, True, 0x88);
-    AddALU8("LDA", "LDAA", "LDAB", "LDB", True, 0x86);
-    AddALU8("ORA", "ORAA", "ORAB", "ORB", True, 0x8a);
-    AddALU8("SBC", "SBCA", "SBCB", NULL, True, 0x82);
-    AddALU8("STA", "STAA", "STAB", "STB", False, 0x87);
-    AddALU8("SUB", "SUBA", "SUBB", NULL, True, 0x80);
+    AddALU8("ADC", True, 0x89);
+    AddALU8("ADD", True, 0x8b);
+    AddALU8("AND", True, 0x84);
+    AddALU8("BIT", True, 0x85);
+    AddALU8("CMP", True, 0x81);
+    AddALU8("EOR", True, 0x88);
+    AddALU8("LDA", True, 0x86);
+    AddInstTable(InstTable, "LDB", 0x86 | (1 << 8) | 0xc000, DecodeALU8);
+    AddALU8("ORA", True, 0x8a);
+    AddInstTable(InstTable, "ORB", 0x8a | (1 << 8) | 0xc000, DecodeALU8);
+    AddALU8("SBC", True, 0x82);
+    AddALU8("STA", False, 0x87);
+    AddInstTable(InstTable, "STB", 0x87 | (1 << 8) | 0xc000, DecodeALU8);
+    AddALU8("SUB", True, 0x80);
 
     InstrZ = 0;
     AddALU16("ADDD", True, CPU6801, 0, 0xc3);
@@ -841,18 +889,18 @@ static void InitFields(void) {
     AddALU16("STY", False, CPU6811, 3, 0xcf);
     AddALU16("SUBD", True, CPU6801, 0, 0x83);
 
-    AddSing8("ASL", "ASLA", "ASLB", 0x48);
-    AddSing8("ASR", "ASRA", "ASRB", 0x47);
-    AddSing8("CLR", "CLRA", "CLRB", 0x4f);
-    AddSing8("COM", "COMA", "COMB", 0x43);
-    AddSing8("DEC", "DECA", "DECB", 0x4a);
-    AddSing8("INC", "INCA", "INCB", 0x4c);
-    AddSing8("LSL", "LSLA", "LSLB", 0x48);
-    AddSing8("LSR", "LSRA", "LSRB", 0x44);
-    AddSing8("NEG", "NEGA", "NEGB", 0x40);
-    AddSing8("ROL", "ROLA", "ROLB", 0x49);
-    AddSing8("ROR", "RORA", "RORB", 0x46);
-    AddSing8("TST", "TSTA", "TSTB", 0x4d);
+    AddSing8("ASL", 0x48);
+    AddSing8("ASR", 0x47);
+    AddSing8("CLR", 0x4f);
+    AddSing8("COM", 0x43);
+    AddSing8("DEC", 0x4a);
+    AddSing8("INC", 0x4c);
+    AddSing8("LSL", 0x48);
+    AddSing8("LSR", 0x44);
+    AddSing8("NEG", 0x40);
+    AddSing8("ROL", 0x49);
+    AddSing8("ROR", 0x46);
+    AddSing8("TST", 0x4d);
 
     AddInstTable(InstTable, "PSH", 0x36, DecodePSH_PUL);
     AddInstTable(InstTable, "PSHA", 0x36, DecodeSing8_Acc);

@@ -2710,10 +2710,11 @@ tRegEvalResult EvalStrRegExpressionAsOperand(
     case ErrNum_SymbolUndef:
         if (MustBeReg) {
             if (PassNo <= MaxSymPass) {
-                pResult->Reg     = 0;
-                pResult->Dissect = NULL;
-                pResult->compare = NULL;
-                Repass           = True;
+                pResult->Reg          = 0;
+                pEvalResult->DataSize = ReqSize;
+                pResult->Dissect      = NULL;
+                pResult->compare      = NULL;
+                Repass                = True;
                 return eIsReg;
             } else {
                 WrStrErrorPos(ErrNum_InvReg, pArg);

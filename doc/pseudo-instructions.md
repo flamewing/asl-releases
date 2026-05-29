@@ -3153,3 +3153,5 @@ CR16 provides `BYTE`/`DC8` for strings or integers; `WORD`/`DC16`, `DC24`, `LONG
 ### EXTRACOMMENTS
 
 On 68xx targets, `EXTRACOMMENTS ON` permits labels or mnemonics beginning with `*` to introduce comments. It also ends the argument list at the first unquoted space and treats the remainder as a comment. Keep spaces out of instruction arguments in this mode. The default is OFF; `-extracomments` enables it initially, and the `EXTRACOMMENTS` symbol reports the current setting.
+
+8080/8085 support register symbols defined with `REG`. Register values can be compared for equality and inequality; aliases preserve the underlying register identity.
