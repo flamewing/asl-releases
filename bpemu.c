@@ -32,15 +32,14 @@
 #    include <direct.h>
 #endif
 
-char* FExpand(char* Src) {
-    static String CurrentDir;
-    String        Copy;
+void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
+    String Copy;
 #ifdef DRSEP
     String DrvPart;
 #endif /* DRSEP */
     char *p, *p2;
 
-    strmaxcpy(Copy, Src, STRINGSIZE);
+    strmaxcpy(Copy, p_src, sizeof(Copy));
 
 #ifdef DRSEP
     p = strchr(Copy, DRSEP);
@@ -65,7 +64,7 @@ char* FExpand(char* Src) {
         } else {
             DrvNum = toupper(*DrvPart) - '@';
         }
-        getcurdir(DrvNum, CurrentDir);
+        getcurdir(DrvNum, p_dest);
     }
 #elif (defined __EMX__) || (defined __IBMC__)
     {
@@ -79,9 +78,12 @@ char* FExpand(char* Src) {
             DrvNum = toupper(*DrvPart) - '@';
         }
         Dummy = 255;
-        DosQueryCurrentDir(DrvNum, (PBYTE)CurrentDir, &Dummy);
+        DosQueryCurrentDir(DrvNum, (PBYTE)p_dest, &Dummy);
     }
-#elif (defined __MINGW32__) || (defined _MSC_VER) /* MinGW or MSVC */
+
+#elif (defined _WIN32)
+#    if (defined __MINGW32__) || (defined _MSC_VER)
+
     {
         int DrvNum;
 
@@ -92,35 +94,38 @@ char* FExpand(char* Src) {
         } else {
             DrvNum = toupper(*DrvPart) - '@';
         }
-        _getdcwd(DrvNum, CurrentDir, STRINGSIZE);
-        if (CurrentDir[1] == ':') {
-            strmov(CurrentDir, CurrentDir + 2);
+        _getdcwd(DrvNum, p_dest, dest_size);
+        if (p_dest[1] == ':') {
+            strmov(p_dest, p_dest + 2);
         }
     }
-#elif (defined _WIN32)                            /* CygWIN */
-    if (!getcwd(CurrentDir, STRINGSIZE)) {
-        0 [CurrentDir] = '\0';
+
+#    else /* CygWIN */
+    if (!getcwd(p_dest, dest_size)) {
+        0 [p_dest] = '\0';
     }
-    for (p = CurrentDir; *p; p++) {
+    for (p = p_dest; *p; p++) {
         if (*p == '/') {
             *p = '\\';
         }
     }
-#else                                             /* UNIX */
-    if (!getcwd(CurrentDir, STRINGSIZE)) {
-        0 [CurrentDir] = '\0';
+
+#    endif
+#else /* UNIX */
+    if (!getcwd(p_dest, dest_size)) {
+        0 [p_dest] = '\0';
     }
 #endif
 
-    if ((*CurrentDir) && (CurrentDir[strlen(CurrentDir) - 1] != PATHSEP)) {
-        strmaxcat(CurrentDir, SPATHSEP, STRINGSIZE);
+    if ((*p_dest) && (p_dest[strlen(p_dest) - 1] != PATHSEP)) {
+        strmaxcat(p_dest, SPATHSEP, dest_size);
     }
-    if (*CurrentDir != PATHSEP) {
-        strmaxprep(CurrentDir, SPATHSEP, STRINGSIZE);
+    if (*p_dest != PATHSEP) {
+        strmaxprep(p_dest, SPATHSEP, dest_size);
     }
 
     if (*Copy == PATHSEP) {
-        strmaxcpy(CurrentDir, SPATHSEP, STRINGSIZE);
+        strmaxcpy(p_dest, SPATHSEP, dest_size);
         strmov(Copy, Copy + 1);
     }
 
@@ -131,8 +136,8 @@ char* FExpand(char* Src) {
     if (*DrvPart)
 #    endif
     {
-        strmaxprep(CurrentDir, SDRSEP, STRINGSIZE);
-        strmaxprep(CurrentDir, DrvPart, STRINGSIZE);
+        strmaxprep(p_dest, SDRSEP, dest_size);
+        strmaxprep(p_dest, DrvPart, dest_size);
     }
 #endif
 
@@ -144,20 +149,18 @@ char* FExpand(char* Src) {
         *p = '\0';
         if (!strcmp(Copy, "."))
             ;
-        else if ((!strcmp(Copy, "..")) && (strlen(CurrentDir) > 1)) {
-            CurrentDir[strlen(CurrentDir) - 1] = '\0';
-            p2                                 = strrchr(CurrentDir, PATHSEP);
-            p2[1]                              = '\0';
+        else if ((!strcmp(Copy, "..")) && (strlen(p_dest) > 1)) {
+            p_dest[strlen(p_dest) - 1] = '\0';
+            p2                         = strrchr(p_dest, PATHSEP);
+            p2[1]                      = '\0';
         } else {
-            strmaxcat(CurrentDir, Copy, STRINGSIZE);
-            strmaxcat(CurrentDir, SPATHSEP, STRINGSIZE);
+            strmaxcat(p_dest, Copy, dest_size);
+            strmaxcat(p_dest, SPATHSEP, dest_size);
         }
         strmov(Copy, p + 1);
     }
 
-    strmaxcat(CurrentDir, Copy, STRINGSIZE);
-
-    return CurrentDir;
+    strmaxcat(p_dest, Copy, dest_size);
 }
 
 /*!------------------------------------------------------------------------
@@ -209,6 +212,11 @@ int FSearch(
 
     Boolean     Absolute = (*pFileToSearch == '/');
     char const *pPos, *pStart;
+
+#if 0
+  fprintf(stderr, "FSearch(..., %u, \"%s\", \"%s\", \"%s\")\n",
+          (unsigned)DestSize, pFileToSearch, pCurrFileName, pSearchPath);
+#endif
 
 #if (defined _WIN32) || (defined __EMX__) || (defined __IBMC__) || (defined __MSDOS__)
     if (*pFileToSearch == PATHSEP) {

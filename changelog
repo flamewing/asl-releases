@@ -1,3 +1,9 @@
+2026-06-07 [1.42 Bld 308]
+
+- Addition    : Add support for S390X, IA64 and HPPA as host
+- Change      : A few changes to make compilation with
+                MSVC simpler
+
 2026-05-29 [1.42 Bld 307]
 
 - Addition    : Add register symbols for 8080/8085

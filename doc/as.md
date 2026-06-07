@@ -5,7 +5,7 @@
 
 Welcome to the Flamewing's Enhanced AS documentation!
 
-Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 307]`.
+Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 308]`.
 
 # Macro Assembler AS V1.42
 

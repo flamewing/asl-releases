@@ -646,31 +646,6 @@ void KillSuffix(char* s) {
 }
 
 /*--------------------------------------------------------------------------*/
-/* Pfadanteil (Laufwerk+Verzeichnis) von einem Dateinamen abspalten */
-
-char* PathPart(char* Name) {
-    static String s;
-    char*         p;
-
-    strmaxcpy(s, Name, STRINGSIZE);
-
-    p = strrchr(Name, PATHSEP);
-#ifdef DRSEP
-    if (!p) {
-        p = strrchr(Name, DRSEP);
-    }
-#endif
-
-    if (!p) {
-        *s = '\0';
-    } else {
-        s[1] = '\0';
-    }
-
-    return s;
-}
-
-/*--------------------------------------------------------------------------*/
 /* Namensanteil von einem Dateinamen abspalten */
 
 char const* NamePart(char const* Name) {

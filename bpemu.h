@@ -14,11 +14,12 @@
 
 #include "datatypes.h"
 
+#include <stddef.h>
 #include <stdio.h>
 
 typedef void (*charcallback)(char* Name);
 
-extern char* FExpand(char* Src);
+extern void FExpand(char* p_dest, size_t dest_size, char const* p_src);
 
 extern int FSearch(
         char* pDest, size_t DestSize, char const* FileToSearch, char const* pCurrFileName,
