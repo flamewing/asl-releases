@@ -34,6 +34,8 @@ typedef unsigned tRegInt;
 typedef void (*DissectRegProc)(
         char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize);
 
+typedef DissectRegProc dissect_reg_fnc_t;
+
 typedef int (*compare_reg_fnc_t)(
         tRegInt value1, tSymbolSize reg_size1, tRegInt value2, tSymbolSize reg_size2);
 
@@ -46,7 +48,7 @@ typedef int (*compare_reg_fnc_t)(
 #define REGSYM_FLAG_ALIAS 0x80
 
 typedef struct sRegDescr {
-    DissectRegProc    Dissect;
+    dissect_reg_fnc_t Dissect;
     compare_reg_fnc_t compare;
     tRegInt           Reg;
 } tRegDescr;

@@ -43,6 +43,8 @@ extern Boolean DirScan(char const* Mask, charcallback callback);
 
 extern LongInt MyGetFileTime(char* Name);
 
+extern int as_fsize(char const* p_path, LargeWord* p_size);
+
 #ifdef __CYGWIN32__
 extern char* DeCygWinDirList(char* pStr);
 

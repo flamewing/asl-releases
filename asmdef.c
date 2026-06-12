@@ -126,7 +126,7 @@ Boolean (*IsDef)(void);           /* ist Label nicht als solches zu werten ? */
 void (*SwitchFrom)(void) = NULL;  /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char* Asc, TempResult* Erg); /* vordefinierte Symbole ? */
 DissectBitProc         DissectBit;
-DissectRegProc         DissectReg;
+dissect_reg_fnc_t      DissectReg;
 as_qualify_quote_fnc_t QualifyQuote;
 
 StringPtr IncludeList;            /* Suchpfade fuer Includedateien */

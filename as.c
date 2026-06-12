@@ -3252,7 +3252,7 @@ static void AssembleFile_InitPass(void) {
        to double if using it: */
 
     strmaxcpy(TmpCompStr, FloatMaxName, sizeof(TmpCompStr));
-#if defined(IEEEFLOAT_10_16_LONG_DOUBLE) || defined(IEEEFLOAT_10_12_LONG_DOUBLE)
+#if defined(AS_IEEEFLOAT_10_16_LONG_DOUBLE) || defined(AS_IEEEFLOAT_10_12_LONG_DOUBLE)
     if (getenv("VALGRIND") && !strcmp(getenv("VALGRIND"), "1")) {
         EnterFloatSymbol(&TmpComp, DBL_MAX, True);
     } else

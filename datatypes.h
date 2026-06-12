@@ -14,10 +14,12 @@
 
 #include "sysdefs.h"
 
-typedef as_uint8_t Byte; /* Integertypen */
+/* Integer Types */
+
+typedef as_uint8_t Byte;
 typedef as_int8_t  ShortInt;
 
-#ifdef HAS16
+#ifdef AS_HAS16
 typedef as_uint16_t Word;
 typedef as_int16_t  Integer;
 #endif
@@ -27,12 +29,12 @@ typedef as_int32_t  LongInt;
 #define PRILongInt PRIas_int32_t
 #define MaxLongInt 2147483647
 
-#ifdef HAS64
+#ifdef AS_HAS64
 typedef as_uint64_t QuadWord;
 typedef as_int64_t  QuadInt;
 #endif
 
-#ifdef HAS128
+#ifdef AS_HAS128
 typedef as_uint128_t OctaWord;
 typedef as_int128_t  OctaInt;
 #endif
@@ -40,13 +42,13 @@ typedef as_int128_t  OctaInt;
 /* On pure 32 bit platforms, avoid warnings about shift
    count being equal to operand size: */
 
-#ifdef HAS128
+#ifdef AS_HAS128
 typedef OctaInt  LargeInt;
 typedef OctaWord LargeWord;
 #    define LARGEBITS         128
 #    define largeint_shr32(l) (l >>= 32)
 #else
-#    ifdef HAS64
+#    ifdef AS_HAS64
 typedef QuadInt  LargeInt;
 typedef QuadWord LargeWord;
 #        define LARGEBITS         64

@@ -433,4 +433,27 @@ char* DeCygwinPath(char* pStr) {
 }
 #endif /* __CYGWIN32__ */
 
+/*!------------------------------------------------------------------------
+ * \fn     as_fsize(const char *p_path, LargeWord *p_size)
+ * \brief  retrieve file size
+ * \param  p_path path to file
+ * \param  p_size return value buffer
+ * \return 0 if succeeded
+ * ------------------------------------------------------------------------ */
+
+int as_fsize(char const* p_path, LargeWord* p_size) {
+    int ret;
+#ifdef _WIN32
+    struct _stat status;
+    ret = _stat(p_path, &status);
+#else
+    struct stat status;
+    ret = stat(p_path, &status);
+#endif
+    if (!ret) {
+        *p_size = status.st_size;
+    }
+    return ret;
+}
+
 void bpemu_init(void) {}

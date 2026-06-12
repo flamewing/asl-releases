@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <float.h>
 #include <string.h>
-#include <sys/stat.h>
 
 static as_float_t log_max, log2_max, log10_max;
 
@@ -628,8 +627,8 @@ static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned 
 
 static Boolean fnc_fsize(
         TempResult* p_result, TempResult const* p_args, unsigned arg_cnt) {
-    char        found_file_name[STRINGSIZE];
-    struct stat status;
+    char      found_file_name[STRINGSIZE];
+    LargeWord file_size;
     UNUSED(arg_cnt);
 
     if (FSearch(found_file_name, sizeof(found_file_name), p_args[0].Contents.str.p_str,
@@ -638,12 +637,12 @@ static Boolean fnc_fsize(
         as_tempres_set_none(p_result);
         return False;
     }
-    if (stat(found_file_name, &status)) {
+    if (as_fsize(found_file_name, &file_size)) {
         WrXError(ErrNum_OpeningFile, found_file_name);
         as_tempres_set_none(p_result);
         return False;
     } else {
-        as_tempres_set_int(p_result, status.st_size);
+        as_tempres_set_int(p_result, file_size);
         return True;
     }
 }

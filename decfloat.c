@@ -22,7 +22,7 @@
 
 #define DBG_FLOAT 0
 
-#ifdef HOST_DECFLOAT
+#ifdef AS_DECFLOAT
 
 #    ifdef __GFLOAT
 /* Some VAX compilers internally seem to use D float
@@ -250,7 +250,7 @@ extern int as_float_2_dec_lit(as_float_t inp, Byte* p_dest) {
  * ------------------------------------------------------------------------ */
 
 int as_float_2_dec_f(as_float_t inp, Word* p_dest) {
-#ifdef HOST_DECFLOAT
+#ifdef AS_DECFLOAT
     float tmp;
 
     /* native format: */
@@ -260,7 +260,7 @@ int as_float_2_dec_f(as_float_t inp, Word* p_dest) {
     tmp = inp;
     memcpy(p_dest, &tmp, 4);
 
-#else /* !HOST_DECFLOAT */
+#else /* !AS_DECFLOAT */
 
     as_float_dissect_t dissect;
 
@@ -301,7 +301,7 @@ int as_float_2_dec_f(as_float_t inp, Word* p_dest) {
                 | as_float_mantissa_extract(&dissect, 1, 7); /* mant bits 22...16 */
     p_dest[1] = as_float_mantissa_extract(&dissect, 8, 16);  /* mant bits 15... 0 */
 
-#endif /* HOST_DECFLOAT */
+#endif /* AS_DECFLOAT */
 
     return 2;
 }
@@ -315,14 +315,14 @@ int as_float_2_dec_f(as_float_t inp, Word* p_dest) {
  * ------------------------------------------------------------------------ */
 
 int as_float_2_dec_d(as_float_t inp, Word* p_dest) {
-#if (defined HOST_DECFLOAT) && (!defined __GFLOAT)
+#if (defined AS_DECFLOAT) && (!defined __GFLOAT)
     double tmp;
 
     /* native format: */
     tmp = inp;
     memcpy(p_dest, &tmp, 8);
 
-#else /* !HOST_DECFLOAT || __GFLOAT*/
+#else /* !AS_DECFLOAT || __GFLOAT*/
 
     as_float_dissect_t dissect;
 
@@ -365,7 +365,7 @@ int as_float_2_dec_d(as_float_t inp, Word* p_dest) {
     p_dest[2] = as_float_mantissa_extract(&dissect, 24, 16); /* mant bits 31...24 */
     p_dest[3] = as_float_mantissa_extract(&dissect, 40, 16); /* mant bits 15... 0 */
 
-#endif /* HOST_DECFLOAT && !__GFLOAT */
+#endif /* AS_DECFLOAT && !__GFLOAT */
 
     return 4;
 }
@@ -379,14 +379,14 @@ int as_float_2_dec_d(as_float_t inp, Word* p_dest) {
  * ------------------------------------------------------------------------ */
 
 int as_float_2_dec_g(as_float_t inp, Word* p_dest) {
-#if (defined HOST_DECFLOAT) && (defined __GFLOAT)
+#if (defined AS_DECFLOAT) && (defined __GFLOAT)
     double tmp;
 
     /* native format: */
     tmp = inp;
     memcpy(p_dest, &tmp, 8);
 
-#else /* !HOST_DECFLOAT || !__GFLOAT*/
+#else /* !AS_DECFLOAT || !__GFLOAT*/
 
     as_float_dissect_t dissect;
 
@@ -429,7 +429,7 @@ int as_float_2_dec_g(as_float_t inp, Word* p_dest) {
     p_dest[2] = as_float_mantissa_extract(&dissect, 21, 16); /* mant bits 31...16 */
     p_dest[3] = as_float_mantissa_extract(&dissect, 37, 16); /* mant bits 15... 0 */
 
-#endif /* HOST_DECFLOAT && __GFLOAT */
+#endif /* AS_DECFLOAT && __GFLOAT */
 
     return 4;
 }

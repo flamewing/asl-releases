@@ -244,4 +244,36 @@ typedef long double as_float_t;
 
 #define UNUSED(x) (void)x
 
+/* Names used by the modern upstream interfaces. */
+#ifdef HAS16
+#    define AS_HAS16
+#endif
+#ifdef HAS64
+#    define AS_HAS64
+#endif
+#ifdef HAS128
+#    define AS_HAS128
+#endif
+#ifdef HOST_DECFLOAT
+#    define AS_DECFLOAT
+#endif
+#ifdef IEEEFLOAT_8_DOUBLE
+#    define AS_IEEEFLOAT_8_DOUBLE
+#endif
+#ifdef IEEEFLOAT_10_10_LONG_DOUBLE
+#    define AS_IEEEFLOAT_10_10_LONG_DOUBLE
+#endif
+#ifdef IEEEFLOAT_10_12_LONG_DOUBLE
+#    define AS_IEEEFLOAT_10_12_LONG_DOUBLE
+#endif
+#ifdef IEEEFLOAT_10_16_LONG_DOUBLE
+#    define AS_IEEEFLOAT_10_16_LONG_DOUBLE
+#endif
+#ifdef IEEEFLOAT_10_2P8_LONG_DOUBLE
+#    define AS_IEEEFLOAT_10_2P8_LONG_DOUBLE
+#endif
+#ifdef IEEEFLOAT_10_LONG_DOUBLE
+#    define AS_IEEEFLOAT_10_LONG_DOUBLE
+#endif
+
 #endif /* SYSDEFS_H */

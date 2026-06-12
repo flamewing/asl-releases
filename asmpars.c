@@ -112,14 +112,14 @@ tIntTypeDef IntTypeDefs[IntTypeCnt] = {
         {0x8020, 0, 0, 0}, /* SInt32 */
         {0x0020, 0, 0, 0}, /* UInt32 */
         {0xc020, 0, 0, 0}, /* Int32 */
-#ifdef HAS64
+#ifdef AS_HAS64
         {0x8040, 0, 0, 0}, /* SInt64 */
         {0x0040, 0, 0, 0}, /* UInt64 */
         {0xc040, 0, 0, 0}, /* Int64 */
 #else
         {0x0000, 0, 0, 0}, {0x0000, 0, 0, 0}, {0x0000, 0, 0, 0},
 #endif
-#ifdef HAS128
+#ifdef AS_HAS128
         {0x8080, 0, 0, 0}, /* SInt128 */
         {0x0080, 0, 0, 0}, /* UInt128 */
         {0xc080, 0, 0, 0}, /* Int128 */
@@ -135,6 +135,12 @@ typedef enum {
     e_lookup_error_namecheck,
     e_lookup_error_notfound
 } lookup_symbol_error_t;
+
+typedef enum {
+    e_chk_tmp_no,
+    e_chk_tmp_yes,
+    e_chk_tmp_error
+} chk_tmp_return_t;
 
 typedef struct {
     Boolean Back;
@@ -432,10 +438,10 @@ void AsmParsInit(void) {
  * ------------------------------------------------------------------------ */
 
 static Boolean range_not_checkable(IntType type) {
-#ifdef HAS128
+#ifdef AS_HAS128
     return (((int)type) >= ((int)SInt128));
 #else
-#    ifdef HAS64
+#    ifdef AS_HAS64
     return (((int)type) >= ((int)SInt64));
 #    else
     return (((int)type) >= ((int)SInt32));
@@ -833,17 +839,26 @@ static void AddTmpSymLog(Boolean Back, LongInt Counter) {
     }
 }
 
-static Boolean ChkTmp1(char* Name) {
-    char *  Src, *Dest;
-    Boolean Result = FALSE;
+/*!------------------------------------------------------------------------
+ * \fn     chk_tmp_1(char *p_name, as_symbol_source_t symbol_source)
+ * \brief  check for $$ local symbols
+ * \param  p_name buffer of original/expanded symbol
+ * \param  symbol_source symbol definition (equ/label) or symbol query
+ * \return no/yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean chk_tmp_1(char* p_name, as_symbol_source_t symbol_source) {
+    Boolean result = False;
 
     /* $$-Symbols: append current $$-counter */
 
-    if (!strncmp(Name, "$$", 2)) {
+    if (!strncmp(p_name, "$$", 2)) {
+        char *p_src, *p_dest;
+
         /* manually copy since this will implicitly give us the point to append
            the number */
 
-        for (Src = Name + 2, Dest = Name; *Src; *(Dest++) = *(Src++))
+        for (p_src = p_name + 2, p_dest = p_name; *p_src; *(p_dest++) = *(p_src++))
             ;
 
         /* append number. only generate the number once */
@@ -857,21 +872,35 @@ static Boolean ChkTmp1(char* Name) {
             SHA1Final(results, &sha);
             SHA1ToHexString(results, TmpSymCounterVal);
         }
-        strcpy(Dest, TmpSymCounterVal);
-        Result = TRUE;
+        strcpy(p_dest, TmpSymCounterVal);
+        result = True;
     }
 
-    return Result;
+    UNUSED(symbol_source);
+    return result;
 }
 
-static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_source) {
-    char const *pRun, *pBegin, *pEnd;
-    int         Cnt;
-    Boolean     Result = FALSE;
+/*!------------------------------------------------------------------------
+ * \fn     chk_tmp_2(char *p_dest, size_t dest_size, const char *p_src, as_symbol_source_t symbol_source)
+ * \brief  check for - + / local symbols
+ * \param  p_dest buffer for expanded symbol
+ * \param  dest_size destination capacity
+ * \param  p_src original symbol
+ * \param  symbol_source symbol definition (equ/label) or symbol query
+ * \return no/yes/error
+ * ------------------------------------------------------------------------ */
 
-    for (pBegin = pSrc; as_isspace(*pBegin); pBegin++)
+static chk_tmp_return_t chk_tmp_2(
+        char* p_dest, size_t dest_size, tStrComp const* p_src,
+        as_symbol_source_t symbol_source) {
+    char const *     p_run, *p_begin, *p_end;
+    int              count;
+    chk_tmp_return_t result = e_chk_tmp_no;
+
+    for (p_begin = p_src->str.p_str; as_isspace(*p_begin); p_begin++)
         ;
-    for (pEnd = pSrc + strlen(pSrc); (pEnd > pBegin) && as_isspace(*(pEnd - 1)); pEnd--)
+    for (p_end = p_src->str.p_str + strlen(p_src->str.p_str);
+         (p_end > p_begin) && as_isspace(*(p_end - 1)); p_end--)
         ;
 
     /* Note: We have to deal with three symbol definitions:
@@ -888,94 +917,132 @@ static Boolean ChkTmp2(char* pDest, char const* pSrc, as_symbol_source_t symbol_
 
     /* backward references ? */
 
-    if (*pBegin == '-') {
-        for (pRun = pBegin; *pRun; pRun++) {
-            if (*pRun != '-') {
+    if (*p_begin == '-') {
+        for (p_run = p_begin; *p_run; p_run++) {
+            if (*p_run != '-') {
                 break;
             }
         }
-        Cnt = pRun - pBegin;
-        if (pRun == pEnd) {
-            if ((symbol_source != e_symbol_source_none) && (Cnt == 1)) {
-                as_snprintf(pDest, STRINGSIZE, "__BACK%d", (int)BackSymCounter);
-                AddTmpSymLog(TRUE, BackSymCounter);
+        count = p_run - p_begin;
+        if (p_run == p_end) {
+            /* symbol definition, which is always a single '-': */
+
+            if ((symbol_source != e_symbol_source_none) && (count == 1)) {
+                as_snprintf(p_dest, dest_size, "__BACK%d", (int)BackSymCounter);
+                AddTmpSymLog(True, BackSymCounter);
                 BackSymCounter++;
-                Result = TRUE;
+                result = e_chk_tmp_yes;
             }
 
             /* TmpSymLogDepth cannot become larger than LOCSYMSIGHT, so we only
-               have to check against the log's actual depth. */
+               have to check against the log's actual depth: */
 
-            else if (Cnt <= TmpSymLogDepth) {
-                Cnt--;
+            else if (count <= TmpSymLogDepth) {
+                count--;
                 as_snprintf(
-                        pDest, STRINGSIZE, "__%s%d",
-                        TmpSymLog[Cnt].Back ? "BACK" : "FORW",
-                        (int)TmpSymLog[Cnt].Counter);
-                Result = TRUE;
+                        p_dest, dest_size, "__%s%d",
+                        TmpSymLog[count].Back ? "BACK" : "FORW",
+                        (int)TmpSymLog[count].Counter);
+                result = e_chk_tmp_yes;
+            }
+
+            /* Not enough previous symbols defined? */
+
+            else {
+                WrStrErrorPos(ErrNum_NotEnoughBkSymbols, p_src);
+                result = e_chk_tmp_error;
             }
         }
     }
 
     /* forward references ? */
 
-    else if (*pBegin == '+') {
-        for (pRun = pBegin; *pRun; pRun++) {
-            if (*pRun != '+') {
+    else if (*p_begin == '+') {
+        for (p_run = p_begin; *p_run; p_run++) {
+            if (*p_run != '+') {
                 break;
             }
         }
-        Cnt = pRun - pBegin;
-        if (pRun == pEnd) {
-            if ((symbol_source != e_symbol_source_none) && (Cnt == 1)) {
-                as_snprintf(pDest, STRINGSIZE, "__FORW%d", (int)FwdSymCounter++);
-                Result = TRUE;
-            } else if (Cnt <= LOCSYMSIGHT) {
+        count = p_run - p_begin;
+        if (p_run == p_end) {
+            /* symbol definition, which is always a single '+': */
+
+            if ((symbol_source != e_symbol_source_none) && (count == 1)) {
+                as_snprintf(p_dest, dest_size, "__FORW%d", (int)FwdSymCounter++);
+                result = e_chk_tmp_yes;
+            } else if (count <= LOCSYMSIGHT) {
                 as_snprintf(
-                        pDest, STRINGSIZE, "__FORW%d", (int)(FwdSymCounter + (Cnt - 1)));
-                Result = TRUE;
+                        p_dest, dest_size, "__FORW%d",
+                        (int)(FwdSymCounter + (count - 1)));
+                result = e_chk_tmp_yes;
             }
         }
     }
 
-    /* slash: only allowed for definition, but add to log for backward ref. */
+    /* Slash: Only allowed for definition, but add to log for backward reference: */
 
     else if (
-            (pEnd - pBegin == 1) && (*pBegin == '/')
+            (p_end - p_begin == 1) && (*p_begin == '/')
             && (symbol_source != e_symbol_source_none)) {
-        AddTmpSymLog(FALSE, FwdSymCounter);
-        as_snprintf(pDest, STRINGSIZE, "__FORW%d", (int)FwdSymCounter);
+        AddTmpSymLog(False, FwdSymCounter);
+        as_snprintf(p_dest, dest_size, "__FORW%d", (int)FwdSymCounter);
         FwdSymCounter++;
-        Result = TRUE;
+        result = e_chk_tmp_yes;
     }
 
-    return Result;
+    return result;
 }
 
-static Boolean ChkTmp3(char* Name, as_symbol_source_t symbol_source) {
-    if ('.' == *Name) {
-        strmaxprep2(Name, LastGlobSymbol, STRINGSIZE);
+/*!------------------------------------------------------------------------
+ * \fn     chk_tmp_3(char *p_name, as_symbol_source_t symbol_source)
+ * \brief  check for . local symbols
+ * \param  p_name buffer for original/expanded symbol
+ * \param  symbol_source symbol definition (equ/label) or symbol query
+ * \return no/yes
+ * ------------------------------------------------------------------------ */
+
+static Boolean chk_tmp_3(char* p_name, as_symbol_source_t symbol_source) {
+    if ('.' == *p_name) {
+        strmaxprep2(p_name, LastGlobSymbol, STRINGSIZE);
         return True;
     }
 
-    if (symbol_source != e_symbol_source_none) {
-        strmaxcpy(LastGlobSymbol, Name, STRINGSIZE);
+#if 0
+  if (symbol_source == e_symbol_source_label)
+#else
+    if (symbol_source != e_symbol_source_none)
+#endif
+    {
+        strmaxcpy(LastGlobSymbol, p_name, STRINGSIZE);
         *TmpSymCounterVal = '\0';
     }
     return False;
 }
 
-static Boolean ChkTmp(char* Name, as_symbol_source_t symbol_source) {
-    if (ChkTmp1(Name)) {
-        return TRUE;
+/*!------------------------------------------------------------------------
+ * \fn     chk_tmp_return_t chk_tmp(tStrComp *p_name, as_symbol_source_t symbol_source)
+ * \brief  check for local symbols
+ * \param  p_name buffer for original/expanded symbol
+ * \param  symbol_source symbol definition (equ/label) or symbol query
+ * \return no/yes/error
+ * ------------------------------------------------------------------------ */
+
+static chk_tmp_return_t chk_tmp(tStrComp* p_name, as_symbol_source_t symbol_source) {
+    Boolean          is_tmp_1, is_tmp_3;
+    chk_tmp_return_t is_tmp_2;
+
+    is_tmp_1 = chk_tmp_1(p_name->str.p_str, symbol_source);
+    if (is_tmp_1) {
+        return e_chk_tmp_yes;
     }
-    if (ChkTmp2(Name, Name, symbol_source)) {
-        return TRUE;
+    is_tmp_2 = chk_tmp_2(p_name->str.p_str, p_name->str.capacity, p_name, symbol_source);
+    if (is_tmp_2 == e_chk_tmp_error) {
+        return e_chk_tmp_error;
     }
-    if (ChkTmp3(Name, symbol_source)) {
-        return TRUE;
-    }
-    return FALSE;
+    is_tmp_3 = chk_tmp_3(
+            p_name->str.p_str, is_tmp_2 ? e_symbol_source_none : symbol_source);
+    return (is_tmp_1 || (is_tmp_2 == e_chk_tmp_yes) || is_tmp_3) ? e_chk_tmp_yes
+                                                                 : e_chk_tmp_no;
 }
 
 Boolean IdentifySection(tStrComp const* pName, LongInt* p_ret) {
@@ -1085,13 +1152,6 @@ static LargeInt ConstIntVal(
 
     *p_outof_range = 0;
 
-    /* empty string is interpreted as 0 */
-
-    if (!*pExpr) {
-        *pResult = NULLSTRING_EVAL_RESULT;
-        return 0;
-    }
-
     *pResult = False;
 
     /* sign: */
@@ -1106,6 +1166,14 @@ static LargeInt ConstIntVal(
         pExpr++;
         break;
     }
+
+    /* empty string is interpreted as 0 */
+
+    if (!*pExpr) {
+        *pResult = NULLSTRING_EVAL_RESULT;
+        return 0;
+    }
+
     Ctx.pExpr   = pExpr;
     Ctx.ExprLen = strlen(pExpr);
     Ctx.Base    = -1;
@@ -1846,7 +1914,10 @@ void EvalStrExpressionWithCallback(
     /* sort out local symbols like - and +++.  Do it now to get them out of the
        formula parser's way. */
 
-    ChkTmp2(CopyComp.str.p_str, CopyComp.str.p_str, e_symbol_source_none);
+    if (chk_tmp_2(CopyComp.str.p_str, STRINGSIZE, &CopyComp, e_symbol_source_none)
+        == e_chk_tmp_error) {
+        LEAVE;
+    }
     StrCompCopy(&STempComp, &CopyComp);
 
     /* Programmzaehler ? */
@@ -2341,7 +2412,7 @@ void EvalStrExpressionWithCallback(
     KillPrefBlanksStrComp(&CopyComp);
     KillPostBlanksStrComp(&CopyComp);
 
-    ChkTmp1(CopyComp.str.p_str);
+    chk_tmp_1(CopyComp.str.p_str, e_symbol_source_none);
 
     /* interne Symbole ? */
 
@@ -3016,10 +3087,12 @@ PSymbolEntry CreateSymbolEntry(
     if (!GetSymSection(p_exp_name, pDestHandle, pName)) {
         LEAVE;
     }
-    (void)ChkTmp(
-            p_exp_name->str.p_str, (symbol_flags & eSymbolFlag_Label)
-                                           ? e_symbol_source_label
-                                           : e_symbol_source_define);
+
+    if (chk_tmp(p_exp_name, (symbol_flags & eSymbolFlag_Label) ? e_symbol_source_label
+                                                               : e_symbol_source_define)
+        == e_chk_tmp_error) {
+        LEAVE;
+    }
     if (!CaseSensitive) {
         NLS_UpString(p_exp_name->str.p_str);
     }
@@ -3492,7 +3565,7 @@ static PSymbolEntry FindNode(
 
     StrCompMkTemp(&name_comp, name, sizeof(name));
     StrCompCopy(&name_comp, p_exp_name);
-    ChkTmp3(name_comp.str.p_str, e_symbol_source_none);
+    chk_tmp_3(name_comp.str.p_str, e_symbol_source_none);
     if (p_lookup_error) {
         *p_lookup_error = e_lookup_error_none;
     }

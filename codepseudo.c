@@ -216,7 +216,7 @@ void code_equate_range(as_addrspace_t dest_seg, LargeInt min_value, LargeInt max
             if (min_value > value) {
                 WrError(ErrNum_UnderRange);
             } else if (
-#ifndef HAS64
+#ifndef AS_HAS64
                     (!(max_value & 0x80000000ul))
                     && /* cannot check >=2G range if LargeInt is 32 bits */
 #endif

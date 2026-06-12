@@ -17,14 +17,14 @@
 #include <float.h>
 #include <math.h>
 #include <string.h>
-#ifdef HOST_DECFLOAT
+#ifdef AS_DECFLOAT
 #    include "decfloat.h"
 #endif
 #include "ieeefloat.h"
 
 #define DBG_FLOAT 0
 
-#ifdef IEEEFLOAT_8_DOUBLE
+#ifdef AS_IEEEFLOAT_8_DOUBLE
 /*!------------------------------------------------------------------------
  * \fn     as_float_dissect(as_float_dissect_t *p_dest, as_float_t num)
  * \brief  dissect float into components - version if as_float_t is IEEE Double
@@ -94,13 +94,13 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
     as_float_dump(stdout, "0", p_dest);
 #    endif
 }
-#endif /* IEEEFLOAT_8_DOUBLE */
+#endif /* AS_IEEEFLOAT_8_DOUBLE */
 
 /* x86 80 bit float format is just extended with two or six padding bytes
    on i386 resp. x86-64, which can be ignored for dissection: */
 
-#if (defined IEEEFLOAT_10_10_LONG_DOUBLE) || (defined IEEEFLOAT_10_12_LONG_DOUBLE) \
-        || (defined IEEEFLOAT_10_16_LONG_DOUBLE)
+#if (defined AS_IEEEFLOAT_10_10_LONG_DOUBLE) || (defined AS_IEEEFLOAT_10_12_LONG_DOUBLE) \
+        || (defined AS_IEEEFLOAT_10_16_LONG_DOUBLE)
 /*!------------------------------------------------------------------------
  * \fn     as_float_dissect(as_float_dissect_t *p_dest, as_float_t num)
  * \brief  dissect float into components - version if as_float_t is x86 extended 80 Bit
@@ -176,10 +176,10 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
     as_float_dump(stdout, "0", p_dest);
 #    endif
 }
-#endif /* IEEEFLOAT_10_10_LONG_DOUBLE || IEEEFLOAT_10_12_LONG_DOUBLE || \
-          IEEEFLOAT_10_16_LONG_DOUBLE */
+#endif /* AS_IEEEFLOAT_10_10_LONG_DOUBLE || AS_IEEEFLOAT_10_12_LONG_DOUBLE || \
+          AS_IEEEFLOAT_10_16_LONG_DOUBLE */
 
-#ifdef IEEEFLOAT_10_2P8_LONG_DOUBLE
+#ifdef AS_IEEEFLOAT_10_2P8_LONG_DOUBLE
 /*!------------------------------------------------------------------------
  * \fn     as_float_dissect(as_float_dissect_t *p_dest, as_float_t num)
  * \brief  dissect float into components - version if as_float_t is 68K extended 96/80 Bit
@@ -243,7 +243,7 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
         p_dest->fp_class = AS_FP_NAN;
     }
 }
-#endif /* IEEEFLOAT_10_12_LONG_DOUBLE */
+#endif /* AS_IEEEFLOAT_10_2P8_LONG_DOUBLE */
 
 /*!------------------------------------------------------------------------
  * \fn     as_float_2_ieee4(as_float_t inp, Byte *pDest, Boolean NeedsBig)
@@ -256,7 +256,7 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
 
 int as_float_2_ieee4(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     as_float_dissect_t dissect;
-#if (defined IEEEFLOAT_8_DOUBLE) || (defined IEEEFLOAT_10_LONG_DOUBLE)
+#if (defined AS_IEEEFLOAT_8_DOUBLE) || (defined AS_IEEEFLOAT_10_LONG_DOUBLE)
 
     float tmp;
     as_float_dissect(&dissect, inp);
@@ -371,7 +371,7 @@ int as_float_2_ieee4(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
 int as_float_2_ieee8(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     as_float_dissect_t dissect;
-#if (defined IEEEFLOAT_8_DOUBLE) || (defined IEEEFLOAT_10_LONG_DOUBLE)
+#if (defined AS_IEEEFLOAT_8_DOUBLE) || (defined AS_IEEEFLOAT_10_LONG_DOUBLE)
 
     double tmp;
     as_float_dissect(&dissect, inp);
@@ -503,8 +503,8 @@ int as_float_2_ieee8(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
  * ------------------------------------------------------------------------ */
 
 int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
-#if (defined IEEEFLOAT_10_10_LONG_DOUBLE) || (defined IEEEFLOAT_10_12_LONG_DOUBLE) \
-        || (defined IEEEFLOAT_10_16_LONG_DOUBLE)
+#if (defined AS_IEEEFLOAT_10_10_LONG_DOUBLE) || (defined AS_IEEEFLOAT_10_12_LONG_DOUBLE) \
+        || (defined AS_IEEEFLOAT_10_16_LONG_DOUBLE)
     memcpy(pDest, &inp, 10);
     if (HostBigEndian != NeedsBig) {
         TSwap(pDest, 10);
@@ -518,7 +518,7 @@ int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
     as_float_dissect(&dissect, inp);
 
-    /* Infinity/NaN: Note that for IEEEFLOAT_10_2P8_LONG_DOUBLE (M68K Extended float),
+    /* Infinity/NaN: Note that for AS_IEEEFLOAT_10_2P8_LONG_DOUBLE (M68K Extended float),
        the mantissa's MSB of infinities and NANs may be 1 or 0.  We want the 1-version,
        to be consistent with x86: */
 
@@ -551,7 +551,7 @@ int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
         return 10;
     }
 
-#    ifdef IEEEFLOAT_10_2P8_LONG_DOUBLE
+#    ifdef AS_IEEEFLOAT_10_2P8_LONG_DOUBLE
 
     Byte* p_src             = (Byte*)&inp;
     pDest[NeedsBig ? 0 : 9] = p_src[0];
@@ -565,7 +565,7 @@ int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     pDest[NeedsBig ? 8 : 1] = p_src[10];
     pDest[NeedsBig ? 9 : 0] = p_src[11];
 
-#    else  /* !IEEEFLOAT_10_2P8_LONG_DOUBLE */
+#    else  /* !AS_IEEEFLOAT_10_2P8_LONG_DOUBLE */
 
     as_float_dissect(&dissect, inp);
     /* (2) Round to target precision: */
@@ -629,8 +629,8 @@ int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     if (NeedsBig) {
         TSwap(pDest, 10);
     }
-#    endif /* IEEEFLOAT_10_2P8_LONG_DOUBLE */
-#endif     /* IEEEFLOAT_10_1?_LONG_DOUBLE */
+#    endif /* AS_IEEEFLOAT_10_2P8_LONG_DOUBLE */
+#endif     /* AS_IEEEFLOAT_10_LONG_DOUBLE */
     return 10;
 }
 

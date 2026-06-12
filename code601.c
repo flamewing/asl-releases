@@ -67,115 +67,7 @@ static CPUVar CPU403, CPU403C, CPU505, CPU601, CPU821, CPU6000;
 #define M_6000 0x20
 #define M_SUP  0x80
 
-#ifdef __STDC__
-#    define T1  1lu
-#    define T3  3lu
-#    define T4  4lu
-#    define T7  7lu
-#    define T8  8lu
-#    define T9  9lu
-#    define T10 10lu
-#    define T11 11lu
-#    define T12 12lu
-#    define T13 13lu
-#    define T14 14lu
-#    define T15 15lu
-#    define T16 16lu
-#    define T17 17lu
-#    define T18 18lu
-#    define T19 19lu
-#    define T20 20lu
-#    define T21 21lu
-#    define T22 22lu
-#    define T23 23lu
-#    define T24 24lu
-#    define T25 25lu
-#    define T26 26lu
-#    define T27 27lu
-#    define T28 28lu
-#    define T29 29lu
-#    define T31 31lu
-#    define T32 32lu
-#    define T33 33lu
-#    define T34 34lu
-#    define T35 35lu
-#    define T36 36lu
-#    define T37 37lu
-#    define T38 38lu
-#    define T39 39lu
-#    define T40 40lu
-#    define T41 41lu
-#    define T42 42lu
-#    define T43 43lu
-#    define T44 44lu
-#    define T45 45lu
-#    define T46 46lu
-#    define T47 47lu
-#    define T48 48lu
-#    define T49 49lu
-#    define T50 50lu
-#    define T51 51lu
-#    define T52 52lu
-#    define T53 53lu
-#    define T54 54lu
-#    define T55 55lu
-#    define T59 59lu
-#    define T63 63lu
-#else
-#    define T1  1l
-#    define T3  3l
-#    define T4  4l
-#    define T7  7l
-#    define T8  8l
-#    define T9  9l
-#    define T10 10l
-#    define T11 11l
-#    define T12 12l
-#    define T13 13l
-#    define T14 14l
-#    define T15 15l
-#    define T16 16l
-#    define T17 17l
-#    define T18 18l
-#    define T19 19l
-#    define T20 20l
-#    define T21 21l
-#    define T22 22l
-#    define T23 23l
-#    define T24 24l
-#    define T25 25l
-#    define T26 26l
-#    define T27 27l
-#    define T28 28l
-#    define T29 29l
-#    define T31 31l
-#    define T32 32l
-#    define T33 33l
-#    define T34 34l
-#    define T35 35l
-#    define T36 36l
-#    define T37 37l
-#    define T38 38l
-#    define T39 39l
-#    define T40 40l
-#    define T41 41l
-#    define T42 42l
-#    define T43 43l
-#    define T44 44l
-#    define T45 45l
-#    define T46 46l
-#    define T47 47l
-#    define T48 48l
-#    define T49 49l
-#    define T50 50l
-#    define T51 51l
-#    define T52 52l
-#    define T53 53l
-#    define T54 54l
-#    define T55 55l
-#    define T59 59l
-#    define T63 63l
-#endif
+#define TO_U32(_n) ((LongWord)_n)
 
 static char           ZeroStr[] = "0";
 static tStrComp const ZeroComp  = {
@@ -798,7 +690,7 @@ static void DecodeLSWI_STSWI(Word Code) {
         Src2 = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt5, &OK, &flags);
         if (OK) {
             or_d_guessed(flags, 0, 1, 0x1f << 11);
-            PutCode((T31 << 26) + (LCode << 1) + (Dest << 21) + (Src1 << 16)
+            PutCode((TO_U32(31) << 26) + (LCode << 1) + (Dest << 21) + (Src1 << 16)
                     + (Src2 << 11));
             CodeLen = 4;
         }
@@ -842,7 +734,7 @@ static void DecodeMTFB_MTTB(Word Code) {
             if ((Src1 == 268) || (Src1 == 269) || (Src1 == 284) || (Src1 == 285)) {
                 SwapCode(&Src1);
                 or_d_guessed(flags, 0, 1, 0x3ff << 11);
-                PutCode((T31 << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
+                PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
                 CodeLen = 4;
             } else {
                 WrError(ErrNum_InvCtrlReg);
@@ -864,7 +756,7 @@ static void DecodeMFSPR_MTSPR(Word Code) {
         if (OK) {
             SwapCode(&Src1);
             or_d_guessed(flags, 0, 1, 0x3ff << 11);
-            PutCode((T31 << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
+            PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
             CodeLen = 4;
         }
     }
@@ -886,7 +778,7 @@ static void DecodeMFDCR_MTDCR(Word Code) {
         if (OK) {
             SwapCode(&Src1);
             or_d_guessed(flags, 0, 1, 0x3ff << 11);
-            PutCode((T31 << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
+            PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src1 << 11) + (LCode << 1));
             CodeLen = 4;
         }
     }
@@ -904,7 +796,7 @@ static void DecodeMFSR_MTSR(Word Code) {
         Src1 = EvalStrIntExpressionWithFlags(pArg2, UInt4, &OK, &flags);
         if (OK) {
             or_d_guessed(flags, 0, 1, 0xf << 16);
-            PutCode((T31 << 26) + (Dest << 21) + (Src1 << 16) + (LCode << 1));
+            PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src1 << 16) + (LCode << 1));
             CodeLen = 4;
             ChkSup();
         }
@@ -926,7 +818,7 @@ static void DecodeMTCRF(Word Code) {
 
         if (OK) {
             or_d_guessed(flags, 0, 1, 0xff << 12);
-            PutCode((T31 << 26) + (Src1 << 21) + (Dest << 12) + (144 << 1));
+            PutCode((TO_U32(31) << 26) + (Src1 << 21) + (Dest << 12) + (144 << 1));
             CodeLen = 4;
         }
     }
@@ -944,7 +836,7 @@ static void DecodeMTFSF(Word Code) {
 
         if (OK) {
             or_d_guessed(flags, 0, 1, 0xff << 17);
-            PutCode((T63 << 26) + (Dest << 17) + (Src1 << 11) + (711 << 1)
+            PutCode((TO_U32(63) << 26) + (Dest << 17) + (Src1 << 11) + (711 << 1)
                     + ExtractPoint(Code));
             CodeLen = 4;
         }
@@ -968,7 +860,7 @@ static void DecodeMTFSFI(Word Code) {
         if (OK) {
             or_dasmcode_guessed(0, 1, dest_guess_mask << 21);
             or_d_guessed(flags, 0, 1, 0xf << 12);
-            PutCode((T63 << 26) + (Dest << 21) + (Src1 << 12) + (134 << 1)
+            PutCode((TO_U32(63) << 26) + (Dest << 21) + (Src1 << 12) + (134 << 1)
                     + ExtractPoint(Code));
             CodeLen = 4;
         }
@@ -991,7 +883,7 @@ static void DecodeRLMI(Word Code) {
             if (OK) {
                 or_d_guessed(src3_flags, 0, 1, 0x1f << 6);
                 or_d_guessed(imm_flags, 0, 1, 0x1f << 1);
-                PutCode((T22 << 26) + (Src1 << 21) + (Dest << 16) + (Src2 << 11)
+                PutCode((TO_U32(22) << 26) + (Src1 << 21) + (Dest << 16) + (Src2 << 11)
                         + (Src3 << 6) + (Imm << 1) + ExtractPoint(Code));
                 CodeLen = 4;
             }
@@ -1015,7 +907,7 @@ static void DecodeRLWNM(Word Code) {
             if (OK) {
                 or_d_guessed(src3_flags, 0, 1, 0x1f << 6);
                 or_d_guessed(imm_flags, 0, 1, 0x1f << 1);
-                PutCode((T23 << 26) + (Src1 << 21) + (Dest << 16) + (Src2 << 11)
+                PutCode((TO_U32(23) << 26) + (Src1 << 21) + (Dest << 16) + (Src2 << 11)
                         + (Src3 << 6) + (Imm << 1) + ExtractPoint(Code));
                 CodeLen = 4;
             }
@@ -1044,8 +936,8 @@ static void DecodeRLWIMI_RLWINM(Word Code) {
                     or_d_guessed(src2_flags, 0, 1, 0x1f << 11);
                     or_d_guessed(src3_flags, 0, 1, 0x1f << 6);
                     or_d_guessed(imm_flags, 0, 1, 0x1f << 1);
-                    PutCode((T20 << 26) + (Dest << 16) + (Src1 << 21) + (Src2 << 11)
-                            + (Src3 << 6) + (Imm << 1) + (LCode << 26)
+                    PutCode((TO_U32(20) << 26) + (Dest << 16) + (Src1 << 21)
+                            + (Src2 << 11) + (Src3 << 6) + (Imm << 1) + (LCode << 26)
                             + ExtractPoint(Code));
                     CodeLen = 4;
                 }
@@ -1060,7 +952,7 @@ static void DecodeTLBIE(Word Code) {
     UNUSED(Code);
 
     if (ChkArgCnt(1, 1) && DecodeGenReg(&ArgStr[1], &Src1)) {
-        PutCode((T31 << 26) + (Src1 << 11) + (306 << 1));
+        PutCode((TO_U32(31) << 26) + (Src1 << 11) + (306 << 1));
         CodeLen = 4;
         ChkSup();
     }
@@ -1079,7 +971,8 @@ static void DecodeTW(Word Code) {
                 = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt5, &OK, &dest_flags);
         if (OK) {
             or_d_guessed(dest_flags, 0, 1, 0x1f << 21);
-            PutCode((T31 << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (4 << 1));
+            PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11)
+                    + (4 << 1));
             CodeLen = 4;
         }
     }
@@ -1101,7 +994,7 @@ static void DecodeTWI(Word Code) {
             if (OK) {
                 or_d_guessed(imm_flags, 0, 1, 0xffff);
                 or_d_guessed(dest_flags, 0, 1, 0x1f << 21);
-                PutCode((T3 << 26) + (Dest << 21) + (Src1 << 16) + (Imm & 0xffff));
+                PutCode((TO_U32(3) << 26) + (Dest << 21) + (Src1 << 16) + (Imm & 0xffff));
                 CodeLen = 4;
             }
         }
@@ -1120,7 +1013,7 @@ static void DecodeWRTEEI(Word Code) {
                         << 15;
         if (OK) {
             or_d_guessed(src1_flags, 0, 1, 1 << 0);
-            PutCode((T31 << 26) + Src1 + (163 << 1));
+            PutCode((TO_U32(31) << 26) + Src1 + (163 << 1));
             CodeLen = 4;
         }
     }
@@ -1149,7 +1042,7 @@ static void DecodeCMP_CMPL(Word Code) {
         if (OK) {
             or_d_guessed(src3_flags, 0, 1, 1 << 21);
             or_dasmcode_guessed(0, 1, dest_guess_mask << 21);
-            PutCode((T31 << 26) + (Dest << 21) + (Src3 << 21) + (Src1 << 16)
+            PutCode((TO_U32(31) << 26) + (Dest << 21) + (Src3 << 21) + (Src1 << 16)
                     + (Src2 << 11) + (LCode << 1));
             CodeLen = 4;
         }
@@ -1173,7 +1066,8 @@ static void DecodeFCMPO_FCMPU(Word Code) {
         WrStrErrorPos(ErrNum_AddrMustBeAligned, &ArgStr[1]);
     } else {
         or_dasmcode_guessed(0, 1, dest_guess_mask << 21);
-        PutCode((T63 << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11) + (LCode << 1));
+        PutCode((TO_U32(63) << 26) + (Dest << 21) + (Src1 << 16) + (Src2 << 11)
+                + (LCode << 1));
         CodeLen = 4;
     }
 }
@@ -1202,8 +1096,8 @@ static void DecodeCMPI_CMPLI(Word Code) {
                     or_d_guessed(src2_flags, 0, 1, 0xffff);
                     or_d_guessed(src3_flags, 0, 1, 1 << 21);
                     or_dasmcode_guessed(0, 1, dest_guess_mask << 21);
-                    PutCode((T10 << 26) + (Dest << 21) + (Src3 << 21) + (Src1 << 16)
-                            + (Src2 & 0xffff) + (LCode << 26));
+                    PutCode((TO_U32(10) << 26) + (Dest << 21) + (Src3 << 21)
+                            + (Src1 << 16) + (Src2 & 0xffff) + (LCode << 26));
                     CodeLen = 4;
                 }
             }
@@ -1233,7 +1127,7 @@ static void DecodeB_BL_BA_BLA(Word Code) {
                 WrError(ErrNum_DistIsOdd);
             } else {
                 or_d_guessed(Flags, 0, 1, 0x03fffffc);
-                PutCode((T18 << 26) + (Dist & 0x03fffffc) + LCode);
+                PutCode((TO_U32(18) << 26) + (Dist & 0x03fffffc) + LCode);
                 CodeLen = 4;
             }
         }
@@ -1270,7 +1164,7 @@ static void DecodeBC_BCL_BCA_BCLA(Word Code) {
                         or_d_guessed(src1_flags, 0, 1, 0x1f << 21);
                         or_d_guessed(src2_flags, 0, 1, 0x1f << 16);
                         or_d_guessed(Flags, 0, 1, 0xfffc);
-                        PutCode((T16 << 26) + (Src1 << 21) + (Src2 << 16)
+                        PutCode((TO_U32(16) << 26) + (Src1 << 21) + (Src2 << 16)
                                 + (Dist & 0xfffc) + LCode);
                         CodeLen = 4;
                     }
@@ -1295,7 +1189,7 @@ static void DecodeBCCTR_BCCTRL_BCLR_BCLRL(Word Code) {
             if (OK) {
                 or_d_guessed(src1_flags, 0, 1, 0x1f << 21);
                 or_d_guessed(src2_flags, 0, 1, 0x1f << 16);
-                PutCode((T19 << 26) + (Src1 << 21) + (Src2 << 16) + LCode);
+                PutCode((TO_U32(19) << 26) + (Src1 << 21) + (Src2 << 16) + LCode);
                 CodeLen = 4;
             }
         }
@@ -1313,8 +1207,8 @@ static void DecodeTLBRE_TLBWE(Word Code) {
                 = EvalStrIntExpressionWithFlags(&ArgStr[3], UInt1, &OK, &src3_flags);
         if (OK) {
             or_d_guessed(src3_flags, 0, 1, 1 << 11);
-            PutCode((T31 << 26) + (Src1 << 21) + (Src2 << 16) + (Src3 << 11) + (946 << 1)
-                    + (LCode << 1));
+            PutCode((TO_U32(31) << 26) + (Src1 << 21) + (Src2 << 16) + (Src3 << 11)
+                    + (946 << 1) + (LCode << 1));
             CodeLen = 4;
         }
     }
@@ -1701,419 +1595,456 @@ static void InitFields(void) {
 
     InstrZ = 0;
     AddFixed(
-            "EIEIO", "EIEIO", (T31 << 26) + (854 << 1),
+            "EIEIO", "EIEIO", (TO_U32(31) << 26) + (854 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddFixed(
-            "ISYNC", "ICS", (T19 << 26) + (150 << 1),
+            "ISYNC", "ICS", (TO_U32(19) << 26) + (150 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddFixed(
-            "RFI", "RFI", (T19 << 26) + (50 << 1),
+            "RFI", "RFI", (TO_U32(19) << 26) + (50 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000 | M_SUP);
     AddFixed(
-            "SC", "SVCA", (T17 << 26) + (1 << 1),
+            "SC", "SVCA", (TO_U32(17) << 26) + (1 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddFixed(
-            "SYNC", "DCS", (T31 << 26) + (598 << 1),
+            "SYNC", "DCS", (TO_U32(31) << 26) + (598 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddFixed("RFCI", "RFCI", (T19 << 26) + (51 << 1), M_403 | M_403C);
-    AddFixed("TLBIA", "TLBIA", (T31 << 26) + (370 << 1), M_403C | M_821);
-    AddFixed("TLBSYNC", "TLBSYNC", (T31 << 26) + (566 << 1), M_403C | M_821);
+    AddFixed("RFCI", "RFCI", (TO_U32(19) << 26) + (51 << 1), M_403 | M_403C);
+    AddFixed("TLBIA", "TLBIA", (TO_U32(31) << 26) + (370 << 1), M_403C | M_821);
+    AddFixed("TLBSYNC", "TLBSYNC", (TO_U32(31) << 26) + (566 << 1), M_403C | M_821);
 
     /* D --> D 0 0 */
 
     InstrZ = 0;
-    AddReg1("MFCR", "MFCR", (T31 << 26) + (19 << 1),
+    AddReg1("MFCR", "MFCR", (TO_U32(31) << 26) + (19 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddReg1("MFMSR", "MFMSR", (T31 << 26) + (83 << 1),
+    AddReg1("MFMSR", "MFMSR", (TO_U32(31) << 26) + (83 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddReg1("MTMSR", "MTMSR", (T31 << 26) + (146 << 1),
+    AddReg1("MTMSR", "MTMSR", (TO_U32(31) << 26) + (146 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000 | M_SUP);
-    AddReg1("WRTEE", "WRTEE", (T31 << 26) + (131 << 1),
+    AddReg1("WRTEE", "WRTEE", (TO_U32(31) << 26) + (131 << 1),
             M_403 | M_403C | M_505 | M_601 | M_6000);
 
     /* crD --> D 0 0 */
 
     InstrZ = 0;
     AddCReg1(
-            "MCRXR", "MCRXR", (T31 << 26) + (512 << 1),
+            "MCRXR", "MCRXR", (TO_U32(31) << 26) + (512 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
 
     /* crbD --> D 0 0 */
 
     InstrZ = 0;
-    AddCBit1("MTFSB0", "MTFSB0", (T63 << 26) + (70 << 1), M_601 | M_6000);
-    AddCBit1("MTFSB0.", "MTFSB0.", (T63 << 26) + (70 << 1) + 1, M_601 | M_6000);
-    AddCBit1("MTFSB1", "MTFSB1", (T63 << 26) + (38 << 1), M_601 | M_6000);
-    AddCBit1("MTFSB1.", "MTFSB1.", (T63 << 26) + (38 << 1) + 1, M_601 | M_6000);
+    AddCBit1("MTFSB0", "MTFSB0", (TO_U32(63) << 26) + (70 << 1), M_601 | M_6000);
+    AddCBit1("MTFSB0.", "MTFSB0.", (TO_U32(63) << 26) + (70 << 1) + 1, M_601 | M_6000);
+    AddCBit1("MTFSB1", "MTFSB1", (TO_U32(63) << 26) + (38 << 1), M_601 | M_6000);
+    AddCBit1("MTFSB1.", "MTFSB1.", (TO_U32(63) << 26) + (38 << 1) + 1, M_601 | M_6000);
 
     /* frD --> D 0 0 */
 
     InstrZ = 0;
-    AddFReg1("MFFS", "MFFS", (T63 << 26) + (583 << 1), M_601 | M_6000);
-    AddFReg1("MFFS.", "MFFS.", (T63 << 26) + (583 << 1) + 1, M_601 | M_6000);
+    AddFReg1("MFFS", "MFFS", (TO_U32(63) << 26) + (583 << 1), M_601 | M_6000);
+    AddFReg1("MFFS.", "MFFS.", (TO_U32(63) << 26) + (583 << 1) + 1, M_601 | M_6000);
 
     /* D,A --> D A 0 */
 
     InstrZ = 0;
-    AddReg2("ABS", "ABS", (T31 << 26) + (360 << 1), M_6000, True, True);
-    AddReg2("ADDME", "AME", (T31 << 26) + (234 << 1),
+    AddReg2("ABS", "ABS", (TO_U32(31) << 26) + (360 << 1), M_6000, True, True);
+    AddReg2("ADDME", "AME", (TO_U32(31) << 26) + (234 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg2("ADDZE", "AZE", (T31 << 26) + (202 << 1),
+    AddReg2("ADDZE", "AZE", (TO_U32(31) << 26) + (202 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg2("CLCS", "CLCS", (T31 << 26) + (531 << 1), M_6000, False, False);
-    AddReg2("NABS", "NABS", (T31 << 26) + (488 << 1), M_6000, True, True);
-    AddReg2("NEG", "NEG", (T31 << 26) + (104 << 1),
+    AddReg2("CLCS", "CLCS", (TO_U32(31) << 26) + (531 << 1), M_6000, False, False);
+    AddReg2("NABS", "NABS", (TO_U32(31) << 26) + (488 << 1), M_6000, True, True);
+    AddReg2("NEG", "NEG", (TO_U32(31) << 26) + (104 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg2("SUBFME", "SFME", (T31 << 26) + (232 << 1),
+    AddReg2("SUBFME", "SFME", (TO_U32(31) << 26) + (232 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg2("SUBFZE", "SFZE", (T31 << 26) + (200 << 1),
+    AddReg2("SUBFZE", "SFZE", (TO_U32(31) << 26) + (200 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
 
     /* cD,cS --> D S 0 */
 
     InstrZ = 0;
     AddCReg2(
-            "MCRF", "MCRF", (T19 << 26) + (0 << 1),
+            "MCRF", "MCRF", (TO_U32(19) << 26) + (0 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddCReg2("MCRFS", "MCRFS", (T63 << 26) + (64 << 1), M_601 | M_6000);
+    AddCReg2("MCRFS", "MCRFS", (TO_U32(63) << 26) + (64 << 1), M_601 | M_6000);
 
     /* fD,fB --> D 0 B */
 
     InstrZ = 0;
-    AddFReg2("FABS", "FABS", (T63 << 26) + (264 << 1), M_601 | M_6000, True);
-    AddFReg2("FCTIW", "FCTIW", (T63 << 26) + (14 << 1), M_601 | M_6000, True);
-    AddFReg2("FCTIWZ", "FCTIWZ", (T63 << 26) + (15 << 1), M_601 | M_6000, True);
-    AddFReg2("FMR", "FMR", (T63 << 26) + (72 << 1), M_601 | M_6000, True);
-    AddFReg2("FNABS", "FNABS", (T63 << 26) + (136 << 1), M_601 | M_6000, True);
-    AddFReg2("FNEG", "FNEG", (T63 << 26) + (40 << 1), M_601 | M_6000, True);
-    AddFReg2("FRSP", "FRSP", (T63 << 26) + (12 << 1), M_601 | M_6000, True);
+    AddFReg2("FABS", "FABS", (TO_U32(63) << 26) + (264 << 1), M_601 | M_6000, True);
+    AddFReg2("FCTIW", "FCTIW", (TO_U32(63) << 26) + (14 << 1), M_601 | M_6000, True);
+    AddFReg2("FCTIWZ", "FCTIWZ", (TO_U32(63) << 26) + (15 << 1), M_601 | M_6000, True);
+    AddFReg2("FMR", "FMR", (TO_U32(63) << 26) + (72 << 1), M_601 | M_6000, True);
+    AddFReg2("FNABS", "FNABS", (TO_U32(63) << 26) + (136 << 1), M_601 | M_6000, True);
+    AddFReg2("FNEG", "FNEG", (TO_U32(63) << 26) + (40 << 1), M_601 | M_6000, True);
+    AddFReg2("FRSP", "FRSP", (TO_U32(63) << 26) + (12 << 1), M_601 | M_6000, True);
 
     /* D,B --> D 0 B */
 
     InstrZ = 0;
-    AddReg2B("MFSRIN", "MFSRIN", (T31 << 26) + (659 << 1), M_601 | M_6000);
-    AddReg2B("MTSRIN", "MTSRI", (T31 << 26) + (242 << 1), M_601 | M_6000);
+    AddReg2B("MFSRIN", "MFSRIN", (TO_U32(31) << 26) + (659 << 1), M_601 | M_6000);
+    AddReg2B("MTSRIN", "MTSRI", (TO_U32(31) << 26) + (242 << 1), M_601 | M_6000);
 
     /* A,S --> S A 0 */
 
     InstrZ = 0;
     AddReg2Swap(
-            "CNTLZW", "CNTLZ", (T31 << 26) + (26 << 1),
+            "CNTLZW", "CNTLZ", (TO_U32(31) << 26) + (26 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, True);
     AddReg2Swap(
-            "EXTSB ", "EXTSB", (T31 << 26) + (954 << 1),
+            "EXTSB ", "EXTSB", (TO_U32(31) << 26) + (954 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, True);
     AddReg2Swap(
-            "EXTSH ", "EXTS", (T31 << 26) + (922 << 1),
+            "EXTSH ", "EXTS", (TO_U32(31) << 26) + (922 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, True);
 
     /* A,B --> 0 A B */
 
     InstrZ = 0;
     AddNoDest(
-            "DCBF", "DCBF", (T31 << 26) + (86 << 1),
+            "DCBF", "DCBF", (TO_U32(31) << 26) + (86 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddNoDest(
-            "DCBI", "DCBI", (T31 << 26) + (470 << 1),
+            "DCBI", "DCBI", (TO_U32(31) << 26) + (470 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddNoDest(
-            "DCBST", "DCBST", (T31 << 26) + (54 << 1),
+            "DCBST", "DCBST", (TO_U32(31) << 26) + (54 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddNoDest(
-            "DCBT", "DCBT", (T31 << 26) + (278 << 1),
+            "DCBT", "DCBT", (TO_U32(31) << 26) + (278 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddNoDest(
-            "DCBTST", "DCBTST", (T31 << 26) + (246 << 1),
+            "DCBTST", "DCBTST", (TO_U32(31) << 26) + (246 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddNoDest(
-            "DCBZ", "DCLZ", (T31 << 26) + (1014 << 1),
+            "DCBZ", "DCLZ", (TO_U32(31) << 26) + (1014 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddNoDest("DCCCI", "DCCCI", (T31 << 26) + (454 << 1), M_403 | M_403C);
+    AddNoDest("DCCCI", "DCCCI", (TO_U32(31) << 26) + (454 << 1), M_403 | M_403C);
     AddNoDest(
-            "ICBI", "ICBI", (T31 << 26) + (982 << 1),
+            "ICBI", "ICBI", (TO_U32(31) << 26) + (982 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddNoDest("ICBT", "ICBT", (T31 << 26) + (262 << 1), M_403 | M_403C);
-    AddNoDest("ICCCI", "ICCCI", (T31 << 26) + (966 << 1), M_403 | M_403C);
+    AddNoDest("ICBT", "ICBT", (TO_U32(31) << 26) + (262 << 1), M_403 | M_403C);
+    AddNoDest("ICCCI", "ICCCI", (TO_U32(31) << 26) + (966 << 1), M_403 | M_403C);
 
     /* D,A,B --> D A B */
 
     InstrZ = 0;
-    AddReg3("ADD", "CAX", (T31 << 26) + (266 << 1),
+    AddReg3("ADD", "CAX", (TO_U32(31) << 26) + (266 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("ADDC", "A", (T31 << 26) + (10 << 1),
+    AddReg3("ADDC", "A", (TO_U32(31) << 26) + (10 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("ADDE", "AE", (T31 << 26) + (138 << 1),
+    AddReg3("ADDE", "AE", (TO_U32(31) << 26) + (138 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("DIV", "DIV", (T31 << 26) + (331 << 1), M_6000, True, True);
-    AddReg3("DIVS", "DIVS", (T31 << 26) + (363 << 1), M_6000, True, True);
-    AddReg3("DIVW", "DIVW", (T31 << 26) + (491 << 1),
+    AddReg3("DIV", "DIV", (TO_U32(31) << 26) + (331 << 1), M_6000, True, True);
+    AddReg3("DIVS", "DIVS", (TO_U32(31) << 26) + (363 << 1), M_6000, True, True);
+    AddReg3("DIVW", "DIVW", (TO_U32(31) << 26) + (491 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("DIVWU", "DIVWU", (T31 << 26) + (459 << 1),
+    AddReg3("DIVWU", "DIVWU", (TO_U32(31) << 26) + (459 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("DOZ", "DOZ", (T31 << 26) + (264 << 1), M_6000, True, True);
-    AddReg3("ECIWX", "ECIWX", (T31 << 26) + (310 << 1), M_821 | M_6000, False, False);
-    AddReg3("LBZUX", "LBZUX", (T31 << 26) + (119 << 1),
+    AddReg3("DOZ", "DOZ", (TO_U32(31) << 26) + (264 << 1), M_6000, True, True);
+    AddReg3("ECIWX", "ECIWX", (TO_U32(31) << 26) + (310 << 1), M_821 | M_6000, False,
+            False);
+    AddReg3("LBZUX", "LBZUX", (TO_U32(31) << 26) + (119 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LBZX", "LBZX", (T31 << 26) + (87 << 1),
+    AddReg3("LBZX", "LBZX", (TO_U32(31) << 26) + (87 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LHAUX", "LHAUX", (T31 << 26) + (375 << 1),
+    AddReg3("LHAUX", "LHAUX", (TO_U32(31) << 26) + (375 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LHAX", "LHAX", (T31 << 26) + (343 << 1),
+    AddReg3("LHAX", "LHAX", (TO_U32(31) << 26) + (343 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LHBRX", "LHBRX", (T31 << 26) + (790 << 1),
+    AddReg3("LHBRX", "LHBRX", (TO_U32(31) << 26) + (790 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LHZUX", "LHZUX", (T31 << 26) + (311 << 1),
+    AddReg3("LHZUX", "LHZUX", (TO_U32(31) << 26) + (311 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LHZX", "LHZX", (T31 << 26) + (279 << 1),
+    AddReg3("LHZX", "LHZX", (TO_U32(31) << 26) + (279 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LSCBX", "LSCBX", (T31 << 26) + (277 << 1), M_6000, False, True);
-    AddReg3("LSWX", "LSX", (T31 << 26) + (533 << 1),
+    AddReg3("LSCBX", "LSCBX", (TO_U32(31) << 26) + (277 << 1), M_6000, False, True);
+    AddReg3("LSWX", "LSX", (TO_U32(31) << 26) + (533 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LWARX", "LWARX", (T31 << 26) + (20 << 1),
+    AddReg3("LWARX", "LWARX", (TO_U32(31) << 26) + (20 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LWBRX", "LBRX", (T31 << 26) + (534 << 1),
+    AddReg3("LWBRX", "LBRX", (TO_U32(31) << 26) + (534 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LWZUX", "LUX", (T31 << 26) + (55 << 1),
+    AddReg3("LWZUX", "LUX", (TO_U32(31) << 26) + (55 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("LWZX", "LX", (T31 << 26) + (23 << 1),
+    AddReg3("LWZX", "LX", (TO_U32(31) << 26) + (23 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("MUL", "MUL", (T31 << 26) + (107 << 1), M_6000, True, True);
-    AddReg3("MULHW", "MULHW", (T31 << 26) + (75 << 1),
+    AddReg3("MUL", "MUL", (TO_U32(31) << 26) + (107 << 1), M_6000, True, True);
+    AddReg3("MULHW", "MULHW", (TO_U32(31) << 26) + (75 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, True);
-    AddReg3("MULHWU", "MULHWU", (T31 << 26) + (11 << 1),
+    AddReg3("MULHWU", "MULHWU", (TO_U32(31) << 26) + (11 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, True);
-    AddReg3("MULLW", "MULS", (T31 << 26) + (235 << 1),
+    AddReg3("MULLW", "MULS", (TO_U32(31) << 26) + (235 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("STBUX", "STBUX", (T31 << 26) + (247 << 1),
+    AddReg3("STBUX", "STBUX", (TO_U32(31) << 26) + (247 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STBX", "STBX", (T31 << 26) + (215 << 1),
+    AddReg3("STBX", "STBX", (TO_U32(31) << 26) + (215 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STHBRX", "STHBRX", (T31 << 26) + (918 << 1),
+    AddReg3("STHBRX", "STHBRX", (TO_U32(31) << 26) + (918 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STHUX", "STHUX", (T31 << 26) + (439 << 1),
+    AddReg3("STHUX", "STHUX", (TO_U32(31) << 26) + (439 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STHX", "STHX", (T31 << 26) + (407 << 1),
+    AddReg3("STHX", "STHX", (TO_U32(31) << 26) + (407 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STSWX", "STSX", (T31 << 26) + (661 << 1),
+    AddReg3("STSWX", "STSX", (TO_U32(31) << 26) + (661 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STWBRX", "STBRX", (T31 << 26) + (662 << 1),
+    AddReg3("STWBRX", "STBRX", (TO_U32(31) << 26) + (662 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STWCX.", "STWCX.", (T31 << 26) + (150 << 1),
+    AddReg3("STWCX.", "STWCX.", (TO_U32(31) << 26) + (150 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STWUX", "STUX", (T31 << 26) + (183 << 1),
+    AddReg3("STWUX", "STUX", (TO_U32(31) << 26) + (183 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("STWX", "STX", (T31 << 26) + (151 << 1),
+    AddReg3("STWX", "STX", (TO_U32(31) << 26) + (151 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, False, False);
-    AddReg3("SUBF", "SUBF", (T31 << 26) + (40 << 1),
+    AddReg3("SUBF", "SUBF", (TO_U32(31) << 26) + (40 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("SUB", "SUB", (T31 << 26) + (40 << 1),
+    AddReg3("SUB", "SUB", (TO_U32(31) << 26) + (40 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("SUBFC", "SF", (T31 << 26) + (8 << 1),
+    AddReg3("SUBFC", "SF", (TO_U32(31) << 26) + (8 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("SUBC", "SUBC", (T31 << 26) + (8 << 1),
+    AddReg3("SUBC", "SUBC", (TO_U32(31) << 26) + (8 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("SUBFE", "SFE", (T31 << 26) + (136 << 1),
+    AddReg3("SUBFE", "SFE", (TO_U32(31) << 26) + (136 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True, True);
-    AddReg3("TLBSX", "TLBSX", (T31 << 26) + (914 << 1), M_403C, False, True);
+    AddReg3("TLBSX", "TLBSX", (TO_U32(31) << 26) + (914 << 1), M_403C, False, True);
 
     /* cD,cA,cB --> D A B */
 
     InstrZ = 0;
     AddCReg3(
-            "CRAND", (T19 << 26) + (257 << 1),
+            "CRAND", (TO_U32(19) << 26) + (257 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CRANDC", (T19 << 26) + (129 << 1),
+            "CRANDC", (TO_U32(19) << 26) + (129 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CREQV", (T19 << 26) + (289 << 1),
+            "CREQV", (TO_U32(19) << 26) + (289 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CRNAND", (T19 << 26) + (225 << 1),
+            "CRNAND", (TO_U32(19) << 26) + (225 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CRNOR", (T19 << 26) + (33 << 1),
+            "CRNOR", (TO_U32(19) << 26) + (33 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CROR", (T19 << 26) + (449 << 1),
+            "CROR", (TO_U32(19) << 26) + (449 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CRORC", (T19 << 26) + (417 << 1),
+            "CRORC", (TO_U32(19) << 26) + (417 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddCReg3(
-            "CRXOR", (T19 << 26) + (193 << 1),
+            "CRXOR", (TO_U32(19) << 26) + (193 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
 
     /* fD,fA,fB --> D A B */
 
     InstrZ = 0;
-    AddFReg3("FADD", "FA", (T63 << 26) + (21 << 1), M_601 | M_6000, True);
-    AddFReg3("FADDS", "FADDS", (T59 << 26) + (21 << 1), M_601 | M_6000, True);
-    AddFReg3("FDIV", "FD", (T63 << 26) + (18 << 1), M_601 | M_6000, True);
-    AddFReg3("FDIVS", "FDIVS", (T59 << 26) + (18 << 1), M_601 | M_6000, True);
-    AddFReg3("FSUB", "FS", (T63 << 26) + (20 << 1), M_601 | M_6000, True);
+    AddFReg3("FADD", "FA", (TO_U32(63) << 26) + (21 << 1), M_601 | M_6000, True);
+    AddFReg3("FADDS", "FADDS", (TO_U32(59) << 26) + (21 << 1), M_601 | M_6000, True);
+    AddFReg3("FDIV", "FD", (TO_U32(63) << 26) + (18 << 1), M_601 | M_6000, True);
+    AddFReg3("FDIVS", "FDIVS", (TO_U32(59) << 26) + (18 << 1), M_601 | M_6000, True);
+    AddFReg3("FSUB", "FS", (TO_U32(63) << 26) + (20 << 1), M_601 | M_6000, True);
 
     /* A,S,B --> S A B */
 
     InstrZ = 0;
     AddReg3Swap(
-            "AND", "AND", (T31 << 26) + (28 << 1),
+            "AND", "AND", (TO_U32(31) << 26) + (28 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
     AddReg3Swap(
-            "ANDC", "ANDC", (T31 << 26) + (60 << 1),
+            "ANDC", "ANDC", (TO_U32(31) << 26) + (60 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
     AddReg3Swap(
-            "ECOWX", "ECOWX", (T31 << 26) + (438 << 1), M_821 | M_601 | M_6000, False);
+            "ECOWX", "ECOWX", (TO_U32(31) << 26) + (438 << 1), M_821 | M_601 | M_6000,
+            False);
     AddReg3Swap(
-            "EQV", "EQV", (T31 << 26) + (284 << 1),
+            "EQV", "EQV", (TO_U32(31) << 26) + (284 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg3Swap("MASKG", "MASKG", (T31 << 26) + (29 << 1), M_6000, True);
-    AddReg3Swap("MASKIR", "MASKIR", (T31 << 26) + (541 << 1), M_6000, True);
+    AddReg3Swap("MASKG", "MASKG", (TO_U32(31) << 26) + (29 << 1), M_6000, True);
+    AddReg3Swap("MASKIR", "MASKIR", (TO_U32(31) << 26) + (541 << 1), M_6000, True);
     AddReg3Swap(
-            "NAND", "NAND", (T31 << 26) + (476 << 1),
-            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg3Swap(
-            "NOR", "NOR", (T31 << 26) + (124 << 1),
+            "NAND", "NAND", (TO_U32(31) << 26) + (476 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
     AddReg3Swap(
-            "OR", "OR", (T31 << 26) + (444 << 1),
+            "NOR", "NOR", (TO_U32(31) << 26) + (124 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
     AddReg3Swap(
-            "ORC", "ORC", (T31 << 26) + (412 << 1),
-            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg3Swap("RRIB", "RRIB", (T31 << 26) + (537 << 1), M_6000, True);
-    AddReg3Swap("SLE", "SLE", (T31 << 26) + (153 << 1), M_6000, True);
-    AddReg3Swap("SLEQ", "SLEQ", (T31 << 26) + (217 << 1), M_6000, True);
-    AddReg3Swap("SLLQ", "SLLQ", (T31 << 26) + (216 << 1), M_6000, True);
-    AddReg3Swap("SLQ", "SLQ", (T31 << 26) + (152 << 1), M_6000, True);
-    AddReg3Swap(
-            "SLW", "SL", (T31 << 26) + (24 << 1),
-            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg3Swap("SRAQ", "SRAQ", (T31 << 26) + (920 << 1), M_6000, True);
-    AddReg3Swap(
-            "SRAW", "SRA", (T31 << 26) + (792 << 1),
-            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg3Swap("SRE", "SRE", (T31 << 26) + (665 << 1), M_6000, True);
-    AddReg3Swap("SREA", "SREA", (T31 << 26) + (921 << 1), M_6000, True);
-    AddReg3Swap("SREQ", "SREQ", (T31 << 26) + (729 << 1), M_6000, True);
-    AddReg3Swap("SRLQ", "SRLQ", (T31 << 26) + (728 << 1), M_6000, True);
-    AddReg3Swap("SRQ", "SRQ", (T31 << 26) + (664 << 1), M_6000, True);
-    AddReg3Swap(
-            "SRW", "SR", (T31 << 26) + (536 << 1),
+            "OR", "OR", (TO_U32(31) << 26) + (444 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
     AddReg3Swap(
-            "XOR", "XOR", (T31 << 26) + (316 << 1),
+            "ORC", "ORC", (TO_U32(31) << 26) + (412 << 1),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
+    AddReg3Swap("RRIB", "RRIB", (TO_U32(31) << 26) + (537 << 1), M_6000, True);
+    AddReg3Swap("SLE", "SLE", (TO_U32(31) << 26) + (153 << 1), M_6000, True);
+    AddReg3Swap("SLEQ", "SLEQ", (TO_U32(31) << 26) + (217 << 1), M_6000, True);
+    AddReg3Swap("SLLQ", "SLLQ", (TO_U32(31) << 26) + (216 << 1), M_6000, True);
+    AddReg3Swap("SLQ", "SLQ", (TO_U32(31) << 26) + (152 << 1), M_6000, True);
+    AddReg3Swap(
+            "SLW", "SL", (TO_U32(31) << 26) + (24 << 1),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
+    AddReg3Swap("SRAQ", "SRAQ", (TO_U32(31) << 26) + (920 << 1), M_6000, True);
+    AddReg3Swap(
+            "SRAW", "SRA", (TO_U32(31) << 26) + (792 << 1),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
+    AddReg3Swap("SRE", "SRE", (TO_U32(31) << 26) + (665 << 1), M_6000, True);
+    AddReg3Swap("SREA", "SREA", (TO_U32(31) << 26) + (921 << 1), M_6000, True);
+    AddReg3Swap("SREQ", "SREQ", (TO_U32(31) << 26) + (729 << 1), M_6000, True);
+    AddReg3Swap("SRLQ", "SRLQ", (TO_U32(31) << 26) + (728 << 1), M_6000, True);
+    AddReg3Swap("SRQ", "SRQ", (TO_U32(31) << 26) + (664 << 1), M_6000, True);
+    AddReg3Swap(
+            "SRW", "SR", (TO_U32(31) << 26) + (536 << 1),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
+    AddReg3Swap(
+            "XOR", "XOR", (TO_U32(31) << 26) + (316 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
 
     /* fD,A,B --> D A B */
 
     InstrZ = 0;
-    AddMixed("LFDUX", "LFDUX", (T31 << 26) + (631 << 1), M_601 | M_6000);
-    AddMixed("LFDX", "LFDX", (T31 << 26) + (599 << 1), M_601 | M_6000);
-    AddMixed("LFSUX", "LFSUX", (T31 << 26) + (567 << 1), M_601 | M_6000);
-    AddMixed("LFSX", "LFSX", (T31 << 26) + (535 << 1), M_601 | M_6000);
-    AddMixed("STFDUX", "STFDUX", (T31 << 26) + (759 << 1), M_601 | M_6000);
-    AddMixed("STFDX", "STFDX", (T31 << 26) + (727 << 1), M_601 | M_6000);
-    AddMixed("STFSUX", "STFSUX", (T31 << 26) + (695 << 1), M_601 | M_6000);
-    AddMixed("STFSX", "STFSX", (T31 << 26) + (663 << 1), M_601 | M_6000);
+    AddMixed("LFDUX", "LFDUX", (TO_U32(31) << 26) + (631 << 1), M_601 | M_6000);
+    AddMixed("LFDX", "LFDX", (TO_U32(31) << 26) + (599 << 1), M_601 | M_6000);
+    AddMixed("LFSUX", "LFSUX", (TO_U32(31) << 26) + (567 << 1), M_601 | M_6000);
+    AddMixed("LFSX", "LFSX", (TO_U32(31) << 26) + (535 << 1), M_601 | M_6000);
+    AddMixed("STFDUX", "STFDUX", (TO_U32(31) << 26) + (759 << 1), M_601 | M_6000);
+    AddMixed("STFDX", "STFDX", (TO_U32(31) << 26) + (727 << 1), M_601 | M_6000);
+    AddMixed("STFSUX", "STFSUX", (TO_U32(31) << 26) + (695 << 1), M_601 | M_6000);
+    AddMixed("STFSX", "STFSX", (TO_U32(31) << 26) + (663 << 1), M_601 | M_6000);
 
     /* fD,fA,fC,fB --> D A B C */
 
     InstrZ = 0;
-    AddFReg4("FMADD", "FMA", (T63 << 26) + (29 << 1), M_601 | M_6000, True);
-    AddFReg4("FMADDS", "FMADDS", (T59 << 26) + (29 << 1), M_601 | M_6000, True);
-    AddFReg4("FMSUB", "FMS", (T63 << 26) + (28 << 1), M_601 | M_6000, True);
-    AddFReg4("FMSUBS", "FMSUBS", (T59 << 26) + (28 << 1), M_601 | M_6000, True);
-    AddFReg4("FNMADD", "FNMA", (T63 << 26) + (31 << 1), M_601 | M_6000, True);
-    AddFReg4("FNMADDS", "FNMADDS", (T59 << 26) + (31 << 1), M_601 | M_6000, True);
-    AddFReg4("FNMSUB", "FNMS", (T63 << 26) + (30 << 1), M_601 | M_6000, True);
-    AddFReg4("FNMSUBS", "FNMSUBS", (T59 << 26) + (30 << 1), M_601 | M_6000, True);
+    AddFReg4("FMADD", "FMA", (TO_U32(63) << 26) + (29 << 1), M_601 | M_6000, True);
+    AddFReg4("FMADDS", "FMADDS", (TO_U32(59) << 26) + (29 << 1), M_601 | M_6000, True);
+    AddFReg4("FMSUB", "FMS", (TO_U32(63) << 26) + (28 << 1), M_601 | M_6000, True);
+    AddFReg4("FMSUBS", "FMSUBS", (TO_U32(59) << 26) + (28 << 1), M_601 | M_6000, True);
+    AddFReg4("FNMADD", "FNMA", (TO_U32(63) << 26) + (31 << 1), M_601 | M_6000, True);
+    AddFReg4("FNMADDS", "FNMADDS", (TO_U32(59) << 26) + (31 << 1), M_601 | M_6000, True);
+    AddFReg4("FNMSUB", "FNMS", (TO_U32(63) << 26) + (30 << 1), M_601 | M_6000, True);
+    AddFReg4("FNMSUBS", "FNMSUBS", (TO_U32(59) << 26) + (30 << 1), M_601 | M_6000, True);
 
     /* D,d(A) --> D A d */
 
     InstrZ = 0;
     AddRegDisp(
-            "LBZ", "LBZ", (T34 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LBZ", "LBZ", (TO_U32(34) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LBZU", "LBZU", (T35 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LBZU", "LBZU", (TO_U32(35) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LHA", "LHA", (T42 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LHA", "LHA", (TO_U32(42) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LHAU", "LHAU", (T43 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LHAU", "LHAU", (TO_U32(43) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LHZ", "LHZ", (T40 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LHZ", "LHZ", (TO_U32(40) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LHZU", "LHZU", (T41 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddRegDisp("LMW", "LM", (T46 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddRegDisp("LWZ", "L", (T32 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LHZU", "LHZU", (TO_U32(41) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "LWZU", "LU", (T33 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LMW", "LM", (TO_U32(46) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STB", "STB", (T38 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LWZ", "L", (TO_U32(32) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STBU", "STBU", (T39 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "LWZU", "LU", (TO_U32(33) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STH", "STH", (T44 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "STB", "STB", (TO_U32(38) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STHU", "STHU", (T45 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "STBU", "STBU", (TO_U32(39) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STMW", "STM", (T47 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddRegDisp("STW", "ST", (T36 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "STH", "STH", (TO_U32(44) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddRegDisp(
-            "STWU", "STU", (T37 << 26), M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "STHU", "STHU", (TO_U32(45) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddRegDisp(
+            "STMW", "STM", (TO_U32(47) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddRegDisp(
+            "STW", "ST", (TO_U32(36) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddRegDisp(
+            "STWU", "STU", (TO_U32(37) << 26),
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
 
     /* fD,d(A) --> D A d */
 
     InstrZ = 0;
-    AddFRegDisp("LFD", "LFD", (T50 << 26), M_601 | M_6000);
-    AddFRegDisp("LFDU", "LFDU", (T51 << 26), M_601 | M_6000);
-    AddFRegDisp("LFS", "LFS", (T48 << 26), M_601 | M_6000);
-    AddFRegDisp("LFSU", "LFSU", (T49 << 26), M_601 | M_6000);
-    AddFRegDisp("STFD", "STFD", (T54 << 26), M_601 | M_6000);
-    AddFRegDisp("STFDU", "STFDU", (T55 << 26), M_601 | M_6000);
-    AddFRegDisp("STFS", "STFS", (T52 << 26), M_601 | M_6000);
-    AddFRegDisp("STFSU", "STFSU", (T53 << 26), M_601 | M_6000);
+    AddFRegDisp("LFD", "LFD", (TO_U32(50) << 26), M_601 | M_6000);
+    AddFRegDisp("LFDU", "LFDU", (TO_U32(51) << 26), M_601 | M_6000);
+    AddFRegDisp("LFS", "LFS", (TO_U32(48) << 26), M_601 | M_6000);
+    AddFRegDisp("LFSU", "LFSU", (TO_U32(49) << 26), M_601 | M_6000);
+    AddFRegDisp("STFD", "STFD", (TO_U32(54) << 26), M_601 | M_6000);
+    AddFRegDisp("STFDU", "STFDU", (TO_U32(55) << 26), M_601 | M_6000);
+    AddFRegDisp("STFS", "STFS", (TO_U32(52) << 26), M_601 | M_6000);
+    AddFRegDisp("STFSU", "STFSU", (TO_U32(53) << 26), M_601 | M_6000);
 
     /* A,S,Imm5 --> S A Imm */
 
     InstrZ = 0;
-    AddReg2Imm("SLIQ", "SLIQ", (T31 << 26) + (184 << 1), M_6000, True);
-    AddReg2Imm("SLLIQ", "SLLIQ", (T31 << 26) + (248 << 1), M_6000, True);
-    AddReg2Imm("SRAIQ", "SRAIQ", (T31 << 26) + (952 << 1), M_6000, True);
+    AddReg2Imm("SLIQ", "SLIQ", (TO_U32(31) << 26) + (184 << 1), M_6000, True);
+    AddReg2Imm("SLLIQ", "SLLIQ", (TO_U32(31) << 26) + (248 << 1), M_6000, True);
+    AddReg2Imm("SRAIQ", "SRAIQ", (TO_U32(31) << 26) + (952 << 1), M_6000, True);
     AddReg2Imm(
-            "SRAWI", "SRAI", (T31 << 26) + (824 << 1),
+            "SRAWI", "SRAI", (TO_U32(31) << 26) + (824 << 1),
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000, True);
-    AddReg2Imm("SRIQ", "SRIQ", (T31 << 26) + (696 << 1), M_6000, True);
-    AddReg2Imm("SRLIQ", "SRLIQ", (T31 << 26) + (760 << 1), M_6000, True);
+    AddReg2Imm("SRIQ", "SRIQ", (TO_U32(31) << 26) + (696 << 1), M_6000, True);
+    AddReg2Imm("SRLIQ", "SRLIQ", (TO_U32(31) << 26) + (760 << 1), M_6000, True);
 
     /* D,A,Imm --> D A Imm */
 
     InstrZ = 0;
-    AddImm16("ADDI", "CAL", T14 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddImm16("ADDIC", "AI", T12 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddImm16("ADDIC.", "AI.", T13 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddImm16("ADDIS", "CAU", T15 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddImm16("DOZI", "DOZI", T9 << 26, M_6000);
-    AddImm16("MULLI", "MULI", T7 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
-    AddImm16("SUBFIC", "SFI", T8 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16(
+            "ADDI", "CAL", TO_U32(14) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16(
+            "ADDIC", "AI", TO_U32(12) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16(
+            "ADDIC.", "AI.", TO_U32(13) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16(
+            "ADDIS", "CAU", TO_U32(15) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16("DOZI", "DOZI", TO_U32(9) << 26, M_6000);
+    AddImm16(
+            "MULLI", "MULI", TO_U32(7) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+    AddImm16(
+            "SUBFIC", "SFI", TO_U32(8) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
 
     /* A,S,Imm --> S A Imm */
 
     InstrZ = 0;
     AddImm16Swap(
-            "ANDI.", "ANDIL.", T28 << 26,
+            "ANDI.", "ANDIL.", TO_U32(28) << 26,
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddImm16Swap(
-            "ANDIS.", "ANDIU.", T29 << 26,
+            "ANDIS.", "ANDIU.", TO_U32(29) << 26,
             M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddImm16Swap(
-            "ORI", "ORIL", T24 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "ORI", "ORIL", TO_U32(24) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddImm16Swap(
-            "ORIS", "ORIU", T25 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "ORIS", "ORIU", TO_U32(25) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddImm16Swap(
-            "XORI", "XORIL", T26 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "XORI", "XORIL", TO_U32(26) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
     AddImm16Swap(
-            "XORIS", "XORIU", T27 << 26, M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
+            "XORIS", "XORIU", TO_U32(27) << 26,
+            M_403 | M_403C | M_505 | M_821 | M_601 | M_6000);
 
     AddIntelPseudo(InstTable, eIntPseudoFlag_DynEndian);
 }

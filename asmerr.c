@@ -386,6 +386,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_SymbolUndef:
         msgno = Num_ErrMsgSymbolUndef;
         break;
+    case ErrNum_NotEnoughBkSymbols:
+        msgno = Num_ErrMsgNotEnoughBkSymbols;
+        break;
     case ErrNum_InvSymName:
         msgno = Num_ErrMsgInvSymName;
         break;

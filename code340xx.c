@@ -1626,6 +1626,15 @@ static void decode_cexec(Word code) {
    CMOVCG Rd1,Rd2,1,command,id
 */
 
+static LongWord eval_cmovcg_command(tStrComp const* p_arg, Boolean* p_ok) {
+    if (*p_arg->str.p_str) {
+        return EvalStrIntExpression(p_arg, UInt21, p_ok);
+    } else {
+        *p_ok = True;
+        return 0;
+    }
+}
+
 static void decode_cmovcg(Word code) {
     Word     Rd1, Rd2 = 0, size = 0, id = coproc;
     LongWord command;
@@ -1650,7 +1659,7 @@ static void decode_cmovcg(Word code) {
         size = 1;
         switch (ArgCnt) {
         case 3: /* Rd1,Rd2,command */
-            command = EvalStrIntExpression(&ArgStr[3], UInt21, &ok);
+            command = eval_cmovcg_command(&ArgStr[3], &ok);
             if (!ok) {
                 return;
             }
@@ -1659,11 +1668,11 @@ static void decode_cmovcg(Word code) {
         {
             LongWord v1, v2;
 
-            v1 = EvalStrIntExpression(&ArgStr[3], UInt21, &ok);
+            v1 = eval_cmovcg_command(&ArgStr[3], &ok);
             if (!ok) {
                 return;
             }
-            v2 = EvalStrIntExpression(&ArgStr[4], UInt21, &ok);
+            v2 = eval_cmovcg_command(&ArgStr[4], &ok);
             if (!ok) {
                 return;
             }
@@ -1680,11 +1689,11 @@ static void decode_cmovcg(Word code) {
             break;
         }
         case 5:
-            size = EvalStrIntExpression(&ArgStr[3], UInt21, &ok);
+            size = eval_cmovcg_command(&ArgStr[3], &ok);
             if (!ok) {
                 return;
             }
-            command = EvalStrIntExpression(&ArgStr[4], UInt21, &ok);
+            command = eval_cmovcg_command(&ArgStr[4], &ok);
             if (!ok) {
                 return;
             }
@@ -1700,7 +1709,7 @@ static void decode_cmovcg(Word code) {
         break;
     case eIsNoReg:
         Rd2     = 0;
-        command = EvalStrIntExpression(&ArgStr[2], UInt21, &ok);
+        command = eval_cmovcg_command(&ArgStr[2], &ok);
         if (!ok) {
             return;
         }
@@ -2006,7 +2015,7 @@ static void decode_field(Word code) {
     if (!ok) {
         return;
     }
-#ifndef HAS64
+#ifndef AS_HAS64
     if (field_length < 32)
 #endif
     {

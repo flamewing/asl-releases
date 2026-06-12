@@ -76,6 +76,7 @@ typedef struct tag_TInputTag {
 
 typedef struct tag_TOutputTag {
     struct tag_TOutputTag* Next;
+
     void (*Processor)(void);
     Integer         NestLevel;
     PInputTag       Tag;

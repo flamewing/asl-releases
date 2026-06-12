@@ -75,6 +75,7 @@ typedef enum {
     ErrNum_WillOverwriteSP             = 510,
     ErrNum_DoubleDef                   = 1000,
     ErrNum_SymbolUndef                 = 1010,
+    ErrNum_NotEnoughBkSymbols          = 1011,
     ErrNum_InvSymName                  = 1020,
     ErrNum_RsvdSymName                 = 1030,
     ErrNum_InvFormat                   = 1090,

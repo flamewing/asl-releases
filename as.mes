@@ -274,6 +274,10 @@ Message ErrMsgSymbolUndef
  "Symbol nicht definiert"
  "symbol undefined"
 
+Message ErrMsgNotEnoughBkSymbols
+ "nicht gen&uuml;gend vorherige lokale Symbole"
+ "not enough previous local symbols"
+
 Message ErrMsgInvSymName
  "ung&uuml;ltiger Symbolname"
  "invalid symbol name"
