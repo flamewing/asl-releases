@@ -50,7 +50,7 @@ static Boolean  StartAuto, StopAuto, AutoErase, EntryAdrPresent, last_byte_no_pa
 static Byte    FillVal, ValidSegment;
 static Boolean DoCheckSum;
 
-static Byte     SizeDiv;
+static Byte     SizeDiv, byte_swap;
 static LongWord ANDMask, ANDEq;
 static ShortInt StartHeader;
 
@@ -288,6 +288,14 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     if (fread(Buffer, 1, TransLen, SrcFile) != TransLen) {
                         chk_wr_read_error(FileName);
                     }
+                    switch (byte_swap) {
+                    case 2:
+                        WSwap(Buffer, TransLen);
+                        break;
+                    case 4:
+                        DSwap(Buffer, TransLen);
+                        break;
+                    }
                     if (SizeDiv == 1) {
                         ResLen = TransLen;
                     } else {
@@ -469,6 +477,20 @@ static as_cmd_result_t CMD_ByteMode(Boolean Negate, char const* pArg) {
     }
 }
 
+static as_cmd_result_t cmd_byte_swap(Boolean negate, char const* p_arg) {
+    if (negate) {
+        byte_swap = 1;
+        return e_cmd_ok;
+    } else {
+        char const* p_end;
+        byte_swap = as_cmd_strtol(p_arg, &p_end);
+        if (*p_end || ((byte_swap != 1) && (byte_swap != 2) && (byte_swap != 4))) {
+            return e_cmd_err;
+        }
+        return e_cmd_arg;
+    }
+}
+
 static as_cmd_result_t CMD_StartHeader(Boolean Negate, char const* Arg) {
     if (Negate) {
         StartHeader = 0;
@@ -552,16 +574,17 @@ static as_cmd_result_t CMD_ForceSegment(Boolean Negate, char const* Arg) {
 }
 
 static as_cmd_rec_t P2BINParams[] = {
-        {      "f",   CMD_FilterList},
-        {      "r",     CMD_AdrRange},
-        {      "s",     CMD_CheckSum},
-        {      "m",     CMD_ByteMode},
-        {      "l",      CMD_FillVal},
-        {      "e",     CMD_EntryAdr},
-        {      "S",  CMD_StartHeader},
-        {      "k",    CMD_AutoErase},
-        {"SEGMENT", CMD_ForceSegment},
-        {      "o",  cmd_target_name}
+        {        "f",   CMD_FilterList},
+        {        "r",     CMD_AdrRange},
+        {        "s",     CMD_CheckSum},
+        {        "m",     CMD_ByteMode},
+        {"byte-swap",    cmd_byte_swap},
+        {        "l",      CMD_FillVal},
+        {        "e",     CMD_EntryAdr},
+        {        "S",  CMD_StartHeader},
+        {        "k",    CMD_AutoErase},
+        {  "SEGMENT", CMD_ForceSegment},
+        {        "o",  cmd_target_name}
 };
 
 int main(int argc, char** argv) {
@@ -598,6 +621,7 @@ int main(int argc, char** argv) {
     last_byte_no_pad = False;
     SizeDiv          = 1;
     ANDEq            = 0;
+    byte_swap        = 1;
     EntryAdr         = -1;
     EntryAdrPresent  = False;
     AutoErase        = False;

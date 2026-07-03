@@ -1,0 +1,1 @@
+bfloat16 constants retain the target little-endian data byte order.

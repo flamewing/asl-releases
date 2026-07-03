@@ -1,3 +1,21 @@
+2026-07-02 [1.42 Bld 310]
+
+- Addition    : Add BF16 directive to dispose floating
+                point constants in BFloat16 format.
+- Addition    : P2BIN has new byte-swap option to perform
+                pairwise or quartet-wise swap of bytes.
+- Bugfix      : TMS320C3x: Allow trap vectors 0..31
+- Bugfix      : TMS320C3x: Mute exponent when using LDM
+                with immediate source operand.
+- Bugfix      : repair INHX16M output for PIC targets.
+- Bugfix      : TMS320C3x: assume no dest operand for
+                CMPI3 and CMPF3, just like for TSTB3.
+- Bugfix      : TMS320C3x: allow certain parallel operations
+                also in reverse order
+- Bugfix      : TMS3203x: Optionally upgrade a 2-operand
+                instruction to three operands to achieve a
+                valid pair for parallel execution.
+
 2026-06-12 [1.42 Bld 309]
 
 - Bugfix      : Explicitly report non-existing local symbols

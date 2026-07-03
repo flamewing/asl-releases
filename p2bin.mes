@@ -60,7 +60,8 @@ Message InfoMessHelp
  "  -segment <Name>   : Quellsegment w&auml;hlen\n" \
  "  -l <8-Bit-Zahl>   : Inhalt unbenutzter Speicherzellen festlegen\n" \
  "  -s                : Pr&uuml;fsumme in Datei ablegen\n" \
- "  -m <Modus>        : EPROM-Modus (odd,even,byte0..byte3)\n" \
+ "  -m <Modus>        : EPROM-Modus (all, odd, even, byte0..byte3, word0..word1)\n" \
+ "  -byte-swap <1|2|4>: keines/Word/DWord Byte-Swap auf Daten durchf&uuml;hren\n" \
  "  -e <Adresse>      : Startadresse festlegen\n" \
  "  -S [L|B]<L&auml;nge>   : Startadresse voranstellen\n" \
  "  -k                : Quelldateien automatisch l&ouml;schen\n" \
@@ -77,7 +78,8 @@ Message InfoMessHelp
  "  -segment <name>   : select source segment\n" \
  "  -l <8-bit-number> : set filler value for unused cells\n" \
  "  -s                : put checksum into file\n" \
- "  -m <mode>         : EPROM-mode (odd,even,byte0..byte3)\n" \
+ "  -m <mode>         : EPROM-mode (all, odd, even, byte0..byte3, word0..word1)\n" \
+ "  -byte-swap <1|2|4>: perform no/word/dword byte swap on data\n" \
  "  -e <address>      : set entry address\n" \
  "  -S [L|B]<length>  : prepend entry address to image\n" \
  "  -k                : automatically erase source files\n" \

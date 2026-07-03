@@ -66,6 +66,13 @@ EPROM burner can skip these cells, speeding up the programming process and
 reducing stress for the EPROM.  However, there are specialized EPROMs that
 have zeros in their cells after erasure, and you might want to fill unused
 areas with a code that executes as a NOP or BREAK statement.
+
+.TP
+.B -byte-swap <1|2|4>
+
+Perform no (1), a pairwise (2), or quartet-wise (4) swap of bytes of the
+binary data.
+
 .TP
 .B -m <all|even|odd|byte<0|1|2|3>|word<0|1>>
 

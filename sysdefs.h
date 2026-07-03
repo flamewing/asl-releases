@@ -89,6 +89,7 @@ typedef int16_t  as_int16_t;
 typedef uint16_t as_uint16_t;
 typedef int32_t  as_int32_t;
 #define PRIas_int32_t PRId32
+#define AS_PRId32     PRId32
 typedef uint32_t    as_uint32_t;
 typedef int64_t     as_int64_t;
 typedef uint64_t    as_uint64_t;

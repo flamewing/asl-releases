@@ -74,8 +74,18 @@ static SingOrder*  SingOrders;
 
 static LongInt DPValue;
 
+#define CODE_LDM 0x12
+
 static char const ParOrders[][6]
         = {"LDF", "LDI", "STF", "STI", "ADDF3", "SUBF3", "ADDI3", "SUBI3"};
+
+#if 0
+#    define par_dbg_printf printf
+#else
+#    define par_dbg_printf(...) \
+        do {                    \
+        } while (0)
+#endif
 
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
@@ -595,11 +605,11 @@ static void DecodeGen(Word Index) {
             return;
         }
     }
-    if ((ActArgCnt == 3) && (!CurrGenInfo.Is3)) {
+    if ((ActArgCnt == 3) && !CurrGenInfo.Is3) {
         CurrGenInfo.Is3 = True;
     }
 
-    if ((CurrGenInfo.pOrder->SwapOps) && (!CurrGenInfo.Is3)) {
+    if (CurrGenInfo.pOrder->SwapOps && !CurrGenInfo.Is3) {
         pArg[3] = pArg[1];
         pArg[1] = pArg[2];
         pArg[2] = pArg[3];
@@ -617,7 +627,10 @@ static void DecodeGen(Word Index) {
     /* Argumente parsen */
 
     if (CurrGenInfo.Is3) {
-        if (Memo("TSTB3")) {
+        /* Although these have only two operands, they are encoded as three-operand
+           instructions with the dest field set to all-zeroes: */
+
+        if (Memo("TSTB3") || Memo("CMPI3") || Memo("CMPF3")) {
             CurrGenInfo.DestMode = ModReg;
             CurrGenInfo.DestPart = 0;
         } else {
@@ -630,7 +643,7 @@ static void DecodeGen(Word Index) {
         }
 
         /* The C4x type 2 format may use an immediate operand only if it is an
-           integer operation - there is no 8-bit represenataion of floats. */
+           integer operation - there is no 8-bit representation of floats. */
 
         DecodeAdr(
                 pArg[1],
@@ -659,7 +672,7 @@ static void DecodeGen(Word Index) {
 
         else if (AdrMode == ModInd) {
             if (!Gen3IndirectAllowed(AdrPart)) {
-                WrError(ErrNum_InvAddrMode);
+                WrStrErrorPos(ErrNum_InvAddrMode, pArg[1]);
                 return;
             }
             T21_22 |= 1ul << 22;
@@ -690,7 +703,7 @@ static void DecodeGen(Word Index) {
 
         else if (AdrMode == ModInd) {
             if (!Gen3IndirectAllowed(AdrPart)) {
-                WrError(ErrNum_InvAddrMode);
+                WrStrErrorPos(ErrNum_InvAddrMode, pArg[2]);
                 return;
             }
             T21_22 |= 1ul << 21;
@@ -707,15 +720,16 @@ static void DecodeGen(Word Index) {
         if (AdrMode == ModNone) {
             return;
         }
+        if ((AdrMode == ModImm) && (CurrGenInfo.pOrder->Code == CODE_LDM)) {
+            AdrPart &= ~0xf000ul;
+        }
         CurrGenInfo.Src2Mode = AdrMode;
         CurrGenInfo.Src2Part = AdrPart;
         DecodeAdr(pArg[2], MModReg + MModInd, CurrGenInfo.pOrder->ImmFloat);
         switch (AdrMode) {
         case ModReg:
-            CurrGenInfo.DestMode = AdrMode;
-            CurrGenInfo.DestPart = AdrPart;
-            CurrGenInfo.Src1Mode = CurrGenInfo.Src2Mode;
-            CurrGenInfo.Src1Part = CurrGenInfo.Src2Part;
+            CurrGenInfo.Src1Mode = CurrGenInfo.DestMode = AdrMode;
+            CurrGenInfo.Src1Part = CurrGenInfo.DestPart = AdrPart;
             break;
         case ModInd:
             if (((strcmp(OpPart.str.p_str, "TSTB")) && (strcmp(OpPart.str.p_str, "CMPI"))
@@ -743,45 +757,87 @@ static void DecodeGen(Word Index) {
     /* auswerten: parallel... */
 
     if (ThisPar) {
-        int      ParIndex;
-        unsigned ARIndex;
+        int            ParIndex;
+        unsigned       ARIndex, passes;
+        Boolean        reverse;
+        tGenOrderInfo *p_curr_gen_info, *p_prev_gen_info;
+        char const*    p_prev_op;
 
         if (!PrevGenInfo.pOrder) {
             WrError(ErrNum_ParNotPossible);
             return;
         }
 
-        /* in Standardreihenfolge suchen */
+        par_dbg_printf(
+                "ThisPar prev %u-0x%x%s%u-0x%x -> %u-0x%x\n", PrevGenInfo.Src1Mode,
+                PrevGenInfo.Src1Part, PrevGenInfo.pOrder->Commutative ? "<->" : ",",
+                PrevGenInfo.Src2Mode, PrevGenInfo.Src2Part, PrevGenInfo.DestMode,
+                PrevGenInfo.DestPart);
+        par_dbg_printf(
+                "ThisPar curr %u-0x%x%s%u-0x%x -> %u-0x%x\n", CurrGenInfo.Src1Mode,
+                CurrGenInfo.Src1Part, CurrGenInfo.pOrder->Commutative ? "<->" : ",",
+                CurrGenInfo.Src2Mode, CurrGenInfo.Src2Part, CurrGenInfo.DestMode,
+                CurrGenInfo.DestPart);
 
-        ParIndex = MatchParIndex(
-                PrevGenInfo.Is3 ? PrevGenInfo.pOrder->Par3Mask
-                                : PrevGenInfo.pOrder->ParMask,
-                CurrGenInfo.Is3 ? CurrGenInfo.pOrder->ParIndex3
-                                : CurrGenInfo.pOrder->ParIndex);
-        if (ParIndex >= 0) {
-            JudgePar(PrevGenInfo.pOrder, ParIndex, &HReg, &HReg2);
-        }
+        /* To achieve a parallel match, a 2-operand instruction may also be extended to a
+         * 3-operand one: */
 
-        /* in gedrehter Reihenfolge suchen */
+        ParIndex = -1;
+        for (passes = 0; passes < 4; passes++) {
+            Boolean prev_is_3 = !!(passes & 1), curr_is_3 = !!(passes & 2);
 
-        else {
-            ParIndex = MatchParIndex(
-                    CurrGenInfo.Is3 ? CurrGenInfo.pOrder->Par3Mask
-                                    : CurrGenInfo.pOrder->ParMask,
-                    PrevGenInfo.Is3 ? PrevGenInfo.pOrder->ParIndex3
-                                    : PrevGenInfo.pOrder->ParIndex);
-            if (ParIndex >= 0) {
-                JudgePar(CurrGenInfo.pOrder, ParIndex, &HReg, &HReg2);
-                SwapMode(&CurrGenInfo.DestMode, &PrevGenInfo.DestMode);
-                SwapMode(&CurrGenInfo.Src2Mode, &PrevGenInfo.Src2Mode);
-                SwapMode(&CurrGenInfo.Src1Mode, &PrevGenInfo.Src1Mode);
-                SwapPart(&CurrGenInfo.DestPart, &PrevGenInfo.DestPart);
-                SwapPart(&CurrGenInfo.Src2Part, &PrevGenInfo.Src2Part);
-                SwapPart(&CurrGenInfo.Src1Part, &PrevGenInfo.Src1Part);
-            } else {
-                WrError(ErrNum_ParNotPossible);
-                return;
+            /* If instruction is already 3-op, we cannot downgrade it to 2-op: */
+
+            if (PrevGenInfo.Is3 && !prev_is_3) {
+                continue;
             }
+            if (CurrGenInfo.Is3 && !curr_is_3) {
+                continue;
+            }
+
+            par_dbg_printf("matchtest prev(%u)-curr(%u)\n", prev_is_3 + 2, curr_is_3 + 2);
+
+            /* standard order? */
+
+            ParIndex = MatchParIndex(
+                    prev_is_3 ? PrevGenInfo.pOrder->Par3Mask
+                              : PrevGenInfo.pOrder->ParMask,
+                    curr_is_3 ? CurrGenInfo.pOrder->ParIndex3
+                              : CurrGenInfo.pOrder->ParIndex);
+            if (ParIndex >= 0) {
+                par_dbg_printf("non-reverse match\n");
+                JudgePar(PrevGenInfo.pOrder, ParIndex, &HReg, &HReg2);
+                PrevGenInfo.Is3 = prev_is_3;
+                CurrGenInfo.Is3 = curr_is_3;
+                p_curr_gen_info = &CurrGenInfo;
+                p_prev_gen_info = &PrevGenInfo;
+                p_prev_op       = PrevOp;
+                reverse         = False;
+                break;
+            }
+
+            /* instruction swapped order? */
+
+            ParIndex = MatchParIndex(
+                    curr_is_3 ? CurrGenInfo.pOrder->Par3Mask
+                              : CurrGenInfo.pOrder->ParMask,
+                    prev_is_3 ? PrevGenInfo.pOrder->ParIndex3
+                              : PrevGenInfo.pOrder->ParIndex);
+            if (ParIndex >= 0) {
+                par_dbg_printf("reverse match\n");
+                JudgePar(CurrGenInfo.pOrder, ParIndex, &HReg, &HReg2);
+                PrevGenInfo.Is3 = prev_is_3;
+                CurrGenInfo.Is3 = curr_is_3;
+                p_curr_gen_info = &PrevGenInfo;
+                p_prev_gen_info = &CurrGenInfo;
+                p_prev_op       = OpPart.str.p_str;
+                reverse         = True;
+                break;
+            }
+        }
+        if (ParIndex < 0) {
+            WrError(ErrNum_ParNotPossible);
+            return;
         }
 
         /* mehrfache Registernutzung ? */
@@ -795,80 +851,111 @@ static void DecodeGen(Word Index) {
 
         /* 3 Basisfaelle */
 
+        (void)reverse;
         switch (HReg) {
         case 1:
-            if ((!strcmp(PrevOp, "LSH3")) || (!strcmp(PrevOp, "ASH3"))
-                || (!strcmp(PrevOp, "SUBF3")) || (!strcmp(PrevOp, "SUBI3"))) {
-                SwapMode(&PrevGenInfo.Src2Mode, &PrevGenInfo.Src1Mode);
-                SwapPart(&PrevGenInfo.Src2Part, &PrevGenInfo.Src1Part);
+            par_dbg_printf("case 1\n");
+            if ((!strcmp(p_prev_op, "LSH3")) || (!strcmp(p_prev_op, "ASH3"))
+                || (!strcmp(p_prev_op, "SUBF3")) || (!strcmp(p_prev_op, "SUBI3"))) {
+                SwapMode(&p_prev_gen_info->Src2Mode, &p_prev_gen_info->Src1Mode);
+                SwapPart(&p_prev_gen_info->Src2Part, &p_prev_gen_info->Src1Part);
             }
-            if ((PrevGenInfo.DestPart > 7) || (CurrGenInfo.DestPart > 7)) {
+            if ((p_prev_gen_info->DestPart > 7) || (p_prev_gen_info->DestPart > 7)) {
                 WrError(ErrNum_InvReg);
                 return;
             }
 
-            /* Bei Addition und Multiplikation Kommutativitaet nutzen */
-
-            if ((PrevGenInfo.Src1Mode == ModInd) && (PrevGenInfo.Src2Mode == ModReg)
-                && (PrevGenInfo.pOrder->Commutative)) {
-                SwapMode(&PrevGenInfo.Src2Mode, &PrevGenInfo.Src1Mode);
-                SwapPart(&PrevGenInfo.Src2Part, &PrevGenInfo.Src1Part);
+            if ((p_prev_gen_info->Src1Mode == ModReg) && (p_prev_gen_info->Src1Part <= 7)
+                && (p_prev_gen_info->Src2Mode == ModInd)
+                && (p_curr_gen_info->Src2Mode == ModInd)) {
+                par_dbg_printf(
+                        "case 1, %sreverse, non-prev-src-swap\n", reverse ? "" : "non-");
+                RetractWords(1);
+                DAsmCode[0] = 0xc0000000 + (((LongWord)HReg2) << 25)
+                              + (((LongWord)p_prev_gen_info->DestPart) << 22)
+                              + (((LongWord)p_prev_gen_info->Src1Part) << 19)
+                              + (((LongWord)p_curr_gen_info->DestPart) << 16)
+                              + (p_curr_gen_info->Src2Part & 0xff00)
+                              + Hi(p_prev_gen_info->Src2Part);
+                CodeLen     = 1;
+                NextPar     = False;
             }
-            if ((PrevGenInfo.Src1Mode != ModReg) || (PrevGenInfo.Src1Part > 7)
-                || (PrevGenInfo.Src2Mode != ModInd) || (CurrGenInfo.Src2Mode != ModInd)) {
+
+            /* Exploit commutativity of addition and multiplication to swap
+               source operands to a fitting combination: */
+
+            else if (
+                    p_prev_gen_info->pOrder->Commutative
+                    && (p_prev_gen_info->Src2Mode == ModReg)
+                    && (p_prev_gen_info->Src2Part <= 7)
+                    && (p_prev_gen_info->Src1Mode == ModInd)
+                    && (p_curr_gen_info->Src2Mode == ModInd)) {
+                par_dbg_printf(
+                        "case 1, %sreverse, prev-src-swap\n", reverse ? "" : "non-");
+                RetractWords(1);
+                DAsmCode[0] = 0xc0000000 + (((LongWord)HReg2) << 25)
+                              + (((LongWord)p_prev_gen_info->DestPart) << 22)
+                              + (((LongWord)p_prev_gen_info->Src2Part) << 19)
+                              + (((LongWord)p_curr_gen_info->DestPart) << 16)
+                              + (p_curr_gen_info->Src2Part & 0xff00)
+                              + Hi(p_prev_gen_info->Src1Part);
+                CodeLen     = 1;
+                NextPar     = False;
+            }
+
+            else {
                 WrError(ErrNum_InvParAddrMode);
                 return;
             }
-            RetractWords(1);
-            DAsmCode[0] = 0xc0000000 + (((LongWord)HReg2) << 25)
-                          + (((LongWord)PrevGenInfo.DestPart) << 22)
-                          + (((LongWord)PrevGenInfo.Src1Part) << 19)
-                          + (((LongWord)CurrGenInfo.DestPart) << 16)
-                          + (CurrGenInfo.Src2Part & 0xff00) + Hi(PrevGenInfo.Src2Part);
-            CodeLen     = 1;
-            NextPar     = False;
             break;
+
         case 2:
-            if ((PrevGenInfo.DestPart > 7) || (CurrGenInfo.DestPart > 7)) {
+            par_dbg_printf("case 2, %sreverse\n", reverse ? "" : "non-");
+
+            if ((p_prev_gen_info->DestPart > 7) || (p_curr_gen_info->DestPart > 7)) {
                 WrError(ErrNum_InvReg);
                 return;
             }
-            if ((PrevGenInfo.Src2Mode != ModInd) || (CurrGenInfo.Src2Mode != ModInd)) {
+            if ((p_prev_gen_info->Src2Mode != ModInd)
+                || (p_curr_gen_info->Src2Mode != ModInd)) {
                 WrError(ErrNum_InvParAddrMode);
                 return;
             }
             RetractWords(1);
             DAsmCode[0] = 0xc0000000 + (((LongWord)HReg2) << 25)
-                          + (((LongWord)PrevGenInfo.DestPart) << 22)
-                          + (CurrGenInfo.Src2Part & 0xff00) + Hi(PrevGenInfo.Src2Part);
+                          + (((LongWord)p_prev_gen_info->DestPart) << 22)
+                          + (p_curr_gen_info->Src2Part & 0xff00)
+                          + Hi(p_prev_gen_info->Src2Part);
             if ((!strcmp(PrevOp, OpPart.str.p_str)) && (*OpPart.str.p_str == 'L')) {
-                DAsmCode[0] += ((LongWord)CurrGenInfo.DestPart) << 19;
-                if (PrevGenInfo.DestPart == CurrGenInfo.DestPart) {
+                DAsmCode[0] += ((LongWord)p_curr_gen_info->DestPart) << 19;
+                if (p_prev_gen_info->DestPart == p_curr_gen_info->DestPart) {
                     WrError(ErrNum_Unpredictable);
                 }
             } else {
-                DAsmCode[0] += ((LongWord)CurrGenInfo.DestPart) << 16;
+                DAsmCode[0] += ((LongWord)p_curr_gen_info->DestPart) << 16;
             }
             CodeLen = 1;
             NextPar = False;
             break;
+
         case 3:
-            if ((PrevGenInfo.DestPart > 1) || (CurrGenInfo.DestPart < 2)
-                || (CurrGenInfo.DestPart > 3)) {
+            par_dbg_printf("case 3, %sreverse\n", reverse ? "" : "non-");
+            if ((p_prev_gen_info->DestPart > 1) || (p_curr_gen_info->DestPart < 2)
+                || (p_curr_gen_info->DestPart > 3)) {
                 WrError(ErrNum_InvReg);
                 return;
             }
             Sum = 0;
-            if (PrevGenInfo.Src2Mode == ModInd) {
+            if (p_prev_gen_info->Src2Mode == ModInd) {
                 Sum++;
             }
-            if (PrevGenInfo.Src1Mode == ModInd) {
+            if (p_prev_gen_info->Src1Mode == ModInd) {
                 Sum++;
             }
-            if (CurrGenInfo.Src2Mode == ModInd) {
+            if (p_curr_gen_info->Src2Mode == ModInd) {
                 Sum++;
             }
-            if (CurrGenInfo.Src1Mode == ModInd) {
+            if (p_curr_gen_info->Src1Mode == ModInd) {
                 Sum++;
             }
             if (Sum != 2) {
@@ -877,46 +964,46 @@ static void DecodeGen(Word Index) {
             }
             RetractWords(1);
             DAsmCode[0] = 0x80000000 + (((LongWord)HReg2) << 26)
-                          + (((LongWord)PrevGenInfo.DestPart & 1) << 23)
-                          + (((LongWord)CurrGenInfo.DestPart & 1) << 22);
+                          + (((LongWord)p_prev_gen_info->DestPart & 1) << 23)
+                          + (((LongWord)p_curr_gen_info->DestPart & 1) << 22);
             CodeLen     = 1;
-            if (CurrGenInfo.Src1Mode == ModReg) {
-                if (CurrGenInfo.Src2Mode == ModReg) {
+            if (p_curr_gen_info->Src1Mode == ModReg) {
+                if (p_curr_gen_info->Src2Mode == ModReg) {
                     DAsmCode[0] += ((LongWord)0x00000000)
-                                   + (((LongWord)CurrGenInfo.Src1Part) << 19)
-                                   + (((LongWord)CurrGenInfo.Src2Part) << 16)
-                                   + (PrevGenInfo.Src1Part & 0xff00)
-                                   + Hi(PrevGenInfo.Src2Part);
+                                   + (((LongWord)p_curr_gen_info->Src1Part) << 19)
+                                   + (((LongWord)p_curr_gen_info->Src2Part) << 16)
+                                   + (p_prev_gen_info->Src1Part & 0xff00)
+                                   + Hi(p_prev_gen_info->Src2Part);
                 } else {
                     DAsmCode[0] += ((LongWord)0x03000000)
-                                   + (((LongWord)CurrGenInfo.Src1Part) << 16)
-                                   + Hi(CurrGenInfo.Src2Part);
-                    if (PrevGenInfo.Src2Mode == ModReg) {
-                        DAsmCode[0] += (((LongWord)PrevGenInfo.Src2Part) << 19)
-                                       + (PrevGenInfo.Src1Part & 0xff00);
+                                   + (((LongWord)p_curr_gen_info->Src1Part) << 16)
+                                   + Hi(p_curr_gen_info->Src2Part);
+                    if (p_prev_gen_info->Src2Mode == ModReg) {
+                        DAsmCode[0] += (((LongWord)p_prev_gen_info->Src2Part) << 19)
+                                       + (p_prev_gen_info->Src1Part & 0xff00);
                     } else {
-                        DAsmCode[0] += (((LongWord)PrevGenInfo.Src1Part) << 19)
-                                       + (PrevGenInfo.Src2Part & 0xff00);
+                        DAsmCode[0] += (((LongWord)p_prev_gen_info->Src1Part) << 19)
+                                       + (p_prev_gen_info->Src2Part & 0xff00);
                     }
                 }
             } else {
-                if (CurrGenInfo.Src2Mode == ModReg) {
+                if (p_curr_gen_info->Src2Mode == ModReg) {
                     DAsmCode[0] += ((LongWord)0x01000000)
-                                   + (((LongWord)CurrGenInfo.Src2Part) << 16)
-                                   + Hi(CurrGenInfo.Src1Part);
-                    if (PrevGenInfo.Src2Mode == ModReg) {
-                        DAsmCode[0] += (((LongWord)PrevGenInfo.Src2Part) << 19)
-                                       + (PrevGenInfo.Src1Part & 0xff00);
+                                   + (((LongWord)p_curr_gen_info->Src2Part) << 16)
+                                   + Hi(p_curr_gen_info->Src1Part);
+                    if (p_prev_gen_info->Src2Mode == ModReg) {
+                        DAsmCode[0] += (((LongWord)p_prev_gen_info->Src2Part) << 19)
+                                       + (p_prev_gen_info->Src1Part & 0xff00);
                     } else {
-                        DAsmCode[0] += (((LongWord)PrevGenInfo.Src1Part) << 19)
-                                       + (PrevGenInfo.Src2Part & 0xff00);
+                        DAsmCode[0] += (((LongWord)p_prev_gen_info->Src1Part) << 19)
+                                       + (p_prev_gen_info->Src2Part & 0xff00);
                     }
                 } else {
                     DAsmCode[0] += ((LongWord)0x02000000)
-                                   + (((LongWord)PrevGenInfo.Src1Part) << 19)
-                                   + (((LongWord)PrevGenInfo.Src2Part) << 16)
-                                   + (CurrGenInfo.Src1Part & 0xff00)
-                                   + Hi(CurrGenInfo.Src2Part);
+                                   + (((LongWord)p_prev_gen_info->Src1Part) << 19)
+                                   + (((LongWord)p_prev_gen_info->Src2Part) << 16)
+                                   + (p_curr_gen_info->Src1Part & 0xff00)
+                                   + Hi(p_curr_gen_info->Src2Part);
                 }
             }
             break;
@@ -1449,7 +1536,7 @@ static void DecodeTRAPcc(Word Code) {
         WrError(ErrNum_ParNotPossible);
     } else {
         Boolean  OK;
-        LongWord HReg = EvalStrIntExpression(&ArgStr[1], Is4x() ? UInt9 : UInt4, &OK);
+        LongWord HReg = EvalStrIntExpression(&ArgStr[1], Is4x() ? UInt9 : UInt5, &OK);
 
         if (OK) {
             DAsmCode[0] = 0x74000000 + HReg + (((LongWord)Code) << 16);
@@ -1737,7 +1824,7 @@ static void InitFields(void) {
     AddGen("LDII", CPU32030, False, False, 0x11, 0xff, True, False, False, False, 0, 0,
            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
            0xff, 0xff, 0xff);
-    AddGen("LDM", CPU32030, False, False, 0x12, 0xff, False, False, True, False, 0, 0,
+    AddGen("LDM", CPU32030, False, False, CODE_LDM, 0xff, False, False, True, False, 0, 0,
            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
            0xff, 0xff, 0xff);
     AddGen("LSH", CPU32030, False, True, 0x13, 0x08, False, False, False, False, 0, 8,

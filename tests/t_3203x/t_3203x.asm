@@ -126,122 +126,251 @@ targ:		br	targ
 
                 tstb3	r5,*ar3++
 
+		;****************************
                 absf	*ar4++,r6
 ||		stf	r6,*ar5++
+		stf	r6,*ar5++
+||		absf	*ar4++,r6
 
+		;****************************
 		sti	r5,*ar3
 ||		absi	*ar4++%,r1
+		absi	*ar4++%,r1
+||		sti	r5,*ar3
 
+		;****************************
 		addf3	*ar4++,r5,r7
 ||		stf	r3,*ar5++
+		stf	r3,*ar5++
+||		addf3	*ar4++,r5,r7
 
+		;****************************
 		sti	r3,*ar5++
 ||		addi3	*ar4++,r5,r7
+		addi3	*ar4++,r5,r7
+||		sti	r3,*ar5++
 
+		;****************************
 		mpyi3	*ar4,*ar5,r1
 ||		subi3	r6,r7,r3
+		subi3	r6,r7,r3
+||		mpyi3	*ar4,*ar5,r1
 
+		;****************************
 		subi3	*ar4,r6,r3
 ||		mpyi3	*ar5,r7,r1
-
-		mpyi3	r7,*ar5,r1
+		mpyi3	*ar5,r7,r1
 ||		subi3	*ar4,r6,r3
 
+		;****************************
+		mpyi3	r7,*ar5,r1
+||		subi3	*ar4,r6,r3
+		subi3	*ar4,r6,r3
+||		mpyi3	r7,*ar5,r1
+
+		;****************************
 		mpyi3	*ar5,r7,r1
 ||		subi3	r6,*ar4,r3
+		subi3	r6,*ar4,r3
+||		mpyi3	*ar5,r7,r1
 
+		;****************************
 		mpyi3	r7,*ar5,r1
 ||		subi3	r6,*ar4,r3
+		subi3	r6,*ar4,r3
+||		mpyi3	r7,*ar5,r1
 
+		;****************************
 		mpyi3	r6,r7,r1
 ||		subi3	*ar5,*ar4,r3
+		subi3	*ar5,*ar4,r3
+||		mpyi3	r6,r7,r1
 
+		;****************************
 		absf	*++ar3(ir1) ,r4
 ||		stf	r4,*-ar7(1)
+		stf	r4,*-ar7(1)
+||		absf	*++ar3(ir1) ,r4
 
+		;****************************
 		absi	*-ar5(1),r5
 ||		sti	r1,*ar2--(ir1)
+		sti	r1,*ar2--(ir1)
+||		absi	*-ar5(1),r5
 
+		;****************************
 		addf3	*+ar3(ir1),r2,r5
 ||		stf	r4,*ar2
+		stf	r4,*ar2
+||		addf3	*+ar3(ir1),r2,r5
 
+		;****************************
 		addi3	*ar0--(ir0),r5,r0
 ||		sti	r3,*ar7
+		sti	r3,*ar7
+||		addi3	*ar0--(ir0),r5,r0
 
+		;****************************
 		and3	*+ar1(ir0),r4,r7
 ||		sti	r3,*ar2
+		sti	r3,*ar2
+||		and3	*+ar1(ir0),r4,r7
 
+		;****************************
 		ash3	r1,*ar6++(ir1),r0
 ||		sti	r5,*ar2
+		sti	r5,*ar2
+||		ash3	r1,*ar6++(ir1),r0
 
+		;****************************
 		fix	*++ar4(1),r1
 ||		sti	r0,*ar2
+		sti	r0,*ar2
+||		fix	*++ar4(1),r1
 
+		;****************************
 		float	*+ar2(ir0),r6
 ||		stf	r7,*ar1
+		stf	r7,*ar1
+||		float	*+ar2(ir0),r6
 
+		;no instruction reversal needed for second case
 		ldf	*--ar1(ir0),r7
 ||		ldf	*ar7++(1),r3
+		ldf	*ar7++(1),r3
+||		ldf	*--ar1(ir0),r7
 
+		;****************************
 		ldf	*ar2--(1),r1
 ||		stf	r3,*ar4++(ir1)
+		stf	r3,*ar4++(ir1)
+||		ldf	*ar2--(1),r1
 
+		;no instruction reversal needed for second case
 		ldi	*-ar1(1),r7
 ||		ldi	*ar7++(ir0),r1
+		ldi	*ar7++(ir0),r1
+||		ldi	*-ar1(1),r7
 
+		;****************************
 		ldi	*-ar1(1),r2
 ||		sti	r7,*ar5++(ir0)
+		sti	r7,*ar5++(ir0)
+||		ldi	*-ar1(1),r2
 
+		;****************************
 		lsh3	r7,*ar2--(1),r2
 ||		sti	r0,*+ar0(1)
+		sti	r0,*+ar0(1)
+||		lsh3	r7,*ar2--(1),r2
 
+		;****************************
 		mpyf3	*ar5++(1),*--ar1(ir0),r0
 ||		addf3	r5,r7,r3
+		addf3	r5,r7,r3
+||		mpyf3	*ar5++(1),*--ar1(ir0),r0
 
+		;****************************
 		mpyf3	*-ar2(1),r7,r0
 ||		stf	r3,*ar0--(ir0)
+		stf	r3,*ar0--(ir0)
+||		mpyf3	*-ar2(1),r7,r0
 
+		;****************************
 		mpyf3	r5,*++ar7(ir1),r0
 ||		subf3	r7,*ar3--(1),r2
+		subf3	r7,*ar3--(1),r2
+||		mpyf3	r5,*++ar7(ir1),r0
 
+		;****************************
 		mpyi3	r7,r4,r0
 ||		addi3	*-ar3,*ar5--(1),r3
+		addi3	*-ar3,*ar5--(1),r3
+||		mpyi3	r7,r4,r0
 
+		;****************************
 		mpyi3	*++ar0(1),r5,r7
 ||		sti	r2,*-ar3(1)
+		sti	r2,*-ar3(1)
+||		mpyi3	*++ar0(1),r5,r7
 
+		;****************************
 		mpyi3	r2,*++ar0(1),r0
 ||		subi3	*ar5--(ir1),r4,r2
+		subi3	*ar5--(ir1),r4,r2
+||		mpyi3	r2,*++ar0(1),r0
 
+		;****************************
 		negf	*ar4--(1),r7
 ||		stf	r2,*++ar5(1)
+		stf	r2,*++ar5(1)
+||		negf	*ar4--(1),r7
 
+		;****************************
 		negi	*-ar3,r2
 ||		sti	r2,*ar1++
+		sti	r2,*ar1++
+||		negi	*-ar3,r2
 
+		;****************************
 		not	*+ar2,r3
 ||		sti	r7,*--ar4(ir1)
+		sti	r7,*--ar4(ir1)
+||		not	*+ar2,r3
 
+		;****************************
 		or3	*++ar2,r5,r2
 ||		sti	r6,*ar1--
+		sti	r6,*ar1--
+||		or3	*++ar2,r5,r2
 
+		;no instruction reversal needed for second case
 		stf	r4,*ar3--
 ||		stf	r3,*++ar5
+		stf	r3,*++ar5
+||		stf	r4,*ar3--
 
+		;no instruction reversal needed for second case
 		sti	r0,*++ar2(ir0)
 ||		sti	r5,*ar0
+		sti	r5,*ar0
+||		sti	r0,*++ar2(ir0)
 
+		;****************************
 		subf3	r1,*-ar4(ir1),r0
 ||		stf	r7,*+ar5(ir0)
+		stf	r7,*+ar5(ir0)
+||		subf3	r1,*-ar4(ir1),r0
 
+		;****************************
 		subi3	r7,*+ar2(ir0),r1
 ||		sti	r3,*++ar7
+		sti	r3,*++ar7
+||		subi3	r7,*+ar2(ir0),r1
 
+		;****************************
 		xor3	*ar1++,r3,r3
 ||		sti	r6,*-ar2(ir0)
+		sti	r6,*-ar2(ir0)
+||		xor3	*ar1++,r3,r3
 
+		;****************************
 		xor3	*ar1++,r3,r3
 		||sti	r6,*-ar2(ir0)
+		sti	r6,*-ar2(ir0)
+		||xor3	*ar1++,r3,r3
+
+		;****************************
+		; ADDF is implicitly converted to ADDF3 to allow parallelism
+		addf	*ar0++,r1
+||		stf	r3,*ar4--
+		stf	r3,*ar4--
+||		addf	*ar0++,r1
+
+		addf3	*ar0++,r1,r1
+||		stf	r3,*ar4--
+		stf	r3,*ar4--
+||		addf3	*ar0++,r1,r1
 
 		ldfz	r3,r5
 		ldfzuf	20h,r6

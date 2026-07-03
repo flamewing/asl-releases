@@ -299,3 +299,5 @@ Without `-o`, the last non-option filename is the output and earlier filenames
 are inputs. With `-o`, every non-option filename is an input, including wildcard
 matches. PBIND defaults missing extensions to `.p`; P2HEX and P2BIN keep their
 usual output extension rules. PBIND options may be stored in `PBINDCMD`.
+
+P2BIN `-byte-swap 2` reverses each pair of output bytes, and `-byte-swap 4` reverses each group of four. Use `1` for unchanged byte order.

@@ -26,7 +26,7 @@ typedef as_int16_t  Integer;
 
 typedef as_uint32_t LongWord;
 typedef as_int32_t  LongInt;
-#define PRILongInt PRIas_int32_t
+#define PRILongInt AS_PRId32
 #define MaxLongInt 2147483647
 
 #ifdef AS_HAS64

@@ -699,7 +699,7 @@ int as_float_2_ieee16(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     }
 
     /* TODO: This is needed to get a correct exponent value (0) for 0.0.
-       The old routine just added the difference of the 64-bit ad 80-bit
+       The old routine just added the difference of the 64-bit and 80-bit
        biases, which resulted in an exponent of 0x3c00 (-1023) in the
        final value.  Ultimately, as_float_dissect() should return an exponent
        of zero. */
@@ -754,7 +754,7 @@ int as_float_2_ieee16(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
 /*!------------------------------------------------------------------------
  * \fn     as_float_2_ieee2(as_float_t inp, Byte *pDest, Boolean NeedsBig)
- * \brief  convert floating point number to IEEE half size (16 bit) format
+ * \brief  convert floating point number to IEEE half size (16 bit, fp16) format
  * \param  inp floating point number to store
  * \param  pDest where to write result (2 bytes)
  * \param  NeedsBig req's big endian?

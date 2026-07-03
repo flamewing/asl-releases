@@ -42,23 +42,33 @@ static char const* HexSuffix = ".hex";
 #define AVRLEN_DEFAULT 3
 #define DefaultCFormat "dSEl"
 
+typedef enum {
+    e_multi_mode_8m  = 0,
+    e_multi_mode_16m = 1,
+    e_multi_mode_8l  = 2,
+    e_multi_mode_8h  = 3,
+    e_multi_mode_count
+} multi_mode_t;
+
+static Byte const multi_mode_byte_masks[e_multi_mode_count] = {3, 3, 1, 2};
+
 typedef void (*ProcessProc)(char const* FileName, LongWord Offset);
 
 static FILE*  TargFile;
 static String TargName, CFormat;
 static Byte   ForceSegment;
 
-static LongWord StartAdr[SegCount], StopAdr[SegCount], LineLen, EntryAdr;
-static LargeInt Relocate;
-static Boolean  StartAuto, StopAuto, AutoErase, EntryAdrPresent;
-static Word     Seg, Ofs;
-static LongWord Dummy;
-static Byte     IntelMode;
-static Byte     MultiMode; /* 0=8M, 1=16, 2=8L, 3=8H */
-static Byte     MinMoto;
-static Boolean  Rec5;
-static Boolean  SepMoto;
-static LongWord AVRLen;
+static LongWord     StartAdr[SegCount], StopAdr[SegCount], LineLen, EntryAdr;
+static LargeInt     Relocate;
+static Boolean      StartAuto, StopAuto, AutoErase, EntryAdrPresent;
+static Word         Seg, Ofs;
+static LongWord     Dummy;
+static Byte         IntelMode;
+static multi_mode_t multi_mode;
+static Byte         MinMoto;
+static Boolean      Rec5;
+static Boolean      SepMoto;
+static LongWord     AVRLen;
 
 static Boolean RelAdr;
 
@@ -484,7 +494,8 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                         /* Intel Hex addresses are byte addresses.  Multi Mode is
                            only relevant for granularities > 8 bit: */
 
-                        if ((MultiMode < 2) || (record_gran_bits(Gran) <= 8)) {
+                        if ((multi_mode_byte_masks[multi_mode] == 3)
+                            || (record_gran_bits(Gran) <= 8)) {
                             WrTransLen     = TransLen;
                             byte_erg_start = record_byte_address(ErgStart, Gran)
                                              - byte_intel_offset;
@@ -530,12 +541,16 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     if (fread(Buffer, 1, TransLen, SrcFile) != TransLen) {
                         chk_wr_read_error(FileName);
                     }
-                    if ((MultiMode == 1) && (record_gran_bits(Gran) <= 8)) {
-                        switch (Gran) {
-                        case 4:
+
+                    /* multibyte-dependent swapping only relevant for granularities > 8
+                     * bits: */
+
+                    if (multi_mode == e_multi_mode_16m) {
+                        switch (record_gran_bits(Gran)) {
+                        case 32:
                             DSwap(Buffer, TransLen);
                             break;
-                        case 2:
+                        case 16:
                             WSwap(Buffer, TransLen);
                             break;
                         default:
@@ -579,8 +594,9 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     case eHexFormatC:
                         if (CDataLower || CDataUpper) {
                             for (z = 0; z < (LongInt)TransLen; z++) {
-                                if ((MultiMode < 2) || (record_gran_bits(Gran) <= 8)
-                                    || (z % Gran == MultiMode - 2)) {
+                                if ((record_gran_bits(Gran) <= 8)
+                                    || ((multi_mode_byte_masks[multi_mode] >> (z % Gran))
+                                        & 1)) {
                                     chkio_fprintf(
                                             TargFile, TargName,
                                             CDataLower ? "0x%02x%s" : "0x%02X%s",
@@ -594,8 +610,9 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                         break;
                     default:
                         for (z = 0; z < (LongInt)TransLen; z++) {
-                            if ((MultiMode < 2) || (record_gran_bits(Gran) <= 8)
-                                || (z % Gran == MultiMode - 2)) {
+                            if ((record_gran_bits(Gran) <= 8)
+                                || ((multi_mode_byte_masks[multi_mode] >> (z % Gran))
+                                    & 1)) {
                                 chkio_fprintf(TargFile, TargName, "%02X", Lo(Buffer[z]));
                                 ChkSum += Buffer[z];
                                 SumLen++;
@@ -875,15 +892,15 @@ static as_cmd_result_t CMD_MultiMode(Boolean Negate, char const* Arg) {
         return e_cmd_err;
     } else {
         char const* p_end;
-        int         Mode = as_cmd_strtol(Arg, &p_end);
+        int         mode = as_cmd_strtol(Arg, &p_end);
 
-        if (*p_end || (Mode < 0) || (Mode > 3)) {
+        if (*p_end || (mode < 0) || (mode >= e_multi_mode_count)) {
             return e_cmd_err;
         } else {
             if (!Negate) {
-                MultiMode = Mode;
-            } else if (MultiMode == Mode) {
-                MultiMode = 0;
+                multi_mode = (multi_mode_t)mode;
+            } else if (multi_mode == (multi_mode_t)mode) {
+                multi_mode = e_multi_mode_8m;
             }
             return e_cmd_arg;
         }
@@ -1133,7 +1150,7 @@ int main(int argc, char** argv) {
     LineLen         = 16;
     AVRLen          = AVRLEN_DEFAULT;
     IntelMode       = 0;
-    MultiMode       = 0;
+    multi_mode      = e_multi_mode_8m;
     DestFormat      = eHexFormatDefault;
     MinMoto         = 1;
     *TargName       = '\0';
