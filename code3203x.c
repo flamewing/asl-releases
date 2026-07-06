@@ -82,9 +82,10 @@ static char const ParOrders[][6]
 #if 0
 #    define par_dbg_printf printf
 #else
-#    define par_dbg_printf(...) \
-        do {                    \
-        } while (0)
+static int par_dbg_printf(char const* p_fmt, ...) {
+    (void)p_fmt;
+    return 0;
+}
 #endif
 
 /*-------------------------------------------------------------------------*/
@@ -760,8 +761,8 @@ static void DecodeGen(Word Index) {
         int            ParIndex;
         unsigned       ARIndex, passes;
         Boolean        reverse;
-        tGenOrderInfo *p_curr_gen_info, *p_prev_gen_info;
-        char const*    p_prev_op;
+        tGenOrderInfo *p_curr_gen_info = NULL, *p_prev_gen_info = NULL;
+        char const*    p_prev_op = NULL;
 
         if (!PrevGenInfo.pOrder) {
             WrError(ErrNum_ParNotPossible);
@@ -854,9 +855,11 @@ static void DecodeGen(Word Index) {
         (void)reverse;
         switch (HReg) {
         case 1:
-            par_dbg_printf("case 1\n");
-            if ((!strcmp(p_prev_op, "LSH3")) || (!strcmp(p_prev_op, "ASH3"))
-                || (!strcmp(p_prev_op, "SUBF3")) || (!strcmp(p_prev_op, "SUBI3"))) {
+            par_dbg_printf("case 1, prev is3 %u\n", p_prev_gen_info->Is3);
+            if (p_prev_gen_info->Is3
+                && ((!strncmp(p_prev_op, "LSH", 3)) || (!strncmp(p_prev_op, "ASH", 3))
+                    || (!strncmp(p_prev_op, "SUBF", 4))
+                    || (!strncmp(p_prev_op, "SUBI", 4)))) {
                 SwapMode(&p_prev_gen_info->Src2Mode, &p_prev_gen_info->Src1Mode);
                 SwapPart(&p_prev_gen_info->Src2Part, &p_prev_gen_info->Src1Part);
             }

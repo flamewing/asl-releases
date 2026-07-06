@@ -2026,3 +2026,5 @@ CR16C supports 16 MiB and is source-compatible with CR16A/B, with different bina
 ### Tiny BASIC Intermediate Language
 
 The preliminary `TBIL` target emits Tiny BASIC IL bytecode. It uses Motorola integer syntax, `.` as its program counter, and a code address range of `$0000`–`$1fff`. A label starts with a colon.
+
+CP-1600 accepts PC and SP as aliases for R7 and R6, and register symbols defined with `REG`. `BLGE` is the carry-branch alias. SDBD’s high-byte instruction word is limited to bits 0–7. Unknown instruction fields are marked with question marks in the listing.

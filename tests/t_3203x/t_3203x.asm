@@ -222,6 +222,11 @@ targ:		br	targ
 		sti	r5,*ar2
 ||		ash3	r1,*ar6++(ir1),r0
 
+		ash	r1,*ar6++(ir1),r0
+||		sti	r5,*ar2
+		sti	r5,*ar2
+||		ash	r1,*ar6++(ir1),r0
+
 		;****************************
 		fix	*++ar4(1),r1
 ||		sti	r0,*ar2
