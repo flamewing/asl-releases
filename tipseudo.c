@@ -147,6 +147,7 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
             }
 
             while (cp < cend) {
+                TransTableCheckRead();
                 callback(&ok, &adr, CharTransTable[((usint)*cp++) & 0xff], t.Flags);
             }
             break;

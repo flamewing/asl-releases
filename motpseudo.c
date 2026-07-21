@@ -933,6 +933,7 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn) {
                                      zp++) {
                                     Word TurnField[8];
 
+                                    TransTableCheckRead();
                                     ConvertFloat(
                                             CharTransTable[(usint)(*zp & 0xff)],
                                             (Byte*)TurnField, HostBigEndian);
@@ -957,9 +958,10 @@ void DecodeMotoDC(tSymbolSize OpSize, Boolean Turn) {
                 } else {
                     for (z2 = 0; z2 < Rep; z2++) {
                         for (zp = t.Contents.str.p_str;
-                             zp < t.Contents.str.p_str + t.Contents.str.len;
-                             EnterInt(CharTransTable[((usint) * (zp++)) & 0xff]))
-                            ;
+                             zp < t.Contents.str.p_str + t.Contents.str.len; zp++) {
+                            TransTableCheckRead();
+                            EnterInt(CharTransTable[((usint)*zp) & 0xff]);
+                        }
                     }
                 }
                 break;

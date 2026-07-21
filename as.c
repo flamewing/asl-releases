@@ -2931,6 +2931,8 @@ static void AssembleFile_InitPass(void) {
     for (z = 0; z < 256; z++) {
         CurrTransTable->Table[z] = z;
     }
+    TransTableInitializeState(CurrTransTable, False);
+    CurrTransTable->WasModified = True;
 
     EnumSegment      = SegNone;
     EnumIncrement    = 1;

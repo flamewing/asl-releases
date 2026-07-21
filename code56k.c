@@ -997,6 +997,7 @@ static Boolean DecodePseudo(void) {
                     DAsmCode[CodeLen] = 0;
                     for (size_t z2 = 0; z2 < t.Contents.str.len; z2++) {
                         HInt = t.Contents.str.p_str[z2];
+                        TransTableCheckRead();
                         HInt = CharTransTable[((usint)HInt) & 0xff];
                         HInt <<= (BCount * 8);
                         DAsmCode[CodeLen] |= HInt;

@@ -281,6 +281,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_RegNumWraparound:
         msgno = Num_ErrMsgRegNumWraparound;
         break;
+    case ErrNum_CodepageReadBeforeModify:
+        msgno = Num_ErrMsgCodepageReadBeforeModify;
+        break;
     case ErrNum_IndexedForIndirect:
         msgno = Num_ErrMsgIndexedForIndirect;
         break;

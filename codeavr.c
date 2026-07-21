@@ -443,6 +443,7 @@ static void DecodeDATA_AVR(Word Index) {
                     }
 
                     for (z2 = 0; z2 < (int)t.Contents.str.len; z2++) {
+                        TransTableCheckRead();
                         Trans = CharTransTable[((usint)t.Contents.str.p_str[z2]) & 0xff];
                         PlaceValue(Trans, True);
                     }

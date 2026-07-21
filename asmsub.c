@@ -484,6 +484,7 @@ void TranslateString(char* s, int Length) {
     if (Length < 0) {
         Length = strlen(s);
     }
+    TransTableCheckRead();
     for (pRun = s, pEnd = pRun + Length; pRun < pEnd; pRun++) {
         *pRun = CharTransTable[((usint)(*pRun)) & 0xff];
     }

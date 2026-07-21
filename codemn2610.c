@@ -930,6 +930,7 @@ static void DecodeDC(Word Code) {
                     }
 
                     for (z2 = 0; z2 < (int)t.Contents.str.len; z2++) {
+                        TransTableCheckRead();
                         Trans = CharTransTable[((usint)t.Contents.str.p_str[z2]) & 0xff];
                         if (HalfFilledWord) {
                             WAsmCode[CodeLen - 1] |= Trans & 0xff;

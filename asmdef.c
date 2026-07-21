@@ -208,6 +208,42 @@ Boolean SuppWarns;
 PTransTable TransTables, /* Liste mit Codepages */
         CurrTransTable;  /* aktuelle Codepage */
 
+Boolean SuppressTransTableReadCheck = False;
+
+void TransTableInitializeState(PTransTable pTable, Boolean CreatedBySingleArg) {
+    if (!pTable) {
+        return;
+    }
+
+    pTable->CreatedBySingleArg     = CreatedBySingleArg;
+    pTable->WasModified            = False;
+    pTable->WarnedReadBeforeModify = False;
+}
+
+void TransTableMarkModified(void) {
+    if (CurrTransTable) {
+        CurrTransTable->WasModified = True;
+    }
+}
+
+void TransTableCheckRead(void) {
+    if (!CurrTransTable) {
+        return;
+    }
+    if (SuppressTransTableReadCheck) {
+        return;
+    }
+    if (!CurrTransTable->CreatedBySingleArg) {
+        return;
+    }
+    if (CurrTransTable->WasModified || CurrTransTable->WarnedReadBeforeModify) {
+        return;
+    }
+
+    CurrTransTable->WarnedReadBeforeModify = True;
+    WrXError(ErrNum_CodepageReadBeforeModify, CurrTransTable->Name);
+}
+
 PDefinement FirstDefine; /* Liste von Praeprozessor-Defines */
 
 PSaveState FirstSaveState; /* gesicherte Zustaende */

@@ -138,6 +138,9 @@ typedef struct tag_TTransTable {
     struct tag_TTransTable* Next;
     char*                   Name;
     unsigned char*          Table;
+    Boolean                 CreatedBySingleArg;
+    Boolean                 WasModified;
+    Boolean                 WarnedReadBeforeModify;
 } TTransTable, *PTransTable;
 
 typedef struct tag_TSaveState {
@@ -350,6 +353,11 @@ extern Boolean SuppWarns;
 
 #define CharTransTable CurrTransTable->Table
 extern PTransTable TransTables, CurrTransTable;
+extern Boolean     SuppressTransTableReadCheck;
+
+extern void TransTableInitializeState(PTransTable pTable, Boolean CreatedBySingleArg);
+extern void TransTableMarkModified(void);
+extern void TransTableCheckRead(void);
 
 extern PDefinement FirstDefine;
 

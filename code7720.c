@@ -141,6 +141,7 @@ static void DecodeDATA_7720(Word Index) {
 
                 Pos = 0;
                 for (z2 = 0; z2 < t.Contents.str.len; z2++) {
+                    TransTableCheckRead();
                     Trans = CharTransTable[((usint)t.Contents.str.p_str[z2]) & 0xff];
                     if (ActPC == SegCode) {
                         DAsmCode[CodeLen]

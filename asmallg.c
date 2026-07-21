@@ -833,7 +833,11 @@ static void CodeCHARSET(Word Index) {
     unsigned char tfield[256];
     LongWord      Start, l, TStart, Stop, z;
     Boolean       OK;
+    Boolean       SavedSuppress;
     UNUSED(Index);
+
+    SavedSuppress               = SuppressTransTableReadCheck;
+    SuppressTransTableReadCheck = True;
 
     if (!ChkArgCnt(0, 3))
         ;
@@ -841,6 +845,7 @@ static void CodeCHARSET(Word Index) {
         for (z = 0; z < 256; z++) {
             CharTransTable[z] = z;
         }
+        TransTableMarkModified();
     } else {
         TempResult t;
 
@@ -884,6 +889,7 @@ static void CodeCHARSET(Word Index) {
                             for (z = Start; z <= Stop; z++) {
                                 CharTransTable[z] = TStart + (z - Start);
                             }
+                            TransTableMarkModified();
                         }
                         break;
                     case TempString:
@@ -894,6 +900,7 @@ static void CodeCHARSET(Word Index) {
                             for (z = 0; z < l; z++) {
                                 CharTransTable[Start + z] = t.Contents.str.p_str[z];
                             }
+                            TransTableMarkModified();
                         }
                         break;
                     case TempFloat:
@@ -920,6 +927,7 @@ static void CodeCHARSET(Word Index) {
                 }
                 fclose(f);
                 memcpy(CharTransTable, tfield, sizeof(char) * 256);
+                TransTableMarkModified();
             }
             break;
         case TempFloat:
@@ -930,6 +938,8 @@ static void CodeCHARSET(Word Index) {
         }
         as_tempres_free(&t);
     }
+
+    SuppressTransTableReadCheck = SavedSuppress;
 }
 
 static void CodePRSET(Word Index) {
@@ -991,6 +1001,7 @@ static void CodeCODEPAGE(Word Index) {
                 New->Name  = as_strdup(ArgStr[1].str.p_str);
                 New->Table = (unsigned char*)malloc(256 * sizeof(char));
                 memcpy(New->Table, Source->Table, 256 * sizeof(char));
+                TransTableInitializeState(New, ArgCnt == 1);
                 if (!Prev) {
                     TransTables = New;
                 } else {

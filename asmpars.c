@@ -385,7 +385,8 @@ LargeInt NonZString2Int(const struct as_nonz_dynstr* p_str) {
 
         Result = 0;
         for (pRun = p_str->p_str; pRun < p_str->p_str + p_str->len; pRun++) {
-            Digit  = (usint)*pRun;
+            Digit = (usint)*pRun;
+            TransTableCheckRead();
             Result = (Result << 8) | CharTransTable[Digit & 0xff];
         }
         return Result;
@@ -407,6 +408,7 @@ Boolean Int2NonZString(struct as_nonz_dynstr* p_str, LargeInt Src) {
         Digit = Src & 0xff;
         Src   = (Src >> 8) & 0xfffffful;
         for (Search = 0; Search < 256; Search++) {
+            TransTableCheckRead();
             if (CharTransTable[Search] == Digit) {
                 *(--pDest) = Search;
                 p_str->len++;
@@ -1730,7 +1732,8 @@ LargeInt EvalStrIntExpressionWithResult(
 
             Result = 0;
             for (pRun = t.Contents.str.p_str; pRun < t.Contents.str.p_str + l; pRun++) {
-                Digit  = (usint)*pRun;
+                Digit = (usint)*pRun;
+                TransTableCheckRead();
                 Result = (Result << 8) | CharTransTable[Digit & 0xff];
             }
             pResult->Flags         = t.Flags;

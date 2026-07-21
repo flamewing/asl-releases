@@ -141,7 +141,7 @@ Message ErrMsgNULCharacter
 
 Message ErrMsgPageCrossing
  "Befehl &uuml;berschreitet Seitengrenze"
- "instruction crosses page boundary" 
+ "instruction crosses page boundary"
 
 Message ErrMsgWOverRange
  "Bereichs&uuml;berschreitung"
@@ -194,6 +194,10 @@ Message ErrMsgPaddingAdded
 Message ErrMsgRegNumWraparound
  "Registernummer-Umlauf"
  "register number wraparound"
+
+Message ErrMsgCodepageReadBeforeModify
+ "Codepage wird verwendet, bevor deren Zeichensatz geändert wurde"
+ "codepage is used before its character mapping is modified"
 
 Message ErrMsgIndexedForIndirect
  "verwende indizierte anstelle indirekter Adressierung"
@@ -638,7 +642,7 @@ Message ErrMsgLevel07
  "level must be in range 0..7"
 
 Message ErrMsgInvBitMask
- "ung&uuml;ltige Bitmaske" 
+ "ung&uuml;ltige Bitmaske"
  "invalid bit mask"
 
 Message ErrMsgInvRegPair
@@ -1016,7 +1020,7 @@ Message ErrMsgHeapOvfl
 Message ErrMsgStackOvfl
  "Stapel&uuml;berlauf"
  "stack overflow"
- 
+
 Message ErrMsgMaxIncLevelExceeded
  "INCLUDE zu tief verschachtelt"
  "INCLUDE nested too deeply"
@@ -1095,7 +1099,7 @@ Message ErrMsgMaxCPUSupported
 
 Message ErrMsgRangeCPUSupported
  "von %s bis %s unterst&uuml;tzt"
- "supported by %s to %s" 
+ "supported by %s to %s"
 
 Message ErrMsgOnlyCPUSupported1
  "nur von "

@@ -304,6 +304,8 @@ Though the `CHARSET` statement gives unlimited freedom in the character assignme
 
 At the beginning of a pass, AS automatically creates a single character set with the name `STANDARD` with a one-to-one translation. If no `CODEPAGE` instructions are used, all settings made via `CHARSET` refer to this table.
 
+If a code page is created with the one-argument form of `CODEPAGE` and then used for character translation before any `CHARSET` operation modifies it, AS emits a warning once for that code page. The two-argument form is exempt from this warning.
+
 ### ENUM, NEXTENUM, and ENUMCONF
 
 _valid for: all processors_

@@ -639,6 +639,7 @@ static Boolean DecodePseudo(void) {
 
                     for (z = 0, cp = t.Contents.str.p_str, cend = cp + t.Contents.str.len;
                          cp < cend; cp++, z++) {
+                        TransTableCheckRead();
                         DAsmCode[CodeLen] = (DAsmCode[CodeLen] << 8)
                                             + CharTransTable[((usint)*cp) & 0xff];
                         if ((z & 3) == 3) {

@@ -165,6 +165,7 @@ static void DecodeDC(Word Code) {
             case TempString:
                 for (p = t.Contents.str.p_str, pEnd = p + t.Contents.str.len; p < pEnd;
                      p++) {
+                    TransTableCheckRead();
                     PutByte(CharTransTable[((usint)*p) & 0xff]);
                 }
                 break;
