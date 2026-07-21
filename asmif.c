@@ -68,9 +68,9 @@ static LongInt GetIfVal(tStrComp const* pCond) {
     LongInt      Tmp;
 
     Tmp = EvalStrIntExpressionWithFlags(pCond, Int32, &IfOK, &Flags);
-    if (mFirstPassUnknown(Flags) || mUsesForwards(Flags) || !IfOK) {
+    if (mFirstPassUnknown(Flags) || mSymbolQuestionable(Flags) || !IfOK) {
         Tmp = 1;
-        if (mFirstPassUnknown(Flags) || mUsesForwards(Flags)) {
+        if (mFirstPassUnknown(Flags) || mSymbolQuestionable(Flags)) {
             WrError(ErrNum_FirstPassCalc);
         }
     }
