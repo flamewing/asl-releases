@@ -1144,6 +1144,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         case '{':
             if (locStack == -1 || tokenStack[locStack] != GetMatchingBrace(token)) {
                 /* Stack underflow or mismatched braces. */
+                WrError(ErrNum_BrackErr);
                 goto chk;
             }
             /* Pop from stack and store current position */
@@ -1157,6 +1158,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         case '}':
             if (locStack == sizeof(tokenStack) - 1) {
                 /* Stack overflow. */
+                WrError(ErrNum_BrackErr);
                 goto chk;
             }
             /* Push into stack and store current position */
@@ -1166,11 +1168,12 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
             haveBrackets           = haveBrackets || token == ']';
             tokenStack[++locStack] = token;
             break;
-        };
+        }
     }
 
     if (locStack != -1) {
         /* Unbalanced parenthesis/square brackets/curly braces */
+        WrError(ErrNum_BrackErr);
         goto chk;
     }
 
@@ -1229,7 +1232,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         /* in Komponenten zerteilen: */
         /* In here, any parenthesis, square brackets, and curly braces found will balance
           out because they have been checked before.
-          Also, all parnthesis will mean expressions or function calls.
+          Also, all parenthesis will mean expressions or function calls.
           So we need to split into comma-separated arguments within square brackets,
           and comma-separated arguments outside square brackets, but not comma separated
           arguments within parenthesis or curly braces. */
@@ -1248,6 +1251,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     if (locStack == -1
                         || tokenStack[locStack] != GetMatchingBrace(token)) {
                         /* Stack underflow or mismatched curly braces. */
+                        WrError(ErrNum_BrackErr);
                         goto chk;
                     }
                     /* Pop from stack */
@@ -1258,6 +1262,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 case '{':
                     if (locStack == sizeof(tokenStack) - 1) {
                         /* Stack overflow. */
+                        WrError(ErrNum_BrackErr);
                         goto chk;
                     }
                     /* Push into stack */
