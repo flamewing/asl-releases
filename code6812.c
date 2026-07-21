@@ -504,8 +504,8 @@ static void DecodeAdr(int Start, int Stop, Word Mask) {
                     AdrWord    = DecFlag ? 8 - AdrWord : AdrWord - 1;
                     AdrVals[0] = (AdrVals[0] << 6) | 0x20 | (Ord(PostFlag) << 4)
                                  | (Ord(DecFlag) << 3) | (AdrWord & 7);
-                    AdrCnt  = 1;
-                    AdrMode = ModIdx;
+                    AdrCnt     = 1;
+                    AdrMode    = ModIdx;
                 }
             }
             goto chk;

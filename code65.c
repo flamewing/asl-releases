@@ -831,7 +831,7 @@ static void DecodeCond(Word Index) {
         tSymbolFlags  Flags;
         Boolean const MayShort = !!pOrder->CodeShort,
                       MayLong  = !!pOrder->CodeLong && (MomCPU == CPU65CE02);
-        Byte ForceSize;
+        Byte          ForceSize;
 
         AdrInt = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[1], ChkZero(&ArgStr[1], &ForceSize), UInt16, &ValOK, &Flags);

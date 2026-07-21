@@ -159,9 +159,11 @@ static unsigned MacroNestLevel = 0;
 #    define dbgexit(str)  printf("***exit %s\n", str);
 #else
 #    define dbgentry(str) \
-        {}
+        {                 \
+        }
 #    define dbgexit(str) \
-        {}
+        {                \
+        }
 #endif
 
 #define LEAVE goto func_exit
@@ -587,8 +589,9 @@ static void ProcessMACROArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser)
         if (ReadMacro_SearchArg(
                     pArg->str.p_str, "EXPORT", &(pContext->pOutputTag->DoExport)))
             ;
-        else if (ReadMacro_SearchArg(
-                         pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
+        else if (
+                ReadMacro_SearchArg(
+                        pArg->str.p_str, "GLOBALSYMBOLS", &pContext->GlobalSymbols))
             ;
         else if (ReadMacro_SearchArg(pArg->str.p_str, "EXPAND", &DoMacExp)) {
             if (!AddLstMacroExpMod(
@@ -613,16 +616,18 @@ static void ProcessMACROArgs(Boolean CtrlArg, tStrComp const* pArg, void* pUser)
                 WrStrErrorPos(ErrNum_TooManyMacExpMod, pArg);
             }
             ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (ReadMacro_SearchArg(
-                           pArg->str.p_str, "INTLABEL", &pContext->DoIntLabel)) {
+        } else if (
+                ReadMacro_SearchArg(pArg->str.p_str, "INTLABEL", &pContext->DoIntLabel)) {
             ExpandPList(pContext->PList, pArg->str.p_str, CtrlArg);
-        } else if (ReadMacro_SearchSect(
-                           pArg->str.p_str, "GLOBAL", &(pContext->pOutputTag->DoGlobCopy),
-                           &(pContext->pOutputTag->GlobSect)))
+        } else if (
+                ReadMacro_SearchSect(
+                        pArg->str.p_str, "GLOBAL", &(pContext->pOutputTag->DoGlobCopy),
+                        &(pContext->pOutputTag->GlobSect)))
             ;
-        else if (ReadMacro_SearchSect(
-                         pArg->str.p_str, "PUBLIC", &pContext->DoPublic,
-                         &(pContext->pOutputTag->PubSect)))
+        else if (
+                ReadMacro_SearchSect(
+                        pArg->str.p_str, "PUBLIC", &pContext->DoPublic,
+                        &(pContext->pOutputTag->PubSect)))
             ;
         else {
             WrStrErrorPos(ErrNum_UnknownMacArg, pArg);

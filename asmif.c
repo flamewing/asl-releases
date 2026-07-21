@@ -122,7 +122,7 @@ static void CodeIFDEF(Word Negate) {
     } else {
         char* Name = ArgStr[1].str.p_str;
         Defined    = IsSymbolDefined(&ArgStr[1]) || FindFunction(Name)
-                  || FoundMacroByName(&OneMacro, Name);
+                     || FoundMacroByName(&OneMacro, Name);
         if (IfAsm) {
             strmaxcpy(ListLine, (Defined) ? "=>DEFINED" : "=>UNDEFINED", STRINGSIZE);
         }

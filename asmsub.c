@@ -77,7 +77,7 @@ static char* QuotPosCore(
     register ShortInt    Brack = 0, AngBrack = 0;
     register char const* i;
     Boolean              InSglQuot = False, InDblQuot = False, ThisEscaped = False,
-            NextEscaped = False;
+                         NextEscaped = False;
 
     for (i = s; *i; i++, ThisEscaped = NextEscaped) {
         NextEscaped = False;

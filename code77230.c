@@ -1114,53 +1114,53 @@ static void MakeCode_77230(void) {
         case 1: /* JMP + MOV */
             DAsmCode[0] = 0xd0000000 + (InstrComps[InstrBranch] << 10)
                           + InstrComps[InstrMove];
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 2: /* ALU + MOV + M0 + M1 + DP0 + DP1 */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrDP1] << 15) + (InstrComps[InstrDP0] << 18)
                           + (InstrComps[InstrM1] << 21) + (InstrComps[InstrM0] << 23);
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 3: /* ALU + MOV + EA + DP0 + DP1 */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrDP1] << 15) + (InstrComps[InstrDP0] << 18)
                           + (InstrComps[InstrEA] << 21) + 0x02000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 4: /* ALU + MOV + RP + M0 + DP0 + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRP] << 21) + (InstrComps[InstrFC] << 15)
                           + (InstrComps[InstrM0] << 19) + (InstrComps[InstrDP0] << 16)
                           + 0x02800000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 5: /* ALU + MOV + RP + M1 + DP1 + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRP] << 21) + (InstrComps[InstrFC] << 15)
                           + (InstrComps[InstrM1] << 19) + (InstrComps[InstrDP1] << 16)
                           + 0x03000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 6: /* ALU + MOV + RP + M0 + M1 + L + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRP] << 21) + (InstrComps[InstrL] << 16)
                           + (InstrComps[InstrM0] << 19) + (InstrComps[InstrM1] << 17)
                           + (InstrComps[InstrFC] << 15) + 0x03800000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 7: /* ALU + MOV + BASE0 + BASE1 + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrBASE0] << 19)
                           + (InstrComps[InstrBASE1] << 16) + (InstrComps[InstrFC] << 15)
                           + 0x04000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 8: /* ALU + MOV + RPC + L+ FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRPC] << 18) + (InstrComps[InstrL] << 16)
                           + (InstrComps[InstrFC] << 15) + 0x04400000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 9: /* ALU + MOV + P2 + P3 + EM + BM + L + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
@@ -1168,47 +1168,47 @@ static void MakeCode_77230(void) {
                           + (InstrComps[InstrEM] << 19) + (InstrComps[InstrBM] << 17)
                           + (InstrComps[InstrL] << 16) + (InstrComps[InstrFC] << 15)
                           + 0x04800000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 10: /* ALU + MOV + RW + L + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRW] << 20) + (InstrComps[InstrL] << 16)
                           + (InstrComps[InstrFC] << 15) + 0x04c00000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 11: /* ALU + MOV + WT + L + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrWT] << 19) + (InstrComps[InstrL] << 16)
                           + (InstrComps[InstrFC] << 15) + 0x05000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 12: /* ALU + MOV + NF + WI + L + FC */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrNF] << 19) + (InstrComps[InstrWI] << 17)
                           + (InstrComps[InstrL] << 16) + (InstrComps[InstrFC] << 15)
                           + 0x05400000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 13: /* ALU + MOV + FIS + FD + L */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrFIS] << 19) + (InstrComps[InstrFD] << 17)
                           + (InstrComps[InstrL] << 16) + 0x05800000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 14: /* ALU + MOV + SHV */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrSHV] << 15) + 0x05c00000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 15: /* ALU + MOV + RPS */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrRPS] << 15) + 0x06000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         case 16: /* ALU + MOV + NAL */
             DAsmCode[0] = (InstrComps[InstrALU] << 10) + InstrComps[InstrMove]
                           + (InstrComps[InstrNAL] << 15) + 0x07000000;
-            CodeLen = 1;
+            CodeLen     = 1;
             break;
         default:
             WrError(ErrNum_InvParAddrMode);

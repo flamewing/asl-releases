@@ -697,7 +697,7 @@ static void DecodeFixed(Word Index) {
 static void DecodeRTWP(Word Code) {
     Word        Variant;
     Word        MaxVariant = (((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99105)
-                       || ((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99110))
+                              || ((pCurrCPUProps->CoreFlags & eCoreAll) == eCore99110))
                                      ? 4
                                      : 0;
     tEvalResult EvalResult;

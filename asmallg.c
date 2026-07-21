@@ -1370,9 +1370,9 @@ static void CodeASSUME(Word Index) {
                         if (mFirstPassUnknown(Flags)) {
                             WrError(ErrNum_FirstPassCalc);
                             OK = False;
-                        } else if (ChkRange(
-                                           HVal, pASSUMERecs[z2].Min,
-                                           pASSUMERecs[z2].Max)) {
+                        } else if (
+                                ChkRange(
+                                        HVal, pASSUMERecs[z2].Min, pASSUMERecs[z2].Max)) {
                             *(pASSUMERecs[z2].Dest) = HVal;
                         }
                     }
@@ -1724,10 +1724,10 @@ static void CodeSTRUCT(Word IsUnion) {
         AddStructSymbol(LabPart.str.p_str, ProgCounter());
     }
 
-    NStruct            = (PStructStack)malloc(sizeof(TStructStack));
-    NStruct->Name      = as_strdup(StructName);
-    NStruct->pBaseName = NStruct->Name + strlen(NStruct->Name)
-                         - strlen(LabPart.str.p_str); /* NULL -> complain too long */
+    NStruct             = (PStructStack)malloc(sizeof(TStructStack));
+    NStruct->Name       = as_strdup(StructName);
+    NStruct->pBaseName  = NStruct->Name + strlen(NStruct->Name)
+                          - strlen(LabPart.str.p_str); /* NULL -> complain too long */
     NStruct->SaveCurrPC = ProgCounter();
     DoExt               = True;
     ExtChar             = DottedStructs ? '.' : '_';

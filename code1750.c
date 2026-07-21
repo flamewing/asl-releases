@@ -344,7 +344,7 @@ static void DecodeICR(Word Code) {
         Boolean      OK;
         tSymbolFlags Flags;
         LargeInt     Diff = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags)
-                        - EProgCounter();
+                            - EProgCounter();
 
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((Diff < -128) || (Diff > 127))) {

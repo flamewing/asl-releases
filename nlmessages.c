@@ -111,8 +111,8 @@ void opencatalog(
     Word        CountryCode;
     char const* lcstring;
     LongInt     DefPos = -1, MomPos, DefLength = 0, MomLength, z, StrStart, CtryCnt,
-            Ctrys[100];
-    Boolean fi, Gotcha;
+                Ctrys[100];
+    Boolean     fi, Gotcha;
 
     tNLSCharacterTab const* CharacterTab;
     char*                   pStr;

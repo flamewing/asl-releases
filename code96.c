@@ -911,7 +911,7 @@ static void DecodeDJNZ_DJNZW(Word Size) {
             BAsmCode[0] = 0xe0 + OpSize;
             BAsmCode[1] = AdrVals[0];
             AdrInt      = EvalStrIntExpressionWithFlags(&ArgStr[2], MemInt, &OK, &Flags)
-                     - (EProgCounter() + 3);
+                          - (EProgCounter() + 3);
             if (OK) {
                 if (!mSymbolQuestionable(Flags) && !IsByteBranch(AdrInt)) {
                     WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);

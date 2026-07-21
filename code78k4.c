@@ -2930,11 +2930,11 @@ static void DecodeCALL_BR(Word IsCALL) {
             break;
         case ModAbs16:
         case ModAbs20: {
-            LongWord Dest    = GetAbsVal(&Addr);
-            LongInt  Dist16  = Dest - (EProgCounter() + 3),
-                    Dist8    = Dest - (EProgCounter() + 2);
-            Boolean Dist16OK = (Dist16 >= -0x8000l) && (Dist16 <= 0x7fffl),
-                    Dist8OK  = (Dist8 >= -0x80) && (Dist8 <= 0x7f);
+            LongWord Dest     = GetAbsVal(&Addr);
+            LongInt  Dist16   = Dest - (EProgCounter() + 3),
+                     Dist8    = Dest - (EProgCounter() + 2);
+            Boolean  Dist16OK = (Dist16 >= -0x8000l) && (Dist16 <= 0x7fffl),
+                     Dist8OK  = (Dist8 >= -0x80) && (Dist8 <= 0x7f);
 
             if (!Addr.ForceAbs && !Addr.ForceRel) {
                 if (Dist8OK && !IsCALL) {

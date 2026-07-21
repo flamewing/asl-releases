@@ -548,7 +548,7 @@ static void DecodeJRR_JRS(Word Code) {
         BAsmCode[0] = (MirrBit(BitPos) << 5) | Code;
         BAsmCode[1] = RegAddr;
         AdrInt      = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt16, &OK, &Flags)
-                 - (EProgCounter() + 3);
+                      - (EProgCounter() + 3);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);

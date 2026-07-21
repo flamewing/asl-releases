@@ -437,7 +437,7 @@ static Boolean SplitBit(tStrComp* pDest, tStrComp const* pSrc, Byte* pErg) {
     *pErg = Inv
             + (EvalStrIntExpressionOffs(pSrc, p + 1 + Inv - pSrc->str.p_str, UInt3, &OK)
                << 1);
-    *p = '\0';
+    *p    = '\0';
     return OK;
 }
 
@@ -1518,7 +1518,7 @@ static void DecodeDJNZ(Word Code) {
 
             BAsmCode[0] = (AdrPart << 4) + 0x0a;
             AdrInt      = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult)
-                     - (EProgCounter() + 2);
+                          - (EProgCounter() + 2);
             if (EvalResult.OK) {
                 if (!mSymbolQuestionable(EvalResult.Flags)
                     && ((AdrInt < -128) || (AdrInt > 127))) {
@@ -1544,7 +1544,7 @@ static void DecodeDWJNZ(Word Code) {
 
             BAsmCode[1] = AdrVals[0];
             AdrInt      = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult)
-                     - (EProgCounter() + 3);
+                          - (EProgCounter() + 3);
             if (EvalResult.OK) {
                 if (!mSymbolQuestionable(EvalResult.Flags)
                     && ((AdrInt < -128) || (AdrInt > 127))) {

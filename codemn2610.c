@@ -657,8 +657,8 @@ static Boolean ChkCarry(int StartIndex, Boolean* pHasCarryArg, Word* pCarryVal) 
         *pHasCarryArg = !as_strcasecmp(ArgStr[StartIndex].str.p_str, "C")
                         || !as_strcasecmp(ArgStr[StartIndex].str.p_str, "0")
                         || !as_strcasecmp(ArgStr[StartIndex].str.p_str, "1");
-        *pCarryVal = *pHasCarryArg && (ArgStr[StartIndex].str.p_str[0] != '0');
-        Result     = (ArgCnt == StartIndex) || *pHasCarryArg;
+        *pCarryVal    = *pHasCarryArg && (ArgStr[StartIndex].str.p_str[0] != '0');
+        Result        = (ArgCnt == StartIndex) || *pHasCarryArg;
         if (!Result) {
             WrStrErrorPos(ErrNum_InvReg, &ArgStr[StartIndex]);
         }

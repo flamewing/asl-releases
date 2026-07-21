@@ -27,13 +27,13 @@ typedef struct {
 
 extern void InitCodeChunk(tCodeChunk* pChunk);
 extern int  ReadCodeChunk(
-         tCodeChunk* pChunk, char const* pFileName, LargeWord Start, LargeWord Length,
-         unsigned Granularity);
+        tCodeChunk* pChunk, char const* pFileName, LargeWord Start, LargeWord Length,
+        unsigned Granularity);
 extern void FreeCodeChunk(tCodeChunk* pChunk);
 
 extern void InitCodeChunkList(tCodeChunkList* pCodeChunkList);
 extern int  MoveCodeChunkToList(
-         tCodeChunkList* pCodeChunkList, tCodeChunk* pNewCodeChunk, Boolean WarnOverlap);
+        tCodeChunkList* pCodeChunkList, tCodeChunk* pNewCodeChunk, Boolean WarnOverlap);
 extern void    FreeCodeChunkList(tCodeChunkList* pCodeChunkList);
 extern Boolean RetrieveCodeFromChunkList(
         tCodeChunkList const* pCodeChunkList, LargeWord Start, Byte* pData,

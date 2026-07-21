@@ -544,9 +544,10 @@ static Boolean DecodeOpPair(
                 Result = True;
             }
         }
-    } else if (DecodeALUReg(
-                       pRight->str.p_str, Reg1, WorkSeg == SegXData, WorkSeg == SegYData,
-                       True)) {
+    } else if (
+            DecodeALUReg(
+                    pRight->str.p_str, Reg1, WorkSeg == SegXData, WorkSeg == SegYData,
+                    True)) {
         *Dir  = 1;
         *Reg2 = -1;
         DecodeAdr(pLeft, MModAll, 1 << WorkSeg, pResult);
@@ -709,7 +710,7 @@ static Boolean DecodeMOVE_1(int Start) {
                         DAsmCode[0] = 0x020090 + ((AdrResult.Val & 1) << 6)
                                       + ((AdrResult.Val & 0x7e) << 10)
                                       + (AdrResult.Mode << 8) + (IsY << 5) + RegErg;
-                        CodeLen = 1;
+                        CodeLen     = 1;
                     } else {
                         DAsmCode[0]
                                 = 0x0a70c0 + (AdrResult.Mode << 8) + (IsY << 16) + RegErg;
@@ -762,7 +763,7 @@ static Boolean DecodeMOVE_1(int Start) {
                     DAsmCode[0] = 0x020080 + ((RightAdrResult.Val & 1) << 6)
                                   + ((RightAdrResult.Val & 0x7e) << 10)
                                   + (RightAdrResult.Mode << 8) + (IsY << 5) + RegErg;
-                    CodeLen = 1;
+                    CodeLen     = 1;
                 } else {
                     DAsmCode[0] = 0x0a7080 + (RightAdrResult.Mode << 8) + (IsY << 16)
                                   + RegErg;
@@ -894,8 +895,8 @@ static Boolean DecodeMOVE_2(int Start) {
                               + (Reg2L << 16) + ((AdrResult1.Mode & 0x1f) << 8)
                               + ((AdrResult2.Mode & 3) << 13)
                               + ((AdrResult2.Mode & 24) << 17);
-                CodeLen = 1;
-                Result  = True;
+                CodeLen     = 1;
+                Result      = True;
             }
         } else if (Reg1R == -1) {
             if ((Reg2L < 2) || (Reg2R > 1)) {
@@ -1129,16 +1130,16 @@ static void DecodePar(Word Index) {
                     if (OK) {
                         DAsmCode[0] = 0x0c1c00 + ((pOrder->Code & 0x10) << 4)
                                       + (Reg2 << 7) + (AddVal << 1) + Reg1;
-                        CodeLen = 1;
-                        DontAdd = True;
+                        CodeLen     = 1;
+                        DontAdd     = True;
                     }
                 } else if (!DecodeXYAB1Reg(LeftComp.str.p_str, &Reg3)) {
                     SetXError(ErrNum_InvReg, &LeftComp);
                 } else {
                     DAsmCode[0] = 0x0c1e60 - ((pOrder->Code & 0x10) << 2) + (Reg2 << 4)
                                   + (Reg3 << 1) + Reg1;
-                    CodeLen = 1;
-                    DontAdd = True;
+                    CodeLen     = 1;
+                    DontAdd     = True;
                 }
             }
             break;
@@ -1162,16 +1163,16 @@ static void DecodePar(Word Index) {
                     if (OK) {
                         DAsmCode[0] = 0x0c1e80 + ((0x33 - pOrder->Code) << 2)
                                       + (AddVal << 1) + Reg1;
-                        CodeLen = 1;
-                        DontAdd = True;
+                        CodeLen     = 1;
+                        DontAdd     = True;
                     }
                 } else if (!DecodeXYAB1Reg(LeftComp.str.p_str, &Reg3)) {
                     SetXError(ErrNum_InvReg, &LeftComp);
                 } else {
                     DAsmCode[0] = 0x0c1e10 + ((0x33 - pOrder->Code) << 1) + (Reg3 << 1)
                                   + Reg1;
-                    CodeLen = 1;
-                    DontAdd = True;
+                    CodeLen     = 1;
+                    DontAdd     = True;
                 }
             }
             break;
@@ -1252,8 +1253,8 @@ static void DecodePar(Word Index) {
                     } else if ((AddVal >= 0) && (AddVal <= 63)) {
                         DAsmCode[0] = 0x014080 + (AddVal << 8) + (Reg2 << 3)
                                       + (pOrder->Code & 7);
-                        CodeLen = 1;
-                        DontAdd = True;
+                        CodeLen     = 1;
+                        DontAdd     = True;
                     } else {
                         DAsmCode[0] = 0x0140c0 + (Reg2 << 3) + (pOrder->Code & 7);
                         DAsmCode[1] = AddVal & 0xffffff;
@@ -1304,7 +1305,7 @@ static void DecodePar(Word Index) {
                         LAddVal     = 23 - LAddVal;
                         DAsmCode[0] = 0x010040 + (LAddVal << 8)
                                       + (Mac2Table[Reg1 & 3] << 4) + (Reg3 << 3);
-                        CodeLen = 1;
+                        CodeLen     = 1;
                     }
                 }
             }
@@ -1950,8 +1951,8 @@ static void DecodeMOVEP(Word Code) {
                     }
                 }
             } else if (LeftAdrResult.Type != ModNone) {
-                LongInt HVal = LeftAdrResult.Val, HCnt = LeftAdrResult.Cnt,
-                        HMode = LeftAdrResult.Mode, HSeg = LeftAdrResult.Seg;
+                LongInt    HVal = LeftAdrResult.Val, HCnt = LeftAdrResult.Cnt,
+                           HMode = LeftAdrResult.Mode, HSeg = LeftAdrResult.Seg;
                 tAdrResult RightAdrResult;
 
                 DecodeAdr(&RightComp, MModAbs, MSegXData + MSegYData, &RightAdrResult);
@@ -2191,7 +2192,7 @@ static void DecodeBcc(Word Condition) {
                 Dist &= 0x1ff;
                 DAsmCode[0] = 0x050400 + (Condition << 12) + ((Dist & 0x1e0) << 1)
                               + (Dist & 0x1f);
-                CodeLen = 1;
+                CodeLen     = 1;
             }
             break;
         case 2:
@@ -2234,7 +2235,7 @@ static void DecodeBScc(Word Condition) {
                 Dist &= 0x1ff;
                 DAsmCode[0] = 0x050000 + (Condition << 12) + ((Dist & 0x1e0) << 1)
                               + (Dist & 0x1f);
-                CodeLen = 1;
+                CodeLen     = 1;
             }
             break;
         case 2:
@@ -2272,7 +2273,7 @@ static void DecodeLUA_LEA(Word Code) {
                     DAsmCode[0] = 0x040000 + (Reg1 - 16) + (AdrResult.Mode << 8)
                                   + ((AdrResult.Val & 0x0f) << 4)
                                   + ((AdrResult.Val & 0x70) << 7);
-                    CodeLen = 1;
+                    CodeLen     = 1;
                 }
             } else if (AdrResult.Type != ModNone) {
                 CodeLen     = 1;
@@ -2457,9 +2458,9 @@ static void DecodeBitJmp(Word Code) {
                                         (MomCPU >= CPU56300)
                                         && (AdrResult.Val >= MemLimit - 0x7f)
                                         && (AdrResult.Val <= MemLimit - 0x40)) {
-                                    CodeLen = 2;
-                                    Reg2    = ((Code & 1) << 5)
-                                           + (((LongInt)(Code >> 1)) << 14);
+                                    CodeLen     = 2;
+                                    Reg2        = ((Code & 1) << 5)
+                                                  + (((LongInt)(Code >> 1)) << 14);
                                     DAsmCode[0] = 0x018080 + h + Reg2 + Reg3
                                                   + ((AdrResult.Val & 0x3f) << 8);
                                 } else {

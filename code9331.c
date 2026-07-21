@@ -367,7 +367,7 @@ static void DecodeLDA(Word Code) {
         if (OK) {
             DAsmCode[0] = 0x04000000ul | (DstA << 22) | (Wrf << 20) | (Dest << 0)
                           | (Sour << 4) | (Xcnt << 8) | ((Value << 10) & 0x7fc00);
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
 }
@@ -392,7 +392,7 @@ static void DecodeLDB(Word Code) {
         if (OK) {
             DAsmCode[0] = 0x08000000ul | (DstB << 1) | (Form << 0)
                           | ((Value & 0xffffff) << 2);
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
 }
@@ -431,7 +431,7 @@ static void DecodeBR(Word Code) {
             DAsmCode[0] = (((LongWord)Code) << 26) | (Address << 17) | (Cp << 16)
                           | (Dps << 13) | (Mode << 10) | (Dest << 0) | (Sour << 4)
                           | (Xcnt << 8) | (Ofp << 15);
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
 }
@@ -473,7 +473,7 @@ static void DecodeJC(Word Code) {
             DAsmCode[0] = (F << 24) | (Address << 17) | (Cp << 16) | (Dps << 13)
                           | (Mode << 10) | (Dest << 0) | (Sour << 4) | (Xcnt << 8)
                           | (Ofp << 15);
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
 }

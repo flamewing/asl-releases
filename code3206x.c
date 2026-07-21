@@ -1743,7 +1743,7 @@ static void DecodeCLR_EXT_EXTU_SET(Word Code) {
                         if (OK) {
                             ThisInst = (DReg << 23) + (S2Reg << 18) + (S1Reg << 13)
                                        + (HReg << 8) + (UnitFlag << 1) + Lo(Code);
-                            erg = True;
+                            erg      = True;
                         }
                     }
                 }
@@ -2054,7 +2054,7 @@ static void DecodeMVK(Word Code) {
                     AddDest(DReg);
                     ThisInst = (DReg << 23) + (((S1Reg >> Hi(Code)) & 0xffff) << 7)
                                + (UnitFlag << 1) + Lo(Code);
-                    erg = True;
+                    erg      = True;
                 }
             }
         }

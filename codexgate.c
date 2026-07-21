@@ -204,12 +204,12 @@ static void DecodeAriImm(Word Index) {
         } else if (DecodeArgReg(2, &SReg1)) {
             WAsmCode[0] = 0x1000 | ((Index & 4) << 9) | (Index & 3) | (DReg << 8)
                           | (DReg << 5) | (SReg1 << 2);
-            CodeLen = 2;
+            CodeLen     = 2;
         }
     } else if (DecodeArgReg(2, &SReg1) && DecodeArgReg(3, &SReg2)) {
         WAsmCode[0] = 0x1000 | ((Index & 4) << 9) | (Index & 3) | (DReg << 8)
                       | (SReg1 << 5) | (SReg2 << 2);
-        CodeLen = 2;
+        CodeLen     = 2;
     }
 }
 

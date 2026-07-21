@@ -508,7 +508,7 @@ static void DecodeMOVE(Word Index) {
     Boolean  OK;
     int      z;
     Word     BigCPUMask = (1 << (CPU53C825 - CPU53C810)) | (1 << (CPU53C875 - CPU53C810))
-                      | (1 << (CPU53C895 - CPU53C810));
+                          | (1 << (CPU53C895 - CPU53C810));
 
     UNUSED(Index);
     StrCompMkTemp(&Token, TokenStr, sizeof(TokenStr));
@@ -871,8 +871,8 @@ static void DecodeSELECT(Word MayATN) {
                     DAsmCode[0] |= 0x04000000;
                     ArgStr[2].str.p_str[l - 1] = '\0';
                     Dist                       = EvalStrIntExpressionOffsWithFlags(
-                                   &ArgStr[2], 4, UInt32, &OK, &Flags)
-                           - (EProgCounter() + 8);
+                                                         &ArgStr[2], 4, UInt32, &OK, &Flags)
+                                                 - (EProgCounter() + 8);
                     if (OK) {
                         if (!mSymbolQuestionable(Flags)
                             && ((Dist > 0x7fffff) || (Dist < -0x800000))) {
@@ -921,8 +921,8 @@ static void DecodeWAIT(Word Index) {
                 StrCompShorten(&ArgStr[1], 1);
                 DAsmCode[0] = 0x54000000;
                 Dist        = EvalStrIntExpressionOffsWithFlags(
-                               &ArgStr[1], 4, UInt32, &OK, &Flags)
-                       - (EProgCounter() + 8);
+                                      &ArgStr[1], 4, UInt32, &OK, &Flags)
+                              - (EProgCounter() + 8);
                 if (OK) {
                     if (mSymbolQuestionable(Flags)
                         && ((Dist > 0x7fffff) || (Dist < -0x800000))) {

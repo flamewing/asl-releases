@@ -465,7 +465,7 @@ static void DecodeADDSUB(Word Index) {
                     if (OK) {
                         WAsmCode[0] = (WAsmCode[0] & 0x1f) | 0xf400 | (Index << 5)
                                       | (SrcAcc << 9) | (*AdrVals << 8);
-                        CodeLen = 1;
+                        CodeLen     = 1;
                     }
                 }
             }
@@ -605,7 +605,7 @@ static void DecodeADDSUB(Word Index) {
                                           | ((LastOpCode & 0x0100) << 1)
                                           | ((LastOpCode & 0x00f0) >> 4)
                                           | (*AdrVals << 4);
-                            CodeLen = 1;
+                            CodeLen     = 1;
                         }
                     }
                 } else {
@@ -629,14 +629,14 @@ static void DecodeADDSUB(Word Index) {
                 {
                     WAsmCode[0] = 0x9000 | (Index << 9) | (WAsmCode[0] << 4)
                                   | (DestAcc << 8) | Shift;
-                    CodeLen = 1;
+                    CodeLen     = 1;
                 } else /* last resort... */
                 {
                     WAsmCode[0] |= 0x6f00;
                     WAsmCode[2] = WAsmCode[1]; /* shift optional address offset */
                     WAsmCode[1] = 0x0c00 | (Index << 5) | (SrcAcc << 9) | (DestAcc << 8)
                                   | (Shift & 0x1f);
-                    CodeLen = 2 + HCnt;
+                    CodeLen     = 2 + HCnt;
                 }
             }
 
@@ -703,7 +703,7 @@ static void DecodeADDSUB(Word Index) {
                 } else {
                     WAsmCode[0] = 0xf000 | (Index << 5) | (DestAcc << 8) | (*AdrVals << 9)
                                   | (Shift & 15);
-                    CodeLen = 2;
+                    CodeLen     = 2;
                 }
             }
             break;
@@ -804,7 +804,7 @@ static void DecodeMPY(Word Index) {
                             RetractWords(1);
                             *WAsmCode = 0xcc00 | DestAcc | ((LastOpCode & 0x0100) << 1)
                                         | ((LastOpCode & 0x00f0) >> 4) | (*AdrVals);
-                            CodeLen = 1;
+                            CodeLen   = 1;
                         }
                     }
                 } else {
@@ -1217,7 +1217,7 @@ static void DecodeMAS(Word Index) {
                                 RetractWords(1);
                                 *WAsmCode = 0xac00 | Index | (LastOpCode & 0x01f0)
                                             | (*AdrVals);
-                                CodeLen = 1;
+                                CodeLen   = 1;
                             }
                         } else if ((LastOpCode & 0xfe0f) == 0x9a00) /* previous op ST src,
                                                                        Ymem */
@@ -1740,7 +1740,7 @@ static void DecodeLD(Word Index) {
                         RetractWords(1);
                         *WAsmCode = 0xe400 | ((LastOpCode & 0x0100) << 1)
                                     | ((LastOpCode & 0x00f0) >> 4) | ((*AdrVals) << 4);
-                        CodeLen = 1;
+                        CodeLen   = 1;
                     }
                 }
             } else {
@@ -2116,7 +2116,7 @@ static void DecodeSTLH(Word Index) {
             } else {
                 CodeLen[WAsmCode] = (0x0c80 | ((*WAsmCode) & 0x100) | (Shift & 0x1f))
                                     - (Index >> 4);
-                *WAsmCode = 0x6f00 | *AdrVals;
+                *WAsmCode         = 0x6f00 | *AdrVals;
                 CodeLen++;
             }
         }

@@ -452,8 +452,8 @@ static void DecodeXCH(Word Index) {
     UNUSED(Index);
 
     if (ChkArgCnt(2, 2)) {
-        Boolean Swap = (!as_strcasecmp(ArgStr[2].str.p_str, "A"))
-                       || (!as_strcasecmp(ArgStr[2].str.p_str, "RP1"));
+        Boolean   Swap  = (!as_strcasecmp(ArgStr[2].str.p_str, "A"))
+                          || (!as_strcasecmp(ArgStr[2].str.p_str, "RP1"));
         tStrComp *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
                  *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
 
@@ -1131,9 +1131,9 @@ static void DecodeDBNZ(Word Index) {
             BAsmCode[0] = (AdrMode == ModReg8) ? 0x88 + AdrPart : 0x04;
             BAsmCode[1] = AdrVals[0];
             AdrInt      = EvalStrIntExpressionOffsWithFlags(
-                             &ArgStr[2], !!(*ArgStr[2].str.p_str == '$'), UInt16, &OK,
-                             &Flags)
-                     - (EProgCounter() + AdrCnt + 2);
+                                  &ArgStr[2], !!(*ArgStr[2].str.p_str == '$'), UInt16, &OK,
+                                  &Flags)
+                          - (EProgCounter() + AdrCnt + 2);
             if (OK) {
                 if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);

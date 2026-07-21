@@ -1426,7 +1426,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 pResult->Vals[0] = (AdrComps[1].INummer << 12)
                                    + (Ord(AdrComps[1].Long) << 11)
                                    + (AdrComps[1].Scale << 9);
-                pResult->Mode = 0x30 + AdrComps[0].ANummer;
+                pResult->Mode    = 0x30 + AdrComps[0].ANummer;
 
                 /* only try 32-bit displacement if explicitly requested, or 68020++ and no
                  * size given */
@@ -1506,8 +1506,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         HVal &= 0x7fff;
                     }
                     OutDispLen = (IsDisp16(HVal)) ? 1 : 2;
-		    if (!CheckFamilyCore(ExtAddrFamilyMask))
-			    OutDispLen = 1;
+                    if (!CheckFamilyCore(ExtAddrFamilyMask)) {
+                        OutDispLen = 1;
+                    }
                 }
                 switch (OutDispLen) {
                 case 1:
@@ -1549,8 +1550,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         HVal &= 0x7f;
                     }
                     OutDispLen = GetDispLen(HVal);
-		    if (!CheckFamilyCore(ExtAddrFamilyMask))
-			    OutDispLen = 0;
+                    if (!CheckFamilyCore(ExtAddrFamilyMask)) {
+                        OutDispLen = 0;
+                    }
                 }
                 pResult->Mode = 0x3b;
                 switch (OutDispLen) {
@@ -1596,7 +1598,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         else if (AdrComps[0].Art == Index) {
             pResult->Vals[0] = (AdrComps[0].INummer << 12) + (Ord(AdrComps[0].Long) << 11)
                                + (AdrComps[0].Scale << 9) + 0x180;
-            pResult->Mode = 0x30;
+            pResult->Mode    = 0x30;
             if (*OutDisp.str.p_str == '\0') {
                 pResult->Vals[0] = pResult->Vals[0] + 0x0010;
                 pResult->Cnt     = 2;
@@ -2423,7 +2425,7 @@ static void DecodeShift(Word Index) {
             if (CheckColdSize()) {
                 WAsmCode[0] = 0xe000 | AdrResult.Mode | (Op << 3) | (OpSize << 6)
                               | (LFlag << 8);
-                OpSize = eSymbolSizeShiftCnt;
+                OpSize      = eSymbolSizeShiftCnt;
                 if (ArgCnt == 2) {
                     DecodeAdr(&ArgStr[1], MModData | MModImm, &AdrResult);
                 } else {
@@ -2895,8 +2897,8 @@ static void DecodeCLRTST(Word Index) {
     if (OpSize > eSymbolSize32Bit) {
         WrError(ErrNum_InvOpSize);
     } else if (ChkArgCnt(1, 1)) {
-        Word w1 = MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX
-                  | MModAbs;
+        Word       w1 = MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX
+                        | MModAbs;
         tAdrResult AdrResult;
 
         switch (pCurrCPUProps->Family) {
@@ -4127,7 +4129,8 @@ static void DecodeBcc(Word CondCode) {
                 /* cannot generate short BSR with zero displacement, and BSR cannot
                    be replaced with NOP -> error */
 
-                else if ((HVal == 0) && IsBSR && !mFirstPassUnknownOrQuestionable(Flags)) {
+                else if (
+                        (HVal == 0) && IsBSR && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 }
 
@@ -4885,8 +4888,8 @@ static void DecodeFBcc(Word CondCode) {
             Boolean      ValOK;
             tSymbolFlags Flags;
 
-            HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags)
-                   - (EProgCounter() + 2);
+            HVal   = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags)
+                     - (EProgCounter() + 2);
             HVal16 = HVal;
 
             if (!*AttrPart.str.p_str) {
@@ -5441,8 +5444,8 @@ static void DecodePBcc(Word CondCode) {
             Boolean      ValOK;
             tSymbolFlags Flags;
 
-            HVal = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags)
-                   - (EProgCounter() + 2);
+            HVal   = EvalStrIntExpressionWithFlags(&ArgStr[1], Int32, &ValOK, &Flags)
+                     - (EProgCounter() + 2);
             HVal16 = HVal;
 
             if (!*AttrPart.str.p_str) {
@@ -5916,7 +5919,7 @@ static void DecodeMxxAC(Word Code) {
     WAsmCode[0] = 0xa000 | ((Rx & 7) << 9) | ((Rx & 8) << 3) | Ry | ((ACCx & 1) << 7);
     WAsmCode[1] = Code | ((OpSize - 1) << 11) | (Scale << 9) | (Ux << 7) | (Uy << 6)
                   | ((ACCx & 2) << 3) | (ACCw << 2);
-    CodeLen = 4;
+    CodeLen     = 4;
 }
 
 static void DecodeCPBCBUSY(Word Code) {

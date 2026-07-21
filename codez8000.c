@@ -718,7 +718,7 @@ static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAd
     Boolean     IsIO            = !!(ModeMask & MModIO);
     tChkRegSize ChkRegSize_Addr = IsIO ? ChkRegSize_IOAddr : ChkRegSize_MemAddr,
                 ChkRegSizeForIOIndir;
-    Boolean IsDirect;
+    Boolean     IsDirect;
 
     ClearAdrVals(pAdrVals);
 

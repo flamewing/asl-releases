@@ -481,7 +481,7 @@ static void DecodeReg(Word Index) {
     LongWord  S1Reg = 0, S1Mode = 0;
     LongWord  S2Reg = 0, S2Mode = 0;
     unsigned  NumArgs = 1 + Ord(Op->Src2Type != NoneOp) + Ord(Op->DestType != NoneOp),
-             ActArgCnt;
+              ActArgCnt;
     tStrComp* pDestArg = NULL;
 
     /* if destination required, but too few args, assume the last op is also destination
@@ -518,7 +518,7 @@ static void DecodeReg(Word Index) {
         DAsmCode[0] = ((Op->Code & 0xff0) << 20) + ((Op->Code & 0xf) << 7) + (S1Reg)
                       + (S2Reg << 14) + (DReg << 19) + (S1Mode << 11) + (S2Mode << 12)
                       + (DMode << 13);
-        CodeLen = 4;
+        CodeLen     = 4;
         if ((Op->Privileged) && (!SupAllowed)) {
             WrError(ErrNum_PrivOrder);
         }
@@ -561,7 +561,7 @@ static void DecodeCobr(Word Index) {
             } else {
                 DAsmCode[0] = (Op->Code << 24) + (S1Reg << 19) + (S2Reg << 14)
                               + (S1Mode << 13) + (AdrInt & 0x1ffc);
-                CodeLen = 4;
+                CodeLen     = 4;
             }
         }
     }

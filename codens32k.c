@@ -1437,8 +1437,8 @@ static void DecodeFormat3(Word Code) {
 
 static void DecodeFormat4(Word Code) {
     tAdrVals SrcAdrVals, DestAdrVals;
-    Boolean  SrcIsAddr = !!(Code & FMT4_SRCISADDR),
-            DestMayImm = !!(Code & FMT4_DESTMAYIMM);
+    Boolean  SrcIsAddr  = !!(Code & FMT4_SRCISADDR),
+             DestMayImm = !!(Code & FMT4_DESTMAYIMM);
 
     Code &= ~(FMT4_SRCISADDR | FMT4_DESTMAYIMM);
     if (ChkArgCnt(2, 2) && ChkNoAttrPart() && SetOpSizeFromCode(Code)

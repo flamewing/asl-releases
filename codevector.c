@@ -213,7 +213,7 @@ static void DecodeSVec(Word Index) {
     else {
         WAsmCode[0] = 0xf000 | (Bright << 4) | ((X >> 8) & 3) | (Y & 0x300)
                       | ((Scale & 1) << 11) | ((Scale & 2) << 2);
-        CodeLen = 1;
+        CodeLen     = 1;
     }
 }
 

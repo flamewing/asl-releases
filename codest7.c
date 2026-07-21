@@ -1484,11 +1484,12 @@ static void DecodeLDF(Word Code) {
         WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
-    } else if (DecodeAdr(
-                       &ArgStr[1],
-                       MModA | MModAbs24 | MModIX24 | MModIY24 | MModI16XAbs24
-                               | MModI16YAbs24 | MModI16Abs24,
-                       False, &AdrVals)) {
+    } else if (
+            DecodeAdr(
+                    &ArgStr[1],
+                    MModA | MModAbs24 | MModIX24 | MModIY24 | MModI16XAbs24
+                            | MModI16YAbs24 | MModI16Abs24,
+                    False, &AdrVals)) {
         switch (AdrVals.Mode) {
         case eModA:
             if (DecodeAdr(
@@ -1554,8 +1555,8 @@ static void DecodeMOV(Word Code) {
         WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
-    } else if (DecodeAdr(
-                       &ArgStr[2], MModImm | MModAbs8 | MModAbs16, False, &SrcAdrVals)) {
+    } else if (
+            DecodeAdr(&ArgStr[2], MModImm | MModAbs8 | MModAbs16, False, &SrcAdrVals)) {
         if (DecodeAdr(
                     &ArgStr[1],
                     ((SrcAdrVals.Mode == eModAbs8) ? MModAbs8 : 0) | MModAbs16, False,
@@ -1970,10 +1971,11 @@ static void DecodeEXG(Word IsW) {
         WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
-    } else if (DecodeAdr(
-                       &ArgStr[1],
-                       (IsW ? 0 : (MModA | MModXL | MModYL | MModAbs16)) | MModX | MModY,
-                       False, &DestAdrVals)) {
+    } else if (
+            DecodeAdr(
+                    &ArgStr[1],
+                    (IsW ? 0 : (MModA | MModXL | MModYL | MModAbs16)) | MModX | MModY,
+                    False, &DestAdrVals)) {
         switch (DestAdrVals.Mode) {
         case eModA:
             if (DecodeAdr(&ArgStr[2], MModXL | MModYL | MModAbs16, False, &SrcAdrVals)) {

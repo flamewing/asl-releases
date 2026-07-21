@@ -507,7 +507,7 @@ static Boolean DecodeBitAddr(tStrComp* pArg, LongInt* Erg) {
                         if (ChkRange(AdrLong & 0xff, 0x20, 0x3f)) {
                             *Erg = 0x100 + ((AdrLong & 0x1f) << 3) + BPos
                                    + (AdrLong & 0xff0000);
-                            Res = 1;
+                            Res  = 1;
                         } else {
                             Res = -1;
                         }

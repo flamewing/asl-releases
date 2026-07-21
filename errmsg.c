@@ -491,7 +491,7 @@ Boolean ChkSamePage(
         tSymbolFlags DestFlags) {
     LargeWord Mask   = ~((1ul << PageBits) - 1);
     Boolean   Result = ((CurrAddr & Mask) == (DestAddr & Mask))
-                     || mFirstPassUnknownOrQuestionable(DestFlags);
+                       || mFirstPassUnknownOrQuestionable(DestFlags);
     if (!Result) {
         WrError(ErrNum_TargOnDiffPage);
     }

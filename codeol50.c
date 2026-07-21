@@ -403,7 +403,7 @@ static void DecodeMSA(Word Code) {
 static void DecodeRel(Word Index) {
     tRelOrder const* pOrder     = RelOrders + Index;
     Boolean          AllowMinus = CheckCPU(pOrder->MinusCPUMask),
-            AllowPlus           = CheckCPU(pOrder->PlusCPUMask);
+                     AllowPlus  = CheckCPU(pOrder->PlusCPUMask);
 
     if (ChkArgCnt(1, 1)
         && (ChkExactCPUMask(pOrder->MinusCPUMask | pOrder->PlusCPUMask, CPU5054) >= 0)) {
@@ -520,7 +520,7 @@ static void DecodeBUZZER(Word Code) {
 
         Freq  = (ReqArgCnt >= 2)
                         ? EvalStrIntExpressionOffs(
-                                 &ArgStr[1], ImmPtr(ArgStr[1].str.p_str), UInt2, &OK)
+                                  &ArgStr[1], ImmPtr(ArgStr[1].str.p_str), UInt2, &OK)
                         : 2;
         Sound = EvalStrIntExpressionOffs(
                 &ArgStr[ArgCnt], ImmPtr(ArgStr[ArgCnt].str.p_str), UInt2, &OK2);
@@ -581,7 +581,7 @@ static void DecodeOUT(Word Code) {
             case ModImm:
                 WAsmCode[0] = ((MomCPU == CPU6052) ? 0x0c00 : 0x0400) | (AdrVal >> 4)
                               | (Port << 4);
-                CodeLen = 1;
+                CodeLen     = 1;
                 break;
             default:
                 break;

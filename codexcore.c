@@ -121,7 +121,7 @@ static void Code_3r(Word Index) {
         && ParseArgReg(3, &Op3, True)) {
         WAsmCode[0] = Index | ((Op3 & 3) << 0) | ((Op2 & 3) << 2) | ((Op1 & 3) << 4)
                       | (UpVal(Op3, Op2, Op1, 0) << 6);
-        CodeLen = 2;
+        CodeLen     = 2;
     }
 }
 
@@ -142,7 +142,7 @@ static void Code_2rus(Word Index) {
             } else {
                 WAsmCode[0] = Index | ((Op3 & 3) << 0) | ((Op2 & 3) << 2)
                               | ((Op1 & 3) << 4) | (UpVal(Op3, Op2, Op1, 0) << 6);
-                CodeLen = 2;
+                CodeLen     = 2;
             }
         }
     }
@@ -156,7 +156,7 @@ static void Code_2r(Word Index) {
 
         WAsmCode[0] = Index | ((Op2 & 3) << 0) | ((Op1 & 3) << 2) | ((Up & 0x1f) << 6)
                       | (Up & 0x20);
-        CodeLen = 2;
+        CodeLen     = 2;
     }
 }
 
@@ -293,7 +293,7 @@ static void Code_rus(Word Index) {
 
                 WAsmCode[0] = Index | ((Op2 & 3) << 0) | ((Op1 & 3) << 2)
                               | ((Up & 0x1f) << 6) | (Up & 0x20);
-                CodeLen = 2;
+                CodeLen     = 2;
             }
         }
     }
@@ -329,7 +329,7 @@ static void Code_l5r(Word Index) {
                       | (UpVal(Op3, Op2, Op1, 0) << 6);
         WAsmCode[1] = Index | ((Op5 & 3) << 0) | ((Op4 & 3) << 2) | ((Up & 0x1f) << 6)
                       | (Up & 0x20);
-        CodeLen = 4;
+        CodeLen     = 4;
     }
 }
 
@@ -343,7 +343,7 @@ static void Code_l6r(Word Index) {
                       | (UpVal(Op3, Op2, Op1, 0) << 6);
         WAsmCode[1] = Index | ((Op6 & 3) << 0) | ((Op5 & 3) << 2) | ((Op4 & 3) << 4)
                       | (UpVal(Op6, Op5, Op4, 0) << 6);
-        CodeLen = 4;
+        CodeLen     = 4;
     }
 }
 
@@ -437,7 +437,7 @@ static void Code_r2r(Word Index) {
 
         WAsmCode[0] = Index | ((Op1 & 3) << 0) | ((Op2 & 3) << 2) | ((Up & 0x1f) << 6)
                       | (Up & 0x20);
-        CodeLen = 2;
+        CodeLen     = 2;
     }
 }
 

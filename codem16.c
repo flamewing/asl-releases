@@ -1774,7 +1774,7 @@ static void DecodeLog(Word Index) {
                 } else {
                     WAsmCode[0] = 0x00c0 + (Index << 8) + (AdrMode[1] & 15)
                                   + ((AdrMode[2] & 15) << 10);
-                    CodeLen = 2;
+                    CodeLen     = 2;
                 }
                 break;
             case 4:
@@ -1841,7 +1841,7 @@ static void DecodeMul(Word Index) {
                 } else {
                     WAsmCode[0] = 0x00d0 + ((AdrMode[2] & 15) << 10) + (Index << 7)
                                   + (AdrMode[1] & 15);
-                    CodeLen = 2;
+                    CodeLen     = 2;
                 }
             }
         }
@@ -2714,8 +2714,8 @@ static void DecodeSSTR(Word Code) {
 
 static void DecodeLDM_STM(Word Code) {
     if (ChkArgCnt(2, 2) && CheckFormat("G")) {
-        Word Mask = MModIReg | MModDisp16 | MModDisp32 | MModAbs16 | MModAbs32
-                    | MModPCRel16 | MModPCRel32;
+        Word      Mask = MModIReg | MModDisp16 | MModDisp32 | MModAbs16 | MModAbs32
+                         | MModPCRel16 | MModPCRel32;
         tStrComp *pRegList, *pMemArg;
         Word      RegList;
 

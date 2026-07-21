@@ -818,8 +818,8 @@ static void DecodeGen(Word Index) {
                           + (((LongWord)PrevGenInfo.Src1Part) << 19)
                           + (((LongWord)CurrGenInfo.DestPart) << 16)
                           + (CurrGenInfo.Src2Part & 0xff00) + Hi(PrevGenInfo.Src2Part);
-            CodeLen = 1;
-            NextPar = False;
+            CodeLen     = 1;
+            NextPar     = False;
             break;
         case 2:
             if ((PrevGenInfo.DestPart > 7) || (CurrGenInfo.DestPart > 7)) {
@@ -872,7 +872,7 @@ static void DecodeGen(Word Index) {
             DAsmCode[0] = 0x80000000 + (((LongWord)HReg2) << 26)
                           + (((LongWord)PrevGenInfo.DestPart & 1) << 23)
                           + (((LongWord)CurrGenInfo.DestPart & 1) << 22);
-            CodeLen = 1;
+            CodeLen     = 1;
             if (CurrGenInfo.Src1Mode == ModReg) {
                 if (CurrGenInfo.Src2Mode == ModReg) {
                     DAsmCode[0] += ((LongWord)0x00000000)
@@ -986,7 +986,7 @@ static void DecodeLDA(Word Code) {
         } else {
             DAsmCode[0] = (((LongWord)Code) << 23) | (((LongWord)AdrMode) << 21)
                           | (((LongWord)HReg) << 16) | AdrPart;
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
     NextPar = False;
@@ -1044,7 +1044,7 @@ static void DecodeLDIcc_LDFcc(Word Code) {
             if (AdrMode != ModNone) {
                 DAsmCode[0] = InstrCode + (((LongWord)HReg) << 16) + (CondCode << 23)
                               + (((LongWord)AdrMode) << 21) + AdrPart;
-                CodeLen = 1;
+                CodeLen     = 1;
             }
         }
         NextPar = False;
@@ -1133,7 +1133,7 @@ static void DecodeLdExp(Word Code) {
     } else {
         DAsmCode[0] = (((LongWord)Code) << 23) | (((LongWord)Dest) << 16)
                       | (((LongWord)Src) << 0);
-        CodeLen = 1;
+        CodeLen     = 1;
     }
     NextPar = False;
 }
@@ -1154,7 +1154,7 @@ static void DecodeRegImm(Word Code) {
         if (AdrMode == ModImm) {
             DAsmCode[0] = (((LongWord)Code) << 23) | (((LongWord)AdrMode) << 21)
                           | (((LongWord)Dest) << 16) | AdrPart;
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
     NextPar = False;
@@ -1176,7 +1176,7 @@ static void DecodeLDPK(Word Code) {
         if (AdrMode == ModImm) {
             DAsmCode[0] = (((LongWord)Code) << 23) | (((LongWord)AdrMode) << 21)
                           | (((LongWord)Dest) << 16) | AdrPart;
-            CodeLen = 1;
+            CodeLen     = 1;
         }
     }
     NextPar = False;
@@ -1201,7 +1201,7 @@ static void DecodeSTIK(Word Code) {
                 Src         = (Src << 16) & 0x001f0000ul;
                 DAsmCode[0] = (((LongWord)Code) << 23) | (((LongWord)AdrMode) << 21) | Src
                               | AdrPart;
-                CodeLen = 1;
+                CodeLen     = 1;
             }
         }
     }
@@ -1395,12 +1395,12 @@ static void DecodeDBcc(Word Code) {
         if (DecodeReg(ArgStr[2].str.p_str, &HReg)) {
             DAsmCode[0] = 0x6c000000 + (CondCode << 16) + DFlag
                           + (((LongWord)HReg2) << 22) + HReg;
-            CodeLen = 1;
+            CodeLen     = 1;
         } else {
             Boolean      OK;
             tSymbolFlags Flags;
             LongInt      AdrLong = EvalAdrExpression(&ArgStr[2], &OK, &Flags)
-                              - (EProgCounter() + Disp);
+                                   - (EProgCounter() + Disp);
 
             if (OK) {
                 if (!mSymbolQuestionable(Flags)
@@ -1409,7 +1409,7 @@ static void DecodeDBcc(Word Code) {
                 } else {
                     DAsmCode[0] = 0x6e000000 + (CondCode << 16) + DFlag
                                   + (((LongWord)HReg2) << 22) + (AdrLong & 0xffff);
-                    CodeLen = 1;
+                    CodeLen     = 1;
                 }
             }
         }

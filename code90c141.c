@@ -1139,8 +1139,8 @@ static void DecodeDJNZ(Word Code) {
                 Boolean      OK;
                 tSymbolFlags Flags;
                 Integer      AdrInt = EvalStrIntExpressionWithFlags(
-                                         &ArgStr[ArgCnt], Int16, &OK, &Flags)
-                                 - (EProgCounter() + 2);
+                                              &ArgStr[ArgCnt], Int16, &OK, &Flags)
+                                      - (EProgCounter() + 2);
 
                 if (OK) {
                     if (!mSymbolQuestionable(Flags)

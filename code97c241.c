@@ -1091,7 +1091,7 @@ static void DecodeGASI2(Word Code) {
                             WAsmCode[0] = 0x3800 + (((Word)OpSize + 1) << 14)
                                           + (AdrMode & 15) + (AdrMode2 << 4)
                                           + (Code << 9);
-                            CodeLen = 2;
+                            CodeLen     = 2;
                         } else {
                             WrError(ErrNum_InvAddrMode);
                         }
@@ -1280,7 +1280,7 @@ static void DecodeBit(Word Code) {
                             WAsmCode[0] = 0x1700 + (((Word)OpSize + 1) << 14)
                                           + ((Code & 1) << 7) + ((Code & 2) << 10)
                                           + (ImmVal() << 4) + AdrMode2;
-                            CodeLen = 2;
+                            CodeLen     = 2;
                         } else {
                             WrError(ErrNum_InvAddrMode);
                         }
@@ -1871,7 +1871,7 @@ static void DecodeEX(Word Code) {
                         if ((IsReg()) && (Is2Reg())) {
                             WAsmCode[0] = 0x3e00 + (((Word)OpSize + 1) << 14)
                                           + (AdrMode2 << 4) + AdrMode;
-                            CodeLen = 2;
+                            CodeLen     = 2;
                         } else {
                             WrError(ErrNum_InvAddrMode);
                         }
@@ -1937,7 +1937,7 @@ static void DecodeJRC(Word Code) {
                 } else {
                     WAsmCode[0] = 0x1000 + ((Condition & 14) << 8) + (AdrInt & 0x1fe)
                                   + (Condition & 1);
-                    CodeLen = 2;
+                    CodeLen     = 2;
                 }
             }
         }
@@ -2049,7 +2049,7 @@ static void DecodeDJNZC(Word Code) {
                             WAsmCode[1 + (AdrCnt >> 1)] = ((Condition & 14) << 12)
                                                           + (AdrInt & 0x1ffe)
                                                           + (Condition & 1);
-                            CodeLen = 4 + AdrCnt;
+                            CodeLen                     = 4 + AdrCnt;
                         }
                     }
                 }

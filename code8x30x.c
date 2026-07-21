@@ -267,7 +267,7 @@ static void DecodeAri(Word Code) {
                             } else {
                                 WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5)
                                               | DestReg;
-                                CodeLen = 1;
+                                CodeLen     = 1;
                             }
                         }
                     }

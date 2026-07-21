@@ -814,8 +814,8 @@ static void SwitchTo_CP1600(void) {
     /* SetIntConstMode(eIntConstModeIBM); */
     NativeIntConstModeMask = (1ul << eIntFormatCOct) | (1ul << eIntFormatIBMXHex)
                              | (1ul << eIntFormatDefRadix);
-    OtherIntConstModeMask = eIntFormatMaskC | eIntFormatMaskIntel | eIntFormatMaskMoto
-                            | eIntFormatMaskIBM;
+    OtherIntConstModeMask  = eIntFormatMaskC | eIntFormatMaskIntel | eIntFormatMaskMoto
+                             | eIntFormatMaskIBM;
     SetIntConstModeByMask(
             NativeIntConstModeMask | (RelaxedMode ? OtherIntConstModeMask : 0));
 

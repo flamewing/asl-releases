@@ -1108,8 +1108,8 @@ static void DecodeXCH(Word Is16) {
 }
 
 static void DecodeALU(Word Props) {
-    Byte const Code8 = (Props >> 0) & 15, Code16 = (Props >> 4) & 15,
-               Code16Reg = (Props >> 8) & 15;
+    Byte const    Code8 = (Props >> 0) & 15, Code16 = (Props >> 4) & 15,
+                  Code16Reg = (Props >> 8) & 15;
     Boolean const Is16 = (Props & 0x8000) || False, May16 = (Props & 0x4000) || False;
 
     if (Is16) {

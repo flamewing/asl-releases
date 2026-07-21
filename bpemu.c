@@ -97,7 +97,7 @@ char* FExpand(char* Src) {
             strmov(CurrentDir, CurrentDir + 2);
         }
     }
-#elif (defined _WIN32) /* CygWIN */
+#elif (defined _WIN32)                            /* CygWIN */
     if (!getcwd(CurrentDir, STRINGSIZE)) {
         0 [CurrentDir] = '\0';
     }
@@ -106,7 +106,7 @@ char* FExpand(char* Src) {
             *p = '\\';
         }
     }
-#else                  /* UNIX */
+#else                                             /* UNIX */
     if (!getcwd(CurrentDir, STRINGSIZE)) {
         0 [CurrentDir] = '\0';
     }
