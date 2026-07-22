@@ -106,6 +106,14 @@ void stdhandl_init(void) {
 #        endif
 #    endif
 
+#    ifdef __EMSCRIPTEN__
+    /*
+     * Newer Emscripten/Node combinations may not expose stdout as a
+     * regular FS stream during startup, and fstat(1, ...) can trap in the
+     * JS runtime. Keep behaviour conservative for this target.
+     */
+    Redirected = NoRedir;
+#    else
     fstat(NumStdOut, &stdout_stat);
     if (S_ISREG(stdout_stat.st_mode)) {
         Redirected = RedirToFile;
@@ -114,6 +122,7 @@ void stdhandl_init(void) {
     } else {
         Redirected = NoRedir;
     }
+#    endif
 
 #endif
 }
