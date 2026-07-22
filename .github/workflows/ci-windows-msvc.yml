@@ -46,7 +46,18 @@ concurrency:
 
 jobs:
   ci-windows-msvc:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: vs2022
+            runs_on: windows-2022
+            cmake_generator: Visual Studio 17 2022
+          - name: latest
+            runs_on: windows-latest
+            cmake_generator: ''
+    name: ci-windows-msvc (${{ matrix.name }})
+    runs-on: ${{ matrix.runs_on }}
     steps:
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
@@ -56,12 +67,31 @@ jobs:
         uses: actions/checkout@master
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
+      - name: Select Visual Studio generator
+        shell: pwsh
+        run: |
+          $generator = '${{ matrix.cmake_generator }}'
+
+          if (-not $generator) {
+            $capabilities = cmake -E capabilities | ConvertFrom-Json
+            $generator = $capabilities.generators |
+              Where-Object { $_.name -match '^Visual Studio \d+ \d{4}$' } |
+              Sort-Object { [int]([regex]::Match($_.name, '^Visual Studio (\d+)').Groups[1].Value) } -Descending |
+              Select-Object -ExpandProperty name -First 1
+          }
+
+          if (-not $generator) {
+            throw 'No Visual Studio generator found in CMake capabilities.'
+          }
+
+          "CMAKE_GENERATOR=$generator" >> $env:GITHUB_ENV
+          Write-Host "Selected CMake generator: $generator"
       - name: Configure
         run: |
-          cmake -S . -B build -G "Visual Studio 17 2022"
+          cmake -S . -B build -A x64 -G "$env:CMAKE_GENERATOR"
       - name: Build
         run: |
-          cmake --build build -j
+          cmake --build build --config Debug --parallel
       - name: Test
         env:
           VERBOSE: 1
