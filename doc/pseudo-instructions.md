@@ -251,8 +251,10 @@ PIO_ctrl   port PIO_port_A+3
 
 ### REG and NAMEREG
 
-_valid for: 680x0, AVR, M\*Core, ST9, 80C16x, Z8000, KCPSM (`NAMEREG` valid only for KCPSM(3)), LatticeMico8, MSP430(X)_
+_valid for: 680x0, AVR, M\*Core, ST9, 80C16x, Z80 family, Z8000, KCPSM (`NAMEREG` valid only for KCPSM(3)), LatticeMico8, MSP430(X)_
 Though it always has the same syntax, this instruction has a slightly different meaning from processor to processor: If the processor uses a separate addressing space for registers, `REG` has the same effect as a simple `EQU` for this address space (e.g. for the ST9). `REG` defines register symbols for all other processors whose function is described in [Register Symbols](assembler-usage.md#register-symbols).
+
+For the Z80 family, a register symbol may be defined for any register known to the Z80, undocumented Z80, Z180, Rabbit 2000, or Z380 backends.  Availability and operand-context restrictions are checked when the symbol is used, allowing common include files to define aliases before selecting a particular family member. Shadow register `AF'` is not currently supported as a `REG` value.
 
 `NAMEREG` exists for compatibility reasons to the original KCPSM assembler. It has an identical function, however both register and symbolic name are given as arguments, for example:
 

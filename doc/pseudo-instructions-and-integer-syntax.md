@@ -236,7 +236,7 @@ _Default Integer Syntax: Intel_
 
 _Default Integer Syntax: Intel_
 
-> `DB` `DD` `DEFB` `DEFW` `DN` `DQ` `DS` `DT` `DW` `EXTMODE` `LWORDMODE`
+> `DB` `DD` `DEFB` `DEFW` `DN` `DQ` `DS` `DT` `DW` `EXTMODE` `LWORDMODE` `REG`
 
 #### Zilog Z8
 

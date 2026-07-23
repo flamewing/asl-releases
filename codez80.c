@@ -113,6 +113,65 @@ static Boolean MayLW, /* Instruktion erlaubt 32 Bit */
 static PrefType CurrPrefix, /* mom. explizit erzeugter Praefix */
         LastPrefix;         /* von der letzten Anweisung generierter Praefix */
 
+typedef enum {
+    eZ80RegB,
+    eZ80RegC,
+    eZ80RegD,
+    eZ80RegE,
+    eZ80RegH,
+    eZ80RegL,
+    eZ80RegA,
+    eZ80RegBC,
+    eZ80RegDE,
+    eZ80RegHL,
+    eZ80RegSP,
+    eZ80RegIX,
+    eZ80RegIY,
+    eZ80RegI,
+    eZ80RegR,
+    eZ80RegAF,
+    eZ80RegF,
+    eZ80RegIXH,
+    eZ80RegIXL,
+    eZ80RegIYH,
+    eZ80RegIYL,
+    eZ80RegIXU,
+    eZ80RegIYU,
+    eZ80RegSR,
+    eZ80RegXSR,
+    eZ80RegDSR,
+    eZ80RegYSR,
+    eZ80RegCount
+} tZ80Reg;
+
+typedef LongWord tZ80RegMask;
+
+#define Z80REGMASK(Reg) (((tZ80RegMask)1) << (Reg))
+#define MZ80Reg8                                                          \
+    (Z80REGMASK(eZ80RegB) | Z80REGMASK(eZ80RegC) | Z80REGMASK(eZ80RegD)   \
+     | Z80REGMASK(eZ80RegE) | Z80REGMASK(eZ80RegH) | Z80REGMASK(eZ80RegL) \
+     | Z80REGMASK(eZ80RegA))
+#define MZ80Reg16                                                          \
+    (Z80REGMASK(eZ80RegBC) | Z80REGMASK(eZ80RegDE) | Z80REGMASK(eZ80RegHL) \
+     | Z80REGMASK(eZ80RegSP) | Z80REGMASK(eZ80RegIX) | Z80REGMASK(eZ80RegIY))
+#define MZ80RegIndex8                                                         \
+    (Z80REGMASK(eZ80RegIXH) | Z80REGMASK(eZ80RegIXL) | Z80REGMASK(eZ80RegIYH) \
+     | Z80REGMASK(eZ80RegIYL) | Z80REGMASK(eZ80RegIXU) | Z80REGMASK(eZ80RegIYU))
+#define MZ80RegSFR                                                           \
+    (Z80REGMASK(eZ80RegSR) | Z80REGMASK(eZ80RegXSR) | Z80REGMASK(eZ80RegDSR) \
+     | Z80REGMASK(eZ80RegYSR))
+
+static char const* const Z80RegNames[eZ80RegCount]
+        = {"B",   "C",   "D",   "E",   "H",   "L",  "A",   "BC",  "DE",
+           "HL",  "SP",  "IX",  "IY",  "I",   "R",  "AF",  "F",   "IXH",
+           "IXL", "IYH", "IYL", "IXU", "IYU", "SR", "XSR", "DSR", "YSR"};
+
+/* REG definitions accept the union of registers from all family members.
+   Availability is checked when an alias is used. */
+static Boolean InREGDefinition;
+
+static void DecodeREG_Z80(Word Index);
+
 /*==========================================================================*/
 /* aux functions */
 
@@ -284,22 +343,179 @@ static LongWord EvalAbsAdrExpression(tStrComp const* pArg, tEvalResult* pEvalRes
 /*==========================================================================*/
 /* Adressparser */
 
-static Boolean DecodeReg8(char* Asc, Byte* Erg) {
-#define Reg8Cnt 7
-    static char const Reg8Names[Reg8Cnt][2] = {"B", "C", "D", "E", "H", "L", "A"};
-    int               z;
+static Boolean DecodeRegCore(char const* pArg, tZ80Reg* pReg) {
+    unsigned z;
 
-    for (z = 0; z < Reg8Cnt; z++) {
-        if (!as_strcasecmp(Asc, Reg8Names[z])) {
-            *Erg = z;
-            if (z == 6) {
-                (*Erg)++;
-            }
+    for (z = 0; z < eZ80RegCount; z++) {
+        if (!as_strcasecmp(pArg, Z80RegNames[z])) {
+            *pReg = (tZ80Reg)z;
             return True;
         }
     }
-
     return False;
+}
+
+static tSymbolSize Z80RegSize(tZ80Reg Reg) {
+    switch (Reg) {
+    case eZ80RegBC:
+    case eZ80RegDE:
+    case eZ80RegHL:
+    case eZ80RegSP:
+    case eZ80RegIX:
+    case eZ80RegIY:
+    case eZ80RegAF:
+        return eSymbolSize16Bit;
+    default:
+        return eSymbolSize8Bit;
+    }
+}
+
+static Boolean Z80RegAvailable(tZ80Reg Reg) {
+    switch (Reg) {
+    case eZ80RegIXH:
+    case eZ80RegIYH:
+        return MomCPU == CPUZ80U;
+    case eZ80RegIXL:
+    case eZ80RegIYL:
+    case eZ80RegIXU:
+    case eZ80RegIYU:
+        return (MomCPU == CPUZ80U) || (MomCPU >= CPUZ380);
+    case eZ80RegF:
+        return (MomCPU == CPUZ80U) || (MomCPU == CPUZ180) || (MomCPU >= CPUZ380);
+    case eZ80RegSR:
+    case eZ80RegXSR:
+    case eZ80RegDSR:
+    case eZ80RegYSR:
+        return MomCPU >= CPUZ380;
+    default:
+        return True;
+    }
+}
+
+static void DissectReg_Z80(
+        char* pDest, size_t DestSize, tRegInt Value, tSymbolSize InpSize) {
+    UNUSED(InpSize);
+
+    if (Value < eZ80RegCount) {
+        as_snprintf(pDest, DestSize, "%s", Z80RegNames[Value]);
+    } else {
+        as_snprintf(pDest, DestSize, "?-%u", (unsigned)Value);
+    }
+}
+
+static tRegEvalResult ResolveReg(
+        tStrComp const* pArg, tZ80Reg* pReg, Boolean* pIsAlias, Boolean MustBeReg) {
+    tRegDescr   RegDescr;
+    tEvalResult EvalResult;
+
+    if (DecodeRegCore(pArg->str.p_str, pReg)) {
+        *pIsAlias = False;
+        return eIsReg;
+    }
+
+    *pIsAlias = True;
+    switch (EvalStrRegExpressionAsOperand(
+            pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg)) {
+    case eIsReg:
+        if (RegDescr.Reg >= eZ80RegCount) {
+            WrStrErrorPos(ErrNum_InvReg, pArg);
+            return eRegAbort;
+        }
+        *pReg = (tZ80Reg)RegDescr.Reg;
+        return eIsReg;
+    case eRegAbort:
+        return eRegAbort;
+    default:
+        return eIsNoReg;
+    }
+}
+
+static tRegEvalResult DecodeReg(
+        tStrComp const* pArg, tZ80RegMask RegMask, tZ80Reg* pReg, Boolean MustBeReg) {
+    Boolean        IsAlias;
+    tRegEvalResult Result = ResolveReg(pArg, pReg, &IsAlias, MustBeReg);
+
+    if (Result != eIsReg) {
+        return Result;
+    }
+    if ((RegMask & Z80REGMASK(*pReg)) && Z80RegAvailable(*pReg)) {
+        return eIsReg;
+    }
+
+    if (IsAlias || MustBeReg) {
+        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        return eRegAbort;
+    }
+    return eIsNoReg;
+}
+
+static Boolean IsReg(tStrComp const* pArg, tZ80Reg ExpectedReg) {
+    Boolean IsAlias;
+    tZ80Reg Reg;
+
+    return (ResolveReg(pArg, &Reg, &IsAlias, False) == eIsReg) && (Reg == ExpectedReg)
+           && Z80RegAvailable(Reg);
+}
+
+static Boolean SetReg8Adr(tZ80Reg Reg) {
+    switch (Reg) {
+    case eZ80RegB:
+    case eZ80RegC:
+    case eZ80RegD:
+    case eZ80RegE:
+    case eZ80RegH:
+    case eZ80RegL:
+        AdrPart = Reg - eZ80RegB;
+        break;
+    case eZ80RegA:
+        AdrPart = 7;
+        break;
+    case eZ80RegIXH:
+    case eZ80RegIXU:
+        AdrPart               = 4;
+        BAsmCode[PrefixCnt++] = IXPrefix;
+        break;
+    case eZ80RegIXL:
+        AdrPart               = 5;
+        BAsmCode[PrefixCnt++] = IXPrefix;
+        break;
+    case eZ80RegIYH:
+    case eZ80RegIYU:
+        AdrPart               = 4;
+        BAsmCode[PrefixCnt++] = IYPrefix;
+        break;
+    case eZ80RegIYL:
+        AdrPart               = 5;
+        BAsmCode[PrefixCnt++] = IYPrefix;
+        break;
+    default:
+        return False;
+    }
+    AdrMode = ModReg8;
+    return True;
+}
+
+static Boolean SetReg16Adr(tZ80Reg Reg) {
+    switch (Reg) {
+    case eZ80RegBC:
+    case eZ80RegDE:
+    case eZ80RegHL:
+    case eZ80RegSP:
+        AdrPart = Reg - eZ80RegBC;
+        break;
+    case eZ80RegIX:
+        AdrPart               = 2;
+        BAsmCode[PrefixCnt++] = IXPrefix;
+        break;
+    case eZ80RegIY:
+        AdrPart               = 2;
+        BAsmCode[PrefixCnt++] = IYPrefix;
+        break;
+    default:
+        return False;
+    }
+    AdrMode = ModReg16;
+    return True;
 }
 
 static Boolean IsSym(char ch) {
@@ -308,120 +524,98 @@ static Boolean IsSym(char ch) {
 }
 
 static void DecodeAdr(tStrComp const* pArg) {
-#define Reg16Cnt 6
-    static char const Reg16Names[Reg16Cnt][3] = {"BC", "DE", "HL", "SP", "IX", "IY"};
-
-    int         z, l;
     Integer     AdrInt;
     LongInt     AdrLong;
     Boolean     OK;
     tEvalResult EvalResult;
+    tZ80Reg     Reg;
 
     AdrMode = ModNone;
     AdrCnt  = 0;
     AdrPart = 0;
 
-    /* 0. Sonderregister */
-
-    if (!as_strcasecmp(pArg->str.p_str, "R")) {
-        AdrMode = ModRef;
-        return;
-    }
-
-    if (!as_strcasecmp(pArg->str.p_str, "I")) {
-        AdrMode = ModInt;
-        return;
-    }
-
-    /* 1. 8-Bit-Register ? */
-
-    if (DecodeReg8(pArg->str.p_str, &AdrPart)) {
-        AdrMode = ModReg8;
-        return;
-    }
-
-    /* 1a. 8-Bit-Haelften von IX/IY ? (nur Z380/Z80UNDOC, sonst als Symbole zulassen) */
-
-    if (((MomCPU >= CPUZ380) || (MomCPU == CPUZ80U))
-        && ((strlen(pArg->str.p_str) == 3) && (toupper(pArg->str.p_str[0]) == 'I'))) {
-        char ix = toupper(pArg->str.p_str[1]);
-
-        if ((ix == 'X') || (ix == 'Y')) {
-            switch (toupper(pArg->str.p_str[2])) {
-            case 'L':
-                AdrMode               = ModReg8;
-                BAsmCode[PrefixCnt++] = (ix == 'X') ? IXPrefix : IYPrefix;
-                AdrPart               = 5;
-                return;
-            case 'H':
-                if (MomCPU != CPUZ80U) {
-                    break;
-                }
-                /* else fall-through */ /* do not allow IXH/IYH on Z380 */
-            case 'U':
-                AdrMode               = ModReg8;
-                BAsmCode[PrefixCnt++] = (ix == 'X') ? IXPrefix : IYPrefix;
-                AdrPart               = 4;
-                return;
-            }
+    switch (DecodeReg(
+            pArg,
+            MZ80Reg8 | MZ80Reg16 | MZ80RegIndex8 | Z80REGMASK(eZ80RegI)
+                    | Z80REGMASK(eZ80RegR),
+            &Reg, False)) {
+    case eIsReg:
+        if (Reg == eZ80RegI) {
+            AdrMode = ModInt;
+        } else if (Reg == eZ80RegR) {
+            AdrMode = ModRef;
+        } else if (!SetReg8Adr(Reg)) {
+            (void)SetReg16Adr(Reg);
         }
+        return;
+    case eRegAbort:
+        return;
+    default:
+        break;
     }
 
-    /* 2. 16-Bit-Register ? */
+    /* 16-bit register indirect, including aliases in (reg+displacement): */
 
-    for (z = 0; z < Reg16Cnt; z++) {
-        if (!as_strcasecmp(pArg->str.p_str, Reg16Names[z])) {
-            AdrMode = ModReg16;
-            if (z <= 3) {
-                AdrPart = z;
-            } else {
-                BAsmCode[PrefixCnt++] = (z == 4) ? IXPrefix : IYPrefix;
-                AdrPart               = 2; /* = HL */
+    {
+        size_t ArgLen = strlen(pArg->str.p_str);
+
+        if ((ArgLen >= 3) && (*pArg->str.p_str == '(')
+            && (pArg->str.p_str[ArgLen - 1] == ')')) {
+            size_t RegLen = 0;
+
+            while ((RegLen + 1 < ArgLen - 1) && IsSym(pArg->str.p_str[RegLen + 1])) {
+                RegLen++;
             }
-            return;
-        }
-    }
+            if (RegLen) {
+                String   RegStr;
+                tStrComp RegArg;
 
-    /* 3. 16-Bit-Register indirekt ? */
+                StrCompMkTemp(&RegArg, RegStr, sizeof(RegStr));
+                StrCompCopySub(&RegArg, pArg, 1, RegLen);
+                switch (DecodeReg(&RegArg, MZ80Reg16, &Reg, False)) {
+                case eIsReg: {
+                    size_t RemainderLen = ArgLen - RegLen - 2;
 
-    if ((strlen(pArg->str.p_str) >= 4) && (*pArg->str.p_str == '(')
-        && (pArg->str.p_str[l = strlen(pArg->str.p_str) - 1] == ')')) {
-        for (z = 0; z < Reg16Cnt; z++) {
-            if ((!as_strncasecmp(pArg->str.p_str + 1, Reg16Names[z], 2))
-                && (!IsSym(pArg->str.p_str[3]))) {
-                if (z < 3) {
-                    if (strlen(pArg->str.p_str) != 4) {
-                        WrError(ErrNum_InvAddrMode);
+                    if (Reg <= eZ80RegHL) {
+                        if (RemainderLen) {
+                            WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+                        } else if (Reg == eZ80RegHL) {
+                            AdrMode = ModReg8;
+                            AdrPart = 6;
+                        } else {
+                            AdrMode = ModIndReg16;
+                            AdrPart = Reg - eZ80RegBC;
+                        }
                         return;
                     }
-                    switch (z) {
-                    case 0:
-                    case 1: /* BC,DE */
-                        AdrMode = ModIndReg16;
-                        AdrPart = z;
-                        break;
-                    case 2: /* HL=M-Register */
-                        AdrMode = ModReg8;
-                        AdrPart = 6;
-                        break;
-                    }
-                } else { /* SP,IX,IY */
-                    /* we replace the register name with '0 ', making it a valid
-                       expression for the parser.  Removing the outer parentheses saves
-                       a level of recursion in the parser: */
 
-                    pArg->str.p_str[1] = '0';
-                    pArg->str.p_str[2] = ' ';
-                    pArg->str.p_str[l] = '\0';
-                    AdrLong            = EvalStrIntExpressionOffs(
-                            pArg, 1, (MomCPU >= CPUZ380) ? SInt24 : SInt8, &OK);
+                    if (!RemainderLen) {
+                        AdrLong = 0;
+                        OK      = True;
+                    } else {
+                        String   DispStr;
+                        tStrComp DispArg;
+                        size_t   z;
+
+                        StrCompMkTemp(&DispArg, DispStr, sizeof(DispStr));
+                        StrCompCopy(&DispArg, pArg);
+                        DispStr[1] = '0';
+                        for (z = 2; z <= RegLen; z++) {
+                            DispStr[z] = ' ';
+                        }
+                        DispStr[ArgLen - 1] = '\0';
+                        DispArg.Pos.Len     = ArgLen - 1;
+                        AdrLong             = EvalStrIntExpressionOffs(
+                                &DispArg, 1, (MomCPU >= CPUZ380) ? SInt24 : SInt8, &OK);
+                    }
                     if (OK) {
-                        if (z == 3) {
+                        if (Reg == eZ80RegSP) {
                             AdrMode = ModSPRel;
                         } else {
-                            AdrMode               = ModReg8;
-                            AdrPart               = 6;
-                            BAsmCode[PrefixCnt++] = (z == 4) ? IXPrefix : IYPrefix;
+                            AdrMode = ModReg8;
+                            AdrPart = 6;
+                            BAsmCode[PrefixCnt++]
+                                    = (Reg == eZ80RegIX) ? IXPrefix : IYPrefix;
                         }
                         AdrVals[AdrCnt++] = AdrLong & 0xff;
                         if ((AdrLong >= -0x80l) && (AdrLong <= 0x7fl))
@@ -436,8 +630,13 @@ static void DecodeAdr(tStrComp const* pArg) {
                             }
                         }
                     }
+                    return;
                 }
-                return;
+                case eRegAbort:
+                    return;
+                default:
+                    break;
+                }
             }
         }
     }
@@ -521,20 +720,111 @@ static void DecodeAdr(tStrComp const* pArg) {
  * ------------------------------------------------------------------------ */
 
 static void DecodeAdrWithF(tStrComp const* pArg, Boolean AllowF) {
+    Boolean        IsAlias;
+    tRegEvalResult RegResult;
+    tZ80Reg        Reg;
+
     if ((MomCPU == CPUZ80U) || (MomCPU == CPUZ180) || (MomCPU == CPUZ380)) {
-        /* if 110 denotes F, it cannot denote (HL) */
-        if (!as_strcasecmp(pArg->str.p_str, "(HL)")) {
-            AdrMode = ModNone;
-            WrStrErrorPos(ErrNum_InvAddrMode, pArg);
-            return;
-        }
-        if (AllowF && !as_strcasecmp(pArg->str.p_str, "F")) {
-            AdrMode = ModReg8;
-            AdrPart = 6;
-            return;
+        if (AllowF) {
+            RegResult = ResolveReg(pArg, &Reg, &IsAlias, False);
+            if ((RegResult == eIsReg) && (Reg == eZ80RegF) && Z80RegAvailable(Reg)) {
+                AdrMode = ModReg8;
+                AdrPart = 6;
+                AdrCnt  = 0;
+                return;
+            }
+            if (RegResult == eRegAbort) {
+                AdrMode = ModNone;
+                return;
+            }
         }
     }
+
     DecodeAdr(pArg);
+    if (((MomCPU == CPUZ80U) || (MomCPU == CPUZ180) || (MomCPU == CPUZ380))
+        && (AdrMode == ModReg8) && (AdrPart == 6) && (PrefixCnt == 0)) {
+        /* if 110 denotes F, it cannot denote (HL) */
+        AdrMode = ModNone;
+        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+    }
+}
+
+static Boolean DecodeIndirectReg(tStrComp const* pArg, tZ80Reg ExpectedReg) {
+    size_t ArgLen = strlen(pArg->str.p_str);
+
+    if ((ArgLen >= 3) && (*pArg->str.p_str == '(')
+        && (pArg->str.p_str[ArgLen - 1] == ')')) {
+        String   RegStr;
+        tStrComp RegArg;
+
+        StrCompMkTemp(&RegArg, RegStr, sizeof(RegStr));
+        StrCompCopySub(&RegArg, pArg, 1, ArgLen - 2);
+        return IsReg(&RegArg, ExpectedReg);
+    }
+    return False;
+}
+
+static Boolean DecodeReg8Code(tStrComp const* pArg, Byte* pCode) {
+    tZ80Reg Reg;
+
+    if (DecodeReg(pArg, MZ80Reg8, &Reg, True) != eIsReg) {
+        return False;
+    }
+    switch (Reg) {
+    case eZ80RegA:
+        *pCode = 7;
+        break;
+    default:
+        *pCode = Reg - eZ80RegB;
+    }
+    return True;
+}
+
+static Boolean ParRegPair(tZ80Reg Reg1, tZ80Reg Reg2) {
+    return (IsReg(&ArgStr[1], Reg1) && IsReg(&ArgStr[2], Reg2))
+           || (IsReg(&ArgStr[1], Reg2) && IsReg(&ArgStr[2], Reg1));
+}
+
+static Boolean ParIndRegPair(tZ80Reg IndReg, tZ80Reg Reg) {
+    return (DecodeIndirectReg(&ArgStr[1], IndReg) && IsReg(&ArgStr[2], Reg))
+           || (IsReg(&ArgStr[1], Reg) && DecodeIndirectReg(&ArgStr[2], IndReg));
+}
+
+static Boolean IsAltAF(tStrComp const* pArg) {
+    return !as_strcasecmp(pArg->str.p_str, "AF\'")
+           || !as_strcasecmp(pArg->str.p_str, "AF`");
+}
+
+static Boolean ParAFPair(void) {
+    return (IsReg(&ArgStr[1], eZ80RegAF) && IsAltAF(&ArgStr[2]))
+           || (IsAltAF(&ArgStr[1]) && IsReg(&ArgStr[2], eZ80RegAF));
+}
+
+static Boolean DecodeSFR(tStrComp const* pArg, Byte* pCode) {
+    Boolean IsAlias;
+    tZ80Reg Reg;
+
+    if ((ResolveReg(pArg, &Reg, &IsAlias, False) != eIsReg)
+        || !(MZ80RegSFR & Z80REGMASK(Reg)) || !Z80RegAvailable(Reg)) {
+        return False;
+    }
+    switch (Reg) {
+    case eZ80RegSR:
+        *pCode = 1;
+        break;
+    case eZ80RegXSR:
+        *pCode = 5;
+        break;
+    case eZ80RegDSR:
+        *pCode = 6;
+        break;
+    case eZ80RegYSR:
+        *pCode = 7;
+        break;
+    default:
+        return False;
+    }
+    return True;
 }
 
 static Boolean ImmIs8(void) {
@@ -558,13 +848,6 @@ static void AppendAdrVals(void) {
     AppendVals(AdrVals, AdrCnt);
 }
 
-static Boolean ParPair(char const* Name1, char const* Name2) {
-    return (((!as_strcasecmp(ArgStr[1].str.p_str, Name1))
-             && (!as_strcasecmp(ArgStr[2].str.p_str, Name2)))
-            || ((!as_strcasecmp(ArgStr[1].str.p_str, Name2))
-                && (!as_strcasecmp(ArgStr[2].str.p_str, Name1))));
-}
-
 /*-------------------------------------------------------------------------*/
 /* Bedingung entschluesseln */
 
@@ -582,24 +865,6 @@ static Boolean DecodeCondition(char const* Name, int* Erg) {
         *Erg = Conditions[z].Code;
         return True;
     }
-}
-
-/*-------------------------------------------------------------------------*/
-/* Sonderregister dekodieren */
-
-static Boolean DecodeSFR(char* Inp, Byte* Erg) {
-    if (!as_strcasecmp(Inp, "SR")) {
-        *Erg = 1;
-    } else if (!as_strcasecmp(Inp, "XSR")) {
-        *Erg = 5;
-    } else if (!as_strcasecmp(Inp, "DSR")) {
-        *Erg = 6;
-    } else if (!as_strcasecmp(Inp, "YSR")) {
-        *Erg = 7;
-    } else {
-        return False;
-    }
-    return True;
 }
 
 /*==========================================================================*/
@@ -646,7 +911,7 @@ static void DecodeAcc(Word Index) {
         ;
     else if (!ChkMinCPU(POrder->MinCPU))
         ;
-    else if ((ArgCnt) && (as_strcasecmp(ArgStr[1].str.p_str, "A"))) {
+    else if (ArgCnt && !IsReg(&ArgStr[1], eZ80RegA)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         if (POrder->Len == 2) {
@@ -666,7 +931,7 @@ static void DecodeHL(Word Index) {
         ;
     else if (!ChkMinCPU(POrder->MinCPU))
         ;
-    else if ((ArgCnt) && (as_strcasecmp(ArgStr[1].str.p_str, "HL"))) {
+    else if (ArgCnt && !IsReg(&ArgStr[1], eZ80RegHL)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         if (POrder->Len == 2) {
@@ -1169,12 +1434,12 @@ static void DecodeLD(Word IsLDW) {
             }
             break;
         case ModInt:
-            if (!as_strcasecmp(ArgStr[2].str.p_str, "A")) /* LD I,A */
+            if (IsReg(&ArgStr[2], eZ80RegA)) /* LD I,A */
             {
                 CodeLen     = 2;
                 BAsmCode[0] = 0xed;
                 BAsmCode[1] = 0x47;
-            } else if (!as_strcasecmp(ArgStr[2].str.p_str, "HL")) /* LD I,HL */
+            } else if (IsReg(&ArgStr[2], eZ80RegHL)) /* LD I,HL */
             {
                 if (ChkMinCPU(CPUZ380)) {
                     CodeLen     = 2;
@@ -1186,7 +1451,7 @@ static void DecodeLD(Word IsLDW) {
             }
             break;
         case ModRef:
-            if (!as_strcasecmp(ArgStr[2].str.p_str, "A")) /* LD R,A */
+            if (IsReg(&ArgStr[2], eZ80RegA)) /* LD R,A */
             {
                 CodeLen     = 2;
                 BAsmCode[0] = 0xed;
@@ -1258,7 +1523,7 @@ static void DecodeALU8(Word Code) {
         return;
     }
 
-    if (!as_strcasecmp(pDestArg->str.p_str, "HL")) {
+    if (IsReg(pDestArg, eZ80RegHL)) {
         if (Code != 2) {
             WrError(ErrNum_InvAddrMode);
         } else {
@@ -1277,7 +1542,7 @@ static void DecodeALU8(Word Code) {
                 }
             }
         }
-    } else if (!as_strcasecmp(pDestArg->str.p_str, "SP")) {
+    } else if (IsReg(pDestArg, eZ80RegSP)) {
         if (Code != 2) {
             WrError(ErrNum_InvAddrMode);
         } else {
@@ -1296,7 +1561,7 @@ static void DecodeALU8(Word Code) {
                 }
             }
         }
-    } else if (as_strcasecmp(pDestArg->str.p_str, "A")) {
+    } else if (!IsReg(pDestArg, eZ80RegA)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         OpSize = 0;
@@ -1329,7 +1594,7 @@ static void DecodeALU16(Word Code) {
         ;
     else if (!ChkMinCPU(CPUZ380))
         ;
-    else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].str.p_str, "HL"))) {
+    else if ((ArgCnt == 2) && !IsReg(&ArgStr[1], eZ80RegHL)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         OpSize = 1;
@@ -1483,7 +1748,7 @@ static void DecodeADDW(Word Index) {
         ;
     else if (!ChkMinCPU(CPUZ380))
         ;
-    else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].str.p_str, "HL"))) {
+    else if ((ArgCnt == 2) && !IsReg(&ArgStr[1], eZ80RegHL)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         OpSize = 1;
@@ -1598,7 +1863,7 @@ static void DecodeADCW_SBCW(Word Code) {
         ;
     else if (!ChkMinCPU(CPUZ380))
         ;
-    else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].str.p_str, "HL"))) {
+    else if ((ArgCnt == 2) && !IsReg(&ArgStr[1], eZ80RegHL)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         OpSize = 1;
@@ -1691,7 +1956,7 @@ static void DecodeShift8(Word Code) {
                     OK = False;
                 } else if (
                         (AdrPart != 6) || (PrefixCnt != 1)
-                        || (!DecodeReg8(ArgStr[1].str.p_str, &AdrPart))) {
+                        || !DecodeReg8Code(&ArgStr[1], &AdrPart)) {
                     WrError(ErrNum_InvAddrMode);
                     OK = False;
                 } else {
@@ -1781,7 +2046,7 @@ static void DecodeBit(Word Code) {
                         OK = False;
                     } else if (
                             (AdrPart != 6) || (PrefixCnt != 1) || (Code == 0)
-                            || (!DecodeReg8(ArgStr[1].str.p_str, &AdrPart))) {
+                            || !DecodeReg8Code(&ArgStr[1], &AdrPart)) {
                         WrError(ErrNum_InvAddrMode);
                         OK = False;
                     } else {
@@ -1843,7 +2108,7 @@ static void DecodeMULT_DIV(Word Code) {
 
     if (!ChkMinCPU(CPUZ380))
         ;
-    else if (as_strcasecmp(pDestArg->str.p_str, "HL")) {
+    else if (!IsReg(pDestArg, eZ80RegHL)) {
         WrError(ErrNum_InvAddrMode);
     } else {
         OpSize = 1;
@@ -1958,26 +2223,27 @@ static void DecodeSWAP(Word Index) {
 static void DecodePUSH_POP(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
-    else if (!as_strcasecmp(ArgStr[1].str.p_str, "SR")) {
+    else if (IsReg(&ArgStr[1], eZ80RegSR)) {
         if (ChkMinCPU(CPUZ380)) {
             CodeLen     = 2;
             BAsmCode[0] = 0xed;
             BAsmCode[1] = 0xc1 + Code;
         }
+    } else if (IsReg(&ArgStr[1], eZ80RegAF)) {
+        CodeLen             = PrefixCnt;
+        BAsmCode[CodeLen++] = 0xf1 + Code;
     } else {
-        if (!as_strcasecmp(ArgStr[1].str.p_str, "SP")) {
-            strmaxcpy(ArgStr[1].str.p_str, "A", STRINGSIZE);
-        }
-        if (!as_strcasecmp(ArgStr[1].str.p_str, "AF")) {
-            strmaxcpy(ArgStr[1].str.p_str, "SP", STRINGSIZE);
-        }
         OpSize = 1;
         MayLW  = True;
         DecodeAdr(&ArgStr[1]);
         switch (AdrMode) {
         case ModReg16:
-            CodeLen             = 1 + PrefixCnt;
-            BAsmCode[PrefixCnt] = 0xc1 + (AdrPart << 4) + Code;
+            if (AdrPart == 3) {
+                WrError(ErrNum_InvAddrMode);
+            } else {
+                CodeLen             = 1 + PrefixCnt;
+                BAsmCode[PrefixCnt] = 0xc1 + (AdrPart << 4) + Code;
+            }
             break;
         case ModImm:
             if (ChkMinCPU(CPUZ380)) {
@@ -2009,27 +2275,24 @@ static void DecodeEX(Word Index) {
 
     if (!ChkArgCnt(2, 2))
         ;
-    else if (ParPair("DE", "HL")) {
+    else if (ParRegPair(eZ80RegDE, eZ80RegHL)) {
         BAsmCode[0] = 0xeb;
         CodeLen     = 1;
-    } else if (ParPair("AF", "AF\'")) {
+    } else if (ParAFPair()) {
         BAsmCode[0] = 0x08;
         CodeLen     = 1;
-    } else if (ParPair("AF", "AF`")) {
-        BAsmCode[0] = 0x08;
-        CodeLen     = 1;
-    } else if (ParPair("(SP)", "HL")) {
+    } else if (ParIndRegPair(eZ80RegSP, eZ80RegHL)) {
         BAsmCode[0] = 0xe3;
         CodeLen     = 1;
-    } else if (ParPair("(SP)", "IX")) {
+    } else if (ParIndRegPair(eZ80RegSP, eZ80RegIX)) {
         BAsmCode[0] = IXPrefix;
         BAsmCode[1] = 0xe3;
         CodeLen     = 2;
-    } else if (ParPair("(SP)", "IY")) {
+    } else if (ParIndRegPair(eZ80RegSP, eZ80RegIY)) {
         BAsmCode[0] = IYPrefix;
         BAsmCode[1] = 0xe3;
         CodeLen     = 2;
-    } else if (ParPair("(HL)", "A")) {
+    } else if (ParIndRegPair(eZ80RegHL, eZ80RegA)) {
         if (ChkMinCPU(CPUZ380)) {
             BAsmCode[0] = 0xed;
             BAsmCode[1] = 0x37;
@@ -2195,7 +2458,7 @@ static void DecodeIN_OUT(Word IsOUT) {
     if ((ArgCnt == 1) && !IsOUT) {
         if (!ChkExactCPU(CPUZ80U))
             ;
-        else if (as_strcasecmp(ArgStr[1].str.p_str, "(C)")) {
+        else if (!DecodeIndirectReg(&ArgStr[1], eZ80RegC)) {
             WrError(ErrNum_InvAddrMode);
         } else {
             BAsmCode[0] = 0xed;
@@ -2208,7 +2471,7 @@ static void DecodeIN_OUT(Word IsOUT) {
         tStrComp const *pPortArg = IsOUT ? &ArgStr[1] : &ArgStr[2],
                        *pRegArg  = IsOUT ? &ArgStr[2] : &ArgStr[1];
 
-        if (!as_strcasecmp(pPortArg->str.p_str, "(C)")) {
+        if (DecodeIndirectReg(pPortArg, eZ80RegC)) {
             OpSize = 0;
             DecodeAdrWithF(pRegArg, !IsOUT);
             switch (AdrMode) {
@@ -2243,7 +2506,7 @@ static void DecodeIN_OUT(Word IsOUT) {
                     WrError(ErrNum_InvAddrMode);
                 }
             }
-        } else if (as_strcasecmp(pRegArg->str.p_str, "A")) {
+        } else if (!IsReg(pRegArg, eZ80RegA)) {
             WrError(ErrNum_InvAddrMode);
         } else {
             tEvalResult EvalResult;
@@ -2263,7 +2526,7 @@ static void DecodeINW_OUTW(Word IsOUTW) {
         tStrComp const *pPortArg = IsOUTW ? &ArgStr[1] : &ArgStr[2],
                        *pRegArg  = IsOUTW ? &ArgStr[2] : &ArgStr[1];
 
-        if (as_strcasecmp(pPortArg->str.p_str, "(C)")) {
+        if (!DecodeIndirectReg(pPortArg, eZ80RegC)) {
             WrError(ErrNum_InvAddrMode);
         } else {
             OpSize = 1;
@@ -2369,8 +2632,8 @@ static void DecodeINA_INAW_OUTA_OUTAW(Word Code) {
                        *pPortArg = IsIn ? &ArgStr[2] : &ArgStr[1];
 
         OpSize = Code & 1;
-        if (((OpSize == 0) && (as_strcasecmp(pRegArg->str.p_str, "A")))
-            || ((OpSize == 1) && (as_strcasecmp(pRegArg->str.p_str, "HL")))) {
+        if (((OpSize == 0) && !IsReg(pRegArg, eZ80RegA))
+            || ((OpSize == 1) && !IsReg(pRegArg, eZ80RegHL))) {
             WrError(ErrNum_InvAddrMode);
         } else {
             tEvalResult EvalResult;
@@ -2440,16 +2703,16 @@ static void DecodeJP(Word Code) {
     UNUSED(Code);
 
     if (ArgCnt == 1) {
-        if (!as_strcasecmp(ArgStr[1].str.p_str, "(HL)")) {
+        if (DecodeIndirectReg(&ArgStr[1], eZ80RegHL)) {
             CodeLen     = 1;
             BAsmCode[0] = 0xe9;
             return;
-        } else if (!as_strcasecmp(ArgStr[1].str.p_str, "(IX)")) {
+        } else if (DecodeIndirectReg(&ArgStr[1], eZ80RegIX)) {
             CodeLen     = 2;
             BAsmCode[0] = IXPrefix;
             BAsmCode[1] = 0xe9;
             return;
-        } else if (!as_strcasecmp(ArgStr[1].str.p_str, "(IY)")) {
+        } else if (DecodeIndirectReg(&ArgStr[1], eZ80RegIY)) {
             CodeLen     = 2;
             BAsmCode[0] = IYPrefix;
             BAsmCode[1] = 0xe9;
@@ -2814,7 +3077,7 @@ static void DecodeLDCTL(Word Code) {
         ;
     else if (!ChkMinCPU(CPUZ380))
         ;
-    else if (DecodeSFR(ArgStr[1].str.p_str, &AdrByte)) {
+    else if (DecodeSFR(&ArgStr[1], &AdrByte)) {
         DecodeAdr(&ArgStr[2]);
         switch (AdrMode) {
         case ModReg8:
@@ -2846,7 +3109,7 @@ static void DecodeLDCTL(Word Code) {
                 WrError(ErrNum_InvAddrMode);
             }
         }
-    } else if (DecodeSFR(ArgStr[2].str.p_str, &AdrByte)) {
+    } else if (DecodeSFR(&ArgStr[2], &AdrByte)) {
         DecodeAdr(&ArgStr[1]);
         switch (AdrMode) {
         case ModReg8:
@@ -3045,6 +3308,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "SETC", 0, DecodeRESC_SETC);
     AddInstTable(InstTable, "DDIR", 0, DecodeDDIR);
     AddInstTable(InstTable, "PORT", 0, DecodePORT);
+    AddInstTable(InstTable, "REG", 0, DecodeREG_Z80);
     AddInstTable(InstTable, "DEFB", 0, ModIntel);
     AddInstTable(InstTable, "DEFW", 0, ModIntel);
 
@@ -3265,10 +3529,31 @@ static void MakeCode_Z80(void) {
 static void InitCode_Z80(void) {
     SetFlag(&ExtFlag, ExtFlagName, False);
     SetFlag(&LWordFlag, LWordFlagName, False);
+    InREGDefinition = False;
 }
 
 static Boolean IsDef_Z80(void) {
-    return Memo("PORT");
+    return Memo("PORT") || Memo("REG");
+}
+
+static void InternSymbol_Z80(char* pArg, TempResult* pResult) {
+    tZ80Reg Reg;
+
+    /* F remains usable as an ordinary symbol outside REG.  It only denotes the
+       undocumented input destination in instruction contexts that allow it. */
+    if (DecodeRegCore(pArg, &Reg)
+        && (InREGDefinition || ((Reg != eZ80RegF) && Z80RegAvailable(Reg)))) {
+        pResult->Typ                       = TempReg;
+        pResult->DataSize                  = Z80RegSize(Reg);
+        pResult->Contents.RegDescr.Reg     = Reg;
+        pResult->Contents.RegDescr.Dissect = DissectReg_Z80;
+    }
+}
+
+static void DecodeREG_Z80(Word Index) {
+    InREGDefinition = True;
+    CodeREG(Index);
+    InREGDefinition = False;
 }
 
 /* treat special case of AF' which is no quoting: */
@@ -3309,6 +3594,8 @@ static void SwitchTo_Z80(void) {
 
     MakeCode     = MakeCode_Z80;
     IsDef        = IsDef_Z80;
+    DissectReg   = DissectReg_Z80;
+    InternSymbol = InternSymbol_Z80;
     QualifyQuote = QualifyQuote_Z80;
     SwitchFrom   = DeinitFields;
     InitFields();
