@@ -24,26 +24,22 @@
    SOFTWARE.
 */
 
-#ifndef _ULIB_HASH_OPEN_PROT_H
-#define _ULIB_HASH_OPEN_PROT_H
-
-#include "util_algo.h"
+#ifndef ULIB_HASH_OPEN_PROT_H
+#define ULIB_HASH_OPEN_PROT_H
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdlib.h>    // IWYU pragma: export
+#include <string.h>    // IWYU pragma: export
 
+#define _swap(type, a, b)   \
+    do {                    \
+        type __tmp = (a);   \
+        (a)        = (b);   \
+        (b)        = __tmp; \
+    } while (0)
 
-#ifndef __WORDSIZE
-#    if INTPTR_MAX == INT64_MAX
-#        define __WORDSIZE 64
-#    elif INTPTR_MAX == INT32_MAX
-#        define __WORDSIZE 32
-#    endif
-#endif
-
-#if __WORDSIZE == 64
+#if INTPTR_MAX == INT64_MAX
 
 typedef uint64_t oh_iter_t;
 typedef uint64_t oh_size_t;
@@ -62,7 +58,7 @@ typedef uint64_t oh_size_t;
 
 #    define OH_FLAGS_BYTE(nb) ((nb) < 32 ? 8 : (nb) >> 2)
 
-#else
+#elif INTPTR_MAX == INT32_MAX
 
 typedef uint32_t oh_iter_t;
 typedef uint32_t oh_size_t;
@@ -77,6 +73,8 @@ typedef uint32_t oh_size_t;
 
 #    define OH_FLAGS_BYTE(nb) ((nb) < 16 ? 4 : (nb) >> 2)
 
+#else
+#    error "Unsupported pointer size: only 32-bit and 64-bit are supported"
 #endif
 
 /* error codes for openhash_set() */
@@ -186,9 +184,9 @@ enum {
                         i = (i + ++step) & mask;                                  \
                     OH_CLEAR_EMPTY(flags, i);                                     \
                     if (i < h->nbucket && OH_ISEITHER(h->flags, i) == 0) {        \
-                        _swap(h->keys[i], key);                                   \
+                        _swap(key_t, h->keys[i], key);                            \
                         if (ismap)                                                \
-                            _swap(h->vals[i], val);                               \
+                            _swap(val_t, h->vals[i], val);                        \
                         OH_SET_DEL(h->flags, i);                                  \
                     } else {                                                      \
                         h->keys[i] = key;                                         \
@@ -332,4 +330,4 @@ enum {
 /* return the current capacity of the hash table */
 #define openhash_nbucket(h) ((h)->nbucket)
 
-#endif /* _ULIB_HASH_OPEN_PROT_H */
+#endif /* ULIB_HASH_OPEN_PROT_H */
