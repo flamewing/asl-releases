@@ -1,4 +1,4 @@
-	cpu	sh7600
+	cpu	sh7615
 	page 	0
 	supmode	on
 
@@ -208,7 +208,7 @@ wdata:	dc.w	$1234
 
 	ltorg
 
-        cpu	sh7700
+        cpu	sh7720
 
         clrs
         sets

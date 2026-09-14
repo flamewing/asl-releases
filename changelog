@@ -1,3 +1,12 @@
+2026-09-14 [1.42 Bld 312]
+
+- Change      : Avoid printing an odd number of bytes or
+                words per line in the listing
+- Addition    : Rework SH target:
+                - Add SH4(A) and SH2A instructions
+                - Add FPU instructions
+                - Add DSP instructions
+
 2026-07-06 [1.42 Bld 311]
 
 - Bugfix      : TMS320C3x: Resolve yet another parallelism

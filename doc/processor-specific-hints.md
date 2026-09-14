@@ -100,7 +100,7 @@ or by the respective command line switch.
 
 Aside from this, the same remarks regarding hexadecimal number syntax apply as for H8/500.
 
-## SH7000/7600/7700
+## SH
 
 Unfortunately, Hitachi once again used their own format for hexadecimal numbers, and once again I was not able to reproduce this with AS...please use Motorola syntax!
 
@@ -2028,3 +2028,19 @@ CR16C supports 16 MiB and is source-compatible with CR16A/B, with different bina
 The preliminary `TBIL` target emits Tiny BASIC IL bytecode. It uses Motorola integer syntax, `.` as its program counter, and a code address range of `$0000`–`$1fff`. A label starts with a colon.
 
 CP-1600 accepts PC and SP as aliases for R7 and R6, and register symbols defined with `REG`. `BLGE` is the carry-branch alias. SDBD’s high-byte instruction word is limited to bits 0–7. Unknown instruction fields are marked with question marks in the listing.
+
+### SuperH variants
+
+| Target | Core and optional units |
+| --- | --- |
+| SH7000 | SH1 |
+| SH7600 | SH2 |
+| SH7615 | SH2 with DSP |
+| SH7700 | SH3 |
+| SH7720 | SH3 with DSP |
+| SH7750 | SH4 |
+| SH7780 | SH4A |
+| SH7201 | SH2A |
+| SH7205 | SH2A with 64-bit FPU |
+
+`FPU` and `DSP` control the corresponding optional instruction sets; `SUPMODE` controls privileged instructions. SH2A adds 12-bit displacement register-indirect addressing and bit operations. Existing `REG`, `DC`, `DS`, `PADDING`, `COMPLITERALS` and `LTORG` directives remain available.

@@ -104,6 +104,10 @@ Message ErrMsgUnpredictable
  "nicht vorhersagbare Ausf&uuml;hrung dieser Anweisung"
  "unpredictable execution of this instruction"
 
+Message ErrMsgConflictingParallelDest
+ "widerstreitende Benutzung des gleichen Ziels in parallelem Konstrukt"
+ "conflicting usage of same destination in parallel construct"
+
 Message ErrMsgAlphaNoSense
  "Lokaloperator au&szlig;erhalb einer Sektion &uuml;berfl&uuml;ssig"
  "localization operator senseless out of a section"
@@ -469,6 +473,14 @@ Message ErrMsgAddrMustBeAligned
 Message ErrMsgInvParAddrMode
  "Adressierungsmodus im Parallelbetrieb nicht erlaubt"
  "addressing mode not allowed in parallel operation"
+
+Message ErrMsgInvParConstruct
+ "ung&uuml;ltiges paralleles Konstrukt"
+ "invalid parallel construct"
+
+Message ErrMsgNoCondExec
+ "Befehl kann nicht bedingt ausgef&uuml;hrt werden"
+ "no conditional execution of this instruction"
 
 Message ErrMsgUndefCond
  "undefinierte Bedingung"

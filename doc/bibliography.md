@@ -361,3 +361,5 @@
 - National Semiconductor: *CompactRISC CR16B Programmer’s Reference Manual*, 633150-001, September 1997; *CompactRISC CR16C Programmer’s Reference Manual*, 424521772-101, March 2002.
 
 - General Instrument Microelectronics: *CP1610 Data Sheet*, <https://wiki.console5.com/tw/images/c/ce/CP1610.pdf>.
+
+- Renesas Electronics: *SH7205 Group User’s Manual: Hardware*, Rev. 3.00, March 2014; *SH7615 Group Hardware Manual*, Rev. 2.00, March 2005; *SH7750/SH7750S/SH7750R Group User’s Manual: Hardware*, Rev. 7.02, September 2013; *SH7780 Hardware Manual*, Rev. 1.00, December 2005.

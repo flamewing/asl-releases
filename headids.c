@@ -67,7 +67,7 @@ static TFamilyDescr const Descrs[] = {
         {    "H8/300(H)", 0x0068,   eHexFormatMotoS, get_granularity_default},
         {       "H8/500", 0x0069,   eHexFormatMotoS, get_granularity_default},
         {          "H16", 0x0040,   eHexFormatMotoS, get_granularity_default},
-        {       "SH7x00", 0x006c,   eHexFormatMotoS, get_granularity_default},
+        {       "SH7xx0", 0x006c,   eHexFormatMotoS, get_granularity_default},
         {      "HMCS400", 0x0050,   eHexFormatMotoS, get_granularity_code_16},
         {        "PPS-4", 0x0010,   eHexFormatIntel, get_granularity_default},
         {         "65xx", 0x0011,     eHexFormatMOS, get_granularity_default},

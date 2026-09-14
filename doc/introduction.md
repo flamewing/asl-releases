@@ -55,7 +55,7 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Freescale 68RS08
 - Hitachi H8/300(H)
 - Hitachi H8/500
-- Hitachi SH7000/7600/7700
+- Hitachi/Renesas SuperH (SH1 through SH4A, SH2A, FPU and DSP variants)
 - Hitachi HMCS400
 - Hitachi H16
 - Rockwell 6502, 65(S)C02, Commodore 65CE02, WDC W65C02S, Rockwell 65C19, and Hudson HuC6280
