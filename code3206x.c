@@ -692,11 +692,11 @@ static Boolean DecodePseudo(void) {
                 }
                 case TempInt:
                 ToInt:
-                    if (!RangeCheck(t.Contents.Int, Int32)) {
+                    if (!RangeCheck(t.Contents.Int.Value, Int32)) {
                         OK = False;
                         WrStrErrorPos(ErrNum_OverRange, pArg);
                     } else {
-                        DAsmCode[cnt++] = t.Contents.Int;
+                        DAsmCode[cnt++] = t.Contents.Int.Value;
                     }
                     break;
                 case TempFloat: {

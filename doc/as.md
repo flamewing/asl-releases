@@ -5,7 +5,7 @@
 
 Welcome to the Flamewing's Enhanced AS documentation!
 
-Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 312]`.
+Most of this is based on the original documentation from AS, v1.42 Beta `[Bld 313]`.
 
 # Macro Assembler AS V1.42
 
@@ -13,7 +13,7 @@ Alfred Arnold, Stefan Hilse, Stephan Kanthak, Oliver Sellke, Vittorio De Tomasi,
 
 # User's Manual
 
-Edition November 2024 Note: This is a modified version by flamewing.
+Edition September 2026 Note: This is a modified version by flamewing.
 
 _IBM, PPC403Gx, OS/2, and PowerPC_ are registered trademarks of IBM Corporation.
 _Intel, MCS-48, MCS-51, MCS-251, MCS-96, MCS-196 and MCS-296_ are registered trademarks of Intel Corp.

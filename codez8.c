@@ -953,7 +953,7 @@ static void DissectBit_Z8(char* pDest, size_t DestSize, LargeWord Inp) {
                 (unsigned)(Address & 15));
     } else {
         SysString(
-                pDest, DestSize, Address, ListRadixBase, mIsZ8Encore() ? 3 : 2,
+                pDest, DestSize, Address, ListRadixBase, False, mIsZ8Encore() ? 3 : 2,
                 (16 == ListRadixBase) && (IntConstMode == eIntConstModeIntel),
                 HexStartCharacter, SplitByteCharacter);
     }

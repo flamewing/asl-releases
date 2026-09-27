@@ -47,20 +47,24 @@ char const* Blanks(int cnt) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SysString(char *pDest, size_t DestSize, LargeWord i, int System, int Stellen, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter)
+ * \fn     SysString(char *pDest, size_t DestSize,
+                     LargeWord Num, int System, Boolean is_signed,
+                     int Digits, Boolean ForceLeadZero, char StartCharacter, char
+ SplitCharacter)
  * \brief  convert number to string in given number system, leading zeros
  * \param  pDest where to write
  * \param  DestSize size of dest buffer
- * \param  i number to convert
- * \param  Stellen minimum length of output
- * \param  ForceLeadZero prepend zero if first character is no number
+ * \param  Num number to convert
  * \param  System number system
+ * \param  is_signed treat as signed?
+ * \param  Digits minimum length of output
+ * \param  ForceLeadZero prepend zero if first character is no number
  * \param  StartCharacter 'a' or 'A' for hex digits
  * \param  SplitCharacter split bytes if not NUL
  * ------------------------------------------------------------------------ */
 
 char* SysStringCore(
-        char* pDest, char* pDestCurr, LargeWord Num, int System, int Stellen,
+        char* pDest, char* pDestCurr, LargeWord Num, int System, int Digits,
         char StartCharacter) {
     LargeWord Digit;
 
@@ -75,23 +79,32 @@ char* SysStringCore(
             *(--pDestCurr) = Digit - 10 + StartCharacter;
         }
         Num /= System;
-        Stellen--;
-    } while ((Stellen > 0) || Num);
+        Digits--;
+    } while ((Digits > 0) || Num);
     return pDestCurr;
 }
 
 int SysString(
-        char* pDest, size_t DestSize, LargeWord Num, int System, int Stellen,
-        Boolean ForceLeadZero, char StartCharacter, char SplitCharacter) {
-    int   Len = 0;
-    char *pDestCurr, *pDestNext;
+        char* pDest, size_t DestSize, LargeWord Num, int System, Boolean is_signed,
+        int Digits, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter) {
+    int     Len = 0;
+    char *  pDestCurr, *pDestNext;
+    Boolean is_negative = False;
 
     if (DestSize < 1) {
         return 0;
     }
 
-    if (Stellen > (int)DestSize - 1) {
-        Stellen = DestSize - 1;
+    if (is_signed) {
+        LargeInt signed_num = Num;
+        if (signed_num < 0) {
+            is_negative = True;
+            Num         = -signed_num;
+        }
+    }
+
+    if (Digits > (int)DestSize - 1 - is_negative) {
+        Digits = DestSize - 1 - is_negative;
     }
 
     pDestCurr  = pDest + DestSize - 1;
@@ -105,19 +118,20 @@ int SysString(
             char Dummy[50];
 
             SystemByteLen[System] = SysString(
-                    Dummy, sizeof(Dummy), 0xff, System, 0, False, StartCharacter, False);
+                    Dummy, sizeof(Dummy), 0xff, System, False, 0, False, StartCharacter,
+                    False);
         }
 
         do {
             Part      = Num % 256;
             Num       = Num / 256;
             pDestNext = SysStringCore(
-                    pDest, pDestCurr, Part, System, Num ? SystemByteLen[System] : Stellen,
+                    pDest, pDestCurr, Part, System, Num ? SystemByteLen[System] : Digits,
                     StartCharacter);
             ThisLen = pDestCurr - pDestNext;
             Len += ThisLen;
             pDestCurr = pDestNext;
-            Stellen -= ThisLen;
+            Digits -= ThisLen;
             if (Num) {
                 if (pDestCurr <= pDest) {
                     break;
@@ -125,15 +139,19 @@ int SysString(
                 *(--pDestCurr) = SplitCharacter;
                 Len++;
             }
-        } while ((Stellen > 0) || Num);
+        } while ((Digits > 0) || Num);
     } else {
-        pDestNext = SysStringCore(pDest, pDestCurr, Num, System, Stellen, StartCharacter);
+        pDestNext = SysStringCore(pDest, pDestCurr, Num, System, Digits, StartCharacter);
         Len += pDestCurr - pDestNext;
         pDestCurr = pDestNext;
     }
 
     if (ForceLeadZero && !isdigit(*pDestCurr) && (pDestCurr > pDest)) {
         *(--pDestCurr) = '0';
+        Len++;
+    }
+    if (is_negative) {
+        *(--pDestCurr) = '-';
         Len++;
     }
 
@@ -527,7 +545,7 @@ static int vsprcatf_core(
                 Cnt = (pStr - Str)
                       + SysString(
                               pStr, sizeof(Str) - (pStr - Str), UIntArg,
-                              FormatContext.arg[1] ? FormatContext.arg[1] : 10,
+                              FormatContext.arg[1] ? FormatContext.arg[1] : 10, False,
                               NumPadZeros, FormatContext.force_lead_zero,
                               FormatContext.force_upper ? 'A' : HexStartCharacter,
                               SplitByteCharacter);

@@ -99,4 +99,6 @@ DefCPPOps_Enum(IntType)
 #    endif
 #endif
 
+        extern unsigned as_log2(unsigned arg);
+
 #endif /* INT_TYPE_H */

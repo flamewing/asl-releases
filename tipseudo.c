@@ -166,7 +166,7 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
         }
         case TempInt:
         ToInt:
-            callback(&ok, &adr, t.Contents.Int, t.Flags);
+            callback(&ok, &adr, t.Contents.Int.Value, t.Flags);
             break;
         default:
             ok = False;
@@ -709,11 +709,11 @@ static void DecodeDATA_TI34x(Word Code) {
             switch (t.Typ) {
             case TempInt:
             ToInt:
-                if (!RangeCheck(t.Contents.Int, Int32)) {
+                if (!RangeCheck(t.Contents.Int.Value, Int32)) {
                     OK = False;
                     WrError(ErrNum_OverRange);
                 } else {
-                    DAsmCode[CodeLen++] = t.Contents.Int;
+                    DAsmCode[CodeLen++] = t.Contents.Int.Value;
                 }
                 break;
             case TempFloat: {

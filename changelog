@@ -1,3 +1,12 @@
+2026-09-27 [1.42 Bld 313]
+
+- Bugfix      : SC/MP: correct check for instructions crossing
+                page boundaries
+- Change      : More consistent display of negative integer
+                symbols in symbol table
+- Addition    : New option to internally store length of
+                integer constants in symbol table
+
 2026-09-14 [1.42 Bld 312]
 
 - Change      : Avoid printing an odd number of bytes or

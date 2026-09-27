@@ -4318,6 +4318,13 @@ static as_cmd_result_t CMD_HardRanges(Boolean Negate, char const* Arg) {
     return e_cmd_ok;
 }
 
+static as_cmd_result_t cmd_fred(Boolean negate, char const* p_arg) {
+    UNUSED(p_arg);
+
+    force_restricted_extension_digits = !negate;
+    return e_cmd_ok;
+}
+
 static as_cmd_result_t CMD_OutFile(Boolean Negate, char const* Arg) {
     if (Arg[0] == '\0') {
         if (Negate) {
@@ -4530,6 +4537,7 @@ static as_cmd_rec_t const ASParams[] = {
         {                 "D",        CMD_DefSymbol},
         {                 "E",        CMD_ErrorPath},
         {                 "g",        CMD_DebugMode},
+        {              "fred",             cmd_fred},
         {                 "G",       CMD_CodeOutput},
         {         "gnuerrors",        CMD_GNUErrors},
         {                 "h",     CMD_HexLowerCase},
@@ -4786,20 +4794,21 @@ int main(int argc, char** argv) {
     MacProOutput = False;
     CodeOutput   = True;
     strcpy(ErrorPath, "!2");
-    MsgIfRepass         = False;
-    NumericErrors       = False;
-    DebugMode           = DebugNone;
-    CaseSensitive       = False;
-    ThrowErrors         = False;
-    HardRanges          = True;
-    NoICEMask           = 1 << SegCode;
-    GNUErrors           = False;
-    MaxErrors           = 0;
-    ListRadixBase       = 16;
-    ListPCZeroPad       = False;
-    MaxIncludeLevel     = DEFAULT_MAXINCLUDELEVEL;
-    write_cpu_list_exit = False;
-    MaxSymPass          = DEFAULT_MAXSYMPASS;
+    MsgIfRepass                       = False;
+    NumericErrors                     = False;
+    DebugMode                         = DebugNone;
+    CaseSensitive                     = False;
+    ThrowErrors                       = False;
+    HardRanges                        = True;
+    force_restricted_extension_digits = False;
+    NoICEMask                         = 1 << SegCode;
+    GNUErrors                         = False;
+    MaxErrors                         = 0;
+    ListRadixBase                     = 16;
+    ListPCZeroPad                     = False;
+    MaxIncludeLevel                   = DEFAULT_MAXINCLUDELEVEL;
+    write_cpu_list_exit               = False;
+    MaxSymPass                        = DEFAULT_MAXSYMPASS;
 
     LineZ         = 0;
     screen_height = 0;

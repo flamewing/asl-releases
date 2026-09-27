@@ -547,7 +547,7 @@ static Boolean force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pR
         return False;
     }
 
-    switch (pRVal->Contents.Int) {
+    switch (pRVal->Contents.Int.Value) {
     case 8:
         add_flags = eSymbolFlag_UserShort;
         goto copy;

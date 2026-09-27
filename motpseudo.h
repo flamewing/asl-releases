@@ -10,8 +10,10 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "as_float.h"
 #include "datatypes.h"
 #include "symbolsize.h"
+#include "symflags.h"
 
 /*****************************************************************************
  * Global Functions
@@ -59,6 +61,7 @@ extern Boolean DecodeMoto16AttrSize(char SizeSpec, tSymbolSize* pResult, Boolean
 extern Boolean DecodeMoto16AttrSizeStr(
         const struct sStrComp* pSizeSpec, tSymbolSize* pResult, Boolean Allow24);
 
-extern void mot_64_to_16(Word* p_dest, LargeWord src, Boolean big_endian);
+extern void mot_64_to_16(
+        Word* p_dest, LargeWord src, tSymbolFlags flags, Boolean big_endian);
 
 #endif /* MOTPSEUDO_H */

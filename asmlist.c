@@ -224,7 +224,7 @@ void MakeList(char const* pSrcLine) {
                         int  pc_len;
 
                         pc_len = SysString(
-                                pc_buf, sizeof(pc_buf), ListPC, ListRadixBase,
+                                pc_buf, sizeof(pc_buf), ListPC, ListRadixBase, False,
                                 (format_context.lead_zero || ListPCZeroPad)
                                         ? pc_max_digits
                                         : 0,
@@ -263,11 +263,11 @@ void MakeList(char const* pSrcLine) {
                    If shorter than space, pad with spaces: */
 
                 if (num_pad < 0) {
-                    ListLine[rem_space - 2] = '\0';
+                    ListLine[rem_space - 3] = '\0';
                 }
                 sum_len += as_sdprcatf(
                         &list_buf, " %s%s", ListLine,
-                        (num_pad >= 0) ? Blanks(num_pad) : "..");
+                        (num_pad >= 0) ? Blanks(num_pad) : "...");
             }
 
             /* Actual code: */
@@ -486,8 +486,8 @@ void asmlist_setup(void) {
     l = 0;
     for (z = 0; z <= system_list_len_max; z++) {
         SysString(
-                Dummy, sizeof(Dummy), l, ListRadixBase, 0, False, HexStartCharacter,
-                SplitByteCharacter);
+                Dummy, sizeof(Dummy), l, ListRadixBase, False, 0, False,
+                HexStartCharacter, SplitByteCharacter);
         p_system_list_len[z] = strlen(Dummy);
         l                    = (l << 1) | 1;
     }

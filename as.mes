@@ -1658,6 +1658,7 @@ Message InfoMessHelp
  "                         !0..!4 f&uuml;r Standardhandles\n" \
  "                         Default <Quelldatei>.LOG\n" \
  "  -extracomments       : EXTRACOMMENTS im Default einschalten\n" \
+ "  -fred                : erzwinge beschr&auml;nkte Stellen-Erweiterung\n" \
  "  +G                   : Code-Erzeugung unterdr&uuml;cken\n" \
  "  -g [map|atmel|noice] : Debug-Informationen schreiben\n" \
  "  -gnuerrors           : Fehlermeldungen im GNU-Format\n" \
@@ -1721,6 +1722,7 @@ Message InfoMessHelp
  "                         !0..!4 for standard handles\n" \
  "                         default is <srcname>.LOG\n" \
  "  -extracomments       : enable EXTRACOMMENTS mode by default\n" \
+ "  -fred                : force restricted extension of digits\n" \
  "  +G                   : suppress code generation\n" \
  "  -g [map|atmel|noice] : write debug info\n" \
  "  -gnuerrors           : error messages in GNU format\n" \

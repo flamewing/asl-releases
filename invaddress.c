@@ -28,7 +28,7 @@ static int         MaxSymbolNameLen;
 static void MakeInvSymbolName(char* pDest, unsigned DestSize, LargeWord Num) {
     *pDest = 'I';
     SysString(
-            pDest + 1, DestSize - 1, Num, 16, 8, False, HexStartCharacter,
+            pDest + 1, DestSize - 1, Num, 16, False, 8, False, HexStartCharacter,
             SplitByteCharacter);
 }
 

@@ -498,7 +498,9 @@ static void CodeSETEQU(Word MayChange) {
                 PushLocHandle(-1);
                 switch (t.Typ) {
                 case TempInt:
-                    EnterIntSymbol(pName, t.Contents.Int, DestSeg, MayChange);
+                    EnterIntSymbolWithFlagsAndWidth(
+                            pName, t.Contents.Int.Value, t.Contents.Int.NumBits, DestSeg,
+                            MayChange, t.Flags & eSymbolFlag_Negative);
                     if (AttrPartOpSize[0] != eSymbolSizeUnknown) {
                         SetSymbolOrStructElemSize(pName, AttrPartOpSize[0]);
                     }
@@ -650,13 +652,13 @@ static void CodeSHARED(Word Index) {
             case TempInt:
                 switch (ShareMode) {
                 case 1:
-                    IntLine(s, sizeof(s), t.Contents.Int, eIntConstModeMoto);
+                    IntLine(s, sizeof(s), t.Contents.Int.Value, eIntConstModeMoto);
                     break;
                 case 2:
-                    IntLine(s, sizeof(s), t.Contents.Int, eIntConstModeC);
+                    IntLine(s, sizeof(s), t.Contents.Int.Value, eIntConstModeC);
                     break;
                 case 3:
-                    IntLine(s, sizeof(s), t.Contents.Int, IntConstMode);
+                    IntLine(s, sizeof(s), t.Contents.Int.Value, IntConstMode);
                     break;
                 }
                 break;
@@ -718,12 +720,12 @@ static void CodeEXPORT(Word Index) {
             continue;
         }
         if (t.Relocs == NULL) {
-            AddExport(pArg->str.p_str, t.Contents.Int, 0);
+            AddExport(pArg->str.p_str, t.Contents.Int.Value, 0);
         } else if (
                 (t.Relocs->Next != NULL) || (strcmp(t.Relocs->Ref, RelName_SegStart))) {
             WrStrErrorPos(ErrNum_Unexportable, pArg);
         } else {
-            AddExport(pArg->str.p_str, t.Contents.Int, RelFlag_Relative);
+            AddExport(pArg->str.p_str, t.Contents.Int.Value, RelFlag_Relative);
         }
         if (t.Relocs) {
             FreeRelocs(&t.Relocs);
@@ -925,11 +927,11 @@ static void CodeCHARSET(Word Index) {
         switch (t.Typ) {
         case TempInt:
             if (mFirstPassUnknown(t.Flags)) {
-                t.Contents.Int &= 255;
+                t.Contents.Int.Value &= 255;
             }
-            if (ChkRange(t.Contents.Int, 0, 255)) {
+            if (ChkRange(t.Contents.Int.Value, 0, 255)) {
                 if (ChkArgCnt(2, 3)) {
-                    LongWord Start = t.Contents.Int;
+                    LongWord Start = t.Contents.Int.Value;
                     if ((ArgCnt == 2) && (!ArgStr[2].str.p_str[0])) {
                         as_chartrans_table_unset(CurrTransTable->p_table, Start);
                         TransTableMarkModified();
@@ -943,22 +945,22 @@ static void CodeCHARSET(Word Index) {
                         case TempInt: /* Uebersetzungsbereich als Character-Angabe
                                        */
                             if (mFirstPassUnknown(t.Flags)) {
-                                t.Contents.Int &= 255;
+                                t.Contents.Int.Value &= 255;
                             }
-                            if (ChkRange(t.Contents.Int, 0, 255)) {
+                            if (ChkRange(t.Contents.Int.Value, 0, 255)) {
                                 if (ArgCnt == 2) {
                                     as_chartrans_table_set(
                                             CurrTransTable->p_table, Start,
-                                            t.Contents.Int);
+                                            t.Contents.Int.Value);
                                     TransTableMarkModified();
                                 } else if (!ArgStr[3].str.p_str[0]) {
                                     as_chartrans_table_unset_mult(
                                             CurrTransTable->p_table, Start,
-                                            t.Contents.Int);
+                                            t.Contents.Int.Value);
                                     TransTableMarkModified();
-                                } else if (ChkRange(t.Contents.Int, Start, 255)) {
+                                } else if (ChkRange(t.Contents.Int.Value, Start, 255)) {
                                     Boolean  OK;
-                                    LongWord Stop   = t.Contents.Int,
+                                    LongWord Stop   = t.Contents.Int.Value,
                                              TStart = EvalStrIntExpression(
                                                      &ArgStr[3], UInt8, &OK);
                                     if (OK) {
@@ -1320,7 +1322,8 @@ static void CodeREAD(Word Index) {
                 } else {
                     switch (Erg.Typ) {
                     case TempInt:
-                        EnterIntSymbol(&ArgStr[ArgCnt], Erg.Contents.Int, SegNone, True);
+                        EnterIntSymbol(
+                                &ArgStr[ArgCnt], Erg.Contents.Int.Value, SegNone, True);
                         break;
                     case TempFloat:
                         EnterFloatSymbol(&ArgStr[ArgCnt], Erg.Contents.Float, True);

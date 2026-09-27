@@ -500,7 +500,7 @@ static void append_adr_vals_64(
     Word     guess_mask = mFirstPassUnknownOrQuestionable(flags) ? 0xffff : 0x0000;
 
     /* re-use core function to dispose 64 bit constant: */
-    mot_64_to_16(&p_result->Vals[p_result->Cnt >> 1], value, True);
+    mot_64_to_16(&p_result->Vals[p_result->Cnt >> 1], value, flags, True);
     for (z = 0; z < 4; z++) {
         p_result->guess_masks[z] = guess_mask;
     }

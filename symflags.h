@@ -16,18 +16,17 @@ typedef enum eSymbolFlags {
     eSymbolFlag_NextLabelAfterBSR  = 1 << 0,
     eSymbolFlag_StringSingleQuoted = 1 << 1,
 
-    /* Hinweisflag: evtl. im ersten Pass unbe-
-       kanntes Symbol, Ausdruck nicht ausgewertet */
+    /* Hint flag: symbol possibly unknown in first pass,
+       expression was not evaluated: */
 
     eSymbolFlag_FirstPassUnknown = 1 << 2,
 
-    /* Hinweisflag:  Dadurch, dass Phasenfehler
-       aufgetreten sind, ist dieser Symbolwert evtl.
-       nicht mehr aktuell */
+    /* Hint flag:  symbol value may no longer be correct due
+       to phase errors: */
 
     eSymbolFlag_Questionable = 1 << 3,
 
-    /* Hinweisflag: benutzt Vorwaertsdefinitionen */
+    /* Hint flag: uses forward references */
 
     eSymbolFlag_UsesForwards = 1 << 4,
 
@@ -36,6 +35,11 @@ typedef enum eSymbolFlags {
     eSymbolFlag_UserShort  = 1 << 6,
     eSymbolFlag_UserMedium = 1 << 7,
     eSymbolFlag_UserLong   = 1 << 8,
+
+    /* Integer value is to be treated as negative value.  Should only
+       be set if MSB is 1: */
+
+    eSymbolFlag_Negative = 1 << 9,
 
     eSymbolFlags_Promotable = eSymbolFlag_FirstPassUnknown | eSymbolFlag_Questionable
                               | eSymbolFlag_UsesForwards | eSymbolFlag_UserShort

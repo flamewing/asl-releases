@@ -1069,3 +1069,5 @@ The CMake option `AS_USE_INT128` enables 128-bit expressions when the compiler s
 `-listing ON|OFF|NOSKIPPED|PURECODE` sets the initial listing mode using the same values as the `LISTING` statement. NOSKIPPED omits excluded source; PURECODE also omits conditional control lines.
 
 `-extracomments` enables the optional Motorola asterisk and end-of-line comment syntax from the start of assembly.
+
+`-fred` retains the bit length of binary, octal, and hexadecimal integer constants, inferred from their written digits. In this mode, the one’s-complement operator applies to that reduced width. Without it, expressions retain the full internal integer width reported by `INTWIDTH`; `FLOATMAX` reports the largest host floating-point value.

@@ -928,26 +928,26 @@ static void DecodeDC(Word Code) {
         forallargs(pArg, OK) {
             EvalStrExpression(pArg, &t);
             if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt)) {
-                t.Contents.Int &= 0x7fff;
+                t.Contents.Int.Value &= 0x7fff;
             }
             switch (t.Typ) {
             case TempInt:
                 if (Packing) {
                     if (mFirstPassUnknown(t.Flags)) {
-                        t.Contents.Int &= 127;
+                        t.Contents.Int.Value &= 127;
                     }
-                    if (ChkRange(t.Contents.Int, -128, 255)) {
-                        AppendByte(t.Contents.Int, &HalfFilledWord);
+                    if (ChkRange(t.Contents.Int.Value, -128, 255)) {
+                        AppendByte(t.Contents.Int.Value, &HalfFilledWord);
                     } else {
                         OK = False;
                     }
                 } else {
                 ToInt:
                     if (mFirstPassUnknown(t.Flags)) {
-                        t.Contents.Int &= 32767;
+                        t.Contents.Int.Value &= 32767;
                     }
-                    if (ChkRange(t.Contents.Int, -32768, 65535)) {
-                        AppendWord(t.Contents.Int, &HalfFilledWord);
+                    if (ChkRange(t.Contents.Int.Value, -32768, 65535)) {
+                        AppendWord(t.Contents.Int.Value, &HalfFilledWord);
                     } else {
                         OK = False;
                     }

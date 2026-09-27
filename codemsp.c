@@ -1166,15 +1166,15 @@ static void DecodeBYTE(Word Index) {
             switch (t.Typ) {
             case TempInt:
                 if (mFirstPassUnknown(t.Flags)) {
-                    t.Contents.Int &= 0xff;
+                    t.Contents.Int.Value &= 0xff;
                 }
-                if (!RangeCheck(t.Contents.Int, Int8)) {
+                if (!RangeCheck(t.Contents.Int.Value, Int8)) {
                     WrStrErrorPos(ErrNum_OverRange, pArg);
                 } else if (SetMaxCodeLen(CodeLen + 1)) {
                     WrStrErrorPos(ErrNum_CodeOverflow, pArg);
                     OK = False;
                 } else {
-                    PutByte(t.Contents.Int);
+                    PutByte(t.Contents.Int.Value);
                 }
                 break;
             case TempString: {

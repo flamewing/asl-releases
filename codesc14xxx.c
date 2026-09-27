@@ -155,10 +155,10 @@ static void DecodeDC(Word Code) {
             switch (t.Typ) {
             case TempInt:
                 if (mFirstPassUnknown(t.Flags)) {
-                    t.Contents.Int &= 127;
+                    t.Contents.Int.Value &= 127;
                 }
-                if (ChkRange(t.Contents.Int, -128, 255)) {
-                    PutByte(t.Contents.Int);
+                if (ChkRange(t.Contents.Int.Value, -128, 255)) {
+                    PutByte(t.Contents.Int.Value);
                 }
                 break;
             case TempString:

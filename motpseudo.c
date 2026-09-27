@@ -137,7 +137,7 @@ void DecodeMotoBYT(Word flags) {
                 case TempInt:
                 ToInt:
                     if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                        && !RangeCheck(t.Contents.Int, Int8)) {
+                        && !RangeCheck(t.Contents.Int.Value, Int8)) {
                         WrStrErrorPos(ErrNum_OverRange, &Arg);
                         OK = False;
                     } else if (SetMaxCodeLen(CodeLen + Rep)) {
@@ -147,7 +147,7 @@ void DecodeMotoBYT(Word flags) {
                         LongInt z2;
 
                         for (z2 = 0; z2 < Rep; z2++) {
-                            PutByte(t.Contents.Int, t.Flags,
+                            PutByte(t.Contents.Int.Value, t.Flags,
                                     !!(flags & e_moto_pseudo_flags_be));
                         }
                     }
@@ -267,10 +267,10 @@ void DecodeMotoADR(Word flags) {
                 case TempInt:
                 ToInt:
                     if (mFirstPassUnknown(Res.Flags)) {
-                        Res.Contents.Int &= 0xffff;
+                        Res.Contents.Int.Value &= 0xffff;
                     }
                     if (!mSymbolQuestionable(Res.Flags)
-                        && !RangeCheck(Res.Contents.Int, Int16)) {
+                        && !RangeCheck(Res.Contents.Int.Value, Int16)) {
                         WrError(ErrNum_OverRange);
                         Res.Typ = TempNone;
                     }
@@ -310,7 +310,7 @@ void DecodeMotoADR(Word flags) {
                 for (z2 = 0; z2 < Rep; z2++) {
                     switch (Res.Typ) {
                     case TempInt:
-                        PutADR(Res.Contents.Int, Res.Flags,
+                        PutADR(Res.Contents.Int.Value, Res.Flags,
                                !!(flags & e_moto_pseudo_flags_be));
                         break;
                     case TempString: {
@@ -687,47 +687,52 @@ int ConvertMotoFloatDec(as_float_t F, Byte* pDest, Boolean NeedsBig) {
     return 12;
 }
 
-static void EnterByte(LargeWord b, Boolean BigEndian) {
-    UNUSED(BigEndian);
-    if (((CodeLen & 1) == 1) && (!HostBigEndian) && (ListGran() != 1)) {
+static void EnterByte(LargeWord b, tSymbolFlags flags, Boolean big_endian) {
+    UNUSED(big_endian);
+    if ((CodeLen & 1) && !HostBigEndian && (ListGran() != 1)) {
+        set_basmcode_guessed(CodeLen, 1, get_basmcode_guessed(CodeLen - 1));
+        set_b_guessed(flags, CodeLen - 1, 1, 0xff);
         BAsmCode[CodeLen]     = BAsmCode[CodeLen - 1];
         BAsmCode[CodeLen - 1] = b;
     } else {
+        set_b_guessed(flags, CodeLen, 1, 0xff);
         BAsmCode[CodeLen] = b;
     }
     CodeLen++;
 }
 
-static void EnterWord(LargeWord w, Boolean BigEndian) {
+static void EnterWord(LargeWord w, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]     = Hi(w);
             BAsmCode[CodeLen + 1] = Lo(w);
         } else {
             BAsmCode[CodeLen]     = Lo(w);
             BAsmCode[CodeLen + 1] = Hi(w);
         }
+        set_b_guessed(flags, CodeLen, 2, 0xff);
     } else {
         WAsmCode[CodeLen >> 1] = w;
+        set_w_guessed(flags, CodeLen, 1, 0xffffu);
     }
     CodeLen += 2;
 }
 
-static void EnterPointer(LargeWord w, Boolean BigEndian) {
-    if (BigEndian) {
-        EnterByte((w >> 16) & 0xff, BigEndian);
-        EnterByte((w >> 8) & 0xff, BigEndian);
-        EnterByte((w) & 0xff, BigEndian);
+static void EnterPointer(LargeWord w, tSymbolFlags flags, Boolean big_endian) {
+    if (big_endian) {
+        EnterByte((w >> 16) & 0xff, flags, big_endian);
+        EnterByte((w >> 8) & 0xff, flags, big_endian);
+        EnterByte((w) & 0xff, flags, big_endian);
     } else {
-        EnterByte((w) & 0xff, BigEndian);
-        EnterByte((w >> 8) & 0xff, BigEndian);
-        EnterByte((w >> 16) & 0xff, BigEndian);
+        EnterByte((w) & 0xff, flags, big_endian);
+        EnterByte((w >> 8) & 0xff, flags, big_endian);
+        EnterByte((w >> 16) & 0xff, flags, big_endian);
     }
 }
 
-static void EnterLWord(LargeWord l, Boolean BigEndian) {
+static void EnterLWord(LargeWord l, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]     = (l >> 24) & 0xff;
             BAsmCode[CodeLen + 1] = (l >> 16) & 0xff;
             BAsmCode[CodeLen + 2] = (l >> 8) & 0xff;
@@ -738,62 +743,74 @@ static void EnterLWord(LargeWord l, Boolean BigEndian) {
             BAsmCode[CodeLen + 2] = (l >> 16) & 0xff;
             BAsmCode[CodeLen + 3] = (l >> 24) & 0xff;
         }
+        set_b_guessed(flags, CodeLen, 4, 0xff);
     } else {
         WAsmCode[(CodeLen >> 1)]     = (l >> 16) & 0xffff;
         WAsmCode[(CodeLen >> 1) + 1] = (l) & 0xffff;
+        set_w_guessed(flags, CodeLen, 2, 0xffffu);
     }
     CodeLen += 4;
 }
 
-void mot_64_to_16(Word* p_dest, LargeWord src, Boolean big_endian) {
+void mot_64_to_16(Word* p_dest, LargeWord src, tSymbolFlags flags, Boolean big_endian) {
     unsigned swap_mask   = big_endian ? 3 : 0, z;
     Word     highest_src = 0;
 
     for (z = 0; z < min(4, (LARGEBITS / 16)); z++, src >>= 16) {
         p_dest[z ^ swap_mask] = highest_src = src & 0xffffu;
     }
-    /* TempResult is LargeInt, so sign-extend if size is less than 64 bits */
+    /* only sign extend if marked as negative */
+    highest_src = ((highest_src & 0x8000u) && (flags & eSymbolFlag_Negative)) ? 0xffffu
+                                                                              : 0x0000;
     for (; z < 4; z++) {
-        p_dest[z ^ swap_mask] = (highest_src & 0x8000) ? 0xffff : 0x0000;
+        p_dest[z ^ swap_mask] = highest_src;
     }
 }
 
-static void EnterQWord(LargeWord q, Boolean BigEndian) {
-    if (ListGran() == 1) {
-        unsigned swap_mask   = BigEndian ? 7 : 0, z;
-        Byte     highest_src = 0;
+static void EnterQWord(LargeWord q, tSymbolFlags flags, Boolean big_endian) {
+    unsigned swap_mask, z;
 
+    if (ListGran() == 1) {
+        Byte highest_src = 0;
+
+        swap_mask = big_endian ? 7 : 0;
         for (z = 0; z < min(8, (LARGEBITS / 8)); z++, q >>= 8) {
             BAsmCode[CodeLen + (z ^ swap_mask)] = highest_src = q & 0xff;
         }
-        /* TempResult is LargeInt, so sign-extend */
+        /* only sign extend if marked as negative */
+        highest_src
+                = ((highest_src & 0x80) && (flags & eSymbolFlag_Negative)) ? 0xff : 0x00;
         for (; z < 8; z++) {
-            BAsmCode[CodeLen + (z ^ swap_mask)] = (highest_src & 0x80) ? 0xff : 0x00;
+            BAsmCode[CodeLen + (z ^ swap_mask)] = highest_src;
         }
+        set_b_guessed(flags, CodeLen, 8, 0xff);
     } else {
-        mot_64_to_16(&WAsmCode[CodeLen >> 1], q, BigEndian);
+        mot_64_to_16(&WAsmCode[CodeLen >> 1], q, flags, big_endian);
+        set_w_guessed(flags, CodeLen, 4, 0xffffu);
     }
     CodeLen += 8;
 }
 
-static void EnterIEEE2(Word* pField, Boolean BigEndian) {
+static void EnterIEEE2(Word* pField, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]     = Hi(pField[0]);
             BAsmCode[CodeLen + 1] = Lo(pField[0]);
         } else {
             BAsmCode[CodeLen]     = Lo(pField[0]);
             BAsmCode[CodeLen + 1] = Hi(pField[0]);
         }
+        set_b_guessed(flags, CodeLen, 2, 0xff);
     } else {
         WAsmCode[(CodeLen >> 1)] = pField[0];
+        set_w_guessed(flags, CodeLen, 1, 0xffffu);
     }
     CodeLen += 2;
 }
 
-static void EnterIEEE4(Word* pField, Boolean BigEndian) {
+static void EnterIEEE4(Word* pField, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]     = Hi(pField[1]);
             BAsmCode[CodeLen + 1] = Lo(pField[1]);
             BAsmCode[CodeLen + 2] = Hi(pField[0]);
@@ -804,16 +821,18 @@ static void EnterIEEE4(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 2] = Lo(pField[1]);
             BAsmCode[CodeLen + 3] = Hi(pField[1]);
         }
+        set_b_guessed(flags, CodeLen, 4, 0xff);
     } else {
         WAsmCode[(CodeLen >> 1)]     = pField[1];
         WAsmCode[(CodeLen >> 1) + 1] = pField[0];
+        set_w_guessed(flags, CodeLen, 2, 0xffffu);
     }
     CodeLen += 4;
 }
 
-static void EnterIEEE8(Word* pField, Boolean BigEndian) {
+static void EnterIEEE8(Word* pField, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]     = Hi(pField[3]);
             BAsmCode[CodeLen + 1] = Lo(pField[3]);
             BAsmCode[CodeLen + 2] = Hi(pField[2]);
@@ -832,18 +851,20 @@ static void EnterIEEE8(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 6] = Lo(pField[3]);
             BAsmCode[CodeLen + 7] = Hi(pField[3]);
         }
+        set_b_guessed(flags, CodeLen, 8, 0xff);
     } else {
         WAsmCode[(CodeLen >> 1)]     = pField[3];
         WAsmCode[(CodeLen >> 1) + 1] = pField[2];
         WAsmCode[(CodeLen >> 1) + 2] = pField[1];
         WAsmCode[(CodeLen >> 1) + 3] = pField[0];
+        set_w_guessed(flags, CodeLen, 4, 0xffffu);
     }
     CodeLen += 8;
 }
 
-static void EnterIEEE10(Word* pField, Boolean BigEndian) {
+static void EnterIEEE10(Word* pField, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]      = Hi(pField[4]);
             BAsmCode[CodeLen + 1]  = Lo(pField[4]);
             BAsmCode[CodeLen + 2]  = 0;
@@ -856,6 +877,8 @@ static void EnterIEEE10(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 9]  = Lo(pField[1]);
             BAsmCode[CodeLen + 10] = Hi(pField[0]);
             BAsmCode[CodeLen + 11] = Lo(pField[0]);
+            set_b_guessed(flags, CodeLen, 2, 0xff);
+            set_b_guessed(flags, CodeLen + 4, 8, 0xff);
         } else {
             BAsmCode[CodeLen]      = Lo(pField[0]);
             BAsmCode[CodeLen + 1]  = Hi(pField[0]);
@@ -869,6 +892,8 @@ static void EnterIEEE10(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 9]  = 0;
             BAsmCode[CodeLen + 10] = Lo(pField[4]);
             BAsmCode[CodeLen + 11] = Hi(pField[4]);
+            set_b_guessed(flags, CodeLen, 8, 0xff);
+            set_b_guessed(flags, CodeLen + 10, 2, 0xff);
         }
     } else {
         WAsmCode[(CodeLen >> 1)]     = pField[4];
@@ -877,13 +902,15 @@ static void EnterIEEE10(Word* pField, Boolean BigEndian) {
         WAsmCode[(CodeLen >> 1) + 3] = pField[2];
         WAsmCode[(CodeLen >> 1) + 4] = pField[1];
         WAsmCode[(CodeLen >> 1) + 5] = pField[0];
+        set_w_guessed(flags, CodeLen, 1, 0xffffu);
+        set_w_guessed(flags, CodeLen + 2, 4, 0xffffu);
     }
     CodeLen += 12;
 }
 
-static void EnterMotoFloatDec(Word* pField, Boolean BigEndian) {
+static void EnterMotoFloatDec(Word* pField, tSymbolFlags flags, Boolean big_endian) {
     if (ListGran() == 1) {
-        if (BigEndian) {
+        if (big_endian) {
             BAsmCode[CodeLen]      = Hi(pField[5]);
             BAsmCode[CodeLen + 1]  = Lo(pField[5]);
             BAsmCode[CodeLen + 2]  = Hi(pField[4]);
@@ -910,8 +937,9 @@ static void EnterMotoFloatDec(Word* pField, Boolean BigEndian) {
             BAsmCode[CodeLen + 10] = Lo(pField[5]);
             BAsmCode[CodeLen + 11] = Hi(pField[5]);
         }
+        set_b_guessed(flags, CodeLen, 12, 0xff);
     } else {
-        if (BigEndian) {
+        if (big_endian) {
             WAsmCode[(CodeLen >> 1)]     = pField[5];
             WAsmCode[(CodeLen >> 1) + 1] = pField[4];
             WAsmCode[(CodeLen >> 1) + 2] = pField[3];
@@ -926,6 +954,7 @@ static void EnterMotoFloatDec(Word* pField, Boolean BigEndian) {
             WAsmCode[(CodeLen >> 1) + 4] = pField[4];
             WAsmCode[(CodeLen >> 1) + 5] = pField[5];
         }
+        set_w_guessed(flags, CodeLen, 6, 0xffffu);
     }
     CodeLen += 12;
 }
@@ -985,7 +1014,7 @@ static Word GetWSize(tSymbolSize OpSize) {
 void DecodeMotoDC(Word flags) {
     tSymbolSize  OpSize = (AttrPartOpSize[0] == eSymbolSizeUnknown) ? eSymbolSize16Bit
                                                                     : AttrPartOpSize[0];
-    Boolean      BigEndian = !!(flags & e_moto_pseudo_flags_be);
+    Boolean      big_endian = !!(flags & e_moto_pseudo_flags_be);
     ShortInt     SpaceFlag;
     tStrComp *   pArg, Arg;
     LongInt      z2, WSize, Rep = 0;
@@ -993,11 +1022,11 @@ void DecodeMotoDC(Word flags) {
     Boolean      OK;
     TempResult   t;
     tSymbolFlags Flags;
-    void (*EnterInt)(LargeWord, Boolean)            = NULL;
-    int (*ConvertFloat)(as_float_t, Byte*, Boolean) = NULL;
-    void (*EnterFloat)(Word*, Boolean)              = NULL;
-    void (*Swap)(void*, int)                        = NULL;
-    IntType IntTypeEnum                             = UInt1;
+    void (*EnterInt)(LargeWord, tSymbolFlags, Boolean) = NULL;
+    int (*ConvertFloat)(as_float_t, Byte*, Boolean)    = NULL;
+    void (*EnterFloat)(Word*, tSymbolFlags, Boolean)   = NULL;
+    void (*Swap)(void*, int)                           = NULL;
+    IntType IntTypeEnum                                = UInt1;
     Boolean PadBeforeStart
             = Odd(EProgCounter()) && DoPadding && (OpSize != eSymbolSize8Bit);
 
@@ -1130,7 +1159,7 @@ void DecodeMotoDC(Word flags) {
                     }
                 } else if (
                         !mFirstPassUnknownOrQuestionable(t.Flags)
-                        && !RangeCheck(t.Contents.Int, IntTypeEnum)) {
+                        && !RangeCheck(t.Contents.Int.Value, IntTypeEnum)) {
                     WrError(ErrNum_OverRange);
                     OK = False;
                 } else if (SetMaxCodeLen(CodeLen + (Rep * WSize))) {
@@ -1138,7 +1167,7 @@ void DecodeMotoDC(Word flags) {
                     OK = False;
                 } else {
                     for (z2 = 0; z2 < Rep; z2++) {
-                        EnterInt(t.Contents.Int, BigEndian);
+                        EnterInt(t.Contents.Int.Value, t.Flags, big_endian);
                     }
                 }
                 break;
@@ -1164,7 +1193,7 @@ void DecodeMotoDC(Word flags) {
                             Swap((void*)TurnField, WSize);
                         }
                         for (z2 = 0; z2 < Rep; z2++) {
-                            EnterFloat(TurnField, BigEndian);
+                            EnterFloat(TurnField, t.Flags, big_endian);
                         }
                     }
                 }
@@ -1199,7 +1228,7 @@ void DecodeMotoDC(Word flags) {
 #else
                                     (void)Swap;
 #endif
-                                    EnterFloat(TurnField, BigEndian);
+                                    EnterFloat(TurnField, t.Flags, big_endian);
                                 }
                             }
                         }
@@ -1214,7 +1243,7 @@ void DecodeMotoDC(Word flags) {
                     for (z2 = 0; z2 < Rep; z2++) {
                         for (zp = t.Contents.str.p_str;
                              zp < t.Contents.str.p_str + t.Contents.str.len;
-                             EnterInt(((usint) * (zp++)) & 0xff, BigEndian))
+                             EnterInt(((usint) * (zp++)) & 0xff, t.Flags, big_endian))
                             ;
                     }
                 }

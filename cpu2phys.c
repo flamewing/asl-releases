@@ -396,7 +396,7 @@ Boolean fnc_phys_2_cpu(TempResult* p_ret, TempResult const* p_args, unsigned arg
         return False;
     }
 
-    address = p_args[0].Contents.Int;
+    address = p_args[0].Contents.Int.Value;
     as_tempres_set_int(
             p_ret, def_phys_2_cpu(ActPC, &address) ? address : area_lists[ActPC].end + 1);
     return True;
@@ -419,7 +419,7 @@ Boolean fnc_cpu_2_phys(TempResult* p_ret, TempResult const* p_args, unsigned arg
         return False;
     }
 
-    address = p_args[0].Contents.Int;
+    address = p_args[0].Contents.Int.Value;
     as_tempres_set_int(
             p_ret, def_cpu_2_phys(ActPC, &address) ? address : SegLimits[ActPC] + 1);
     return True;

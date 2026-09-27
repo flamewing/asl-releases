@@ -429,12 +429,12 @@ static Boolean DecodeConst(tStrComp* pStr) {
     switch (t.Typ) {
     case TempInt:
         if (!mFirstPassUnknownOrQuestionable(Flags)) {
-            if (!ChkRange(t.Contents.Int, -2048, 4095)) {
+            if (!ChkRange(t.Contents.Int.Value, -2048, 4095)) {
                 break;
             }
         }
 
-        WAsmCode[CodeLen++] = t.Contents.Int & 07777;
+        WAsmCode[CodeLen++] = t.Contents.Int.Value & 07777;
         break;
     case TempString:
         as_chartrans_xlate_nonz_dynstr(CurrTransTable->p_table, &t.Contents.str, pStr);

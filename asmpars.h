@@ -149,12 +149,16 @@ extern struct sStrComp* ExpandStrSymbol(
 
 extern void ChangeSymbol(struct sSymbolEntry* pEntry, LargeInt Value);
 
-extern struct sSymbolEntry* EnterIntSymbolWithFlags(
-        const struct sStrComp* pName, LargeInt Wert, as_addrspace_t addrspace,
-        Boolean MayChange, tSymbolFlags Flags);
-
-#define EnterIntSymbol(pName, Wert, addrspace, MayChange) \
-    EnterIntSymbolWithFlags(pName, Wert, addrspace, MayChange, eSymbolFlag_None)
+extern struct sSymbolEntry* EnterIntSymbolWithFlagsAndWidth(
+        const struct sStrComp* p_name, LargeInt value, Integer num_bits,
+        as_addrspace_t addrspace, Boolean may_change, tSymbolFlags flags);
+#define EnterIntSymbolWithFlags(p_name, value, addrspace, may_change, flags) \
+    EnterIntSymbolWithFlagsAndWidth(                                         \
+            p_name, value, INTSYM_NUM_BITS_DEFAULT, addrspace, may_change, flags)
+#define EnterIntSymbol(p_name, value, addrspace, may_change)               \
+    EnterIntSymbolWithFlagsAndWidth(                                       \
+            p_name, value, INTSYM_NUM_BITS_DEFAULT, addrspace, may_change, \
+            eSymbolFlag_None)
 
 extern void EnterExtSymbol(
         const struct sStrComp* pName, LargeInt Wert, as_addrspace_t addrspace,

@@ -328,7 +328,8 @@ DECLARE_AS_EVAL_CB(tlcs9000_eval_cb) {
         }
         for (p_eval_cb_data->scale_fact = 0; p_eval_cb_data->scale_fact < 4;
              p_eval_cb_data->scale_fact++) {
-            if (p_data->p_other_arg->Contents.Int == 1 << p_eval_cb_data->scale_fact) {
+            if (p_data->p_other_arg->Contents.Int.Value
+                == 1 << p_eval_cb_data->scale_fact) {
                 break;
             }
         }

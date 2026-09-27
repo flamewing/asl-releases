@@ -52,6 +52,14 @@
         }                                                                             \
     } while (0)
 
+#define PromoteNegativeLRInt()                                           \
+    do {                                                                 \
+        if (((pLVal->Flags & eSymbolFlag_Negative)                       \
+             || (pRVal->Flags & eSymbolFlag_Negative))                   \
+            && (pErg->Typ == TempInt) && (pErg->Contents.Int.Value < 0)) \
+            pErg->Flags |= eSymbolFlag_Negative;                         \
+    } while (0)
+
 /*!------------------------------------------------------------------------
  * \fn     reg_cmp(const TempResult *p_val1, const TempResult *p_val2)
  * \brief  compare two register symbols
@@ -104,7 +112,13 @@ static Boolean OneComplOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal
         return False;
     }
 
-    as_tempres_set_int(pErg, ~(pRVal->Contents.Int));
+    as_tempres_set_int(pErg, ~(pRVal->Contents.Int.Value));
+    if (pRVal->Contents.Int.NumBits != INTSYM_NUM_BITS_DEFAULT) {
+        pErg->Contents.Int.Value
+                &= (((LargeWord)1)
+                    << (pErg->Contents.Int.NumBits = pRVal->Contents.Int.NumBits))
+                   - 1;
+    }
     PromoteRValFlags();
     return True;
 }
@@ -114,7 +128,7 @@ static Boolean ShLeftOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         return False;
     }
 
-    as_tempres_set_int(pErg, pLVal->Contents.Int << pRVal->Contents.Int);
+    as_tempres_set_int(pErg, pLVal->Contents.Int.Value << pRVal->Contents.Int.Value);
     PromoteLRValFlags();
     return True;
 }
@@ -124,7 +138,7 @@ static Boolean ShRightOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal)
         return False;
     }
 
-    as_tempres_set_int(pErg, pLVal->Contents.Int >> pRVal->Contents.Int);
+    as_tempres_set_int(pErg, pLVal->Contents.Int.Value >> pRVal->Contents.Int.Value);
     PromoteLRValFlags();
     return True;
 }
@@ -136,14 +150,15 @@ static Boolean BitMirrorOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVa
         return False;
     }
 
-    if ((pRVal->Contents.Int < 1) || (pRVal->Contents.Int > 32)) {
+    if ((pRVal->Contents.Int.Value < 1) || (pRVal->Contents.Int.Value > 32)) {
         WrError(ErrNum_OverRange);
     } else {
-        LargeInt Result = (pLVal->Contents.Int >> pRVal->Contents.Int)
-                          << pRVal->Contents.Int;
+        LargeInt Result = (pLVal->Contents.Int.Value >> pRVal->Contents.Int.Value)
+                          << pRVal->Contents.Int.Value;
 
-        for (z = 0; z < pRVal->Contents.Int; z++) {
-            if ((pLVal->Contents.Int & (1 << (pRVal->Contents.Int - 1 - z))) != 0) {
+        for (z = 0; z < pRVal->Contents.Int.Value; z++) {
+            if ((pLVal->Contents.Int.Value & (1 << (pRVal->Contents.Int.Value - 1 - z)))
+                != 0) {
                 Result |= (1 << z);
             }
         }
@@ -158,7 +173,7 @@ static Boolean BinAndOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         return False;
     }
 
-    as_tempres_set_int(pErg, pLVal->Contents.Int & pRVal->Contents.Int);
+    as_tempres_set_int(pErg, pLVal->Contents.Int.Value & pRVal->Contents.Int.Value);
     PromoteLRValFlags();
     return True;
 }
@@ -168,7 +183,7 @@ static Boolean BinOrOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         return False;
     }
 
-    as_tempres_set_int(pErg, pLVal->Contents.Int | pRVal->Contents.Int);
+    as_tempres_set_int(pErg, pLVal->Contents.Int.Value | pRVal->Contents.Int.Value);
     PromoteLRValFlags();
     return True;
 }
@@ -178,7 +193,7 @@ static Boolean BinXorOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         return False;
     }
 
-    as_tempres_set_int(pErg, pLVal->Contents.Int ^ pRVal->Contents.Int);
+    as_tempres_set_int(pErg, pLVal->Contents.Int.Value ^ pRVal->Contents.Int.Value);
     PromoteLRValFlags();
     return True;
 }
@@ -192,10 +207,10 @@ static Boolean PotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        if (pRVal->Contents.Int < 0) {
+        if (pRVal->Contents.Int.Value < 0) {
             as_tempres_set_int(pErg, 0);
         } else {
-            LargeInt l = pLVal->Contents.Int, r = pRVal->Contents.Int;
+            LargeInt l = pLVal->Contents.Int.Value, r = pRVal->Contents.Int.Value;
 
             HVal = 1;
             while (r > 0) {
@@ -255,7 +270,7 @@ static Boolean MultOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, pLVal->Contents.Int * pRVal->Contents.Int);
+        as_tempres_set_int(pErg, pLVal->Contents.Int.Value * pRVal->Contents.Int.Value);
         break;
     case TempFloat:
         as_tempres_set_float(pErg, pLVal->Contents.Float * pRVal->Contents.Float);
@@ -264,6 +279,7 @@ static Boolean MultOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     }
     PromoteLRValFlags();
+    PromoteNegativeLRInt();
     return True;
 }
 
@@ -274,10 +290,11 @@ static Boolean DivOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        if (pRVal->Contents.Int == 0) {
+        if (pRVal->Contents.Int.Value == 0) {
             WrError(ErrNum_DivByZero);
         } else {
-            as_tempres_set_int(pErg, pLVal->Contents.Int / pRVal->Contents.Int);
+            as_tempres_set_int(
+                    pErg, pLVal->Contents.Int.Value / pRVal->Contents.Int.Value);
         }
         break;
     case TempFloat:
@@ -290,6 +307,7 @@ static Boolean DivOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     }
     PromoteLRValFlags();
+    PromoteNegativeLRInt();
     return True;
 }
 
@@ -298,12 +316,13 @@ static Boolean ModOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         return False;
     }
 
-    if (pRVal->Contents.Int == 0) {
+    if (pRVal->Contents.Int.Value == 0) {
         WrError(ErrNum_DivByZero);
     } else {
-        as_tempres_set_int(pErg, pLVal->Contents.Int % pRVal->Contents.Int);
+        as_tempres_set_int(pErg, pLVal->Contents.Int.Value % pRVal->Contents.Int.Value);
     }
     PromoteLRValFlags();
+    PromoteNegativeLRInt();
     return True;
 }
 
@@ -319,14 +338,15 @@ static Boolean AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     case TempInt:
         switch (pRVal->Typ) {
         case TempInt:
-            as_tempres_set_int(pErg, pLVal->Contents.Int + pRVal->Contents.Int);
+            as_tempres_set_int(
+                    pErg, pLVal->Contents.Int.Value + pRVal->Contents.Int.Value);
             pErg->Relocs = MergeRelocs(&(pLVal->Relocs), &(pRVal->Relocs), TRUE);
             break;
         case TempString: {
             LargeInt  RIntVal;
             tErrorNum error_num = NonZString2Int(&pRVal->Contents.str, &RIntVal);
 
-            RIntVal += pLVal->Contents.Int;
+            RIntVal += pLVal->Contents.Int.Value;
             if (ErrNum_None == error_num) {
                 if (RIntVal >= 0) {
                     as_tempres_set_c_str(pErg, "");
@@ -362,7 +382,7 @@ static Boolean AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
             tErrorNum error_num = NonZString2Int(&pLVal->Contents.str, &LIntVal);
 
             if (ErrNum_None == error_num) {
-                LIntVal += pRVal->Contents.Int;
+                LIntVal += pRVal->Contents.Int.Value;
                 if (LIntVal >= 0) {
                     as_tempres_set_c_str(pErg, "");
                     Int2NonZString(&pErg->Contents.str, LIntVal);
@@ -386,6 +406,7 @@ static Boolean AddOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     }
     PromoteLRValFlags();
+    PromoteNegativeLRInt();
     return True;
 }
 
@@ -396,7 +417,7 @@ static Boolean SubOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, pLVal->Contents.Int - pRVal->Contents.Int);
+        as_tempres_set_int(pErg, pLVal->Contents.Int.Value - pRVal->Contents.Int.Value);
         break;
     case TempFloat:
         as_tempres_set_float(pErg, pLVal->Contents.Float - pRVal->Contents.Float);
@@ -405,6 +426,7 @@ static Boolean SubOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     }
     PromoteLRValFlags();
+    PromoteNegativeLRInt();
     return True;
 }
 
@@ -416,7 +438,7 @@ static Boolean SubSglOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, -pRVal->Contents.Int);
+        as_tempres_set_int(pErg, -pRVal->Contents.Int.Value);
         break;
     case TempFloat:
         as_tempres_set_float(pErg, -pRVal->Contents.Float);
@@ -425,6 +447,9 @@ static Boolean SubSglOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         break;
     }
     PromoteRValFlags();
+    if ((pErg->Typ == TempInt) && (pErg->Contents.Int.Value < 0)) {
+        pErg->Flags |= eSymbolFlag_Negative;
+    }
     return True;
 }
 
@@ -434,7 +459,7 @@ static Boolean LogNotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         return False;
     }
 
-    as_tempres_set_int(pErg, pRVal->Contents.Int ? 0 : 1);
+    as_tempres_set_int(pErg, pRVal->Contents.Int.Value ? 0 : 1);
     PromoteRValFlags();
     return True;
 }
@@ -447,7 +472,7 @@ static Boolean LogAndOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
     /* short circuit evaluation: 0 && ... -> 0 */
 
     if (!pRVal) {
-        if (!pLVal->Contents.Int) {
+        if (!pLVal->Contents.Int.Value) {
             as_tempres_set_int(pErg, 0);
             PromoteLValFlags();
             return True;
@@ -455,7 +480,8 @@ static Boolean LogAndOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
         return False;
     }
 
-    as_tempres_set_int(pErg, (pLVal->Contents.Int && pRVal->Contents.Int) ? 1 : 0);
+    as_tempres_set_int(
+            pErg, (pLVal->Contents.Int.Value && pRVal->Contents.Int.Value) ? 1 : 0);
     PromoteLRValFlags();
     return True;
 }
@@ -468,7 +494,7 @@ static Boolean LogOrOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
     /* short circuit evaluation: 1 ||  ... -> 1 */
 
     if (!pRVal) {
-        if (pLVal->Contents.Int) {
+        if (pLVal->Contents.Int.Value) {
             as_tempres_set_int(pErg, 1);
             PromoteLValFlags();
             return True;
@@ -476,7 +502,8 @@ static Boolean LogOrOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         return False;
     }
 
-    as_tempres_set_int(pErg, (pLVal->Contents.Int || pRVal->Contents.Int) ? 1 : 0);
+    as_tempres_set_int(
+            pErg, (pLVal->Contents.Int.Value || pRVal->Contents.Int.Value) ? 1 : 0);
     PromoteLRValFlags();
     return True;
 }
@@ -487,7 +514,9 @@ static Boolean LogXorOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) 
     }
 
     as_tempres_set_int(
-            pErg, ((pLVal->Contents.Int != 0) != (pRVal->Contents.Int != 0)) ? 1 : 0);
+            pErg, ((pLVal->Contents.Int.Value != 0) != (pRVal->Contents.Int.Value != 0))
+                          ? 1
+                          : 0);
     PromoteLRValFlags();
     return True;
 }
@@ -499,7 +528,8 @@ static Boolean EqOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int == pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value == pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(
@@ -529,7 +559,8 @@ static Boolean GtOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int > pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value > pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(pErg, (pLVal->Contents.Float > pRVal->Contents.Float) ? 1 : 0);
@@ -557,7 +588,8 @@ static Boolean LtOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int < pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value < pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(pErg, (pLVal->Contents.Float < pRVal->Contents.Float) ? 1 : 0);
@@ -585,7 +617,8 @@ static Boolean LeOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int <= pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value <= pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(
@@ -617,7 +650,8 @@ static Boolean GeOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int >= pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value >= pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(
@@ -649,7 +683,8 @@ static Boolean UneqOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
 
     switch (pLVal->Typ) {
     case TempInt:
-        as_tempres_set_int(pErg, (pLVal->Contents.Int != pRVal->Contents.Int) ? 1 : 0);
+        as_tempres_set_int(
+                pErg, (pLVal->Contents.Int.Value != pRVal->Contents.Int.Value) ? 1 : 0);
         break;
     case TempFloat:
         as_tempres_set_int(

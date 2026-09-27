@@ -458,7 +458,7 @@ static void DecodeDATA_AVR(Word Index) {
         forallargs(pArg, OK) {
             EvalStrExpression(pArg, &t);
             if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt)) {
-                t.Contents.Int &= MaxV;
+                t.Contents.Int.Value &= MaxV;
             }
             switch (t.Typ) {
             case TempString: {
@@ -482,8 +482,8 @@ static void DecodeDATA_AVR(Word Index) {
             }
             ToInt:
             case TempInt:
-                if (ChkRange(t.Contents.Int, MinV, MaxV)) {
-                    PlaceValue(t.Contents.Int, t.Flags, Packing, &ctx);
+                if (ChkRange(t.Contents.Int.Value, MinV, MaxV)) {
+                    PlaceValue(t.Contents.Int.Value, t.Flags, Packing, &ctx);
                 }
                 break;
             case TempFloat:

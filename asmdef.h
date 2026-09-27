@@ -242,6 +242,7 @@ extern Boolean     CodeOutput;
 extern Boolean     MacProOutput;
 extern Boolean     MacroOutput;
 extern Boolean     HardRanges;
+extern Boolean     force_restricted_extension_digits;
 extern Boolean     label_leading_colon;
 extern char const* DivideChars;
 extern Boolean     HasAttrs;

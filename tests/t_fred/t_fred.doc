@@ -1,0 +1,6 @@
++-------------------------- Test Application FRED ---------------------------+
+|                                                                            |
+| This is a small test of defining integer constants with reduced bit        |
+| length.  The reduced length is derived fron the number of digits written.  |
+|                                                                            |
++----------------------------------------------------------------------------+

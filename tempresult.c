@@ -97,8 +97,9 @@ void as_tempres_set_int(TempResult* p_res, LargeInt value) {
     if (p_res->Typ == TempString) {
         as_nonz_dynstr_free(&p_res->Contents.str);
     }
-    p_res->Typ          = TempInt;
-    p_res->Contents.Int = value;
+    p_res->Typ                  = TempInt;
+    p_res->Contents.Int.NumBits = INTSYM_NUM_BITS_DEFAULT;
+    p_res->Contents.Int.Value   = value;
 }
 
 /*!------------------------------------------------------------------------
@@ -183,7 +184,8 @@ void as_tempres_set_reg(TempResult* p_res, tRegDescr const* p_value) {
 void as_tempres_copy_value(TempResult* p_dest, TempResult const* p_src) {
     switch (p_src->Typ) {
     case TempInt:
-        as_tempres_set_int(p_dest, p_src->Contents.Int);
+        as_tempres_set_int(p_dest, p_src->Contents.Int.Value);
+        p_dest->Contents.Int.NumBits = p_src->Contents.Int.NumBits;
         break;
     case TempFloat:
         as_tempres_set_float(p_dest, p_src->Contents.Float);
@@ -237,9 +239,9 @@ int as_tempres_cmp(TempResult const* p_res1, TempResult const* p_res2) {
             return 0;
         }
     case TempInt:
-        if (p_res1->Contents.Int < p_res2->Contents.Int) {
+        if (p_res1->Contents.Int.Value < p_res2->Contents.Int.Value) {
             return -1;
-        } else if (p_res1->Contents.Int > p_res2->Contents.Int) {
+        } else if (p_res1->Contents.Int.Value > p_res2->Contents.Int.Value) {
             return 1;
         } else {
             return 0;
@@ -273,7 +275,7 @@ int TempResultToFloat(TempResult* pResult) {
                    to long double when Valgrind is active: */
                 (QuadInt)
 #endif
-                        pResult->Contents.Int;
+                        pResult->Contents.Int.Value;
         pResult->Typ = TempFloat;
         break;
     case TempFloat:
@@ -298,7 +300,12 @@ int as_tempres_append_dynstr(
         as_dynstr_t* p_dest, TempResult const* pResult, int int_radix) {
     switch (pResult->Typ) {
     case TempInt:
-        as_sdprcatf(p_dest, (int_radix == 16) ? "%lllx" : "%llld", pResult->Contents.Int);
+
+        /* TODO: use SystemStr */
+        as_sdprcatf(
+                p_dest, (int_radix == 16) ? "%lllx" : "%llld",
+                pResult->Contents.Int.Value);
+
         break;
     case TempFloat:
         as_sdprcatf(p_dest, "%0.*llle", AS_FLOAT_DIG + 2, pResult->Contents.Float);

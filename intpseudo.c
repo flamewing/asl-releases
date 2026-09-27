@@ -75,13 +75,9 @@ struct sLayoutCtx {
     Boolean (*Put48F)(as_float_t f, tSymbolFlags flags, struct sLayoutCtx* pCtx);
     Boolean (*Put64I)(LargeWord q, tSymbolFlags flags, struct sLayoutCtx* pCtx);
     Boolean (*Put64F)(as_float_t f, tSymbolFlags flags, struct sLayoutCtx* pCtx);
-    Boolean (*Put80I)(
-            LargeWord t, tSymbolFlags flags, Boolean orig_negative,
-            struct sLayoutCtx* pCtx);
+    Boolean (*Put80I)(LargeWord t, tSymbolFlags flags, struct sLayoutCtx* pCtx);
     Boolean (*Put80F)(as_float_t t, tSymbolFlags flags, struct sLayoutCtx* pCtx);
-    Boolean (*Put128I)(
-            LargeWord q, tSymbolFlags flags, Boolean orig_negative,
-            struct sLayoutCtx* pCtx);
+    Boolean (*Put128I)(LargeWord q, tSymbolFlags flags, struct sLayoutCtx* pCtx);
     Boolean (*Put128F)(as_float_t t, tSymbolFlags flags, struct sLayoutCtx* pCtx);
     Boolean (*Replicate)(
             tCurrCodeFill const* pStartPos, tCurrCodeFill const* pEndPos,
@@ -107,6 +103,35 @@ void DumpCodeFill(char const* pTitle, tCurrCodeFill const* pFill) {
     fprintf(stderr, "%s %u %d\n", pTitle, (unsigned)pFill->FullWordCnt,
             pFill->LastWordFill);
 }
+
+/* Deduction of upper bytes/words if the destination integer size is larger than what
+   the host sytem can handle.  Sign-extend if the value is flagged negative: */
+
+#define test_signext_4(highest_word, flags)                                             \
+    do {                                                                                \
+        highest_word                                                                    \
+                = ((highest_word & 0x8) && (flags & eSymbolFlag_Negative)) ? 0xf : 0x0; \
+    } while (0)
+
+#define test_signext_8(highest_word, flags)                                              \
+    do {                                                                                 \
+        highest_word = ((highest_word & 0x80) && (flags & eSymbolFlag_Negative)) ? 0xff  \
+                                                                                 : 0x00; \
+    } while (0)
+
+#define test_signext_16(highest_word, flags)                                        \
+    do {                                                                            \
+        highest_word = ((highest_word & 0x8000u) && (flags & eSymbolFlag_Negative)) \
+                               ? 0xffffu                                            \
+                               : 0x0000;                                            \
+    } while (0)
+
+#define test_signext_32(highest_word, flags)                                             \
+    do {                                                                                 \
+        highest_word = ((highest_word & 0x80000000ul) && (flags & eSymbolFlag_Negative)) \
+                               ? 0xfffffffful                                            \
+                               : 0x00000000;                                             \
+    } while (0)
 
 /*!------------------------------------------------------------------------
  * \fn     Boolean SetDSFlag(struct sLayoutCtx *pCtx, tDSFlag Flag)
@@ -535,12 +560,12 @@ static Boolean LayoutBit(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     switch (t.Typ) {
     case TempInt:
         if (mFirstPassUnknown(t.Flags)) {
-            t.Contents.Int &= 0x1;
+            t.Contents.Int.Value &= 0x1;
         }
-        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, UInt1)) {
+        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int.Value, UInt1)) {
             WrStrErrorPos(ErrNum_OverRange, pExpr);
         } else {
-            if (!pCtx->Put1I(t.Contents.Int, t.Flags, pCtx)) {
+            if (!pCtx->Put1I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Result = True;
@@ -753,12 +778,12 @@ static Boolean LayoutNibble(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     switch (t.Typ) {
     case TempInt:
         if (mFirstPassUnknown(t.Flags)) {
-            t.Contents.Int &= 0xf;
+            t.Contents.Int.Value &= 0xf;
         }
-        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int4)) {
+        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int.Value, Int4)) {
             WrStrErrorPos(ErrNum_OverRange, pExpr);
         } else {
-            if (!pCtx->Put4I(t.Contents.Int, t.Flags, pCtx)) {
+            if (!pCtx->Put4I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Result = True;
@@ -963,14 +988,16 @@ static Boolean LayoutByte(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (mFirstPassUnknown(t.Flags)) {
-            t.Contents.Int &= 0xff;
+            t.Contents.Int.Value &= 0xff;
         }
         if (!allow_int) {
             WrStrErrorPos(ErrNum_StringButInt, pExpr);
-        } else if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int8)) {
+        } else if (
+                !mSymbolQuestionable(t.Flags)
+                && !RangeCheck(t.Contents.Int.Value, Int8)) {
             WrStrErrorPos(ErrNum_OverRange, pExpr);
         } else {
-            if (!pCtx->Put8I(t.Contents.Int, t.Flags, pCtx)) {
+            if (!pCtx->Put8I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Result = True;
@@ -1303,12 +1330,13 @@ static Boolean LayoutWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     ToInt:
         if (pCtx->Put16I) {
             if (mFirstPassUnknown(t.Flags)) {
-                t.Contents.Int &= 0xffff;
+                t.Contents.Int.Value &= 0xffff;
             }
-            if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int16)) {
+            if (!mSymbolQuestionable(t.Flags)
+                && !RangeCheck(t.Contents.Int.Value, Int16)) {
                 WrStrErrorPos(ErrNum_OverRange, pExpr);
             } else {
-                if (!pCtx->Put16I(t.Contents.Int, t.Flags, pCtx)) {
+                if (!pCtx->Put16I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
                 Result = True;
@@ -1473,7 +1501,7 @@ static Boolean LayoutPointer(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (pCtx->Put24I) {
-            if (!pCtx->Put24I(t.Contents.Int, t.Flags, pCtx)) {
+            if (!pCtx->Put24I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Cnt    = 3;
@@ -1767,12 +1795,13 @@ static Boolean LayoutDoubleWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) 
     ToInt:
         if (pCtx->Put32I) {
             if (mFirstPassUnknown(t.Flags)) {
-                t.Contents.Int &= 0xfffffffful;
+                t.Contents.Int.Value &= 0xfffffffful;
             }
-            if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int, Int32)) {
+            if (!mSymbolQuestionable(t.Flags)
+                && !RangeCheck(t.Contents.Int.Value, Int32)) {
                 WrStrErrorPos(ErrNum_OverRange, pExpr);
             } else {
-                if (!pCtx->Put32I(t.Contents.Int, t.Flags, pCtx)) {
+                if (!pCtx->Put32I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
                 Cnt    = 4;
@@ -2044,7 +2073,7 @@ static Boolean LayoutMacAddr(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (pCtx->Put48I) {
-            if (!pCtx->Put48I(t.Contents.Int, t.Flags, pCtx)) {
+            if (!pCtx->Put48I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Cnt    = 6;
@@ -2113,9 +2142,9 @@ static Boolean Put64I_To_1(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* p
     for (z = 0; z < min(4, LARGEBITS / 16); z++, l >>= 16) {
         highest_src = w[pCtx->LoHiMap ? (3 - z) : z] = l & 0xffffu;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_16(highest_src, flags);
     for (; z < 4; z++) {
-        w[pCtx->LoHiMap ? (3 - z) : z] = (highest_src & 0x8000u) ? 0xffffu : 0x0000u;
+        w[pCtx->LoHiMap ? (3 - z) : z] = highest_src;
     }
 
     for (z = 0; z < 4; z++) {
@@ -2158,7 +2187,7 @@ static Boolean Put64I_To_4(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* p
         BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
                 = l & 0xf;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_4(highest_src, flags);
     for (; z < 16; z++) {
         BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
                 = (highest_src & 0x8) ? 0xf : 0x0;
@@ -2219,19 +2248,19 @@ static Boolean Put64F_To_4(as_float_t t, tSymbolFlags flags, struct sLayoutCtx* 
 
 static Boolean Put64I_To_8(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int  z;
-    Byte higest_src = 0x00;
+    Byte highest_src = 0x00;
 
     if (!IncMaxCodeLen(pCtx, 8)) {
         return False;
     }
     set_b_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 8, 0xff);
     for (z = 0; z < min(8, LARGEBITS / 8); z++, l >>= 8) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = higest_src
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
                 = l & 0xff;
     }
+    test_signext_8(highest_src, flags);
     for (; z < 8; z++) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = (higest_src & 0x80) ? 0xff : 0x00;
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 8;
     return True;
@@ -2276,12 +2305,11 @@ static Boolean Put64I_To_16(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* 
     set_w_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 4, 0xffffu);
     for (z = 0; z < min(4, LARGEBITS / 16); z++, l >>= 16) {
         WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
-                = l & 0xffff;
+                = l & 0xffffu;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_16(highest_src, flags);
     for (; z < 4; z++) {
-        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = (highest_src & 0x8000) ? 0xffff : 0x0000;
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 4;
     return True;
@@ -2324,10 +2352,9 @@ static Boolean Put64I_To_32(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* 
         DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
                 = l & 0xfffffffful;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_32(highest_src, flags);
     for (; z < 2; z++) {
-        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = (highest_src & 0x80000000ul) ? 0xfffffffful : 0x00000000ul;
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 2;
     return True;
@@ -2373,10 +2400,10 @@ static Boolean LayoutQuadWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     ToInt:
         if (pCtx->Put64I) {
             if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int, Int64)) {
+                && !RangeCheck(t.Contents.Int.Value, Int64)) {
                 WrStrErrorPos(ErrNum_OverRange, pExpr);
             } else {
-                if (!pCtx->Put64I(t.Contents.Int, t.Flags, pCtx)) {
+                if (!pCtx->Put64I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
                 Cnt    = 8;
@@ -2445,18 +2472,16 @@ func_exit:
  * Result:      TRUE if no errors occured
  *****************************************************************************/
 
-static Boolean Put80I_To_4(
-        LargeWord t, tSymbolFlags flags, Boolean orig_negative,
-        struct sLayoutCtx* p_ctx) {
+static Boolean Put80I_To_4(LargeWord t, tSymbolFlags flags, struct sLayoutCtx* p_ctx) {
     unsigned dest;
-    Byte     digit;
+    Byte     digit, negative = !!(flags & eSymbolFlag_Negative);
 
     if (!IncMaxCodeLen(p_ctx, 20)) {
         return False;
     }
     memset(&BAsmCode[p_ctx->CurrCodeFill.FullWordCnt], 0, 20);
 
-    if (orig_negative) {
+    if (negative) {
         t = (LargeWord)(0 - ((LargeInt)t));
     }
     dest = 0;
@@ -2470,11 +2495,11 @@ static Boolean Put80I_To_4(
         }
         dest++;
         if ((dest >= 18) && t) {
-            WrError(orig_negative ? ErrNum_UnderRange : ErrNum_OverRange);
+            WrError(negative ? ErrNum_UnderRange : ErrNum_OverRange);
             return False;
         }
     }
-    digit = !!orig_negative << 3;
+    digit = negative << 3;
     if (p_ctx->LoHiMap) {
         BAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 0] |= digit;
     } else {
@@ -2485,18 +2510,16 @@ static Boolean Put80I_To_4(
     return True;
 }
 
-static Boolean Put80I_To_8(
-        LargeWord t, tSymbolFlags flags, Boolean orig_negative,
-        struct sLayoutCtx* p_ctx) {
+static Boolean Put80I_To_8(LargeWord t, tSymbolFlags flags, struct sLayoutCtx* p_ctx) {
     unsigned dest, bit_pos;
-    Byte     digit;
+    Byte     digit, negative = !!(flags & eSymbolFlag_Negative);
 
     if (!IncMaxCodeLen(p_ctx, 10)) {
         return False;
     }
     memset(&BAsmCode[p_ctx->CurrCodeFill.FullWordCnt], 0, 10);
 
-    if (orig_negative) {
+    if (negative) {
         t = (LargeWord)(0 - ((LargeInt)t));
     }
     dest = bit_pos = 0;
@@ -2513,11 +2536,11 @@ static Boolean Put80I_To_8(
             dest++;
         }
         if ((dest >= 9) && t) {
-            WrError(orig_negative ? ErrNum_UnderRange : ErrNum_OverRange);
+            WrError(negative ? ErrNum_UnderRange : ErrNum_OverRange);
             return False;
         }
     }
-    digit = !!orig_negative << 7;
+    digit = negative << 7;
     if (p_ctx->LoHiMap) {
         BAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 0] |= digit;
     } else {
@@ -2528,18 +2551,16 @@ static Boolean Put80I_To_8(
     return True;
 }
 
-static Boolean Put80I_To_16(
-        LargeWord t, tSymbolFlags flags, Boolean orig_negative,
-        struct sLayoutCtx* p_ctx) {
+static Boolean Put80I_To_16(LargeWord t, tSymbolFlags flags, struct sLayoutCtx* p_ctx) {
     unsigned dest, bit_pos;
-    Word     digit;
+    Word     digit, negative = !!(flags & eSymbolFlag_Negative);
 
     if (!IncMaxCodeLen(p_ctx, 5)) {
         return False;
     }
     memset(&WAsmCode[p_ctx->CurrCodeFill.FullWordCnt], 0, 10);
 
-    if (orig_negative) {
+    if (negative) {
         t = (LargeWord)(0 - ((LargeInt)t));
     }
     dest = bit_pos = 0;
@@ -2556,11 +2577,11 @@ static Boolean Put80I_To_16(
             dest++;
         }
         if ((dest >= 4) && (bit_pos >= 8) && t) {
-            WrError(orig_negative ? ErrNum_UnderRange : ErrNum_OverRange);
+            WrError(negative ? ErrNum_UnderRange : ErrNum_OverRange);
             return False;
         }
     }
-    digit = !!orig_negative << 15;
+    digit = negative << 15;
     if (p_ctx->LoHiMap) {
         WAsmCode[p_ctx->CurrCodeFill.FullWordCnt + 0] |= digit;
     } else {
@@ -2571,18 +2592,16 @@ static Boolean Put80I_To_16(
     return True;
 }
 
-static Boolean Put80I_To_32(
-        LargeWord t, tSymbolFlags flags, Boolean orig_negative,
-        struct sLayoutCtx* p_ctx) {
+static Boolean Put80I_To_32(LargeWord t, tSymbolFlags flags, struct sLayoutCtx* p_ctx) {
     unsigned dest, bit_pos;
-    LongWord digit;
+    LongWord digit, negative = !!(flags & eSymbolFlag_Negative);
 
     if (!IncMaxCodeLen(p_ctx, 3)) {
         return False;
     }
     memset(&DAsmCode[p_ctx->CurrCodeFill.FullWordCnt], 0, 12);
 
-    if (orig_negative) {
+    if (negative) {
         t = (LargeWord)(0 - ((LargeInt)t));
     }
     dest = bit_pos = 0;
@@ -2599,11 +2618,11 @@ static Boolean Put80I_To_32(
             dest++;
         }
         if ((dest >= 2) && (bit_pos >= 8) && t) {
-            WrError(orig_negative ? ErrNum_UnderRange : ErrNum_OverRange);
+            WrError(negative ? ErrNum_UnderRange : ErrNum_OverRange);
             return False;
         }
     }
-    digit = ((LongWord) !!orig_negative) << 15;
+    digit = negative << 15;
     if (p_ctx->LoHiMap) {
         set_d_guessed(flags, p_ctx->CurrCodeFill.FullWordCnt, 1, 0xffffu);
         set_d_guessed(flags, p_ctx->CurrCodeFill.FullWordCnt + 1, 2, 0xfffffffful);
@@ -2747,7 +2766,7 @@ static Boolean LayoutTenBytes(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (pCtx->flags & eIntPseudoFlag_AllowInt) {
-            if (!pCtx->Put80I(t.Contents.Int, t.Flags, t.Contents.Int < 0, pCtx)) {
+            if (!pCtx->Put80I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
             Cnt    = 10;
@@ -2781,7 +2800,7 @@ static Boolean LayoutTenBytes(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
 
         for (z = 0; z < t.Contents.str.len; z++) {
             ret = (pCtx->flags & eIntPseudoFlag_AllowInt)
-                          ? pCtx->Put80I(t.Contents.str.p_str[z], t.Flags, False, pCtx)
+                          ? pCtx->Put80I(t.Contents.str.p_str[z], t.Flags, pCtx)
                           : pCtx->Put80F(t.Contents.str.p_str[z], t.Flags, pCtx);
             if (!ret) {
                 LEAVE;
@@ -2812,16 +2831,16 @@ func_exit:
  * Result:      TRUE if no errors occured
  *****************************************************************************/
 
-static Boolean Put128I_To_1(
-        LargeWord l, tSymbolFlags flags, Boolean orig_negative, struct sLayoutCtx* pCtx) {
-    Word w[8];
+static Boolean Put128I_To_1(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
+    Word w[8], highest_src;
     int  z;
 
     for (z = 0; z < min(8, LARGEBITS / 16); z++, l >>= 16) {
-        w[pCtx->LoHiMap ? (7 - z) : z] = l & 0xffffu;
+        w[pCtx->LoHiMap ? (7 - z) : z] = highest_src = l & 0xffffu;
     }
+    test_signext_16(highest_src, flags);
     for (; z < 8; z++) {
-        w[pCtx->LoHiMap ? (7 - z) : z] = orig_negative ? 0xffffu : 0x0000u;
+        w[pCtx->LoHiMap ? (7 - z) : z] = highest_src;
     }
 
     for (z = 0; z < 8; z++) {
@@ -2849,21 +2868,21 @@ static Boolean Put128F_To_1(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
     return True;
 }
 
-static Boolean Put128I_To_4(
-        LargeWord l, tSymbolFlags flags, Boolean orig_negative, struct sLayoutCtx* pCtx) {
-    int z;
+static Boolean Put128I_To_4(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
+    int  z;
+    Byte highest_src;
 
     if (!IncMaxCodeLen(pCtx, 32)) {
         return False;
     }
     set_b_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 32, 0xf);
     for (z = 0; z < min(32, LARGEBITS / 4); z++, l >>= 4) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = l & 0xf;
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
+                = l & 0xf;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_4(highest_src, flags);
     for (; z < 32; z++) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = orig_negative ? 0xff : 0x00;
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
 
     pCtx->CurrCodeFill.FullWordCnt += 32;
@@ -2927,21 +2946,21 @@ static Boolean Put128F_To_4(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
     return True;
 }
 
-static Boolean Put128I_To_8(
-        LargeWord l, tSymbolFlags flags, Boolean orig_negative, struct sLayoutCtx* pCtx) {
-    int z;
+static Boolean Put128I_To_8(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
+    int  z;
+    Byte highest_src;
 
     if (!IncMaxCodeLen(pCtx, 16)) {
         return False;
     }
     set_b_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 16, 0xff);
     for (z = 0; z < min(16, LARGEBITS / 8); z++, l >>= 8) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = l & 0xff;
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
+                = l & 0xff;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_8(highest_src, flags);
     for (; z < 16; z++) {
-        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = orig_negative ? 0xff : 0x00;
+        BAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 16;
     return True;
@@ -2974,21 +2993,21 @@ static Boolean Put128F_To_8(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
     }
 }
 
-static Boolean Put128I_To_16(
-        LargeWord l, tSymbolFlags flags, Boolean orig_negative, struct sLayoutCtx* pCtx) {
-    int z;
+static Boolean Put128I_To_16(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
+    int  z;
+    Word highest_src;
 
     if (!IncMaxCodeLen(pCtx, 8)) {
         return False;
     }
     set_w_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 8, 0xffffu);
     for (z = 0; z < min(8, LARGEBITS / 16); z++, l >>= 16) {
-        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = l & 0xffff;
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
+                = l & 0xffff;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_16(highest_src, flags);
     for (; z < 8; z++) {
-        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = orig_negative ? 0xffff : 0x0000;
+        WAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 8;
     return True;
@@ -3027,21 +3046,21 @@ static Boolean Put128F_To_16(as_float_t t, tSymbolFlags flags, struct sLayoutCtx
     return True;
 }
 
-static Boolean Put128I_To_32(
-        LargeWord l, tSymbolFlags flags, Boolean orig_negative, struct sLayoutCtx* pCtx) {
-    int z;
+static Boolean Put128I_To_32(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
+    int      z;
+    LongWord highest_src;
 
     if (!IncMaxCodeLen(pCtx, 4)) {
         return False;
     }
     set_d_guessed(flags, pCtx->CurrCodeFill.FullWordCnt, 4, 0xfffffffful);
     for (z = 0; z < min(4, LARGEBITS / 32); z++, largeint_shr32(l)) {
-        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = l & 0xfffffffful;
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src
+                = l & 0xfffffffful;
     }
-    /* TempResult is TempInt, so sign-extend */
+    test_signext_32(highest_src, flags);
     for (; z < 4; z++) {
-        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)]
-                = orig_negative ? 0xfffffffful : 0x00000000;
+        DAsmCode[pCtx->CurrCodeFill.FullWordCnt + (z ^ pCtx->LoHiMap)] = highest_src;
     }
     pCtx->CurrCodeFill.FullWordCnt += 4;
     return True;
@@ -3093,10 +3112,10 @@ static Boolean LayoutOctaWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     ToInt:
         if (pCtx->Put128I) {
             if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int, Int128)) {
+                && !RangeCheck(t.Contents.Int.Value, Int128)) {
                 WrStrErrorPos(ErrNum_OverRange, pExpr);
             } else {
-                if (!pCtx->Put128I(t.Contents.Int, t.Flags, t.Contents.Int < 0, pCtx)) {
+                if (!pCtx->Put128I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
                 Cnt    = 16;
@@ -3135,7 +3154,7 @@ static Boolean LayoutOctaWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             }
 
             for (z = 0; z < t.Contents.str.len; z++) {
-                if (!pCtx->Put128I(t.Contents.str.p_str[z], t.Flags, False, pCtx)) {
+                if (!pCtx->Put128I(t.Contents.str.p_str[z], t.Flags, pCtx)) {
                     LEAVE;
                 }
             }

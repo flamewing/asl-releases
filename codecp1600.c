@@ -639,30 +639,30 @@ static void DecodeWORD(Word Index) {
         forallargs(pArg, OK) {
             EvalStrExpression(pArg, &t);
             if (mFirstPassUnknown(t.Flags) && t.Typ == TempInt) {
-                t.Contents.Int &= 65535;
+                t.Contents.Int.Value &= 65535;
             }
 
             switch (t.Typ) {
             case TempInt:
                 switch (Index) {
                 case 0x0000: /* WORD */
-                    if (ChkRange(t.Contents.Int, -32768, 65535)) {
+                    if (ChkRange(t.Contents.Int.Value, -32768, 65535)) {
                         set_w_guessed(t.Flags, CodeLen, 1, 0xffff);
-                        WAsmCode[CodeLen++] = t.Contents.Int;
+                        WAsmCode[CodeLen++] = t.Contents.Int.Value;
                     }
                     b = 0;
                     break;
                 case 0x0001: /* BYTE */
-                    if (ChkRange(t.Contents.Int, -32768, 65535)) {
+                    if (ChkRange(t.Contents.Int.Value, -32768, 65535)) {
                         set_w_guessed(t.Flags, CodeLen, 2, 0x00ff);
-                        WAsmCode[CodeLen++] = t.Contents.Int & 0x00FF;
-                        WAsmCode[CodeLen++] = (t.Contents.Int >> 8) & 0x00FF;
+                        WAsmCode[CodeLen++] = t.Contents.Int.Value & 0x00FF;
+                        WAsmCode[CodeLen++] = (t.Contents.Int.Value >> 8) & 0x00FF;
                     }
                     b = 0;
                     break;
                 case 0x0002: /* TEXT */
-                    if (ChkRange(t.Contents.Int, 0, 255)) {
-                        PutByte(t.Contents.Int & 0xff, &b, t.Flags);
+                    if (ChkRange(t.Contents.Int.Value, 0, 255)) {
+                        PutByte(t.Contents.Int.Value & 0xff, &b, t.Flags);
                     }
                     break;
                 default:

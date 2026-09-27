@@ -121,7 +121,7 @@ static void DecodeDATA_7720(Word Index) {
         forallargs(pArg, OK) {
             EvalStrExpression(pArg, &t);
             if (mFirstPassUnknown(t.Flags) && (t.Typ == TempInt)) {
-                t.Contents.Int &= MaxV;
+                t.Contents.Int.Value &= MaxV;
             }
 
             switch (t.Typ) {
@@ -145,12 +145,12 @@ static void DecodeDATA_7720(Word Index) {
             }
             case TempInt:
             ToInt:
-                OK = ChkRange(t.Contents.Int, MinV, MaxV);
+                OK = ChkRange(t.Contents.Int.Value, MinV, MaxV);
                 if (OK) {
                     if (ActPC == SegCode) {
-                        DAsmCode[CodeLen++] = t.Contents.Int & MaxV;
+                        DAsmCode[CodeLen++] = t.Contents.Int.Value & MaxV;
                     } else {
-                        WAsmCode[CodeLen++] = t.Contents.Int;
+                        WAsmCode[CodeLen++] = t.Contents.Int.Value;
                     }
                 }
                 break;
