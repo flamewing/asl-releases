@@ -71,6 +71,12 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Conservative simple-symbol shortcut — evaluated and discarded 5 October 2026
+
+Recognizing plain ASCII identifiers after constant and target-specific processing, then jumping to the unchanged symbol path, passed all 209 tests on both OSes and preserved every benchmark object and cross-platform code record. Five-pair screens showed no useful incremental gain after operator dispatch: Windows -15.22–2.93%, Linux -5.32–1.28%, with six negative Linux medians. The first scaler lost all Linux pairs with nonoverlapping ranges. The implementation was reverted and both normal assemblers rebuilt. No code commit or confirmation was warranted.
+
+The four requested experiments are complete. Delimiter absence and operator dispatch are retained; backup-copy delay and this symbol shortcut are discarded. See the [complete follow-up results](README.md#scanner-and-expression-follow-up-experiments-2026-10-05).
+
 ### First-character expression operator dispatch — accepted 5 October 2026
 
 Parser initialization builds first-byte operator chains in original table order. The existing quote/bracket scan consults only the appropriate chain, replacing per-operator whole-expression searches and unrelated comparisons. Longest matches, precedence, associativity, unary handling and symbol behavior are retained. The rejected backup-copy candidate is excluded.

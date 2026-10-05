@@ -445,3 +445,23 @@ Windows faster-pair counts are 5, 5, 4, 5, 5, 5, 5; Linux counts are 4, 4, 4, 5,
 Every confirmation median improves and every workload wins at least seven Windows pairs and eight Linux pairs. The earlier Sonic Classic Heroes slowdown does not repeat; its Linux ranges do not overlap (0.706–0.793 versus 0.605–0.662 s). Big Fishing Derby's ranges do not overlap on either platform. The dispatch change is accepted. Gains are incremental to delimiter absence and must not be added to percentages from other batches.
 
 Every warmup and measured object matches its baseline, and actual code records match across OSes for screening and confirmation. Raw artifacts follow the earlier directory pattern with experiment name `operator-index`; Linux paths now resolve through the retained symlink to native disk. No new instrumented profile or call-count reduction is claimed.
+
+### Conservative simple-symbol shortcut — discarded
+
+After the existing constant conversions and target-specific `InternSymbol` attempt, this candidate recognized ASCII identifiers of the form `[A-Za-z_][A-Za-z0-9_]*` and jumped to the original symbol-restoration/lookup path. These identifiers cannot contain the current operators, quotes or brackets. Numeric syntax, program-counter handling, registers, temporary symbols, internal symbols, forward-reference flags and lookup behavior retained their existing order; other inputs retained the full scanner. No expression values were cached. The accepted operator dispatch was the baseline, so this experiment measured the shortcut's incremental value after that improvement.
+
+All 209 tests pass on Windows and Linux. Every warmup and measured object matches the baseline, and actual code records match across OSes. Five-pair screening, with Linux inputs on native ext4:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 0.949 → 0.958 | -0.95% | 0.306 → 0.322 | -5.20% |
+| Sonic 2 | 1.343 → 1.384 | -3.05% | 0.622 → 0.628 | -0.93% |
+| Sonic & Knuckles | 1.579 → 1.533 | 2.93% | 0.647 → 0.638 | 1.28% |
+| Big Fishing Derby | 1.167 → 1.245 | -6.75% | 0.585 → 0.586 | -0.24% |
+| Sonic Classic Heroes | 1.818 → 1.803 | 0.83% | 0.672 → 0.682 | -1.40% |
+| ScalerMacros-v1.asm | 0.517 → 0.596 | -15.22% | 0.395 → 0.416 | -5.32% |
+| ScalerMacros-v2.asm | 1.671 → 1.704 | -1.95% | 1.213 → 1.239 | -2.15% |
+
+Windows faster-pair counts in table order are 3, 3, 4, 1, 4, 2, 2; Linux counts are 1, 3, 2, 3, 3, 0, 2 out of five. No useful overall gain is established. The first scaler's Linux ranges do not overlap (0.384–0.397 versus 0.401–0.429 s), with no faster candidate pairs. The extra eligibility scan may outweigh work avoided in the already improved parser, but its precise cost was not separately profiled. This conservative variant does not determine whether a more ambitious symbol path could help.
+
+The implementation was reverted without confirmation or a code commit, and both normal assemblers rebuilt from the accepted implementation. Raw reports and preserved baselines follow the earlier directory pattern with experiment name `symbol-fast` and suffix `ab`. The final production code includes delimiter absence and first-character operator dispatch; the original backup copy and general symbol path remain. All four requested follow-up experiments are complete.
