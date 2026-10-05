@@ -154,3 +154,65 @@ These measurements isolate the cursor change: baseline and candidate both includ
 Values are medians. In table order, the cursor won 3/9, 8/9, 3/9, 5/9, 6/9, 5/9, and 9/9 Windows pairs; Linux counts were 5/9, 5/9, 5/9, 5/9, 5/9, 7/9, and 9/9. The clear repeatable improvement is ScalerMacros-v2: Windows baseline samples span 3.063–3.204 s versus 2.669–2.913 s with the cursor; Linux spans 2.333–2.489 s versus 2.028–2.115 s. These ranges do not overlap. The v1 Linux result is smaller, while its Windows result is inconclusive. The other small changes, including the negative Sonic & Knuckles Windows median, do not establish a broad gain or regression. Sonic 1's positive Windows median with only three faster pairs illustrates why median reduction alone is insufficient.
 
 The cursor is retained for its consistent benefit on the larger scaler and removal of repeated traversal without additional allocation or input-tag storage. All 207 tests pass on both platforms. The new `t_macrocursor` regression covers recursive returns, repeated invocations, nested IRP input, SHIFT, early exits, and empty macros; the previous head-walking executable also matches its independently specified expected bytes. Every warmup and measured object matches between baseline and cursor on each OS, and actual code records match across platforms, ignoring only creator footers. Raw samples, executable hashes, logs, snapshots, verification results, and private adapters remain in ignored local directories. This experiment uses wall-time comparisons; no new instrumented profile is claimed.
+
+## Further linked-list experiments (2026-10-05)
+
+Three follow-up candidates were evaluated independently, in the requested order. Each used the committed macro-line-cursor version as its baseline because neither preceding candidate was accepted. These are uninstrumented Release -O3 builds with MinGW GCC 16.2 on Windows/local NTFS and GCC 15.2 on WSL2 Ubuntu/native Linux storage. Each screen used one warmup per binary and five alternating measured pairs, reversing order each pair. Windows and Linux batches ran sequentially, separately from builds and tests. Workloads, adapters and assembly flags retain the scope described above. Positive percentages mean less time; negative percentages mean more time. Absolute times are medians in seconds, rounded independently of the percentage calculation.
+
+### IRP/IRPN argument cursor: discarded
+
+The candidate advanced an invocation-local argument pointer by one element for IRP or by the tuple width for IRPN, replacing the walk from the list head at each iteration. Diagnostics retained the original list. All 208 candidate tests passed on both OSes; the extra regression covered empty arguments, tuple padding, nested loops and repeated invocations, with independently specified output also verified against the baseline.
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.174 → 1.194 | -1.71% | 0.468 → 0.451 | 3.52% |
+| Sonic 2 | 2.053 → 2.023 | 1.44% | 0.972 → 0.959 | 1.34% |
+| Sonic & Knuckles | 2.094 → 2.112 | -0.87% | 0.867 → 0.872 | -0.59% |
+| Big Fishing Derby | 1.761 → 1.798 | -2.10% | 0.863 → 0.882 | -2.12% |
+| Sonic Classic Heroes | 2.565 → 2.450 | 4.49% | 0.913 → 0.932 | -2.17% |
+| ScalerMacros-v1.asm | 0.993 → 0.971 | 2.23% | 0.626 → 0.651 | -4.05% |
+| ScalerMacros-v2.asm | 2.992 → 3.190 | -6.60% | 2.150 → 2.195 | -2.09% |
+
+In table order, the candidate won 3/5, 5/5, 1/5, 2/5, 4/5, 3/5 and 1/5 Windows pairs; Linux counts were 3/5, 3/5, 3/5, 1/5, 0/5, 0/5 and 1/5. Results did not establish a consistent useful gain across the available inputs. The implementation and candidate-only test were discarded without a commit.
+
+### Tail pointers for body capture and copying: discarded
+
+An append-with-tail helper left the existing list API available for other callers. Macro definitions and loop capture tags retained final nodes, making body capture appends constant-time for macros, IRP/IRPC, REPT and WHILE. Generic string-list duplication and global macro-body copies became linear. All 207 tests passed on both platforms.
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.175 → 1.164 | 0.99% | 0.472 → 0.485 | -2.76% |
+| Sonic 2 | 2.065 → 2.075 | -0.50% | 0.992 → 1.014 | -2.17% |
+| Sonic & Knuckles | 2.131 → 2.114 | 0.83% | 0.896 → 0.897 | -0.09% |
+| Big Fishing Derby | 1.742 → 1.771 | -1.64% | 0.954 → 0.999 | -4.71% |
+| Sonic Classic Heroes | 2.420 → 2.456 | -1.48% | 0.919 → 0.958 | -4.28% |
+| ScalerMacros-v1.asm | 0.977 → 1.063 | -8.83% | 0.629 → 0.656 | -4.21% |
+| ScalerMacros-v2.asm | 3.152 → 3.241 | -2.83% | 2.155 → 2.203 | -2.24% |
+
+The candidate won 4/5, 3/5, 2/5, 2/5, 1/5, 1/5 and 1/5 Windows pairs; Linux counts were 1/5, 0/5, 2/5, 2/5, 1/5, 0/5 and 0/5. This candidate showed no repeatable useful benefit and was discarded without a commit. Its extra tail fields changed structure layouts as well as append behavior; the timings do not isolate a cause for the negative results. Unusually long captured bodies may behave differently.
+
+### Reuse stored macro body count: discarded after confirmation
+
+The candidate assigned `ExpandMacro`'s line count from the existing `BodyLineCount`, removing the per-invocation counting walk and adding no state. All 207 tests passed on both platforms.
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.318 → 1.219 | 7.46% | 0.478 → 0.469 | 1.82% |
+| Sonic 2 | 1.998 → 2.014 | -0.81% | 0.990 → 1.007 | -1.73% |
+| Sonic & Knuckles | 2.033 → 2.171 | -6.75% | 0.900 → 0.899 | 0.15% |
+| Big Fishing Derby | 1.704 → 1.708 | -0.24% | 0.893 → 0.904 | -1.26% |
+| Sonic Classic Heroes | 2.290 → 2.322 | -1.43% | 1.011 → 0.974 | 3.71% |
+| ScalerMacros-v1.asm | 0.945 → 0.918 | 2.90% | 0.668 → 0.671 | -0.47% |
+| ScalerMacros-v2.asm | 3.072 → 3.033 | 1.26% | 2.212 → 2.251 | -1.78% |
+
+The candidate won 4/5, 1/5, 2/5, 2/5, 1/5, 4/5 and 3/5 Windows pairs; Linux counts were 4/5, 2/5, 4/5, 2/5, 3/5, 1/5 and 1/5. Sonic 1 warranted confirmation, as did the apparent Sonic & Knuckles Windows regression. A fresh nine-pair comparison on all three public inputs gave:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Faster pairs | Linux baseline → candidate (s) | Time reduction | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.098 → 1.099 | -0.07% | 6/9 | 0.492 → 0.489 | 0.59% | 5/9 |
+| Sonic 2 | 1.919 → 1.899 | 1.07% | 5/9 | 0.998 → 1.003 | -0.51% | 6/9 |
+| Sonic & Knuckles | 2.009 → 1.981 | 1.41% | 7/9 | 0.912 → 0.903 | 0.94% | 6/9 |
+
+The initial larger gain and regression did not repeat, and confirmation differences were small with overlapping timing ranges. The stored-count change was discarded without a commit. These experiments illustrate that removing list traversal does not guarantee a measurable improvement when other work dominates, and that a short positive median is insufficient evidence for acceptance.
+
+All seven workloads preserved identical baseline/candidate objects through every warmup and measured run of all three screens. Actual code records matched across OSes, ignoring only creator footers. Confirmation objects also matched. Raw reports retain individual samples, timing ranges, executable hashes and execution order; binaries, logs, snapshots and private adapters remain in ignored local directories. No new instrumented profile is claimed. The committed macro-line-cursor implementation remains the final code baseline; only these experiment notes are retained from the follow-up work.

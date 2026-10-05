@@ -71,6 +71,24 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Reuse macro body count — evaluated and discarded 5 October 2026
+
+`ExpandMacro` used the definition's existing `BodyLineCount` instead of walking its body list to count lines on every invocation. No new state or allocation was introduced. All 207 tests passed on Windows and Linux; all seven workloads retained identical baseline/candidate objects and cross-platform code records.
+
+The five-pair screen suggested a Sonic 1 improvement (7.46% Windows, 1.82% Linux), but nine fresh alternating pairs on the three public inputs did not confirm a meaningful gain. Sonic 1 then measured -0.07% / 0.59%; Sonic 2 measured 1.07% / -0.51%; Sonic & Knuckles measured 1.41% / 0.94% (Windows/Linux). The apparent larger Windows regression on Sonic & Knuckles also failed to repeat. The change was discarded and not committed. This small reduction in work did not demonstrate a stable useful wall-time benefit on the tested inputs.
+
+### Tail pointers for body capture and list copying — evaluated and discarded 5 October 2026
+
+An append-with-tail helper preserved the existing list API while macro definitions and loop capture tags retained final-node pointers. Macro, IRP/IRPC, REPT and WHILE capture used constant-time appends; generic list duplication and global macro-body copies became linear. Macro-copy tails were initialized explicitly and released with their owning lists.
+
+All 207 tests passed on both OSes. Five alternating benchmark pairs per workload and OS did not demonstrate a useful gain: most Windows medians and all Linux medians were negative. All objects matched the baseline and code records matched across OSes. The implementation was discarded and not committed. This does not prove tail appends cannot help unusually long bodies; it means this candidate did not meet acceptance on the seven available workloads. Raw samples and the candidate binary remain in ignored local directories.
+
+### IRP/IRPN argument cursor — evaluated and discarded 5 October 2026
+
+An invocation-local argument pointer replaced the repeated walk from `Params` at the start of each iteration, advancing by one argument for IRP and by tuple width for IRPN. Diagnostic lookup retained the original list. The candidate passed all 208 tests on Windows and Linux, including an additional independently specified regression for empty arguments, tuple padding, nested loops and repeated macro invocation; the baseline produced the same expected bytes.
+
+Five alternating measured pairs per workload and OS did not show a consistent useful gain. Sonic Classic Heroes and ScalerMacros-v1 had positive Windows medians but negative Linux medians; the larger scaler was slower by median on both platforms. Every baseline/candidate object matched and code records agreed across OSes. The code and its candidate-only regression were discarded; no implementation commit was made. Raw results remain in ignored local directories. See the [follow-up measurements](README.md#further-linked-list-experiments-2026-10-05), which also cover the subsequent tail-pointer and stored-count experiments.
+
 ### Invocation-local macro line cursor — experiment 5 October 2026
 
 `MACRO_Processor` now reads the current body node from the input tag's existing `LineRun` pointer and advances it once per returned line. `ExpandMacro` initializes that pointer for each invocation. Previously, line `n` required walking `n-1` links from the body head: processing an entire `L`-line body required `L*(L-1)/2` link traversals. The cursor requires `L` advances. The separate invocation-time line-count scan remains unchanged in this experiment.
