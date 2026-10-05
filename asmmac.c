@@ -374,12 +374,44 @@ void ResetMacroDefines(void) {
     IterTree((PTree)MacroRoot, ResetMacroDefines_ResetNode, NULL);
 }
 
+void AddMacroLine(PMacroRec Macro, char const* Line, Boolean NeedsExpansion) {
+    if (Macro->BodyLineCount == Macro->BodyLineCapacity) {
+        size_t Capacity = Macro->BodyLineCapacity ? 2 * Macro->BodyLineCapacity : 16;
+        Byte*  Flags    = (Byte*)realloc(Macro->LineNeedsExpansion, Capacity);
+        if (!Flags) {
+            fprintf(stderr, "out of memory storing macro line flags\n");
+            abort();
+        }
+        Macro->LineNeedsExpansion = Flags;
+        Macro->BodyLineCapacity   = Capacity;
+    }
+    AddStringListLast(&Macro->FirstLine, Line);
+    Macro->LineNeedsExpansion[Macro->BodyLineCount++] = !!NeedsExpansion;
+}
+
+void DuplicateMacroLines(PMacroRec Dest, PMacroRec Src) {
+    Dest->FirstLine     = DuplicateStringList(Src->FirstLine);
+    Dest->BodyLineCount = Dest->BodyLineCapacity = Src->BodyLineCount;
+    Dest->LineNeedsExpansion                     = NULL;
+    if (Src->BodyLineCount) {
+        Dest->LineNeedsExpansion = (Byte*)malloc(Src->BodyLineCount);
+        if (!Dest->LineNeedsExpansion) {
+            fprintf(stderr, "out of memory copying macro line flags\n");
+            abort();
+        }
+        memcpy(Dest->LineNeedsExpansion, Src->LineNeedsExpansion, Src->BodyLineCount);
+    }
+}
+
 void ClearMacroRec(PMacroRec* Alt, Boolean Complete) {
     if ((*Alt)->Name) {
         free((*Alt)->Name);
         (*Alt)->Name = NULL;
     }
     ClearStringList(&((*Alt)->FirstLine));
+    free((*Alt)->LineNeedsExpansion);
+    (*Alt)->LineNeedsExpansion = NULL;
+    (*Alt)->BodyLineCount = (*Alt)->BodyLineCapacity = 0;
     ClearStringList(&((*Alt)->ParamNames));
     ClearStringList(&((*Alt)->ParamDefVals));
 

@@ -23,9 +23,11 @@
 #include <stdio.h>
 
 typedef struct tag_MacroRec {
-    char*           Name;           /* Name des Makros */
-    Byte            ParamCount;     /* Anzahl Parameter */
-    StringList      FirstLine;      /* Zeiger auf erste Zeile */
+    char*           Name;               /* Name des Makros */
+    Byte            ParamCount;         /* Anzahl Parameter */
+    StringList      FirstLine;          /* Zeiger auf erste Zeile */
+    Byte*           LineNeedsExpansion; /* one flag per stored body line */
+    size_t          BodyLineCount, BodyLineCapacity;
     StringList      ParamNames;     /* parameter names, needed for named parameters */
     StringList      ParamDefVals;   /* default values */
     LongInt         UseCounter;     /* to limit recursive calls */
@@ -94,6 +96,10 @@ extern void ClearMacroList(void);
 extern void ResetMacroDefines(void);
 
 extern void ClearMacroRec(PMacroRec* Alt, Boolean Complete);
+
+extern void AddMacroLine(PMacroRec Macro, char const* Line, Boolean NeedsExpansion);
+
+extern void DuplicateMacroLines(PMacroRec Dest, PMacroRec Src);
 
 extern void PrintMacroList(void);
 

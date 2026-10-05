@@ -1,0 +1,5 @@
+Checks constant and expandable macro body lines, metadata growth, special
+parameters (attributes, argument count, all arguments, internal label), empty
+macros, recursive calls, nested definitions, and globally copied definitions.
+The same line order and bytes must be emitted whether replacements are skipped
+on constant lines or every line follows the original replacement path.

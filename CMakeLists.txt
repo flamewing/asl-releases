@@ -293,6 +293,8 @@ elseif(MSVC)
     # add_compile_options("/wd4800") # warning C4800: 'const SymbolDatabase *' : forcing value to bool 'true' or 'false' (performance warning)
 endif()
 
+include(Profiling)
+
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     # If Microsoft SDK is installed create script run-msbuild.bat that
     # calls SetEnv.cmd to set up build environment and runs msbuild.

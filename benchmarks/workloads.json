@@ -1,0 +1,5 @@
+{
+  "s1": {"repository": "s1disasm_as", "source": "sonic.asm", "arguments": [], "pcm": "sound/dac/pcm", "dpcm": "sound/dac/dpcm"},
+  "s2": {"repository": "s2disasm", "source": "s2.asm", "arguments": [], "pcm": "sound/PCM", "dpcm": "sound/DAC", "music": true},
+  "sk": {"repository": "skdisasm", "source": "sonic3k.asm", "arguments": ["-D", "Sonic3_Complete=0"], "pcm": "Sound/PCM", "dpcm": "Sound/DAC"}
+}

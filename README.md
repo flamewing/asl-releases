@@ -60,6 +60,11 @@ This build procedure has been tested on the following environments:
 
 I would like to know if it works on other circumstances, particularly when cross-compiling.
 
+## Profiling
+
+For repeatable Windows and Linux performance measurements and opt-in profiling
+builds, see [the benchmark guide](benchmarks/README.md).
+
 ## Cross-compiling
 
 To cross-compile, you need to have an appropriate toolchain file for your target, in addition to the actual toolchain. You start by doing a (potentially partial) host build:

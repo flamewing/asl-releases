@@ -388,6 +388,7 @@ static void MACRO_OutProcessor(void) {
 
     if (FirstOutputTag->NestLevel != -1) {
         as_dynstr_t s;
+        Boolean     NeedsExpansion = False;
 
         as_dynstr_ini_clone(&s, &OneLine);
         KillCtrl(s.p_str);
@@ -396,25 +397,28 @@ static void MACRO_OutProcessor(void) {
 
         l = FirstOutputTag->ParamNames;
         for (z = 1; z <= FirstOutputTag->Mac->ParamCount; z++) {
-            CompressLine(GetStringListNext(&l), z, &s, CaseSensitive);
+            NeedsExpansion
+                    |= CompressLine(GetStringListNext(&l), z, &s, CaseSensitive) > 0;
         }
 
         /* reserved argument names are never case-sensitive */
 
         if (HasAttrs) {
-            CompressLine(AttrName, ArgCntMax + 1, &s, FALSE);
+            NeedsExpansion |= CompressLine(AttrName, ArgCntMax + 1, &s, FALSE) > 0;
         }
         if (CompressLine(ArgCName, ArgCntMax + 2, &s, FALSE) > 0) {
             FirstOutputTag->UsesNumArgs = TRUE;
+            NeedsExpansion              = True;
         }
         if (CompressLine(AllArgName, ArgCntMax + 3, &s, FALSE) > 0) {
             FirstOutputTag->UsesAllArgs = TRUE;
+            NeedsExpansion              = True;
         }
         if (FirstOutputTag->Mac->LocIntLabel) {
-            CompressLine(LabelName, ArgCntMax + 4, &s, FALSE);
+            NeedsExpansion |= CompressLine(LabelName, ArgCntMax + 4, &s, FALSE) > 0;
         }
 
-        AddStringListLast(&(FirstOutputTag->Mac->FirstLine), s.p_str);
+        AddMacroLine(FirstOutputTag->Mac, s.p_str, NeedsExpansion);
         as_dynstr_free(&s);
     }
 
@@ -433,7 +437,7 @@ static void MACRO_OutProcessor(void) {
                 GMacro             = (PMacroRec)malloc(sizeof(MacroRec));
                 GMacro->Name       = as_strdup(FirstOutputTag->GName);
                 GMacro->ParamCount = FirstOutputTag->Mac->ParamCount;
-                GMacro->FirstLine  = DuplicateStringList(FirstOutputTag->Mac->FirstLine);
+                DuplicateMacroLines(GMacro, FirstOutputTag->Mac);
                 GMacro->ParamNames = DuplicateStringList(FirstOutputTag->Mac->ParamNames);
                 GMacro->ParamDefVals
                         = DuplicateStringList(FirstOutputTag->Mac->ParamDefVals);
@@ -471,27 +475,30 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     }
     as_dynstr_copy_c_str(p_dest, Lauf->Content);
 
-    /* process parameters */
+    /* Constant body lines cannot acquire tokens through a substitution.
+       Keep the existing replacement order on every expandable line. */
 
-    Lauf = PInp->Params;
-    for (z = 1; z <= PInp->ParCnt; z++) {
-        ExpandLine(Lauf->Content, z, p_dest);
-        Lauf = Lauf->Next;
-    }
+    if (PInp->Macro->LineNeedsExpansion[PInp->LineZ - 1]) {
+        Lauf = PInp->Params;
+        for (z = 1; z <= PInp->ParCnt; z++) {
+            ExpandLine(Lauf->Content, z, p_dest);
+            Lauf = Lauf->Next;
+        }
 
-    /* process special parameters */
+        /* process special parameters */
 
-    if (HasAttrs) {
-        ExpandLine(PInp->SaveAttr, ArgCntMax + 1, p_dest);
-    }
-    if (PInp->UsesNumArgs) {
-        ExpandLine(PInp->NumArgs, ArgCntMax + 2, p_dest);
-    }
-    if (PInp->UsesAllArgs) {
-        ExpandLine(PInp->AllArgs, ArgCntMax + 3, p_dest);
-    }
-    if (PInp->Macro->LocIntLabel) {
-        ExpandLine(PInp->SaveLabel, ArgCntMax + 4, p_dest);
+        if (HasAttrs) {
+            ExpandLine(PInp->SaveAttr, ArgCntMax + 1, p_dest);
+        }
+        if (PInp->UsesNumArgs) {
+            ExpandLine(PInp->NumArgs, ArgCntMax + 2, p_dest);
+        }
+        if (PInp->UsesAllArgs) {
+            ExpandLine(PInp->AllArgs, ArgCntMax + 3, p_dest);
+        }
+        if (PInp->Macro->LocIntLabel) {
+            ExpandLine(PInp->SaveLabel, ArgCntMax + 4, p_dest);
+        }
     }
 
     CurrLine    = PInp->StartLine;
