@@ -113,8 +113,8 @@ extern char SrcSuffix[], IncSuffix[], PrgSuffix[], LstSuffix[], MacSuffix[], Pre
 
 extern char const* EnvName;
 
-/* This results from the tokenized representation of macro arguments
-   in macro bodys: (31*16) - 4 for special arguments: */
+/* Preserve the historical argument limit. The record-separator/base-29
+   macro token encoding must cover this plus four special parameters. */
 
 #define ArgCntMax 476
 

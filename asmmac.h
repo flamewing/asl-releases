@@ -24,7 +24,7 @@
 
 typedef struct tag_MacroRec {
     char*           Name;               /* Name des Makros */
-    Byte            ParamCount;         /* Anzahl Parameter */
+    int             ParamCount;         /* Anzahl Parameter (up to ArgCntMax) */
     StringList      FirstLine;          /* Zeiger auf erste Zeile */
     Byte*           LineNeedsExpansion; /* one flag per stored body line */
     size_t          BodyLineCount, BodyLineCapacity;

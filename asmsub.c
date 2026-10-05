@@ -1475,10 +1475,18 @@ int ReplaceLineUnchecked(
     return NumReplace;
 }
 
+#if ArgCntMax + 4 >= 29 * 29
+#error Macro parameter tokens exceed the base-29 encoding range
+#endif
+
 static void SetToken(char* Token, unsigned TokenNum) {
-    Token[0] = (TokenNum >> 4) + 1;
-    Token[1] = (TokenNum & 15) + 1;
-    Token[2] = 0;
+    /* Record separator uniquely marks the start. Base-29 digits stay in
+       1..29, excluding both NUL and the separator, and cover all ordinary
+       and special parameter numbers (up to ArgCntMax + 4). */
+    Token[0] = 0x1e;
+    Token[1] = (TokenNum / 29) + 1;
+    Token[2] = (TokenNum % 29) + 1;
+    Token[3] = 0;
 }
 
 /*!------------------------------------------------------------------------
@@ -1493,7 +1501,7 @@ static void SetToken(char* Token, unsigned TokenNum) {
 int CompressLine(
         char const* TokNam, unsigned TokenNum, as_dynstr_t* p_str,
         Boolean ThisCaseSensitive) {
-    char Token[3];
+    char Token[4];
     SetToken(Token, TokenNum);
     return ReplaceLine(p_str, TokNam, Token, ThisCaseSensitive);
 }
@@ -1507,7 +1515,7 @@ int CompressLine(
  * ------------------------------------------------------------------------ */
 
 void ExpandLine(char const* TokNam, unsigned TokenNum, as_dynstr_t* p_str) {
-    char Token[3];
+    char Token[4];
     SetToken(Token, TokenNum);
     (void)ReplaceLineUnchecked(p_str, Token, TokNam, True);
 }

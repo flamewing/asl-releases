@@ -1,0 +1,6 @@
+Checks unambiguous macro parameter tokens: the 16/17 boundary that used
+to replace parameter 1, all 476 ordinary parameters concatenated, radix
+transitions, empty substitutions, attributes, argument count, all arguments,
+and internal labels. Expected bytes are specified independently of ASL.
+The expected stream is AB, 476 letters cycling A..Z, word $01dc,
+ABZZ, word $0001, Z, and the invocation label address as word $01e2.
