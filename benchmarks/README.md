@@ -465,3 +465,67 @@ All 209 tests pass on Windows and Linux. Every warmup and measured object matche
 Windows faster-pair counts in table order are 3, 3, 4, 1, 4, 2, 2; Linux counts are 1, 3, 2, 3, 3, 0, 2 out of five. No useful overall gain is established. The first scaler's Linux ranges do not overlap (0.384–0.397 versus 0.401–0.429 s), with no faster candidate pairs. The extra eligibility scan may outweigh work avoided in the already improved parser, but its precise cost was not separately profiled. This conservative variant does not determine whether a more ambitious symbol path could help.
 
 The implementation was reverted without confirmation or a code commit, and both normal assemblers rebuilt from the accepted implementation. Raw reports and preserved baselines follow the earlier directory pattern with experiment name `symbol-fast` and suffix `ab`. The final production code includes delimiter absence and first-character operator dispatch; the original backup copy and general symbol path remain. All four requested follow-up experiments are complete.
+
+## Post-dispatch instrumented profiles (2026-10-05)
+
+Fresh Release gprof builds of `495bd2f` include accepted delimiter absence and operator dispatch, without the discarded backup-copy or simple-symbol changes. Each of the same seven workloads ran five times on Windows and WSL2 Ubuntu, with unchanged snapshots, adapters and arguments, no listing and zero warmups. Builds completed before collection and OS batches ran sequentially. Windows uses MinGW GCC 16.2.0/gprof 2.47.20260726; Linux uses GCC 15.2.0/gprof 2.46 and native ext4 through the retained workspace symlink. The preceding instrumented Linux refresh used tmpfs. Input scope remains ASL assembly with the documented adapters, not full game build pipelines.
+
+All five outputs for every workload match the accepted uninstrumented operator-confirmation object hash on their OS. Actual code records match across OSes, excluding creator footers. Primary and self-recursive `EvalStrExpression` counts are unchanged from the previous profiles, as are `ExpandTokens`, legacy `ExpandLine` and `StrCompAlloc` counts. No new production code was introduced; the accepted implementation's 209-test results remain applicable.
+
+### Remaining sampled costs
+
+Linux gprof sampled self-time, excluding callees, compared with the preceding refresh at `7adbaef`:
+
+| Workload | `EvalStrExpression`, previous → current | `QuotPosQualify`, previous → current | Current `AssembleFile` |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 17.61% → 13.48% | 11.27% → 4.49% | 8.99% |
+| Sonic 2 | 17.97% → 13.90% | 14.06% → 0.90% | 4.48% |
+| Sonic & Knuckles | 14.69% → 9.86% | 10.20% → 2.35% | 7.51% |
+| Big Fishing Derby | 16.07% → 14.15% | 11.61% → 2.44% | 7.32% |
+| Sonic Classic Heroes | 17.13% → 7.96% | 7.57% → 2.65% | 5.31% |
+| ScalerMacros-v1.asm | 7.50% → 8.92% | 12.50% → 3.18% | 20.38% |
+| ScalerMacros-v2.asm | 8.96% → 3.94% | 16.42% → 4.81% | 17.07% |
+
+Scanning occupies a smaller sampled share on every workload. Expression evaluation remains prominent on full projects; broad assembly/line processing dominates the scalers. A rising share, such as the first scaler's expression share, does not imply a slowdown when other costs have fallen. The uninstrumented confirmation pairs establish performance improvements; these percentage comparisons do not independently quantify them. Storage, sampling, compiler layout and instrumentation limit comparisons of absolute CPU seconds between refreshes.
+
+Current Windows expression self-time is 8.09%, 9.64%, 8.59%, 5.48%, 7.27%, 5.20% and 4.96% in table order. `AssembleFile` reaches 10.00%/12.40% on the scalers. Windows profiling hooks occupy 50.14–56.65% of samples, and elapsed-time outliers persist. Linux still has an unresolved `_init` bucket of 14.55–18.82%. No samples were renormalized to remove those costs, and the bucket must not be interpreted as startup or a particular library function. Optimized helpers and inlined functions complicate attribution; repeated static-function names are aggregated as families rather than silently overwriting rows.
+
+Linux `MACRO_Processor` now occupies 0–0.88% sampled self-time. Remaining lookup costs matter more: `FindNode_FNode` reaches 6.10% on Sonic & Knuckles, while `SearchTree` reaches 5.38% on Sonic 2. Caller inspection shows `SearchTree` serves macro and structure lookup; ordinary symbols already use a hash table. These observations do not justify replacing the symbol table with another tree or treating all lookup work as one operation. Dynamic copies and whitespace/case normalization also recur frequently, but one short sampled copy-function result is insufficient to prioritize a library-wide string redesign.
+
+### Diagnostic frequencies for next experiments
+
+A separate local Release build adds counters to expression stages, single-character searches and lookup entry points. It runs one assembly per workload on Linux/ext4, including every assembly pass and recursive evaluation. Its outputs match the refreshed profile objects. Evaluation totals agree with gprof primary plus recursive counts; conversion-stage accounting reconciles, and logical scanner entries agree with gprof. Counter instrumentation adds work, so its elapsed times are excluded from performance conclusions. The counter source/build is separate from production and normal/profile builds.
+
+| Workload | Float-conversion attempts | Successful float constants | Attempts outside candidate starting characters |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 541,855 | 1,344 | 85.93% |
+| Sonic 2 | 1,459,292 | 1,383 | 88.73% |
+| Sonic & Knuckles | 953,066 | 902 | 90.39% |
+| Big Fishing Derby | 1,079,940 | 1 | 85.02% |
+| Sonic Classic Heroes | 987,541 | 1 | 87.41% |
+| ScalerMacros-v1.asm | 761,292 | 0 | 99.10% |
+| ScalerMacros-v2.asm | 1,316,758 | 0 | 93.49% |
+
+The candidate-character diagnostic retains digits, signs, decimal point, `n`/`N`, `i`/`I`, whitespace and empty input. Outside that set, no float conversion succeeds on these workloads under the benchmark C locale. This is eligibility evidence for a future guard, not proof of all locale/implementation behavior or a measured saving.
+
+| Workload | Local lookups with no active local scope | Structure lookups with an empty table | Single-character searches with absent delimiter |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 62,393 / 128,921 (48.40%) | 1,145 / 372,182 (0.31%) | 74.60% |
+| Sonic 2 | 95,091 / 228,087 (41.69%) | 1,777 / 642,004 (0.28%) | 78.90% |
+| Sonic & Knuckles | 290,264 / 400,804 (72.42%) | 283,458 / 688,214 (41.19%) | 68.69% |
+| Big Fishing Derby | 181,077 / 384,457 (47.10%) | 166 / 608,042 (0.03%) | 68.75% |
+| Sonic Classic Heroes | 184,343 / 365,484 (50.44%) | 172 / 699,406 (0.02%) | 70.55% |
+| ScalerMacros-v1.asm | 90 / 298,024 (0.03%) | 952,798 / 952,798 (100%) | 68.31% |
+| ScalerMacros-v2.asm | 100 / 772,438 (0.01%) | 3,218,428 / 3,218,428 (100%) | 78.64% |
+
+The last column confirms that the accepted delimiter-absence return is exercised frequently. Macro tables are empty on only 30–93 lookup entries per workload, so an analogous empty-macro guard has much less frequency evidence. These counters include logical entries that compiler inlining can omit from individual gprof function counts.
+
+### Suggested next sequence
+
+1. **Guard impossible float conversions.** Inside `ConstFloatVal`, reject input that cannot start a float before calling `strtod` or performing its preparatory length checks. Preserve integer-format precedence, signed/dotted numbers, exponents, NaN/Inf, whitespace, empty input, the existing `0x` rule and locale behavior. Start with the smallest provably safe guard; the failed plain-symbol eligibility experiment does not test this earlier conversion cost. This is the broadest frequency-supported candidate, with 0.54–1.46 million attempts per workload and 85–99% outside the diagnostic prefix set.
+2. **Move the inactive-local-scope check earlier.** `FindLocNode` currently copies the name, expands dot-prefixed names and uppercases it before returning for `MomLocHandle == -1`. Move that existing check ahead of preparatory work, after confirming helper side effects are irrelevant on this path. `ChkTmp3` with `e_symbol_source_none` modifies only the local name buffer; it does not update the global temporary-symbol state. Preserve active/nested scope search order, case sensitivity, temporary/dot-prefixed symbols and result flags. Expect this primarily to help full projects, not the scalers.
+3. **Reject structure lookup when the table is empty.** At `FoundStruct` entry, clear the output pointer and return false when `StructRoot` is null, avoiding copying, normalization and section traversal. Preserve behavior as structures are defined, reset and cleared; do not cache misses across definitions or passes. This targets both scalers and Sonic & Knuckles, where empty-table calls are frequent. An empty-macro guard is lower priority given its very small observed count.
+
+Run each independently, with complete Windows/Linux tests, focused behavioral checks where warranted, identical benchmark objects and cross-platform code records. Screen optimized uninstrumented builds with alternating pairs; confirm promising changes in a fresh nine-pair batch before accepting them. No new optimization is implemented or accepted by this profiling refresh. Lambda substitution and finer attribution within `AssembleFile` remain follow-up investigations if these guards do not produce useful gains.
+
+Exact Windows binaries/catalogs, analysis and public profiles are under ignored `build-benchmark-results/reprofile-dispatch`; private profiles are under `build-benchmark-results/local-private/reprofile-dispatch-windows`. Native Linux reports/gmons are under `/tmp/asl-token-20261005/reprofile-dispatch-{public,local}`, with exact binaries in `reprofile-dispatch-binaries`. Diagnostic source, build, reports and logs use `diagnostic-dispatch-*` beneath the same native workspace. These paths resolve to the relocated ext4 workspace. Private sources and adapters remain outside committed documentation.

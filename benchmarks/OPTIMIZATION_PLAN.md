@@ -71,6 +71,14 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Post-dispatch profile refresh — 5 October 2026
+
+Five gprof runs of all seven workloads on both platforms at `495bd2f` preserve accepted uninstrumented object hashes and cross-platform code records. Expression primary/recursive calls, token-expansion calls and allocation-wrapper calls remain unchanged. Linux single-character scanning now occupies 0.90–4.81% sampled self-time, compared with 7.57–16.42% in the preceding refresh. Expression evaluation remains prominent on full projects (7.96–14.15%); `AssembleFile` dominates scalers (17.07–20.38%). Instrumentation, unresolved attribution and Linux's tmpfs-to-ext4 transition limit percentage interpretation; paired uninstrumented confirmations remain the speedup evidence.
+
+A separate local counter build preserves outputs and agrees with profile evaluation totals. Float conversion succeeds on at most 1,383 of 0.54–1.46 million attempts per workload; 85.02–99.10% start outside the diagnostic float-prefix set under the benchmark locale. Local lookups have inactive local scope on 41.69–72.42% of full-project entries. Structure tables are empty on every scaler lookup and 41.19% of Sonic & Knuckles entries. Delimiters are absent on 68.31–78.90% of single-character scanner entries, confirming use of the accepted shortcut.
+
+The next proposed experiments, individually measured, are: (1) a conservative impossible-float-start guard inside `ConstFloatVal`; (2) moving `FindLocNode`'s existing inactive-scope return ahead of name preparation; (3) returning an explicitly null result from `FoundStruct` before preparation when its table is empty. Preserve locale/numeric behavior, scope semantics and table lifecycle respectively. These are measured opportunities, not accepted changes. See the [profile tables, diagnostic counts and validation plans](README.md#post-dispatch-instrumented-profiles-2026-10-05).
+
 ### Conservative simple-symbol shortcut — evaluated and discarded 5 October 2026
 
 Recognizing plain ASCII identifiers after constant and target-specific processing, then jumping to the unchanged symbol path, passed all 209 tests on both OSes and preserved every benchmark object and cross-platform code record. Five-pair screens showed no useful incremental gain after operator dispatch: Windows -15.22–2.93%, Linux -5.32–1.28%, with six negative Linux medians. The first scaler lost all Linux pairs with nonoverlapping ranges. The implementation was reverted and both normal assemblers rebuilt. No code commit or confirmation was warranted.
