@@ -247,3 +247,121 @@ The candidate won all five pairs for every workload on both platforms. A fresh n
 The scaler confirmation ranges do not overlap: Windows 2.970–3.513 s versus 2.004–2.522 s, Linux 2.132–2.230 s versus 1.493–1.547 s. Sonic 1's Windows baseline includes a 3.128 s outlier; medians and paired wins are reported rather than treating that sample as typical. These are repeatable gains on this machine, not instrumented profile percentages or guarantees for every input.
 
 All 207 tests pass on both OSes. A temporary differential harness compiled the old and candidate scanner functions extracted directly from source, comparing 600,000 results on deterministic generated inputs with quote escapes, bracket nesting, qualified/unqualified apostrophes, empty and multi-entry lists, multi-character delimiters and all three scanner entry points. All results agree. Every warmup and measured object matches the baseline; actual code records match across Windows and Linux, ignoring only creator footers, including confirmation runs. The fast path is retained and becomes the baseline for the next experiment.
+
+### Skip matching inside quotes/brackets: discarded
+
+This candidate moved the protected-state check before delimiter matching in the shared scanner. It retained every quote, escape, bracket and apostrophe-qualification update, including matching at eligible opening characters before updating state. Its baseline includes the accepted single-character fast path. All 207 tests pass on both platforms and the same 600,000 differential scanner comparisons agree with the baseline. Five-pair results:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.273 → 1.209 | 5.04% | 0.457 → 0.502 | -9.94% |
+| Sonic 2 | 1.993 → 1.992 | 0.06% | 0.983 → 0.995 | -1.15% |
+| Sonic & Knuckles | 2.161 → 2.105 | 2.60% | 0.950 → 0.976 | -2.78% |
+| Big Fishing Derby | 1.653 → 1.712 | -3.57% | 0.830 → 0.840 | -1.15% |
+| Sonic Classic Heroes | 2.193 → 2.363 | -7.75% | 0.924 → 0.914 | 1.06% |
+| ScalerMacros-v1.asm | 0.832 → 0.825 | 0.85% | 0.574 → 0.586 | -2.03% |
+| ScalerMacros-v2.asm | 2.545 → 2.355 | 7.47% | 1.646 → 1.692 | -2.81% |
+
+In table order, the candidate won 4/5, 2/5, 5/5, 1/5, 2/5, 2/5 and 3/5 Windows pairs; Linux counts were 1/5, 2/5, 2/5, 3/5, 3/5, 1/5 and 2/5. The code was correct but the timings did not establish a repeatable useful incremental gain. The candidate was discarded without a commit. Every object matched the baseline and actual code records matched across OSes.
+
+### Expression scratch-buffer reuse: accepted
+
+The baseline includes the accepted single-character delimiter fast path, without the discarded protected-region change. `EvalStrExpression` borrows a pair of scratch buffers from a free list; each active recursive evaluation keeps its pair checked out. New pairs are allocated only when all existing pairs are active, and pairs are individually allocated so recursive calls cannot move a parent's storage. Cleanup returns buffers with their updated capacity; file cleanup frees the pool. Parsing and backup-copy behavior are unchanged, and expression values are never cached. The pool retains peak pair count and enlarged capacities until file cleanup. Other parser allocations, including lambda-formatting and string-constant scratch storage, are unchanged.
+
+Five-pair screening results:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.273 → 1.122 | 11.89% | 0.465 → 0.413 | 11.14% |
+| Sonic 2 | 2.175 → 1.741 | 19.98% | 0.963 → 0.841 | 12.60% |
+| Sonic & Knuckles | 2.073 → 1.928 | 7.01% | 0.920 → 0.784 | 14.76% |
+| Big Fishing Derby | 1.671 → 1.441 | 13.80% | 0.822 → 0.721 | 12.29% |
+| Sonic Classic Heroes | 2.341 → 2.113 | 9.73% | 0.850 → 0.768 | 9.62% |
+| ScalerMacros-v1.asm | 0.835 → 0.733 | 12.27% | 0.514 → 0.476 | 7.36% |
+| ScalerMacros-v2.asm | 2.450 → 2.390 | 2.46% | 1.617 → 1.705 | -5.46% |
+
+All five Windows pairs favored the candidate on every workload. Linux counts were 4/5, 5/5, 5/5, 5/5, 5/5, 5/5 and 3/5. The larger scaler's negative Linux median despite three faster pairs warranted confirmation. A fresh nine-pair batch on every workload gave:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Faster pairs | Linux baseline → candidate (s) | Time reduction | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.139 → 0.953 | 16.34% | 8/9 | 0.437 → 0.403 | 7.92% | 9/9 |
+| Sonic 2 | 1.948 → 1.564 | 19.69% | 9/9 | 0.929 → 0.790 | 15.00% | 9/9 |
+| Sonic & Knuckles | 2.079 → 1.822 | 12.35% | 9/9 | 0.840 → 0.755 | 10.15% | 7/9 |
+| Big Fishing Derby | 1.687 → 1.448 | 14.18% | 9/9 | 0.764 → 0.684 | 10.49% | 9/9 |
+| Sonic Classic Heroes | 2.247 → 2.017 | 10.23% | 7/9 | 0.798 → 0.728 | 8.69% | 9/9 |
+| ScalerMacros-v1.asm | 0.764 → 0.622 | 18.62% | 9/9 | 0.457 → 0.416 | 9.06% | 8/9 |
+| ScalerMacros-v2.asm | 2.267 → 2.056 | 9.32% | 9/9 | 1.503 → 1.466 | 2.48% | 8/9 |
+
+The candidate improves every confirmation median. The larger scaler's apparent Linux slowdown does not repeat; its confirmed gain is modest and timing ranges overlap. Sonic 2's confirmation ranges do not overlap on either OS: Windows 1.872–2.070 s versus 1.485–1.636 s, Linux 0.885–0.966 s versus 0.778–0.834 s. These are incremental gains from scratch reuse, measured separately from the delimiter fast path; percentages from different batches are not added together.
+
+All 208 tests pass on Windows and Linux. The new `t_exprscratch` regression covers nested functions/operators, float and stringification paths, scratch growth beyond the initial 1024 bytes followed by short expressions, forward references across passes and forty nested parenthesized calls. Its independently specified bytes also match the baseline assembler. Two-file runs produce matching output on both platforms, exercising file cleanup and subsequent initialization. Linux AddressSanitizer memory-access checks pass for the recursion/growth regression and the two-file run; leak detection was disabled for these checks.
+
+All seven workloads retain identical baseline/candidate objects through every warmup, screening and confirmation run. Actual code records match across Windows and Linux, ignoring only creator footers. The pool change is retained. The final implementation includes the single-character delimiter fast path and scratch reuse, with the protected-region candidate discarded. No new instrumented profile is claimed for these experiments.
+
+## Refreshed instrumented profiles (2026-10-05)
+
+Fresh Release gprof builds of commit `7adbaef` include the accepted macro line cursor, single-character delimiter fast path and expression scratch pool. All seven workloads were profiled again, five assemblies each, with the same snapshots, adapters, flags and no listing. Windows used MinGW GCC 16.2.0 and gprof 2.47.20260726; WSL2 Ubuntu used GCC 15.2.0 and gprof 2.46, with inputs on native Linux storage. Windows profiling disables executable ASLR for gprof collection only. Builds completed before collection; the OS batches ran sequentially, with no warmups.
+
+The user reported staying tabbed out of VSCode during these runs to reduce possible Git-extension activity. This was not a controlled editor-activity comparison, so its contribution to earlier noise remains unproven. Windows still had elapsed-time outliers. Instrumented elapsed times are not used to infer optimization gains.
+
+Every profiled assembly produced the same object hash as the latest uninstrumented scratch-pool confirmation executable on its OS. Actual code records match across OSes, excluding creator footers. This checks all five runs of all seven workloads on each platform. No production code changed for this refresh; the existing 208-test results apply to this commit.
+
+### Current sampled self-time
+
+These are percentages of all gprof samples, including profiling overhead and unidentified attribution. They exclude callees from each named function's share. They are instrumented CPU-time rankings, not percentages of uninstrumented wall time or expected speedups. Linux provides the clearer function attribution:
+
+| Workload | `EvalStrExpression` | `QuotPosQualify` | `AssembleFile` | `MACRO_Processor` |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 17.61% | 11.27% | 4.23% | 0.70% |
+| Sonic 2 | 17.97% | 14.06% | 7.81% | 0.39% |
+| Sonic & Knuckles | 14.69% | 10.20% | 6.53% | 0.00% |
+| Big Fishing Derby | 16.07% | 11.61% | 6.70% | 0.89% |
+| Sonic Classic Heroes | 17.13% | 7.57% | 4.38% | 0.80% |
+| ScalerMacros-v1.asm | 7.50% | 12.50% | 15.00% | 0.62% |
+| ScalerMacros-v2.asm | 8.96% | 16.42% | 13.81% | 1.87% |
+
+Zero is a rounded sampled share, not evidence that a function does no work. `AssembleFile` includes broad assembly/line-processing work and compiler-inlined code; this table does not identify file I/O as the bottleneck.
+
+Windows corroborates expression evaluation and scanning as remaining areas, but its instrumentation occupies much of the sample budget:
+
+| Workload | `EvalStrExpression` | Reported `SearchSingleChar` | `_mcount_private` + `__fentry__` |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 8.05% | 5.75% | 51.73% |
+| Sonic 2 | 11.37% | 4.37% | 54.23% |
+| Sonic & Knuckles | 8.46% | 3.98% | 49.01% |
+| Big Fishing Derby | 10.13% | 6.86% | 45.43% |
+| Sonic Classic Heroes | 11.28% | 6.23% | 44.51% |
+| ScalerMacros-v1.asm | 6.91% | 6.45% | 52.99% |
+| ScalerMacros-v2.asm | 4.61% | 10.09% | 48.42% |
+
+Disassembly of both normal and instrumented Windows builds shows direct delimiter comparison in the specialized scanner core, without a per-character call to `SearchSingleChar`. The Windows helper label therefore does not establish callback overhead; attribution around optimized clones is unreliable. Linux incorporates the specialized loop into `QuotPosQualify`. Linux also reports 10.61–22.54% under `_init`; that bucket is unresolved and must not be interpreted as startup cost or a particular library function. Shares above have not been renormalized to remove these buckets.
+
+### Call-count confirmation
+
+Compared with the earlier three-run single-pass profiles, before the macro cursor, delimiter and scratch-pool changes, `StrCompAlloc` calls per assembly fall as follows. Counts agree between Windows and Linux:
+
+| Workload | Earlier → current `StrCompAlloc` calls | Reduction |
+| --- | ---: | ---: |
+| Sonic 1 | 1,680,828 → 23,818 | 98.58% |
+| Sonic 2 | 4,454,689 → 55,471 | 98.75% |
+| Sonic & Knuckles | 3,147,949 → 15,701 | 99.50% |
+| Big Fishing Derby | 3,367,276 → 50,346 | 98.51% |
+| Sonic Classic Heroes | 2,891,384 → 56,724 | 98.04% |
+| ScalerMacros-v1.asm | 1,931,896 → 214 | 99.99% |
+| ScalerMacros-v2.asm | 3,136,343 → 217 | 99.99% |
+
+These are calls to this allocation wrapper across the assembler, not all heap allocations. The reduction is consistent with scratch reuse; it is not a wall-time saving estimate. Primary and self-recursive `EvalStrExpression` call counts are unchanged from the earlier profiles on both OSes. `ExpandTokens` and legacy `ExpandLine` counts are also unchanged for every workload.
+
+The larger scaler's Linux `MACRO_Processor` sampled self-time share drops from 19.51% in the earlier profile to 1.87% now, consistent with removing repeated body-list traversal. Sampling and instrumentation prevent treating that ratio as a speedup. The accepted uninstrumented paired results remain the performance evidence.
+
+The delimiter shortcut shifts work between scanner symbols: on Linux, current `QuotPosQualify` calls equal its earlier count plus the unchanged `QuotSMultPosQualify` count for every workload. For example, the larger scaler goes from 3,964,224 to 7,983,562 calls, with 4,019,338 multi-delimiter entry calls routed through it. `QuotSMultPosQualify` itself now samples at only 0–0.62%. This is redistribution of existing scanning work, not additional source scanning; the general wrapper's lower share does not mean comment scanning has disappeared.
+
+### Next measurements
+
+Expression evaluation remains a priority for the full projects. Measure how often simple numeric literals and symbols reach the general operator-discovery path, and the cost of conversion attempts, before proposing a conservative fast path. Preserve CPU-specific numeric syntax, temporary/internal symbols, relocation, flags and source-position behavior. The allocation profile gives little reason to prioritize another broad scratch-allocation change first.
+
+Quote-aware scanning remains substantial on every workload. A small candidate to investigate is rejecting a single-character search with `strchr` when the character is absent, retaining the full state machine when present. First measure absence frequency and audit apostrophe-qualification callback behavior; correctness and a gain are not yet established. This is separate from the discarded protected-region matching experiment.
+
+For the scalers, finer attribution inside `AssembleFile` would help choose the next line-processing experiment. Further macro-cursor or list-metadata changes are lower priority given the current profile and the previous inconclusive experiments. `EvalStrExpression` in lambda substitution remains a future evaluation item, rather than a demonstrated current bottleneck.
+
+Raw Windows gmons, reports and results remain under ignored `build-benchmark-results/reprofile/windows-public` and `build-benchmark-results/local-private/reprofile-windows`; the exact Windows executable/catalogs and analysis are under `build-benchmark-results/reprofile`. Native Linux artifacts are under `/tmp/asl-token-20261005/reprofile-public`, `reprofile-local` and `reprofile-binaries`. Private sources, adapters and original paths remain outside committed documentation. Workload scope remains ASL assembly with the previously documented adapters, not the complete game build pipelines.

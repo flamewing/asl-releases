@@ -1317,6 +1317,41 @@ static Byte TryConvert(Byte TypeMask, TempType ActType, int OpIndex) {
     return 255;
 }
 
+typedef struct sExpressionScratch {
+    struct sExpressionScratch* Next;
+    tStrComp CopyComp, STempComp;
+} tExpressionScratch;
+
+static tExpressionScratch* FreeExpressionScratch;
+
+static tExpressionScratch* AcquireExpressionScratch(void) {
+    tExpressionScratch* pScratch = FreeExpressionScratch;
+
+    if (pScratch) {
+        FreeExpressionScratch = pScratch->Next;
+    } else {
+        pScratch = (tExpressionScratch*)malloc(sizeof(*pScratch));
+        if (!pScratch) {
+            fprintf(stderr, "out of memory storing expression scratch buffers\n");
+            abort();
+        }
+        StrCompAlloc(&pScratch->CopyComp, STRINGSIZE);
+        StrCompAlloc(&pScratch->STempComp, STRINGSIZE);
+    }
+    return pScratch;
+}
+
+static void ClearExpressionScratch(void) {
+    while (FreeExpressionScratch) {
+        tExpressionScratch* pScratch = FreeExpressionScratch;
+
+        FreeExpressionScratch = pScratch->Next;
+        StrCompFree(&pScratch->CopyComp);
+        StrCompFree(&pScratch->STempComp);
+        free(pScratch);
+    }
+}
+
 void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
     Operator const* pOp;
     Operator const* FOps[OPERATOR_MAXCNT];
@@ -1338,12 +1373,15 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
     tSymbolFlags     PromotedFlags;
     unsigned         PromotedAddrSpaceMask;
     tSymbolSize      PromotedDataSize;
+    tExpressionScratch* pScratch;
 
     for (z1 = 0; z1 < 3; z1++) {
         as_tempres_ini(&InVals[z1]);
     }
-    StrCompAlloc(&CopyComp, STRINGSIZE);
-    StrCompAlloc(&STempComp, STRINGSIZE);
+    /* A checked-out pair cannot be reused by an active recursive child. */
+    pScratch = AcquireExpressionScratch();
+    CopyComp = pScratch->CopyComp;
+    STempComp = pScratch->STempComp;
 
     if (MakeDebug) {
         fprintf(Debug, "Parse '%s'\n", pExpr->str.p_str);
@@ -1858,15 +1896,18 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
 
 func_exit:
 
-    StrCompFree(&CopyComp);
-    StrCompFree(&STempComp);
-
     for (z1 = 0; z1 < 3; z1++) {
         if (InVals[z1].Relocs) {
             FreeRelocs(&InVals[z1].Relocs);
         }
         as_tempres_free(&InVals[z1]);
     }
+
+    /* Preserve buffer growth and return the pair only after all cleanup. */
+    pScratch->CopyComp = CopyComp;
+    pScratch->STempComp = STempComp;
+    pScratch->Next = FreeExpressionScratch;
+    FreeExpressionScratch = pScratch;
 }
 
 void EvalExpression(char const* pExpr, TempResult* pErg) {
@@ -3372,6 +3413,7 @@ static void ClearSymbolList_ClearNode(PTree Node, void* pData) {
 }
 
 void ClearSymbolList(void) {
+    ClearExpressionScratch();
     DestroySymbolHashTable(FirstSymbol, ClearSymbolList_ClearNode, NULL);
     DestroySymbolHashTable(FirstLocSymbol, ClearSymbolList_ClearNode, NULL);
 }

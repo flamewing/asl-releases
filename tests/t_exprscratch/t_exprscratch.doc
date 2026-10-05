@@ -1,0 +1,4 @@
+Checks scratch-buffer reuse across nested functions, operators, floats and
+stringification, growth beyond the initial capacity followed by short input,
+forward references across passes, and forty nested parenthesized expressions.
+Expected bytes are specified independently and verified with the baseline.

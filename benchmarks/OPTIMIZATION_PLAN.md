@@ -71,6 +71,30 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Instrumented profile refresh — 5 October 2026
+
+Five fresh gprof assemblies of every workload on Windows and WSL2 Ubuntu at `7adbaef` preserve the latest uninstrumented object hashes and cross-platform code records. The user reported staying tabbed out of VSCode; this condition does not establish the cause of earlier timing noise, and Windows outliers remain. Instrumented elapsed times are excluded from speedup conclusions.
+
+The refresh confirms 98.58–99.99% fewer `StrCompAlloc` calls, with unchanged primary/recursive expression and token-expansion call counts. Linux sampled self-time now puts expression evaluation at 14.69–17.97% on the full projects, quote-aware single-character scanning at 7.57–16.42% across all inputs, and macro processing at 0–1.87%. The larger scaler's macro share was previously 19.51%. Windows profiling overhead and optimized-clone attribution, plus an unresolved Linux `_init` bucket, limit precise percentage interpretation.
+
+Next, measure simple-expression conversion/operator-discovery costs and single-character delimiter absence rates. Audit callback behavior before any scanner early rejection. Obtain finer attribution within `AssembleFile` for the scalers before another broad line-processing change. Lambda evaluation remains a future investigation. No new implementation or optimization acceptance follows from this refresh; see the [full profile tables and limitations](README.md#refreshed-instrumented-profiles-2026-10-05).
+
+### Expression scratch-buffer reuse — accepted 5 October 2026
+
+`EvalStrExpression` checks out a pair of reusable `CopyComp`/`STempComp` buffers from a module-local free list. A new pair is allocated only when every existing pair is active. Recursive calls therefore retain independent storage; frames are individually allocated and never moved. The original parsing, backup copying, replacement and error paths are retained. The exit path saves any enlarged buffer capacity and returns the pair after temporary-result cleanup. `ClearSymbolList`, called at file cleanup, frees all retained pairs. Other expression-related allocations remain unchanged.
+
+The number of pairs is bounded by peak simultaneously active evaluations in a file. Capacities retain their high-water sizes until file cleanup, trading retained memory for fewer allocations and repeated 1024-byte buffer clears. No expression values are cached across calls or passes.
+
+All 208 tests pass on Windows and Linux. `t_exprscratch` checks nested operators/functions, float and stringification paths, buffer growth beyond the initial capacity followed by short expressions, forward references and forty nested parenthesized calls. Independently specified expected bytes also match the baseline. Multi-file runs match on both OSes. AddressSanitizer memory-access checks on Linux pass for the growth/recursion regression and multi-file cleanup (leak detection was disabled).
+
+Nine fresh alternating confirmation pairs on all seven workloads show 9.32–19.69% median time reduction on Windows and 2.48–15.00% on Linux, relative to the accepted delimiter fast path. The initial larger-scaler Linux slowdown did not repeat; confirmation wins 8/9 pairs there. Every baseline/candidate object matches, and actual code records agree across OSes. The implementation is accepted; see the [full experiment results](README.md#delimiter-and-scratch-buffer-experiments-2026-10-05).
+
+### Skip delimiter matching in protected regions — evaluated and discarded 5 October 2026
+
+The candidate checked quote/bracket state before calling the delimiter matcher, while retaining all state updates and matching eligible opening characters before their state transitions. It used the accepted single-character fast path as baseline. All 207 tests passed on both OSes, and all 600,000 temporary differential scanner comparisons agreed with that baseline.
+
+Five alternating pairs per workload and platform produced mixed Windows results and mostly negative Linux medians. The candidate did not demonstrate a consistent incremental gain and was discarded without a commit. Objects and cross-platform code records matched throughout. Expression scratch-buffer measurements therefore use the accepted delimiter fast path, without this discarded change, as their baseline.
+
 ### Single-character delimiter fast path — accepted 5 October 2026
 
 `QuotSMultPosQualify` detects a packed delimiter list containing exactly one single-character entry and uses the existing `QuotPosQualify` scanner. This removes repeated general string matching on the common semicolon-only configuration while preserving the same quote, escape, bracket and apostrophe-qualification state machine. Empty lists, multi-character entries and multiple entries retain the general matcher.
