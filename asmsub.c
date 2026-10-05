@@ -158,6 +158,9 @@ char* QuotMultPosQualify(
 }
 
 char* QuotPosQualify(char const* s, char Zeichen, tQualifyQuoteFnc QualifyQuoteFnc) {
+    if (!strchr(s, Zeichen)) {
+        return NULL;
+    }
     return QuotPosCore(s, SearchSingleChar, &Zeichen, QualifyQuoteFnc);
 }
 

@@ -365,3 +365,29 @@ Quote-aware scanning remains substantial on every workload. A small candidate to
 For the scalers, finer attribution inside `AssembleFile` would help choose the next line-processing experiment. Further macro-cursor or list-metadata changes are lower priority given the current profile and the previous inconclusive experiments. `EvalStrExpression` in lambda substitution remains a future evaluation item, rather than a demonstrated current bottleneck.
 
 Raw Windows gmons, reports and results remain under ignored `build-benchmark-results/reprofile/windows-public` and `build-benchmark-results/local-private/reprofile-windows`; the exact Windows executable/catalogs and analysis are under `build-benchmark-results/reprofile`. Native Linux artifacts are under `/tmp/asl-token-20261005/reprofile-public`, `reprofile-local` and `reprofile-binaries`. Private sources, adapters and original paths remain outside committed documentation. Workload scope remains ASL assembly with the previously documented adapters, not the complete game build pipelines.
+
+## Scanner and expression follow-up experiments (2026-10-05)
+
+These experiments proceed independently in order: delimiter absence, expression backup copying, operator dispatch, then a conservative simple-symbol path. Each accepted implementation becomes the next baseline. Timing uses the same seven prepared workloads, flags and adapters, optimized uninstrumented builds, one warmup per executable and alternating/reversed measured pairs. Builds and tests precede timings; OS batches run sequentially. The user reports remaining tabbed out of VSCode. This condition does not establish the source of earlier noise. Raw inputs, private adapters, binaries and reports stay ignored.
+
+### Single-character delimiter absence — accepted
+
+`QuotPosQualify` first uses `strchr` to reject a missing delimiter, avoiding quote/bracket traversal. A present delimiter retains the complete original scanner. Both installed quote-qualification callbacks only inspect their inputs, so skipping them when no match can exist has no side effects. Searching for NUL retains the previous scanner result. This does add a preliminary search on strings containing the delimiter; gains must therefore be established on complete assemblies.
+
+All 208 tests pass on Windows and Linux. The extracted-source differential scanner harness agrees on 600,000 comparisons with quotes, escapes, nesting, apostrophe qualification and packed delimiter configurations. Five-pair screening improves every median: Windows 2.85–11.78%, Linux 3.58–15.34%. Windows faster-pair counts in table order are 5, 5, 4, 5, 4, 4, 5 out of five; Linux counts are 5, 4, 4, 4, 4, 5, 5.
+
+Fresh nine-pair confirmation:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Faster pairs | Linux baseline → candidate (s) | Time reduction | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 0.951 → 0.881 | 7.35% | 9/9 | 0.401 → 0.371 | 7.32% | 9/9 |
+| Sonic 2 | 1.510 → 1.458 | 3.47% | 4/9 | 0.784 → 0.746 | 4.81% | 7/9 |
+| Sonic & Knuckles | 1.832 → 1.725 | 5.84% | 9/9 | 0.761 → 0.724 | 4.85% | 7/9 |
+| Big Fishing Derby | 1.426 → 1.320 | 7.45% | 8/9 | 0.703 → 0.667 | 5.11% | 8/9 |
+| Sonic Classic Heroes | 2.067 → 1.997 | 3.39% | 8/9 | 0.794 → 0.742 | 6.52% | 9/9 |
+| ScalerMacros-v1.asm | 0.651 → 0.623 | 4.33% | 8/9 | 0.474 → 0.447 | 5.78% | 8/9 |
+| ScalerMacros-v2.asm | 2.081 → 1.771 | 14.89% | 9/9 | 1.514 → 1.291 | 14.70% | 9/9 |
+
+Sonic 2's Windows confirmation is inconclusive in isolation despite the positive median. The other Windows workloads and every Linux workload favor the candidate in at least seven pairs. The larger scaler wins all pairs with nonoverlapping ranges: Windows 2.033–2.188 versus 1.678–1.889 s; Linux 1.497–1.531 versus 1.276–1.307 s. The overall evidence supports accepting this small change. No delimiter-absence frequency or instrumented speedup estimate is claimed.
+
+Every warmup and measured object matches its baseline; actual code records match across OSes for screening and confirmation. Raw reports are under ignored `build-benchmark-results/delimiter-absence/windows-public-{ab,confirm}`, `build-benchmark-results/local-private/delimiter-absence-windows-{ab,confirm}` and native Linux `/tmp/asl-token-20261005/delimiter-absence/{public,local}-{ab,confirm}`. Preserved baselines, test logs and differential checks accompany the experiment artifacts.

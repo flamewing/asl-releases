@@ -71,6 +71,12 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Single-character delimiter absence — accepted 5 October 2026
+
+`QuotPosQualify` rejects strings lacking the requested character with `strchr`; present characters retain the complete original state machine. The installed apostrophe-qualification callbacks have no side effects. All 208 tests pass on both OSes and 600,000 differential scanner comparisons agree. All seven workloads retain identical objects and cross-platform code records.
+
+Five-pair screens and fresh nine-pair confirmation favor the change overall. Confirmation median reductions are 3.39–14.89% on Windows and 4.81–14.70% on Linux; Sonic 2's Windows result alone is inconclusive (4/9 faster pairs), while other Windows workloads and every Linux workload win at least 7/9. The larger scaler wins all pairs with nonoverlapping ranges on both platforms. The change is retained as the expression experiments' baseline. See the [follow-up results](README.md#scanner-and-expression-follow-up-experiments-2026-10-05).
+
 ### Instrumented profile refresh — 5 October 2026
 
 Five fresh gprof assemblies of every workload on Windows and WSL2 Ubuntu at `7adbaef` preserve the latest uninstrumented object hashes and cross-platform code records. The user reported staying tabbed out of VSCode; this condition does not establish the cause of earlier timing noise, and Windows outliers remain. Instrumented elapsed times are excluded from speedup conclusions.
