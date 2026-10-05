@@ -1520,6 +1520,78 @@ void ExpandLine(char const* TokNam, unsigned TokenNum, as_dynstr_t* p_str) {
     (void)ReplaceLineUnchecked(p_str, Token, TokNam, True);
 }
 
+static void AppendTokenSpan(
+        as_dynstr_t* Dest, size_t* Length, char const* Text, size_t Count) {
+    size_t Needed = *Length + Count + 1;
+    if (Needed > Dest->capacity) {
+        size_t Capacity = Dest->capacity * 2;
+        if (Capacity < Needed) {
+            Capacity = as_dynstr_roundup_len(Needed);
+        }
+        if (as_dynstr_realloc(Dest, Capacity)) {
+            fprintf(stderr, "out of memory expanding parameter tokens\n");
+            abort();
+        }
+    }
+    memcpy(Dest->p_str + *Length, Text, Count);
+    *Length += Count;
+}
+
+void ExpandTokens(
+        char const* Source, tTokenReplacement const* Replacements,
+        unsigned ParamCount, Boolean ExpandAttrs, Boolean Sequential,
+        as_dynstr_t* Dest) {
+    unsigned z;
+    size_t   Length = 0;
+
+    /* Values containing the separator can introduce tokens for later
+       parameters. Retain ordered replacement for these unusual inputs. */
+    if (Sequential) {
+        as_dynstr_copy_c_str(Dest, Source);
+        for (z = 0; z < ParamCount + 4; z++) {
+            if (Replacements[z].Text && ((z != ParamCount) || ExpandAttrs)) {
+                ExpandLine(
+                        Replacements[z].Text,
+                        z < ParamCount ? z + 1 : ArgCntMax + 1 + z - ParamCount,
+                        Dest);
+            }
+        }
+        return;
+    }
+
+    while (*Source) {
+        char const* Marker = strchr(Source, 0x1e);
+        if (!Marker) {
+            AppendTokenSpan(Dest, &Length, Source, strlen(Source));
+            break;
+        }
+        AppendTokenSpan(Dest, &Length, Source, Marker - Source);
+        Source = Marker;
+
+        /* Check each byte before reading the next: trailing fragments and
+           inactive tokens must survive unchanged, just as in ExpandLine. */
+        if ((unsigned char)Source[1] >= 1 && (unsigned char)Source[1] <= 29
+            && (unsigned char)Source[2] >= 1 && (unsigned char)Source[2] <= 29) {
+            unsigned TokenNum = ((unsigned char)Source[1] - 1) * 29
+                                + (unsigned char)Source[2] - 1;
+            tTokenReplacement const* Replacement = NULL;
+            if (TokenNum >= 1 && TokenNum <= ParamCount) {
+                Replacement = Replacements + TokenNum - 1;
+            } else if (TokenNum >= ArgCntMax + 1 && TokenNum <= ArgCntMax + 4
+                       && (ExpandAttrs || TokenNum != ArgCntMax + 1)) {
+                Replacement = Replacements + ParamCount + TokenNum - ArgCntMax - 1;
+            }
+            if (Replacement && Replacement->Text) {
+                AppendTokenSpan(Dest, &Length, Replacement->Text, Replacement->Length);
+                Source += 3;
+                continue;
+            }
+        }
+        AppendTokenSpan(Dest, &Length, Source++, 1);
+    }
+    Dest->p_str[Length] = '\0';
+}
+
 void KillCtrl(char* Line) {
     char* z;
 

@@ -1,0 +1,7 @@
+Checks verbatim token replacement, defaults and named arguments, empty
+values, adjacent special tokens, SHIFT invalidation, nested IRP loops,
+IRPN iteration changes and tuple padding, and output buffer growth/reuse.
+Expected bytes are specified independently; the prior sequential build
+must produce the same output.
+control-args.inc deliberately contains literal bytes $1e,$01,$03 inside
+the first argument, testing sequential fallback when it introduces token 2.

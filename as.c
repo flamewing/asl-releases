@@ -214,6 +214,8 @@ static PInputTag GenerateProcessor(void) {
     PInp->SaveLabel[0]  = '\0';
     PInp->GlobalSymbols = False;
     PInp->UsesNumArgs = PInp->UsesAllArgs = False;
+    PInp->Replacements     = NULL;
+    PInp->SequentialTokens = False;
 
     /* in case the input tag chain is empty, this must be the master file */
 
@@ -460,10 +462,35 @@ static void MACRO_OutProcessor(void) {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* Von hier her kommen bei einem Makroaufruf die expandierten Zeilen */
 
+static void SetInputReplacement(PInputTag PInp, unsigned Index, char const* Text) {
+    PInp->Replacements[Index].Text   = Text;
+    PInp->Replacements[Index].Length = Text ? strlen(Text) : 0;
+    if (Text && strchr(Text, 0x1e)) {
+        PInp->SequentialTokens = True;
+    }
+}
+
+static void PrepareInputReplacements(
+        PInputTag PInp, StringRecPtr Params, unsigned Count) {
+    if (!PInp->Replacements) {
+        PInp->Replacements
+                = (tTokenReplacement*)calloc(Count + 4, sizeof(tTokenReplacement));
+        if (!PInp->Replacements) {
+            fprintf(stderr, "out of memory storing parameter replacements\n");
+            abort();
+        }
+    }
+    PInp->SequentialTokens = False;
+    for (unsigned z = 0; z < Count; z++, Params = Params->Next) {
+        SetInputReplacement(PInp, z, Params->Content);
+    }
+}
+
 Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     StringRecPtr Lauf;
     int          z;
     Boolean      Result;
+    unsigned     ParamCount = PInp->ParCnt > 0 ? PInp->ParCnt : 0;
 
     Result = True;
 
@@ -473,32 +500,25 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     for (z = 1; z <= PInp->LineZ - 1; z++) {
         Lauf = Lauf->Next;
     }
-    as_dynstr_copy_c_str(p_dest, Lauf->Content);
-
-    /* Constant body lines cannot acquire tokens through a substitution.
-       Keep the existing replacement order on every expandable line. */
+    /* Constant body lines cannot acquire tokens through a substitution. */
 
     if (PInp->Macro->LineNeedsExpansion[PInp->LineZ - 1]) {
-        Lauf = PInp->Params;
-        for (z = 1; z <= PInp->ParCnt; z++) {
-            ExpandLine(Lauf->Content, z, p_dest);
-            Lauf = Lauf->Next;
+        if (!PInp->Replacements) {
+            PrepareInputReplacements(PInp, PInp->Params, ParamCount);
+            SetInputReplacement(PInp, ParamCount, PInp->SaveAttr);
+            SetInputReplacement(
+                    PInp, ParamCount + 1, PInp->UsesNumArgs ? PInp->NumArgs : NULL);
+            SetInputReplacement(
+                    PInp, ParamCount + 2, PInp->UsesAllArgs ? PInp->AllArgs : NULL);
+            SetInputReplacement(
+                    PInp, ParamCount + 3,
+                    PInp->Macro->LocIntLabel ? PInp->SaveLabel : NULL);
         }
-
-        /* process special parameters */
-
-        if (HasAttrs) {
-            ExpandLine(PInp->SaveAttr, ArgCntMax + 1, p_dest);
-        }
-        if (PInp->UsesNumArgs) {
-            ExpandLine(PInp->NumArgs, ArgCntMax + 2, p_dest);
-        }
-        if (PInp->UsesAllArgs) {
-            ExpandLine(PInp->AllArgs, ArgCntMax + 3, p_dest);
-        }
-        if (PInp->Macro->LocIntLabel) {
-            ExpandLine(PInp->SaveLabel, ArgCntMax + 4, p_dest);
-        }
+        ExpandTokens(
+                Lauf->Content, PInp->Replacements, ParamCount, HasAttrs,
+                PInp->SequentialTokens, p_dest);
+    } else {
+        as_dynstr_copy_c_str(p_dest, Lauf->Content);
     }
 
     CurrLine    = PInp->StartLine;
@@ -769,6 +789,8 @@ static void ReadMacro(void) {
 /* Beendigung der Expansion eines Makros */
 
 static void MACRO_Cleanup(PInputTag PInp) {
+    free(PInp->Replacements);
+    PInp->Replacements = NULL;
     ClearStringList(&(PInp->Params));
 }
 
@@ -1018,6 +1040,9 @@ static void ExpandSHIFT(void) {
         }
 
         if ((RunTag) && (RunTag->Params)) {
+            /* SHIFT changes the parameter order, values, and special strings. */
+            free(RunTag->Replacements);
+            RunTag->Replacements = NULL;
             GetAndCutStringList(&(RunTag->Params));
             RunTag->ParCnt--;
             ComputeMacroStrings(RunTag);
@@ -1038,6 +1063,7 @@ Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     StringRecPtr Lauf;
     int          z;
     Boolean      Result;
+    int          ParIter = PInp->ParIter == 0 ? 1 : PInp->ParIter;
 
     Result = True;
 
@@ -1059,24 +1085,19 @@ Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
+        Lauf = PInp->Params;
+        for (z = 1; z < PInp->ParZ; z++) {
+            Lauf = Lauf->Next;
+        }
+        PrepareInputReplacements(PInp, Lauf, ParIter);
     }
 
     /* extract line */
 
-    as_dynstr_copy_c_str(p_dest, PInp->LineRun->Content);
+    ExpandTokens(
+            PInp->LineRun->Content, PInp->Replacements, ParIter, False,
+            PInp->SequentialTokens, p_dest);
     PInp->LineRun = PInp->LineRun->Next;
-
-    /* expand iteration parameter */
-
-    Lauf = PInp->Params;
-    for (z = 1; z <= PInp->ParZ - 1; z++) {
-        Lauf = Lauf->Next;
-    }
-    int ParIter = PInp->ParIter == 0 ? 1 : PInp->ParIter;
-    for (z = 1; z <= ParIter; z++) {
-        ExpandLine(Lauf->Content, z, p_dest);
-        Lauf = Lauf->Next;
-    }
 
     /* end of body? then reset to line 1 and exit if this was the last iteration */
 
@@ -1096,6 +1117,9 @@ Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
 static void IRP_Cleanup(PInputTag PInp) {
     StringRecPtr Lauf;
+
+    free(PInp->Replacements);
+    PInp->Replacements = NULL;
 
     /* letzten Parameter sichern, wird evtl. noch fuer GetPos gebraucht!
        ... SaveAttr ist aber frei */

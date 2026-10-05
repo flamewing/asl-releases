@@ -41,6 +41,7 @@ typedef struct tag_MacroRec {
 #define BufferArraySize 1024
 
 struct as_dynstr;
+struct sTokenReplacement;
 
 typedef struct tag_TInputTag {
     struct tag_TInputTag* Next;
@@ -65,6 +66,8 @@ typedef struct tag_TInputTag {
     void (*Restorer)(struct tag_TInputTag* P);
     Boolean (*GetPos)(struct tag_TInputTag* P, char* Dest, size_t DestSize);
     PMacroRec Macro;
+    struct sTokenReplacement* Replacements;
+    Boolean                  SequentialTokens;
 } TInputTag, *PInputTag;
 
 typedef struct tag_TOutputTag {

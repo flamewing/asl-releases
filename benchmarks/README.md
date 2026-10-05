@@ -100,3 +100,37 @@ Separate gprof builds ran each workload three times per binary and platform. The
 The standalone adapters exercise generation in both inputs. One adapter omits a consumer example whose PC-relative references exceed the CPU's addressing range, while retaining its tables and generator example. The other explicitly invokes a generator whose supplied example is disabled. One staged Linux project needs an include-directory case alias to reproduce Windows path resolution. Original sources were not modified. These tests verify assembly output equivalence, not complete project build pipelines.
 
 After the optimization, Linux gprof attributes 20.78% of Local D self-time to `MACRO_Processor` and 10.66% to `QuotSMultPosQualify`; Local C attributes 10.87% to each. This supports testing the planned invocation-local macro line cursor and delimiter scanning experiments next. The profile does not isolate linked-list traversal within `MACRO_Processor`, so that attribution must be checked with an isolated change and uninstrumented timings. Expression evaluation remains prominent in A and B (12.50% and 10.33% Linux self-time respectively). Instrumentation overhead and sampling uncertainty still apply; profile times are not used for the improvements reported above.
+
+## Single-pass substitution results (2026-10-05)
+
+Macro and IRP/IRPN expansion now decode all active parameter tokens in one pass, copying literal spans and argument values directly into the line output buffer. Replacement tables cache pointers and lengths per invocation or loop iteration; `SHIFT` invalidates the macro table. Arguments containing the record separator retain ordered substitution. IRPC and lambda substitutions keep their existing path; see the [lambda evaluation note](OPTIMIZATION_PLAN.md#lambda-substitution-path--future-evaluation).
+
+Both baseline and candidate include the constant-line shortcut and the three-byte token correctness fix. These measurements isolate the additional single-pass change. Release -O3 builds use MinGW GCC 16.2 on Windows and GCC 15.2 on WSL2 Ubuntu, with local NTFS and native Linux storage respectively. Each executable had one warmup and nine measured runs in alternating pairs, reversing order each pair. Windows and Linux timing batches ran sequentially, separately from builds, tests, and instrumented profiling. Local adapters and measurement scope are the same as described above.
+
+| Workload | Windows baseline → optimized (s) | Time reduction | Linux baseline → optimized (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.345 → 1.135 | 15.66% | 0.559 → 0.462 | 17.35% |
+| Sonic 2 | 2.359 → 2.072 | 12.14% | 1.127 → 0.988 | 12.33% |
+| Sonic & Knuckles | 2.258 → 2.252 | 0.24% | 0.903 → 0.881 | 2.42% |
+| Big-Fishing-Derby | 1.921 → 1.848 | 3.82% | 0.941 → 0.873 | 7.18% |
+| Sonic-Classic-Heroes | 2.570 → 2.303 | 10.41% | 1.003 → 0.941 | 6.15% |
+| 3dSonic / ScalerMacros-v1.asm | 0.956 → 0.910 | 4.74% | 0.730 → 0.661 | 9.45% |
+| 3dSonic / ScalerMacros-v2.asm | 3.349 → 3.242 | 3.20% | 2.655 → 2.573 | 3.10% |
+
+Values are medians. In table order, the candidate won 9/9, 8/9, 3/9, 8/9, 8/9, 8/9, and 9/9 Windows pairs; Linux counts were 9/9, 9/9, 7/9, 6/9, 9/9, 9/9, and 7/9. Sonic & Knuckles is inconclusive on Windows: its negligible median change and paired results do not demonstrate a gain. The Linux change there is modest too. Other gains remain measurements on this machine, rather than guarantees for every input.
+
+Separate candidate gprof builds collected three runs per workload and OS. These per-assembly counts agree exactly between Windows and Linux:
+
+| Workload | `ExpandTokens` calls | Remaining `ExpandLine` / `ReplaceLineUnchecked` calls |
+| --- | ---: | ---: |
+| Sonic 1 | 129,136 | 36,828 |
+| Sonic 2 | 237,026 | 84,448 |
+| Sonic & Knuckles | 102,140 | 44,784 |
+| Big-Fishing-Derby | 216,534 | 64,027 |
+| Sonic-Classic-Heroes | 167,972 | 124,314 |
+| 3dSonic / ScalerMacros-v1.asm | 241,454 | 540 |
+| 3dSonic / ScalerMacros-v2.asm | 286,446 | 540 |
+
+The Linux call graphs attribute the remaining 540 legacy replacements in each standalone generator to `EvalStrExpression`. Their sampled cost is small. The larger generator still spends 19.51% of Linux gprof self-time in `MACRO_Processor`, supporting a separate current-line cursor experiment. Windows/Linux gprof processor-wrapper totals differ in these builds and are not used for cross-platform count comparisons; decoder, legacy replacement, and expression-evaluation totals agree. Instrumented wall times are not used for the reductions above.
+
+All 205 tests pass on both OSes, including the new behavioral regression checked against the sequential executable. Every baseline/candidate warmup and measured object matches; profiling objects also match the timing objects. All seven workloads retain their previous same-platform object hashes, and actual code records match between Windows and Linux, ignoring only creator footers. Raw reports, snapshots, and private adapters remain in ignored local directories.

@@ -119,6 +119,18 @@ extern int CompressLine(
 
 extern void ExpandLine(char const* TokNam, unsigned TokenNum, struct as_dynstr* p_str);
 
+typedef struct sTokenReplacement {
+    char const* Text; /* NULL means this token is inactive; "" deletes it */
+    size_t      Length;
+} tTokenReplacement;
+
+/* Ordinary replacements followed by four special-parameter slots. Source
+   must not alias destination. Sequential preserves control-bearing values. */
+extern void ExpandTokens(
+        char const* Source, tTokenReplacement const* Replacements,
+        unsigned ParamCount, Boolean ExpandAttrs, Boolean Sequential,
+        struct as_dynstr* Dest);
+
 extern void KillCtrl(char* Line);
 
 extern void AddCopyright(char const* NewLine);

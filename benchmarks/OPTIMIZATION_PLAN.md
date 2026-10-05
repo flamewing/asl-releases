@@ -21,17 +21,21 @@ Validation: mixed constant/parameter lines; special-parameter-only lines; empty 
 3. Build replacement output into a reusable buffer to avoid repeated suffix movement; consider expanding all parameters in one pass only after proving equivalence with sequential replacement.
 4. Maintain an invocation-local current-line pointer to avoid repeatedly walking from the linked-list head. Treat this as a separate experiment.
 
-### Next experiment: guarded single-pass macro expansion
+### Guarded single-pass macro and IRP expansion
 
 `SetToken` now encodes parameter number `n` as three nonzero bytes: `$1E`, `(n / 29) + 1`, `(n % 29) + 1`. With `ArgCntMax=476`, all ordinary and special tokens use control bytes; neither payload byte contains `$1E`. Ordinary printable argument text, including another parameter's textual name, cannot introduce an encoded token. A direct token lookup can therefore replace repeated whole-line searches on the common path, while appending replacement text verbatim.
 
 The previous two-byte encoding was not self-synchronizing: adjacent tokens 16 and 17 produced bytes `[2,1,2,2]`, whose middle pair `[1,2]` matched token 1. Actual assembly confirmed the erroneous replacement. This is a correctness bug, now fixed with the uniquely marked encoding below; single-pass expansion should preserve corrected behavior. A fallback may still be needed for replacement strings containing encoded control bytes.
 
 1. Build an invocation-local indexed replacement table, including the enabled special parameters. Keep replacement pointers stable for the invocation and distinguish inactive tokens from empty replacements.
-2. Establish a conservative fast-path eligibility check for both stored body lines and invocation replacements. Initially fall back for control-bearing replacements. Adjacent valid tokens and empty printable substitutions no longer create overlapping matches. Account for inactive tokens and malformed fragments too; do not decode every control-byte pair indiscriminately.
-3. Decode eligible lines into a reusable invocation-local output buffer, copying literal spans and inserting replacement values without rescanning them. Preserve the existing constant-line shortcut and leave other `ExpandLine` callers unchanged initially.
+2. Compute fallback eligibility from invocation replacements: values containing `$1E` retain ordered substitution. Validate stored token payloads while decoding, preserving inactive tokens and malformed fragments. Adjacent valid tokens and empty substitutions without `$1E` no longer create overlapping matches; do not decode every control-byte pair indiscriminately.
+3. Decode eligible lines directly into the existing reusable line output buffer, copying literal spans and inserting replacement values without rescanning them. Preserve the existing constant-line shortcut. Apply the decoder to `IRP_Processor` (including IRPN); `IRP_OutProcessor` continues capturing and compressing the body. Leave other `ExpandLine` callers unchanged initially.
 4. Differentially test the decoder and fallback against the sequential implementation, including concatenation, parameters 16/17, empty values, control-bearing arguments, special parameters, defaults, nesting, recursion, and global copies. Run the full suite on both OSes.
 5. Measure eligibility/fallback rates in a diagnostic build. Repeat alternating uninstrumented comparisons on the public and additional local workloads, verifying objects and cross-platform code records. Evaluate this independently of the linked-list cursor experiment.
+
+### Lambda substitution path — future evaluation
+
+The user-defined/lambda function path in `EvalStrExpression` evaluates each argument, formats its value into a parenthesized string, and calls `ExpandLine` for each formal parameter before recursively evaluating the expanded function expression. Investigate batching these replacements after measuring this path separately. Preserve argument evaluation order, relocation rejection, symbol flags, address-space masks, data-size promotion, parenthesization, and recursive evaluation behavior. A syntax-tree approach would be a separate, larger experiment; this implementation leaves the lambda path unchanged. If replacements are batched, retain each formatted argument separately: the current `stemp` buffer is reused for every argument, so caching pointers to it would make earlier replacement values invalid or overwrite them.
 
 ## Expression evaluation
 
@@ -67,6 +71,16 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Single-pass macro and IRP/IRPN substitution — implemented 5 October 2026
+
+`ExpandTokens` scans record separators and decodes ordinary and enabled special tokens into the existing dynamic line output buffer. It copies literal spans and replacement values directly, with geometric buffer growth, avoiding repeated whole-line searches and suffix movement. Empty values remove tokens; inactive tokens and malformed fragments remain intact. Arguments containing `$1E` use the existing ordered replacement path.
+
+Macro invocations lazily cache replacement pointers, lengths, and fallback eligibility. `SHIFT`, including one issued from an enclosing macro's nested loop, invalidates that cache. Negative historical counts after shifting excess arguments are treated as zero ordinary replacements while retaining the signed `ARGCOUNT` string. IRP/IRPN refresh the table once per iteration. Cleanup releases tables on normal completion and early exits. The existing constant macro line flags and macro linked-list traversal remain unchanged. `IRP_OutProcessor` continues compressing captured bodies; the shared decoder runs when `IRP_Processor` expands them. IRPC and lambda substitutions retain their existing `ExpandLine` path.
+
+`t_singlepass` has independently specified expected output, also verified with the previous sequential executable. It covers literal argument names, named/default/empty arguments, special-token adjacency, `SHIFT`, nested IRP, IRPN tuple padding, buffer growth/reuse, inactive tokens, early macro exits, and separator-bearing arguments that introduce later tokens, including iteration-local fallback changes. The existing full-range token, recursion, global-copy, and lambda tests remain part of the complete suite.
+
+All 205 tests pass on Windows and WSL2 Ubuntu. All seven benchmark workloads preserve their previous same-platform object hashes, including profiling builds, and code records agree across platforms. Nine alternating measured pairs show the clearest incremental gains on Sonic 1 (15.66% / 17.35% Windows/Linux) and Sonic 2 (12.14% / 12.33%). Additional local workload improvements range from 3.20–10.41% on Windows and 3.10–9.45% on Linux. Sonic & Knuckles is inconclusive on Windows (0.24%, only 3/9 faster pairs). See the [complete timing and candidate profile results](README.md#single-pass-substitution-results-2026-10-05).
+
 ### Unambiguous macro tokens — implemented 5 October 2026
 
 An actual 17-parameter macro concatenating parameters 16 and 17 reproduced the overlapping-token bug: arguments `A,B` emitted bytes `$02,$58,$02` instead of `$41,$42`, because parameter 1's argument `X` replaced the middle pair. This was erroneous behavior, not a substitution dependency to preserve.
@@ -75,7 +89,7 @@ Tokens now contain ASCII record separator `$1E`, followed by two nonzero base-29
 
 Full-range testing also exposed `MacroRec.ParamCount` truncating counts above 255 because it was stored in a byte. It now uses `int`, matching the count collected while reading the definition.
 
-The new `t_mactokens` regression has independently specified expected bytes for the 16/17 overlap, all 476 ordinary parameter numbers, radix transitions, empty replacements, attributes, argument count, all arguments, and internal labels. The old executable emits the wrong bytes for the minimal example and fails the full-range regression. All 204 tests pass on Windows and WSL2 Ubuntu with the fix. Sonic 1, Sonic 2, Sonic & Knuckles, and all four additional local workloads retain their previous full object hashes on each OS; their code records match across platforms. These runs checked correctness and are not new performance measurements. Single-pass expansion remains a separate upcoming optimization.
+The new `t_mactokens` regression has independently specified expected bytes for the 16/17 overlap, all 476 ordinary parameter numbers, radix transitions, empty replacements, attributes, argument count, all arguments, and internal labels. The old executable emits the wrong bytes for the minimal example and fails the full-range regression. All 204 tests pass on Windows and WSL2 Ubuntu with the fix. Sonic 1, Sonic 2, Sonic & Knuckles, and all four additional local workloads retain their previous full object hashes on each OS; their code records match across platforms. These runs checked correctness and are not new performance measurements. This correctness fix is included in the baseline for the subsequent single-pass measurements.
 
 ### Per-line macro replacement metadata — implemented 5 October 2026
 
