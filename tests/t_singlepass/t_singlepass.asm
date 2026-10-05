@@ -37,7 +37,7 @@ shiftloop macro first,second
         endm
         shiftloop 1,2
 
-; Preserve SHIFT's historical signed count when only excess arguments exist.
+; SHIFT counts supplied arguments even when no formal parameters exist.
 countless macro
         dc.b ARGCOUNT
         shift

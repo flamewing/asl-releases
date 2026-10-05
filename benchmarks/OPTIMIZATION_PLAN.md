@@ -71,11 +71,37 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### SHIFT argument accounting — fixed 5 October 2026
+
+The negative count was reachable through ordinary variadic calls. `ParCnt`
+started at the formal parameter count, whereas the initial `ARGCOUNT` string
+used the supplied count. After the first `SHIFT`, the string was rebuilt from
+`ParCnt`, so a one-formal/six-argument call reported zero instead of five.
+Subsequent shifts could make the count negative and stop expanding a formal
+name even while excess arguments remained.
+
+The input tag now stores the supplied argument count separately. The
+replacement-list count includes excess positional arguments and decreases
+with each removal; the supplied count decreases independently and saturates
+at zero. Cached ordinary replacements are limited to declared formal slots,
+so excess arguments do not enlarge the table unnecessarily. `ALLARGS` now
+preserves leading empty arguments when rebuilding the remaining list.
+Initial `ARGCOUNT` behavior for defaults and named calls is retained.
+The manual now reflects that behavior instead of claiming defaults increase
+the initial count. `t_shiftargs` covers excess and zero-formal calls, default
+and named arguments, empty-list shifts, nested-loop shifts, and recursive
+forwarding, including empty argument positions. The old executable fails the ordinary excess-argument cases;
+the formerly negative-count case in `t_singlepass` now expects 2, 1, 0.
+
+All 206 tests pass on Windows and WSL2 Ubuntu. The three public disassemblies
+and four additional local workloads retain their previous full object hashes
+on each OS, and their code records still match across platforms.
+
 ### Single-pass macro and IRP/IRPN substitution — implemented 5 October 2026
 
 `ExpandTokens` scans record separators and decodes ordinary and enabled special tokens into the existing dynamic line output buffer. It copies literal spans and replacement values directly, with geometric buffer growth, avoiding repeated whole-line searches and suffix movement. Empty values remove tokens; inactive tokens and malformed fragments remain intact. Arguments containing `$1E` use the existing ordered replacement path.
 
-Macro invocations lazily cache replacement pointers, lengths, and fallback eligibility. `SHIFT`, including one issued from an enclosing macro's nested loop, invalidates that cache. Negative historical counts after shifting excess arguments are treated as zero ordinary replacements while retaining the signed `ARGCOUNT` string. IRP/IRPN refresh the table once per iteration. Cleanup releases tables on normal completion and early exits. The existing constant macro line flags and macro linked-list traversal remain unchanged. `IRP_OutProcessor` continues compressing captured bodies; the shared decoder runs when `IRP_Processor` expands them. IRPC and lambda substitutions retain their existing `ExpandLine` path.
+Macro invocations lazily cache replacement pointers, lengths, and fallback eligibility. `SHIFT`, including one issued from an enclosing macro's nested loop, invalidates that cache. The initial version preserved legacy negative argument counts; those are corrected in the SHIFT accounting fix above. IRP/IRPN refresh the table once per iteration. Cleanup releases tables on normal completion and early exits. The existing constant macro line flags and macro linked-list traversal remain unchanged. `IRP_OutProcessor` continues compressing captured bodies; the shared decoder runs when `IRP_Processor` expands them. IRPC and lambda substitutions retain their existing `ExpandLine` path.
 
 `t_singlepass` has independently specified expected output, also verified with the previous sequential executable. It covers literal argument names, named/default/empty arguments, special-token adjacency, `SHIFT`, nested IRP, IRPN tuple padding, buffer growth/reuse, inactive tokens, early macro exits, and separator-bearing arguments that introduce later tokens, including iteration-local fallback changes. The existing full-range token, recursion, global-copy, and lambda tests remain part of the complete suite.
 

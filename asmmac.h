@@ -53,6 +53,7 @@ typedef struct tag_TInputTag {
     LongInt               StartLine;
     Boolean (*Processor)(struct tag_TInputTag* P, struct as_dynstr* p_dest);
     LongInt      ParCnt, ParZ, ParIter;
+    LongInt      MacroArgCnt; /* supplied argument count, excluding defaults */
     StringList   Params;
     LongInt      LineCnt, LineZ;
     StringRecPtr Lines, LineRun;

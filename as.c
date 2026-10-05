@@ -192,6 +192,7 @@ static PInputTag GenerateProcessor(void) {
     PInp->OrigDoLst = DoLst;
     PInp->StartLine = CurrLine;
     PInp->ParCnt    = 0;
+    PInp->MacroArgCnt = 0;
     PInp->ParZ      = 0;
     PInp->ParIter   = 0;
     InitStringList(&(PInp->Params));
@@ -340,7 +341,7 @@ static void ComputeMacroStrings(PInputTag Tag) {
     /* recompute # of params */
 
     if (Tag->UsesNumArgs) {
-        as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), "%" PRId32, Tag->ParCnt);
+        as_snprintf(Tag->NumArgs, sizeof(Tag->NumArgs), "%" PRId32, Tag->MacroArgCnt);
     }
 
     /* recompute 'all string' parameter */
@@ -349,7 +350,7 @@ static void ComputeMacroStrings(PInputTag Tag) {
         Tag->AllArgs[0] = '\0';
         Lauf            = Tag->Params;
         while (Lauf) {
-            if (Tag->AllArgs[0] != '\0') {
+            if (Lauf != Tag->Params) {
                 strmaxcat(Tag->AllArgs, ",", STRINGSIZE);
             }
             strmaxcat(Tag->AllArgs, Lauf->Content, STRINGSIZE);
@@ -491,6 +492,12 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
     int          z;
     Boolean      Result;
     unsigned     ParamCount = PInp->ParCnt > 0 ? PInp->ParCnt : 0;
+
+    /* Excess arguments can shift into formal slots, but have no tokens of
+       their own in the stored body. Cache only the remaining formal slots. */
+    if (ParamCount > (unsigned)PInp->Macro->ParamCount) {
+        ParamCount = PInp->Macro->ParamCount;
+    }
 
     Result = True;
 
@@ -877,6 +884,7 @@ static void ExpandMacro(PMacroRec OneMacro) {
             }
         }
         Tag->ParCnt = OneMacro->ParamCount;
+        Tag->MacroArgCnt = ArgCnt;
 
         /* 3. generate argument list */
 
@@ -956,6 +964,7 @@ static void ExpandMacro(PMacroRec OneMacro) {
 
             else if (z1 > OneMacro->ParamCount) {
                 AddStringListLast(&(Tag->Params), ArgStr[z1].str.p_str);
+                Tag->ParCnt++;
             }
         }
 
@@ -1045,6 +1054,9 @@ static void ExpandSHIFT(void) {
             RunTag->Replacements = NULL;
             GetAndCutStringList(&(RunTag->Params));
             RunTag->ParCnt--;
+            if (RunTag->MacroArgCnt > 0) {
+                RunTag->MacroArgCnt--;
+            }
             ComputeMacroStrings(RunTag);
         }
     }

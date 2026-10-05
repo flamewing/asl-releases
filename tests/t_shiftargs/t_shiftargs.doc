@@ -1,0 +1,5 @@
+Checks SHIFT with excess positional arguments, zero formal parameters,
+ARGCOUNT/ALLARGS updates, default-only and named arguments, shifting an
+empty list, shifts from nested loops, and recursive forwarding.
+Empty remaining arguments retain their comma positions in ALLARGS.
+Expected bytes are specified independently of the assembler.

@@ -73,16 +73,16 @@ Both runners accept `--manifest /path/to/local/workloads.json` for additional lo
 
 ## Additional local workload results (2026-10-05)
 
-Four private workloads were tested against the baseline and the macro line replacement optimization. Their names are documented with the owner's approval; source snapshots, paths, adapters, and raw reports remain in ignored local files. A (Big-Fishing-Derby) and B (Sonic-Classic-Heroes) assemble full project entry points; C and D exercise 3dSonic's standalone macro generators through assembly wrappers.
+Four private workloads were tested against the baseline and the macro line replacement optimization. A (Big Fishing Derby) and B (Sonic Classic Heroes) assemble full project entry points; C and D exercise standalone macro scaler generators through assembly wrappers.
 
 These are uninstrumented Release builds (-O3), using MinGW GCC 16.2 on Windows and GCC 15.2 on WSL2 Ubuntu. Windows inputs use local NTFS; Linux inputs and outputs use native Linux storage. Each comparison used one warmup per executable followed by nine alternating measured pairs, reversing order each pair. Timing runs were separate from profiling and compiler builds. Times cover the ASL subprocess, without listings or ROM postprocessing.
 
 | Workload | Windows baseline → optimized (s) | Time reduction | Linux baseline → optimized (s) | Time reduction |
 | --- | ---: | ---: | ---: | ---: |
-| A: Big-Fishing-Derby | 1.800 → 1.701 | 5.52% | 0.996 → 0.915 | 8.15% |
-| B: Sonic-Classic-Heroes | 2.402 → 2.281 | 5.04% | 1.026 → 0.975 | 4.94% |
-| C: 3dSonic / ScalerMacros-v1.asm | 1.211 → 0.950 | 21.53% | 0.914 → 0.722 | 21.03% |
-| D: 3dSonic / ScalerMacros-v2.asm | 3.900 → 3.383 | 13.25% | 3.010 → 2.613 | 13.18% |
+| A: Big Fishing Derby | 1.800 → 1.701 | 5.52% | 0.996 → 0.915 | 8.15% |
+| B: Sonic Classic Heroes | 2.402 → 2.281 | 5.04% | 1.026 → 0.975 | 4.94% |
+| C: ScalerMacros-v1.asm | 1.211 → 0.950 | 21.53% | 0.914 → 0.722 | 21.03% |
+| D: ScalerMacros-v2.asm | 3.900 → 3.383 | 13.25% | 3.010 → 2.613 | 13.18% |
 
 Values are medians. The optimized build won 8/9 Windows pairs for A and B, 9/9 Linux pairs for A, 8/9 Linux pairs for B, and every pair for C and D on both platforms. These measurements describe the staged inputs on this machine, rather than a guaranteed improvement for every macro workload.
 
@@ -90,10 +90,10 @@ Separate gprof builds ran each workload three times per binary and platform. The
 
 | Workload | Baseline calls | Optimized calls | Calls avoided |
 | --- | ---: | ---: | ---: |
-| A: Big-Fishing-Derby | 1,749,395 | 820,991 | 53.07% |
-| B: Sonic-Classic-Heroes | 1,326,118 | 692,550 | 47.78% |
-| C: 3dSonic / ScalerMacros-v1.asm | 2,589,370 | 725,544 | 71.98% |
-| D: 3dSonic / ScalerMacros-v2.asm | 6,140,822 | 968,018 | 84.24% |
+| A: Big Fishing Derby | 1,749,395 | 820,991 | 53.07% |
+| B: Sonic Classic Heroes | 1,326,118 | 692,550 | 47.78% |
+| C: ScalerMacros-v1.asm | 2,589,370 | 725,544 | 71.98% |
+| D: ScalerMacros-v2.asm | 6,140,822 | 968,018 | 84.24% |
 
 `MACRO_Processor`, `EvalStrExpression`, and `QuotSMultPosQualify` call counts are unchanged between the two versions on all four workloads. All warmup and measured objects match between baseline and optimized builds on each platform; the instrumented builds produce the same objects too. Actual code records also match between Windows and Linux, ignoring only the platform-specific creator footer.
 
@@ -112,10 +112,10 @@ Both baseline and candidate include the constant-line shortcut and the three-byt
 | Sonic 1 | 1.345 → 1.135 | 15.66% | 0.559 → 0.462 | 17.35% |
 | Sonic 2 | 2.359 → 2.072 | 12.14% | 1.127 → 0.988 | 12.33% |
 | Sonic & Knuckles | 2.258 → 2.252 | 0.24% | 0.903 → 0.881 | 2.42% |
-| Big-Fishing-Derby | 1.921 → 1.848 | 3.82% | 0.941 → 0.873 | 7.18% |
-| Sonic-Classic-Heroes | 2.570 → 2.303 | 10.41% | 1.003 → 0.941 | 6.15% |
-| 3dSonic / ScalerMacros-v1.asm | 0.956 → 0.910 | 4.74% | 0.730 → 0.661 | 9.45% |
-| 3dSonic / ScalerMacros-v2.asm | 3.349 → 3.242 | 3.20% | 2.655 → 2.573 | 3.10% |
+| Big Fishing Derby | 1.921 → 1.848 | 3.82% | 0.941 → 0.873 | 7.18% |
+| Sonic Classic Heroes | 2.570 → 2.303 | 10.41% | 1.003 → 0.941 | 6.15% |
+| ScalerMacros-v1.asm | 0.956 → 0.910 | 4.74% | 0.730 → 0.661 | 9.45% |
+| ScalerMacros-v2.asm | 3.349 → 3.242 | 3.20% | 2.655 → 2.573 | 3.10% |
 
 Values are medians. In table order, the candidate won 9/9, 8/9, 3/9, 8/9, 8/9, 8/9, and 9/9 Windows pairs; Linux counts were 9/9, 9/9, 7/9, 6/9, 9/9, 9/9, and 7/9. Sonic & Knuckles is inconclusive on Windows: its negligible median change and paired results do not demonstrate a gain. The Linux change there is modest too. Other gains remain measurements on this machine, rather than guarantees for every input.
 
@@ -126,10 +126,10 @@ Separate candidate gprof builds collected three runs per workload and OS. These 
 | Sonic 1 | 129,136 | 36,828 |
 | Sonic 2 | 237,026 | 84,448 |
 | Sonic & Knuckles | 102,140 | 44,784 |
-| Big-Fishing-Derby | 216,534 | 64,027 |
-| Sonic-Classic-Heroes | 167,972 | 124,314 |
-| 3dSonic / ScalerMacros-v1.asm | 241,454 | 540 |
-| 3dSonic / ScalerMacros-v2.asm | 286,446 | 540 |
+| Big Fishing Derby | 216,534 | 64,027 |
+| Sonic Classic Heroes | 167,972 | 124,314 |
+| ScalerMacros-v1.asm | 241,454 | 540 |
+| ScalerMacros-v2.asm | 286,446 | 540 |
 
 The Linux call graphs attribute the remaining 540 legacy replacements in each standalone generator to `EvalStrExpression`. Their sampled cost is small. The larger generator still spends 19.51% of Linux gprof self-time in `MACRO_Processor`, supporting a separate current-line cursor experiment. Windows/Linux gprof processor-wrapper totals differ in these builds and are not used for cross-platform count comparisons; decoder, legacy replacement, and expression-evaluation totals agree. Instrumented wall times are not used for the reductions above.
 

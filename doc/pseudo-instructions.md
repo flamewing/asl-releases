@@ -1918,7 +1918,7 @@ Apart from the parameters explicitly declared for a macro, four more 'implicitly
 
 - `ATTRIBUTE` refers to the attribute appended to the macro call, in case the currently active architecture supports attributes for machine instructions. See below for an example!
 - `ALLARGS` refers to a comma-separated list of all arguments passed to a macro, usable e.g. to pass them on to a IRP statement.
-- `ARGCOUNT` refers to the actual count of parameters passed to a macro. Note however that this number is never lower than the formal parameter count of the macro, since AS will fill up missing arguments with empty strings!
+- `ARGCOUNT` refers to the number of arguments supplied at the macro call. Default values and empty strings used to fill missing formal parameters do not add to this count. Each successful `SHIFT` decreases it by one, down to a minimum of zero.
 - `__LABEL__` refers to a label present in a line that calls the macro. This replacement only takes place if the `INTLABEL` option was set for this macro!
 
 **IMPORTANT:** the names of these implicit parameters are also case-insensitive if AS was told to operate case-sensitive!
@@ -2121,7 +2121,11 @@ Currently there exists a little ugly detail for `WHILE`: an additional empty lin
 
 ### SHIFT
 
-`SHIFT` is a tool to construct macros with variable argument lists: it discards the first parameter, with the result that the second parameter takes its place and so on. This way one could process a variable argument list...if you do it the right way. For example, the following does not work...
+`SHIFT` is a tool to construct macros with variable argument lists: it discards the first parameter, with the result that the second parameter takes its place and so on. This way one could process a variable argument list...if you do it the right way.
+
+Excess positional arguments are part of this list: a declared parameter continues to refer to the next remaining argument after a shift, even when more arguments were supplied than parameters were declared. `ARGCOUNT` tracks the supplied argument count independently of the declaration. Shifting an empty list has no effect.
+
+For example, the following does not work...
 
 ```asm
 pushlist  macro reg
