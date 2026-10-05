@@ -71,6 +71,16 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Invocation-local macro line cursor — experiment 5 October 2026
+
+`MACRO_Processor` now reads the current body node from the input tag's existing `LineRun` pointer and advances it once per returned line. `ExpandMacro` initializes that pointer for each invocation. Previously, line `n` required walking `n-1` links from the body head: processing an entire `L`-line body required `L*(L-1)/2` link traversals. The cursor requires `L` advances. The separate invocation-time line-count scan remains unchanged in this experiment.
+
+The cursor belongs to the invocation rather than the shared macro definition, so recursive and nested calls resume independently. `LineZ` still indexes expansion flags and supplies diagnostic line numbers; parameter replacement, local scope, cleanup, and end-of-body behavior are unchanged. Empty macros never enter the processor. No additional allocation or input-tag field is needed.
+
+`t_macrocursor` checks recursive returns, repeated invocations, nested IRP input, SHIFT, early EXITM, and empty bodies against independently specified bytes also produced by the head-walking baseline. All 207 tests pass on Windows and WSL2 Ubuntu. Every baseline/candidate object from the seven workloads matches, including warmups and all nine measured pairs; actual code records match across OSes.
+
+The change is retained: ScalerMacros-v2 improves by 11.73% on Windows and 14.26% on Linux, winning all nine pairs on each OS with non-overlapping timing ranges. Other workloads show much smaller or inconclusive changes; no broad speedup is claimed. See the [full cursor results](README.md#macro-line-cursor-results-2026-10-05). These measurements isolate the cursor change from the already-applied single-pass and SHIFT fixes.
+
 ### SHIFT argument accounting — fixed 5 October 2026
 
 The negative count was reachable through ordinary variadic calls. `ParCnt`

@@ -134,3 +134,23 @@ Separate candidate gprof builds collected three runs per workload and OS. These 
 The Linux call graphs attribute the remaining 540 legacy replacements in each standalone generator to `EvalStrExpression`. Their sampled cost is small. The larger generator still spends 19.51% of Linux gprof self-time in `MACRO_Processor`, supporting a separate current-line cursor experiment. Windows/Linux gprof processor-wrapper totals differ in these builds and are not used for cross-platform count comparisons; decoder, legacy replacement, and expression-evaluation totals agree. Instrumented wall times are not used for the reductions above.
 
 All 205 tests pass on both OSes, including the new behavioral regression checked against the sequential executable. Every baseline/candidate warmup and measured object matches; profiling objects also match the timing objects. All seven workloads retain their previous same-platform object hashes, and actual code records match between Windows and Linux, ignoring only creator footers. Raw reports, snapshots, and private adapters remain in ignored local directories.
+
+## Macro line cursor results (2026-10-05)
+
+`MACRO_Processor` now advances the invocation's existing `LineRun` pointer once per body line. Previously it walked from the shared body head to the current line on every call, requiring `L*(L-1)/2` link traversals for a complete `L`-line invocation. Each recursive or nested call owns its cursor. The invocation-time line-count scan remains unchanged.
+
+These measurements isolate the cursor change: baseline and candidate both include single-pass substitution, the constant-line shortcut, unambiguous tokens, and the SHIFT accounting fix. Uninstrumented Release -O3 builds use MinGW GCC 16.2 on Windows and GCC 15.2 on WSL2 Ubuntu. Windows uses local NTFS; Linux inputs and outputs use native Linux storage. Each binary had one warmup followed by nine alternating measured pairs, with execution order reversed each pair. OS timing batches ran sequentially and separately from builds and tests. Local adapters and assembly scope are unchanged from the earlier comparisons.
+
+| Workload | Windows baseline → cursor (s) | Time reduction | Linux baseline → cursor (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.180 → 1.158 | 1.80% | 0.427 → 0.425 | 0.41% |
+| Sonic 2 | 1.866 → 1.834 | 1.76% | 0.928 → 0.922 | 0.60% |
+| Sonic & Knuckles | 1.953 → 1.973 | -1.04% | 0.823 → 0.820 | 0.37% |
+| Big Fishing Derby | 1.678 → 1.666 | 0.71% | 0.828 → 0.826 | 0.26% |
+| Sonic Classic Heroes | 2.249 → 2.237 | 0.50% | 0.890 → 0.883 | 0.75% |
+| ScalerMacros-v1.asm | 0.901 → 0.897 | 0.43% | 0.633 → 0.613 | 3.19% |
+| ScalerMacros-v2.asm | 3.121 → 2.755 | 11.73% | 2.408 → 2.064 | 14.26% |
+
+Values are medians. In table order, the cursor won 3/9, 8/9, 3/9, 5/9, 6/9, 5/9, and 9/9 Windows pairs; Linux counts were 5/9, 5/9, 5/9, 5/9, 5/9, 7/9, and 9/9. The clear repeatable improvement is ScalerMacros-v2: Windows baseline samples span 3.063–3.204 s versus 2.669–2.913 s with the cursor; Linux spans 2.333–2.489 s versus 2.028–2.115 s. These ranges do not overlap. The v1 Linux result is smaller, while its Windows result is inconclusive. The other small changes, including the negative Sonic & Knuckles Windows median, do not establish a broad gain or regression. Sonic 1's positive Windows median with only three faster pairs illustrates why median reduction alone is insufficient.
+
+The cursor is retained for its consistent benefit on the larger scaler and removal of repeated traversal without additional allocation or input-tag storage. All 207 tests pass on both platforms. The new `t_macrocursor` regression covers recursive returns, repeated invocations, nested IRP input, SHIFT, early exits, and empty macros; the previous head-walking executable also matches its independently specified expected bytes. Every warmup and measured object matches between baseline and cursor on each OS, and actual code records match across platforms, ignoring only creator footers. Raw samples, executable hashes, logs, snapshots, verification results, and private adapters remain in ignored local directories. This experiment uses wall-time comparisons; no new instrumented profile is claimed.

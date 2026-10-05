@@ -488,8 +488,7 @@ static void PrepareInputReplacements(
 }
 
 Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
-    StringRecPtr Lauf;
-    int          z;
+    StringRecPtr Lauf = PInp->LineRun;
     Boolean      Result;
     unsigned     ParamCount = PInp->ParCnt > 0 ? PInp->ParCnt : 0;
 
@@ -501,12 +500,6 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
     Result = True;
 
-    /* run to current line */
-
-    Lauf = PInp->Lines;
-    for (z = 1; z <= PInp->LineZ - 1; z++) {
-        Lauf = Lauf->Next;
-    }
     /* Constant body lines cannot acquire tokens through a substitution. */
 
     if (PInp->Macro->LineNeedsExpansion[PInp->LineZ - 1]) {
@@ -539,6 +532,7 @@ Boolean MACRO_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
 
     /* signal the end of the macro */
 
+    PInp->LineRun = Lauf->Next;
     if (++(PInp->LineZ) > PInp->LineCnt) {
         Result = False;
     }
@@ -981,7 +975,8 @@ static void ExpandMacro(PMacroRec OneMacro) {
 
         /* 4. Zeilenliste anhaengen */
 
-        Tag->Lines   = OneMacro->FirstLine;
+        /* Each invocation owns its cursor, including recursive calls. */
+        Tag->Lines = Tag->LineRun = OneMacro->FirstLine;
         Tag->IsEmpty = !OneMacro->FirstLine;
         Lauf         = OneMacro->FirstLine;
         while (Lauf) {

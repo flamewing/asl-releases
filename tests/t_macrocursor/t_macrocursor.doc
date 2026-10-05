@@ -1,0 +1,4 @@
+Checks invocation-local macro line cursors across recursive calls and returns,
+repeated invocations, nested IRP input, SHIFT, early EXITM, and empty bodies.
+Expected bytes are specified independently and checked with the head-walking
+baseline as well as the cursor implementation.
