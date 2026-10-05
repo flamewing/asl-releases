@@ -163,6 +163,10 @@ char* QuotPosQualify(char const* s, char Zeichen, tQualifyQuoteFnc QualifyQuoteF
 
 char* QuotSMultPosQualify(
         char const* s, char const* pStrs, tQualifyQuoteFnc QualifyQuoteFnc) {
+    /* The packed list ends with an empty string. Most targets use only ';'. */
+    if (pStrs[0] && !pStrs[1] && !pStrs[2]) {
+        return QuotPosQualify(s, pStrs[0], QualifyQuoteFnc);
+    }
     return QuotPosCore(s, SearchMultString, pStrs, QualifyQuoteFnc);
 }
 

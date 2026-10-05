@@ -71,6 +71,14 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Single-character delimiter fast path — accepted 5 October 2026
+
+`QuotSMultPosQualify` detects a packed delimiter list containing exactly one single-character entry and uses the existing `QuotPosQualify` scanner. This removes repeated general string matching on the common semicolon-only configuration while preserving the same quote, escape, bracket and apostrophe-qualification state machine. Empty lists, multi-character entries and multiple entries retain the general matcher.
+
+All 207 tests pass on Windows and Linux. A temporary harness extracted the old and candidate scanner functions directly from source and compared 600,000 results across deterministic generated strings, three quote-qualification modes, eight packed delimiter lists, and all three scanner entry points. It found no differences. All seven workloads preserve baseline/candidate objects and cross-platform code records.
+
+Five alternating pairs showed positive medians on every workload and OS. Fresh nine-pair confirmation on the public inputs and larger scaler repeated the gains: 6.45%, 7.54%, 7.26% and 28.01% on Windows; 15.09%, 10.72%, 10.99% and 30.25% on Linux. The implementation is accepted. See the [delimiter and scratch-buffer results](README.md#delimiter-and-scratch-buffer-experiments-2026-10-05). Subsequent experiments use this accepted implementation as their baseline.
+
 ### Reuse macro body count — evaluated and discarded 5 October 2026
 
 `ExpandMacro` used the definition's existing `BodyLineCount` instead of walking its body list to count lines on every invocation. No new state or allocation was introduced. All 207 tests passed on Windows and Linux; all seven workloads retained identical baseline/candidate objects and cross-platform code records.

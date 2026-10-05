@@ -216,3 +216,34 @@ The candidate won 4/5, 1/5, 2/5, 2/5, 1/5, 4/5 and 3/5 Windows pairs; Linux coun
 The initial larger gain and regression did not repeat, and confirmation differences were small with overlapping timing ranges. The stored-count change was discarded without a commit. These experiments illustrate that removing list traversal does not guarantee a measurable improvement when other work dominates, and that a short positive median is insufficient evidence for acceptance.
 
 All seven workloads preserved identical baseline/candidate objects through every warmup and measured run of all three screens. Actual code records matched across OSes, ignoring only creator footers. Confirmation objects also matched. Raw reports retain individual samples, timing ranges, executable hashes and execution order; binaries, logs, snapshots and private adapters remain in ignored local directories. No new instrumented profile is claimed. The committed macro-line-cursor implementation remains the final code baseline; only these experiment notes are retained from the follow-up work.
+
+## Delimiter and scratch-buffer experiments (2026-10-05)
+
+These experiments use the same seven workloads and adapters described above. Measurements are uninstrumented Release -O3 builds, with MinGW GCC 16.2 on Windows/local NTFS and GCC 15.2 on WSL2 Ubuntu/native Linux storage. Each binary gets one warmup; measured pairs alternate and reverse execution order each pair. OS batches run sequentially, separately from builds and tests. Positive percentages mean less time. Raw samples, binaries, logs, verification results, and private input snapshots remain in ignored local directories.
+
+### Single-character delimiter: accepted
+
+The baseline includes the accepted macro line cursor. The candidate detects exactly one single-character entry in the packed delimiter list and routes it through `QuotPosQualify`, avoiding general `strlen`/`strncmp` matching at each source character. Other configurations keep the general scanner. Five-pair screening results:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.335 → 1.209 | 9.41% | 0.518 → 0.464 | 10.43% |
+| Sonic 2 | 2.134 → 1.979 | 7.25% | 1.061 → 0.962 | 9.36% |
+| Sonic & Knuckles | 2.235 → 2.064 | 7.67% | 0.987 → 0.863 | 12.51% |
+| Big Fishing Derby | 1.703 → 1.572 | 7.68% | 1.002 → 0.902 | 9.99% |
+| Sonic Classic Heroes | 2.498 → 2.381 | 4.69% | 0.990 → 0.896 | 9.42% |
+| ScalerMacros-v1.asm | 1.046 → 0.873 | 16.59% | 0.683 → 0.526 | 22.93% |
+| ScalerMacros-v2.asm | 3.334 → 2.403 | 27.92% | 2.186 → 1.604 | 26.63% |
+
+The candidate won all five pairs for every workload on both platforms. A fresh nine-pair confirmation on the public inputs and the larger scaler gave:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Faster pairs | Linux baseline → candidate (s) | Time reduction | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.178 → 1.102 | 6.45% | 8/9 | 0.471 → 0.400 | 15.09% | 8/9 |
+| Sonic 2 | 2.086 → 1.929 | 7.54% | 8/9 | 0.950 → 0.848 | 10.72% | 9/9 |
+| Sonic & Knuckles | 2.274 → 2.109 | 7.26% | 8/9 | 0.880 → 0.783 | 10.99% | 9/9 |
+| ScalerMacros-v2.asm | 3.150 → 2.268 | 28.01% | 9/9 | 2.174 → 1.517 | 30.25% | 9/9 |
+
+The scaler confirmation ranges do not overlap: Windows 2.970–3.513 s versus 2.004–2.522 s, Linux 2.132–2.230 s versus 1.493–1.547 s. Sonic 1's Windows baseline includes a 3.128 s outlier; medians and paired wins are reported rather than treating that sample as typical. These are repeatable gains on this machine, not instrumented profile percentages or guarantees for every input.
+
+All 207 tests pass on both OSes. A temporary differential harness compiled the old and candidate scanner functions extracted directly from source, comparing 600,000 results on deterministic generated inputs with quote escapes, bracket nesting, qualified/unqualified apostrophes, empty and multi-entry lists, multi-character delimiters and all three scanner entry points. All results agree. Every warmup and measured object matches the baseline; actual code records match across Windows and Linux, ignoring only creator footers, including confirmation runs. The fast path is retained and becomes the baseline for the next experiment.
