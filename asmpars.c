@@ -1301,6 +1301,9 @@ static Byte GetOpTypeMask(Byte TotMask, int OpIndex) {
     return (TotMask >> (OpIndex * 4)) & 15;
 }
 
+/* Zero terminates each chain; operator zero is the non-matching placeholder. */
+static unsigned FirstOperator[256], NextOperator[OPERATOR_MAXCNT + 1];
+
 static Byte TryConvert(Byte TypeMask, TempType ActType, int OpIndex) {
     if (TypeMask & ActType) {
         return 0 << (4 * OpIndex);
@@ -1354,8 +1357,6 @@ static void ClearExpressionScratch(void) {
 
 void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
     Operator const* pOp;
-    Operator const* FOps[OPERATOR_MAXCNT];
-    LongInt         FOpCnt = 0;
 
     Boolean          OK;
     tStrComp         InArgs[3];
@@ -1367,7 +1368,7 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
     Boolean          InSgl, InDbl, NextEscaped, ThisEscaped;
     PFunction        ValFunc;
     tStrComp         CopyComp, STempComp;
-    char *           KlPos, *zp, *pOpPos;
+    char *           KlPos, *zp;
     tFunction const* pFunction;
     PRelocEntry      TReloc;
     tSymbolFlags     PromotedFlags;
@@ -1444,20 +1445,13 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
         LEAVE;
     }
 
-    /* find out which operators *might* occur in expression */
+    /* Scan for operators using chains grouped by their first byte. */
 
     OpMax  = 0;
     LKlamm = 0;
     RKlamm = 0;
     WKlamm = 0;
     InSgl = InDbl = ThisEscaped = NextEscaped = False;
-    for (pOp = Operators + 1; pOp->Id; pOp++) {
-        pOpPos = (pOp->IdLen == 1) ? (strchr(CopyComp.str.p_str, *pOp->Id))
-                                   : (strstr(CopyComp.str.p_str, pOp->Id));
-        if (pOpPos) {
-            FOps[FOpCnt++] = pOp;
-        }
-    }
 
     /* nach Operator hoechster Rangstufe ausserhalb Klammern suchen */
 
@@ -1506,9 +1500,11 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
                 Boolean OpFnd = False;
                 sint    OpLen = 0, LocOpMax = 0;
 
-                for (zop = 0; zop < FOpCnt; zop++) {
-                    pOp = FOps[zop];
-                    if ((!strncmp(zp, pOp->Id, pOp->IdLen)) && (pOp->IdLen >= OpLen)) {
+                for (zop = FirstOperator[(unsigned char)*zp]; zop;
+                     zop = NextOperator[zop]) {
+                    pOp = Operators + zop;
+                    if ((pOp->IdLen == 1 || !strncmp(zp, pOp->Id, pOp->IdLen))
+                        && (pOp->IdLen >= OpLen)) {
                         OpFnd    = True;
                         OpLen    = pOp->IdLen;
                         LocOpMax = pOp - Operators;
@@ -4207,6 +4203,19 @@ void PrintCodepages(void) {
 
 void asmpars_init(void) {
     tIntTypeDef* pCurr;
+    int OpCount, OpIndex;
+
+    /* Group operators by their first byte, retaining original table order. */
+    memset(FirstOperator, 0, sizeof(FirstOperator));
+    memset(NextOperator, 0, sizeof(NextOperator));
+    for (OpCount = 1; Operators[OpCount].Id; OpCount++) {
+        assert(OpCount <= OPERATOR_MAXCNT);
+    }
+    for (OpIndex = OpCount - 1; OpIndex > 0; OpIndex--) {
+        unsigned char Ch = (unsigned char)*Operators[OpIndex].Id;
+        NextOperator[OpIndex] = FirstOperator[Ch];
+        FirstOperator[Ch] = OpIndex;
+    }
 
     serr           = (char*)malloc(sizeof(char) * STRINGSIZE);
     snum           = (char*)malloc(sizeof(char) * STRINGSIZE);

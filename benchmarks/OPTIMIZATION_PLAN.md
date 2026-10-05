@@ -71,6 +71,18 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### First-character expression operator dispatch — accepted 5 October 2026
+
+Parser initialization builds first-byte operator chains in original table order. The existing quote/bracket scan consults only the appropriate chain, replacing per-operator whole-expression searches and unrelated comparisons. Longest matches, precedence, associativity, unary handling and symbol behavior are retained. The rejected backup-copy candidate is excluded.
+
+All 209 tests pass on both platforms. Independent `t_exprdispatch` bytes also pass with the old assembler; 600,000 differential operator/state comparisons, including high bytes, agree. Every benchmark object matches and cross-platform code records agree. Nine-pair confirmation improves every median: Windows 4.32–14.04% (7–9 faster pairs), Linux 13.81–19.62% (8–9 faster pairs). The initial Sonic Classic Heroes Linux slowdown did not repeat. This change is retained as the symbol experiment's baseline.
+
+WSL `/tmp` proved to be tmpfs and filled during private input staging. Generated artifacts were preserved on native ext4 with the original workspace path retained as a symlink. The entire Linux screen was rerun after relocation; confirmation and subsequent experiments use disk-backed native storage. See the [follow-up results and storage details](README.md#scanner-and-expression-follow-up-experiments-2026-10-05).
+
+### Expression backup copying — evaluated and discarded 5 October 2026
+
+Delaying the backup copy until integer/float conversion failed passed all 208 tests on both OSes and preserved all seven benchmark objects and cross-platform code records. Five-pair timings were mixed (Windows -3.73–2.25%, Linux -2.05–4.38%), with only two or three faster pairs on every workload and overlapping ranges. The implementation was reverted; original backup behavior remains. Operator dispatch is the next independent experiment. See the [follow-up results](README.md#scanner-and-expression-follow-up-experiments-2026-10-05).
+
 ### Single-character delimiter absence — accepted 5 October 2026
 
 `QuotPosQualify` rejects strings lacking the requested character with `strchr`; present characters retain the complete original state machine. The installed apostrophe-qualification callbacks have no side effects. All 208 tests pass on both OSes and 600,000 differential scanner comparisons agree. All seven workloads retain identical objects and cross-platform code records.

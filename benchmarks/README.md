@@ -391,3 +391,57 @@ Fresh nine-pair confirmation:
 Sonic 2's Windows confirmation is inconclusive in isolation despite the positive median. The other Windows workloads and every Linux workload favor the candidate in at least seven pairs. The larger scaler wins all pairs with nonoverlapping ranges: Windows 2.033–2.188 versus 1.678–1.889 s; Linux 1.497–1.531 versus 1.276–1.307 s. The overall evidence supports accepting this small change. No delimiter-absence frequency or instrumented speedup estimate is claimed.
 
 Every warmup and measured object matches its baseline; actual code records match across OSes for screening and confirmation. Raw reports are under ignored `build-benchmark-results/delimiter-absence/windows-public-{ab,confirm}`, `build-benchmark-results/local-private/delimiter-absence-windows-{ab,confirm}` and native Linux `/tmp/asl-token-20261005/delimiter-absence/{public,local}-{ab,confirm}`. Preserved baselines, test logs and differential checks accompany the experiment artifacts.
+
+### Delay expression backup until numeric conversion fails — discarded
+
+This candidate moved `StrCompCopy(&STempComp, &CopyComp)` after integer and float conversion, retaining it before string conversion and target-specific symbol handling. Both numeric conversions only read the expression, so constants and the program counter no longer needed the backup. Later parsing and symbol restoration were unchanged. The baseline includes accepted delimiter absence.
+
+All 208 tests pass on Windows and Linux; every warmup and measured object matches the baseline, and actual code records match across OSes. Five-pair screening:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Linux baseline → candidate (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 0.948 → 0.959 | -1.15% | 0.380 → 0.378 | 0.47% |
+| Sonic 2 | 1.559 → 1.591 | -2.00% | 0.775 → 0.761 | 1.90% |
+| Sonic & Knuckles | 1.711 → 1.706 | 0.31% | 0.752 → 0.719 | 4.38% |
+| Big Fishing Derby | 1.320 → 1.299 | 1.60% | 0.702 → 0.687 | 2.18% |
+| Sonic Classic Heroes | 1.956 → 1.912 | 2.25% | 0.763 → 0.756 | 0.88% |
+| ScalerMacros-v1.asm | 0.612 → 0.615 | -0.40% | 0.457 → 0.466 | -2.05% |
+| ScalerMacros-v2.asm | 1.820 → 1.888 | -3.73% | 1.354 → 1.350 | 0.28% |
+
+Windows faster-pair counts in table order are 2, 3, 2, 3, 3, 3, 2; Linux counts are 2, 2, 3, 3, 2, 2, 2 out of five. Every range overlaps, and positive medians lack a consistent pairwise advantage. No meaningful gain is established. The implementation was reverted without confirmation or a code commit. Raw reports and baselines use the same directory pattern as above with experiment name `expr-backup` and suffix `ab`.
+
+### First-character expression operator dispatch — accepted
+
+At parser initialization, operators are grouped into chains by their first byte, preserving original table order and the existing operator-count limit. During expression scanning, only that byte's chain is considered; single-byte operators need no `strncmp`. The preliminary whole-expression `strchr`/`strstr` pass for every operator is removed. Quote/bracket state, longest-match handling, precedence, associativity, unary interpretation, result conversion and symbol handling remain unchanged. The original expression backup copy is retained; the discarded backup candidate is not included.
+
+All 209 tests pass on Windows and Linux, including `t_exprdispatch`, whose independent expected bytes cover overlapping operators, precedence, associativity, unary operations, strings and floats and also pass with the previous assembler. An extracted-source harness compares operator choice, position and quote/bracket state on 600,000 generated cases, including high bytes and three apostrophe-qualification modes; all agree. A capacity adjustment before confirmation preserves all `OPERATOR_MAXCNT` slots plus the placeholder index; final builds repeat both suites and differential checks.
+
+The Linux screen initially ran out of staging space: Ubuntu's `/tmp` is a 7.8 GB tmpfs, not disk-backed storage. Only public timings had completed; private timings had not begun. The entire generated `/tmp/asl-token-20261005` workspace was relocated to `/home/marzojr/asl-benchmark-20261005`, retaining the former path as a symlink. Logs, objects, binaries and input snapshots were preserved. The original public batch is retained as `public-ab-tmpfs`, and incomplete private staging as `local-ab-incomplete`. The entire Linux screen was rerun with fresh inputs on native ext4; confirmation and subsequent experiments use that disk. No timings were collected during relocation. Earlier Linux results used native Linux tmpfs; percentages below compare contemporaneous pairs on the same filesystem, not absolute times across storage conditions.
+
+Five-pair screening median reductions:
+
+| Workload | Windows | Linux, fresh ext4 batch |
+| --- | ---: | ---: |
+| Sonic 1 | 8.84% | 8.30% |
+| Sonic 2 | 8.52% | 15.10% |
+| Sonic & Knuckles | 6.13% | 14.41% |
+| Big Fishing Derby | 10.35% | 18.42% |
+| Sonic Classic Heroes | 7.26% | -6.85% |
+| ScalerMacros-v1.asm | 11.10% | 15.47% |
+| ScalerMacros-v2.asm | 8.30% | 9.53% |
+
+Windows faster-pair counts are 5, 5, 4, 5, 5, 5, 5; Linux counts are 4, 4, 4, 5, 2, 5, 5. Sonic Classic Heroes' Linux candidate range includes 1.926 s versus a 0.741 s median, but neither that outlier nor the other positive medians alone establishes the outcome. Fresh nine-pair confirmation of the final implementation gives:
+
+| Workload | Windows baseline → candidate (s) | Time reduction | Faster pairs | Linux baseline → candidate (s) | Time reduction | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 0.909 → 0.869 | 4.32% | 7/9 | 0.362 → 0.307 | 15.11% | 8/9 |
+| Sonic 2 | 1.428 → 1.327 | 7.07% | 8/9 | 0.752 → 0.610 | 18.88% | 9/9 |
+| Sonic & Knuckles | 1.666 → 1.547 | 7.14% | 7/9 | 0.735 → 0.622 | 15.26% | 9/9 |
+| Big Fishing Derby | 1.288 → 1.155 | 10.30% | 9/9 | 0.681 → 0.547 | 19.62% | 9/9 |
+| Sonic Classic Heroes | 1.976 → 1.822 | 7.81% | 8/9 | 0.719 → 0.620 | 13.81% | 9/9 |
+| ScalerMacros-v1.asm | 0.607 → 0.522 | 14.04% | 8/9 | 0.449 → 0.383 | 14.87% | 9/9 |
+| ScalerMacros-v2.asm | 1.723 → 1.598 | 7.30% | 8/9 | 1.382 → 1.187 | 14.09% | 9/9 |
+
+Every confirmation median improves and every workload wins at least seven Windows pairs and eight Linux pairs. The earlier Sonic Classic Heroes slowdown does not repeat; its Linux ranges do not overlap (0.706–0.793 versus 0.605–0.662 s). Big Fishing Derby's ranges do not overlap on either platform. The dispatch change is accepted. Gains are incremental to delimiter absence and must not be added to percentages from other batches.
+
+Every warmup and measured object matches its baseline, and actual code records match across OSes for screening and confirmation. Raw artifacts follow the earlier directory pattern with experiment name `operator-index`; Linux paths now resolve through the retained symlink to native disk. No new instrumented profile or call-count reduction is claimed.

@@ -1,0 +1,4 @@
+Checks operator precedence and associativity, overlapping one/two-character
+spellings, unary operators, string comparison and quoted operator characters,
+and floating-point operands. Expected bytes are independently specified and
+also checked with the previous assembler before first-byte operator dispatch.
