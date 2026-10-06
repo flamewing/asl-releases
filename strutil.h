@@ -111,7 +111,10 @@ extern void strutil_init(void);
 #define chartouint(c)  (((unsigned int)(c)) & 0xff)
 #define as_toupper(c)  (toupper(chartouint(c)))
 #define as_tolower(c)  (tolower(chartouint(c)))
-#define as_isspace(c)  (!!isspace(chartouint(c)))
+static inline int as_isspace(int c) {
+    unsigned int byte = chartouint(c);
+    return (byte == ' ') || (byte == '\t') || !!isspace(byte);
+}
 #define as_isdigit(c)  (!!isdigit(chartouint(c)))
 #define as_isxdigit(c) (!!isxdigit(chartouint(c)))
 #define as_isprint(c)  (!!isprint(chartouint(c)))
