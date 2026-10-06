@@ -872,6 +872,7 @@ void strmaxprep2(char* p_dest, char const* p_src, size_t max_len) {
     }
     memmove(p_dest + src_len, p_dest, dest_len + 1);
     memmove(p_dest, p_src, src_len);
+    p_dest[src_len + dest_len] = '\0';
 }
 
 void strins(char* Dest, char const* Src, int Pos) {

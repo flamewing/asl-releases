@@ -108,7 +108,7 @@ Artifacts: `experiments/local-prefix-hash`, `baselines/local-prefix-hash`, `resu
 
 ### Separate correctness finding
 
-The initial sanitizer harness exposes a pre-existing `strmaxprep2` truncation issue: it copies `dest_len + 1` bytes after shortening `dest_len`, but that last copied byte need not be the source's NUL. For an eight-byte destination containing `.abc`, prepending `LONGNAME` produces eight nonzero bytes (`LONGNAM.`). A subsequent string scan can run beyond the buffer. The initial sanitizer run reports a stack-buffer-overflow during preparation/normalization, before cached hashing. No production fix is included in this performance series. Hash-equivalence checks explicitly terminate constructed truncated names so they test the hash helper's valid-string contract. This finding needs a separate bounded-prepend fix and regression test.
+The initial sanitizer harness exposes a pre-existing `strmaxprep2` truncation issue: it copies `dest_len + 1` bytes after shortening `dest_len`, but that last copied byte need not be the source's NUL. For an eight-byte destination containing `.abc`, prepending `LONGNAME` produces eight nonzero bytes (`LONGNAM.`). A subsequent string scan can run beyond the buffer. The initial sanitizer run reports a stack-buffer-overflow during preparation/normalization, before cached hashing. No production fix is included in this performance series. Hash-equivalence checks explicitly terminate constructed truncated names so they test the hash helper's valid-string contract. This finding is fixed by the separate bounded-prepend correctness change recorded in the optimization plan, with an actual-function regression test.
 
 ## Pristine Windows verification and revised register decision
 

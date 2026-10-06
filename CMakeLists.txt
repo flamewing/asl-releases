@@ -1169,6 +1169,13 @@ endif()
 
 enable_testing()
 
+define_executable(test_strmaxprep2
+    tests/strmaxprep2.c
+    strutil.c
+    dynstr.c
+)
+add_test(NAME strmaxprep2 COMMAND test_strmaxprep2)
+
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()
