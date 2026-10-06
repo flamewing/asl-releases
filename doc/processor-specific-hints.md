@@ -847,16 +847,18 @@ ADD/ADC/SUB/SBC/AND/XOR/OR/CP A,Rx
 
 `Rx` and `Ry` are synonyms for `IXL`, `IXU`, `IYL` or `IYU`. Keep however in mind that in the case of `LD Rx,Ry`, both registers must be part of the same index register.
 
-The coding of shift instructions leaves an undefined bit combination which is now accessible as the `SLIA` or `SLS` instruction. `SLIA/SLS` works like `SLA` with the difference of entering a 1 into bit position 0. Like all other shift instructions, `SLIA` also allows another undocumented variant:
+The coding of shift instructions leaves an undefined bit combination accessible as `SL1`, `SLI`, `SLIA`, or `SLS`. This fork also retains `SLL` as an alias. These work like `SLA`, but shift a 1 into bit position 0. The undocumented indexed variant accepts the destination first or last:
 
 ```asm
         SLIA    R,(XY+d)
+        SLIA    (XY+d),R
 ```
 
 In this case, `R` is an arbitrary 8-bit register (excluding index register halves...), and `(XY+d)` is a normal indexed address. This operation has the additional effect of copying the result into the register. This also works for the `RES` and `SET` instructions:
 
 ```asm
         SET/RES R,n,(XY+d)
+        SET/RES n,(XY+d),R
 ```
 
 Furthermore, two hidden I/O instructions exist:
@@ -869,6 +871,26 @@ Furthermore, two hidden I/O instructions exist:
 Their operation should be clear.
 
 **CAUTION!** No one can guarantee that all mask revisions of the Z80 execute these instructions, and the Z80's successors will react with traps if they find one of these instructions. Use them on your own risk...
+
+## GBZ80 / LR35902
+
+Select `GBZ80` or `LR35902` for the Sharp CPU used in the original Game Boy. The following Sharp mnemonics and common alternate forms are supported:
+
+| Sharp syntax | Alternate syntax | Operation |
+| --- | --- | --- |
+| `LD A,(HLD)` | `LD A,(HL-)`, `LDD A,(HL)` | Load A, then decrement HL |
+| `LD A,(HLI)` | `LD A,(HL+)`, `LDI A,(HL)` | Load A, then increment HL |
+| `LD (HLD),A` | `LD (HL-),A`, `LDD (HL),A` | Store A, then decrement HL |
+| `LD (HLI),A` | `LD (HL+),A`, `LDI (HL),A` | Store A, then increment HL |
+| `LD A,(C)` | `LD A,(FF00+C)`, `LDH A,(C)` | Load A from address `$ff00+C` |
+| `LD (C),A` | `LD (FF00+C),A`, `LDH (C),A` | Store A at address `$ff00+C` |
+| `LD (FF00+n),A` | `LDH (n),A` | Store A in the high memory page |
+| `LD A,(FF00+n)` | `LDH A,(n)` | Load A from the high memory page |
+| `LDHL SP,d` | `LD HL,SP+d` | Set HL to SP plus a signed displacement |
+| `LDX A,(nn)` | `LD A,(nn)` | Load A; `LDX` forces 16-bit addressing |
+| `LDX (nn),A` | `LD (nn),A` | Store A; `LDX` forces 16-bit addressing |
+
+`EXA` is an alias for `EX AF,AF'`, and `EXD` for `EX DE,HL` on processors that support those instructions. They are unavailable on the Game Boy.
 
 ## Z380
 

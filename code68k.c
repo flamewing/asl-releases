@@ -4312,8 +4312,9 @@ static void DecodeFRegList(tStrComp const* pArg, Byte* pTyp, Byte* pList) {
         p2 = strchr(Arg.str.p_str, '-');
         if (p2) {
             StrCompSplitRef(&From, &To, &Arg, p2);
-            if ((DecodeFPReg(&From, &RegFrom, False) != eIsReg) || (RegFrom & REG_FPCTRL)
-                || (DecodeFPReg(&To, &RegTo, False) != eIsReg) || (RegTo & REG_FPCTRL)) {
+            if (!strlen(To.str.p_str) || (DecodeFPReg(&From, &RegFrom, False) != eIsReg)
+                || (RegFrom & REG_FPCTRL) || (DecodeFPReg(&To, &RegTo, False) != eIsReg)
+                || (RegTo & REG_FPCTRL)) {
                 return;
             }
             if (RegFrom <= RegTo) {
