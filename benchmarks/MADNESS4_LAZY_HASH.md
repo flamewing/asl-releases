@@ -67,8 +67,9 @@ Separate diagnostic binaries explicitly use
 `-O3 -DNDEBUG -g -fno-omit-frame-pointer -pg`, with `-pg` at link time.
 Windows diagnostics additionally disable dynamic-base and high-entropy VA
 relocation for gprof address resolution. Normal timed binaries retain normal
-linker behavior. Setting `ASL_PROFILE` alone does not instrument these source
-snapshots: that CMake option is not consumed. An initial noninstrumented attempt
+linker behavior. Setting `ASL_PROFILE` alone does not instrument the original
+`0730cdf` snapshot, which lacks the later profiling CMake module; the accepted
+snapshot supports that option. An initial noninstrumented original-build attempt
 produced no `gmon.out` and was replaced by explicit-flag builds; no such attempt
 is used as a profile.
 

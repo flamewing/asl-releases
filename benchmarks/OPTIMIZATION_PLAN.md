@@ -311,3 +311,25 @@ time: an apparent 6.04% native Madness 4 release wall gain for scope reuse has
 rather than attributing the wall difference to cached hashing. Accepted source
 and binaries are restored; experimental artifacts and private inputs remain
 outside the checkout. The new public manifest records both listing variants.
+
+### Fresh aggregate and compiler profiles — 6 October 2026
+
+See [the aggregate report](HEAD_COMPILER_PROFILES.md). Freeze pre-optimization
+`0730cdf` and current HEAD `2369d51`; use pristine Windows GCC/MSVC and native
+Linux GCC builds, all eleven workload variants and nine interleaved measured
+rounds after warmups. The geometric-mean time reductions are 42.02%, 41.30%
+and 48.06%, respectively. Original/current suites pass 202/210 tests for all
+three toolchains, and all variants preserve assembled code across revisions,
+compilers and OSes. Anonymous-case details remain external.
+
+Use identical Windows CPU sampling for GCC and MSVC, supplementing separate
+fresh GCC instrumented collections on both OSes. Macro substitution, delimiter
+matching and scratch allocation have much lower costs after the accepted changes.
+Compiler/runtime differences concentrate around formatting and synchronization;
+MSVC wins the public listing-heavy cases while GCC wins the seven established
+cases. Do not choose a compiler from the roughly 1% all-case aggregate difference.
+
+Next experiments should inspect listing/output buffering and runtime locking,
+whitespace classification in macro-heavy input, then expression-evaluation and
+symbol/string work. Preserve character/codepage semantics and output ordering.
+These are profile-guided suggestions, not implemented or accepted changes.
