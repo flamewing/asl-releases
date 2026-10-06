@@ -1045,6 +1045,20 @@ static Double ConstFloatVal(char const* pExpr, FloatType Typ, Boolean* pResult) 
 
     UNUSED(Typ);
 
+    /* ASL leaves LC_NUMERIC in the C locale; defer non-ASCII bytes too. */
+    unsigned char First = (unsigned char)*pExpr;
+    if (First && (First < 0x80) && ((First < '0') || (First > '9'))) {
+        switch (First) {
+        case '+': case '-': case '.':
+        case 'n': case 'N': case 'i': case 'I':
+        case ' ': case '\t': case '\n': case '\r': case '\f': case '\v':
+            break;
+        default:
+            *pResult = False;
+            return 0.0;
+        }
+    }
+
     if (*pExpr) {
         /* Some strtod() implementations interpret hex constants starting with '0x'.  We
            don't want this here.  Either 0x for hex constants is allowed, then it should
