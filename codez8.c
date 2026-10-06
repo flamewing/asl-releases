@@ -2591,7 +2591,7 @@ static ASSUMERec ASSUMEeZ8s[] = {
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_Z8(void* pUser) {
-    PFamilyDescr pDescr;
+    TFamilyDescr const* pDescr;
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);

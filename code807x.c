@@ -720,7 +720,7 @@ static void SwitchFrom_807x(void) {
 }
 
 static void SwitchTo_807x(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("807x");
 

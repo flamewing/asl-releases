@@ -458,7 +458,7 @@ static void MakeCode_KCPSM3(void) {
 }
 
 static void SwitchTo_KCPSM3(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("KCPSM3");
 

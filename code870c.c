@@ -1290,7 +1290,7 @@ static Boolean TrueFnc(void) {
 }
 
 static void SwitchTo_870C(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("TLCS-870/C");
 

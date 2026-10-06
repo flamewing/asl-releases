@@ -267,7 +267,7 @@ static void MakeCode_Vector(void) {
 }
 
 static void SwitchTo_Vector(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("ATARI_VECTOR");
 

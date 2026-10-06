@@ -162,6 +162,11 @@ extern Boolean MultiCharToInt(TempResult* pResult, unsigned MaxLen);
 
 extern Boolean RangeCheck(LargeInt Wert, IntType Typ);
 
+extern Boolean ChkRangeByType(
+        LargeInt value, IntType type, const struct sStrComp* p_comp);
+extern Boolean ChkRangeWarnByType(
+        LargeInt value, IntType type, const struct sStrComp* p_comp);
+
 extern Boolean FloatRangeCheck(Double Wert, FloatType Typ);
 
 extern Boolean IdentifySection(const struct sStrComp* pName, LongInt* Erg);

@@ -422,7 +422,7 @@ static Boolean IsDef_F8(void) {
 }
 
 static void SwitchTo_F8(void) {
-    PFamilyDescr Descr;
+    TFamilyDescr const* Descr;
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);

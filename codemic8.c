@@ -516,7 +516,7 @@ static void MakeCode_Mico8(void) {
 }
 
 static void SwitchTo_Mico8(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("Mico8");
 

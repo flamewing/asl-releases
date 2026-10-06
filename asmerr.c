@@ -245,6 +245,9 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_PageCrossing:
         msgno = Num_ErrMsgPageCrossing;
         break;
+    case ErrNum_WUnderRange:
+        msgno = Num_ErrMsgWUnderRange;
+        break;
     case ErrNum_WOverRange:
         msgno = Num_ErrMsgWOverRange;
         break;

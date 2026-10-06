@@ -893,7 +893,7 @@ static void SwitchFrom_1750(void) {
 }
 
 static void SwitchTo_1750(void) {
-    PFamilyDescr pDescr;
+    TFamilyDescr const* pDescr;
 
     pDescr = FindFamilyByName("1750");
 

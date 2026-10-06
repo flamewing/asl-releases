@@ -16,7 +16,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-static TFamilyDescr Descrs[] = {
+static TFamilyDescr const Descrs[] = {
         {        "680x0", 0x0001,   eHexFormatMotoS},
         {     "DSP56000", 0x0009,   eHexFormatMotoS},
         {       "MPC601", 0x0005,   eHexFormatMotoS},
@@ -127,8 +127,8 @@ static TFamilyDescr Descrs[] = {
 
 /*---------------------------------------------------------------------------*/
 
-PFamilyDescr FindFamilyByName(char const* Name) {
-    PFamilyDescr pRun;
+TFamilyDescr const* FindFamilyByName(char const* Name) {
+    TFamilyDescr const* pRun;
 
     for (pRun = Descrs; pRun->Name != NULL; pRun++) {
         if (!strcmp(Name, pRun->Name)) {
@@ -139,8 +139,8 @@ PFamilyDescr FindFamilyByName(char const* Name) {
     return NULL;
 }
 
-PFamilyDescr FindFamilyById(Word Id) {
-    PFamilyDescr pRun;
+TFamilyDescr const* FindFamilyById(Word Id) {
+    TFamilyDescr const* pRun;
 
     for (pRun = Descrs; pRun->Name != NULL; pRun++) {
         if (Id == pRun->Id) {

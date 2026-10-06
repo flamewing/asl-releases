@@ -480,7 +480,7 @@ The following table shows the most important symbols which are predefined by AS.
 
 Additionally some pseudo instructions define symbols that reflect the value that has been set with these instructions. Their descriptions are explained at the individual commands belonging to them.
 
-A hidden feature (that has to be used with care) is that symbol names may be assembled from the contents of string symbols. This can be achieved by framing the string symbol's name with braces and inserting it into the new symbol's name. This allows for example to define a symbol's name based on the value of another symbol:
+A hidden feature (that has to be used with care) is that symbol names may be assembled from the contents of string symbols. This can be achieved by framing the string symbol's name with curly braces and inserting it into the new symbol's name. This allows for example to define a symbol's name based on the value of another symbol:
 
 ```asm
 cnt             set     cnt+1
@@ -679,7 +679,7 @@ Some frequently used control characters can also be reached with the following a
 
 Both upper and lower case characters may be used for the identification letters.
 
-By means of this escape character, you can even work formula expressions into a string, if they are enclosed by braces: e.g.
+By means of this escape character, you can even work formula expressions into a string, if they are enclosed by curly braces: e.g.
 
 ```asm
 message "root of 81 : \{sqrt(81)}"

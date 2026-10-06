@@ -525,7 +525,7 @@ static void SwitchFrom_4004(void) {
 }
 
 static void SwitchTo_4004(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("4004/4040");
 

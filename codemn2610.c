@@ -1182,7 +1182,7 @@ static void SwitchFrom_MN1610_Alt(void) {
 }
 
 static void SwitchTo_MN1610_Alt(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("MN161x");
 

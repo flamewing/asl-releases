@@ -3090,7 +3090,7 @@ static Boolean ChkMoreZeroArg(void) {
 }
 
 static void SwitchTo_NS32K(void* pUser) {
-    PFamilyDescr pDescr = FindFamilyByName("NS32000");
+    TFamilyDescr const* pDescr = FindFamilyByName("NS32000");
 
     TurnWords = True;
     SetIntConstMode(eIntConstModeIntel);

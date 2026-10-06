@@ -3081,7 +3081,7 @@ static void InternSymbol_H16(char* pArg, TempResult* pResult) {
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_H16(void) {
-    PFamilyDescr const pDescr = FindFamilyByName("H16");
+    TFamilyDescr const* pDescr = FindFamilyByName("H16");
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeMoto);

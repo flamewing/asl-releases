@@ -544,7 +544,7 @@ static void SwitchFrom_1802(void) {
 }
 
 static void SwitchTo_1802(void) {
-    PFamilyDescr FoundDescr;
+    TFamilyDescr const* FoundDescr;
 
     FoundDescr = FindFamilyByName("1802");
 

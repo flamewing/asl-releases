@@ -991,7 +991,7 @@ static void InternSymbol_960(char* pArg, TempResult* pResult) {
 }
 
 static void SwitchTo_960(void) {
-    PFamilyDescr FoundId;
+    TFamilyDescr const* FoundId;
 
     TurnWords = False;
     SetIntConstMode(eIntConstModeIntel);

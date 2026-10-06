@@ -46,13 +46,13 @@ static void ParamError(Boolean InEnv, char* Arg) {
 }
 
 static void ProcessSingle(char const* pFileName) {
-    FILE*        ProgFile;
-    Byte         Header, Segment, Gran, CPU;
-    PFamilyDescr FoundId;
-    int          Ch;
-    Word         Len, ID;
-    LongWord     StartAdr;
-    Boolean      HeadFnd;
+    FILE*               ProgFile;
+    Byte                Header, Segment, Gran, CPU;
+    TFamilyDescr const* FoundId;
+    int                 Ch;
+    Word                Len, ID;
+    LongWord            StartAdr;
+    Boolean             HeadFnd;
 
     ProgFile = fopen(pFileName, OPENRDMODE);
     if (!ProgFile) {

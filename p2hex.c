@@ -179,8 +179,8 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
 
     Byte MotRecType = 0;
 
-    tHexFormat   ActFormat;
-    PFamilyDescr FoundDscr;
+    tHexFormat          ActFormat;
+    TFamilyDescr const* FoundDscr;
 
     SrcFile = fopen(FileName, OPENRDMODE);
     if (!SrcFile) {

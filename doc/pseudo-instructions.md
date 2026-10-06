@@ -1827,7 +1827,7 @@ Similar to symbols, macros are local, i.e. they are only known in a section and 
 
 A default value may be provided for each macro parameter (appended via an equal sign). This value is used if there is no argument for this parameter at macro call or if the positional argument (see below) for this parameter is empty.
 
-Apart from the macro parameters themselves, the parameter list may contain control parameters which influence the processing of the macro. These parameters are distinguished from normal parameters by being enclosed in braces. The following control parameters are defined:
+Apart from the macro parameters themselves, the parameter list may contain control parameters which influence the processing of the macro. These parameters are distinguished from normal parameters by being enclosed in curly braces. The following control parameters are defined:
 
 - `EXPAND/NOEXPAND`: rule whether the enclosed code shall be written to the listing when the macro is expanded. The default is the value set by the pseudo instruction `MACEXP_DFT`.
 - `EXPIF/NOEXPIF`: rule whether instructions for conditional assembly and code excluded by it shall be written to the listing when the macro is expanded. The default is the value set by the pseudo instruction `MACEXP_DFT`.

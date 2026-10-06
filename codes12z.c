@@ -2598,8 +2598,8 @@ static Boolean IsDef_S12Z(void) {
 }
 
 static void SwitchTo_S12Z(void) {
-    PFamilyDescr const pDescr = FindFamilyByName("S12Z");
-    TurnWords                 = False;
+    TFamilyDescr const* pDescr = FindFamilyByName("S12Z");
+    TurnWords                  = False;
     SetIntConstMode(eIntConstModeMoto);
 
     PCSymbol    = "*";

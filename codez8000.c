@@ -3417,7 +3417,7 @@ static Boolean TrueFnc(void) {
 }
 
 static void SwitchTo_Z8000(void* pUser) {
-    PFamilyDescr pDescr = FindFamilyByName("Z8000");
+    TFamilyDescr const* pDescr = FindFamilyByName("Z8000");
 
     TurnWords = True;
     SetIntConstMode(eIntConstModeIntel);
