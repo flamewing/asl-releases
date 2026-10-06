@@ -1,5 +1,7 @@
 Checks constant and expandable macro body lines, metadata growth, special
 parameters (attributes, argument count, all arguments, internal label), empty
 macros, recursive calls, nested definitions, and globally copied definitions.
+Global copies also retain internal labels, global symbol visibility and listing
+options, and can be invoked repeatedly with independent invocation state.
 The same line order and bytes must be emitted whether replacements are skipped
 on constant lines or every line follows the original replacement path.

@@ -84,3 +84,16 @@ copied  macro   value,{GLOBAL}
         endm
         endsection
         Example_copied $62
+
+; A global copy must retain internal-label, symbol-scope and listing options.
+        section Options
+internal macro value,{GLOBAL},{INTLABEL},{GLOBALSYMBOLS},{NOEXPAND}
+__LABEL__ dc.b  value
+visible set     $72
+        endm
+        endsection
+anchor2 Options_internal $70
+        dc.b    visible
+        dc.w    anchor2
+anchor3 Options_internal $73
+        dc.w    anchor3

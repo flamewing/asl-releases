@@ -438,6 +438,8 @@ static void MACRO_OutProcessor(void) {
             AddMacro(FirstOutputTag->Mac, FirstOutputTag->PubSect, True);
             if ((FirstOutputTag->DoGlobCopy) && (SectionStack)) {
                 GMacro             = (PMacroRec)malloc(sizeof(MacroRec));
+                *GMacro            = *FirstOutputTag->Mac;
+                GMacro->UseCounter = 0;
                 GMacro->Name       = as_strdup(FirstOutputTag->GName);
                 GMacro->ParamCount = FirstOutputTag->Mac->ParamCount;
                 DuplicateMacroLines(GMacro, FirstOutputTag->Mac);
