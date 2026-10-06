@@ -1,6 +1,6 @@
 # Register, opcode and symbol-hashing experiments — 6 October 2026
 
-**Windows timing correction in progress:** the initial Windows incremental-build helper could reuse object files from discarded trials after restoring older source timestamps. Initial Windows timing tables below are provisional, including the first FPU acceptance evidence. Linux copies source files with new timestamps before building and is unaffected by this specific issue. Repeat Windows comparisons with separate pristine source/build directories under `windows-isolated` before finalizing decisions. The shared helper now refreshes all experiment-managed Windows source/header timestamps before building.
+**Windows timing correction:** the initial Windows incremental-build helper could reuse object files from discarded trials after restoring older source timestamps. Initial Windows timing tables below are provisional, including the first FPU acceptance evidence. Linux copies source files with new timestamps before building and is unaffected by this specific issue. Windows comparisons below were repeated with separate pristine source/build directories under `windows-isolated`; the final decisions use the corrected evidence at the end of this record. The shared helper now refreshes all experiment-managed Windows source/header timestamps before building.
 
 Evaluate these independently, in order, against the latest accepted code. The initial baseline is `e0a21be`.
 
@@ -98,7 +98,7 @@ Revised five-pair screening:
 
 The revised Windows Sonic 2 ranges do not overlap: baseline 1.102–1.150 s, candidate 1.151–1.215 s. Six Windows medians are negative. Large Linux percentages accompany overlapping ranges and uneven pair counts (including only 3/5 wins for Big Fishing Derby and 1/5 for Sonic Classic Heroes). This implementation has an unfavorable tradeoff; discard both variants without committing the generic API or running full confirmation. This does not prove that all possible prehashed lookup designs lack benefit. Revised objects and cross-platform code records agree; available memory stays above 10,711 MiB, maximum load 67%.
 
-## Cached local-label prefix hash — provisional rejection
+## Cached local-label prefix hash — discarded
 
 Baseline: `e3e78e4`; the generic prehashed lookup API and scope-hash reuse are restored. Cache the current global-label prefix after the existing normalization, its length and its rolling hash state. On a matching name prefix, continue hashing only the remaining bytes; otherwise hash the whole name normally. Preserve the scope mix and full equality checks. Invalidate the cache at temporary-symbol reset and global-prefix changes; recompute when the case mode changes. Prefix matching is a byte comparison against the actual name, so extending the cached state reproduces the full composed-name hash.
 
@@ -119,3 +119,61 @@ Fresh FPU confirmation retains the commit: Sonic 2 improves 1.82% (9/9 faster pa
 The clean integer-register screen is mixed. Nine-pair confirmation gives sub-1% full-game reductions and a stronger ScalerMacros-v1 result, 1.91% with 9/9 faster pairs. A focused scaler repeat gives Windows v1 only 0.33% (6/9; paired 1.00%) but Linux v1 3.99% (8/9; paired 2.68%). A further focused v1 repeat gives Windows 2.38% (8/9; paired 1.23%) and Linux 2.05% (7/9; paired 2.29%). Linux v2 improves 0.96% (7/9) in the focused repeat; Windows v2 improves 1.10% (6/9; paired only 0.05%). Accept the small repeated v1 benefit, strongest on Linux, without claiming significant full-game or v2 gains. The original large public-workload gains do not establish a repeatable improvement.
 
 Clean register artifacts are `windows-isolated/reg-shape` and `results/windows-isolated/reg-shape/{screen,confirm,targeted,targeted-v1}`; native focused records are `results/reg-shape/{targeted-scalers,targeted-v1}`. All 209 fresh Windows tests pass. The earlier decoder differential and native sanitizer checks apply to the exact same register function. Subsequent candidates must be rebuilt against this newly accepted code.
+
+## Name-copy and scope-hash retests against `f46eb3c`
+
+The accepted register change requires new independent baselines. Rebase only that accepted decoder into each pristine Windows candidate directory; refresh all 15 managed native source/header files before Linux builds. Every rebased candidate passes all 209 tests on each OS. The saved Linux executables preserve executable permissions. An initial Linux launch with missing execute permission performed no timing; its artifact is retained separately.
+
+Positive median reduction is faster; counts are adjacent faster pairs.
+
+### plain-name-copy
+
+| Workload | Windows reduction (wins) | Linux reduction (wins) |
+| --- | ---: | ---: |
+| Sonic 1 | -1.27% (3/9) | 1.42% (5/9) |
+| Sonic 2 | 2.18% (6/9) | 1.75% (7/9) |
+| Sonic 3 & Knuckles | 0.33% (5/9) | 1.65% (7/9) |
+| Big Fishing Derby | 1.70% (8/9) | 0.76% (7/9) |
+| Sonic Classic Heroes | 1.07% (6/9) | 1.82% (6/9) |
+| ScalerMacros-v1 | 0.65% (7/9) | -0.15% (4/9) |
+| ScalerMacros-v2 | 2.32% (7/9) | 2.12% (8/9) |
+
+### scope-name-hash-empty
+
+| Workload | Windows reduction (wins) | Linux reduction (wins) |
+| --- | ---: | ---: |
+| Sonic 1 | 0.65% (4/5) | 7.49% (3/5) |
+| Sonic 2 | 2.60% (4/5) | 0.34% (3/5) |
+| Sonic 3 & Knuckles | -0.27% (2/5) | 1.62% (4/5) |
+| Big Fishing Derby | -0.14% (2/5) | -1.63% (0/5) |
+| Sonic Classic Heroes | -0.22% (1/5) | -1.32% (1/5) |
+| ScalerMacros-v1 | -2.32% (0/5) | -2.88% (1/5) |
+| ScalerMacros-v2 | -1.78% (1/5) | 1.64% (4/5) |
+
+The name-copy screen has four negative Windows medians, including v1 at -2.57% (1/5); confirmation changes most signs, but Sonic 1 is -1.27% (3/9). Linux v2 repeats a modest benefit, +2.37% (4/5) then +2.12% (8/9), while v1 becomes -0.15% (4/9). Discard this version because the overall platform/workload tradeoff is inconclusive, despite a possible Linux v2 benefit. All objects and cross-platform code records match in both full batches; minimum available memory is 9,254 MiB in confirmation.
+
+Scope-hash reuse is slower on every private Windows workload. Linux is slower on three of the four private workloads. In particular v1 is -2.32% (0/5) on Windows and -2.88% (1/5) on Linux. The +7.49% Linux Sonic 1 median has only 3/5 faster pairs and overlapping ranges. Discard without full confirmation. All objects/code records match; minimum available memory is 9,213 MiB.
+
+The first pristine scope-hash build against `e3e78e4` fails `t_maclines` with a recursive-macro-depth error at the nested macro invocation; rerunning alone fails, while the accepted executable passes the same source path. Rebuilding against `f46eb3c` passes the full Windows/native suites. The earlier failure is unresolved and is additional reason to keep this candidate out of production, rather than claiming a proven hash-mathematics defect. Its logs remain in `windows-isolated/scope-name-hash-empty/tests.log`; the later passing logs have the `-reg` suffix.
+
+## Prefix-cache retest and final decisions
+
+The independent prefix-cache rebuild against `f46eb3c` passes all 209 tests on both systems. Five-pair screening is slower on six of seven Windows workloads and all seven Linux workloads.
+
+| Workload | Windows reduction (wins) | Linux reduction (wins) |
+| --- | ---: | ---: |
+| Sonic 1 | -1.08% (1/5) | -5.21% (2/5) |
+| Sonic 2 | -1.39% (1/5) | -2.60% (1/5) |
+| Sonic 3 & Knuckles | -1.87% (2/5) | -2.50% (0/5) |
+| Big Fishing Derby | -0.17% (3/5) | -1.83% (0/5) |
+| Sonic Classic Heroes | -0.73% (2/5) | -0.80% (1/5) |
+| ScalerMacros-v1 | -1.88% (0/5) | -3.80% (0/5) |
+| ScalerMacros-v2 | 0.61% (3/5) | -2.74% (1/5) |
+
+Linux v1 has non-overlapping ranges, 0.334–0.343 versus 0.343–0.356 s, with no faster pairs. The cache preserves exact hash values, as the differential checks establish, but its management and prefix comparisons add an unfavorable cost in these workloads. Discard without further confirmation. All objects and cross-platform code records agree; minimum available memory is 9,233 MiB.
+
+Retained code commits are `e3e78e4` (FPU prefix guard) and `f46eb3c` (integer-register spelling check). The latter has a modest repeated v1 scaler benefit, strongest on Linux; significant whole-game improvement is not established. The other three versions are removed from production. Separate pristine Windows directories correct the stale-object issue for these decisions. Existing earlier Windows incremental-build timing claims should also be treated as provisional until their build provenance is checked; this series does not retroactively validate them.
+
+Exact accepted Windows/native binaries are restored to the external ordinary build locations. Source snapshots and final CTest/output/executable-hash audits accompany the corrected results. The shared Windows build helper refreshes managed source/header timestamps; future trials should prefer separate build directories or an explicit clean build rather than rely solely on source timestamp restoration. Private inputs, adapters and identities remain external; only workload names occur here.
+
+Final audit: 18 corrected report pairs cover 59 matching cross-platform workload records, including the focused scaler repeats. All same-platform object hashes remain unchanged across the corrected series. Baseline executable hashes for the final three trials match the newly accepted register executable on each OS; restored ordinary-build executable hashes match those exact accepted binaries. All 15 managed source/header files agree between the checkout, native source snapshot and pristine accepted Windows snapshot. Final CTest runs pass all 209 cases on both systems. The machine-readable audit is `results/windows-isolated/final-five-audit.json` under the external Windows workspace.

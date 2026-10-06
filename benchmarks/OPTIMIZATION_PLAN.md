@@ -256,3 +256,11 @@ Windows and Linux gprof agree on the reduction in replacement work. Counts below
 `MACRO_Processor` call counts are unchanged: 257,418, 427,026, and 232,456 per assembly. Every macro line is still processed; only unnecessary substitutions are removed. Instrumented timing is excluded from the speedup table.
 
 Saved artifacts are under ignored `build-benchmark-results/`: `macro-windows-ab/`, `macro-linux-ab/`, `macro-windows-profile/`, and `macro-linux-profile/`, plus `macro-verification.json` for object/code-record and call-count checks. The Linux directories preserve exact executables and logs. Windows candidate executables are in `build-opt-macro-windows/` and `build-opt-macro-profile-windows/`. Native Linux build/input snapshots are at `/tmp/asl-macro-20261005` in Ubuntu. See `benchmarks/ab.py` and the benchmark guide for reproduction. Further macro changes, expression evaluation, and delimiter scanning remain planned, with no implementation in this experiment.
+
+### Register and hashing experiments — completed 6 October 2026
+
+See [the experiment report](REGISTER_HASH_EXPERIMENTS.md). Evaluate five candidates independently in the requested order, updating the accepted baseline after each winner. Retain FPU-prefix rejection (`e3e78e4`) and integer-register spelling rejection (`f46eb3c`). Discard the direct plain-name copy, reuse of name hashes across handles, and cached global-prefix hash state after corrected comparisons. The integer-register benefit is modest and concentrated in ScalerMacros-v1, especially on Linux.
+
+Restored source timestamps could leave discarded Windows object files in subsequent incremental builds. Repeat this series with pristine source/build directories outside the checkout; retain raw paired results and exact binaries. Future build isolation must account for object timestamps as well as executable/source restoration. Older Windows incremental timing evidence needs a provenance audit before reuse.
+
+Record the pre-existing `strmaxprep2` truncation/termination bug separately for a correctness fix with independently specified bounded-buffer regression cases. An early pristine scope-hash build also triggers a macro-depth test failure that disappears after rebasing onto the accepted register implementation; keep its logs and investigate before revisiting that discarded candidate.

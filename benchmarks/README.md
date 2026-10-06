@@ -2,7 +2,7 @@
 
 The [expression and line-processing experiments](EXPRESSION_LINE_EXPERIMENTS.md) are complete: lazy operand initialization and combined copying/trimming were discarded; known-length argument trimming in line splitting was accepted after repeated scaler gains on both OSes.
 
-The next five independent trials are recorded in [register, opcode and symbol-hashing experiments](REGISTER_HASH_EXPERIMENTS.md).
+The five [register, opcode and symbol-hashing experiments](REGISTER_HASH_EXPERIMENTS.md) are complete. FPU-prefix and integer-register spelling checks were retained; name copying and both hashing candidates were discarded. Windows comparisons were repeated using separate pristine builds after finding stale incremental objects; the linked report contains the corrected evidence and its limits. Earlier Windows incremental-build timing claims remain provisional until their build provenance is checked.
 
 ## Watcher contention and retesting (2026-10-06)
 
