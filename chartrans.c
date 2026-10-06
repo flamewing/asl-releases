@@ -110,7 +110,7 @@ int as_chartrans_table_set_mult(
         return EBADF;
     }
     if ((input_code_from > 255) || (input_code_to > 255) || (output_code > 255)
-        || (output_code + (input_code_to - input_code_from - 1) > 255)) {
+        || (output_code + (input_code_to - input_code_from) > 255)) {
         return E2BIG;
     }
     for (; input_code_from <= input_code_to; input_code_from++, output_code++) {

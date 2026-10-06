@@ -1,0 +1,2 @@
+Checks zero-valued character mappings and inclusive translation-range bounds.
+Derived from failures assembling Sonic disassemblies, without game source assets.
