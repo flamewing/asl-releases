@@ -281,3 +281,33 @@ Retry these independently against the committed `strmaxprep2` fix. The previous 
 Check cache invalidation and exact hash equivalence at both hash widths, including nested scopes, push/pop/reset, new global labels within the same scope, case/codepage transitions, explicit section selectors, forward references, empty prefixes and truncated composed names. Use independently specified assembly output and sanitizer checks, including the newly corrected bounded-prepend cases. Reproduce and investigate the earlier macro-depth failure before retaining a scope-search implementation.
 
 Use separate pristine Windows/native build directories outside the source tree. Run the seven established workloads with alternating screening/confirmation pairs, matching objects and code records; retain only repeated useful improvements. If promising, collect diagnostic cache population/hit and bytes-hashed counts separately from uninstrumented timings. No lazy hashing code is included in the correctness fix.
+
+### Madness 4 and lazy-cache results — 6 October 2026
+
+The [pinned new workload and complete lazy-cache report](MADNESS4_LAZY_HASH.md)
+compares pre-optimization `0730cdf` against accepted `a93a2f4`. Madness 4
+release/debug assembly, including listings, improves 29.77%/29.10% on Windows
+and 43.20%/41.91% on native WSL2 Linux. Five alternating measured pairs per
+variant follow a warmup; all original/accepted objects match on each OS and
+both variants' code records match across OSes. ROM compression and
+post-processing are excluded. Fresh explicit-`-pg` profiles verify the large
+reductions in scratch allocations and repeated macro replacement calls.
+
+Both independent lazy hashing implementations pass all 210 tests on each OS,
+independent-byte scope/prefix fixtures, exact hash differential checks at both
+widths, and generic prehashed lookup collision/deletion/resize checks with
+native sanitizers. Neither implementation is retained. Prefix-cache screening
+and focused nine-pair repeats remain mixed, with debug slower. Scope-name
+reuse gets a full fresh nine-pair confirmation: the Sonic & Knuckles screening
+gain reverses, Windows v2 slows with 1/9 faster pairs, and native v2 is slower
+in both batches. Small possible workload-specific Linux gains do not establish
+a useful overall tradeoff. The earlier eager scope trial's unexplained
+macro-depth failure remains unresolved; no new scope cache is committed.
+
+Native I/O pressure distorts some wall measurements without swap traffic or
+memory exhaustion. Later batches reuse prepared workdirs and record child CPU
+time: an apparent 6.04% native Madness 4 release wall gain for scope reuse has
+-0.27% CPU reduction and overlapping ranges. Keep these limits with the results,
+rather than attributing the wall difference to cached hashing. Accepted source
+and binaries are restored; experimental artifacts and private inputs remain
+outside the checkout. The new public manifest records both listing variants.

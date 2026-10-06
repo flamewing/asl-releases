@@ -1,5 +1,12 @@
 # Profiling ASL on Windows and Linux
 
+The [Madness 4 baseline and lazy-hashing trials](MADNESS4_LAZY_HASH.md) add a
+pinned public workload with release/debug listings. Against the revision before
+optimization, accepted assembly times fall about 30% on Windows and 42–43% on
+native WSL2 Linux. Both independent lazy cache trials were discarded after
+mixed screening/confirmation results. The report records instrumented call
+counts and the limits introduced by I/O variation.
+
 The [expression and line-processing experiments](EXPRESSION_LINE_EXPERIMENTS.md) are complete: lazy operand initialization and combined copying/trimming were discarded; known-length argument trimming in line splitting was accepted after repeated scaler gains on both OSes.
 
 The five [register, opcode and symbol-hashing experiments](REGISTER_HASH_EXPERIMENTS.md) are complete. FPU-prefix and integer-register spelling checks were retained; name copying and both hashing candidates were discarded. Windows comparisons were repeated using separate pristine builds after finding stale incremental objects; the linked report contains the corrected evidence and its limits. Earlier Windows incremental-build timing claims remain provisional until their build provenance is checked.

@@ -1,0 +1,12 @@
+{
+  "madness4-release": {
+    "repository": "madness4",
+    "source": "sonic.asm",
+    "arguments": ["-L"]
+  },
+  "madness4-debug": {
+    "repository": "madness4",
+    "source": "sonic.asm",
+    "arguments": ["-L", "-D", "__DEBUG__", "-OLIST", "sonic.debug.lst"]
+  }
+}
