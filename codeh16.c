@@ -24,6 +24,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "motpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <ctype.h>
@@ -3108,12 +3109,11 @@ static void SwitchTo_H16(void) {
     InternSymbol   = InternSymbol_H16;
     InitFields();
 
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
-    AddMoto16PseudoONOFF();
+    onoff_supmode_add();
 
     /* H16 code is byte-oriented, so no padding by default */
 
-    SetFlag(&DoPadding, DoPaddingName, False);
+    AddMoto16PseudoONOFF(False);
 }
 
 /*!------------------------------------------------------------------------

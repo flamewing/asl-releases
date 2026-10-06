@@ -1142,7 +1142,7 @@ static void InitFields(void) {
     AddFixed("RRA", 0x1a, eSyntaxZ80);
 
     AddInstTable(InstTable, "PORT", 0, DecodePORT);
-    AddInstTable(InstTable, "Z80SYNTAX", 0, DecodeZ80SYNTAX);
+    AddZ80Syntax(InstTable);
 }
 
 static void DeinitFields(void) {

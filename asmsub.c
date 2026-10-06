@@ -915,9 +915,9 @@ void NewPage(ShortInt Level, Boolean WithFF) {
 /* eine Zeile ins Listing schieben */
 
 static void WriteLstText(char const* line) {
-    static char* buffer;
+    static char*  buffer;
     static size_t capacity;
-    size_t length = strlen(line);
+    size_t        length = strlen(line);
 
     if (length + 1 > capacity) {
         char* grown = (char*)realloc(buffer, length + 1);
@@ -926,7 +926,7 @@ static void WriteLstText(char const* line) {
             fprintf(LstFile, "%s\n", line);
             return;
         }
-        buffer = grown;
+        buffer   = grown;
         capacity = length + 1;
     }
     memcpy(buffer, line, length);
@@ -1503,7 +1503,7 @@ int ReplaceLineUnchecked(
 }
 
 #if ArgCntMax + 4 >= 29 * 29
-#error Macro parameter tokens exceed the base-29 encoding range
+#    error Macro parameter tokens exceed the base-29 encoding range
 #endif
 
 static void SetToken(char* Token, unsigned TokenNum) {
@@ -1565,9 +1565,8 @@ static void AppendTokenSpan(
 }
 
 void ExpandTokens(
-        char const* Source, tTokenReplacement const* Replacements,
-        unsigned ParamCount, Boolean ExpandAttrs, Boolean Sequential,
-        as_dynstr_t* Dest) {
+        char const* Source, tTokenReplacement const* Replacements, unsigned ParamCount,
+        Boolean ExpandAttrs, Boolean Sequential, as_dynstr_t* Dest) {
     unsigned z;
     size_t   Length = 0;
 
@@ -1579,8 +1578,7 @@ void ExpandTokens(
             if (Replacements[z].Text && ((z != ParamCount) || ExpandAttrs)) {
                 ExpandLine(
                         Replacements[z].Text,
-                        z < ParamCount ? z + 1 : ArgCntMax + 1 + z - ParamCount,
-                        Dest);
+                        z < ParamCount ? z + 1 : ArgCntMax + 1 + z - ParamCount, Dest);
             }
         }
         return;
@@ -1599,13 +1597,14 @@ void ExpandTokens(
            inactive tokens must survive unchanged, just as in ExpandLine. */
         if ((unsigned char)Source[1] >= 1 && (unsigned char)Source[1] <= 29
             && (unsigned char)Source[2] >= 1 && (unsigned char)Source[2] <= 29) {
-            unsigned TokenNum = ((unsigned char)Source[1] - 1) * 29
-                                + (unsigned char)Source[2] - 1;
+            unsigned TokenNum
+                    = ((unsigned char)Source[1] - 1) * 29 + (unsigned char)Source[2] - 1;
             tTokenReplacement const* Replacement = NULL;
             if (TokenNum >= 1 && TokenNum <= ParamCount) {
                 Replacement = Replacements + TokenNum - 1;
-            } else if (TokenNum >= ArgCntMax + 1 && TokenNum <= ArgCntMax + 4
-                       && (ExpandAttrs || TokenNum != ArgCntMax + 1)) {
+            } else if (
+                    TokenNum >= ArgCntMax + 1 && TokenNum <= ArgCntMax + 4
+                    && (ExpandAttrs || TokenNum != ArgCntMax + 1)) {
                 Replacement = Replacements + ParamCount + TokenNum - ArgCntMax - 1;
             }
             if (Replacement && Replacement->Text) {

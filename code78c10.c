@@ -15,6 +15,7 @@
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
+#include "asmstructs.h"
 #include "asmsub.h"
 #include "bpemu.h"
 #include "codepseudo.h"
@@ -34,8 +35,13 @@ typedef struct {
 } intflag_t;
 
 typedef struct {
-    char const* p_name;
-    Byte        code, flags;
+    char const name[5];
+    Byte       code, flags;
+} reg_t;
+
+typedef struct {
+    char const name[5];
+    Byte       code, flags, core_mask;
 } sreg_t;
 
 typedef struct {
@@ -54,10 +60,14 @@ typedef enum {
 
 #define core_mask_no_low    ((1 << eCore7800High) | (1 << eCore7807) | (1 << eCore7810))
 #define core_mask_7800      ((1 << eCore7800Low) | (1 << eCore7800High))
+#define core_mask_7800_low  (1 << eCore7800Low)
+#define core_mask_7800_high (1 << eCore7800High)
 #define core_mask_7807      (1 << eCore7807)
+#define core_mask_7810      (1 << eCore7810)
 #define core_mask_7807_7810 ((1 << eCore7807) | (1 << eCore7810))
 #define core_mask_all \
     ((1 << eCore7800Low) | (1 << eCore7800High) | (1 << eCore7807) | (1 << eCore7810))
+#define core_mask_cmos 0x80
 
 enum {
     eFlagHasV = 1 << 0,
@@ -86,7 +96,6 @@ typedef struct {
 
 #define FixedOrderCnt 39
 #define Reg2OrderCnt  10
-#define SRegCnt       28
 #define IntFlagCnt    18
 
 static Boolean is_7807_781x;
@@ -97,9 +106,67 @@ static tCPUProps const* pCurrCPUProps;
 
 static order_t *  fixed_orders, *reg2_orders;
 static intflag_t* int_flags;
-static sreg_t*    s_regs;
+
+static sreg_t const s_regs[] = {
+        {  "PA", 0x00, eFlagSR | eFlagSR1 | eFlagSR2,                        core_mask_all},
+        {  "PB", 0x01, eFlagSR | eFlagSR1 | eFlagSR2,                        core_mask_all},
+        {  "PC", 0x02, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        {  "PD", 0x03, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        {  "PF", 0x05, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        { "MKH", 0x06, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        { "MKL", 0x07, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        { "SMH", 0x09, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        { "SML", 0x0a,                       eFlagSR,                  core_mask_7807_7810},
+        { "EOM", 0x0b, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        {"ETMM", 0x0c,                       eFlagSR,                  core_mask_7807_7810},
+        { "TMM", 0x0d, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7807_7810},
+        {  "MM", 0x10,                       eFlagSR,                  core_mask_7807_7810},
+        { "MCC", 0x11,                       eFlagSR,                  core_mask_7807_7810},
+        {  "MA", 0x12,                       eFlagSR,                  core_mask_7807_7810},
+        {  "MB", 0x13,                       eFlagSR,                  core_mask_7807_7810},
+        {  "MC", 0x14,                       eFlagSR,                  core_mask_7807_7810},
+        {  "MF", 0x17,                       eFlagSR,                  core_mask_7807_7810},
+        { "TXB", 0x18,                       eFlagSR,                  core_mask_7807_7810},
+        { "RXB", 0x19,                      eFlagSR1,                  core_mask_7807_7810},
+        { "TM0", 0x1a,                       eFlagSR,                  core_mask_7807_7810},
+        { "TM1", 0x1b,                       eFlagSR,                  core_mask_7807_7810},
+        { "ZCM", 0x28,                       eFlagSR, core_mask_7807_7810 | core_mask_cmos},
+        { "ANM", 0x08, eFlagSR | eFlagSR1 | eFlagSR2,                       core_mask_7810},
+        { "CR0", 0x20,                      eFlagSR1,                       core_mask_7810},
+        { "CR1", 0x21,                      eFlagSR1,                       core_mask_7810},
+        { "CR2", 0x22,                      eFlagSR1,                       core_mask_7810},
+        { "CR3", 0x23,                      eFlagSR1,                       core_mask_7810},
+        {  "PT", 0x0e, eFlagSR | eFlagSR1 | eFlagSR2,                       core_mask_7807},
+        { "WDM", 0x20,            eFlagSR | eFlagSR1,                       core_mask_7807},
+        {  "MT", 0x21,            eFlagSR | eFlagSR1,                       core_mask_7807},
+        {  "MK", 0x03, eFlagSR | eFlagSR1 | eFlagSR2,                       core_mask_7800},
+        {  "MB", 0x04,                       eFlagSR,                       core_mask_7800},
+        {  "PC", 0x02, eFlagSR | eFlagSR1 | eFlagSR2,                  core_mask_7800_high},
+        {  "PC", 0x02,           eFlagSR1 | eFlagSR2,                   core_mask_7800_low},
+        {  "MC", 0x05,                       eFlagSR,                  core_mask_7800_high},
+        {  "MC", 0x05,                             0,                   core_mask_7800_low},
+        { "TM0", 0x06,                       eFlagSR,                  core_mask_7800_high},
+        { "TM0", 0x06,                             0,                   core_mask_7800_low},
+        { "TM1", 0x07,                       eFlagSR,                  core_mask_7800_high},
+        { "TM1", 0x07,                             0,                   core_mask_7800_low},
+        {  "TM", 0x06,                       eFlagSR,                   core_mask_7800_low},
+        {  "TM", 0x06,                             0,                  core_mask_7800_high},
+        {  "SM", 0x0a,            eFlagSR | eFlagSR1,                   core_mask_7800_low},
+        {  "SM", 0x0a,                             0,                  core_mask_7800_high},
+        {  "SC", 0x0b,            eFlagSR | eFlagSR1,                   core_mask_7800_low},
+        {  "SC", 0x0b,                             0,                  core_mask_7800_high},
+        {   "S", 0x08,            eFlagSR | eFlagSR1,                       core_mask_7800},
+        { "TMM", 0x09,            eFlagSR | eFlagSR1,                       core_mask_7800}
+};
 
 /*--------------------------------------------------------------------------------*/
+
+static Boolean check_core(unsigned core_mask) {
+    if ((core_mask & core_mask_cmos) && !(pCurrCPUProps->Flags & eFlagCMOS)) {
+        return False;
+    }
+    return !!((core_mask >> pCurrCPUProps->Core) & 1);
+}
 
 /*!------------------------------------------------------------------------
  * \fn     decode_r(const tStrComp *p_arg, ShortInt *p_res)
@@ -166,7 +233,7 @@ static decode_reg_res_t decode_r2(tStrComp const* p_arg, ShortInt* p_res) {
 }
 
 static Boolean Decode_rp2(char* p_arg, ShortInt* p_res) {
-    static sreg_t const regs[] = {
+    static reg_t const regs[] = {
             {"SP", 0, 0},
             { "B", 1, 0},
             {"BC", 1, 0},
@@ -175,11 +242,11 @@ static Boolean Decode_rp2(char* p_arg, ShortInt* p_res) {
             { "H", 3, 0},
             {"HL", 3, 0},
             {"EA", 4, 0},
-            {NULL, 0, 0},
+            {  "", 0, 0},
     };
 
-    for (*p_res = 0; regs[*p_res].p_name; (*p_res)++) {
-        if (!as_strcasecmp(p_arg, regs[*p_res].p_name)) {
+    for (*p_res = 0; regs[*p_res].name[0]; (*p_res)++) {
+        if (!as_strcasecmp(p_arg, regs[*p_res].name)) {
             *p_res = regs[*p_res].code;
             return True;
         }
@@ -354,10 +421,11 @@ static Boolean Decode_f(char* Asc, ShortInt* Erg) {
 }
 
 static sreg_t const* decode_sr_core(tStrComp const* p_arg) {
-    int z;
+    size_t z;
 
-    for (z = 0; (z < SRegCnt) && s_regs[z].p_name; z++) {
-        if (!as_strcasecmp(p_arg->str.p_str, s_regs[z].p_name)) {
+    for (z = 0; z < sizeof(s_regs) / sizeof(*s_regs); z++) {
+        if (check_core(s_regs[z].core_mask)
+            && !as_strcasecmp(p_arg->str.p_str, s_regs[z].name)) {
             return &s_regs[z];
         }
     }
@@ -456,14 +524,244 @@ static Boolean HasDisp(ShortInt Mode) {
     return ((Mode & 11) == 11);
 }
 
+/*--------------------------------------------------------------------------*/
+/* Bit Symbol Handling (uPD7807...7809 only) */
+
+/*
+ * Compact representation of bits in symbol table:
+ * bits 0..2: bit position
+ * bits 3...6/18: address in I/O or memory space
+ * bit 19: 0 for memory space, 1 for I/O space
+ * bits 20..23: core type
+ */
+
+/*!------------------------------------------------------------------------
+ * \fn     eval_bit_position(const tStrComp *p_arg, Boolean *p_ok)
+ * \brief  evaluate bit position
+ * \param  bit position argument
+ * \param  p_ok parsing OK?
+ * \return numeric bit position
+ * ------------------------------------------------------------------------ */
+
+static LongWord eval_bit_position(tStrComp const* p_arg, Boolean* p_ok) {
+    return EvalStrIntExpression(p_arg, UInt3, p_ok);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     assemble_bit_symbol(Byte core, Boolean is_io, Word address, Byte bit_pos)
+ * \brief  transform bit symbol components into compact representation
+ * \param  core core used to define this bit
+ * \param  is_io special register or memory bit?
+ * \param  address (I/O) register address
+ * \param  bit_pos bit position
+ * \return compact storage value
+ * ------------------------------------------------------------------------ */
+
+static LongWord assemble_bit_symbol(
+        Byte core, Boolean is_io, Word address, Byte bit_pos) {
+    LongWord result = bit_pos | (address << 3);
+
+    if (is_io) {
+        result |= 1ul << 19;
+    }
+    result |= ((LongWord)core) << 20;
+    return result;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_bit_arg_2(LongWord *p_result, const tStrComp *p_reg_arg, const tStrComp *p_bit_arg)
+ * \brief  encode a bit symbol, address & bit position separated
+ * \param  p_result resulting encoded bit
+ * \param  p_reg_arg register argument
+ * \param  p_bit_arg bit argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean decode_bit_arg_2(
+        LongWord* p_result, tStrComp const* p_reg_arg, tStrComp const* p_bit_arg) {
+    Boolean  ok;
+    LongWord addr;
+    Boolean  is_io;
+    Byte     bit_pos;
+    ShortInt s_reg;
+
+    bit_pos = eval_bit_position(p_bit_arg, &ok);
+    if (!ok) {
+        return False;
+    }
+
+    if (decode_sr_flag(p_reg_arg, &s_reg, eFlagSR2) == e_decode_reg_ok) {
+        if ((s_reg > 0x0f) || (s_reg < 0)) {
+            WrStrErrorPos(ErrNum_InvReg, p_reg_arg);
+            return False;
+        }
+        is_io = True;
+        addr  = s_reg;
+    }
+
+    else {
+        addr = EvalStrIntExpression(p_reg_arg, UInt16, &ok);
+        if (!ok) {
+            return False;
+        }
+        is_io = False;
+    }
+
+    *p_result = assemble_bit_symbol(pCurrCPUProps->Core, is_io, addr, bit_pos);
+    return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_bit_arg(LongWord *p_result, int start, int stop)
+ * \brief  encode a bit symbol from instruction argument(s)
+ * \param  p_result resulting encoded bit
+ * \param  start first argument
+ * \param  stop last argument
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+static Boolean decode_bit_arg(LongWord* p_result, int start, int stop) {
+    *p_result = 0;
+
+    /* Just one argument -> parse as bit argument */
+
+    if (start == stop) {
+        char* p_sep = RQuotPos(ArgStr[start].str.p_str, '.');
+
+        if (p_sep) {
+            tStrComp reg_comp, bit_comp;
+
+            StrCompSplitRef(&reg_comp, &bit_comp, &ArgStr[start], p_sep);
+            return decode_bit_arg_2(p_result, &reg_comp, &bit_comp);
+        } else {
+            tEvalResult eval_result;
+
+            *p_result = EvalStrIntExpressionWithResult(
+                    &ArgStr[start], UInt24, &eval_result);
+            if (eval_result.OK) {
+                ChkSpace(SegBData, eval_result.AddrSpaceMask);
+            }
+            return eval_result.OK;
+        }
+    }
+
+    /* register & bit position are given as separate arguments */
+
+    else if (stop == start + 1) {
+        return decode_bit_arg_2(p_result, &ArgStr[start], &ArgStr[stop]);
+    }
+
+    /* other # of arguments not allowed */
+
+    else {
+        WrError(ErrNum_WrongArgCnt);
+        return False;
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     dissect_bit_symbol(LongWord bit_symbol, Byte *p_core, Boolean *p_is_io, Word *p_address, Byte *p_bit_pos)
+ * \brief  transform compact representation of bit (field) symbol into components
+ * \param  bit_symbol compact storage
+ * \param  p_core core used to define bit
+ * \param  p_is_io special register or memory bit?
+ * \param  p_address (I/O) register address
+ * \param  p_bit_pos (start) bit position
+ * \return constant True
+ * ------------------------------------------------------------------------ */
+
+static Boolean dissect_bit_symbol(
+        LongWord bit_symbol, Byte* p_core, Boolean* p_is_io, Word* p_address,
+        Byte* p_bit_pos) {
+    *p_core    = (bit_symbol >> 20) & 15;
+    *p_is_io   = (bit_symbol >> 19) & 1;
+    *p_address = (bit_symbol >> 3) & (*p_is_io ? 0xf : 0xffff);
+    *p_bit_pos = bit_symbol & 7;
+    return True;
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     dissect_bit_7807(char *p_dest, size_t dest_size, LargeWord inp)
+ * \brief  dissect compact storage of bit (field) into readable form for listing
+ * \param  p_dest destination for ASCII representation
+ * \param  dest_size destination buffer size
+ * \param  inp compact storage
+ * ------------------------------------------------------------------------ */
+
+static void dissect_bit_7807(char* p_dest, size_t dest_size, LargeWord inp) {
+    Byte    bit_pos, core;
+    Word    address;
+    Boolean is_io;
+
+    dissect_bit_symbol(inp, &core, &is_io, &address, &bit_pos);
+
+    if (is_io) {
+        size_t z;
+
+        for (z = 0; z < sizeof(s_regs) / sizeof(*s_regs); z++) {
+            if (!((s_regs[z].core_mask >> core) & 1)) {
+                continue;
+            }
+            if (address == s_regs[z].code) {
+                as_snprintf(
+                        p_dest, dest_size, "%s.%u", s_regs[z].name, (unsigned)bit_pos);
+                return;
+            }
+        }
+        as_snprintf(p_dest, dest_size, "SR%u.%u", address, (unsigned)bit_pos);
+    } else {
+        as_snprintf(
+                p_dest, dest_size, "%~.*u%s.%u", ListRadixBase, (unsigned)address,
+                GetIntConstIntelSuffix(ListRadixBase), (unsigned)bit_pos);
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     expand_bit_7807(const tStrComp *p_var_name, const struct sStructElem *p_struct_elem, LargeWord base)
+ * \brief  expands bit definition when a structure is instantiated
+ * \param  p_var_name desired symbol name
+ * \param  p_struct_elem element definition
+ * \param  base base address of instantiated structure
+ * ------------------------------------------------------------------------ */
+
+static void expand_bit_7807(
+        tStrComp const* p_var_name, const struct sStructElem* p_struct_elem,
+        LargeWord base) {
+    LongWord address = base + p_struct_elem->Offset;
+
+    if (pInnermostNamedStruct) {
+        PStructElem p_elem = CloneStructElem(p_var_name, p_struct_elem);
+
+        if (!p_elem) {
+            return;
+        }
+        p_elem->Offset = address;
+        AddStructElem(pInnermostNamedStruct->StructRec, p_elem);
+    } else {
+        if (!ChkRange(address, 0, 0xffff) || !ChkRange(p_struct_elem->BitPos, 0, 7)) {
+            return;
+        }
+
+        PushLocHandle(-1);
+        EnterIntSymbol(
+                p_var_name,
+                assemble_bit_symbol(
+                        pCurrCPUProps->Core, False, address, p_struct_elem->BitPos),
+                SegBData, False);
+        PopLocHandle();
+        /* TODO: MakeUseList? */
+    }
+}
+
 /*--------------------------------------------------------------------------------*/
 
-static Boolean check_core(unsigned core_mask) {
-    if ((core_mask >> pCurrCPUProps->Core) & 1) {
-        return True;
+static Boolean check_core_and_error(unsigned core_mask) {
+    Boolean ret = check_core(core_mask);
+
+    if (!ret) {
+        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
-    return False;
+    return ret;
 }
 
 static void PutCode(Word Code) {
@@ -480,58 +778,24 @@ static void PutCode(Word Code) {
  * \param  code machine code of instruction
  * ------------------------------------------------------------------------ */
 
-static void decode_bit_7807_core(tStrComp const* p_arg, Byte code) {
-    Boolean OK;
-    char*   p_sep;
+static void decode_bit_7807_core(int arg_idx, Byte code) {
+    LongWord packed_bit;
+    Boolean  is_io;
+    Word     address;
+    Byte     bit_pos, core;
 
-    /* specified as register + bit position? */
+    if (!decode_bit_arg(&packed_bit, arg_idx, arg_idx)) {
+        return;
+    }
+    dissect_bit_symbol(packed_bit, &core, &is_io, &address, &bit_pos);
 
-    p_sep = RQuotPos(p_arg->str.p_str, '.');
-    if (p_sep) {
-        tStrComp reg_comp, bit_comp;
-        Boolean  OK;
-        ShortInt s_reg;
-
-        StrCompSplitRef(&reg_comp, &bit_comp, p_arg, p_sep);
-        BAsmCode[1] = EvalStrIntExpression(&bit_comp, UInt3, &OK);
-        if (!OK) {
-            return;
-        }
-
-        /* Special registers 0...15 bit addressable as bits 80h...0ffh: */
-
-        if (decode_sr_flag(&reg_comp, &s_reg, eFlagSR2) == e_decode_reg_ok) {
-            if ((s_reg > 0x0f) || (s_reg < 0)) {
-                WrStrErrorPos(ErrNum_InvReg, &reg_comp);
-                return;
-            }
-            BAsmCode[1] |= 0x80 | (s_reg << 3);
-        }
-
-        /* Bit addressable memory: first 16 bytes in working page: */
-
-        else {
-            Byte address;
-
-            if (!Decode_wa(&reg_comp, &address, 15)) {
-                return;
-            }
-            BAsmCode[1] |= address << 3;
-            if (!OK) {
-                return;
-            }
+    if (!is_io) {
+        if ((Hi(address) != WorkArea) || (Lo(address) > 15)) {
+            WrStrErrorPos(ErrNum_InAccPage, &ArgStr[arg_idx]);
         }
     }
 
-    /* linear value ? */
-
-    else {
-        BAsmCode[1] = EvalStrIntExpression(p_arg, UInt8, &OK);
-        if (!OK) {
-            return;
-        }
-    }
-
+    BAsmCode[1] = (is_io ? 0x80 : 0x00) | ((address & 15) << 3) | (bit_pos & 7);
     BAsmCode[0] = code;
     CodeLen     = 2;
 }
@@ -539,7 +803,7 @@ static void decode_bit_7807_core(tStrComp const* p_arg, Byte code) {
 static void DecodeFixed(Word index) {
     order_t const* p_order = &fixed_orders[index];
 
-    if (ChkArgCnt(0, 0) && check_core(p_order->core_mask)) {
+    if (ChkArgCnt(0, 0) && check_core_and_error(p_order->core_mask)) {
         PutCode(p_order->code);
     }
 }
@@ -605,11 +869,11 @@ static void DecodeMOV(Word Code) {
     } else if (
             (pCurrCPUProps->Core == eCore7807)
             && !as_strcasecmp(ArgStr[1].str.p_str, "CY")) {
-        decode_bit_7807_core(&ArgStr[2], 0x5f);
+        decode_bit_7807_core(2, 0x5f);
     } else if (
             (pCurrCPUProps->Core == eCore7807)
             && !as_strcasecmp(ArgStr[2].str.p_str, "CY")) {
-        decode_bit_7807_core(&ArgStr[1], 0x5a);
+        decode_bit_7807_core(1, 0x5a);
     } else if ((res1 = decode_r(&ArgStr[1], &HReg)) != e_decode_reg_unknown) {
         if (res1 == e_decode_reg_ok) {
             AdrInt = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
@@ -676,7 +940,7 @@ static void DecodeMVIW(Word Code) {
 
     UNUSED(Code);
 
-    if (!ChkArgCnt(2, 2) || !check_core(core_mask_no_low))
+    if (!ChkArgCnt(2, 2) || !check_core_and_error(core_mask_no_low))
         ;
     else if (Decode_wa(&ArgStr[1], BAsmCode + 1, 0xff)) {
         BAsmCode[2] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
@@ -693,7 +957,7 @@ static void DecodeMVIX(Word Code) {
 
     UNUSED(Code);
 
-    if (!ChkArgCnt(2, 2) || !check_core(core_mask_no_low))
+    if (!ChkArgCnt(2, 2) || !check_core_and_error(core_mask_no_low))
         ;
     else if (!Decode_rpa1(&ArgStr[1], &HReg)) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
@@ -728,7 +992,7 @@ static void DecodeLDAX_STAX(Word Code) {
 static void DecodeLDEAX_STEAX(Word Code) {
     ShortInt HReg;
 
-    if (!ChkArgCnt(1, 1) || !check_core(core_mask_7807_7810))
+    if (!ChkArgCnt(1, 1) || !check_core_and_error(core_mask_7807_7810))
         ;
     else if (!Decode_rpa3(&ArgStr[1], &HReg, (ShortInt*)&BAsmCode[2])) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
@@ -778,7 +1042,7 @@ static void DecodeDMOV(Word Code) {
 
     UNUSED(Code);
 
-    if (ChkArgCnt(2, 2) && check_core(core_mask_7807_7810)) {
+    if (ChkArgCnt(2, 2) && check_core_and_error(core_mask_7807_7810)) {
         Boolean         Swap  = as_strcasecmp(ArgStr[1].str.p_str, "EA") || False;
         tStrComp const *pArg1 = Swap ? &ArgStr[2] : &ArgStr[1],
                        *pArg2 = Swap ? &ArgStr[1] : &ArgStr[2];
@@ -897,7 +1161,7 @@ static void DecodeALUReg(Word Code) {
 }
 
 static void DecodeALURegW(Word Code) {
-    if (ChkArgCnt(1, 1) && check_core(core_mask_no_low)
+    if (ChkArgCnt(1, 1) && check_core_and_error(core_mask_no_low)
         && Decode_wa(&ArgStr[1], BAsmCode + 2, 0xff)) {
         CodeLen     = 3;
         BAsmCode[0] = 0x74;
@@ -970,7 +1234,7 @@ static void DecodeReg2(Word index) {
     ShortInt         HReg;
     decode_reg_res_t res;
 
-    if (!ChkArgCnt(1, 1) || !check_core(p_order->core_mask))
+    if (!ChkArgCnt(1, 1) || !check_core_and_error(p_order->core_mask))
         ;
     else if ((res = decode_r2(&ArgStr[1], &HReg)) == e_decode_reg_unknown) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
@@ -997,7 +1261,7 @@ static void DecodeA(Word Code) {
 }
 
 static void DecodeEA(Word Code) {
-    if (!ChkArgCnt(1, 1) || !check_core(core_mask_7807_7810))
+    if (!ChkArgCnt(1, 1) || !check_core_and_error(core_mask_7807_7810))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "EA")) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
@@ -1028,7 +1292,7 @@ static void DecodeEADD_ESUB(Word Code) {
     ShortInt         HReg;
     decode_reg_res_t res;
 
-    if (!ChkArgCnt(2, 2) || !check_core(core_mask_7807_7810))
+    if (!ChkArgCnt(2, 2) || !check_core_and_error(core_mask_7807_7810))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "EA")) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
@@ -1128,7 +1392,7 @@ static void DecodeCALT(Word Code) {
 static void DecodeBIT(Word Code) {
     UNUSED(Code);
 
-    if (ChkArgCnt(2, 2) && check_core(core_mask_no_low)) {
+    if (ChkArgCnt(2, 2) && check_core_and_error(core_mask_no_low)) {
         Boolean  OK;
         ShortInt HReg;
 
@@ -1145,14 +1409,14 @@ static void DecodeBIT(Word Code) {
 static void DecodeSK_SKN(Word Code) {
     ShortInt HReg;
 
-    if (!ChkArgCnt(1, 1) || !check_core(Hi(Code)))
+    if (!ChkArgCnt(1, 1) || !check_core_and_error(Hi(Code)))
         ;
     else if (Decode_f(ArgStr[1].str.p_str, &HReg)) {
         CodeLen     = 2;
         BAsmCode[0] = 0x48;
         BAsmCode[1] = Lo(Code) + HReg;
     } else if (pCurrCPUProps->Core == eCore7807) {
-        decode_bit_7807_core(&ArgStr[1], (Code & 0x10) ? 0x50 : 0x5d);
+        decode_bit_7807_core(1, (Code & 0x10) ? 0x50 : 0x5d);
     } else {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
     }
@@ -1161,7 +1425,8 @@ static void DecodeSK_SKN(Word Code) {
 static void DecodeSKIT_SKNIT(Word Code) {
     ShortInt HReg;
 
-    if (ChkArgCnt(1, 1) && check_core(Hi(Code)) && Decode_irf(&ArgStr[1], &HReg)) {
+    if (ChkArgCnt(1, 1) && check_core_and_error(Hi(Code))
+        && Decode_irf(&ArgStr[1], &HReg)) {
         CodeLen     = 2;
         BAsmCode[0] = 0x48;
         BAsmCode[1] = Lo(Code) + HReg;
@@ -1216,22 +1481,67 @@ static void DecodeBLOCK_7807(Word code) {
 static void DecodeBit1_7807(Word code) {
     if (!ChkArgCnt(1, 1))
         ;
-    else if (!check_core(core_mask_7807))
+    else if (!check_core_and_error(core_mask_7807))
         ;
     else {
-        decode_bit_7807_core(&ArgStr[1], code);
+        decode_bit_7807_core(1, code);
     }
 }
 
 static void DecodeBit2_7807(Word code) {
     if (!ChkArgCnt(2, 2))
         ;
-    else if (!check_core(core_mask_7807))
+    else if (!check_core_and_error(core_mask_7807))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "CY")) {
         WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
     } else {
-        decode_bit_7807_core(&ArgStr[2], code);
+        decode_bit_7807_core(2, code);
+    }
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeDEFBIT(Word code)
+ * \brief  handle DEBIT instruction (7807...7809 only)
+ * ------------------------------------------------------------------------ */
+
+static void DecodeDEFBIT(Word code) {
+    LongWord BitSpec;
+
+    UNUSED(code);
+
+    /* if in structure definition, add special element to structure */
+
+    if (ActPC == StructSeg) {
+        Boolean     OK;
+        Byte        BitPos;
+        PStructElem pElement;
+
+        if (!ChkArgCnt(2, 2)) {
+            return;
+        }
+        BitPos = eval_bit_position(&ArgStr[2], &OK);
+        if (!OK) {
+            return;
+        }
+        pElement = CreateStructElem(&LabPart);
+        if (!pElement) {
+            return;
+        }
+        pElement->pRefElemName = as_strdup(ArgStr[1].str.p_str);
+        pElement->OpSize       = eSymbolSize8Bit;
+        pElement->BitPos       = BitPos;
+        pElement->ExpandFnc    = expand_bit_7807;
+        AddStructElem(pInnermostNamedStruct->StructRec, pElement);
+    } else {
+        if (decode_bit_arg(&BitSpec, 1, ArgCnt)) {
+            *ListLine = '=';
+            dissect_bit_7807(ListLine + 1, STRINGSIZE - 3, BitSpec);
+            PushLocHandle(-1);
+            EnterIntSymbol(&LabPart, BitSpec, SegBData, False);
+            PopLocHandle();
+            /* TODO: MakeUseList? */
+        }
     }
 }
 
@@ -1244,15 +1554,6 @@ static void AddFixed(char const* p_name, Word code, unsigned core_mask) {
     fixed_orders[InstrZ].code      = code;
     fixed_orders[InstrZ].core_mask = core_mask;
     AddInstTable(InstTable, p_name, InstrZ++, DecodeFixed);
-}
-
-static void AddSReg(char const* p_name, Word code, Byte flags) {
-    if (InstrZ >= SRegCnt) {
-        exit(255);
-    }
-    s_regs[InstrZ].p_name  = p_name;
-    s_regs[InstrZ].code    = code;
-    s_regs[InstrZ++].flags = flags;
 }
 
 static void AddIntFlag(char const* p_name, Byte code) {
@@ -1394,56 +1695,12 @@ static void InitFields(void) {
         AddFixed("STOP", 0x48bb, core_mask_all);
     }
 
-    s_regs = (sreg_t*)calloc(SRegCnt, sizeof(*s_regs));
-    InstrZ = 0;
-    AddSReg("PA", 0x00, eFlagSR | eFlagSR1 | eFlagSR2);
-    AddSReg("PB", 0x01, eFlagSR | eFlagSR1 | eFlagSR2);
     if (is_7807_781x) {
-        AddSReg("PC", 0x02, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("PD", 0x03, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("PF", 0x05, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("MKH", 0x06, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("MKL", 0x07, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("SMH", 0x09, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("SML", 0x0a, eFlagSR);
-        AddSReg("EOM", 0x0b, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("ETMM", 0x0c, eFlagSR);
-        AddSReg("TMM", 0x0d, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("MM", 0x10, eFlagSR);
-        AddSReg("MCC", 0x11, eFlagSR);
-        AddSReg("MA", 0x12, eFlagSR);
-        AddSReg("MB", 0x13, eFlagSR);
-        AddSReg("MC", 0x14, eFlagSR);
-        AddSReg("MF", 0x17, eFlagSR);
-        AddSReg("TXB", 0x18, eFlagSR);
-        AddSReg("RXB", 0x19, eFlagSR1);
-        AddSReg("TM0", 0x1a, eFlagSR);
-        AddSReg("TM1", 0x1b, eFlagSR);
-        AddSReg("ZCM", 0x28, (pCurrCPUProps->Flags & eFlagCMOS) ? eFlagSR : 0);
         if (Is781x) {
-            AddSReg("ANM", 0x08, eFlagSR | eFlagSR1 | eFlagSR2);
-            AddSReg("CR0", 0x20, eFlagSR1);
-            AddSReg("CR1", 0x21, eFlagSR1);
-            AddSReg("CR2", 0x22, eFlagSR1);
-            AddSReg("CR3", 0x23, eFlagSR1);
         } else {
-            AddSReg("PT", 0x0e, eFlagSR | eFlagSR1 | eFlagSR2);
-            AddSReg("WDM", 0x20, eFlagSR | eFlagSR1);
-            AddSReg("MT", 0x21, eFlagSR | eFlagSR1);
         }
         /* 0x28 eFlagSR ? */
     } else {
-        AddSReg("MK", 0x03, eFlagSR | eFlagSR1 | eFlagSR2);
-        AddSReg("MB", 0x04, eFlagSR);
-        AddSReg("PC", 0x02, eFlagSR1 | (IsHigh ? eFlagSR | eFlagSR2 : eFlagSR2));
-        AddSReg("MC", 0x05, IsHigh ? eFlagSR : 0);
-        AddSReg("TM0", 0x06, IsHigh ? eFlagSR : 0);
-        AddSReg("TM1", 0x07, IsHigh ? eFlagSR : 0);
-        AddSReg("TM", 0x06, IsLow ? eFlagSR : 0);
-        AddSReg("SM", 0x0a, IsLow ? eFlagSR | eFlagSR1 : 0);
-        AddSReg("SC", 0x0b, IsLow ? eFlagSR | eFlagSR1 : 0);
-        AddSReg("S", 0x08, eFlagSR | eFlagSR1);
-        AddSReg("TMM", 0x09, eFlagSR | eFlagSR1);
     }
 
     int_flags = (intflag_t*)calloc(IntFlagCnt, sizeof(*int_flags));
@@ -1563,11 +1820,14 @@ static void InitFields(void) {
     AddInstTable(InstTable, "SETB", 0x58, DecodeBit1_7807);
     AddInstTable(InstTable, "CLR", 0x5b, DecodeBit1_7807);
     AddInstTable(InstTable, "NOT", 0x59, DecodeBit1_7807);
+
+    if (Is7807) {
+        AddInstTable(InstTable, "DEFBIT", 0, DecodeDEFBIT);
+    }
 }
 
 static void DeinitFields(void) {
     DestroyInstTable(InstTable);
-    free(s_regs);
     free(int_flags);
     free(fixed_orders);
     free(reg2_orders);
@@ -1601,7 +1861,7 @@ static void InitCode_78C10(void) {
 }
 
 static Boolean IsDef_78C10(void) {
-    return False;
+    return (pCurrCPUProps->Core == eCore7807) && Memo("DEFBIT");
 }
 
 static void SwitchFrom_78C10(void) {
@@ -1643,6 +1903,9 @@ static void SwitchTo_78C10(void* pUser) {
     MakeCode   = MakeCode_78C10;
     IsDef      = IsDef_78C10;
     SwitchFrom = SwitchFrom_78C10;
+    if (pCurrCPUProps->Core == eCore7807) {
+        DissectBit = dissect_bit_7807;
+    }
     InitFields();
 }
 

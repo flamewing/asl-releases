@@ -2482,9 +2482,7 @@ static void SwitchTo_ST7(void* pUser) {
     SwitchFrom     = DeinitFields;
     DissectBit     = DissectBit_ST7;
     InitFields();
-    AddMoto16PseudoONOFF();
-
-    SetFlag(&DoPadding, DoPaddingName, False);
+    AddMoto16PseudoONOFF(False);
 }
 
 /*!------------------------------------------------------------------------

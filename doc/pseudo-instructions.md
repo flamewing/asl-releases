@@ -205,6 +205,10 @@ Bits that have been defined this way may be used just like a argument duple of r
 
 The Z8000 features instructions to set and clear bits, however they cannot access addresses in I/O space. For this reason, both `DEFBIT` and `DEFBITB` only allow to define bit objects in memory space. The differentiation in operand size is important because the Z8000 is a big endian processor: bit _n_ of a 16 bit word at address _m_ corresponds to bit _n_ of an 8-bit byte at address _m+1_.
 
+#### μPD7807...μPD7809
+
+The lowest 16 bytes of the working area and special registers with an address below 16 are bit addressable.
+
 ### DEFBITFIELD
 
 _valid for: S12Z_

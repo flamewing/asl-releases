@@ -19,6 +19,7 @@
 #include "bpemu.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -1598,7 +1599,7 @@ static void SwitchTo_MSP(void) {
     DispIntType        = (MomCPU == CPUMSP430X) ? Int20 : Int16;
     SegLimits[SegCode] = IntTypeDefs[AdrIntType].Max;
 
-    AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
+    AddONOFF(DoPaddingName, &DoPadding, DoPaddingName, False);
 
     DecodeAttrPart = DecodeAttrPart_MSP;
     MakeCode       = MakeCode_MSP;

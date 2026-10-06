@@ -22,6 +22,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "motpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -951,10 +952,8 @@ static void SwitchTo_MCORE(void) {
 
     SwitchFrom = DeinitFields;
     InitFields();
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
-    AddMoto16PseudoONOFF();
-
-    SetFlag(&DoPadding, DoPaddingName, True);
+    onoff_supmode_add();
+    AddMoto16PseudoONOFF(True);
 }
 
 /*--------------------------------------------------------------------------*/

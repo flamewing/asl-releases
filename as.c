@@ -137,6 +137,7 @@
 #include "ioerrs.h"
 #include "nlmessages.h"
 #include "nls.h"
+#include "onoff_common.h"
 #include "stdhandl.h"
 #include "stringlists.h"
 #include "strutil.h"
@@ -186,15 +187,15 @@ static Boolean INCLUDE_Processor(PInputTag PInp, as_dynstr_t* p_dest);
 static PInputTag GenerateProcessor(void) {
     PInputTag PInp = (PInputTag)malloc(sizeof(TInputTag));
 
-    PInp->IsMacro   = False;
-    PInp->Next      = NULL;
-    PInp->First     = True;
-    PInp->OrigDoLst = DoLst;
-    PInp->StartLine = CurrLine;
-    PInp->ParCnt    = 0;
+    PInp->IsMacro     = False;
+    PInp->Next        = NULL;
+    PInp->First       = True;
+    PInp->OrigDoLst   = DoLst;
+    PInp->StartLine   = CurrLine;
+    PInp->ParCnt      = 0;
     PInp->MacroArgCnt = 0;
-    PInp->ParZ      = 0;
-    PInp->ParIter   = 0;
+    PInp->ParZ        = 0;
+    PInp->ParIter     = 0;
     InitStringList(&(PInp->Params));
     PInp->LineCnt = 0;
     PInp->LineZ   = 1;
@@ -215,8 +216,8 @@ static PInputTag GenerateProcessor(void) {
     PInp->SaveLabel[0]  = '\0';
     PInp->GlobalSymbols = False;
     PInp->UsesNumArgs = PInp->UsesAllArgs = False;
-    PInp->Replacements     = NULL;
-    PInp->SequentialTokens = False;
+    PInp->Replacements                    = NULL;
+    PInp->SequentialTokens                = False;
 
     /* in case the input tag chain is empty, this must be the master file */
 
@@ -879,7 +880,7 @@ static void ExpandMacro(PMacroRec OneMacro) {
                 strmaxcat(Tag->AllArgs, ArgStr[z1].str.p_str, STRINGSIZE);
             }
         }
-        Tag->ParCnt = OneMacro->ParamCount;
+        Tag->ParCnt      = OneMacro->ParamCount;
         Tag->MacroArgCnt = ArgCnt;
 
         /* 3. generate argument list */
@@ -979,8 +980,8 @@ static void ExpandMacro(PMacroRec OneMacro) {
 
         /* Each invocation owns its cursor, including recursive calls. */
         Tag->Lines = Tag->LineRun = OneMacro->FirstLine;
-        Tag->IsEmpty = !OneMacro->FirstLine;
-        Lauf         = OneMacro->FirstLine;
+        Tag->IsEmpty              = !OneMacro->FirstLine;
+        Lauf                      = OneMacro->FirstLine;
         while (Lauf) {
             Tag->LineCnt++;
             Lauf = Lauf->Next;
@@ -1094,7 +1095,7 @@ Boolean IRP_Processor(PInputTag PInp, as_dynstr_t* p_dest) {
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
-        Lauf = PInp->Params;
+        Lauf          = PInp->Params;
         for (z = 1; z < PInp->ParZ; z++) {
             Lauf = Lauf->Next;
         }
@@ -2612,8 +2613,7 @@ static void adjust_copy_comp(tStrComp* p_comp, char const* p_src, size_t newsz) 
 
 /* Components just copied by adjust_copy_comp already have their string length. */
 static void trim_copied_comp(tStrComp* p_comp) {
-    while (p_comp->Pos.Len > 0
-           && as_isspace(p_comp->str.p_str[p_comp->Pos.Len - 1])) {
+    while (p_comp->Pos.Len > 0 && as_isspace(p_comp->str.p_str[p_comp->Pos.Len - 1])) {
         p_comp->str.p_str[--p_comp->Pos.Len] = '\0';
     }
 }
@@ -3030,8 +3030,6 @@ static void AssembleFile_InitPass(void) {
         EnterStringSymbol(&TmpComp, TimeS, True);
     }
 
-    SetFlag(&DoPadding, DoPaddingName, True);
-
     if (*DefCPU == '\0') {
         SetCPUByType(0, NULL);
     } else {
@@ -3043,10 +3041,6 @@ static void AssembleFile_InitPass(void) {
         }
     }
 
-    SetFlag(&SupAllowed, SupAllowedSymName, DefSupAllowed);
-    SetFlag(&FPUAvail, FPUAvailName, False);
-    SetFlag(&Maximum, MaximumName, False);
-    SetFlag(&DoBranchExt, BranchExtName, False);
     strmaxcpy(TmpCompStr, ListOnName, sizeof(TmpCompStr));
     EnterIntSymbol(&TmpComp, ListOn = 1, SegNone, True);
     SetLstMacroExp(eLstMacroExpAll);
@@ -4332,7 +4326,7 @@ int main(int argc, char** argv) {
         asmdebug_init();
 
         codeallg_init();
-        intpseudo_init();
+        onoff_common_init();
 
         code68k_init();
         code56k_init();

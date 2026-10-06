@@ -22,6 +22,7 @@
 #include "errmsg.h"
 #include "intpseudo.h"
 #include "nls.h"
+#include "onoff_common.h"
 #include "stringlists.h"
 #include "strutil.h"
 
@@ -1050,7 +1051,7 @@ static void SwitchTo_29K(void) {
     IsDef        = IsDef_29K;
     InternSymbol = InternSymbol_29K;
     DissectReg   = DissectReg_29K;
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    onoff_supmode_add();
 
     pASSUMERecs  = ASSUME29Ks;
     ASSUMERecCnt = ASSUME29KCount;

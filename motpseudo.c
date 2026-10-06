@@ -26,6 +26,7 @@
 #include "bpemu.h"
 #include "errmsg.h"
 #include "ieeefloat.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <assert.h>
@@ -671,8 +672,9 @@ static void Double_2_ieee2_wrap(Double Inp, Byte* pDest, Boolean BigEndian) {
     (void)Double_2_ieee2(Inp, pDest, BigEndian);
 }
 
-void AddMoto16PseudoONOFF(void) {
-    AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
+void AddMoto16PseudoONOFF(Boolean default_padding_value) {
+    SetFlag(&DoPadding, DoPaddingName, default_padding_value);
+    AddONOFF(DoPaddingName, &DoPadding, DoPaddingName, False);
 }
 
 /*!------------------------------------------------------------------------

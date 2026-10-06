@@ -22,6 +22,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "motpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -65,8 +66,6 @@ enum {
 #define RegGBR   (-3)
 
 #define CompLiteralsName "COMPRESSEDLITERALS"
-
-#define DSPAvailName "HASDSP"
 
 typedef struct {
     CPUVar  MinCPU;
@@ -1596,7 +1595,6 @@ static void MakeCode_7000(void) {
 static void InitCode_7000(void) {
     FirstLiteral = NULL;
     ForwardCount = 0;
-    SetFlag(&DSPAvail, DSPAvailName, False);
 }
 
 /*!------------------------------------------------------------------------
@@ -1652,16 +1650,17 @@ static void SwitchTo_7000(void) {
     DissectReg     = DissectReg_7000;
     SwitchFrom     = SwitchFrom_7000;
     InitFields();
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    onoff_supmode_add();
     AddONOFF("COMPLITERALS", &CompLiterals, CompLiteralsName, False);
-    AddMoto16PseudoONOFF();
+    AddMoto16PseudoONOFF(False);
 
-    AddONOFF("DSP", &DSPAvail, DSPAvailName, False);
+    if (!onoff_test_and_set(e_onoff_reg_dsp)) {
+        SetFlag(&DSPAvail, DSPSymName, False);
+    }
+    AddONOFF(DSPCmdName, &DSPAvail, DSPSymName, False);
 
     CurrDelayed = False;
     PrevDelayed = False;
-
-    SetFlag(&DoPadding, DoPaddingName, False);
 }
 
 void code7000_init(void) {

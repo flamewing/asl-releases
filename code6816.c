@@ -1221,12 +1221,10 @@ static void SwitchTo_6816(void) {
     MakeCode       = MakeCode_6816;
     IsDef          = IsDef_6816;
     SwitchFrom     = SwitchFrom_6816;
-    AddMoto16PseudoONOFF();
+    AddMoto16PseudoONOFF(False);
 
     pASSUMERecs  = ASSUME6816s;
     ASSUMERecCnt = ASSUME6816Count;
-
-    SetFlag(&DoPadding, DoPaddingName, False);
 
     InitFields();
 }

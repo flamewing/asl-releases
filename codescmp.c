@@ -21,6 +21,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -304,10 +305,6 @@ static Boolean IsDef_SCMP(void) {
     return False;
 }
 
-static void InitPass_SCMP(void) {
-    SetFlag(&TargetBigEndian, BigEndianName, False);
-}
-
 static void SwitchTo_SCMP(void) {
     TurnWords = False;
     SetIntConstMode(eIntConstModeC);
@@ -329,7 +326,7 @@ static void SwitchTo_SCMP(void) {
     SwitchFrom = DeinitFields;
     InitFields();
 
-    AddONOFF("BIGENDIAN", &TargetBigEndian, BigEndianName, False);
+    onoff_bigendian_add();
 
     QualifyQuote          = QualifyQuote_SingleQuoteConstant;
     IntConstModeIBMNoTerm = True;
@@ -337,6 +334,4 @@ static void SwitchTo_SCMP(void) {
 
 void codescmp_init(void) {
     CPUSCMP = AddCPU("SC/MP", SwitchTo_SCMP);
-
-    AddInitPassProc(InitPass_SCMP);
 }

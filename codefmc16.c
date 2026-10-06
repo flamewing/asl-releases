@@ -22,6 +22,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -2164,7 +2165,7 @@ static void SwitchTo_F2MC16(void) {
     SwitchFrom = DeinitFields;
     InitFields();
 
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    onoff_supmode_add();
 
     pASSUMERecs  = ASSUMEF2MC16s;
     ASSUMERecCnt = ASSUMEF2MC16Count;

@@ -1,0 +1,2 @@
+Preserve the fork's -supmode default and explicit SUPMODE settings when
+the common option registry is initialized or a CPU target is selected again.

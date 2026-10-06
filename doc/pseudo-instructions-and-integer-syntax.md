@@ -456,11 +456,17 @@ _Default Integer Syntax: Intel_
 
 > `DB` `DD` `DN` `DQ` `DS` `DT` `DW` `PORT`
 
-#### NEC μPD78(C)1x
+#### NEC μPD7800...μPD7806, μPD78(C)1x
 
 _Default Integer Syntax: Intel_
 
 > `ASSUME` `DB` `DD` `DN` `DQ` `DS` `DT` `DW`
+
+#### NEC μPD7807...μPD7809
+
+_Default Integer Syntax: Intel_
+
+> `ASSUME` `DB` `DEFBIT` `DD` `DN` `DQ` `DS` `DT` `DW`
 
 #### NEC 75xx
 

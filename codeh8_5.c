@@ -24,6 +24,7 @@
 #include "errmsg.h"
 #include "motpseudo.h"
 #include "nls.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -300,7 +301,7 @@ static void DecideAbsolute(LongInt Value, tSymbolSize Size, Boolean Unknown, Wor
         AdrCnt     = 1;
         break;
     case eSymbolSize16Bit:
-        if (Maximum) {
+        if (MaxMode) {
             Base = AbsBank;
             Base <<= 16;
         } else {
@@ -1560,7 +1561,7 @@ static void DecodePJMP_PJSR(Word IsPJMP) {
         WrError(ErrNum_UseLessAttr);
     } else if (strcmp(Format, " ")) {
         WrError(ErrNum_InvFormat);
-    } else if (!Maximum) {
+    } else if (!MaxMode) {
         WrError(ErrNum_OnlyInMaxmode);
     } else {
         tStrComp *pArg    = &ArgStr[1], Arg;
@@ -2115,7 +2116,7 @@ static void MakeCode_H8_5(void) {
 
 static Boolean ChkPC_H8_5(LargeWord Addr) {
     if (ActPC == SegCode) {
-        return (Addr < (Maximum ? 0x1000000u : 0x10000u));
+        return (Addr < (MaxMode ? 0x1000000u : 0x10000u));
     } else {
         return False;
     }
@@ -2159,13 +2160,11 @@ static void SwitchTo_H8_5(void) {
     QualifyQuote          = QualifyQuote_SingleQuoteConstant;
     IntConstModeIBMNoTerm = True;
     InitFields();
-    AddONOFF("MAXMODE", &Maximum, MaximumName, False);
-    AddMoto16PseudoONOFF();
+    onoff_maxmode_add();
+    AddMoto16PseudoONOFF(False);
 
     pASSUMERecs  = ASSUMEH8_5s;
     ASSUMERecCnt = ASSUMEH8_5Count;
-
-    SetFlag(&DoPadding, DoPaddingName, False);
 }
 
 void codeh8_5_init(void) {

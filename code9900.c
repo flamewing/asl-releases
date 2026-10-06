@@ -24,6 +24,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "ibmfloat.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -1295,8 +1296,8 @@ static void SwitchTo_9900(void* pUser) {
     IsDef        = IsDef_9900;
     SwitchFrom   = DeinitFields;
     InternSymbol = InternSymbol_9900;
-    AddONOFF("PADDING", &DoPadding, DoPaddingName, False);
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    AddONOFF(DoPaddingName, &DoPadding, DoPaddingName, False);
+    onoff_supmode_add();
 
     InitFields();
 }

@@ -20,6 +20,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -2784,7 +2785,7 @@ static void SwitchTo_86(void) {
     IsDef      = IsDef_86;
     SwitchFrom = DeinitFields;
     InitFields();
-    AddONOFF("FPU", &FPUAvail, FPUAvailName, False);
+    onoff_fpu_add();
 }
 
 void code86_init(void) {

@@ -23,12 +23,10 @@
 #include "headids.h"
 #include "ieeefloat.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "strutil.h"
 
 #include <string.h>
-
-#define CustomAvailCmdName "CUSTOM"
-#define CustomAvailSymName "CUSTOM"
 
 typedef enum {
     eCoreNone,
@@ -3062,9 +3060,6 @@ static void InternSymbol_NS32K(char* pArg, TempResult* pResult) {
  * ------------------------------------------------------------------------ */
 
 static void InitCode_NS32K(void) {
-    SetFlag(&PMMUAvail, PMMUAvailName, False);
-    SetFlag(&FPUAvail, FPUAvailName, False);
-    SetFlag(&CustomAvail, CustomAvailSymName, False);
     SetMomFPU(eFPUNone);
     SetMomPMMU(ePMMUNone);
 }
@@ -3125,7 +3120,10 @@ static void SwitchTo_NS32K(void* pUser) {
     IntConstModeIBMNoTerm = True;
     QualifyQuote          = QualifyQuote_SingleQuoteConstant;
     InitFields();
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    onoff_supmode_add();
+    if (!onoff_test_and_set(e_onoff_reg_custom)) {
+        SetFlag(&CustomAvail, CustomAvailSymName, False);
+    }
     AddONOFF(CustomAvailCmdName, &CustomAvail, CustomAvailSymName, False);
 }
 

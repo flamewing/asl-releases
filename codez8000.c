@@ -25,6 +25,7 @@
 #include "headids.h"
 #include "intformat.h"
 #include "intpseudo.h"
+#include "onoff_common.h"
 #include "operator.h"
 #include "strutil.h"
 
@@ -3452,7 +3453,7 @@ static void SwitchTo_Z8000(void* pUser) {
     if (AMDSyntax) {
         pPotMonadicOperator = &PotMonadicOperator;
     }
-    AddONOFF(SupAllowedCmdName, &SupAllowed, SupAllowedSymName, False);
+    onoff_supmode_add();
 }
 
 /*!------------------------------------------------------------------------
