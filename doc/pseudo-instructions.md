@@ -852,9 +852,10 @@ The processors can roughly be distinguished in families, inside the families dif
 
 72. 7800, 7801, 7802
     78C05, 78C06
+    7807, 7808, 7809
     7810 → 78C10, 78C11, 78C12, 78C14, 78C17, 78C18
 
-    μPD7800 to μPD7802 represent the "first generation" of the uCOM87 family from NEC. μPD78C05 and μPD78C06 are reduced variants that implement only a subset of the instruction set. All μPD781x variants belong to the uCOM87AD series, which - aside from an A/D converter - also supports additional registers and machine instructions.
+    μPD7800 to μPD7802 represent the first generation of the NEC uCOM87 family. μPD78C05 and μPD78C06 implement a reduced instruction set. The 7807 to 7809 greatly extend the instruction set. The μPD781x variants belong to the uCOM87AD series, which adds an A/D converter but removes the bit-processing instructions.
 
     **NOTE:** The instruction set is only partially binary upward compatible! The NMOS version μPD7810 has no stop-mode; the respective command and the ZCM register are omitted.
 
@@ -2834,9 +2835,13 @@ Though the assembler checks source files as strict as possible and delivers diff
 - `ERROR`: True errors in a program. Assembly continues to allow detection of possible further errors in the same pass. A code file is not generated.
 - `FATAL`: Serious errors that force an immediate termination of assembly. A code file may be generated but will be incomplete.
 
-All three instructions have the same format for the message that shall be issued: an arbitrary (possibly computed?!) string expression which may therefore be either a constant or variable.
+All three instructions accept a string expression, from a simple constant to a computed string. Symbol values can be embedded as described in [String Constants](assembler-usage.md#string-constants):
 
-These instructions generally only make sense in conjunction wit conditional assembly. For example, if there is only a limited address space for a program, one can test for overflow in the following way:
+```asm
+        MESSAGE "Start Address is \{start_address}"
+```
+
+Warnings and errors typically make sense in conjunction with conditional assembly. For example, if there is only a limited address space for a program, one can test for overflow in the following way:
 
 ```asm
 ROMSize equ     8000h   ; 27256 EPROM
@@ -2880,10 +2885,10 @@ Programs can this way configure themselves dynamically during assembly and one c
 
 _valid for: all processors_
 
-This instruction allows to modify the set of notations for integer constants in various number systems. - After selection of a CPU target, a certain default set is selected (see section 10(#SectPseudoInst)). This set may be augmented with other notations, or notations may be removed from it. `INTSYNTAX` takes an arbitrary list of arguments which either begin with aplus or minus character, followed by the notation's identifier. For instance, the following statement
+This instruction modifies the set of notations for integer constants in various number systems. After selection of a CPU target, a default set is installed (see [Pseudo Instructions and Integer Syntax](pseudo-instructions-and-integer-syntax.md)). This set may be augmented with other notations, or notations may be removed from it. `INTSYNTAX` takes a list of arguments beginning with a plus or minus character, followed by the notation's identifier. For instance, the following statement
 
 ```asm
-        intsyntax    -0oct,+0hex
+        INTSYNTAX    -0oct,+0hex
 ```
 
 has the result that a leading zero marks a hexadecimal instead of an octal constant, a common usage on some assemblers for the SC/MP. The notations' identifiers can be found in table [Defined Numbering Systems and Notations table](assembler-usage.md#table-defined-numbering-systems-and-notations). There is no limit on combining notations, except when they contradict each other. For instance, it would not be allowed to enable `0oct` and `0hex` at the same time.

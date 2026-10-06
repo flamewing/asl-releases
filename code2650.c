@@ -80,6 +80,10 @@ static void DecodeOneReg(Word Index) {
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
         WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    }
+    /* ANDZ R0 is not allowed and decodes as HALT */
+    else if ((Index == 0x40) && !Reg) {
+        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
     } else {
         BAsmCode[0] = Index | Reg;
         CodeLen     = 1;

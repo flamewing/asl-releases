@@ -1226,6 +1226,8 @@ static void SwitchTo_6816(void) {
     pASSUMERecs  = ASSUME6816s;
     ASSUMERecCnt = ASSUME6816Count;
 
+    SetFlag(&DoPadding, DoPaddingName, False);
+
     InitFields();
 }
 

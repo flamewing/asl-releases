@@ -50,6 +50,8 @@
 
 [^GBZ80]: _CPU Comparison with Z80._ <https://gbdev.io/pandocs/CPU_Comparison_with_Z80.html>
 
+[^Sig2650]: Signetics Corporation: _Signetics 2650 Microprocessor._ 1975.
+
 [^Hit180]: Hitachi Ltd.: _8-/16-Bit Microprocessor Data Book._ 1986
 
 [^Hit63]: Trevor J. Terrel & Robert J. Simpson: _Understanding HD6301X/03X CMOS Microprocessor Systems._ published by Hitachi
