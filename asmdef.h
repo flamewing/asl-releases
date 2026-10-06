@@ -269,6 +269,7 @@ extern LongInt   LineSum;
 extern LongInt   MacLineSum;
 
 extern LongInt       NOPCode;
+extern Boolean       PhaseSignExtend; /* signed 32-bit phase addresses */
 extern Boolean       TurnWords;
 extern Byte          HeaderID;
 extern char const*   PCSymbol;

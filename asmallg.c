@@ -179,6 +179,7 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
     target_operators      = no_operators;
     SetIsOccupiedFnc = SaveIsOccupiedFnc = RestoreIsOccupiedFnc = NULL;
     multi_char_le                                               = False;
+    PhaseSignExtend                                             = False;
     DecodeAttrPart                                              = NULL;
     SwitchIsOccupied = PageIsOccupied = ShiftIsOccupied = False;
     ChkPC                                               = DefChkPC;
@@ -771,7 +772,7 @@ static void CodeString(Word Index) {
 
 static void CodePHASE(Word Index) {
     Boolean  OK;
-    LongWord HVal;
+    LargeInt HVal;
     UNUSED(Index);
 
     if (!ChkArgCnt(1, 1))
@@ -781,6 +782,9 @@ static void CodePHASE(Word Index) {
     } else {
         HVal = EvalStrIntExpression(&ArgStr[1], Int32, &OK);
         if (OK) {
+            if (PhaseSignExtend) {
+                HVal = (LongInt)HVal;
+            }
             tSavePhase* pSavePhase;
 
             pSavePhase            = (tSavePhase*)calloc(1, sizeof(*pSavePhase));

@@ -19,7 +19,6 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "codepseudo.h"
 #include "codevars.h"
@@ -6658,12 +6657,13 @@ static void SwitchTo_68K(void* pUser) {
     TurnWords = True;
     SetIntConstMode(eIntConstModeMoto);
 
-    PCSymbol    = "*";
-    HeaderID    = 0x01;
-    NOPCode     = 0x4e71;
-    DivideChars = ",";
-    HasAttrs    = True;
-    AttrChars   = ".";
+    PhaseSignExtend = True;
+    PCSymbol        = "*";
+    HeaderID        = 0x01;
+    NOPCode         = 0x4e71;
+    DivideChars     = ",";
+    HasAttrs        = True;
+    AttrChars       = ".";
 
     ValidSegs          = (1 << SegCode);
     Grans[SegCode]     = 1;

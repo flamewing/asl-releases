@@ -105,7 +105,8 @@ LongInt   CurrLine;             /* virtuelle Position */
 LongInt   LineSum;              /* Gesamtzahl Quellzeilen */
 LongInt   MacLineSum;           /* inkl. Makroexpansion */
 
-LongInt NOPCode;      /* Maschinenbefehl NOP zum Stopfen */
+LongInt NOPCode; /* Maschinenbefehl NOP zum Stopfen */
+Boolean PhaseSignExtend;
 Boolean TurnWords;    /* TRUE  = Motorola-Wortformat */
                       /* FALSE = Intel-Wortformat */
 Byte        HeaderID; /* Kennbyte des Codeheaders */
@@ -122,8 +123,8 @@ Boolean (*ChkPC)(LargeWord Addr); /* ueberprueft Codelaengenueberschreitungen */
 Boolean (*IsDef)(void);           /* ist Label nicht als solches zu werten ? */
 void (*SwitchFrom)(void) = NULL;  /* bevor von einer CPU weggeschaltet wird */
 void (*InternSymbol)(char* Asc, TempResult* Erg); /* vordefinierte Symbole ? */
-DissectBitProc   DissectBit;
-DissectRegProc   DissectReg;
+DissectBitProc         DissectBit;
+DissectRegProc         DissectReg;
 as_qualify_quote_fnc_t QualifyQuote;
 
 StringPtr IncludeList;            /* Suchpfade fuer Includedateien */
