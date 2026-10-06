@@ -2,6 +2,8 @@
 
 Evaluate four changes independently, in order: write each listing line through one buffered stream operation; fast-path common whitespace; append literal format text in spans; retain an append cursor during listing construction. Each accepted change becomes the next baseline. Restore rejected changes before proceeding. Initial source was `930b9b0`; pristine builds exposed the [global macro-copy initialization defect](MACRO_COPY_FIX.md), corrected separately in `653269c`. No performance timings use the initial failing builds. The first optimization baseline is `653269c`.
 
+Completed in order. Commit `3ada94e` retains listing writes; `d5407ab` retains common whitespace. Literal format spans and the listing append cursor are discarded. Winners primarily improve Windows GCC, with smaller MSVC listing-write gains and measured Linux limitations recorded below. Every trial preserves assembled code and listing contents, and rejected source changes are removed.
+
 ## Method
 
 Use pristine source/build directories under `D:/tmp/asl-bench-20261006/output-experiments` and native WSL2 ext4 `/home/marzojr/asl-benchmark-20261005/output-experiments`. Build Windows GCC 16.2, Windows MSVC 19.44 and Linux GCC 15.2 with the same normal Release flags as the [aggregate comparison](HEAD_COMPILER_PROFILES.md). Run complete correctness suites before timings. Build and timing batches do not overlap; Windows and Linux timing batches run sequentially.
@@ -70,10 +72,50 @@ External artifacts: `whitespace/{screen,confirmation}`, `summary.json`, `audit.j
 
 In `vsprcatf_core`, append each ordinary format-text span in one operation instead of one character at a time. Preserve format parsing, output counts, truncation, dynamic growth and percent escapes. Check fixed-buffer boundaries and dynamic output independently.
 
-Pending the preceding decision.
+Discarded against `d5407ab`. All three 210-test suites and 2,740 independent formatting checks per compiler pass; native AddressSanitizer/UndefinedBehaviorSanitizer checks also pass. Objects and normalized listings match in all eleven screened cases on each platform/compiler.
+
+| Workload | GCC Windows screen | MSVC screen | Linux screen |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | -0.78% (1/5) | +0.45% (2/5) | -0.66% (3/5) |
+| Sonic 2 | +0.88% (4/5) | +0.37% (2/5) | +0.64% (2/5) |
+| Sonic & Knuckles | -0.25% (3/5) | +1.28% (5/5) | -0.01% (3/5) |
+| Big's Fishing Derby | +0.42% (4/5) | +0.56% (3/5) | +0.48% (2/5) |
+| Sonic Classic Heroes | +0.80% (3/5) | -0.07% (3/5) | -0.78% (1/5) |
+| ScalerMacros-v1.asm | -0.50% (2/5) | +0.62% (3/5) | -0.99% (3/5) |
+| ScalerMacros-v2.asm | -0.07% (2/5) | +0.55% (3/5) | +0.40% (3/5) |
+| Madness 4 release | +0.66% (3/5) | +0.46% (3/5) | -2.84% (0/5) |
+| Madness 4 debug | -0.61% (2/5) | +1.38% (4/5) | -1.49% (2/5) |
+| local-e | +0.03% (3/5) | -0.37% (1/5) | +3.78% (2/5) |
+| local-e-debug | -3.24% (1/5) | +0.34% (3/5) | +2.45% (3/5) |
+
+Windows gains are small and inconsistent. Linux public listing release/debug CPU time is 4.31%/3.31% worse; the anonymous release apparent 3.78% wall gain wins only 2/5 pairs and accompanies 2.13% more CPU time. These results do not justify retaining the change or another full confirmation batch. Restore character-at-a-time literal handling before the next experiment.
+
+External artifacts: `literal-spans/screen`, `summary.json`, `audit.json`, independent formatting fixtures and sanitizer logs; baseline build `whitespace`.
 
 ### 4. Listing append cursor
 
 Retain the constructed listing line's length locally, passing it to an internal formatted-append helper. Avoid a library-wide dynamic-string layout change. Preserve length across buffer growth, line resets, radix/padding changes and wrapped code lines.
 
-Pending the preceding decision.
+Discarded against `d5407ab`; the preceding literal-span candidate was removed before building this trial. Add a formatted-append helper accepting the known current length, and keep that length local to `MakeList`, updating it from actual appended counts and resetting it for each new or wrapped line. Ordinary callers still discover their destination length normally.
+
+All three 210-test suites and 2,740 independently specified formatting checks per compiler pass, including the new known-length path and native AddressSanitizer/UndefinedBehaviorSanitizer. Screens cover all eleven workloads with all three toolchains; a fresh nine-pair Windows batch confirms benefits and penalties. Code records, deterministic objects and normalized listings match.
+
+| Workload | GCC Windows screen | GCC Windows confirm | MSVC screen | MSVC confirm | Linux screen |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | +0.46% (2/5) | -1.95% (3/9) | -4.21% (2/5) | -1.32% (3/9) | +0.53% (4/5) |
+| Sonic 2 | +0.35% (3/5) | -0.31% (5/9) | +1.94% (3/5) | +0.04% (6/9) | -0.18% (1/5) |
+| Sonic & Knuckles | -0.36% (2/5) | -0.66% (3/9) | -0.22% (2/5) | +0.00% (6/9) | -0.37% (2/5) |
+| Big's Fishing Derby | +4.27% (4/5) | -0.52% (3/9) | -2.34% (0/5) | -1.79% (0/9) | -0.39% (2/5) |
+| Sonic Classic Heroes | +0.37% (3/5) | +0.47% (3/9) | +0.77% (3/5) | -2.02% (3/9) | -1.04% (2/5) |
+| ScalerMacros-v1.asm | +0.02% (3/5) | -1.64% (1/9) | -3.53% (0/5) | -3.59% (1/9) | -0.93% (1/5) |
+| ScalerMacros-v2.asm | +0.64% (3/5) | -0.61% (3/9) | -4.76% (0/5) | -5.01% (0/9) | -0.39% (3/5) |
+| Madness 4 release | +2.87% (5/5) | +1.98% (8/9) | -0.59% (1/5) | -0.44% (3/9) | +0.05% (2/5) |
+| Madness 4 debug | +0.37% (3/5) | +0.29% (5/9) | +0.07% (2/5) | -0.11% (3/9) | -4.39% (3/5) |
+| local-e | +1.16% (5/5) | +0.62% (5/9) | -0.47% (3/5) | +0.04% (4/9) | -5.07% (2/5) |
+| local-e-debug | +1.29% (5/5) | +1.04% (7/9) | -0.01% (2/5) | -0.33% (5/9) | +3.07% (3/5) |
+
+Windows GCC Madness 4 release improves 2.87% in screening and 1.98% in confirmation, with 1.80%/1.81% lower CPU time and 5/5 then 8/9 faster pairs. Other listing gains are small: confirmed debug 0.29%, anonymous release 0.62% and anonymous debug 1.04%. MSVC scaler slowdowns repeat: v1 3.53%/3.59%, v2 4.76%/5.01%, with confirmed CPU slowdowns of 3.33%/4.30%. MSVC Big's Fishing Derby is slower in every screen and confirmation pair. These losses outweigh the small GCC benefit.
+
+Linux has no clear general gain in screening: the four listing CPU changes are -0.95%, -0.35%, +0.73% and +1.02%, with mixed wall results. A further native confirmation was omitted after the Windows repeat established rejection. All three experimental source files are restored; only the accepted listing-write and common-whitespace changes remain. Windows confirmation has at least 10,460 MiB available memory and maximum load 67%.
+
+External artifacts: `listing-cursor/{screen,confirmation}` (confirmation is Windows only), `summary.json`, `audit.json`, pristine snapshots and formatting/sanitizer fixture logs; baseline build `whitespace`. Audit verifies 110 completed object combinations, 40 saved normalized listings, eleven matching code cases and six complete baseline/candidate correctness suites.
