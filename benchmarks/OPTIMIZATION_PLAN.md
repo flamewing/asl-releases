@@ -333,3 +333,7 @@ Next experiments should inspect listing/output buffering and runtime locking,
 whitespace classification in macro-heavy input, then expression-evaluation and
 symbol/string work. Preserve character/codepage semantics and output ordering.
 These are profile-guided suggestions, not implemented or accepted changes.
+
+### Listing and string-processing trials — 6 October 2026
+
+See [the independent trial report](OUTPUT_STRING_EXPERIMENTS.md). A pre-existing global macro-copy initialization defect is corrected separately in `653269c`, with poisoned-allocation checks and expanded regression coverage; all optimization timings start from that corrected state. Retain the listing-write trial after Windows GCC/MSVC confirmation, recording mixed Linux wall results alongside lower Linux listing CPU time. Continue individually with common whitespace, literal format spans and a listing append cursor, updating the baseline after each accepted change. Sources, builds, prepared inputs and raw reports remain external; only anonymous measurements may identify `local-e`.

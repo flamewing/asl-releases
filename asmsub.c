@@ -914,6 +914,26 @@ void NewPage(ShortInt Level, Boolean WithFF) {
 /*--------------------------------------------------------------------------*/
 /* eine Zeile ins Listing schieben */
 
+static void WriteLstText(char const* line) {
+    static char* buffer;
+    static size_t capacity;
+    size_t length = strlen(line);
+
+    if (length + 1 > capacity) {
+        char* grown = (char*)realloc(buffer, length + 1);
+        if (!grown) {
+            errno = 0;
+            fprintf(LstFile, "%s\n", line);
+            return;
+        }
+        buffer = grown;
+        capacity = length + 1;
+    }
+    memcpy(buffer, line, length);
+    buffer[length] = '\n';
+    fwrite(buffer, 1, length + 1, LstFile);
+}
+
 void WrLstLine(char const* Line) {
     int    LLength;
     char   bbuf[2500];
@@ -926,7 +946,7 @@ void WrLstLine(char const* Line) {
 
     if (PageLength == 0) {
         errno = 0;
-        fprintf(LstFile, "%s\n", Line);
+        WriteLstText(Line);
         ChkIO(ErrNum_ListWrError);
     } else {
         if ((PageWidth == 0) || ((strlen(Line) << 3) < PageWidth)) {
@@ -948,7 +968,7 @@ void WrLstLine(char const* Line) {
         }
         if (LLength == 1) {
             errno = 0;
-            fprintf(LstFile, "%s\n", Line);
+            WriteLstText(Line);
             ChkIO(ErrNum_ListWrError);
             if ((++LstCounter) == PageLength) {
                 NewPage(0, True);
@@ -963,7 +983,7 @@ void WrLstLine(char const* Line) {
                 memcpy(LLine, bbuf + Start, hlen);
                 LLine[hlen] = '\0';
                 errno       = 0;
-                fprintf(LstFile, "%s\n", LLine);
+                WriteLstText(LLine);
                 if ((++LstCounter) == PageLength) {
                     NewPage(0, True);
                 }

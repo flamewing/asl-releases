@@ -1,5 +1,7 @@
 # Profiling ASL on Windows and Linux
 
+The [listing and string-processing experiments](OUTPUT_STRING_EXPERIMENTS.md) evaluate four independent changes using all eleven variants and Windows GCC/MSVC plus native Linux GCC. Listing writes are retained for repeated 19–27% Windows GCC and 2.8–5.3% MSVC gains on listing-heavy cases; Linux CPU time improves slightly, while anonymous release wall time is slower. The report preserves that limitation. A separately committed [global macro-copy initialization fix](MACRO_COPY_FIX.md) corrects an intermittent baseline test failure before these timings.
+
 The [fresh aggregate timings and compiler profiles](HEAD_COMPILER_PROFILES.md) compare pre-optimization `0730cdf` with frozen HEAD `2369d51` across all eleven registered variants, adding MSVC to Windows GCC and native Linux GCC. Median time ratios give geometric-mean reductions of 42.02%, 41.30% and 48.06%, respectively. Windows CPU sampling finds repeatable compiler/runtime differences around formatting and synchronization, particularly with listings. The report includes anonymized `local-e` timings and profile findings; identifying information and raw profiling artifacts remain outside the checkout.
 
 The [Madness 4 baseline and lazy-hashing trials](MADNESS4_LAZY_HASH.md) add a
