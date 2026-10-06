@@ -305,6 +305,10 @@ static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeFPRegCore(char const* pArg, Word* pResult) {
+    if ((as_toupper(pArg[0]) != 'F') || (as_toupper(pArg[1]) != 'P')) {
+        return False;
+    }
+
     if (!as_strcasecmp(pArg, "FPCR")) {
         *pResult = REG_FPCTRL | REG_FPCR;
         return True;
