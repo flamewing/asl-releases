@@ -1046,14 +1046,6 @@ install(
     ${CMAKE_INSTALL_MANDIR}/man1
 )
 
-# TODO: Add generation and installation of documents
-# They should go to ${CMAKE_INSTALL_DOCDIR}
-# List of documents:
-# - COPYING                         -> ${CMAKE_INSTALL_DOCDIR}/COPYING
-# - doc/biblio.tex              -> ${CMAKE_INSTALL_DOCDIR}/biblio.tex
-# - doc/ps*.tex                 -> ${CMAKE_INSTALL_DOCDIR}/ps*.tex
-# - doc/taborg*.tex             -> ${CMAKE_INSTALL_DOCDIR}/taborg*.tex
-# - doc/as.{doc,html,dvi,ps,pdf} -> ${CMAKE_INSTALL_DOCDIR}/as_EN.{doc,html,dvi,ps,pdf}
 if(EXISTS ${PANDOC_EXECUTABLE})
     message(STATUS "Pandoc found: ${PANDOC_EXECUTABLE}, documents will be generated.")
     INCLUDE(pandocology)

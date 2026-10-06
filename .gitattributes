@@ -23,9 +23,6 @@
 BENCHES				text
 changelog			text
 TODO				text
-MakeDef.*			text
-rscdeps				text
-makedefs.*			text
 warnlog.*			text
 warnlog.*			text
 *.sh				text eol=lf
@@ -43,12 +40,7 @@ tests/t_*/*.out		text
 tests/t_*/*.rst		text
 tests/t_*/*.tl		text
 
-testall				text
-testall.bat			text eol=crlf
-testall.cmd			text eol=crlf
-
 asflags				text
-Makefile*			text
 
 AUTHORS				text
 COPYING				text

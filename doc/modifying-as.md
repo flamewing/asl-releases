@@ -32,7 +32,7 @@ The inclusion of some additional features not present in the Pascal version (e.g
 
 As I already mentioned, As has been tailored to provide maximum platform independence and portability (at least I believe so...). This means packing all platform dependencies into as few files as possible. I will describe these files now, and this section is the first one because it is probably one of the most important:
 
-The Build of all components of AS takes place via a central `Makefile`. To make it work, it has to be accompanied by a fitting `Makefile.def` that gives the platform dependent settings like compiler flags. The subdirectory `Makefile.def-samples` contains a couple of includes that work for widespread platforms (but which need not be optimal...). In case your platform is not among them, you may take the file `Makefile.def.tmpl` as a starting point (and send me the result!).
+All components of AS are built with CMake, using the targets and source lists in `CMakeLists.txt`. CMake detects the compiler and platform; cross-compilation uses a toolchain file. See [the build instructions](../README.md#create-and-install-the-package) for configuration, building, testing, and installation, and [the cross-compilation instructions](../README.md#cross-compiling) for building on a different host platform.
 
 A further component to capture system dependencies is the file `sysdefs.h`. Practically all compilers predefine a couple of preprocessor symbols that describe the target processor and the used operating system. For example, on a Sun Sparc under Solaris equipped with the GNU compiler, the symbols `__sparc` and `__SVR4`. `sysdefs.h` exploits these symbols to provide a homogeneous environment for the remaining, system-independent files. Especially, this covers integer data types of a specific length, but it may also include the (re)definition of C functions which are not present or non-standard-like on a specific platform. It's best to read this files yourself if you like to know which things may occur... Generally, the `#ifdef` statement are ordered in two levels: First, a specific processor platform is selected, the the operating systems are sorted out in such a section.
 
@@ -285,7 +285,7 @@ The test run is started via a simple `ctest --build-run-dir build --test-dir bui
 
 ## Adding a New Target Processor
 
-The probably most common reason to modify the source code of AS is to add a new target processor. Apart from adding the new module to the Makefile, there are few places in other modules that need a modification. The new module will do the rest by registering itself in the list of code generators. I will describe the needed steps in a cookbook style in the following sections:
+The probably most common reason to modify the source code of AS is to add a new target processor. Apart from adding the new module to the `AS_OBJECTS` source list in `CMakeLists.txt`, there are few places in other modules that need a modification. The new module will do the rest by registering itself in the list of code generators. I will describe the needed steps in a cookbook style in the following sections:
 
 #### Choosing the Processor's Name
 
