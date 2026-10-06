@@ -71,6 +71,10 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Expression and line-processing experiments — 6 October 2026
+
+Tested lazy operand initialization, copy-and-trim fusion and one line-processing change selected from fresh stage profiles, in that order and independently against `d383f77`. The first two pass correctness checks but are discarded because meaningful gains were not established. Fresh stage profiles identify line splitting as a substantial scaler cost; its known-length argument trimming is accepted after repeated large-scaler gains on both OSes and a clear Windows Big Fishing Derby improvement. All 209 tests pass on both OSes, all seven objects and cross-platform code records match, and a focused Linux recheck resolves the concerning confirmation slowdowns. See the [experiment record](EXPRESSION_LINE_EXPERIMENTS.md) for methods, decisions and retained artifacts. All benchmark and diagnostic directories stay outside the source checkout.
+
 ### Watcher confound: reopen discarded experiments — 6 October 2026
 
 The user identified VSCode indexing the in-tree benchmark directories until memory pressure caused thrashing, including while tabbed out. Historical timing decisions are provisional; the nine discarded experiments are reopened. Windows artifacts were deleted by the user. Recover surviving Linux snapshots and metadata, keep all new Windows builds/inputs/private adapters/results under `D:/tmp/asl-bench-20261006`, and retain Linux runs on native ext4 outside the Windows checkout. Verify identical-binary timing stability and memory availability before new A/B decisions. Retest in historical order, independently, and confirm/commit only repeatable meaningful gains. See the [retesting procedure](README.md#watcher-contention-and-retesting-2026-10-06).

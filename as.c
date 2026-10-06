@@ -2608,6 +2608,14 @@ static void adjust_copy_comp(tStrComp* p_comp, char const* p_src, size_t newsz) 
     p_comp->Pos.Len = strmemcpy(p_comp->str.p_str, p_comp->str.capacity, p_src, newsz);
 }
 
+/* Components just copied by adjust_copy_comp already have their string length. */
+static void trim_copied_comp(tStrComp* p_comp) {
+    while (p_comp->Pos.Len > 0
+           && as_isspace(p_comp->str.p_str[p_comp->Pos.Len - 1])) {
+        p_comp->str.p_str[--p_comp->Pos.Len] = '\0';
+    }
+}
+
 static void SplitLine(void) {
     char const *pRun, *pEnd, *pPos;
 
@@ -2752,7 +2760,7 @@ static void SplitLine(void) {
         StrCompReset(&AttrPart);
     }
 
-    KillPostBlanksStrComp(&ArgPart);
+    trim_copied_comp(&ArgPart);
 
     /* Argumente zerteilen: */
 
@@ -2760,7 +2768,7 @@ static void SplitLine(void) {
         char const *pDivPos, *pActDiv, *pActDivPos;
 
         pRun       = ArgPart.str.p_str;
-        pEnd       = pRun + strlen(pRun);
+        pEnd       = pRun + ArgPart.Pos.Len;
         pActDivPos = NULL;
 
         /* A separator found in the previous iteration forces another argument,
@@ -2790,7 +2798,7 @@ static void SplitLine(void) {
             adjust_copy_comp(&ArgStr[ArgCnt], pRun, pDivPos - pRun);
             ArgStr[ArgCnt].Pos.StartCol
                     = ArgPart.Pos.StartCol + (pRun - ArgPart.str.p_str);
-            KillPostBlanksStrComp(&ArgStr[ArgCnt]);
+            trim_copied_comp(&ArgStr[ArgCnt]);
             pRun = (pDivPos < pEnd) ? pDivPos + 1 : pEnd;
         }
     }

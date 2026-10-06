@@ -1,5 +1,7 @@
 # Profiling ASL on Windows and Linux
 
+The [expression and line-processing experiments](EXPRESSION_LINE_EXPERIMENTS.md) are complete: lazy operand initialization and combined copying/trimming were discarded; known-length argument trimming in line splitting was accepted after repeated scaler gains on both OSes.
+
 ## Watcher contention and retesting (2026-10-06)
 
 The user identified VSCode's file watcher indexing the growing in-tree `build-*` directories, causing severe memory pressure and thrashing even while VSCode was not foreground. The user killed VSCode, deleted those Windows directories and added watcher exclusions. Historical timing percentages and acceptance/rejection decisions below are provisional pending measurements without that contention; tabbing out did not control this confound. Correctness checks and deterministic call counts remain useful, but sampled profiles can also be distorted by contention.
