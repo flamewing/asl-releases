@@ -729,15 +729,9 @@
 	push	ix		; dd e5
 	endexpect
 	if	mompass>1
-	expect	1010
+	expect	1010,1010
 	endif
-	jp	(ix)		; IX is not a Game Boy register
-	if	mompass>1
-	endexpect
-	endif
-	if	mompass>1
-	expect	1010
-	endif
+	jp	(ix)		; dd e9
 	ld	sp,ix		; dd f9
 	if	mompass>1
 	endexpect
@@ -879,15 +873,9 @@
 	push	iy		; fd e5
 	endexpect
 	if	mompass>1
-	expect	1010
+	expect	1010,1010
 	endif
-	jp	(iy)		; IY is not a Game Boy register
-	if	mompass>1
-	endexpect
-	endif
-	if	mompass>1
-	expect	1010
-	endif
+	jp	(iy)		; fd e9
 	ld	sp,iy		; fd f9
 	if	mompass>1
 	endexpect
