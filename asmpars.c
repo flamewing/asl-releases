@@ -1512,7 +1512,6 @@ static Byte GetOpTypeMask(Byte TotMask, int OpIndex) {
     return (TotMask >> (OpIndex * 4)) & 15;
 }
 
-
 static Byte TryConvert(Byte TypeMask, TempType ActType, int OpIndex) {
     if (TypeMask & ActType) {
         return 0 << (4 * OpIndex);
@@ -1612,6 +1611,25 @@ static int operator_search_cb(
         break;
     default:
         if ((p_data->l_klamm == p_data->r_klamm) && !p_data->w_klamm) {
+            /* A short +/- run can be a temporary-label operand. Preserve it
+               before a binary operator, so recursive evaluation sees the
+               complete label rather than separate unary operators. */
+            if ((*p_pos == '+' || *p_pos == '-')
+                && !is_non_space_upto(p_data->p_after_last_op_start, p_pos)) {
+                char const* p_end = p_pos;
+                while (*p_end == *p_pos) {
+                    p_end++;
+                }
+                char const* p_next = p_end;
+                while (as_isspace(*p_next)) {
+                    p_next++;
+                }
+                if (p_end - p_pos <= LOCSYMSIGHT
+                    && (!*p_next || strchr("+-*/&|^=<>!#%~", *p_next))) {
+                    return p_end - p_pos - 1;
+                }
+            }
+
             as_operator_t const* p_pos_best_op            = NULL;
             Boolean              pos_best_op_argcnt_match = False;
             size_t               zop;
@@ -1707,14 +1725,13 @@ void EvalStrExpressionWithCallback(
 
     tExpressionScratch* pScratch;
 
-
     for (z1 = 0; z1 < 3; z1++) {
         as_tempres_ini(&InVals[z1]);
     }
     /* A checked-out pair cannot be reused by an active recursive child. */
-    pScratch  = AcquireExpressionScratch();
-    CopyComp  = pScratch->CopyComp;
-    STempComp = pScratch->STempComp;
+    pScratch             = AcquireExpressionScratch();
+    CopyComp             = pScratch->CopyComp;
+    STempComp            = pScratch->STempComp;
     cb_data_stack.p_next = p_callback_data->p_stack;
 
     if (MakeDebug) {
@@ -1792,7 +1809,7 @@ void EvalStrExpressionWithCallback(
         LEAVE;
     }
 
-    /* Scan for operators using chains grouped by their first byte. */
+    /* Prefilter built-in, target and expression-specific operators. */
 
     operator_search_data.data.callback_before  = False;
     operator_search_data.data.qualify_quote    = QualifyQuote;
@@ -4610,7 +4627,6 @@ void PrintCodepages(void) {
 
 void asmpars_init(void) {
     tIntTypeDef* pCurr;
-
 
     serr           = (char*)malloc(sizeof(char) * STRINGSIZE);
     snum           = (char*)malloc(sizeof(char) * STRINGSIZE);
