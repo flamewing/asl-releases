@@ -446,6 +446,7 @@ _valid for: all processors_
 | 29XXX              |       4G        |      ---      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
 | 80C166             |      256K       |      ---      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
 | 80C167             |       16M       |      ---      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
+| GBZ80/LR35902      |       64K       |      ---      |   ---    |   ---    |  ---   |   ---    |      ---      | --- |   ---    |   ---    |
 | Z80                |       64K       |      ---      |   ---    |   ---    |  ---   |   ---    |      256      | --- |   ---    |   ---    |
 | Z180               |    512K[^O2]    |               |          |          |        |          |      256      |     |          |   ---    |
 | Z380               |       4G        |               |          |          |        |          |      4G       |     |          |          |
@@ -704,9 +705,11 @@ The processors can roughly be distinguished in families, inside the families dif
 
     80C167 and 80C165/163 have an address space of 16 Mbytes instead of 256 Kbytes, and furthermore they know some additional instructions for extended addressing modes and atomic instruction sequences. They are 'second generation' processors and differ from each other only in the amount of on-chip peripherals.
 
-34. Z80 → Z80UNDOC → Z180 → Z380
+34. LR35902/GBZ80 → Z80 → Z80UNDOC → Z180 → Z380
 
     While there are only a few additional instructions for the Z180, the Z380 owns 32-bit registers, a linear address space of 4 Gbytes, a couple of instruction set extensions that make the overall instruction set considerably more orthogonal, and new addressing modes (referring to index register halves, stack relative). These extensions partially already exist on the Z80 as undocumented extensions and may be switched on via the Z80UNDOC variant. A list with the additional instructions can be found in the chapter with processor specific hints.
+
+    The Game Boy's LR35902 combines features of the 8080 and Z80. It has no IX/IY registers, I/O address space, or second register bank, and omits several Z80 instructions. Select `LR35902` or `GBZ80`; its code address space is 64 Kbytes.
 
 35. Z8601, Z8603, z86C03, z86E03, Z86C06, Z86E06, Z86C08, Z86C21, Z86E21, Z86C30, Z86C31, Z86C32
     Z86C40 → Z88C00, Z88C01 → eZ8, Z8F0113, Z8F011A, Z8F0123, Z8F012A, Z8F0130, Z8F0131, Z8F0213, Z8F021A, Z8F0223, Z8F022A, Z8F0230, Z8F0231, Z8F0411, Z8F0412, Z8F0413, Z8F041A, Z8F0421, Z8F0422, Z8F0423, Z8F042A, Z8F0430, Z8F0431, Z8F0811, Z8F0812, Z8F0813, Z8F081A, Z8F0821, Z8F0822, Z8F0823, Z8F082A, Z8F0830, Z8F0831, Z8F0880, Z8F1232, Z8F1233, Z8F1621, Z8F1622, Z8F1680, Z8F1681, Z8F1682, Z8F2421, Z8F2422, Z8F2480, Z8F3221, Z8F3222, Z8F3281, Z8F3282, Z8F4821, Z8F4822, Z8F4823, Z8F6081, Z8F6082, Z8F6421, Z8F6422, Z8F6423, Z8F6481, Z8F6482

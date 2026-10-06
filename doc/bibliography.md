@@ -48,6 +48,8 @@
 
 [^CP1600]: General Instrument Microelectronics: _Series 1600 Microprocessor System Documentation._ S16DOC-CP-1600-04, May 1975 <http://www.bitsavers.org/components/gi/CP1600/> CP-1600_Microprocessor_Users_Manual_May75.pdf
 
+[^GBZ80]: _CPU Comparison with Z80._ <https://gbdev.io/pandocs/CPU_Comparison_with_Z80.html>
+
 [^Hit180]: Hitachi Ltd.: _8-/16-Bit Microprocessor Data Book._ 1986
 
 [^Hit63]: Trevor J. Terrel & Robert J. Simpson: _Understanding HD6301X/03X CMOS Microprocessor Systems._ published by Hitachi

@@ -76,7 +76,8 @@ In contrast to ordinary assemblers, AS offers the possibility to generate code f
 - Atmel (Mega-)AVR
 - AMD 29K
 - Siemens 80C166/167
-- Zilog Z80, Z180, Z380
+- Zilog Z80 (including undocumented instructions), Z180, Z380
+- Sharp LR35902 (Game Boy Z80)[^GBZ80]
 - Zilog Z8, Super8, Z8 Encore
 - Zilog Z8000
 - Xilinx KCPSM/KCPSM3 ('PicoBlaze')
