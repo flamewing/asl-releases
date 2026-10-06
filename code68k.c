@@ -273,19 +273,27 @@ static Boolean ValReg(char Ch) {
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
-    if (!as_strcasecmp(pArg, "SP")) {
-        *pResult = REG_SP | REG_MARK;
-        return True;
+    int First = as_toupper(pArg[0]);
+
+    if (First == 'S') {
+        if (!as_strcasecmp(pArg, "SP")) {
+            *pResult = REG_SP | REG_MARK;
+            return True;
+        }
+        return False;
     }
 
-    if (strlen(pArg) != 2) {
+    if ((First != 'D') && (First != 'A')) {
+        return False;
+    }
+    if (!pArg[1] || pArg[2]) {
         return False;
     }
     if ((*pResult = pArg[1] - '0') > 7) {
         return False;
     }
 
-    switch (as_toupper(*pArg)) {
+    switch (First) {
     case 'D':
         return True;
     case 'A':
