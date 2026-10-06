@@ -1,5 +1,199 @@
 # Profiling ASL on Windows and Linux
 
+## Watcher contention and retesting (2026-10-06)
+
+The user identified VSCode's file watcher indexing the growing in-tree `build-*` directories, causing severe memory pressure and thrashing even while VSCode was not foreground. The user killed VSCode, deleted those Windows directories and added watcher exclusions. Historical timing percentages and acceptance/rejection decisions below are provisional pending measurements without that contention; tabbing out did not control this confound. Correctness checks and deterministic call counts remain useful, but sampled profiles can also be distorted by contention.
+
+All future Windows benchmark builds, prepared inputs, private adapters, reports and profiling artifacts belong outside the source checkout, under `D:/tmp/asl-bench-20261006`. Linux builds and measurements remain on native ext4 outside the Windows checkout. Previous Windows artifact paths below are historical and were deleted; surviving Linux snapshots/reports are retained under `/home/marzojr/asl-benchmark-20261005`. Original disassembly repositories are not staging or output directories.
+
+First run an identical-executable A/A comparison and check timing stability and available memory. Then retest each discarded candidate independently against the accepted code, confirming promising changes in a fresh batch before committing them. The queue is IRP/IRPN argument cursor, list-tail appends/copying, stored macro body count, protected-region delimiter matching, expression backup-copy delay, simple-symbol shortcut, impossible-float prefix, inactive-local-scope check and empty-structure-table check. Retain accepted code while this queue is evaluated; the prior rejection timings do not establish that these candidates lack benefit.
+
+## Discarded-experiment retests (2026-10-06)
+
+All nine previously discarded candidates were retested individually after moving Windows artifacts outside the source checkout. The float-prefix guard was accepted and committed; the other decisions below use the new measurements. Historical timings remain provisional. These are uninstrumented timing reruns, not fresh gprof profiles.
+
+Windows uses MinGW GCC 16.2.0 and local NTFS under `D:/tmp/asl-bench-20261006`; WSL2 Ubuntu uses GCC 15.2.0 and native ext4 under `/home/marzojr/asl-benchmark-20261005/retests-20261006`. Builds are Release `-O3`, with `ASL_PROFILE=OFF`. Recovered prepared snapshots and private adapters retain the earlier assembly scope; original repositories were not changed. No new benchmark build or output directory is inside the checkout.
+
+Each candidate had one warmup per executable and five measured alternating pairs per workload and OS. Promising screens were followed by a fresh nine-pair batch, reversing order each pair. Builds and tests completed before timings; Windows and Linux timing batches ran sequentially. An identical-executable A/A control also used nine pairs. All 209 CTest cases passed on both systems for every candidate. All warmup and measured object hashes agree within each OS; all seven absolute-code record sets agree across OSes, ignoring only the creator footer. This does not verify complete compressed ROM pipelines.
+
+### A/A timing control
+
+Both labels ran the identical accepted executable. Positive percentages mean the second label happened to be faster; they are noise, not an optimization. Small median differences and a few extra paired wins are not sufficient evidence by themselves.
+
+| Workload | Windows apparent reduction (wins) | Linux apparent reduction (wins) |
+| --- | ---: | ---: |
+| Sonic 1 | +0.26% (7/9) | -2.16% (2/9) |
+| Sonic 2 | -0.33% (3/9) | +1.98% (7/9) |
+| Sonic & Knuckles | -1.02% (4/9) | +0.56% (7/9) |
+| Big Fishing Derby | +0.54% (6/9) | -1.21% (3/9) |
+| Sonic Classic Heroes | +0.01% (4/9) | -0.95% (1/9) |
+| ScalerMacros-v1.asm | +0.25% (5/9) | +1.55% (7/9) |
+| ScalerMacros-v2.asm | +0.12% (6/9) | +0.17% (4/9) |
+
+The host-memory monitor sampled every two seconds throughout each batch, including staging. Across these reports, minimum available host memory was 10,163 MiB and maximum load was 68%. This shows substantial host headroom, although it does not establish that every run was free of other interference. The symbol-shortcut Windows confirmation includes one 10.732-second Sonic Classic Heroes candidate run against a usual roughly 1.6 seconds. That sample is retained, not removed; the report uses medians and paired results. Apparent large screen gains that failed to repeat are not accepted.
+
+### Decisions and baselines
+
+| Candidate | Accepted baseline | Decision | Commit |
+| --- | --- | --- | --- |
+| IRP/IRPN argument cursor | `e70c690` | Discarded | — |
+| List-tail appends and copying | `e70c690` | Discarded | — |
+| Stored macro body count | `e70c690` | Discarded | — |
+| Skip matching in protected regions | `e70c690` | Discarded | — |
+| Delay expression backup copy | `e70c690` | Discarded | — |
+| Simple-symbol shortcut | `e70c690` | Discarded | — |
+| Impossible-float prefix guard | `e70c690` | Accepted | `776e39b` |
+| Inactive-local-scope guard | `776e39b` | Discarded | — |
+| Empty-structure-table guard | `776e39b` | Discarded | — |
+
+The first seven candidates use `e70c690`; the last two use the accepted float-guard code. Rejected trials are restored before the next candidate. This isolates each change without undoing accepted improvements.
+
+### IRP/IRPN argument cursor
+
+No convincing gain; both scaler workloads were slower on both OSes in the screen.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | -0.91% (2/5) | — | -3.48% (1/5) | — |
+| Sonic 2 | -1.50% (0/5) | — | +0.81% (3/5) | — |
+| Sonic & Knuckles | +0.51% (3/5) | — | +3.30% (4/5) | — |
+| Big Fishing Derby | +0.52% (3/5) | — | +0.62% (1/5) | — |
+| Sonic Classic Heroes | +0.18% (2/5) | — | -6.75% (1/5) | — |
+| ScalerMacros-v1.asm | -2.52% (1/5) | — | -1.97% (0/5) | — |
+| ScalerMacros-v2.asm | -2.57% (0/5) | — | -2.16% (0/5) | — |
+
+### List-tail appends and copying
+
+The isolated Windows larger-scaler gain had only 3/5 paired wins and did not carry over to Linux; the other differences were small or negative.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | +0.86% (4/5) | — | -0.66% (4/5) | — |
+| Sonic 2 | -0.98% (0/5) | — | -2.88% (0/5) | — |
+| Sonic & Knuckles | +0.19% (4/5) | — | -3.11% (1/5) | — |
+| Big Fishing Derby | -0.50% (2/5) | — | -1.62% (1/5) | — |
+| Sonic Classic Heroes | +0.84% (4/5) | — | -0.53% (2/5) | — |
+| ScalerMacros-v1.asm | -0.03% (2/5) | — | +0.39% (3/5) | — |
+| ScalerMacros-v2.asm | +4.01% (3/5) | — | -2.37% (0/5) | — |
+
+### Stored macro body count
+
+The Windows Sonic 1 screen gain did not repeat; fresh confirmation was mixed and predominantly slower on Linux.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | +1.78% (5/5) | -1.25% (2/9) | +1.46% (1/5) | -3.59% (2/9) |
+| Sonic 2 | +0.05% (3/5) | +0.75% (6/9) | -0.03% (3/5) | -0.43% (4/9) |
+| Sonic & Knuckles | -2.44% (0/5) | -0.37% (3/9) | +0.07% (4/5) | -2.73% (3/9) |
+| Big Fishing Derby | +0.57% (5/5) | +1.58% (6/9) | +0.36% (3/5) | -0.76% (4/9) |
+| Sonic Classic Heroes | +0.07% (2/5) | +0.24% (4/9) | -3.14% (2/5) | -0.14% (3/9) |
+| ScalerMacros-v1.asm | +2.74% (4/5) | +1.40% (8/9) | -2.18% (1/5) | -2.18% (2/9) |
+| ScalerMacros-v2.asm | +1.49% (3/5) | +1.74% (6/9) | -3.29% (0/5) | +1.64% (5/9) |
+
+### Skip matching in protected regions
+
+The apparent Linux Sonic 1 and Big Fishing Derby gains disappeared in confirmation.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | -2.61% (1/5) | +0.25% (6/9) | +4.36% (4/5) | -0.11% (4/9) |
+| Sonic 2 | -0.52% (1/5) | -0.86% (2/9) | -2.45% (1/5) | +1.13% (5/9) |
+| Sonic & Knuckles | -3.37% (2/5) | -0.60% (5/9) | -2.25% (2/5) | +1.25% (6/9) |
+| Big Fishing Derby | -0.97% (1/5) | +0.90% (7/9) | +6.39% (4/5) | -1.77% (5/9) |
+| Sonic Classic Heroes | +0.26% (2/5) | -0.62% (4/9) | +0.37% (4/5) | -2.61% (3/9) |
+| ScalerMacros-v1.asm | -0.24% (2/5) | -0.77% (3/9) | +2.04% (3/5) | -0.47% (4/9) |
+| ScalerMacros-v2.asm | +1.27% (4/5) | -1.21% (2/9) | -2.75% (1/5) | +1.60% (7/9) |
+
+### Delay expression backup copy
+
+The apparent 11.15% Linux Big Fishing Derby gain became a 1.32% slowdown in confirmation; the other benefits were small or inconsistent.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | -1.11% (3/5) | +2.63% (6/9) | +1.31% (5/5) | +0.19% (6/9) |
+| Sonic 2 | +1.55% (2/5) | +0.41% (3/9) | +0.59% (3/5) | -0.50% (3/9) |
+| Sonic & Knuckles | -0.79% (2/5) | +0.36% (6/9) | +0.12% (3/5) | +0.39% (4/9) |
+| Big Fishing Derby | +0.65% (2/5) | +1.23% (8/9) | +11.15% (4/5) | -1.32% (3/9) |
+| Sonic Classic Heroes | +0.04% (3/5) | +0.82% (7/9) | +1.81% (3/5) | -1.01% (3/9) |
+| ScalerMacros-v1.asm | +1.73% (5/5) | +0.65% (5/9) | -0.74% (2/5) | +0.34% (4/9) |
+| ScalerMacros-v2.asm | +0.92% (4/5) | -0.02% (5/9) | -0.32% (2/5) | +0.27% (5/9) |
+
+### Simple-symbol shortcut
+
+The apparent Linux gains did not repeat, while every Windows confirmation median was slower.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | -2.53% (2/5) | -1.14% (4/9) | +0.79% (3/5) | -0.96% (3/9) |
+| Sonic 2 | -1.15% (1/5) | -1.00% (2/9) | -2.55% (1/5) | -0.14% (5/9) |
+| Sonic & Knuckles | +2.03% (4/5) | -2.68% (3/9) | +4.33% (2/5) | -1.05% (4/9) |
+| Big Fishing Derby | -0.94% (2/5) | -0.52% (3/9) | +9.23% (4/5) | +0.74% (6/9) |
+| Sonic Classic Heroes | +0.47% (4/5) | -1.80% (3/9) | +4.36% (2/5) | +1.22% (4/9) |
+| ScalerMacros-v1.asm | -0.74% (2/5) | -1.19% (3/9) | -2.99% (1/5) | +0.21% (5/9) |
+| ScalerMacros-v2.asm | +1.27% (5/5) | -1.42% (3/9) | +1.50% (2/5) | -0.83% (3/9) |
+
+### Impossible-float prefix guard
+
+Accepted for repeatable Windows Sonic 2 and Sonic & Knuckles gains, supported by Linux results; smaller workload differences remain uncertain.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | +0.59% (4/5) | +2.07% (7/9) | +3.74% (3/5) | +4.13% (6/9) |
+| Sonic 2 | +7.06% (5/5) | +2.84% (9/9) | +1.43% (4/5) | +1.44% (7/9) |
+| Sonic & Knuckles | +3.01% (4/5) | +3.24% (8/9) | +3.47% (4/5) | +1.28% (5/9) |
+| Big Fishing Derby | +0.92% (3/5) | +1.62% (7/9) | +2.19% (3/5) | +1.30% (5/9) |
+| Sonic Classic Heroes | +2.84% (4/5) | +0.52% (7/9) | +0.71% (3/5) | +0.29% (4/9) |
+| ScalerMacros-v1.asm | +5.40% (4/5) | +0.82% (7/9) | -1.83% (3/5) | +2.38% (7/9) |
+| ScalerMacros-v2.asm | +0.98% (5/5) | +1.81% (8/9) | +2.44% (4/5) | -0.32% (5/9) |
+
+### Inactive-local-scope guard
+
+The roughly 6% Sonic 1 screen gains disappeared in fresh confirmation (Windows +0.47%, Linux -1.01%). Big Fishing Derby was repeatedly slower on Windows; the other benefits were small or mixed.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | +5.53% (3/5) | +0.47% (5/9) | +6.03% (4/5) | -1.01% (5/9) |
+| Sonic 2 | -1.51% (1/5) | +0.72% (6/9) | +0.38% (3/5) | +2.48% (5/9) |
+| Sonic & Knuckles | +1.20% (2/5) | +0.95% (6/9) | -0.88% (2/5) | -0.32% (5/9) |
+| Big Fishing Derby | -3.03% (1/5) | -3.95% (3/9) | -11.02% (2/5) | -1.12% (4/9) |
+| Sonic Classic Heroes | -0.04% (2/5) | -0.44% (4/9) | -0.61% (1/5) | -2.07% (5/9) |
+| ScalerMacros-v1.asm | +0.93% (3/5) | +0.40% (3/9) | +0.37% (2/5) | +0.23% (5/9) |
+| ScalerMacros-v2.asm | +2.04% (4/5) | +0.90% (5/9) | -0.54% (2/5) | -0.35% (4/9) |
+
+### Empty-structure-table guard
+
+Discarded as a tradeoff: the Windows ScalerMacros-v2 gain repeated at +3.09% (7/9 wins), but its Linux gain shrank to +0.73% (5/9). Linux Sonic 1 and Sonic Classic Heroes again had roughly 3.12% slower medians; the other apparent benefits were mixed. This trial does show a possible workload-specific benefit, rather than proving that the empty-table shortcut cannot help.
+
+| Workload | Windows screen | Windows confirmation | Linux screen | Linux confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | -2.45% (2/5) | +1.16% (6/9) | -2.82% (3/5) | -3.12% (4/9) |
+| Sonic 2 | +2.68% (3/5) | -0.10% (3/9) | +1.05% (3/5) | +1.97% (5/9) |
+| Sonic & Knuckles | -2.09% (1/5) | +2.64% (5/9) | -0.98% (3/5) | -0.42% (4/9) |
+| Big Fishing Derby | +0.84% (3/5) | +0.73% (6/9) | -7.36% (1/5) | +0.61% (4/9) |
+| Sonic Classic Heroes | +0.20% (3/5) | +0.54% (4/9) | -4.19% (2/5) | -3.12% (3/9) |
+| ScalerMacros-v1.asm | +2.72% (5/5) | +1.31% (6/9) | -0.16% (3/5) | +2.77% (7/9) |
+| ScalerMacros-v2.asm | +2.72% (4/5) | +3.09% (7/9) | +3.01% (5/5) | +0.73% (5/9) |
+
+### Accepted float-guard confirmation times
+
+The guard rejects only ASCII prefixes that cannot start a C-locale floating-point constant. Digits, signs, decimal points, whitespace, NaN/Infinity prefixes, empty strings and non-ASCII inputs retain conversion handling; the existing hexadecimal exclusion is unchanged. Source-extracted differential checks compared 602,000 conversions per platform, including values, success flags and errno. The protected-delimiter trial also passed 600,000 scanner/result and quote-qualification trace comparisons per platform; the IRP cursor passed an independent expected-byte fixture against baseline and candidate on both OSes. Those diagnostic harnesses remain in the external workspace.
+
+| Workload | Windows baseline → candidate (s) | Reduction | Linux baseline → candidate (s) | Reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 0.743 → 0.728 | +2.07% | 0.291 → 0.279 | +4.13% |
+| Sonic 2 | 1.197 → 1.163 | +2.84% | 0.562 → 0.554 | +1.44% |
+| Sonic & Knuckles | 1.416 → 1.370 | +3.24% | 0.590 → 0.582 | +1.28% |
+| Big Fishing Derby | 1.044 → 1.027 | +1.62% | 0.526 → 0.519 | +1.30% |
+| Sonic Classic Heroes | 1.619 → 1.610 | +0.52% | 0.596 → 0.595 | +0.29% |
+| ScalerMacros-v1.asm | 0.470 → 0.467 | +0.82% | 0.369 → 0.360 | +2.38% |
+| ScalerMacros-v2.asm | 1.458 → 1.431 | +1.81% | 1.135 → 1.139 | -0.32% |
+
+Windows Sonic 2 won all nine confirmation pairs with non-overlapping ranges (baseline 1.180–1.275 s; candidate 1.140–1.175 s). Sonic & Knuckles repeated its roughly 3% Windows gain and won 8/9 confirmation pairs. Linux Sonic 1 repeated a roughly 4% median gain but had only 6/9 wins and overlapping ranges, so its exact magnitude is less certain. Gains on other workloads are modest or inconsistent and should not be generalized.
+
+Raw JSON reports, commands, executable/object hashes, individual timing samples, logs, snapshots, source trial helpers, memory telemetry and decisions remain under the external Windows/native Linux workspaces. Exact candidate executables are retained for the final four trials; accepted baseline executables are retained for all nine. The earlier deleted Windows candidate binaries could not be recovered, and the first five rerun candidates can be reconstructed from the saved source/helper transformations. Private identity mappings and source adapters are not committed.
+
+The final audit checked all 64 A/B reports: every trial used the correct accepted executable, screens and confirmation batches used unchanged binaries, all seven object hashes stayed identical across the series on each OS, and the restored final executables match the accepted float-guard binary. Windows and native Linux source snapshots agree. Linux `pswpin` and `pswpout` counters were both zero at the end, showing no native swap I/O since that WSL instance started. The audit is saved as `D:/tmp/asl-bench-20261006/final-verification.json`.
+
 Use separate optimized timing and profiling builds. `ASL_PROFILE=OFF` (the default) keeps normal build flags. `SAMPLE` adds symbols and frame pointers for external sampling tools; MSVC uses `/Zi /DEBUG /INCREMENTAL:NO`. `GPROF` adds GCC -pg at compile and link time, including shared object libraries. It requires GCC, including MinGW GCC on Windows. The MinGW diagnostic build disables ASLR so gprof can resolve recorded addresses. OFF and SAMPLE retain normal linker behavior.
 
 ## Windows (PowerShell)
@@ -7,14 +201,18 @@ Use separate optimized timing and profiling builds. `ASL_PROFILE=OFF` (the defau
 Adjust GCC and gprof paths for your MSYS2 installation:
 
 ```powershell
-cmake -S . -B build-bench-windows -G Ninja -DCMAKE_C_COMPILER="$(cygpath -m $(which gcc))" -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=OFF
-cmake --build build-bench-windows --target asl p2bin test_driver -j 8
-ctest --test-dir build-bench-windows -j 8 --output-on-failure
-python benchmarks/run.py --asl build-bench-windows/asl.exe --repos path/to/sonic/disassemblies --out build-benchmark-results/baseline-new --prepare --runs 7
+$benchmarkRoot = 'D:/tmp/asl-bench-20261006'
+$compiler = 'D:/msys64/mingw64/bin/gcc.exe'
+$ninja = 'D:/msys64/mingw64/bin/ninja.exe'
+$gprof = 'D:/msys64/mingw64/bin/gprof.exe'
+cmake -S . -B "$benchmarkRoot/builds/windows" -G Ninja -DCMAKE_C_COMPILER="$compiler" -DCMAKE_MAKE_PROGRAM="$ninja" -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=OFF
+cmake --build "$benchmarkRoot/builds/windows" --target asl p2bin test_driver -j 8
+ctest --test-dir "$benchmarkRoot/builds/windows" -j 8 --output-on-failure
+python benchmarks/run.py --asl "$benchmarkRoot/builds/windows/asl.exe" --repos path/to/sonic/disassemblies --out "$benchmarkRoot/inputs/public-new" --prepare --runs 7
 
-cmake -S . -B build-profile-windows -G Ninja -DCMAKE_C_COMPILER="$(cygpath -m $(which gcc))" -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=GPROF
-cmake --build build-profile-windows --target asl -j 8
-python benchmarks/run.py --asl build-profile-windows/asl.exe --repos build-benchmark-results/baseline-new --out build-benchmark-results/profile-new --gprof "$(cygpath -m $(which gprof))" --runs 7 --warmups 0
+cmake -S . -B "$benchmarkRoot/builds/windows-profile" -G Ninja -DCMAKE_C_COMPILER="$compiler" -DCMAKE_MAKE_PROGRAM="$ninja" -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=GPROF
+cmake --build "$benchmarkRoot/builds/windows-profile" --target asl -j 8
+python benchmarks/run.py --asl "$benchmarkRoot/builds/windows-profile/asl.exe" --repos "$benchmarkRoot/inputs/public-new" --out "$benchmarkRoot/results/profile-new" --gprof "$gprof" --runs 7 --warmups 0
 ```
 
 The runner requires Python 3.6+. Each output directory must be new. It copies selected repositories, excluding `.git`, and assembles from the copies. `--prepare` generates PCM/DPCM assets with the bundled Lua on Windows (or `--lua /path/to/lua` elsewhere). For Sonic 2 it also reuses the music-generation functions from `build.lua`, invoking the repository's existing tool bundle. Preparation runs outside the timed region; no dependencies are installed. Missing tools cause preparation to fail with a log. Pass a prepared output directory as `--repos` on subsequent runs.
@@ -25,11 +223,11 @@ Only the main ASL subprocess is timed with a monotonic clock. Copying, conversio
 
 ## WSL2 Ubuntu
 
-Use native Linux storage, such as your home directory or `/tmp`. Shared `/mnt/d` storage can dominate runtime. Example with a fresh temporary workspace:
+Use native Linux disk storage, such as your home directory. `/tmp` may be memory-backed and can amplify memory pressure; shared `/mnt/d` storage can dominate runtime. Example with a fresh workspace outside the source tree:
 
 ```bash
 src=path/to/asl/source
-task=$(mktemp -d /tmp/asl-profile.XXXXXX)
+task=$(mktemp -d "$HOME/asl-profile.XXXXXX")
 mkdir "$task/source"
 rsync -a --exclude='/build*' --exclude='/.git' --exclude='/.vs' --exclude='/.cache' --exclude='/Testing' "$src/" "$task/source/"
 cmake -S "$task/source" -B "$task/baseline" -G Ninja -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=OFF
@@ -37,13 +235,13 @@ cmake --build "$task/baseline" --target asl p2bin test_driver -j 8
 ctest --test-dir "$task/baseline" -j 8 --output-on-failure
 
 # Reuse assets prepared on Windows; no Ubuntu Lua needed.
-python3 "$src/benchmarks/run.py" --asl "$task/baseline/asl" --repos "$src/build-benchmark-results/baseline-new" --out "$task/linux-native" --runs 7
+python3 "$src/benchmarks/run.py" --asl "$task/baseline/asl" --repos /mnt/d/tmp/asl-bench-20261006/inputs/public-new --out "$task/linux-native" --runs 7
 cmake -S "$task/source" -B "$task/gprof" -G Ninja -DCMAKE_BUILD_TYPE=Release -DASL_PROFILE=GPROF
 cmake --build "$task/gprof" --target asl -j 8
 python3 "$src/benchmarks/run.py" --asl "$task/gprof/asl" --repos "$task/linux-native" --out "$task/linux-profile" --gprof /usr/bin/gprof --runs 7 --warmups 0
 ```
 
-To measure shared-filesystem cost, repeat with the same baseline executable and prepared inputs, setting `--out` to a fresh directory under `$src/build-benchmark-results`. Run timing builds sequentially on an idle machine. Warmups measure warm caches; this runner does not flush caches or claim cold-I/O performance. Record compiler versions and storage locations.
+To measure shared-filesystem cost, repeat with the same baseline executable and prepared inputs, setting `--out` to a fresh directory under `/mnt/d/tmp/asl-bench-20261006/results`. Run timing builds sequentially on an idle machine. Warmups measure warm caches; this runner does not flush caches or claim cold-I/O performance. Record compiler versions and storage locations.
 
 ## Interpretation and output checks
 
@@ -64,12 +262,12 @@ See [the initial findings](RESULTS.md) for this machine's measurements.
 The [optimization plan](OPTIMIZATION_PLAN.md) records the experiments and their acceptance criteria. `ab.py` runs a baseline and candidate alternately on the same prepared snapshot, reversing their order each pair. Each executable gets one warmup followed by nine measured runs by default. All object hashes must match across both executables and every repetition.
 
 ```powershell
-python benchmarks/ab.py --baseline build-bench-windows/asl.exe --candidate build-opt-macro-windows/asl.exe --repos build-benchmark-results/windows-final --out build-benchmark-results/macro-comparison-new --runs 9
+python benchmarks/ab.py --baseline "$benchmarkRoot/builds/baseline/asl.exe" --candidate "$benchmarkRoot/builds/candidate/asl.exe" --repos "$benchmarkRoot/inputs/public-new" --out "$benchmarkRoot/results/macro-comparison-new" --runs 9
 ```
 
 On Ubuntu, use `python3`, Linux executables, and an output directory on native Linux storage. The tool records each execution order, both sample sets, executable hashes, median time reduction, and paired speedup ratios. Inputs must already contain generated assets; the output directory must be new. Run timing comparisons separately from compiler builds, tests, and instrumented profiling.
 
-Both runners accept `--manifest /path/to/local/workloads.json` for additional local workloads, selected explicitly with `--workloads`. The manifest uses the same schema as `workloads.json`: a label maps to a staged repository directory, an assembly entry point, and an argument list. The built-in public workload definitions remain the default. Keep private manifests, input snapshots, wrappers, logs, and identity mappings under an ignored local build directory; include private workload names in documentation only with the owner's approval.
+Both runners accept `--manifest /path/to/local/workloads.json` for additional local workloads, selected explicitly with `--workloads`. The manifest uses the same schema as `workloads.json`: a label maps to a staged repository directory, an assembly entry point, and an argument list. The built-in public workload definitions remain the default. Keep private manifests, input snapshots, wrappers, logs, and identity mappings outside the source checkout, under the external benchmark workspace; include private workload names in documentation only with the owner's approval.
 
 ## Additional local workload results (2026-10-05)
 
@@ -529,3 +727,127 @@ The last column confirms that the accepted delimiter-absence return is exercised
 Run each independently, with complete Windows/Linux tests, focused behavioral checks where warranted, identical benchmark objects and cross-platform code records. Screen optimized uninstrumented builds with alternating pairs; confirm promising changes in a fresh nine-pair batch before accepting them. No new optimization is implemented or accepted by this profiling refresh. Lambda substitution and finer attribution within `AssembleFile` remain follow-up investigations if these guards do not produce useful gains.
 
 Exact Windows binaries/catalogs, analysis and public profiles are under ignored `build-benchmark-results/reprofile-dispatch`; private profiles are under `build-benchmark-results/local-private/reprofile-dispatch-windows`. Native Linux reports/gmons are under `/tmp/asl-token-20261005/reprofile-dispatch-{public,local}`, with exact binaries in `reprofile-dispatch-binaries`. Diagnostic source, build, reports and logs use `diagnostic-dispatch-*` beneath the same native workspace. These paths resolve to the relocated ext4 workspace. Private sources and adapters remain outside committed documentation.
+
+## Independent conversion and lookup guards (2026-10-06)
+
+The three proposed guards were tested independently, in order, against `e70c690`. Each candidate was reverted before the next experiment. Release builds, prepared inputs, adapters and arguments match the preceding experiments. Each platform/workload gets one warmup per executable, five alternating screening pairs, then a fresh nine-pair confirmation. Windows and Linux batches run sequentially; compilation and tests finish before timing. Linux uses the native ext4 workspace. The user reports remaining tabbed out of VSCode; timing noise persists and its cause is not established.
+
+All three candidates pass all 209 tests on both platforms and preserve every warmup/measured object; actual code records agree across OSes. The first Windows float-guard suite had a transient `t_maclines` macro-recursion failure; the focused rerun and complete serial suite passed. The final accepted code also passes the complete parallel suite on both platforms.
+
+Positive percentages below mean shorter median assembly time. Faster-pair counts refer to the fresh nine-pair confirmation. Raw samples, ranges, hashes, baseline executables and build/test logs remain in the ignored experiment directories. Every confirmation range overlaps its baseline range. No candidate establishes a sufficiently consistent, meaningful incremental gain; all three implementations are discarded and no optimization commit is made.
+
+### Impossible float prefix — discarded
+
+The candidate rejected impossible ASCII first bytes inside `ConstFloatVal`, before its length check and `strtod`. ASL does not change `LC_NUMERIC` from the C locale. Digits, signs, dot, C whitespace, NaN/Inf prefixes, empty input and non-ASCII first bytes retained the original path; the existing hex-prefix rule and integer-conversion precedence were unchanged. An extracted-source harness agreed with the old routine on 602,322 cases on each platform, including valid/malformed numbers, special values, all nonzero first bytes and generated high-byte inputs. High attempted-conversion counts did not translate into broad repeatable assembly-time gains.
+
+| Workload | Windows screen | Linux screen | Windows confirmation | Faster pairs | Linux confirmation | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | -4.10% | 1.70% | -3.47% | 4/9 | -0.00% | 5/9 |
+| Sonic 2 | 17.15% | 3.56% | -4.19% | 5/9 | 2.05% | 6/9 |
+| Sonic & Knuckles | -8.37% | -1.15% | 2.18% | 7/9 | -0.48% | 4/9 |
+| Big Fishing Derby | 5.10% | 5.72% | 8.82% | 8/9 | -0.65% | 4/9 |
+| Sonic Classic Heroes | 3.53% | 5.59% | 0.60% | 6/9 | 1.41% | 6/9 |
+| ScalerMacros-v1.asm | 1.75% | -2.07% | 0.20% | 6/9 | 2.15% | 7/9 |
+| ScalerMacros-v2.asm | -3.02% | -4.72% | 5.21% | 7/9 | 1.49% | 6/9 |
+
+### Inactive local scope — discarded
+
+The candidate moved the existing `MomLocHandle == -1` return in `FindLocNode` before name copying, dot-prefix preparation and uppercasing. `ChkTmp3` with `e_symbol_source_none` only changes the temporary buffer, and uppercasing also only changes that buffer. Active/nested lookup order was retained. Screening gains on Sonic 1 and Sonic & Knuckles did not hold consistently: no confirmation workload/platform won more than 6/9 pairs.
+
+| Workload | Windows screen | Linux screen | Windows confirmation | Faster pairs | Linux confirmation | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 2.32% | 8.60% | -0.36% | 4/9 | 3.22% | 4/9 |
+| Sonic 2 | -5.53% | -2.91% | 1.71% | 6/9 | -1.80% | 4/9 |
+| Sonic & Knuckles | 4.70% | 8.53% | 0.64% | 3/9 | 1.15% | 4/9 |
+| Big Fishing Derby | 2.17% | -2.57% | 1.48% | 5/9 | 0.02% | 4/9 |
+| Sonic Classic Heroes | -0.67% | -2.99% | 0.20% | 6/9 | 1.37% | 3/9 |
+| ScalerMacros-v1.asm | -2.70% | -2.21% | 0.77% | 5/9 | -1.38% | 5/9 |
+| ScalerMacros-v2.asm | 3.18% | 0.91% | -1.12% | 4/9 | 0.59% | 4/9 |
+
+### Empty structure table — discarded
+
+The candidate returned `False` and explicitly set `*Erg = NULL` before name preparation when `StructRoot` was null. It inspected the current root on every call, without caching misses across definitions, files or passes. The scalers' high empty-table counts suggested a targeted opportunity, but confirmation was modest and mixed: the larger scaler's Windows median was unchanged, and several full projects slowed down.
+
+| Workload | Windows screen | Linux screen | Windows confirmation | Faster pairs | Linux confirmation | Faster pairs |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sonic 1 | 2.11% | 1.75% | -1.47% | 3/9 | 3.45% | 6/9 |
+| Sonic 2 | -4.31% | 4.53% | 2.28% | 6/9 | -3.18% | 3/9 |
+| Sonic & Knuckles | -8.94% | 1.30% | 1.24% | 6/9 | -1.99% | 4/9 |
+| Big Fishing Derby | 0.69% | 1.32% | -3.94% | 3/9 | -1.75% | 3/9 |
+| Sonic Classic Heroes | -0.86% | 3.99% | -1.65% | 4/9 | 0.99% | 6/9 |
+| ScalerMacros-v1.asm | 5.48% | -1.88% | 1.72% | 5/9 | 3.21% | 6/9 |
+| ScalerMacros-v2.asm | 1.45% | 2.45% | -0.06% | 7/9 | 0.95% | 7/9 |
+
+Artifacts follow the earlier layout using experiment names `float-guard`, `local-guard` and `struct-guard`, with suffixes `ab` and `confirm`: Windows public reports under ignored `build-benchmark-results/<experiment>`, private reports under `build-benchmark-results/local-private`, and native Linux reports under `/tmp/asl-token-20261005/<experiment>` (the retained symlink to ext4). Private inputs, paths and adapters remain uncommitted.
+
+## Aggregate comparison against the original baseline (2026-10-06)
+
+The original baseline is `0730cdf`, the parent of the first optimization commit `c1e0852`. The final accepted code is `e70c690`; the three guards above are excluded. This comparison includes the complete accepted macro/token, current-line cursor, delimiter, expression scratch-pool and operator-dispatch series. The earlier symbol-table hashing change predates this baseline and is present in both revisions.
+
+Both revisions were freshly built with the same Release settings and compilers used above: MinGW GCC 16.2.0 on Windows and GCC 15.2.0 on WSL2 Ubuntu. The original source snapshot receives only the opt-in CMake profiling infrastructure; `ASL_PROFILE=OFF` preserves its normal compiler flags. Inputs and outputs use NTFS on Windows and native ext4 on Linux. Snapshots, ASL arguments and private scaler adapters are identical between revisions; timings cover ASL only, without listings or complete game-build/postprocessing pipelines.
+
+### Uninstrumented timing
+
+One warmup per executable precedes nine alternating measured pairs, reversing order each pair. These fresh measurements directly measure the aggregate effect; incremental percentages from earlier experiments are not added together.
+
+| Workload | Windows original → final (s) | Time reduction | Linux original → final (s) | Time reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 1.443 → 0.867 | 39.92% | 0.591 → 0.277 | 53.16% |
+| Sonic 2 | 2.160 → 1.227 | 43.18% | 1.199 → 0.564 | 53.02% |
+| Sonic & Knuckles | 2.182 → 1.549 | 29.00% | 0.954 → 0.566 | 40.69% |
+| Big Fishing Derby | 1.918 → 1.148 | 40.17% | 1.045 → 0.527 | 49.62% |
+| Sonic Classic Heroes | 2.519 → 1.811 | 28.10% | 1.090 → 0.637 | 41.57% |
+| ScalerMacros-v1.asm | 1.264 → 0.494 | 60.90% | 0.925 → 0.368 | 60.21% |
+| ScalerMacros-v2.asm | 4.435 → 1.546 | 65.13% | 3.107 → 1.167 | 62.45% |
+
+The final executable wins **9/9 pairs for every workload on both platforms**, with nonoverlapping observed ranges. Every warmup and measured object is byte-for-byte identical to the original same-platform output. Actual code records match across Windows and Linux. The accepted HEAD passes all 209 tests on both platforms.
+
+### Comparative instrumented profiles
+
+Five fresh gprof assemblies of each workload at each revision on each platform use the same snapshots, flags and native storage, no warmups and no listings. OS/revision batches run sequentially after builds and uninstrumented timings finish. Both diagnostic builds use `-pg -g -fno-omit-frame-pointer`; Windows diagnostic executables disable ASLR for address resolution. Normal builds retain normal linker behavior. Duplicate static function labels are aggregated when parsing flat profiles.
+
+All 140 profiling objects match their uninstrumented outputs and cross-platform code records. Primary and recursive expression-evaluation counts agree between revisions and OSes, so the reductions do not come from skipping logical expression evaluations. Calls below are per assembly:
+
+| Workload | `StrCompAlloc`, original → final | `ExpandLine`, original → final | Final `ExpandTokens` |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 1,680,828 → 23,818 | 1,479,714 → 36,828 | 129,136 |
+| Sonic 2 | 4,454,689 → 55,471 | 2,535,532 → 84,448 | 237,026 |
+| Sonic & Knuckles | 3,147,949 → 15,701 | 869,844 → 44,784 | 102,140 |
+| Big Fishing Derby | 3,367,276 → 50,346 | 1,749,395 → 64,027 | 216,534 |
+| Sonic Classic Heroes | 2,891,384 → 56,724 | 1,326,118 → 124,314 | 167,972 |
+| ScalerMacros-v1.asm | 1,931,896 → 214 | 2,589,370 → 540 | 241,454 |
+| ScalerMacros-v2.asm | 3,136,343 → 217 | 6,140,822 → 540 | 286,446 |
+
+`ExpandTokens` is the new batched macro/IRP decoder; its calls are not equivalent to the old per-parameter `ExpandLine` calls. Remaining `ExpandLine` callers include the unchanged paths documented earlier. The allocation counts support scratch reuse, while replacement-call counts support avoiding repeated per-parameter scans.
+
+Sampled self-time below excludes callees. Percentages describe the instrumented build, not the uninstrumented wall-time reductions above. The delimiter column sums `QuotPosQualify` and `QuotSMultPosQualify`: the single-character optimization routes common calls from the latter to the former, so either label alone misses part of the comparison.
+
+Windows sampled self-time:
+
+| Workload | `EvalStrExpression`, original → final | Delimiter scanners, original → final | `AssembleFile`, original → final | `MACRO_Processor`, original → final |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 8.93% → 9.04% | 5.36% → 1.13% | 5.00% → 7.34% | 1.07% → 0.56% |
+| Sonic 2 | 8.24% → 9.55% | 5.56% → 0.28% | 3.64% → 2.25% | 1.53% → 0.00% |
+| Sonic & Knuckles | 9.07% → 9.44% | 4.54% → 0.29% | 2.86% → 3.24% | 0.48% → 0.29% |
+| Big Fishing Derby | 7.58% → 6.25% | 4.40% → 0.00% | 2.69% → 5.51% | 1.96% → 0.37% |
+| Sonic Classic Heroes | 10.56% → 5.84% | 6.52% → 3.43% | 3.15% → 4.47% | 0.45% → 0.00% |
+| ScalerMacros-v1.asm | 6.47% → 6.70% | 4.71% → 4.31% | 6.76% → 5.74% | 4.12% → 0.48% |
+| ScalerMacros-v2.asm | 3.14% → 3.37% | 12.94% → 1.38% | 5.97% → 10.41% | 10.41% → 1.53% |
+
+Linux sampled self-time:
+
+| Workload | `EvalStrExpression`, original → final | Delimiter scanners, original → final | `AssembleFile`, original → final | `MACRO_Processor`, original → final |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 14.48% → 19.23% | 13.80% → 4.81% | 5.52% → 5.77% | 2.07% → 0.00% |
+| Sonic 2 | 14.79% → 15.79% | 5.79% → 4.74% | 3.86% → 7.37% | 0.64% → 0.53% |
+| Sonic & Knuckles | 9.52% → 13.02% | 6.96% → 3.12% | 5.49% → 5.73% | 1.83% → 0.52% |
+| Big Fishing Derby | 10.23% → 15.03% | 9.47% → 2.07% | 10.23% → 8.29% | 2.27% → 2.07% |
+| Sonic Classic Heroes | 6.21% → 15.38% | 9.66% → 5.77% | 4.83% → 7.21% | 2.41% → 0.00% |
+| ScalerMacros-v1.asm | 9.28% → 11.11% | 10.97% → 3.97% | 9.70% → 14.29% | 5.06% → 0.00% |
+| ScalerMacros-v2.asm | 4.59% → 5.60% | 13.43% → 3.30% | 11.90% → 19.34% | 17.79% → 2.80% |
+
+Removing work changes the total sampled time, so a function's larger share does not establish a regression. Final Windows profiling hooks account for 46.89–57.52% sampled self-time; Linux's unresolved `_init` accounts for 11.54–22.28%. Neither is attributed to a production-code bottleneck. Compiler inlining also redistributes cost among labels, and a 0.00% row means no samples, not no execution. Instrumented elapsed times and sample shares are not used as speedup estimates. Raw profiles, call graphs and exact executables are retained for further analysis.
+
+The remaining measured priorities are expression evaluation in full projects (13.02–19.23% Linux self-time) and `AssembleFile` in the scalers (14.29–19.34%). Delimiter matching and macro body traversal occupy much smaller shares than in the original baseline. Before another optimization, split `AssembleFile` attribution into line preparation, macro/structure lookup, pseudo-op handling and CPU instruction decoding. The rejected guards show that frequent preparatory work alone is insufficient evidence of meaningful wall-time cost. Lambda substitution through `EvalStrExpression`/`ExpandLine` remains a future evaluation, as recorded in the plan.
+
+Aggregate Windows timing/public profile artifacts are under ignored `build-benchmark-results/aggregate`; private profiles/timings remain under `build-benchmark-results/local-private` with the `aggregate-windows-*` prefix. Exact original/final profile binaries, analysis, original source snapshot and build/test logs accompany them. Linux equivalents are under native `/tmp/asl-token-20261005/aggregate`. Public and private profile directories use `baseline-profile` and `final-profile` suffixes. Private names appear only in Markdown; sources, original paths, adapters and manifests stay ignored.

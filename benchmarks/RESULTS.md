@@ -1,5 +1,7 @@
 # Initial profiling findings — 5 October 2026
 
+Historical timing figures below are provisional: on 6 October the user identified severe VSCode file-watcher contention from the growing in-tree benchmark directories. Future artifacts live outside the checkout and all nine discarded experiments have been retested. See the [new retest results](README.md#discarded-experiment-retests-2026-10-06) and [watcher-confound procedure](README.md#watcher-contention-and-retesting-2026-10-06).
+
 ASL now has opt-in CMake profiling modes and a repeatable real-disassembly benchmark runner. Measurements below use optimized, **uninstrumented** builds: seven measured assemblies after one warmup, without listing output. Copies, asset generation, and hashing are outside the measured interval.
 
 ## Baseline measurements

@@ -71,6 +71,22 @@ Validation covers escaped quotes, target-specific apostrophes, nested brackets, 
 
 ## Implementation log
 
+### Watcher confound: reopen discarded experiments — 6 October 2026
+
+The user identified VSCode indexing the in-tree benchmark directories until memory pressure caused thrashing, including while tabbed out. Historical timing decisions are provisional; the nine discarded experiments are reopened. Windows artifacts were deleted by the user. Recover surviving Linux snapshots and metadata, keep all new Windows builds/inputs/private adapters/results under `D:/tmp/asl-bench-20261006`, and retain Linux runs on native ext4 outside the Windows checkout. Verify identical-binary timing stability and memory availability before new A/B decisions. Retest in historical order, independently, and confirm/commit only repeatable meaningful gains. See the [retesting procedure](README.md#watcher-contention-and-retesting-2026-10-06).
+
+### Discarded-experiment retests completed — 6 October 2026
+
+All nine discarded experiments were recreated and tested independently outside the checkout, using identical-executable A/A controls, five-pair screens and fresh nine-pair confirmation for promising candidates. Every candidate passed all 209 tests on both OSes and preserved all seven same-platform objects and cross-platform code records. The impossible-float prefix guard was accepted as `776e39b`; its Windows Sonic 2 gain repeated at 2.84% with 9/9 wins and non-overlapping ranges, and Sonic & Knuckles repeated at 3.24% with 8/9 wins. Its extracted-function differential check passed 602,000 cases on each OS. Other decisions and any later accepted commits are recorded in the [complete new retest results](README.md#discarded-experiment-retests-2026-10-06). Host memory retained substantial headroom; isolated timing interruptions remain documented. Earlier timing-based decisions are historical, not the evidence for these new decisions.
+
+### Independent conversion/lookup guards — 6 October 2026
+
+Tested impossible float prefixes, inactive local scope and empty structure tables independently, reverting each before the next. All 209 tests pass on both platforms; all benchmark objects and cross-platform code records match. The float candidate also agrees with the original conversion routine on 602,322 differential cases per platform. Five-pair screening followed by fresh nine-pair confirmation fails to establish sufficiently consistent meaningful gains for any candidate. All three implementations are discarded; no optimization commit is made. See the [guard results](README.md#independent-conversion-and-lookup-guards-2026-10-06).
+
+### Aggregate verification — 6 October 2026
+
+Fresh builds compare the accepted `e70c690` code with `0730cdf`, before the first optimization commit. Nine alternating pairs per workload/platform show 28.10–65.13% shorter Windows medians and 40.69–62.45% shorter Linux medians. The final executable wins all pairs with nonoverlapping observed ranges and unchanged objects/code records. Five gprof assemblies per revision/workload/platform preserve all 140 objects and expression counts; allocation and replacement counts quantify the retained work reductions. The discarded guards are excluded. See the [aggregate timing and profiles](README.md#aggregate-comparison-against-the-original-baseline-2026-10-06).
+
 ### Post-dispatch profile refresh — 5 October 2026
 
 Five gprof runs of all seven workloads on both platforms at `495bd2f` preserve accepted uninstrumented object hashes and cross-platform code records. Expression primary/recursive calls, token-expansion calls and allocation-wrapper calls remain unchanged. Linux single-character scanning now occupies 0.90–4.81% sampled self-time, compared with 7.57–16.42% in the preceding refresh. Expression evaluation remains prominent on full projects (7.96–14.15%); `AssembleFile` dominates scalers (17.07–20.38%). Instrumentation, unresolved attribution and Linux's tmpfs-to-ext4 transition limit percentage interpretation; paired uninstrumented confirmations remain the speedup evidence.
