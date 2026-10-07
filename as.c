@@ -2807,7 +2807,7 @@ void as_separate_attribute_from_oppart(void) {
             size_t attr_len = strlen(p_attr_split_pos + 1);
 
             AttrSplit = (*p_attr_split_pos);
-            StrCompCopySub(
+            StrCompCopySubKnown(
                     &AttrPart, &OpPart, p_attr_split_pos + 1 - OpPart.str.p_str,
                     attr_len);
             StrCompShorten(&OpPart, attr_len + 1);
@@ -2951,11 +2951,11 @@ static void SplitLine(void) {
 
         if (to_label) {
             if (label_leading_colon && (pRun[0] == ':')) {
-                StrCompCopySub(&LabPart, &SrcLine, pRun + 1 - SrcLine.str.p_str, len - 1);
+                StrCompCopySubKnown(&LabPart, &SrcLine, pRun + 1 - SrcLine.str.p_str, len - 1);
             } else if (!label_leading_colon && (pRun[len - 1] == ':')) {
-                StrCompCopySub(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len - 1);
+                StrCompCopySubKnown(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len - 1);
             } else {
-                StrCompCopySub(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len);
+                StrCompCopySubKnown(&LabPart, &SrcLine, pRun - SrcLine.str.p_str, len);
             }
         }
 
@@ -2968,7 +2968,7 @@ static void SplitLine(void) {
             if (strchr(DivideChars, *pRun))
                 /* StrCompReset(&OpPart) */;
             else {
-                StrCompCopySub(&OpPart, &SrcLine, pRun - SrcLine.str.p_str, len);
+                StrCompCopySubKnown(&OpPart, &SrcLine, pRun - SrcLine.str.p_str, len);
                 pRun += len;
             }
 
@@ -3008,7 +3008,7 @@ static void SplitLine(void) {
 
             /* Put the rest of the line up to the comment into argument list part: */
 
-            StrCompCopySub(
+            StrCompCopySubKnown(
                     &ArgPart, &SrcLine, pRun - SrcLine.str.p_str, p_comment_start - pRun);
             break;
         }
@@ -3036,7 +3036,7 @@ static void SplitLine(void) {
     trim_copied_comp(&ArgPart);
 
     if (*p_comment_start) {
-        StrCompCopySub(
+        StrCompCopySubKnown(
                 &CommPart, &SrcLine, p_comment_start - SrcLine.str.p_str,
                 p_line_end - p_comment_start);
     }

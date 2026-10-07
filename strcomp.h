@@ -42,6 +42,10 @@ extern void StrCompCopy(tStrComp* pDest, tStrComp const* pSrc);
 
 extern void StrCompCopySub(
         tStrComp* pDest, tStrComp const* pSrc, size_t Start, size_t Count);
+/* Known, physically bounded, non-overlapping source span. */
+extern void StrCompCopySubKnown(
+        tStrComp* pDest, tStrComp const* pSrc, size_t Start, size_t Count);
+
 
 extern void StrCompSplitRight(tStrComp* pSrc, tStrComp* pDest, char* pSrcSplitPos);
 

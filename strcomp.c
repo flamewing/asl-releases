@@ -154,6 +154,18 @@ void StrCompCopySub(tStrComp* pDest, tStrComp const* pSrc, size_t Start, size_t 
     pDest->Pos.Len          = Count;
 }
 
+/* The caller has already validated this physical substring against the source
+   string.  Diagnostic Pos.Len is not a string bound.  Buffers must not overlap. */
+void StrCompCopySubKnown(tStrComp* pDest, tStrComp const* pSrc, size_t Start,
+                         size_t Count) {
+    check_capacity(pDest);
+    Count = check_realloc(&pDest->str, Count);
+    memcpy(pDest->str.p_str, pSrc->str.p_str + Start, Count);
+    pDest->str.p_str[Count] = '\0';
+    pDest->Pos.StartCol = pSrc->Pos.StartCol + Start;
+    pDest->Pos.Len = Count;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     StrCompSplitRight(tStrComp *pSrc, tStrComp *pDest, char *pSrcSplitPos)
  * \brief  split off another component at the right of the source

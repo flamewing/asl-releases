@@ -1281,6 +1281,19 @@ define_executable(test_strmaxprep2
 )
 add_test(NAME strmaxprep2 COMMAND test_strmaxprep2)
 
+define_executable(test_strcomp_span
+    tests/strcomp_span.c
+    strcomp.c strutil.c dynstr.c
+)
+add_test(NAME strcomp_span COMMAND test_strcomp_span)
+
+define_executable(test_formatter
+    tests/formatter.c
+    strutil.c
+    dynstr.c
+)
+add_test(NAME formatter COMMAND test_formatter)
+
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()
