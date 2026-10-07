@@ -6,17 +6,16 @@
 #include "strutil.h"
 #include "trees.h"
 
-/* Instrument the real forward-reference implementation, not a duplicate
-   model. Tree traversal itself uses the production trees.c implementation. */
-static unsigned root_searches;
-static TTree* counted_find_tree_first(TTree* tree, char const* name,
-                                     as_tree_path_t* path) {
-    root_searches++;
-    return find_tree_first(tree, name, path);
+/* Include the real implementation and count scope/name allocations. Hash
+   collisions, growth and cleanup exercise the production table implementation. */
+static unsigned entry_allocations, name_allocations;
+static void* counted_calloc(size_t count, size_t size) {
+    entry_allocations++;
+    return calloc(count, size);
 }
-#define find_tree_first counted_find_tree_first
+#define calloc counted_calloc
 #include "../fwd_refs.c"
-#undef find_tree_first
+#undef calloc
 
 LongInt MomLocHandle = -1, MomSectionHandle = -1;
 static SimpProc pass_cleanup;
@@ -32,6 +31,7 @@ Boolean is_sub_section(LongInt child, LongInt parent) {
 
 char* as_strdup(char const* text) {
     size_t length = strlen(text) + 1;
+    name_allocations++;
     char* result = (char*)malloc(length);
     if (!result) {
         abort();
@@ -41,10 +41,9 @@ char* as_strdup(char const* text) {
 }
 
 static int mark(char const* name, LongInt attribute, Boolean expected) {
-    unsigned before = root_searches;
     Boolean actual = as_forward_ref_search_and_mark(name, attribute);
-    if (actual != expected || root_searches != before + 1) {
-        fprintf(stderr, "Wrong resolution or root-search count for %s/%ld\n",
+    if (actual != expected) {
+        fprintf(stderr, "Wrong resolution for %s/%ld\n",
                 name, (long)attribute);
         return 1;
     }
@@ -55,6 +54,77 @@ static void add(char const* name, LongInt section, LongInt local) {
     MomSectionHandle = section;
     MomLocHandle = local;
     as_forward_ref_add(name);
+}
+
+static int allocation_checks(void) {
+    unsigned order[1024], i, repeat, entries = entry_allocations;
+    unsigned names = name_allocations, seed = 0x12345678u;
+    char name[40];
+    for (i = 0; i < 1024; i++) order[i] = i;
+    for (i = 1023; i; i--) {
+        unsigned index, tmp;
+        seed = seed * 1664525u + 1013904223u;
+        index = seed % (i + 1);
+        tmp = order[i]; order[i] = order[index]; order[index] = tmp;
+    }
+    for (i = 0; i < 1024; i++) {
+        snprintf(name, sizeof(name), "entry%04u", order[i]);
+        add(name, 1, -1);
+    }
+    if (entry_allocations != entries + 1024 || name_allocations != names + 1024) {
+        fprintf(stderr, "Unique references must allocate one entry and name each\n");
+        return 1;
+    }
+    entries = entry_allocations; names = name_allocations;
+    for (repeat = 0; repeat < 16; repeat++) {
+        for (i = 0; i < 1024; i++) {
+            snprintf(name, sizeof(name), "entry%04u", order[i]);
+            add(name, 1, -1);
+            if (mark(name, 1, repeat == 0)) return 1;
+        }
+    }
+    if (entry_allocations != entries || name_allocations != names) {
+        fprintf(stderr, "Duplicate references must not allocate entries or names\n");
+        return 1;
+    }
+    if (mark("Ab", 1, True) || mark("BA", 1, True)) return 1;
+    pass_cleanup();
+    return 0;
+}
+
+static int collision_and_scope_checks(void) {
+    unsigned i, entries, names;
+    /* These distinct names have the same complete djb2 hash, not just the
+       same initial bucket. They must survive equality checks and resizing. */
+    if (forward_ref_hash("Ab") != forward_ref_hash("BA")) return 1;
+    add("Ab", 1, -1);
+    add("BA", 1, -1);
+    if (allocation_checks()) return 1;
+    /* The stress helper cleared the pass; rebuild the colliding pair. */
+    add("Ab", 1, -1);
+    add("BA", 1, -1);
+    if (mark("Ab", 1, True) || mark("BA", 1, True)
+        || mark("Ab", 1, False) || mark("BA", 1, False)) return 1;
+    entries = entry_allocations; names = name_allocations;
+    for (i = 0; i < 128; ++i) {
+        add("scoped", -1, LOC_HANDLE_OFFSET + ((i * 73u) % 128u));
+    }
+    if (entry_allocations != entries + 128 || name_allocations != names + 1) {
+        fprintf(stderr, "Scopes must share one owned name, with distinct records\n");
+        return 1;
+    }
+    entries = entry_allocations; names = name_allocations;
+    for (i = 0; i < 128; ++i) {
+        add("scoped", -1, LOC_HANDLE_OFFSET + i);
+        if (mark("scoped", LOC_HANDLE_OFFSET + i, True)) return 1;
+    }
+    if (entry_allocations != entries || name_allocations != names
+        || mark("scoped", -1, False)) return 1;
+    add("scoped", 3, -1);
+    if (mark("scoped", -1, True) || mark("scoped", -1, False)) return 1;
+    pass_cleanup();
+    if (forward_refs.nbucket || forward_refs.nelem) return 1;
+    return mark("Ab", -1, False) || mark("BA", -1, False);
 }
 
 static int run(Boolean balanced) {
@@ -81,11 +151,11 @@ static int run(Boolean balanced) {
     add("global", 1, LOC_HANDLE_OFFSET);
     if (mark("global", -1, True) || mark("global", -1, False)) return 1;
     pass_cleanup();
-    if (p_forward_ref_tree || mark("same", -1, False)) return 1;
+    if (openhash_size(&forward_refs) || forward_refs.nbucket || mark("same", -1, False)) return 1;
     add("same", 1, -1);
     if (mark("same", 1, True)) return 1;
     pass_cleanup();
-    return 0;
+    return collision_and_scope_checks();
 }
 
 int main(void) {
