@@ -1274,6 +1274,11 @@ endif()
 
 enable_testing()
 
+define_executable(test_forward_refs
+    tests/forward_refs.c trees.c
+)
+add_test(NAME forward_refs COMMAND test_forward_refs)
+
 define_executable(test_strmaxprep2
     tests/strmaxprep2.c
     strutil.c

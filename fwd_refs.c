@@ -146,15 +146,14 @@ static void clear_forward_refs(void) {
 
 Boolean as_forward_ref_search_and_mark(char const* p_name, LongInt attribute) {
     as_tree_path_t          tree_path;
-    as_forward_ref_entry_t* p_entry = (as_forward_ref_entry_t*)find_tree_first(
-            &p_forward_ref_tree->tree, p_name, &tree_path);
+    as_forward_ref_entry_t* p_entry;
     Boolean ret = False;
 
     fwd_ref_dbg_printf(
             "search_and_mark_forward_refs '%s' defined in %ld:\n", p_name,
             (long)attribute);
     for (p_entry = (as_forward_ref_entry_t*)find_tree_first(
-                 &p_forward_ref_tree->tree, p_name, &tree_path);
+                 (TTree*)p_forward_ref_tree, p_name, &tree_path);
          p_entry; p_entry = (as_forward_ref_entry_t*)find_tree_next(p_name, &tree_path)) {
         fwd_ref_dbg_printf(" forward from %ld:\n", (long)p_entry->tree.Attribute);
 

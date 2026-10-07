@@ -876,3 +876,5 @@ Follow-up experiments against the upstream-synced compatibility baseline are rec
 The SysString correctness fix, refreshed profiles and subsequent independent optimization trials are recorded in [UPSTREAM_FOLLOWUP_EXPERIMENTS.md](UPSTREAM_FOLLOWUP_EXPERIMENTS.md).
 
 The upstream regression bisections, compatibility overlay controls, parent comparisons and independent correction trials are recorded in [UPSTREAM_REGRESSION_BISECT.md](UPSTREAM_REGRESSION_BISECT.md).
+
+The independently staged forward-reference, expression and line-parsing trials from the upstream performance review are recorded in [UPSTREAM_REVIEW_EXPERIMENTS.md](UPSTREAM_REVIEW_EXPERIMENTS.md).
