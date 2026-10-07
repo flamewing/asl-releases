@@ -4884,7 +4884,7 @@ static void DecodeFMOVE(Word Code) {
 
     /* k-Faktor abspalten */
 
-    LineCompReset(&KArg.Pos);
+    LineCompResetInline(&KArg.Pos);
     if (OpSize == eSymbolSizeFloatDec96Bit) {
         if (!split_k(&AttrPart, &KArg)) {
             split_k(&ArgStr[2], &KArg);

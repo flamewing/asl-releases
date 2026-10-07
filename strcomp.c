@@ -50,7 +50,7 @@ static size_t check_realloc(as_dynstr_t* p_str, size_t req_count) {
 
 void StrCompAlloc(tStrComp* pComp, size_t capacity) {
     as_dynstr_ini(&pComp->str, capacity);
-    StrCompReset(pComp);
+    StrCompResetInline(pComp);
 }
 
 /*!------------------------------------------------------------------------
@@ -60,8 +60,12 @@ void StrCompAlloc(tStrComp* pComp, size_t capacity) {
  * ------------------------------------------------------------------------ */
 
 void StrCompReset(tStrComp* pComp) {
+#if defined(_MSC_VER) && !defined(__clang__)
+    StrCompResetInline(pComp);
+#else
     LineCompReset(&pComp->Pos);
     *pComp->str.p_str = '\0';
+#endif
 }
 
 /*!------------------------------------------------------------------------
@@ -82,7 +86,7 @@ void LineCompReset(tLineComp* pComp) {
  * ------------------------------------------------------------------------ */
 
 void StrCompFree(tStrComp* pComp) {
-    LineCompReset(&pComp->Pos);
+    LineCompResetInline(&pComp->Pos);
     as_dynstr_free(&pComp->str);
 }
 
@@ -95,7 +99,7 @@ void StrCompFree(tStrComp* pComp) {
  * ------------------------------------------------------------------------ */
 
 void StrCompMkTemp(tStrComp* pComp, char* pStr, size_t capacity) {
-    LineCompReset(&pComp->Pos);
+    LineCompResetInline(&pComp->Pos);
     pComp->str.p_str    = pStr;
     pComp->str.capacity = capacity;
     pComp->str.dynamic  = 0;

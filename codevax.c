@@ -390,7 +390,7 @@ static Boolean decode_adr(
         KillPrefBlanksStrCompRef(&arg);
     } else {
         len_spec = '\0';
-        LineCompReset(&len_spec_arg.Pos);
+        LineCompResetInline(&len_spec_arg.Pos);
     }
 
     /* #imm, @#abs */

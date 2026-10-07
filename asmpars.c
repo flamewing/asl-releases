@@ -2322,7 +2322,7 @@ void EvalStrExpressionWithCallback(
                 if (p_arg_split_pos) {
                     FArg = Remainder;
                 } else {
-                    StrCompReset(&FArg);
+                    StrCompResetInline(&FArg);
                 }
             }
             if (*FArg.str.p_str) {

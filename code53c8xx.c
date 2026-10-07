@@ -63,7 +63,7 @@ static void GetToken(tStrComp* pSrc, tStrComp* pDest) {
     }
     StrCompCutLeft(pSrc, p - pSrc->str.p_str);
     if (*p == '\0') {
-        StrCompReset(pDest);
+        StrCompResetInline(pDest);
         return;
     }
     pDest->Pos.StartCol = pSrc->Pos.StartCol;
@@ -330,7 +330,7 @@ static void DecodeJmps(Word Index) {
             if (Memo("RETURN")) {
                 StrCompCopy(&ArgStr[2], &ArgStr[1]);
             } else {
-                StrCompReset(&ArgStr[2]);
+                StrCompResetInline(&ArgStr[2]);
             }
         }
         Buf = 0;

@@ -31,6 +31,26 @@ typedef struct sStrComp tStrComp;
 extern void StrCompAlloc(tStrComp* pComp, size_t Capacity);
 extern void StrCompFree(tStrComp* pComp);
 
+/* Keep caller inlining on MSVC, where measurements show repeatable savings.
+   GCC retains its existing call sites: its measured benefit was inconclusive. */
+#if defined(_MSC_VER) && !defined(__clang__)
+/* These operations retain the string buffer and its ownership.  Keep the
+   out-of-line entry points below for callers that need their addresses. */
+static inline void LineCompResetInline(tLineComp* pComp) {
+    pComp->StartCol = -1;
+    pComp->Len = 0;
+}
+
+static inline void StrCompResetInline(tStrComp* pComp) {
+    LineCompResetInline(&pComp->Pos);
+    *pComp->str.p_str = '\0';
+}
+
+#else
+#define LineCompResetInline LineCompReset
+#define StrCompResetInline StrCompReset
+#endif
+
 extern void StrCompReset(tStrComp* pComp);
 extern void LineCompReset(tLineComp* pComp);
 

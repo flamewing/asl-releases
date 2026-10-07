@@ -6429,7 +6429,7 @@ static void StripPref(char const* Arg, Byte Opcode) {
         /* add to code */
 
         BAsmCode[PrefixCnt++] = Opcode;
-        StrCompReset(&OpPart);
+        StrCompResetInline(&OpPart);
 
         /* cut true opcode out of next argument */
 

@@ -240,7 +240,7 @@ static PInputTag GenerateProcessor(void) {
     PInp->LineZ                       = 1;
     PInp->Lines = PInp->LineRun = NULL;
     StrCompMkTemp(&PInp->SpecName, PInp->SpecNameStr, sizeof(PInp->SpecNameStr));
-    StrCompReset(&PInp->SpecName);
+    StrCompResetInline(&PInp->SpecName);
     PInp->AllArgs[0]    = '\0';
     PInp->NumArgs[0]    = '\0';
     PInp->IsEmpty       = False;
@@ -1689,7 +1689,7 @@ static void ExpandIRPC(Word code) {
     Context.GlobalSymbols = False;
     Context.ArgCnt        = 0;
     StrCompMkTemp(&Context.Parameter, Context.ParameterStr, sizeof(Context.ParameterStr));
-    StrCompReset(&Context.Parameter);
+    StrCompResetInline(&Context.Parameter);
 
     Context.pOutputTag       = GenerateOUTProcessor(IRP_OutProcessor, ErrNum_OpenIRPC);
     Context.pOutputTag->Next = FirstOutputTag;
@@ -2000,7 +2000,7 @@ Boolean WHILE_Processor(PInputTag PInp, tStrComp* p_dest) {
     /* nasty last line... */
 
     else {
-        StrCompReset(p_dest);
+        StrCompResetInline(p_dest);
     }
 
     return Result;
@@ -2106,7 +2106,7 @@ static void ExpandWHILE(Word code) {
     Context.ErrFlag        = False;
     Context.ArgCnt         = 0;
     StrCompMkTemp(&Context.SpecName, Context.SpecNameStr, sizeof(Context.SpecNameStr));
-    StrCompReset(&Context.SpecName);
+    StrCompResetInline(&Context.SpecName);
     ProcessMacroArgs(ProcessWHILEArgs, &Context);
 
     /* condition must be present only once */
@@ -2244,7 +2244,7 @@ Boolean INCLUDE_Processor(PInputTag PInp, struct sStrComp* p_dest) {
     Result = True;
 
     if (feof(PInp->Datei)) {
-        StrCompReset(p_dest);
+        StrCompResetInline(p_dest);
     } else {
         p_dest->Pos.Len = ReadLnCont(PInp->Datei, &p_dest->str);
         /**ChkIO(ErrNum_FileReadError);**/
@@ -2300,7 +2300,7 @@ static void ExpandINCLUDE_Core(tStrComp const* pArg, Boolean SearchPath) {
 
     Tag->StartLine = CurrLine;
     strmaxcpy(Tag->SpecName.str.p_str, FNameArg.str.p_str, STRINGSIZE);
-    LineCompReset(&Tag->SpecName.Pos);
+    LineCompResetInline(&Tag->SpecName.Pos);
     strmaxcpy(Tag->SaveAttr, CurrFileName, STRINGSIZE);
 
     /* Datei oeffnen */
@@ -2366,7 +2366,7 @@ static void GetNextLine(tStrComp* pLine) {
     }
 
     if (!FirstInputTag) {
-        StrCompReset(pLine);
+        StrCompResetInline(pLine);
         return;
     }
 
@@ -2872,11 +2872,11 @@ static void SplitLine(void) {
     pRun       = SrcLine.str.p_str;
     p_line_end = p_comment_start = pRun + strlen(pRun);
 
-    StrCompReset(&LabPart);
-    StrCompReset(&OpPart);
-    StrCompReset(&CommPart);
-    StrCompReset(&AttrPart);
-    StrCompReset(&ArgPart);
+    StrCompResetInline(&LabPart);
+    StrCompResetInline(&OpPart);
+    StrCompResetInline(&CommPart);
+    StrCompResetInline(&AttrPart);
+    StrCompResetInline(&ArgPart);
 
     /* If comment is present, ignore everything after it. The
        comment lead-in may occur anywhwere, also within tokens,
@@ -2966,7 +2966,7 @@ static void SplitLine(void) {
                OpPart is empty and rest of line is all-arguments: */
 
             if (strchr(DivideChars, *pRun))
-                /* StrCompReset(&OpPart) */;
+                /* StrCompResetInline(&OpPart) */;
             else {
                 StrCompCopySubKnown(&OpPart, &SrcLine, pRun - SrcLine.str.p_str, len);
                 pRun += len;
@@ -3057,7 +3057,7 @@ static void ProcessFile(char* pFileName) {
 
     dbgentry("ProcessFile");
 
-    StrCompReset(&SrcLine);
+    StrCompResetInline(&SrcLine);
     *CurrFileName = '\0';
     StrCompMkTemp(&FileArg, pFileName, 0);
     ExpandINCLUDE_Core(&FileArg, False);
@@ -3312,7 +3312,7 @@ static void AssembleFile_InitPass(void) {
     if (def_int_syntax.p_str && *def_int_syntax.p_str) {
         tStrComp int_comp;
 
-        LineCompReset(&int_comp.Pos);
+        LineCompResetInline(&int_comp.Pos);
         as_dynstr_ini_clone(&int_comp.str, &def_int_syntax);
         split_arguments(&int_comp, ",");
         CodeINTSYNTAX(0);

@@ -134,7 +134,7 @@ static void SplitArg(tStrComp const* pOrig, tStrComp* pLDest, tStrComp* pRDest) 
 
     p = QuotPos(pOrig->str.p_str, ',');
     if (!p) {
-        StrCompReset(pRDest);
+        StrCompResetInline(pRDest);
         StrCompCopy(pLDest, pOrig);
     } else {
         StrCompSplitCopy(pLDest, pRDest, pOrig, p);

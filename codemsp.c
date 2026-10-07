@@ -1308,7 +1308,7 @@ static void DecodeRPT(Word Code) {
                 AttrPart.str.p_str, STRINGSIZE, pAttrPart + 1, strlen(pAttrPart + 1));
         *pAttrPart = '\0';
     } else {
-        StrCompReset(&AttrPart);
+        StrCompResetInline(&AttrPart);
     }
 
     /* prefix 0x0000 is rptc #1 and effectively a NOP prefix: */
