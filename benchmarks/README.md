@@ -874,3 +874,5 @@ Aggregate Windows timing/public profile artifacts are under ignored `build-bench
 Follow-up experiments against the upstream-synced compatibility baseline are recorded in [UPSTREAM_OPTIMIZATION_EXPERIMENTS.md](UPSTREAM_OPTIMIZATION_EXPERIMENTS.md), including discarded candidates, independent confirmations and all three toolchains.
 
 The SysString correctness fix, refreshed profiles and subsequent independent optimization trials are recorded in [UPSTREAM_FOLLOWUP_EXPERIMENTS.md](UPSTREAM_FOLLOWUP_EXPERIMENTS.md).
+
+The upstream regression bisections, compatibility overlay controls, parent comparisons and independent correction trials are recorded in [UPSTREAM_REGRESSION_BISECT.md](UPSTREAM_REGRESSION_BISECT.md).
