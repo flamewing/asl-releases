@@ -1,0 +1,1 @@
+Verify that unmatched ENDM and ENDR are ignored in inactive conditional branches, including nested conditions, while inactive macro/repetition bodies remain balanced and active misplaced terminators still report error 1808.

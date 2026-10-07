@@ -1,0 +1,1 @@
+Verify that string CHARSET mappings preserve bytes 0x00, 0x7F, 0x80 and 0xFF for string data and multi-character integer constants, and that resetting CHARSET restores the original characters.

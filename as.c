@@ -2190,7 +2190,9 @@ static Boolean MacroEnd(void) {
 
 static void misplaced_endm(Word code) {
     UNUSED(code);
-    WrStrErrorPos(ErrNum_ENDMOutsideMacro, &OpPart);
+    if (IfAsm) {
+        WrStrErrorPos(ErrNum_ENDMOutsideMacro, &OpPart);
+    }
 }
 
 /*--------------------------------------------------------------------------*/

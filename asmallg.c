@@ -984,7 +984,7 @@ static void CodeCHARSET(Word Index) {
                                 for (z = 0; z < l; z++) {
                                     as_chartrans_table_set(
                                             CurrTransTable->p_table, Start + z,
-                                            t.Contents.str.p_str[z]);
+                                            (unsigned char)t.Contents.str.p_str[z]);
                                     TransTableMarkModified();
                                 }
                             }
