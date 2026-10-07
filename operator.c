@@ -114,10 +114,11 @@ static Boolean OneComplOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal
 
     as_tempres_set_int(pErg, ~(pRVal->Contents.Int.Value));
     if (pRVal->Contents.Int.NumBits != INTSYM_NUM_BITS_DEFAULT) {
-        pErg->Contents.Int.Value
-                &= (((LargeWord)1)
-                    << (pErg->Contents.Int.NumBits = pRVal->Contents.Int.NumBits))
-                   - 1;
+        pErg->Contents.Int.NumBits = min(pRVal->Contents.Int.NumBits, LARGEBITS);
+        if (pErg->Contents.Int.NumBits < LARGEBITS) {
+            pErg->Contents.Int.Value
+                    &= (((LargeWord)1) << pErg->Contents.Int.NumBits) - 1;
+        }
     }
     PromoteRValFlags();
     return True;

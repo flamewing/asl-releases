@@ -1152,7 +1152,7 @@ static Boolean const_int_val(
     Boolean               neg_flag = False, first_digit;
     LargeWord             acc, acc_max, mul_max;
     tIntCheckCtx          ctx;
-    Byte                  num_digits;
+    unsigned              num_digits;
     tIntFormatList const* p_int_format;
 
     *p_outof_range = 0;
@@ -1233,7 +1233,9 @@ static Boolean const_int_val(
         if ((p_int_format->Id == eIntFormatIntHex) && first_digit && (*ctx.pExpr == '0')
             && as_isalpha(ctx.pExpr[1])) {
         } else {
-            num_digits++;
+            if (num_digits < LARGEBITS) {
+                num_digits++;
+            }
         }
         first_digit = False;
         ctx.pExpr++;
@@ -1246,8 +1248,9 @@ static Boolean const_int_val(
         *p_value    = -acc;
     } else {
         *p_flags    = eSymbolFlag_None;
-        *p_num_bits = force_restricted_extension_digits ? (num_digits * as_log2(ctx.Base))
-                                                        : 0;
+        *p_num_bits = force_restricted_extension_digits
+                              ? min(num_digits * as_log2(ctx.Base), LARGEBITS)
+                              : 0;
         *p_value    = acc;
     }
     return True;

@@ -1,0 +1,1 @@
+Restricted-width complements at internal width, oversized zero padding, and symbol width preservation. Expected bytes are independently computed from bounded integer masks.
