@@ -1293,6 +1293,7 @@ define_executable(test_formatter
     dynstr.c
 )
 add_test(NAME formatter COMMAND test_formatter)
+set_tests_properties(formatter PROPERTIES TIMEOUT 15)
 
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})

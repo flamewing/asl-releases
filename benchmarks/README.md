@@ -872,3 +872,5 @@ The remaining measured priorities are expression evaluation in full projects (13
 Aggregate Windows timing/public profile artifacts are under ignored `build-benchmark-results/aggregate`; private profiles/timings remain under `build-benchmark-results/local-private` with the `aggregate-windows-*` prefix. Exact original/final profile binaries, analysis, original source snapshot and build/test logs accompany them. Linux equivalents are under native `/tmp/asl-token-20261005/aggregate`. Public and private profile directories use `baseline-profile` and `final-profile` suffixes. Private names appear only in Markdown; sources, original paths, adapters and manifests stay ignored.
 
 Follow-up experiments against the upstream-synced compatibility baseline are recorded in [UPSTREAM_OPTIMIZATION_EXPERIMENTS.md](UPSTREAM_OPTIMIZATION_EXPERIMENTS.md), including discarded candidates, independent confirmations and all three toolchains.
+
+The SysString correctness fix, refreshed profiles and subsequent independent optimization trials are recorded in [UPSTREAM_FOLLOWUP_EXPERIMENTS.md](UPSTREAM_FOLLOWUP_EXPERIMENTS.md).

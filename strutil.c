@@ -88,7 +88,7 @@ int SysString(
         char* pDest, size_t DestSize, LargeWord Num, int System, Boolean is_signed,
         int Digits, Boolean ForceLeadZero, char StartCharacter, char SplitCharacter) {
     int     Len = 0;
-    char *  pDestCurr, *pDestNext;
+    char *  pDestCurr, *pDestNext, *pDigitsBegin;
     Boolean is_negative = False;
 
     if (DestSize < 1) {
@@ -99,9 +99,16 @@ int SysString(
         LargeInt signed_num = Num;
         if (signed_num < 0) {
             is_negative = True;
-            Num         = -signed_num;
+            Num         = (LargeWord)0 - Num;
         }
     }
+
+    if (is_negative && DestSize < 2) {
+        *pDest = '\0';
+        return 0;
+    }
+    /* Reserve the sign even when the number or byte separators fill the buffer. */
+    pDigitsBegin = pDest + is_negative;
 
     if (Digits > (int)DestSize - 1 - is_negative) {
         Digits = DestSize - 1 - is_negative;
@@ -126,27 +133,29 @@ int SysString(
             Part      = Num % 256;
             Num       = Num / 256;
             pDestNext = SysStringCore(
-                    pDest, pDestCurr, Part, System, Num ? SystemByteLen[System] : Digits,
+                    pDigitsBegin, pDestCurr, Part, System, Num ? SystemByteLen[System] : Digits,
                     StartCharacter);
             ThisLen = pDestCurr - pDestNext;
             Len += ThisLen;
             pDestCurr = pDestNext;
             Digits -= ThisLen;
+            /* Separators use space without consuming requested padding digits.
+               Stop when full, including when only padding remains and Num is zero. */
+            if (pDestCurr <= pDigitsBegin) {
+                break;
+            }
             if (Num) {
-                if (pDestCurr <= pDest) {
-                    break;
-                }
                 *(--pDestCurr) = SplitCharacter;
                 Len++;
             }
         } while ((Digits > 0) || Num);
     } else {
-        pDestNext = SysStringCore(pDest, pDestCurr, Num, System, Digits, StartCharacter);
+        pDestNext = SysStringCore(pDigitsBegin, pDestCurr, Num, System, Digits, StartCharacter);
         Len += pDestCurr - pDestNext;
         pDestCurr = pDestNext;
     }
 
-    if (ForceLeadZero && !isdigit(*pDestCurr) && (pDestCurr > pDest)) {
+    if (ForceLeadZero && !isdigit(*pDestCurr) && (pDestCurr > pDigitsBegin)) {
         *(--pDestCurr) = '0';
         Len++;
     }
