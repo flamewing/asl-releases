@@ -163,3 +163,84 @@ The larger distinct-name MSVC control is 0.54% elapsed / 1.39% CPU faster in the
 The full eleven-variant screen has geometric elapsed/CPU savings of 1.15% / 0.10%, -0.47% / -0.12%, 1.18% / 0.75% (Windows GCC, MSVC, native GCC). The independent six-variant confirmation is 0.36% / -0.15%, -0.09% / -0.26%, 0.57% / 0.76% in the same order. Keep the cohorts and batches separate. Native Madness 4 release changes from 5.70% elapsed / 2.98% CPU faster in the screen to 3.49% / 3.12% slower in confirmation, with mixed pairs; Windows GCC Classic Heroes changes from 2.64% / 1.02% faster to 3.08% / 0.96% slower. The short MSVC scaler v1 screen loss of 8.21% elapsed becomes 1.54% in the repeat; its CPU difference is one timing quantum. These results do not establish an overall throughput improvement or a consistent large workload regression.
 
 Every timed run succeeds, generated code is deterministic per binary and equivalent across the compared revisions/toolchains, and normalized listings match within each compiler. Both local-e variants match the prepared comparison baseline on all three toolchains; that baseline itself differs from the older aggregate golden, so no agreement with the older golden is claimed. All timing runs and builds are separate, with artifacts outside the checkout. Final artifacts: `review-forward-hash-ordered-20261007/{hash-screen,hash-confirm,unique-check,workloads-screen,workloads-confirm,candidate.patch}`. The generic tree implementation and ordinary symbol tables are unchanged. Expression-scanning and source-line profiling remain later stages of the review plan.
+
+## Hash finalizer experiment, 2026-10-08
+
+Compare a fixed-width unsigned 64-bit avalanche finalizer against committed `be04cdea`, using the frozen `review-forward-hash-ordered-20261007` binaries. Keep the existing name accumulation, scope lists, allocation behavior and visibility rules; add only the final mixing arithmetic. All shifts are within the fixed type width and there is no compiler/OS-specific path. The unchanged collision regression still checks distinct names with identical full hashes. All 327 CTest cases pass on Windows GCC, Windows MSVC and native GCC before timings. Reject this finalizer: it reduces bucket collisions but independently slows the large distinct-name input on all three toolchains, without a consistent representative-workload gain. Restore the committed hash function rather than committing the slower production change.
+
+Use the existing alternating-pair, warmup and correctness-check protocol, with no overlap between timing runs, builds or diagnostic collection. Seven-pair synthetic screens and confirmations are independent; the eleven-variant game/macro screen uses three pairs. Positive percentages below indicate elapsed/CPU savings, so negative values are losses. Do not combine cohorts into an aggregate improvement claim.
+
+| finalizer-screen | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| literal | -6.81% / -12.50% | -4.73% / 0.00% | -3.52% / -3.64% |
+| defined | 0.56% / 0.00% | -0.70% / 0.00% | 1.75% / 1.64% |
+| duplicate-forward | 0.00% / 0.00% | -1.52% / 0.00% | 0.47% / 0.46% |
+| unique-forward | -0.54% / 0.00% | 0.36% / 11.11% | -0.07% / -0.10% |
+| query-128 | -1.24% / 7.69% | -5.41% / 0.00% | -1.68% / -1.65% |
+| query-8192 | 3.80% / 0.00% | -2.39% / 0.00% | -2.58% / -2.60% |
+| scopes-128 | -2.59% / 0.00% | -1.00% / 0.00% | -3.38% / -5.08% |
+| scopes-8192 | -0.58% / 0.00% | 5.68% / 0.00% | 0.20% / 0.13% |
+| unique-forward-large | -3.35% / -4.41% | -6.75% / -6.49% | -8.39% / -8.38% |
+
+| finalizer-confirm | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| duplicate-forward | -0.73% / 0.00% | -2.89% / -2.04% | -0.23% / 0.03% |
+| query-128 | 0.57% / 0.00% | -2.65% / 0.00% | 0.44% / 0.48% |
+| query-8192 | -1.49% / 0.00% | -2.16% / 0.00% | -0.92% / -0.79% |
+| unique-forward-large | -3.44% / -4.48% | -6.21% / -8.00% | -6.20% / -6.21% |
+
+| workloads-screen | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | -0.43% / 0.00% | 1.03% / 0.00% | -13.19% / -13.23% |
+| Sonic 2 | -3.03% / 0.00% | -0.95% / -1.22% | 8.03% / 8.03% |
+| Sonic 3 & Knuckles | -0.93% / 0.00% | -0.76% / -2.08% | -1.98% / -2.22% |
+| Big’s Fishing Derby | 0.12% / 0.00% | -0.99% / -2.86% | -1.02% / -1.79% |
+| Sonic Classic Heroes | -0.96% / 0.00% | 2.64% / -1.82% | -4.91% / -5.67% |
+| Scaler v1 | 1.51% / 3.33% | -3.21% / -6.06% | 1.93% / 1.61% |
+| Scaler v2 | -0.93% / -1.08% | -0.90% / -1.89% | -2.93% / -3.03% |
+| Madness 4 release | -0.89% / 0.56% | 2.37% / -2.15% | -3.00% / -0.85% |
+| Madness 4 debug | -1.40% / -1.06% | -0.18% / -0.50% | -0.13% / 0.39% |
+| local-e | -0.09% / -1.43% | 0.29% / 0.00% | 1.76% / 0.49% |
+| local-e debug | -1.00% / -1.35% | 2.87% / 2.50% | -5.97% / -1.21% |
+
+The large distinct-name confirmation loses 3.44% elapsed with Windows GCC, 6.21% with MSVC and 6.20% with native GCC; zero, one and one of seven pairs favor the candidate, respectively. The game screen is mixed and is not independently confirmed: native Sonic 1 loses 13.19% elapsed / 13.23% CPU while Sonic 2 improves 8.03% / 8.03%. The repeatable synthetic loss already rejects the candidate; do not credit the isolated Sonic 2 result as a proven optimization. Every timing run succeeds with deterministic objects, generated-code equality across the compared binaries and normalized-listing equality within each compiler. Both local-e variants match their prepared comparison baseline; that baseline differs from the older aggregate golden.
+
+### Bucket collisions and scope traversal
+
+Diagnostic counters are confined to external source copies, collected after timing runs. Calibrate them with deliberately identical complete hashes and known successful, unsuccessful and empty-table probe counts. Read every diagnostic record, including records attached to assembler messages without a preceding newline. Compare diagnostic generated code with the ordinary binaries. Windows and native Linux counters agree exactly on every workload; no complete-hash collision occurs between distinct stored names in these datasets. Repeated insertion of the same name is not a collision. Collision averages below count extra probes through occupied buckets belonging to other names per insertion/name check, including duplicate scope requests but excluding table-growth rehash work. These workloads invoke no forward-reference resolution queries.
+
+| Workload | Current extra probes / insertion | Finalizer extra probes / insertion |
+| --- | ---: | ---: |
+| Sonic 1 | 1.45 | 1.13 |
+| Sonic 2 | 1.96 | 1.12 |
+| Sonic 3 & Knuckles | 1.45 | 1.26 |
+| Big’s Fishing Derby | 3.56 | 1.23 |
+| Sonic Classic Heroes | 1.23 | 1.02 |
+| Scaler v1 | 1.36 | 1.27 |
+| Scaler v2 | 1.36 | 1.27 |
+| Madness 4 release | 1.54 | 1.24 |
+| Madness 4 debug | 1.55 | 1.25 |
+| local-e | 1.67 | 1.16 |
+| local-e debug | 1.66 | 1.16 |
+
+The operation-weighted cohort average falls from 1.6657 to 1.1732 extra probes. Fewer collisions are established, but assembly-time improvement is not. Extra finalization work and changed table layout may offset the probe savings; their individual contributions have not been isolated.
+
+| Workload | Most scopes for one name | Existing scope nodes examined / insertion | Longest scope walk | Names with more than 32 scopes |
+| --- | ---: | ---: | ---: | ---: |
+| Sonic 1 | 36 | 0.4567 | 10 | 1 |
+| Sonic 2 | 2319 | 0.3973 | 27 | 10 |
+| Sonic 3 & Knuckles | 128 | 0.3207 | 5 | 1 |
+| Big’s Fishing Derby | 444 | 0.4887 | 10 | 1 |
+| Sonic Classic Heroes | 3252 | 1.3439 | 98 | 14 |
+| Scaler v1 | 1 | 0.0000 | 0 | 0 |
+| Scaler v2 | 1 | 0.0000 | 0 | 0 |
+| Madness 4 release | 48 | 0.4181 | 47 | 3 |
+| Madness 4 debug | 50 | 0.4238 | 49 | 5 |
+| local-e | 69 | 0.3652 | 21 | 2 |
+| local-e debug | 69 | 0.3657 | 21 | 2 |
+
+The scope measurements describe the unchanged ordered-list algorithm; name and scope counts also match the original hash-table diagnostic. Most game workloads examine fewer than 0.5 existing scope nodes per insertion. Classic Heroes is the exception at 1.3439 nodes, 23,655 walk steps over 28,890 insertions, a longest walk of 98 and a largest list of 3,252 records. Sonic 2 has a list of 2,319 records but a longest walk of 27, demonstrating why size alone is not a good promotion trigger. Both scalers contain only single-scope names. The earlier 8,192-scope stress case also benefits from increasing handles and does not by itself justify adding a per-name index.
+
+A secondary index is therefore a possible future independent experiment, rather than part of this finalizer change. Prefer a lazily created integer-keyed scope hash table to a balanced tree: exact handle lookup requires no ordering, and balancing would reintroduce larger nodes and insertion bookkeeping. Preserve the list for cheap head insertion/current-handle hits and global/section iteration; consider promotion after repeated expensive walks, not merely after a name acquires many scopes. Benchmark Classic Heroes and deliberately out-of-order/revisited-handle cases against the current ordered list, count promotion/allocation behavior and memory, preserve duplicate/resolution state and pass cleanup, and check that small or steadily increasing scope sets do not slow. The present averages suggest that a universal secondary tree/table would mostly add overhead; no secondary scope index is implemented or claimed as a measured gain here.
+
+External timing artifacts: `review-forward-finalizer-20261007/{finalizer-screen,finalizer-confirm,workloads-screen,candidate.patch}`. Baseline counters: `review-forward-collisions-20261007/{results.json,summary.json,calibration.json}`. Candidate collision/scope diagnostics: `review-forward-finalizer-collisions-20261008/{results.json,calibration.json,fwd_refs.c,fwd_hash_profile.h}`. Build sources, workload copies and raw logs stay outside the checkout; local-e remains anonymous.
