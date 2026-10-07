@@ -1,0 +1,1 @@
+Intel hexadecimal zero retains one digit; only a zero before an alphabetic digit is excluded from the width.

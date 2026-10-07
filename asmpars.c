@@ -1231,7 +1231,7 @@ static Boolean const_int_val(
         acc = acc + digit;
         /* Necessary leading 0 for Intel-style hex consts does not count: */
         if ((p_int_format->Id == eIntFormatIntHex) && first_digit && (*ctx.pExpr == '0')
-            && as_isalpha(ctx.pExpr[1])) {
+            && (ctx.ExprLen > 1) && as_isalpha(ctx.pExpr[1])) {
         } else {
             if (num_digits < LARGEBITS) {
                 num_digits++;
