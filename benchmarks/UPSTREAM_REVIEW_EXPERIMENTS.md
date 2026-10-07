@@ -244,3 +244,86 @@ The scope measurements describe the unchanged ordered-list algorithm; name and s
 A secondary index is therefore a possible future independent experiment, rather than part of this finalizer change. Prefer a lazily created integer-keyed scope hash table to a balanced tree: exact handle lookup requires no ordering, and balancing would reintroduce larger nodes and insertion bookkeeping. Preserve the list for cheap head insertion/current-handle hits and global/section iteration; consider promotion after repeated expensive walks, not merely after a name acquires many scopes. Benchmark Classic Heroes and deliberately out-of-order/revisited-handle cases against the current ordered list, count promotion/allocation behavior and memory, preserve duplicate/resolution state and pass cleanup, and check that small or steadily increasing scope sets do not slow. The present averages suggest that a universal secondary tree/table would mostly add overhead; no secondary scope index is implemented or claimed as a measured gain here.
 
 External timing artifacts: `review-forward-finalizer-20261007/{finalizer-screen,finalizer-confirm,workloads-screen,candidate.patch}`. Baseline counters: `review-forward-collisions-20261007/{results.json,summary.json,calibration.json}`. Candidate collision/scope diagnostics: `review-forward-finalizer-collisions-20261008/{results.json,calibration.json,fwd_refs.c,fwd_hash_profile.h}`. Build sources, workload copies and raw logs stay outside the checkout; local-e remains anonymous.
+
+## Main symbol-name hash experiments (2026-10-08)
+
+The ordinary symbol tables and the new forward-reference name table both accumulate djb2, starting at 5381 and computing `hash * 33 + byte`. Evaluate their hashes separately: the main symbol table also performs frequent successful/missing symbol lookups and mixes the section/local-handle attribute into the name hash, whereas the previous forward-reference diagnostics mainly measured insertion. Keep full name/attribute equality, ownership and table algorithms unchanged. Start these independent trials from `28deb260`; its production sources match the frozen `review-forward-hash-ordered-20261007` baseline. None of the rejected forward-reference finalizer is retained.
+
+The tables select an initial bucket with `hash & (capacity - 1)`. Since 33 is congruent to 1 modulo 32, djb2's lowest five bits depend on the sum of the input bytes, independently of their order; applying the existing scope XOR does not distinguish those equal-name-hash low bits within a scope. This motivates testing a different byte recurrence, but does not establish that a more elaborate hash will assemble faster. Candidate arithmetic remains unsigned and shared across Windows/Linux.
+
+### djb2 XOR variant: rejected
+
+Replace only the main table's per-byte addition with XOR, retaining the 5381 seed, multiplier 33 and final attribute mixing. This is a one-operation change rather than an added finalizer, and the forward-reference hash remains unchanged. All 327 tests pass independently on Windows GCC, Windows MSVC and native WSL GCC.
+
+The initial strict-listing screen stopped at Madness 4 release because the printed symbol table follows bucket iteration order. The generated code matched, and an independent comparison established that the symbol-table record order was the only substantive listing difference. For these main-table hash trials, retain the established timestamp normalization, compare the assembly listing exactly, and canonicalize only the symbol-table section by sorting its printed records. Preserve every name, value and unused/segment flag, and check the parsed count against the printed symbol total. Calibration rejects changed values, changed usage flags and missing entries. Within-binary determinism is still required. This is an external experimental comparator, not a production listing change. The completed three-pair screen below uses that comparator; earlier stopped-screen samples remain saved separately and are not pooled with it.
+
+Positive percentages indicate a reduction in elapsed/CPU time. One warmup precedes alternating before/after pairs; builds, diagnostic profiles and timing batches do not overlap. The full screen covers all eleven workload variants, checks deterministic objects and identical generated code across revisions/toolchains, and compares the normalized assembly listing plus symbol records. local-e and local-e debug already differ from the older aggregate golden in the accepted baseline; both candidates must match the actual current baseline, and no older-golden agreement is claimed for them.
+
+| Workload | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 1.69% / 0.00% | -0.47% / 2.04% | 2.65% / 2.76% |
+| Sonic 2 | 0.72% / 1.37% | 0.09% / 0.00% | 3.50% / 3.48% |
+| Sonic 3 & Knuckles | 1.27% / 1.14% | 0.05% / 0.00% | -2.02% / -2.08% |
+| Big’s Fishing Derby | 11.52% / 1.56% | 3.52% / -1.45% | 2.38% / 2.41% |
+| Sonic Classic Heroes | -0.03% / 0.00% | -0.39% / -0.93% | 1.04% / 1.04% |
+| Scaler v1 | 1.06% / 3.45% | -0.16% / 0.00% | 0.25% / 0.25% |
+| Scaler v2 | 1.09% / 0.00% | -1.95% / -0.97% | 0.82% / 0.82% |
+| Madness 4 release | -2.26% / 1.16% | -3.31% / 0.54% | 2.20% / 1.59% |
+| Madness 4 debug | 1.16% / 0.56% | 1.17% / 0.00% | 2.44% / 2.82% |
+| local-e | -0.54% / -1.44% | -0.52% / 1.31% | -0.97% / 0.27% |
+| local-e debug | -0.42% / 0.70% | 5.27% / 0.65% | 0.23% / -0.13% |
+| Geometric cohort mean | 1.45% / 0.78% | 0.32% / 0.11% | 1.15% / 1.21% |
+
+Independently repeat five alternating pairs on Sonic 1, Sonic 2, Sonic 3 & Knuckles and Madness 4 release to check the initial native gains and possible regressions:
+
+| Workload | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 2.13% / 0.00% | 1.94% / 2.00% | 0.62% / 0.63% |
+| Sonic 2 | -0.34% / 0.00% | -0.92% / 0.00% | 1.15% / 1.19% |
+| Sonic 3 & Knuckles | 1.52% / -1.14% | 1.19% / 1.03% | -2.34% / -2.33% |
+| Madness 4 release | -0.61% / -0.57% | -0.10% / -1.64% | 9.15% / -0.69% |
+| Geometric cohort mean | 0.68% / -0.43% | 0.53% / 0.36% | 2.24% / -0.29% |
+
+Reject this variant. Native Sonic 3 & Knuckles slows 2.02% elapsed / 2.08% CPU in the screen and 2.34% / 2.33% in confirmation, with only one of five confirmation pairs faster. Native Sonic 1/2's initial 2.65%/3.50% elapsed gains shrink to 0.62%/1.15%. The confirmation's native Madness 4 release 9.15% elapsed gain accompanies a 0.69% CPU loss, so do not treat its elapsed-time swing or the confirmation cohort's elapsed average as a hashing speedup. Main-table XOR is removed before the next independent candidate; no production change is committed for it.
+
+External artifacts: `review-symbol-djb2xor-20261008/{candidate.patch,workloads-screen,workloads-semantic-screen,workloads-confirm,workloads-semantic-screen-summary.json,workloads-confirm-summary.json}`. The strict-listing interruption is retained rather than relabeled as a completed benchmark. External tools `review-symbol-timings.py` and `review-symbol-batch.py` implement the checked symbol-record comparator. Sources, build directories and raw logs remain outside the checkout; local-e remains anonymous.
+
+### FNV-1a 64-bit: rejected
+
+Use the standard 64-bit [FNV-1a recurrence and constants](https://www.isthe.com/chongo/tech/comp/fnv/index.html): start at `UINT64_C(14695981039346656037)` and compute `(hash ^ byte) * UINT64_C(1099511628211)` per unsigned byte. Use a `uint64_t` accumulator, convert to `oh_size_t` on return, and retain exactly the existing attribute mixing and full name/attribute equality. This changes only the main symbol table; the forward-reference hash remains djb2. There are no CPU/OS/compiler-specific branches, unaligned loads, reads past the terminating NUL or additional dependencies. All 327 tests pass on each of Windows GCC, MSVC and native WSL GCC. The tested executables are 64-bit; no 32-bit timing claim is made.
+
+The independent three-pair eleven-workload screen uses the same baseline, serialized execution and symbol-record-aware listing comparator as the XOR trial. All generated code and normalized assembly listings/symbol records match their baseline. Do not pool this candidate with XOR or the previous finalizer:
+
+| Workload | Windows GCC elapsed / CPU | MSVC elapsed / CPU | Native GCC elapsed / CPU |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 2.26% / 4.35% | -2.88% / -2.08% | -7.36% / -7.36% |
+| Sonic 2 | 0.78% / 1.39% | -1.37% / 0.00% | 1.28% / 1.28% |
+| Sonic 3 & Knuckles | 1.09% / 0.00% | 0.34% / -1.06% | 3.06% / 3.17% |
+| Big’s Fishing Derby | -0.68% / -1.67% | -4.85% / 0.00% | -0.08% / 0.07% |
+| Sonic Classic Heroes | 0.99% / -1.04% | 2.63% / 1.89% | 0.25% / 1.00% |
+| Scaler v1 | -2.45% / -3.70% | 0.61% / 3.23% | 5.40% / 5.37% |
+| Scaler v2 | -1.24% / -2.35% | 0.68% / 0.00% | -3.13% / -3.08% |
+| Madness 4 release | 0.65% / 0.60% | 2.16% / 2.23% | 0.68% / 1.36% |
+| Madness 4 debug | 1.64% / 2.84% | -0.15% / 0.54% | -2.57% / -5.45% |
+| local-e | -0.19% / 0.74% | -0.49% / 0.00% | -2.53% / -1.18% |
+| local-e debug | -2.24% / 0.00% | 2.83% / 0.00% | -3.49% / -3.38% |
+| Geometric cohort mean | 0.07% / 0.13% | -0.02% / 0.44% | -0.72% / -0.68% |
+
+Windows elapsed changes are essentially neutral in the cohort, with CPU reductions below half a percent. The native screen contains stronger gains and losses, so repeat five alternating pairs independently on Sonic 1, Sonic 3 & Knuckles, both scalers and local-e debug before attributing them to the hash:
+
+| Workload | Native GCC elapsed reduction | Native GCC CPU reduction | Faster pairs |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 0.04% | 0.04% | 2/5 |
+| Sonic 3 & Knuckles | -0.66% | -0.66% | 2/5 |
+| Scaler v1 | 1.37% | 1.23% | 2/5 |
+| Scaler v2 | 1.95% | 1.97% | 3/5 |
+| local-e debug | 2.06% | 1.11% | 3/5 |
+| Geometric cohort mean | 0.96% | 0.74% | — |
+
+Reject this candidate for lack of significant, dependable evidence of improvement, rather than claiming all screen regressions are established. Sonic 1's initial 7.36% elapsed / 7.36% CPU loss disappears in confirmation (0.04% / 0.04% reduction). Sonic 3 & Knuckles' initial 3.06% / 3.17% gain changes to a 0.66% / 0.66% loss; scaler v1's 5.40% / 5.37% gain shrinks to 1.37% / 1.23% with only two of five pairs faster. Scaler v2 and local-e debug switch from screen losses to modest confirmation gains, favoring only three of five pairs. This screen/repeat instability and the neutral Windows cohort do not establish a better replacement. Restore the original main-table djb2 implementation; no production hash change is committed.
+
+Both hash candidates received 327 successful tests on all three toolchains. Saved Windows memory monitoring reports minimum available memory of 9,928 MiB for the completed XOR screen, 7,255 MiB for its confirmation and 9,289 MiB for the FNV screen. Each native batch records zero increases in memory-pressure stall totals, zero swap-in/out pages and zero OOM kills. Nonzero I/O pressure totals remain, including activity from synchronization outside the timed assemblies; these are whole-batch counters, not a measurement of stalls inside each assembly. Keep CPU and elapsed results separate and retain every sample rather than selecting favorable wall-time swings. These checks show no recurrence of the previously observed memory thrashing, but do not remove all timing variability.
+
+These trials establish neither that djb2 is optimal nor that a hash with better dispersion would necessarily be faster. The previous collision measurements were for forward-reference names, not the main table; no main-table collision reduction or hashing-cost attribution is claimed here. Before heavier/block-oriented hash experiments, measure actual main-table lookup/insertion probe counts, key-length distribution and hashing work, keeping diagnostic overhead out of normal timing binaries. Any later recurrence/finalization change should again be isolated from caching, scope mixing and table load-factor changes. The forward-reference table is unchanged by these main-table experiments.
+
+External artifacts: `review-symbol-fnv1a64-20261008/{candidate.patch,workloads-screen,workloads-screen-summary.json,native-confirm-summary.json}` and native `review-symbol-fnv1a64-20261008/native-confirm`. The saved candidate binaries, sources, build/test logs, raw samples, objects/listings and pressure counters remain available externally. Only this report is retained in the repository; the untracked review files and all private workload inputs are untouched.
