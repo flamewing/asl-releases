@@ -14,5 +14,5 @@ char const* Version    = "1.42 Beta [Bld 313]";
 char const* DebVersion = "1.42bld313-1";
 LongInt     VerNo      = 0x142f;
 
-char const* InfoMessCopyright = "(C) 1992,2022 Alfred Arnold";
-char const* InfoNewCopyright  = "(C) 2022-2024 flamewing";
+char const* InfoMessCopyright = "(C) 1992-2026 Alfred Arnold";
+char const* InfoNewCopyright  = "(C) 2022-2026 flamewing";
