@@ -1188,7 +1188,7 @@ static Boolean const_int_val(
         }
     }
     if (ctx.Base <= 0) {
-        return -1;
+        return False;
     }
     mul_max = acc_max / ctx.Base;
 

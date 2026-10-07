@@ -22,3 +22,10 @@
 	intsyntax	+0oct
 	endexpect
 
+
+	; With default decimal syntax disabled, non-literals must still
+	; reach symbol and expression evaluation.
+	intsyntax	-dec
+value	equ	0x2a
+	ldi	value
+	ldi	0x2b+value
