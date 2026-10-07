@@ -1716,6 +1716,7 @@ typedef struct operator_search_cb_data {
     char const*                  p_after_last_op_start;
     as_operator_t const*         found_ops[OPERATOR_MAXCNT];
     size_t                       found_op_cnt;
+    unsigned char                present[32];
 } operator_search_cb_data_t;
 
 static Boolean is_non_space_upto(char const* p_from, char const* p_to) {
@@ -1790,7 +1791,8 @@ static int operator_search_cb(
                 /* Possible at all:
                    (a) operator string itself must match */
 
-                if (strncmp(p_pos, p_this_op->Id, p_this_op->IdLen)) {
+                if (*p_pos != *p_this_op->Id
+                    || strncmp(p_pos, p_this_op->Id, p_this_op->IdLen)) {
                     continue;
                 }
 
@@ -1841,8 +1843,12 @@ static int operator_search_cb(
 
 static void test_found_op(
         operator_search_cb_data_t* p_data, as_operator_t const* p_op, char const* p_str) {
+    unsigned char first = (unsigned char)*p_op->Id;
+    if (!(p_data->present[first >> 3] & (1u << (first & 7)))) {
+        return;
+    }
     char const* p_op_pos
-            = (p_op->IdLen == 1) ? (strchr(p_str, *p_op->Id)) : (strstr(p_str, p_op->Id));
+            = (p_op->IdLen == 1) ? p_str : strstr(p_str, p_op->Id);
 
     if (p_op_pos) {
         p_data->found_ops[p_data->found_op_cnt++] = p_op;
@@ -2017,6 +2023,10 @@ void EvalStrExpressionWithCallback(
     operator_search_data.r_klamm               = 0;
     operator_search_data.w_klamm               = 0;
     operator_search_data.found_op_cnt          = 0;
+    memset(operator_search_data.present, 0, sizeof(operator_search_data.present));
+    for (unsigned char const* p = (unsigned char const*)CopyComp.str.p_str; *p; p++) {
+        operator_search_data.present[*p >> 3] |= 1u << (*p & 7);
+    }
     for (p_run_op = operators; p_run_op->Id; p_run_op++) {
         test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
     }
