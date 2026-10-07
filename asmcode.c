@@ -18,7 +18,6 @@
 #include "asmlabel.h"
 #include "asmlist.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "chunks.h"
 #include "errmsg.h"
 #include "fileformat.h"
@@ -864,7 +863,9 @@ void set_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length) {
     extend_zero_basmcode_guessed_len(
             (basmcode_partially_used + start + field_length + 7) >> 3);
     set_byte_bit_field_le_core(
-            basmcode_guessed, start, (1ul << field_length) - 1, field_length);
+            basmcode_guessed, start,
+            (field_length == 32) ? (LongWord)-1 : (((LongWord)1 << field_length) - 1),
+            field_length);
 }
 
 /*!------------------------------------------------------------------------
@@ -892,7 +893,9 @@ void set_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length) {
     extend_zero_basmcode_guessed_len(
             (basmcode_partially_used + start + field_length + 7) >> 3);
     set_byte_bit_field_be_core(
-            basmcode_guessed, start, (1ul << field_length) - 1, field_length);
+            basmcode_guessed, start,
+            (field_length == 32) ? (LongWord)-1 : (((LongWord)1 << field_length) - 1),
+            field_length);
 }
 
 /*!------------------------------------------------------------------------

@@ -2007,6 +2007,10 @@ static void decode_field(Word code) {
         WrStrErrorPos(ErrNum_FirstPassCalc, &ArgStr[2]);
         return;
     }
+    if (field_length < 1) {
+        WrStrErrorPos(ErrNum_UnderRange, &ArgStr[2]);
+        return;
+    }
     if (field_length > 32) {
         WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
         return;
@@ -2015,29 +2019,22 @@ static void decode_field(Word code) {
     if (!ok) {
         return;
     }
-#ifndef AS_HAS64
-    if (field_length < 32)
-#endif
-    {
-        if (field_value >= 0) {
-            LargeInt max_v = (1ul << field_length) - 1;
-            if (mFirstPassUnknownOrQuestionable(flags)) {
-                field_value &= max_v;
-            } else if (field_value > max_v) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
-                return;
-            }
-        } else {
-            LargeInt min_v = -(1ul << (field_length - 1)) - 1;
-            if (mFirstPassUnknownOrQuestionable(flags)) {
-                field_value &= min_v + 1;
-            } else if (field_value < min_v) {
-                WrStrErrorPos(ErrNum_UnderRange, &ArgStr[1]);
-                return;
-            }
+    /* Int32 already checks the full-width signed/unsigned range. */
+    if (field_length < 32) {
+        LargeInt max_v = (((LargeWord)1) << field_length) - 1;
+        LargeInt min_v = -(((LargeInt)1) << (field_length - 1));
+        if (mFirstPassUnknownOrQuestionable(flags)) {
+            field_value &= max_v;
+        } else if (field_value > max_v) {
+            WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
+            return;
+        } else if (field_value < min_v) {
+            WrStrErrorPos(ErrNum_UnderRange, &ArgStr[1]);
+            return;
         }
     }
     set_basmcode_bit_field_le(CodeLen, field_value, field_length);
+    set_b_bit_field_guessed_le(flags, CodeLen, field_length);
     CodeLen += field_length;
     ActListGran = (field_length > 8) ? 2 : 1;
     act_list_gran_bits_unused
