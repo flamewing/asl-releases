@@ -1845,6 +1845,32 @@ static int operator_search_cb(
     return extra_skip;
 }
 
+/* The evaluator always matches after quote handling. Keeping its scanner and
+   matching in one translation unit permits direct calls and caller inlining. */
+#if !defined(_MSC_VER)
+static void scan_expression_operators(char const* p_str, operator_search_cb_data_t* p_data) {
+    as_quoted_iterator_cb_data_t* p_cb_data = &p_data->data;
+    as_quoted_iterator_state_t state;
+    char const* p_run;
+    int extra_skip;
+
+    p_cb_data->p_str = p_str;
+    p_cb_data->in_single_quote = p_cb_data->in_double_quote = False;
+    for (p_run = p_str, state.this_escaped = False; *p_run;
+         p_run += 1 + extra_skip, state.this_escaped = state.next_escaped) {
+        extra_skip = 0;
+        if (!as_iterate_quote_core(p_run, p_cb_data, &state)
+            && !p_cb_data->in_single_quote && !p_cb_data->in_double_quote
+            && p_data->p_first_op[(unsigned char)*p_run]) {
+            extra_skip = operator_search_cb(p_run, p_cb_data);
+            if (extra_skip < 0) {
+                return;
+            }
+        }
+    }
+}
+#endif
+
 static void test_found_op(
         operator_search_cb_data_t* p_data, as_operator_t const* p_op, char const* p_str) {
     unsigned char first = (unsigned char)*p_op->Id;
@@ -1872,6 +1898,12 @@ static void prepare_op_chains(operator_search_cb_data_t* p_data) {
         p_data->next_op[index] = p_data->first_op[first];
         p_data->first_op[first] = index;
     }
+    /* Structural bytes must reach the callback's bracket switch. Their marker
+       is not traversed as an operator chain, even with custom bracket operators. */
+#if !defined(_MSC_VER)
+    p_data->first_op['('] = p_data->first_op[')']
+            = p_data->first_op['{'] = p_data->first_op['}'] = 1;
+#endif
 }
 
 /* Built-ins are immutable.  Custom inventories remain per expression below. */
@@ -2082,8 +2114,13 @@ void EvalStrExpressionWithCallback(
 
     /* search for highest-prio operator outside parentheses */
 
+    /* MSVC keeps the generic scan: specialization did not show a useful gain. */
+#if defined(_MSC_VER)
     as_iterate_str_quoted(
             CopyComp.str.p_str, operator_search_cb, &operator_search_data.data);
+#else
+    scan_expression_operators(CopyComp.str.p_str, &operator_search_data);
+#endif
 
     /* Klammerfehler ? */
 

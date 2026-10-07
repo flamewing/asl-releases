@@ -36,4 +36,13 @@ extern void as_iterate_str_quoted(
         char const* p_str, as_quoted_iterator_cb_t callback,
         as_quoted_iterator_cb_data_t* p_cb_data);
 
+#if !defined(_MSC_VER)
+/* Shared quote state for generic and specialized scanners. */
+typedef struct {
+    Boolean this_escaped, next_escaped;
+} as_quoted_iterator_state_t;
+
+#include "striter_core.h"
+#endif
+
 #endif /* STRITER_H */
