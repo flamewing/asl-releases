@@ -94,6 +94,9 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num);
 
 as_float_round_t as_float_round(as_float_dissect_t* p_dest, unsigned target_bits);
 
+as_float_round_t as_float_round_ieee(
+        as_float_dissect_t* p_num, unsigned target_bits, Integer min_exponent);
+
 void as_float_dump_mantissa(
         FILE* p_dest, as_float_mant_t const p_mantissa, unsigned mantissa_bits);
 void as_float_dump(FILE* p_dest, char const* p_name, as_float_dissect_t const* p_float);

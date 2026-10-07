@@ -1,0 +1,1 @@
+BF16 little-endian and FP16 big-endian subnormal nearest-even rounding, underflow ties, signed values, and carry into normal range.

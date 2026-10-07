@@ -465,6 +465,49 @@ as_float_round_t as_float_round(as_float_dissect_t* p_num, unsigned target_bits)
     return round_type;
 }
 
+/* Align subnormals before rounding, retaining guard and sticky bits. The
+   returned exponent is ready for biasing: min_exponent - 1 denotes exponent
+   field zero, while a rounding carry into the leading bit remains normal. */
+as_float_round_t as_float_round_ieee(
+        as_float_dissect_t* p_num, unsigned target_bits, Integer min_exponent) {
+    as_float_round_t round_type;
+
+    if (as_float_mantissa_is_zero(p_num)) {
+        p_num->exponent = min_exponent - 1;
+        return as_float_round(p_num, target_bits);
+    }
+    if (p_num->exponent < min_exponent - (Integer)target_bits) {
+        memset(p_num->mantissa, 0, sizeof p_num->mantissa);
+        p_num->exponent = min_exponent - 1;
+        as_float_round(p_num, target_bits);
+        return e_round_down;
+    }
+    while (p_num->mantissa_bits < target_bits + 2) {
+        unsigned delta = target_bits + 2 - p_num->mantissa_bits;
+        if (delta > AS_FLOAT_MANT_WORD_BITS) {
+            delta = AS_FLOAT_MANT_WORD_BITS;
+        }
+        as_float_append_mantissa_bits(p_num, 0, delta);
+    }
+    while (p_num->exponent < min_exponent) {
+        as_float_mant_word_t sticky
+                = as_float_mantissa_shift_right(p_num->mantissa, 0, p_num->mantissa_bits);
+        if (sticky) {
+            unsigned last_bit = p_num->mantissa_bits - 1;
+            p_num->mantissa[last_bit / AS_FLOAT_MANT_WORD_BITS]
+                    |= ((as_float_mant_word_t)1)
+                       << (AS_FLOAT_MANT_WORD_BITS_M1
+                           - last_bit % AS_FLOAT_MANT_WORD_BITS);
+        }
+        p_num->exponent++;
+    }
+    round_type = as_float_round(p_num, target_bits);
+    if (!as_float_get_mantissa_bit(p_num->mantissa, p_num->mantissa_bits, 0)) {
+        p_num->exponent = min_exponent - 1;
+    }
+    return round_type;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     as_float_dump_mantissa(FILE *p_dest, const as_float_mant_t p_mantissa, unsigned mantissa_bits)
  * \brief  dump mantissa of as_float_dissect_t

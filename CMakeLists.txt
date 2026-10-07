@@ -1295,6 +1295,13 @@ define_executable(test_formatter
 add_test(NAME formatter COMMAND test_formatter)
 set_tests_properties(formatter PROPERTIES TIMEOUT 15)
 
+define_executable(test_float_subnormal
+    tests/float_subnormal.c
+    as_float.c bfloat.c ieeefloat.c strutil.c dynstr.c
+)
+target_link_libm(test_float_subnormal)
+add_test(NAME float_subnormal COMMAND test_float_subnormal)
+
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()

@@ -311,7 +311,7 @@ int as_float_2_ieee4(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
     /* (2) Round to target precision: */
 
-    round_type = as_float_round(&dissect, 24);
+    round_type = as_float_round_ieee(&dissect, 24, -126);
 
     /* (3a) Overrange? */
 
@@ -321,27 +321,6 @@ int as_float_2_ieee4(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
             (dissect.exponent == 127) && as_float_mantissa_is_allones(&dissect)
             && (round_type == e_round_down)) {
         return -E2BIG;
-    }
-
-    /* (3b) number that is too small may degenerate to 0: */
-
-    while ((dissect.exponent < -127) && !as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent++;
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
-    }
-
-    /* numbers too small to represent degenerate to 0 (mantissa was shifted out) */
-
-    if (dissect.exponent < -127) {
-        dissect.exponent = -127;
-    }
-
-    /* For denormal numbers, exponent is 2^(-126) and not 2^(-127)!
-       So if we end up with an exponent of 2^(-127), convert
-       mantissa so it corresponds to 2^(-127): */
-
-    else if (dissect.exponent == -127) {
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
     /* (3c) add bias to exponent */
@@ -431,7 +410,7 @@ int as_float_2_ieee8(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
     /* (2) Round to target precision: */
 
-    round_type = as_float_round(&dissect, 53);
+    round_type = as_float_round_ieee(&dissect, 53, -1022);
 
     /* (3a) Overrange? */
 
@@ -441,36 +420,6 @@ int as_float_2_ieee8(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
             (dissect.exponent == 1023) && as_float_mantissa_is_allones(&dissect)
             && (round_type == e_round_down)) {
         return -E2BIG;
-    }
-
-    /* (3b) number that is too small may degenerate to 0: */
-
-    while ((dissect.exponent < -1023) && !as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent++;
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
-    }
-
-    /* TODO: This is needed to get a correct exponent value (0) for 0.0,
-       if the host format has smaller exponent that IEEE64.
-       Ultimately, as_float_dissect() should return an exponent
-       of zero. */
-
-    if (as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent = -1023;
-    }
-
-    /* numbers too small to represent degenerate to 0 (mantissa was shifted out) */
-
-    if (dissect.exponent < -1023) {
-        dissect.exponent = -1023;
-    }
-
-    /* For denormal numbers, exponent is 2^(-1022) and not 2^(-1023)!
-       So if we end up with an exponent of 2^(-1023), convert
-       mantissa so it corresponds to 2^(-1023): */
-
-    else if (dissect.exponent == -1023) {
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
     /* (3c) add bias to exponent */
@@ -570,43 +519,12 @@ int as_float_2_ieee10(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     as_float_dissect(&dissect, inp);
     /* (2) Round to target precision: */
 
-    as_float_round(&dissect, 64);
+    as_float_round_ieee(&dissect, 64, -16382);
 
     /* (3a) Overrange? */
 
     if (dissect.exponent > 16383) {
         return -E2BIG;
-    }
-
-    /* (3b) number that is too small may degenerate to 0: */
-
-    while ((dissect.exponent < -16383) && !as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent++;
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
-    }
-
-    /* TODO: This is needed to get a correct exponent value (0) for 0.0.
-       The old routine just added the difference of the 64-bit ad 80-bit
-       biases, which resulted in an exponent of 0x3c00 (-1023) in the
-       final value.  Ultimately, as_float_dissect() should return an exponent
-       of zero. */
-
-    if (as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent = -16383;
-    }
-
-    /* numbers too small to represent degenerate to 0 (mantissa was shifted out) */
-
-    if (dissect.exponent < -16383) {
-        dissect.exponent = -16383;
-    }
-
-    /* For denormal numbers, exponent is 2^(-16382) and not 2^(-16383)!
-       So if we end up with an exponent of 2^(-16383), convert
-       mantissa so it corresponds to 2^(-16382): */
-
-    else if (dissect.exponent == -16383) {
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
     /* (3c) add bias to exponent */
@@ -683,43 +601,12 @@ int as_float_2_ieee16(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
     /* (2) Round to target precision: */
 
-    as_float_round(&dissect, 113);
+    as_float_round_ieee(&dissect, 113, -16382);
 
     /* (3a) Overrange? */
 
     if (dissect.exponent > 16383) {
         return -E2BIG;
-    }
-
-    /* (3b) number that is too small may degenerate to 0: */
-
-    while ((dissect.exponent < -16383) && !as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent++;
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
-    }
-
-    /* TODO: This is needed to get a correct exponent value (0) for 0.0.
-       The old routine just added the difference of the 64-bit and 80-bit
-       biases, which resulted in an exponent of 0x3c00 (-1023) in the
-       final value.  Ultimately, as_float_dissect() should return an exponent
-       of zero. */
-
-    if (as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent = -16383;
-    }
-
-    /* numbers too small to represent degenerate to 0 (mantissa was shifted out) */
-
-    if (dissect.exponent < -16383) {
-        dissect.exponent = -16383;
-    }
-
-    /* For denormal numbers, exponent is 2^(-16382) and not 2^(-16383)!
-       So if we end up with an exponent of 2^(-16383), convert
-       mantissa so it corresponds to 2^(-16382): */
-
-    else if (dissect.exponent == -16383) {
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
     /* (3c) add bias to exponent */
@@ -799,7 +686,7 @@ int as_float_2_ieee2(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
 
     /* (2) Round to target precision: */
 
-    round_type = as_float_round(&dissect, 11);
+    round_type = as_float_round_ieee(&dissect, 11, -14);
 
     /* (3a) Overrange? */
 
@@ -809,27 +696,6 @@ int as_float_2_ieee2(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
             (dissect.exponent == 15) && as_float_mantissa_is_allones(&dissect)
             && (round_type == e_round_down)) {
         return -E2BIG;
-    }
-
-    /* (3b) number that is too small may degenerate to 0: */
-
-    while ((dissect.exponent < -15) && !as_float_mantissa_is_zero(&dissect)) {
-        dissect.exponent++;
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
-    }
-
-    /* numbers too small to represent degenerate to 0 (mantissa was shifted out) */
-
-    if (dissect.exponent < -15) {
-        dissect.exponent = -15;
-    }
-
-    /* For denormal numbers, exponent is 2^(-14) and not 2^(-15)!
-       So if we end up with an exponent of 2^(-15), convert
-       mantissa so it corresponds to 2^(-14): */
-
-    else if (dissect.exponent == -15) {
-        as_float_mantissa_shift_right(dissect.mantissa, 0, dissect.mantissa_bits);
     }
 
     /* (3c) add bias to exponent */
