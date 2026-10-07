@@ -78,6 +78,32 @@ static void list_format_error(tErrorNum num, char fmt) {
     WrXError(num, err_str);
 }
 
+/* Keep the existing MSVC code: direct conversion showed consistent savings
+   only on GCC. These macros retain the original formatting call sites. */
+#if defined(_MSC_VER)
+#    define append_list_code_value(value, width) \
+        as_sdprcatf(&list_buf, " %0*.*lllu", (int)(width), (int)ListRadixBase, (value))
+#    define format_list_code_mask(buf, size, value, width) \
+        as_snprintf((buf), (size), "%0*.*lllu", (int)(width), (int)ListRadixBase, (value))
+#else
+/* Listing code values use fixed unsigned formatting; keep the shared radix,
+   zero-padding and byte-separator conversion without parsing a format string. */
+static void append_list_code_value(LargeWord value, unsigned width) {
+    /* Like list_buf, this belongs to the shared, non-reentrant listing state. */
+    static char buf[101];
+    int  len;
+
+    buf[0] = ' ';
+    len = SysString(
+            buf + 1, sizeof(buf) - 1, value, ListRadixBase, False, width, False,
+            HexStartCharacter, SplitByteCharacter);
+    as_dynstr_append(&list_buf, buf, 1 + len);
+}
+#    define format_list_code_mask(buf, size, value, width) \
+        SysString((buf), (size), (value), ListRadixBase, False, (width), False, \
+                  HexStartCharacter, SplitByteCharacter)
+#endif
+
 void MakeList(char const* pSrcLine) {
     Word    EffLen, Gran               = Granularity();
     Boolean ThisDoLst, bitwise_segment = (Gran == 1) && (gran_bits_unused() == 7);
@@ -308,19 +334,16 @@ void MakeList(char const* pSrcLine) {
                                 ThisWordGuessed = get_basmcode_guessed(Index);
                             }
                         }
-                        as_sdprcatf(
-                                &list_buf, " %0*.*lllu", (int)SystemListLen,
-                                (int)ListRadixBase, ThisWord);
+                        append_list_code_value(ThisWord, SystemListLen);
                         num_printed++;
                         if (list_unknown_values && (ThisWordGuessed != 0)) {
                             char  mask_buf[100];
                             char *p_val_end = list_buf.p_str + strlen(list_buf.p_str),
                                  *p_mask_end
                                  = mask_buf
-                                   + as_snprintf(
-                                           mask_buf, sizeof(mask_buf), "%0*.*lllu",
-                                           (int)SystemListLen, (int)ListRadixBase,
-                                           ThisWordGuessed);
+                                   + format_list_code_mask(
+                                           mask_buf, sizeof(mask_buf), ThisWordGuessed,
+                                           SystemListLen);
                             while (p_mask_end > mask_buf) {
                                 p_val_end--;
                                 if (*--p_mask_end != '0') {
