@@ -1717,6 +1717,9 @@ typedef struct operator_search_cb_data {
     as_operator_t const*         found_ops[OPERATOR_MAXCNT];
     size_t                       found_op_cnt;
     unsigned char                present[32];
+    unsigned char                first_op[256], next_op[OPERATOR_MAXCNT + 1];
+    unsigned char const         *p_first_op, *p_next_op;
+    as_operator_t const* const*   p_chain_ops;
 } operator_search_cb_data_t;
 
 static Boolean is_non_space_upto(char const* p_from, char const* p_to) {
@@ -1784,15 +1787,16 @@ static int operator_search_cb(
                This way, target- or expression-specific operators get higher priority
                over built-in ones: */
 
-            for (zop = 0; zop < p_data->found_op_cnt; zop++) {
-                as_operator_t const* p_this_op = p_data->found_ops[zop];
+            for (zop = p_data->p_first_op[(unsigned char)*p_pos]; zop;
+                 zop = p_data->p_next_op[zop]) {
+                as_operator_t const* p_this_op = p_data->p_chain_ops[zop - 1];
                 Boolean              this_op_argcnt_match;
 
                 /* Possible at all:
                    (a) operator string itself must match */
 
-                if (*p_pos != *p_this_op->Id
-                    || strncmp(p_pos, p_this_op->Id, p_this_op->IdLen)) {
+                if (p_this_op->IdLen > 1
+                    && strncmp(p_pos, p_this_op->Id, p_this_op->IdLen)) {
                     continue;
                 }
 
@@ -1853,6 +1857,38 @@ static void test_found_op(
     if (p_op_pos) {
         p_data->found_ops[p_data->found_op_cnt++] = p_op;
     }
+}
+
+/* Build backwards so later matching candidates retain their override order.
+   Zero terminates each chain; indices 1..OPERATOR_MAXCNT cover every slot. */
+static void prepare_op_chains(operator_search_cb_data_t* p_data) {
+    size_t index;
+    p_data->p_first_op = p_data->first_op;
+    p_data->p_next_op = p_data->next_op;
+    p_data->p_chain_ops = p_data->found_ops;
+    memset(p_data->first_op, 0, sizeof(p_data->first_op));
+    for (index = p_data->found_op_cnt; index; index--) {
+        unsigned char first = (unsigned char)*p_data->found_ops[index - 1]->Id;
+        p_data->next_op[index] = p_data->first_op[first];
+        p_data->first_op[first] = index;
+    }
+}
+
+/* Built-ins are immutable.  Custom inventories remain per expression below. */
+static void use_builtin_op_chains(operator_search_cb_data_t* p_data) {
+    static operator_search_cb_data_t builtins;
+    static Boolean initialized = False;
+    if (!initialized) {
+        as_operator_t const* op;
+        for (op = operators; op->Id; op++) {
+            builtins.found_ops[builtins.found_op_cnt++] = op;
+        }
+        prepare_op_chains(&builtins);
+        initialized = True;
+    }
+    p_data->p_first_op = builtins.first_op;
+    p_data->p_next_op = builtins.next_op;
+    p_data->p_chain_ops = builtins.found_ops;
 }
 
 typedef struct {
@@ -2023,18 +2059,25 @@ void EvalStrExpressionWithCallback(
     operator_search_data.r_klamm               = 0;
     operator_search_data.w_klamm               = 0;
     operator_search_data.found_op_cnt          = 0;
-    memset(operator_search_data.present, 0, sizeof(operator_search_data.present));
-    for (unsigned char const* p = (unsigned char const*)CopyComp.str.p_str; *p; p++) {
-        operator_search_data.present[*p >> 3] |= 1u << (*p & 7);
-    }
-    for (p_run_op = operators; p_run_op->Id; p_run_op++) {
-        test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
-    }
-    for (p_run_op = target_operators; p_run_op->Id; p_run_op++) {
-        test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
-    }
-    for (p_run_op = p_callback_data->p_operators; p_run_op->Id; p_run_op++) {
-        test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
+    if (!target_operators->Id && !p_callback_data->p_operators->Id) {
+        use_builtin_op_chains(&operator_search_data);
+    } else {
+        memset(operator_search_data.present, 0, sizeof(operator_search_data.present));
+        for (unsigned char const* p = (unsigned char const*)CopyComp.str.p_str; *p; p++) {
+            operator_search_data.present[*p >> 3] |= 1u << (*p & 7);
+        }
+        for (p_run_op = operators; p_run_op->Id; p_run_op++) {
+            test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
+        }
+        for (p_run_op = target_operators; p_run_op->Id; p_run_op++) {
+            test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
+        }
+        for (p_run_op = p_callback_data->p_operators; p_run_op->Id; p_run_op++) {
+            test_found_op(&operator_search_data, p_run_op, CopyComp.str.p_str);
+        }
+
+        prepare_op_chains(&operator_search_data);
+
     }
 
     /* search for highest-prio operator outside parentheses */
