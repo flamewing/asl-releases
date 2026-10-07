@@ -1302,6 +1302,12 @@ define_executable(test_float_subnormal
 target_link_libm(test_float_subnormal)
 add_test(NAME float_subnormal COMMAND test_float_subnormal)
 
+define_executable(test_cpu2phys
+    tests/cpu2phys.c
+    cpu2phys.c tempresult.c nonzstring.c strutil.c dynstr.c
+)
+add_test(NAME cpu2phys COMMAND test_cpu2phys)
+
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()

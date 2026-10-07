@@ -167,7 +167,7 @@ void cpu_2_phys_area_add(
 
             overlap_start = max(p_list->areas[z].cpu_start, p_list->areas[z2].cpu_start);
             overlap_end   = min(p_list->areas[z].cpu_end, p_list->areas[z2].cpu_end);
-            if (overlap_start >= overlap_end) {
+            if (overlap_start > overlap_end) {
                 continue;
             }
 
