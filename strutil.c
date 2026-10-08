@@ -24,6 +24,12 @@
 char HexStartCharacter;  /* characters to use for 10,11,...35 */
 char SplitByteCharacter; /* output large numbers per-byte with given split char */
 
+/* Helpers are valid before initialization in the process's initial C locale. */
+unsigned char as_space_class[256] = {
+        [' '] = 1, ['\t'] = 1, ['\n'] = 1,
+        ['\r'] = 1, ['\f'] = 1, ['\v'] = 1
+};
+
 /*--------------------------------------------------------------------------*/
 /* eine bestimmte Anzahl Leerzeichen liefern */
 
@@ -1378,5 +1384,10 @@ unsigned as_bit_count(LongWord i) {
 /*--------------------------------------------------------------------------*/
 
 void strutil_init(void) {
+    unsigned c;
+
+    for (c = 0; c < 256; c++) {
+        as_space_class[c] = !!isspace(c);
+    }
     HexStartCharacter = 'A';
 }

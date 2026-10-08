@@ -127,9 +127,11 @@ extern void strutil_init(void);
 #define as_toupper(c) (toupper(chartouint(c)))
 #define as_tolower(c) (tolower(chartouint(c)))
 
+/* Initialized for the C locale; strutil_init refreshes a changed LC_CTYPE. */
+extern unsigned char as_space_class[256];
+
 static inline int as_isspace(int c) {
-    unsigned int byte = chartouint(c);
-    return (byte == ' ') || (byte == '\t') || !!isspace(byte);
+    return as_space_class[chartouint(c)];
 }
 
 #define as_isdigit(c)  (!!isdigit(chartouint(c)))

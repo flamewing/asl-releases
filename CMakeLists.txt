@@ -1292,6 +1292,11 @@ define_executable(test_strcomp_span
 )
 add_test(NAME strcomp_span COMMAND test_strcomp_span)
 
+define_executable(test_space_classification
+    tests/space_classification.c strutil.c dynstr.c
+)
+add_test(NAME space_classification COMMAND test_space_classification)
+
 define_executable(test_formatter
     tests/formatter.c
     strutil.c
