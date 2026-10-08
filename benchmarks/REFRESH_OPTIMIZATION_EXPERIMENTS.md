@@ -44,6 +44,62 @@ The three-pair full screen gave geometric elapsed/CPU savings of 4.24%/3.60%, 2.
 
 Artifacts: `trial-space-table-20261008`, batches `screen` and `confirmation`. Subsequent experiments use its frozen binaries as their accepted baseline.
 
+## 4a. Float hexadecimal exclusion without strlen — discarded
+
+The hexadecimal exclusion checked the first two bytes directly inside the existing nonempty-input branch. Conversion, range handling and format precedence stayed unchanged. All 328 tests passed on each toolchain; all eleven code outputs and normalized listings matched the whitespace baseline.
+
+The three-pair full screen gave geometric elapsed/CPU savings of -2.19%/-0.18% on Windows GCC, -0.38%/+0.55% on MSVC and -1.24%/-0.19% on native GCC. Individual results were mixed and did not establish a meaningful portable gain. The check was restored without a confirmation batch. The large individual elapsed fluctuations are not evidence that this tiny edit caused equivalent CPU regressions.
+
+Artifacts: `trial-float-hex-20261008`, batch `screen`, against `329c60f0` and its frozen whitespace binaries.
+
+## 4b. Delay integer overflow-threshold division — discarded
+
+The existing first_digit flag gated mul_max calculation after digit validation; later digits reused the result. No extra digit prescan was introduced. All 328 tests passed on each toolchain, and all eleven code outputs and normalized listings matched the parent. Generated Windows GCC code confirmed that first-digit failures bypassed the division.
+
+The three-pair full screen gave geometric elapsed/CPU savings of +0.80%/-0.03% on Windows GCC, -0.66%/+1.11% on MSVC and +0.22%/+0.19% on native GCC. Workload results were mixed, with little GCC CPU improvement despite the high rejection counts. The screen did not justify confirmation or retention; the original setup was restored. Artifacts: `trial-delayed-divide-20261008`, batch `screen`, against the accepted whitespace baseline.
+
+## 5. Lazy reuse of expression left-operand checks — discarded
+
+operator_search_cb cached whether the current position had nonblank content to its left, sharing that result between temporary-label handling and overlapping operator candidates. The cache was local to one callback position and filled only when needed; there was no additional identifier prescan. All 328 tests passed on each toolchain, and all workload code outputs and normalized listings matched the parent.
+
+The three-pair full screen gave geometric elapsed/CPU savings of -2.82%/-0.07% on Windows GCC, -0.10%/-0.00% on MSVC and +0.54%/+0.59% on native GCC. A -33.21% Windows GCC scaler-v1 elapsed outlier had unchanged median process CPU time and is not evidence of an equivalent code regression. The remaining results were mixed and too small to justify retention. The change was removed. Artifacts: `trial-expression-reuse-20261008`, batch `screen`, against the accepted whitespace baseline.
+
+## 6a. Lazy canonical-name hash reuse across scopes — discarded
+
+FindNode carried a per-lookup name hash through local/global scope attempts. SearchSymbolHashTable filled it only when encountering a nonempty table, then mixed the existing attribute into that same hash. The algorithm, equality and scope order were unchanged. A prehashed lookup API shared the existing probe implementation; a regression test checked parity through deliberate collisions, growth, deleted buckets, reinsertion and clearing, without invoking the hash function again. All 329 tests passed on each toolchain, and all eleven code outputs and normalized listings matched the parent.
+
+The three-pair full screen gave geometric elapsed/CPU savings of -1.23%/-0.27% on Windows GCC, +0.28%/+0.17% on MSVC and -0.70%/-0.74% on native GCC. Some early MSVC wall gains were not supported by comparable CPU reductions; most native cases were slower. The result did not justify retaining the added cache plumbing and API. Implementation and focused test were removed. Artifacts: `trial-name-hash-reuse-20261008`, batch `screen`, against the accepted whitespace baseline.
+
+## 6b. Single-probe symbol insertion below the growth threshold — discarded
+
+EnterSymbolHashTable used set directly while capacity was available, interpreting its existing-key result before calling the original update callback. At the growth threshold it retained get first, preserving existing-symbol updates without allocation and the original failure behavior. New-key callback rejection still deleted the inserted bucket. This was independent of the discarded name-hash cache. All 328 tests passed on each toolchain, and all eleven code outputs and normalized listings matched the parent.
+
+The three-pair full screen gave geometric elapsed/CPU savings of +1.26%/-0.63% on Windows GCC, +0.96%/+0.16% on MSVC and -0.33%/+0.05% on native GCC. CPU results did not establish a significant gain, and workload results were mixed. The original get/set sequence was restored. Artifacts: `trial-single-probe-insert-20261008`, batch `screen`, against the accepted whitespace baseline.
+
+## 7. Shared hexadecimal listing code-value formatter — discarded
+
+Plain hexadecimal code-value fragments used a shared nibble-based formatter with a leading space and minimum zero-padded width. Other radices, byte separators and oversized widths retained the existing formatter, including its existing compiler choices. The new production path had no platform-specific branches. A focused test checked zero, narrow/wide padding, lowercase, values wider than their requested field, the largest unsigned value and buffer boundaries. All 329 tests passed on each toolchain. An additional synthetic listing matrix matched the parent for 82 pairs on each toolchain, covering radices 2–36, address padding, case, separators, byte/word listings and multi-line data. Clock-generated TIME/DATE fields were normalized, like the standard benchmark listings.
+
+The three-pair full screen gave geometric elapsed/CPU savings of -1.77%/-0.16% on Windows GCC, +0.95%/-0.24% on MSVC and +0.70%/+0.81% on native GCC. The four Windows listing workloads had small positive elapsed gains, and all four MSVC listing CPU medians improved, warranting a separate confirmation despite the mixed full screen.
+
+The seven-pair confirmation covered the four listing workloads plus Sonic 1, Sonic 2, Sonic & Knuckles and scaler v2 as controls. Its eight-workload elapsed/CPU aggregate was +0.58%/+0.23%, -0.72%/+0.58% and +0.96%/+0.67% respectively; this is a subset, not a full-cohort result. For the four listing workloads alone, elapsed/CPU savings were only +0.25%/+0.77%, +0.77%/+1.40% and +0.53%/-0.04%. Native Madness 4 debug's +3.41% elapsed result had -1.48% CPU savings, illustrating why elapsed gains alone were insufficient. Windows scaler-v2 CPU medians were slower by 1.22% on GCC and 2.06% on MSVC. The small, inconsistent portable benefit did not justify the additional formatter. Implementation and focused test were removed.
+
+Artifacts: `trial-list-hex-20261008`, batches `screen`, `confirmation` and `listing-matrix`, against the accepted whitespace baseline. All normal workload code outputs and normalized listings matched the parent in both timing batches.
+
+## Final decision
+
+All proposed mechanisms were tested independently, including the three line-length stages and both ordinary-symbol lookup alternatives. Only whitespace classification caching demonstrated a repeatable meaningful gain across all three toolchains; it was committed as `329c60f0`. Its nine-pair full-cohort confirmation is the performance comparison for the final accepted assembler code: elapsed savings of 3.54% on Windows GCC, 2.55% on MSVC and 4.75% on native Linux GCC, with CPU savings of 3.72%, 3.04% and 4.99%. Rejected code and trial-only tests were removed. Subsequent report-only changes do not alter the assembler.
+
+Final accepted-state validation built every utility and passed all 328 tests on Windows GCC, MSVC and native Linux GCC. Each final assembler's complete .text section matched its corresponding frozen executable from the confirmed whitespace trial, verifying that discarded experiments left no machine-code changes. Artifacts: `final-accepted-check-20261009`, with build/test logs and saved executables.
+
+Windows memory monitors recorded at least 9,900 MiB of available memory across the completed timing batches; these records do not indicate the earlier memory-thrashing condition. This does not eliminate ordinary scheduling or I/O noise, so decisions relied on paired elapsed/CPU evidence and independent confirmation of promising changes.
+
+## Diagnostic eligibility counts
+
+A diagnostic-only native pass against the accepted whitespace baseline ran each of the eleven workloads twice, with deterministic counts and identical code outputs. First-digit rejections accounted for 58.53–83.26% of integer-probe division setups. Windows GCC disassembly independently showed an actual unsigned division before digit validation. This supports testing delayed calculation without a complete digit prescan.
+
+The same pass recorded repeated scope lookup attempts and name hashing; empty tables skip actual hashing, so lookup totals alone overstate the opportunity. Listing workloads emitted 525,672–563,650 code-value fragments per assembly, all eligible for ordinary hexadecimal conversion without byte separators. Diagnostic code is absent from normal binaries and was restored in the external mutable source before the next build. Artifacts: `eligibility-space-head-20261008-r2`; the earlier attempt stopped before compilation because its source-pattern assertion did not normalize CRLF.
+
 ## Locale clarification
 
 Inspection for the whitespace candidate found nls_init setting LC_TIME and LC_MONETARY. No LC_CTYPE-changing call was found. Thus the assembler’s character classification remains in the C locale; the initial profile report’s broader statement that no locale-changing calls existed was too broad. Any caching experiment must still support helper use before initialization and preserve byte masking.
