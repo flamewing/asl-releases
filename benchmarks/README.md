@@ -878,3 +878,5 @@ The SysString correctness fix, refreshed profiles and subsequent independent opt
 The upstream regression bisections, compatibility overlay controls, parent comparisons and independent correction trials are recorded in [UPSTREAM_REGRESSION_BISECT.md](UPSTREAM_REGRESSION_BISECT.md).
 
 The independently staged forward-reference, expression and line-parsing trials from the upstream performance review are recorded in [UPSTREAM_REVIEW_EXPERIMENTS.md](UPSTREAM_REVIEW_EXPERIMENTS.md).
+
+The refreshed master-versus-experimental comparison, validated stage counters, normal Windows GCC/MSVC sampling and ranked next opportunities are recorded in [MASTER_EXPERIMENTAL_PROFILES_20261008.md](MASTER_EXPERIMENTAL_PROFILES_20261008.md).
