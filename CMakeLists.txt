@@ -1300,6 +1300,9 @@ add_test(NAME space_classification COMMAND test_space_classification)
 define_executable(test_strref tests/strref.c strutil.c dynstr.c)
 add_test(NAME strref COMMAND test_strref)
 
+define_executable(test_intconst_span tests/intconst_span.c intformat.c int_type.c strutil.c dynstr.c)
+add_test(NAME intconst_span COMMAND test_intconst_span)
+
 define_executable(test_formatter
     tests/formatter.c
     strutil.c

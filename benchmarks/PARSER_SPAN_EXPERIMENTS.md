@@ -40,6 +40,70 @@ Typical inputs are short. These counts establish repeated work, not a memory-ban
 
 `strref.h` defines the borrowed view and bounded helpers. Tests use nonterminated immutable arrays, empty NULL views, out-of-range slices and maximal counts. The `span-foundation-20261009` build passes all 329 tests on each of the three toolchains. Production parsing does not yet use the helpers; this is enabling infrastructure, with no speedup claimed.
 
+The Windows GCC and MSVC assembler `.text` sections match the final accepted whitespace-baseline binaries byte for byte. Foundation commit: `682e1921`.
+
+## Bounded integer leaf
+
+`const_int_val_ref` accepts a pointer/length pair; ASL's existing format recognizers already operate on bounded contexts. The shared internal implementation remains visible to the optimizer and to a unit test using nonterminated arrays. Tests cover signs, C/Intel/Motorola formats, explicitly enabled IBM character constants and controlled character-translation diagnostics. The existing assembler suites exercise the real translation implementation. Two initial unit-test setup mistakes (an uninitialized default radix and an omitted character-format enablement) were corrected; production regression tests passed throughout.
+
+The leaf-only `span-integer-20261009-r3` artifact passes all 330 tests on all three toolchains. Its three-pair full-cohort screen preserves all object code and normalized listings. Geometric elapsed/CPU savings are −1.62%/−0.32% for Windows GCC, +2.00%/+0.89% for MSVC and −1.44%/−1.85% for Linux GCC. This screen does not establish a portable speed benefit, so the leaf is not committed as an optimization by itself.
+
+The next integer experiment uses the bounded leaf to return common literals before allocating evaluator scratch space or copying input and backup strings. Local sign-only references and PC symbols retain precedence; overflowing constants and unsuccessful probes retain the legacy continuation. The complete change is compared against the original span foundation, rather than claiming the leaf-only changes as savings.
+
+The initial `span-integer-fast-20261009` version passes all 330 tests on each toolchain and preserves all eleven workloads' code and normalized listings. Its three-pair full screen gives geometric elapsed/CPU savings of −0.92%/+0.16% on Windows GCC, +0.75%/+1.23% on MSVC and −0.76%/+1.52% on native GCC. The mixed result does not justify retaining this version. GCC inlines the integer leaf at two call sites; the evaluator's distance to the next symbol grows from 11,120 to 13,072 bytes, including alignment padding.
+
+`span-integer-shared-20261009` routes borrowed and owned input through one probe, avoiding that duplication. All 330 tests pass on each toolchain; all workload code and normalized listings match. The evaluator's next-symbol distance decreases to 12,064 bytes. A three-pair full screen gives +0.66%/+0.47%, +0.54%/+1.28% and +1.24%/+2.09% elapsed/CPU savings respectively. These remain screening results, not an independently confirmed optimization. A further revision rejects obvious nonliteral starts before measuring and trimming a span, reducing preparatory work on symbol-heavy inputs.
+
+## Integer stage retained
+
+`span-integer-gate-20261009` performs that cheap first-character rejection at the existing terminated public interface. Only plausible literals construct and trim a borrowed span. Borrowed and materialized inputs share one integer probe; an unsuccessful early probe is reused after the owned adapter is prepared. Successful literals return before temporary-result initialization and scratch checkout. Bare local signs, PC symbols, overflowing values and nonstandard default radices retain the established paths. Integer format checks, translation, range handling and symbol flags retain their existing implementation.
+
+All 330 tests pass on each toolchain. The three-pair full screen preserves every workload's code and normalized listings and gives +1.25%/+0.91%, +2.68%/+2.16% and +2.01%/+2.91% geometric elapsed/CPU savings for Windows GCC, Windows MSVC and native Linux GCC respectively. The final `span-integer-final-20261009` build includes all utilities and all 330 tests on each toolchain. Its assembler `.text` matches the screened candidate byte for byte on all three compilers, confirming that the diagnostic counters are absent and the comment cleanup has no executable effect. Native Linux's foundation `.text` also matches the original accepted baseline.
+
+An independent seven-pair full-cohort confirmation against the foundation gives the following results. All code and normalized listings still match. Positive values indicate savings; these are geometric per-workload results, rather than a sum of all benchmark runtimes.
+
+| Toolchain | Elapsed savings | CPU savings |
+| --- | ---: | ---: |
+| Windows GCC | 1.50% | 1.59% |
+| Windows MSVC | 1.95% | 2.06% |
+| Native Linux GCC | 1.30% | 1.38% |
+
+These are modest, repeatable portable gains, not the larger individual elapsed outliers seen in screening. For example, MSVC scaler-v1's confirmation improves elapsed time by 4.95% in all seven pairs, whereas Windows GCC scaler-v2's earlier 7.21% elapsed screen becomes −0.23% in confirmation. The complete integer stage is retained on the independent full-cohort result and because it enables further bounded propagation; neither the leaf-only conversion nor the earlier duplicate-probe version is retained separately.
+
+The diagnostic `span-integer-counts-20261009` runs all eleven workloads twice against the final mechanism. Both runs agree exactly and retain each normal object's hash. Total evaluation counts match the original inventory; borrowed successes account for 15.6–37.8% of calls. The diagnostic source is restored before the final normal build. These counts establish removed work and are not timing measurements.
+
+| Workload | Borrowed integer evaluations | Input copy bytes avoided | Backup copy bytes avoided |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | 262,903 | 467,442 | 465,674 |
+| Sonic 2 | 677,384 | 1,111,618 | 1,103,714 |
+| Sonic & Knuckles | 524,688 | 1,163,796 | 1,156,788 |
+| Big Fishing Derby | 487,361 | 1,202,892 | 1,200,632 |
+| Sonic Classic Heroes | 343,344 | 789,395 | 785,373 |
+| ScalerMacros-v1.asm | 184,262 | 253,040 | 253,040 |
+| ScalerMacros-v2.asm | 231,974 | 338,164 | 338,164 |
+| Madness 4 release | 755,231 | 1,392,406 | 1,386,538 |
+| Madness 4 debug | 771,023 | 1,410,066 | 1,402,898 |
+| local-e | 858,575 | 1,981,576 | 1,978,672 |
+| local-e-debug | 863,735 | 1,987,174 | 1,984,006 |
+
+The recognized literals are especially short, so avoided call setup, initialization and scratch handling are relevant alongside copying. Most copied bytes belong to the remaining symbol and compound-expression paths. Quoted-string decoding and recursive view propagation are the next implementation stages; memory mapping remains a separate later experiment with the Windows/POSIX abstraction described above.
+
+## Ownership and interface boundaries
+
+| Consumer | Current copy or scan | Borrowing requirement |
+| --- | --- | --- |
+| Integer constants | Input strlen before a bounded format context | Pass the physical length; preserve format priority, sign flags, overflow and translation |
+| Floating constants | Terminated libc conversion | Use a common stack termination buffer and a longer-input fallback; preserve syntax and range behavior |
+| Quoted constants | Owned interior copy and destructive escape/interpolation splitting | Bounded source scanning and escapes; decoded output remains owned |
+| Brace expressions in expanded symbol names | Copied expression before recursive evaluation | Parent storage remains alive while the child consumes a bounded slice |
+| Expression evaluation | Owned input and backup, then recursive splitting | Retain terminated adapters for mutable callbacks and diagnostics; borrow the unmodified backup only with a stable owner |
+| Symbol lookup | Copied canonical name with local/section processing and uppercase conversion | Separate transient lookup views from owned keys retained in the symbol table |
+| Line arguments | Copies from the current source line | CPU decoders can mutate arguments; do not replace these components wholesale without auditing their consumers |
+| Diagnostics | `WrStrErrorPos` passes component text to a C-string error interface | Materialize a terminated adapter when needed; diagnostic position metadata is not a storage bound |
+| Source lines | stdio reads into mutable dynamic line storage | Preserve newline, continuation, text-mode and EOF behavior; persistent macro storage cannot outlive its owner |
+
+The source has 52 `InternSymbol` assignment sites and eleven `DECLARE_AS_EVAL_CB` occurrences, rather than a single generic callback boundary. These counts are an inventory aid, not a count of unique runtime callbacks or a performance measurement. Input-file experiments must also distinguish physical source text from generated macro text; mapping source files does not eliminate copies of generated expansions.
+
 ## Floating conversion follow-up
 
 A stack termination buffer can cover common floating literals, with reusable dynamic storage for longer inputs. Numeric precision does not bound source length: leading zeros, long exponents and rounding-sensitive tails must not be silently truncated. Preserve ASL's locale, range and accepted-syntax behavior.

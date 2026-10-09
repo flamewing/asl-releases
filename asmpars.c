@@ -32,6 +32,7 @@
 #include "fwd_refs.h"
 #include "fwd_sym.h"
 #include "intformat.h"
+#include "intconst_core.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "operator.h"
@@ -1135,127 +1136,6 @@ static Boolean GetSymSection(
     return IdentifySection(&TmpComp, p_ret);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     const_int_val(const char *p_expr, LargeInt *p_value, tSymbolFlags *p_flags, Integer *p_num_bits, int *p_outof_range)
- * \brief  evaluate integer constant
- * \param  p_expr source argument
- * \param  p_value parsed integer value
- * \param  p_flags associated symbol flags (only negative ATM)
- * \param  p_num_bits returns bit length of integer
- * \param  p_outof_range returns -1/+1 if out of LargeInt range
- * \return True if parsing OK
- * ------------------------------------------------------------------------ */
-
-static Boolean const_int_val(
-        char const* p_expr, LargeInt* p_value, tSymbolFlags* p_flags, Byte* p_num_bits,
-        int* p_outof_range) {
-    Boolean               neg_flag = False, first_digit;
-    LargeWord             acc, acc_max, mul_max;
-    tIntCheckCtx          ctx;
-    unsigned              num_digits;
-    tIntFormatList const* p_int_format;
-
-    *p_outof_range = 0;
-
-    /* sign: */
-
-    acc_max = (LargeWord)-1;
-    switch (*p_expr) {
-    case '-':
-        neg_flag = True;
-        acc_max  = (acc_max >> 1) + 1;
-        /* else fall-through */
-    case '+':
-        p_expr++;
-        break;
-    }
-
-    /* empty string is interpreted as 0 */
-
-    if (!*p_expr) {
-        *p_value = 0;
-        return NULLSTRING_EVAL_RESULT;
-    }
-
-    ctx.pExpr   = p_expr;
-    ctx.ExprLen = strlen(p_expr);
-    ctx.Base    = -1;
-
-    for (p_int_format = IntFormatList; p_int_format->Check; p_int_format++) {
-        if (p_int_format->Check(&ctx, p_int_format->Ch)) {
-            ctx.Base = (p_int_format->Base > 0) ? p_int_format->Base : RadixBase;
-            break;
-        }
-    }
-    if (ctx.Base <= 0) {
-        return False;
-    }
-    mul_max = acc_max / ctx.Base;
-
-    /* we may have decremented ctx.ExprLen, so do not run until string end */
-
-    acc         = 0;
-    num_digits  = 0;
-    first_digit = True;
-    if (256 == ctx.Base) {
-        TransTableCheckRead();
-    }
-    while (ctx.ExprLen > 0) {
-        int digit;
-
-        if (256 == ctx.Base) {
-            digit = as_chartrans_xlate(
-                    CurrTransTable->p_table, ((unsigned)*ctx.pExpr) & 0xff);
-            if (digit < 0) {
-                WrError(ErrNum_UnmappedChar);
-                digit = 0;
-            }
-        } else {
-            digit = DigitVal(as_toupper(*ctx.pExpr), ctx.Base);
-        }
-        if (digit == -1) {
-            *p_value = -1;
-            return False;
-        }
-        if (acc > mul_max) {
-            *p_outof_range = neg_flag ? -1 : 1;
-            *p_value       = neg_flag ? -acc_max : acc_max;
-            return True;
-        }
-        acc = acc * ctx.Base;
-        if (acc_max - acc < (unsigned)digit) {
-            *p_outof_range = neg_flag ? -1 : 1;
-            *p_value       = neg_flag ? -acc_max : acc_max;
-            return True;
-        }
-        acc = acc + digit;
-        /* Necessary leading 0 for Intel-style hex consts does not count: */
-        if ((p_int_format->Id == eIntFormatIntHex) && first_digit && (*ctx.pExpr == '0')
-            && (ctx.ExprLen > 1) && as_isalpha(ctx.pExpr[1])) {
-        } else {
-            if (num_digits < LARGEBITS) {
-                num_digits++;
-            }
-        }
-        first_digit = False;
-        ctx.pExpr++;
-        ctx.ExprLen--;
-    }
-
-    if (neg_flag) {
-        *p_flags    = eSymbolFlag_Negative;
-        *p_num_bits = -1;
-        *p_value    = -acc;
-    } else {
-        *p_flags    = eSymbolFlag_None;
-        *p_num_bits = force_restricted_extension_digits
-                              ? min(num_digits * as_log2(ctx.Base), LARGEBITS)
-                              : 0;
-        *p_value    = acc;
-    }
-    return True;
-}
-
 /*****************************************************************************
  * Function:    ConstFloatVal
  * Purpose:     evaluate floating point constant
@@ -1955,7 +1835,7 @@ DECLARE_AS_EVAL_CB(function_eval_cb) {
 void EvalStrExpressionWithCallback(
         tStrComp const* pExpr, TempResult* pErg, as_eval_flags_t eval_flags,
         as_eval_cb_data_t* p_callback_data) {
-    Boolean                   OK;
+    Boolean                   OK, int_probed = False, int_valid = False;
     int                       int_outof_range, float_outof_range;
     tStrComp                  InArgs[3];
     TempResult                InVals[3];
@@ -1973,16 +1853,8 @@ void EvalStrExpressionWithCallback(
     tSymbolSize               PromotedDataSize;
     as_eval_cb_data_stack_t   cb_data_stack;
 
-    tExpressionScratch* pScratch;
-
-    for (z1 = 0; z1 < 3; z1++) {
-        as_tempres_ini(&InVals[z1]);
-    }
-    /* A checked-out pair cannot be reused by an active recursive child. */
-    pScratch             = AcquireExpressionScratch();
-    CopyComp             = pScratch->CopyComp;
-    STempComp            = pScratch->STempComp;
-    cb_data_stack.p_next = p_callback_data->p_stack;
+    tExpressionScratch* pScratch = NULL;
+    as_strref_t int_source;
 
     if (MakeDebug) {
         fprintf(Debug, "Parse '%s'\n", pExpr->str.p_str);
@@ -1995,6 +1867,52 @@ void EvalStrExpressionWithCallback(
     pErg->Flags         = eSymbolFlag_None;
     pErg->AddrSpaceMask = 0;
     pErg->DataSize      = eSymbolSizeUnknown;
+
+    /* The public component interface is terminated. Reject nonliteral starts
+       before measuring a span; borrowed recursive callers can supply lengths
+       directly when their interfaces are converted. */
+    if (RadixBase >= 2 && RadixBase <= 36) {
+        char const* first = pExpr->str.p_str;
+        unsigned char lead;
+        while (as_isspace(*first)) {
+            first++;
+        }
+        if (*first == '+' || *first == '-') {
+            first++;
+        }
+        lead = (unsigned char)*first;
+        if ((lead >= '0' && lead <= '9')
+            || ((lead == '$' || lead == '%' || lead == '@') && first[1])) {
+            as_strref_t input = as_strref_trim(
+                    (as_strref_t){pExpr->str.p_str, strlen(pExpr->str.p_str)});
+            Boolean is_pc = False;
+            if (PCSymbol && as_toupper(PCSymbol[0]) == as_toupper(input.data[0])
+                && strlen(PCSymbol) == input.len) {
+                size_t pos;
+                is_pc = True;
+                for (pos = 0; pos < input.len; pos++) {
+                    if (as_toupper(input.data[pos]) != as_toupper(PCSymbol[pos])) {
+                        is_pc = False;
+                        break;
+                    }
+                }
+            }
+            if (!is_pc) {
+                int_source = input;
+                goto probe_integer;
+            }
+        }
+    }
+
+materialize_input:
+    for (z1 = 0; z1 < 3; z1++) {
+        as_tempres_ini(&InVals[z1]);
+    }
+    /* A checked-out pair cannot be reused by an active recursive child. */
+    pScratch             = AcquireExpressionScratch();
+    CopyComp             = pScratch->CopyComp;
+    STempComp            = pScratch->STempComp;
+    cb_data_stack.p_next = p_callback_data->p_stack;
 
     StrCompCopy(&CopyComp, pExpr);
     KillPrefBlanksStrComp(&CopyComp);
@@ -2020,9 +1938,23 @@ void EvalStrExpressionWithCallback(
 
     /* Konstanten ? */
 
-    if (const_int_val(
-                CopyComp.str.p_str, &pErg->Contents.Int.Value, &pErg->Flags,
-                &pErg->Contents.Int.NumBits, &int_outof_range)) {
+    if (int_probed) {
+        goto integer_result;
+    }
+    int_source = (as_strref_t){CopyComp.str.p_str, strlen(CopyComp.str.p_str)};
+probe_integer:
+    int_valid = const_int_val_ref(int_source, &pErg->Contents.Int.Value, &pErg->Flags,
+                                  &pErg->Contents.Int.NumBits, &int_outof_range);
+    if (!pScratch) {
+        if (int_valid && !int_outof_range) {
+            pErg->Typ = TempInt;
+            return;
+        }
+        int_probed = True;
+        goto materialize_input;
+    }
+integer_result:
+    if (int_valid) {
         if (int_outof_range) {
 #if !TREAT_LARGEINT_FLOAT
             WrStrErrorPos(
