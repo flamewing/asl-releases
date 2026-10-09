@@ -70,6 +70,8 @@ An independent seven-pair full-cohort confirmation against the foundation gives 
 
 These are modest, repeatable portable gains, not the larger individual elapsed outliers seen in screening. For example, MSVC scaler-v1's confirmation improves elapsed time by 4.95% in all seven pairs, whereas Windows GCC scaler-v2's earlier 7.21% elapsed screen becomes −0.23% in confirmation. The complete integer stage is retained on the independent full-cohort result and because it enables further bounded propagation; neither the leaf-only conversion nor the earlier duplicate-probe version is retained separately.
 
+Retained integer implementation and tests: `68ca50da`. Confirmation's smallest per-workload CPU saving is 0.00% on both Windows compilers and −0.31% on native GCC. Windows process CPU quantization limits interpretation of tiny changes on the shortest workloads. The monitored Windows confirmation retains at least 9,869 MiB available memory; no memory thrashing is indicated by that record.
+
 The diagnostic `span-integer-counts-20261009` runs all eleven workloads twice against the final mechanism. Both runs agree exactly and retain each normal object's hash. Total evaluation counts match the original inventory; borrowed successes account for 15.6–37.8% of calls. The diagnostic source is restored before the final normal build. These counts establish removed work and are not timing measurements.
 
 | Workload | Borrowed integer evaluations | Input copy bytes avoided | Backup copy bytes avoided |
