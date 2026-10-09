@@ -882,3 +882,5 @@ The independently staged forward-reference, expression and line-parsing trials f
 The refreshed master-versus-experimental comparison, validated stage counters, normal Windows GCC/MSVC sampling and ranked next opportunities are recorded in [MASTER_EXPERIMENTAL_PROFILES_20261008.md](MASTER_EXPERIMENTAL_PROFILES_20261008.md).
 
 Independent trials of those next candidates, including confirmed gains and discarded changes, are recorded in [REFRESH_OPTIMIZATION_EXPERIMENTS.md](REFRESH_OPTIMIZATION_EXPERIMENTS.md).
+
+The copy inventory and individually staged borrowed-string experiments are recorded in [PARSER_SPAN_EXPERIMENTS.md](PARSER_SPAN_EXPERIMENTS.md).
