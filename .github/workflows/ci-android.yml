@@ -42,6 +42,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   VERBOSE: "1"
   ANDROID_NDK_VERSION: "30.0.16248370"
@@ -57,11 +60,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build
       - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+        uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Select Android NDK
         run: |
           ndk_home="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
@@ -84,7 +89,7 @@ jobs:
           cmake --build build -j
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |

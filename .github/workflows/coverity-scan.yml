@@ -5,9 +5,10 @@ on:
     - cron: "0 00 * * *" # Daily at 00:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
-  TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
-  EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
   SHA1: ${{ github.sha }}
   FILE: asl-releases-ubuntu-gcc.tgz
   PROJ: flamewing%2Fasl-releases
@@ -42,6 +43,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake
       - name: Download Coverity Build Tool
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
           wget -q https://scan.coverity.com/download/Linux --post-data "token=$TOKEN&project=$PROJ" -O /tmp/cov-analysis-linux64.tar.gz
@@ -49,7 +52,9 @@ jobs:
           tar xzf /tmp/cov-analysis-linux64.tar.gz --strip 1 -C /tmp/cov-analysis-linux64
       - name: Checkout code
         if: ${{ env.REPO_ALIVE == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Configure
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
@@ -60,6 +65,9 @@ jobs:
           export PATH=/tmp/cov-analysis-linux64/bin:$PATH
           cov-build --dir cov-int cmake --build build --parallel
       - name: Submit the result to Coverity Scan
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
           tar czvf $FILE cov-int
@@ -73,7 +81,7 @@ jobs:
             https://scan.coverity.com/builds?project=$PROJ
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: failure-logs-coverity
           path: |

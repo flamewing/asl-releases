@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   GH_REPO: ${{ github.repository }}
@@ -19,6 +19,8 @@ env:
 
 jobs:
   activity-check:
+    permissions:
+      contents: write
     timeout-minutes: 10
     if: ${{ github.repository_owner == 'flamewing' }}
     runs-on: "ubuntu-latest"
@@ -142,7 +144,7 @@ jobs:
           brew install cmake ninja
       - name: Install dependencies (Windows)
         if: ${{ startsWith(matrix.architecture, 'win') }}
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         with:
           msystem: ${{ matrix.msystem }}
           install: >-
@@ -150,11 +152,13 @@ jobs:
           pacboy: >-
             toolchain:p binutils:p cmake:p ninja:p
       - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+        uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           pandoc-version: "3.1.11"
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Configure
         env:
           MSYS2_PATH_TYPE: inherit
@@ -172,18 +176,19 @@ jobs:
         run: |
           cp COPYING build/
           cd build
-          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
-      - name: Upload snapshot
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "${{ needs.activity-check.outputs.tag_name }}" \
-            "${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip" --clobber
+          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt ./*.msg {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
+      - name: Store snapshot package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: snapshot-package-${{ matrix.architecture }}
+          path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
 
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -203,9 +208,11 @@ jobs:
       PACKAGE: asl-freebsd-x86_64-${{ needs.activity-check.outputs.build_id }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Build and test in FreeBSD
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1
         with:
           usesh: true
           sync: rsync
@@ -222,17 +229,19 @@ jobs:
         run: |
           cp COPYING build/
           cd build
-          7z -tzip a ../${PACKAGE}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg alink dasl p2bin p2hex pbind plist asl
-      - name: Upload snapshot
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
+          7z -tzip a "../${PACKAGE}.zip" -mx9 -mmt COPYING asl.html asl.odt ./*.msg alink dasl p2bin p2hex pbind plist asl
+      - name: Store snapshot package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: snapshot-package-${{ github.job }}
+          path: ${{ env.PACKAGE }}.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
 
-  # Experimental: cross-compiled with the NDK, not run on CI.
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -258,11 +267,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build
       - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+        uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           pandoc-version: "3.1.11"
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Select Android NDK
         run: |
           ndk_home="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
@@ -287,16 +298,19 @@ jobs:
         run: |
           cp COPYING build/
           cd build
-          7z -tzip a ../${PACKAGE}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg alink dasl p2bin p2hex pbind plist asl
-      - name: Upload snapshot
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
+          7z -tzip a "../${PACKAGE}.zip" -mx9 -mmt COPYING asl.html asl.odt ./*.msg alink dasl p2bin p2hex pbind plist asl
+      - name: Store snapshot package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: snapshot-package-${{ github.job }}
+          path: ${{ env.PACKAGE }}.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
 
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -307,6 +321,8 @@ jobs:
           if-no-files-found: ignore
 
   finish-release:
+    permissions:
+      contents: write
     timeout-minutes: 10
     needs:
       - activity-check
@@ -318,9 +334,17 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Download snapshot packages
+        if: needs.snapshots.result == 'success' && needs.snapshot-freebsd.result == 'success'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: snapshot-package-*
+          merge-multiple: true
+          path: release-assets
       - name: Finish release
         if: needs.snapshots.result == 'success' && needs.snapshot-freebsd.result == 'success'
         run: |
+          gh release upload "${{ needs.activity-check.outputs.tag_name }}" release-assets/*.zip --clobber
           gh release edit "${{ needs.activity-check.outputs.tag_name }}" --draft=false
       - name: Rollback release
         if: needs.snapshots.result != 'success' || needs.snapshot-freebsd.result != 'success'
