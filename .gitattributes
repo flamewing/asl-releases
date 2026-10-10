@@ -26,6 +26,9 @@ TODO				text
 warnlog.*			text
 warnlog.*			text
 *.sh				text eol=lf
+*.py				text
+*.json				text
+*.cmake				text
 *.mes	 			text
 
 .clangd				text diff=yaml
