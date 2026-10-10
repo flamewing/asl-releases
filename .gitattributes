@@ -26,19 +26,23 @@ TODO				text
 warnlog.*			text
 warnlog.*			text
 *.sh				text eol=lf
+*.mes	 			text
 
 .clangd				text diff=yaml
 .clang-tidy			text diff=yaml
 .clangd-format		text diff=yaml
 
-tests/t_*/t_*.doc	text
-tests/t_*/*.clk		text
-tests/t_*/*.fp		text
-tests/t_*/*.pgm		text
-tests/t_*/*.pwm		text
-tests/t_*/*.out		text
-tests/t_*/*.rst		text
-tests/t_*/*.tl		text
+tests/t_*/t_*.doc		text
+tests/t_*/*.clk			text
+tests/t_*/*.fp			text
+tests/t_*/*.pgm			text
+tests/t_*/*.pwm			text
+tests/t_*/*.in			text
+tests/t_*/*.out			text
+tests/t_*/*.rst			text
+tests/t_*/*.tl			text
+tests/t_*/p2binflags	text
+tests/t_*/run	 		text eol=lf diff=sh
 
 asflags				text
 
