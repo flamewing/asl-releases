@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   coverity-linux:
+    timeout-minutes: 60
     if: ${{ github.repository_owner == 'flamewing' }}
     runs-on: ubuntu-latest
     steps:
@@ -70,3 +71,13 @@ jobs:
             --form version=master \
             --form description="$SHA1" \
             https://scan.coverity.com/builds?project=$PROJ
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-coverity
+          path: |
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            cov-int/build-log.txt
+          retention-days: 7
+          if-no-files-found: ignore

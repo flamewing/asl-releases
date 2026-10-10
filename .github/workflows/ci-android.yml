@@ -42,8 +42,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  VERBOSE: "1"
+
 jobs:
   ci-android:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     continue-on-error: true # Experimental
     steps:
@@ -70,3 +74,14 @@ jobs:
       - name: Build
         run: |
           cmake --build build -j
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore

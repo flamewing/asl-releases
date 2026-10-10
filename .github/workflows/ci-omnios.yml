@@ -42,8 +42,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  VERBOSE: "1"
+
 jobs:
   ci-omnios:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -54,7 +58,7 @@ jobs:
         with:
           usesh: true
           sync: rsync
-          copyback: false
+          copyback: true
           prepare: |
             # pkg update
             # TODO: Figure out packages for building documentation.
@@ -64,4 +68,15 @@ jobs:
             export VERBOSE=1
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)
             cmake --build build -j
-            ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure
+            ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore

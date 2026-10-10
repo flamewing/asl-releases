@@ -14,9 +14,11 @@ permissions:
 
 env:
   GH_REPO: ${{ github.repository }}
+  VERBOSE: "1"
 
 jobs:
   activity-check:
+    timeout-minutes: 10
     if: ${{ github.repository_owner == 'flamewing' }}
     runs-on: "ubuntu-latest"
     outputs:
@@ -62,6 +64,7 @@ jobs:
           This is an automated snapshot build, not a stable release. For Apple Silicon binaries, please use the macOS ARM64 build."
 
   snapshots:
+    timeout-minutes: 60
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
@@ -161,6 +164,9 @@ jobs:
           MSYS2_PATH_TYPE: inherit
         run: |
           cmake --build build -j
+      - name: Test
+        run: |
+          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120
       - name: Create package
         run: |
           cp COPYING build/
@@ -174,7 +180,20 @@ jobs:
           gh release upload "${{ needs.activity-check.outputs.tag_name }}" \
             "${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip" --clobber
 
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore
+
   snapshot-freebsd:
+    timeout-minutes: 60
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
@@ -184,7 +203,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Build in FreeBSD
+      - name: Build and test in FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
           usesh: true
@@ -194,8 +213,10 @@ jobs:
             pkg update
             pkg install -y cmake ninja hs-pandoc
           run: |
+            export VERBOSE=1
             cmake -S . -B build -G Ninja
             cmake --build build -j
+            ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120
       - name: Create package
         run: |
           cp COPYING build/
@@ -208,7 +229,21 @@ jobs:
           gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
 
   # Experimental: cross-compiled with the NDK, not run on CI.
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Experimental: cross-compiled with the NDK, not run on CI.
   snapshot-android:
+    timeout-minutes: 45
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
@@ -251,7 +286,20 @@ jobs:
         run: |
           gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
 
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore
+
   finish-release:
+    timeout-minutes: 10
     needs:
       - activity-check
       - snapshots

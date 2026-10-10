@@ -42,8 +42,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  VERBOSE: "1"
+
 jobs:
   ci-macos:
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -69,7 +73,16 @@ jobs:
         run: |
           cmake --build build -j
       - name: Test
-        env:
-          VERBOSE: 1
         run: |
-          ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure
+          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
+          path: |
+            build/Testing/Temporary/
+            build/CMakeFiles/CMakeConfigureLog.yaml
+            build-host/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore
