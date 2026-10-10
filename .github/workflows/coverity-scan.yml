@@ -12,7 +12,7 @@ permissions:
 env:
   SHA1: ${{ github.sha }}
   FILE: asl-releases-ubuntu-gcc.tgz
-  PROJ: flamewing%2Fasl-releases
+  PROJ: flamewing/asl-releases
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -76,15 +76,30 @@ jobs:
           EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
-          tar czvf $FILE cov-int
-          curl \
-            --form project=$PROJ \
-            --form token=$TOKEN \
-            --form email=$EMAIL \
-            --form file=@$FILE \
-            --form version=master \
-            --form description="$SHA1" \
-            https://scan.coverity.com/builds?project=$PROJ
+          tar czvf "$FILE" cov-int
+          response_file="$RUNNER_TEMP/coverity-upload-response.txt"
+          if ! status_code=$(curl --fail-with-body --show-error --silent \
+            --output "$response_file" --write-out '%{http_code}' \
+            --form-string "project=$PROJ" \
+            --form-string "token=$TOKEN" \
+            --form-string "email=$EMAIL" \
+            --form "file=@$FILE" \
+            --form-string "version=$SHA1" \
+            --form-string "description=$SHA1" \
+            https://scan.coverity.com/builds); then
+            echo "Coverity submission failed (HTTP $status_code)." >&2
+            if [ -f "$response_file" ]; then
+              cat "$response_file" >&2
+            fi
+            exit 1
+          fi
+          # Coverity's official submission script requires HTTP 201 for acceptance.
+          if [ "$status_code" != "201" ]; then
+            echo "Coverity submission was not accepted (HTTP $status_code)." >&2
+            cat "$response_file" >&2
+            exit 1
+          fi
+          echo "Coverity accepted the submission for $SHA1."
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
