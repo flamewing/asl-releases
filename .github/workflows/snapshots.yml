@@ -348,24 +348,41 @@ jobs:
       - snapshots
       - snapshot-freebsd
       - snapshot-android
-    if: ${{ always() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
+    if: ${{ always() && !cancelled() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
     runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SNAPSHOT_TAG: ${{ needs.activity-check.outputs.tag_name }}
+      SNAPSHOT_BUILD_ID: ${{ needs.activity-check.outputs.build_id }}
+      ORIGINAL_RELEASE_ID: ${{ needs.activity-check.outputs.release_id }}
     steps:
-      - name: Download snapshot packages
+      - name: Checkout release tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Recover or validate release
+        id: release
         if: needs.snapshots.result == 'success' && needs.snapshot-freebsd.result == 'success'
+        run: python3 .github/scripts/snapshot_release.py prepare --release-id "$ORIGINAL_RELEASE_ID"
+      - name: Download snapshot packages
+        if: steps.release.outputs.release_id != ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: snapshot-package-*
           merge-multiple: true
           path: release-assets
-      - name: Finish release
-        if: needs.snapshots.result == 'success' && needs.snapshot-freebsd.result == 'success'
-        run: |
-          gh release upload "${{ needs.activity-check.outputs.tag_name }}" release-assets/*.zip --clobber
-          gh release edit "${{ needs.activity-check.outputs.tag_name }}" --draft=false
-      - name: Rollback release
-        if: needs.snapshots.result != 'success' || needs.snapshot-freebsd.result != 'success'
-        run: |
-          gh release delete "${{ needs.activity-check.outputs.tag_name }}" --yes --cleanup-tag
+      - name: Upload snapshot assets
+        if: steps.release.outputs.release_id != ''
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: python3 .github/scripts/snapshot_release.py upload --release-id "$RELEASE_ID"
+      - name: Publish snapshot
+        if: steps.release.outputs.release_id != ''
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: python3 .github/scripts/snapshot_release.py publish --release-id "$RELEASE_ID"
+      - name: Clean up owned draft after failure
+        if: ${{ !cancelled() && (failure() || needs.snapshots.result != 'success' || needs.snapshot-freebsd.result != 'success') }}
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.release_id || needs.activity-check.outputs.release_id }}
+        run: python3 .github/scripts/snapshot_release.py cleanup --release-id "$RELEASE_ID"
