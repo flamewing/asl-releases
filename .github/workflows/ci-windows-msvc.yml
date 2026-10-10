@@ -10,7 +10,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -29,7 +28,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -41,7 +39,7 @@ on:
       - '.github/workflows/ci-windows-msvc.yml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

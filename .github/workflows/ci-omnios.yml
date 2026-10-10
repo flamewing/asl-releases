@@ -10,7 +10,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -29,7 +28,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -41,7 +39,7 @@ on:
       - '.github/workflows/ci-omnios.yml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -64,6 +62,6 @@ jobs:
             pkg install gcc13 cmake ninja
           run: |
             export VERBOSE=1
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_C_COMPILER=$(which gcc)
             cmake --build build -j
             ctest --build-run-dir build --test-dir build -j --rerun-failed --output-on-failure

@@ -10,7 +10,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -29,7 +28,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -41,7 +39,7 @@ on:
       - '.github/workflows/ci-android.yml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -65,7 +63,7 @@ jobs:
           cmake --build build-host -j --target rescomp
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG \
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 \
             -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake

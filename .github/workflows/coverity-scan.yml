@@ -13,7 +13,7 @@ env:
   PROJ: flamewing%2Fasl-releases
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
           export PATH=/tmp/cov-analysis-linux64/bin:$PATH
-          cov-build --dir cov-int make -j
+          cov-build --dir cov-int cmake --build build --parallel
       - name: Submit the result to Coverity Scan
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |

@@ -10,7 +10,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -29,7 +28,6 @@ on:
       - '!doc_COM/*'
       - '!doc_DE/*'
       - '!doc_EN/*'
-      - '!include/**'
       - '!man/*'
       - '!COPYING'
       - '!INSTALL'
@@ -41,7 +39,7 @@ on:
       - '.github/workflows/ci-emscripten.yml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -68,7 +66,7 @@ jobs:
           cmake --build build-host -j --target rescomp
       - name: Configure Target
         run: |
-          emcmake cmake -S . -B build -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake -DCMAKE_BUILD_TYPE=DEBUG
+          emcmake cmake -S . -B build -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake -DCMAKE_BUILD_TYPE=Debug
       - name: Build Target
         run: |
           cmake --build build -j
