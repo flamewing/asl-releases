@@ -389,6 +389,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
         if ((ModeMask & MModImmCondition)
             && DecodeCondition(pArg->str.p_str + 1, &Value)) {
             EvalResult.OK = True;
+            EvalResult.Flags = eSymbolFlag_None;
         } else {
             switch (OpSize) {
             case eSymbolSize8Bit:

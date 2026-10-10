@@ -2329,6 +2329,7 @@ static Boolean DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess
     if (!*ShiftArg.str.p_str) {
         ShiftCnt = 1;
         OK       = True;
+        flags    = eSymbolFlag_None;
     } else {
         ShiftCnt = EvalStrIntExpressionWithFlags(&ShiftArg, UInt1, &OK, &flags);
     }
