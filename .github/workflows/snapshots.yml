@@ -29,6 +29,8 @@ jobs:
       REPO_ALIVE: ${{ steps.activity.outputs.REPO_ALIVE }}
       build_id: ${{ steps.activity.outputs.build_id }}
       tag_name: ${{ steps.activity.outputs.tag_name }}
+      release_id: ${{ steps.release.outputs.release_id }}
+      published: ${{ steps.release.outputs.published }}
     steps:
       - name: Activity check
         id: activity
@@ -50,32 +52,38 @@ jobs:
               REPO_ALIVE=true
             fi
           fi
-          build_id="v1.4.2.$(date --utc +'%Y%m%d')"
-          tag_name="snapshot-${build_id}"
+          build_id=""
+          tag_name=""
+          if [ "$REPO_ALIVE" = true ]; then
+            # Run creation time is stable across retries, including across midnight.
+            RUN_CREATED_AT=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq '.created_at')
+            build_id="v1.4.2.$(date --utc -d "$RUN_CREATED_AT" +'%Y%m%d')-run${GITHUB_RUN_ID}"
+            tag_name="snapshot-${build_id}"
+          fi
           {
             echo "REPO_ALIVE=${REPO_ALIVE}"
             echo "build_id=${build_id}"
             echo "tag_name=${tag_name}"
           } >> "$GITHUB_OUTPUT"
-      - name: Create release
+      - name: Checkout release tooling
         if: ${{ steps.activity.outputs.REPO_ALIVE == 'true' }}
-        shell: bash
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Prepare release
+        id: release
+        if: ${{ steps.activity.outputs.REPO_ALIVE == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ steps.activity.outputs.tag_name }}" \
-            --draft \
-            --target "${{ github.sha }}" \
-            --title "Snapshot ${{ steps.activity.outputs.build_id }}" \
-            --notes "Snapshot build for ${{ steps.activity.outputs.build_id }}.
-
-          This is an automated snapshot build, not a stable release. For Apple Silicon binaries, please use the macOS ARM64 build."
+          SNAPSHOT_TAG: ${{ steps.activity.outputs.tag_name }}
+          SNAPSHOT_BUILD_ID: ${{ steps.activity.outputs.build_id }}
+        run: python3 .github/scripts/snapshot_release.py prepare
 
   snapshots:
     timeout-minutes: 60
     needs:
       - activity-check
-    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -190,6 +198,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+          overwrite: true
 
       - name: Upload failure logs
         if: failure()
@@ -202,12 +211,13 @@ jobs:
             build-host/CMakeFiles/CMakeConfigureLog.yaml
           retention-days: 7
           if-no-files-found: ignore
+          overwrite: true
 
   snapshot-freebsd:
     timeout-minutes: 60
     needs:
       - activity-check
-    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
     runs-on: ubuntu-latest
     env:
       PACKAGE: asl-freebsd-x86_64-${{ needs.activity-check.outputs.build_id }}
@@ -243,6 +253,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+          overwrite: true
 
       - name: Upload failure logs
         if: failure()
@@ -255,13 +266,14 @@ jobs:
             build-host/CMakeFiles/CMakeConfigureLog.yaml
           retention-days: 7
           if-no-files-found: ignore
+          overwrite: true
 
   # Experimental: cross-compiled with the NDK, not run on CI.
   snapshot-android:
     timeout-minutes: 45
     needs:
       - activity-check
-    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     env:
@@ -312,6 +324,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+          overwrite: true
 
       - name: Upload failure logs
         if: failure()
@@ -324,6 +337,7 @@ jobs:
             build-host/CMakeFiles/CMakeConfigureLog.yaml
           retention-days: 7
           if-no-files-found: ignore
+          overwrite: true
 
   finish-release:
     permissions:
@@ -334,7 +348,7 @@ jobs:
       - snapshots
       - snapshot-freebsd
       - snapshot-android
-    if: ${{ always() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    if: ${{ always() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.release_id != '' }}
     runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
