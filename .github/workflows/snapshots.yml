@@ -67,7 +67,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Checkout release tooling
         if: ${{ steps.activity.outputs.REPO_ALIVE == 'true' }}
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Prepare release
@@ -169,7 +169,7 @@ jobs:
         with:
           pandoc-version: "3.1.11"
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Configure
@@ -191,7 +191,7 @@ jobs:
           cd build
           "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt ./*.msg {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
       - name: Store snapshot package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: snapshot-package-${{ matrix.architecture }}
           path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
@@ -202,7 +202,7 @@ jobs:
 
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -223,7 +223,7 @@ jobs:
       PACKAGE: asl-freebsd-x86_64-${{ needs.activity-check.outputs.build_id }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Build and test in FreeBSD
@@ -246,7 +246,7 @@ jobs:
           cd build
           7z -tzip a "../${PACKAGE}.zip" -mx9 -mmt COPYING asl.html asl.odt ./*.msg alink dasl p2bin p2hex pbind plist asl
       - name: Store snapshot package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: snapshot-package-${{ github.job }}
           path: ${{ env.PACKAGE }}.zip
@@ -257,7 +257,7 @@ jobs:
 
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -288,7 +288,7 @@ jobs:
         with:
           pandoc-version: "3.1.11"
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Select Android NDK
@@ -317,7 +317,7 @@ jobs:
           cd build
           7z -tzip a "../${PACKAGE}.zip" -mx9 -mmt COPYING asl.html asl.odt ./*.msg alink dasl p2bin p2hex pbind plist asl
       - name: Store snapshot package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: snapshot-package-${{ github.job }}
           path: ${{ env.PACKAGE }}.zip
@@ -328,7 +328,7 @@ jobs:
 
       - name: Upload failure logs
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: failure-logs-${{ github.job }}-${{ strategy.job-index }}
           path: |
@@ -357,7 +357,7 @@ jobs:
       ORIGINAL_RELEASE_ID: ${{ needs.activity-check.outputs.release_id }}
     steps:
       - name: Checkout release tooling
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Recover or validate release
@@ -366,7 +366,7 @@ jobs:
         run: python3 .github/scripts/snapshot_release.py prepare --release-id "$ORIGINAL_RELEASE_ID"
       - name: Download snapshot packages
         if: steps.release.outputs.release_id != ''
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: snapshot-package-*
           merge-multiple: true
