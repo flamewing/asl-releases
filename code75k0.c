@@ -403,8 +403,6 @@ static Boolean DecodeIntName(char* Asc, Byte* Erg) {
 
     if (pCurrCPUProps->CoreType <= eCore402) {
         LPart = 0;
-    } else if (pCurrCPUProps->CoreType < eCore004) {
-        LPart = 1;
     } else if (pCurrCPUProps->CoreType < eCore104) {
         LPart = 2;
     } else {

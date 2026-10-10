@@ -317,7 +317,8 @@ void cpu_2_phys_area_dump(as_addrspace_t addr_space, FILE* p_file) {
     }
     for (z = 0; z < p_list->cnt; z++) {
         as_snprintf(
-                str, sizeof str, "[%2u] %0*lllx...%0*lllx -> %0*lllx...%0*lllx\n", z,
+                str, sizeof str, "[%2llu] %0*lllx...%0*lllx -> %0*lllx...%0*lllx\n",
+                (unsigned long long)z,
                 cpu_max_len, p_list->areas[z].cpu_start, cpu_max_len,
                 p_list->areas[z].cpu_end, phys_max_len, p_list->areas[z].phys_start,
                 phys_max_len, p_list->areas[z].phys_end);

@@ -863,7 +863,7 @@ static void DecodeGen(Word Index) {
                 SwapMode(&p_prev_gen_info->Src2Mode, &p_prev_gen_info->Src1Mode);
                 SwapPart(&p_prev_gen_info->Src2Part, &p_prev_gen_info->Src1Part);
             }
-            if ((p_prev_gen_info->DestPart > 7) || (p_prev_gen_info->DestPart > 7)) {
+            if ((p_prev_gen_info->DestPart > 7) || (p_curr_gen_info->DestPart > 7)) {
                 WrError(ErrNum_InvReg);
                 return;
             }

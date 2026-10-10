@@ -58,6 +58,13 @@ static int SetCodeChunkListAllocLen(
         pCodeChunkList->RealLen = NewAllocLen;
     }
 
+    if (!NewAllocLen) {
+        free(pCodeChunkList->Chunks);
+        pCodeChunkList->Chunks = NULL;
+        pCodeChunkList->AllocLen = 0;
+        return 0;
+    }
+
     if (!pCodeChunkList->AllocLen) {
         pCodeChunkList->Chunks = (tCodeChunk*)malloc(NewAllocLen * sizeof(tCodeChunk));
         Result                 = pCodeChunkList->Chunks ? 0 : ENOMEM;
@@ -74,9 +81,6 @@ static int SetCodeChunkListAllocLen(
 
     if (!Result) {
         pCodeChunkList->AllocLen = NewAllocLen;
-        if (!pCodeChunkList->AllocLen) {
-            pCodeChunkList->Chunks = NULL;
-        }
     }
     return Result;
 }
