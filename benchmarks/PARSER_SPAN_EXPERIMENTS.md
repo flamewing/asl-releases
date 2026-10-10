@@ -186,6 +186,54 @@ Retain the portable pointer version: MSVC improves on every workload and confirm
 
 Complete source snapshots, normal and sanitizer binaries, test logs, diagnostic probes and raw timing results remain under the external `output-experiments` roots. The retained artifacts are `span-recursive-final-20261010` and the screened pointer version `span-recursive-20261010-r3`; the by-value trial is preserved separately. No private workload source, original source paths or manifests are committed. Profiles and future counted floating/quoted leaves can evaluate the remaining materialization boundaries independently.
 
+## Linux Sonic 1 regression investigation: no retained code change
+
+The reported 4.50% slowdown compares `span-recursive-final-20261010` (production `8d2493e4`) with `span-integer-final-20261009` (production `68ca50da`). Fresh measurements reuse those frozen optimized binaries, with no rebuilding or instrumentation during timing. All runs use native ext4 and alternate binary order; objects and normalized listings match. Positive reductions mean faster.
+
+| Linux Sonic 1 comparison | Measured pairs | Warm-ups per binary | Elapsed reduction | CPU reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Original confirmation | 7 | 1 | -4.47% | -4.51% |
+| Fresh focused repeat | 21 | 1 | +0.18% | +0.92% |
+| Second focused repeat | 21 | 1 | +1.35% | +1.36% |
+| Fresh eleven-workload sweep | 7 | 1 | -6.07% | -6.12% |
+| Focused repeat on virtual CPU 2 | 63 | 10 | +1.95% | +1.84% |
+
+The short seven-pair samples remain unstable, whereas the longer focused checks do not reproduce a persistent regression. In original confirmation, baseline CPU times range from 0.285 to 0.560 seconds and candidate times from 0.275 to 0.405 seconds. That sample's ratio of medians suggests a slowdown, but its geometric mean of paired CPU ratios suggests a 4.86% improvement. An exploratory paired bootstrap spans -4.82% to +14.69%, including no change. This is evidence of inadequate precision, not a reason to replace the preselected median statistic with a more favorable statistic.
+
+With ten warm-ups and both binaries restricted to the same virtual CPU, median CPU time falls from 0.280405 to 0.275248 seconds. The geometric paired CPU reduction is +2.52%, with an exploratory bootstrap interval of +1.39% to +3.81%. These intervals resample pairs and do not account for temporal correlation. Guest CPU affinity also does not control the host's scheduling or clock frequency. The measurements do not establish the exact source of the earlier variation. Memory-pressure counters remain zero and there are no swap-ins or swap-outs in either pinned comparison.
+
+For completeness, the fresh unrestricted seven-pair sweep has -0.60% mean CPU reduction across the eleven workloads, compared with +0.57% in original confirmation. The small Linux aggregate is therefore also sensitive to measurement variation.
+
+| Workload | Fresh native Linux GCC CPU reduction |
+| --- | ---: |
+| Sonic 1 | -6.12% |
+| Sonic 2 | -1.44% |
+| Sonic & Knuckles | +0.62% |
+| Big Fishing Derby | +0.34% |
+| Sonic Classic Heroes | -2.85% |
+| ScalerMacros-v1.asm | +1.53% |
+| ScalerMacros-v2.asm | +0.28% |
+| Madness 4 release | +0.49% |
+| Madness 4 debug | -0.70% |
+| local-e | +0.04% |
+| local-e-debug | +0.92% |
+
+### Public evaluator wrapper experiment: discarded
+
+Disassembly reveals an additional wrapper cost in the retained implementation: the public entry point constructs a positioned view on its stack, calls the private evaluator, and returns through a stack-canary check. This is a concrete overhead, but its contribution to the reported regression was not established. One portable experiment passes the text, physical length and caller's live position directly to the core evaluator, with an inline adapter for recursive views. It leaves parsing and ownership rules unchanged. Linux GCC emits a tail jump from the public wrapper and removes its temporary view and canary check; no platform guards or compiler attributes are introduced.
+
+The `span-recursive-tail-20261010` snapshot builds all utilities and passes all 332 tests on Windows GCC, Windows MSVC and native Linux GCC. Three-pair screening against the retained recursive implementation preserves objects and normalized listings on all eleven workloads.
+
+| Toolchain | Elapsed reduction | CPU reduction |
+| --- | ---: | ---: |
+| Windows GCC | +1.92% | +1.19% |
+| Windows MSVC | -0.88% | -1.66% |
+| Native Linux GCC | +0.69% | +0.83% |
+
+A separate 63-pair, ten-warm-up comparison on virtual CPU 2 measures +1.29% elapsed and +1.16% CPU reduction for the wrapper experiment on Sonic 1. The extra overhead can be reduced, but the experiment fails the requirement to preserve the other workloads' gains: MSVC screening loses performance overall. Discard the candidate and retain `8d2493e4` unchanged. At the user's request, stop investigating the vanished regression; do not chase short-sample fluctuations or add further speculative changes.
+
+Timing results are preserved under the native `span-recursive-final-20261010` artifact in batches `regression-s1-20261010`, `regression-s1-repeat-20261010`, `regression-all-20261010` and `regression-s1-pinned-20261010`. The discarded candidate's sources, patch, binaries, test logs and screening summaries remain in `span-recursive-tail-20261010` under the external Windows and native artifact roots; its focused repeat is also named `regression-s1-pinned-20261010`. No private source or identifying information is added to the report.
+
 ## Floating conversion follow-up
 
 A stack termination buffer can cover common floating literals, with reusable dynamic storage for longer inputs. Numeric precision does not bound source length: leading zeros, long exponents and rounding-sensitive tails must not be silently truncated. Preserve ASL's locale, range and accepted-syntax behavior.
