@@ -984,6 +984,12 @@ define_executable(asl
 )
 target_link_libm(asl)
 
+if(EMSCRIPTEN)
+    # Recursive expression evaluation needs more than Emscripten's 64 KiB stack.
+    set(ASL_EMSCRIPTEN_STACK_SIZE 1048576 CACHE STRING "Assembler WebAssembly stack size in bytes")
+    target_link_options(asl PRIVATE "-sSTACK_SIZE=${ASL_EMSCRIPTEN_STACK_SIZE}")
+endif()
+
 if(DEFINED ENV{MSYSTEM_PREFIX})
     define_executable(asw
         $<TARGET_OBJECTS:AS_OBJECTS>
@@ -1216,9 +1222,11 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         --self-contained --standalone
         --reference-doc=doc/asl-template.odt
     )
-    # Note: making ODT depend arbitrarily on HTML to avoid a race condition when
-    # Pandocollogy copies the source files.
+    # Both the wrapper and the product target can copy shared document inputs.
+    # Order the product target too: ordering only the wrapper leaves MSBuild
+    # free to build its product dependency alongside HTML.
     add_dependencies(odt_document html_document)
+    add_dependencies(asl.odt_product html_document)
     install(
         FILES
         COPYING
