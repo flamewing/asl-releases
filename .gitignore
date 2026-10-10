@@ -24,6 +24,7 @@
 testlog
 run-msbuild.bat
 
+.cache/*
 out/*
 .vscode/*
 .vs/*
