@@ -1,0 +1,74 @@
+name: ci-android
+
+on:
+  push:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-android.yml'
+  pull_request:
+    paths:
+      - '**'
+      - '!*.bat'
+      - '!*.cmd'
+      - '!*.sh'
+      - '!doc_COM/*'
+      - '!doc_DE/*'
+      - '!doc_EN/*'
+      - '!include/**'
+      - '!man/*'
+      - '!COPYING'
+      - '!INSTALL'
+      - '!README*'
+      - '!.clang*'
+      - '!.gitignore'
+      - '!.gitattributes'
+      - '!.github/workflows/*'
+      - '.github/workflows/ci-android.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  ci-android:
+    runs-on: ubuntu-latest
+    continue-on-error: true # Experimental
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.1.11'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build host tools
+        run: |
+          cmake -S . -B build-host
+          cmake --build build-host -j --target rescomp
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=DEBUG \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 \
+            -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
+      - name: Build
+        run: |
+          cmake --build build -j

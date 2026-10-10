@@ -9,6 +9,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
+env:
+  GH_REPO: ${{ github.repository }}
+
 jobs:
   activity-check:
     if: ${{ github.repository_owner == 'flamewing' }}
@@ -17,8 +23,6 @@ jobs:
       REPO_ALIVE: ${{ steps.activity.outputs.REPO_ALIVE }}
       build_id: ${{ steps.activity.outputs.build_id }}
       tag_name: ${{ steps.activity.outputs.tag_name }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Activity check
         id: activity
@@ -38,60 +42,59 @@ jobs:
           fi
           build_id="v1.4.2.$(date --utc +'%Y%m%d')"
           tag_name="snapshot-${build_id}"
-          echo "::set-output name=REPO_ALIVE::${REPO_ALIVE}"
-          echo "::set-output name=build_id::${build_id}"
-          echo "::set-output name=tag_name::${tag_name}"
-          echo REPO_ALIVE=${REPO_ALIVE} >> $GITHUB_ENV
-          echo BUILD_ID="${build_id}" >> $GITHUB_ENV
-          echo TAG_NAME="${tag_name}" >> $GITHUB_ENV
+          {
+            echo "REPO_ALIVE=${REPO_ALIVE}"
+            echo "build_id=${build_id}"
+            echo "tag_name=${tag_name}"
+          } >> "$GITHUB_OUTPUT"
       - name: Create release
-        if: ${{ env.REPO_ALIVE == 'true' }}
-        id: create_release
-        uses: actions/create-release@v1
+        if: ${{ steps.activity.outputs.REPO_ALIVE == 'true' }}
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: snapshot-${{ env.TAG_NAME }}
-          release_name: Snapshot ${{ env.BUILD_ID }}
-          draft: true
-          prerelease: false
-          body: "Snapshot build for ${{ env.BUILD_ID }}.\n\nThis is an automated snapshot build, not a stable release. For Apple Silicon binaries, please use the macOS ARM64 build."
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.activity.outputs.tag_name }}" \
+            --draft \
+            --target "${{ github.sha }}" \
+            --title "Snapshot ${{ steps.activity.outputs.build_id }}" \
+            --notes "Snapshot build for ${{ steps.activity.outputs.build_id }}.
+
+          This is an automated snapshot build, not a stable release. For Apple Silicon binaries, please use the macOS ARM64 build."
 
   snapshots:
     needs:
       - activity-check
     if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
-        architecture:
-          - linux32
-          - linux64
-          - macos-x86_64
-          - macos-arm64
-          - win32
-          - win64
         include:
           - architecture: linux32
             os: ubuntu-latest
             shell: bash
-            arch: i686
             package: asl-ubuntu-i686
             p7zip: 7z
             exe_ext: ""
             as: asl
             depends: "gcc-multilib"
+            cflags: "-m32"
           - architecture: linux64
             os: ubuntu-latest
             shell: bash
-            arch: x86_64
             package: asl-ubuntu-x86_64
             p7zip: 7z
             exe_ext: ""
             as: asl
-          - architecture: macos-x86_64
-            os: macos-13 # macos-13 is the last x86_64 version.
+          - architecture: linux-aarch64
+            os: ubuntu-24.04-arm
             shell: bash
-            arch: x86_64
+            package: asl-ubuntu-aarch64
+            p7zip: 7z
+            exe_ext: ""
+            as: asl
+          - architecture: macos-x86_64
+            os: macos-15-intel # last x86_64 runner image
+            shell: bash
             package: asl-osx-x86_64
             p7zip: 7z
             exe_ext: ""
@@ -99,7 +102,6 @@ jobs:
           - architecture: macos-arm64
             os: macos-latest # macos-latest is arm64.
             shell: bash
-            arch: arm64
             package: asl-osx-arm64
             p7zip: 7z
             exe_ext: ""
@@ -108,7 +110,6 @@ jobs:
             os: windows-latest
             shell: msys2
             msystem: MINGW32
-            arch: i686
             package: asl-windows-i686
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
@@ -116,8 +117,7 @@ jobs:
           - architecture: win64
             os: windows-latest
             shell: msys2
-            msystem: MINGW64
-            arch: x86_64
+            msystem: UCRT64
             package: asl-windows-x86_64
             p7zip: "/c/Program Files/7-Zip/7z.exe"
             exe_ext: ".exe"
@@ -128,44 +128,34 @@ jobs:
         shell: ${{ matrix.shell }} {0}
     steps:
       - name: Install dependencies (Linux)
-        if: ${{ matrix.architecture == 'linux32' || matrix.architecture == 'linux64' }}
+        if: ${{ startsWith(matrix.architecture, 'linux') }}
         run: |
-          if ! apt-fast -- help &> /dev/null; then
-            sudo add-apt-repository -u -y ppa:apt-fast/stable
-            sudo apt-get update
-            echo debconf apt-fast/maxdownloads string 16 | sudo debconf-set-selections
-            echo debconf apt-fast/dlflag boolean true | sudo debconf-set-selections
-            echo debconf apt-fast/aptmanager string apt-get | sudo debconf-set-selections
-            DEBIAN_FRONTEND=noninteractive sudo apt install -y apt-fast
-          else
-            sudo apt-fast update
-          fi
-          sudo apt-fast install -y libboost-all-dev ninja-build
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev ninja-build ${{ matrix.depends }}
       - name: Install dependencies (Mac OS)
-        if: ${{ matrix.architecture == 'macos-x86_64' || matrix.architecture == 'macos-arm64' }}
+        if: ${{ startsWith(matrix.architecture, 'macos') }}
         run: |
-          brew update
-          brew upgrade || true
           brew install cmake ninja
       - name: Install dependencies (Windows)
-        if: ${{ matrix.architecture == 'win32' || matrix.architecture == 'win64' }}
+        if: ${{ startsWith(matrix.architecture, 'win') }}
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: base-devel git
-            mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
-            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-ninja
+          install: >-
+            base-devel git
+          pacboy: >-
+            toolchain:p binutils:p cmake:p ninja:p
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: "3.1.11"
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Configure
         env:
           MSYS2_PATH_TYPE: inherit
         run: |
-          cmake -S . -B build -G Ninja
+          cmake -S . -B build -G Ninja "-DCMAKE_C_FLAGS=${{ matrix.cflags }}"
       - name: Build
         env:
           MSYS2_PATH_TYPE: inherit
@@ -177,34 +167,106 @@ jobs:
           cd build
           "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
       - name: Upload snapshot
-        uses: actions/upload-release-asset@v1
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.activity-check.outputs.tag_name }}" \
+            "${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip" --clobber
+
+  snapshot-freebsd:
+    needs:
+      - activity-check
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: asl-freebsd-x86_64-${{ needs.activity-check.outputs.build_id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build in FreeBSD
+        uses: vmactions/freebsd-vm@v1
         with:
-          upload_url: ${{ needs.activity-check.outputs.upload_url }}
-          asset_path: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
-          asset_name: ${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip
-          asset_content_type: application/zip
+          usesh: true
+          sync: rsync
+          copyback: true
+          prepare: |
+            pkg update
+            pkg install -y cmake ninja hs-pandoc
+          run: |
+            cmake -S . -B build -G Ninja
+            cmake --build build -j
+      - name: Create package
+        run: |
+          cp COPYING build/
+          cd build
+          7z -tzip a ../${PACKAGE}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg alink dasl p2bin p2hex pbind plist asl
+      - name: Upload snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
+
+  # Experimental: cross-compiled with the NDK, not run on CI.
+  snapshot-android:
+    needs:
+      - activity-check
+    if: ${{ github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      PACKAGE: asl-android-aarch64-${{ needs.activity-check.outputs.build_id }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: "3.1.11"
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build host tools
+        run: |
+          cmake -S . -B build-host
+          cmake --build build-host -j --target rescomp
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 \
+            -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
+      - name: Build
+        run: |
+          cmake --build build -j
+      - name: Create package
+        run: |
+          cp COPYING build/
+          cd build
+          7z -tzip a ../${PACKAGE}.zip -mx9 -mmt COPYING asl.html asl.odt *.msg alink dasl p2bin p2hex pbind plist asl
+      - name: Upload snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.activity-check.outputs.tag_name }}" "${PACKAGE}.zip" --clobber
 
   finish-release:
     needs:
       - activity-check
       - snapshots
+      - snapshot-freebsd
+      - snapshot-android
     if: ${{ always() && github.repository_owner == 'flamewing' && needs.activity-check.outputs.REPO_ALIVE == 'true' }}
     runs-on: "ubuntu-latest"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Finish release
-        if: needs.snapshots.result == 'success'
-        uses: eregon/publish-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ needs.activity-check.outputs.release_id }}
+        if: needs.snapshots.result == 'success' && needs.snapshot-freebsd.result == 'success'
+        run: |
+          gh release edit "${{ needs.activity-check.outputs.tag_name }}" --draft=false
       - name: Rollback release
-        if: needs.snapshots.result != 'success'
-        uses: author/action-rollback@stable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ needs.activity-check.outputs.release_id }}
-          tag: ${{ needs.activity-check.outputs.tag_name }}
+        if: needs.snapshots.result != 'success' || needs.snapshot-freebsd.result != 'success'
+        run: |
+          gh release delete "${{ needs.activity-check.outputs.tag_name }}" --yes --cleanup-tag

@@ -55,10 +55,8 @@ jobs:
         include:
           - architecture: i686
             msystem: MINGW32
-            arch: i686
           - architecture: x86_64
-            msystem: MINGW64
-            arch: x86_64
+            msystem: UCRT64
     defaults:
       run:
         shell: msys2 {0}
@@ -67,16 +65,16 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install:
+          install: >-
             base-devel git
-            mingw-w64-${{ matrix.arch }}-toolchain mingw-w64-${{ matrix.arch }}-binutils
-            mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-ninja
+          pacboy: >-
+            toolchain:p binutils:p cmake:p ninja:p
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Configure
         env:
           MSYS2_PATH_TYPE: inherit

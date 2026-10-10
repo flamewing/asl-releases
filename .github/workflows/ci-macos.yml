@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-13]  # macos-13 is the last x86_64 version.
+        os: [macos-latest, macos-15-intel]  # macos-15-intel is the last x86_64 image
         generator: [Ninja]
     runs-on: ${{ matrix.os }}
     steps:
@@ -63,7 +63,7 @@ jobs:
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Configure
         run: |
           cmake -S . -B build -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=DEBUG

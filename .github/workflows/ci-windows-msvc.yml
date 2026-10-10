@@ -64,9 +64,9 @@ jobs:
         with:
           pandoc-version: '3.1.11'
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v2
       - name: Select Visual Studio generator
         shell: pwsh
         run: |
