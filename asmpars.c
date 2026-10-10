@@ -38,6 +38,7 @@
 #include "operator.h"
 #include "sha1.h"
 #include "strcomp.h"
+#include "strcomp_view.h"
 #include "strutil.h"
 #include "trees.h"
 #include "ulib/hash_open_prot.h"
@@ -1832,18 +1833,36 @@ DECLARE_AS_EVAL_CB(function_eval_cb) {
     return e_eval_none;
 }
 
-void EvalStrExpressionWithCallback(
-        tStrComp const* pExpr, TempResult* pErg, as_eval_flags_t eval_flags,
+/* Terminated, writable adapters are confined to legacy interface boundaries. */
+static inline void MaterializeExpressionView(tStrComp* dest, as_strcomp_view_t source) {
+    tStrComp component;
+    component.str.p_str = (char*)source.text.data;
+    component.str.capacity = 0;
+    component.str.dynamic = 0;
+    component.Pos = source.pos;
+    StrCompCopySubKnown(dest, &component, 0, source.text.len);
+}
+
+static void WrExpressionViewError(tErrorNum error, as_strcomp_view_t source) {
+    tStrComp component;
+    StrCompAlloc(&component, STRINGSIZE);
+    MaterializeExpressionView(&component, source);
+    WrStrErrorPos(error, &component);
+    StrCompFree(&component);
+}
+
+static void EvalExpressionView(
+        as_strcomp_view_t const* expression, TempResult* pErg,
+        as_eval_flags_t eval_flags,
         as_eval_cb_data_t* p_callback_data) {
     Boolean                   OK, int_probed = False, int_valid = False;
     int                       int_outof_range, float_outof_range;
-    tStrComp                  InArgs[3];
+    as_strcomp_view_t         InArgs[3];
     TempResult                InVals[3];
     int                       z1, cnt;
-    char                      Save = '\0';
     operator_search_cb_data_t operator_search_data;
     as_operator_t const*      p_run_op;
-    char*                     p_arg_split_pos;
+    char const*               p_arg_split_pos;
     PFunction                 ValFunc;
     tStrComp                  CopyComp, STempComp;
     tFunction const*          pFunction;
@@ -1855,9 +1874,10 @@ void EvalStrExpressionWithCallback(
 
     tExpressionScratch* pScratch = NULL;
     as_strref_t int_source;
+    as_strcomp_view_t original = as_strcomp_view_trim(*expression);
 
     if (MakeDebug) {
-        fprintf(Debug, "Parse '%s'\n", pExpr->str.p_str);
+        fprintf(Debug, "Parse '%.*s'\n", (int)expression->text.len, expression->text.data);
     }
 
     /* Annahme Fehler */
@@ -1868,23 +1888,13 @@ void EvalStrExpressionWithCallback(
     pErg->AddrSpaceMask = 0;
     pErg->DataSize      = eSymbolSizeUnknown;
 
-    /* The public component interface is terminated. Reject nonliteral starts
-       before measuring a span; borrowed recursive callers can supply lengths
-       directly when their interfaces are converted. */
-    if (RadixBase >= 2 && RadixBase <= 36) {
-        char const* first = pExpr->str.p_str;
-        unsigned char lead;
-        while (as_isspace(*first)) {
-            first++;
-        }
-        if (*first == '+' || *first == '-') {
-            first++;
-        }
-        lead = (unsigned char)*first;
+    /* Integer leaves can consume a child slice without an adapter or strlen. */
+    if (RadixBase >= 2 && RadixBase <= 36 && original.text.len) {
+        as_strref_t input = original.text;
+        size_t first = (*input.data == '+' || *input.data == '-') ? 1 : 0;
+        unsigned char lead = first < input.len ? (unsigned char)input.data[first] : 0;
         if ((lead >= '0' && lead <= '9')
-            || ((lead == '$' || lead == '%' || lead == '@') && first[1])) {
-            as_strref_t input = as_strref_trim(
-                    (as_strref_t){pExpr->str.p_str, strlen(pExpr->str.p_str)});
+            || ((lead == '$' || lead == '%' || lead == '@') && first + 1 < input.len)) {
             Boolean is_pc = False;
             if (PCSymbol && as_toupper(PCSymbol[0]) == as_toupper(input.data[0])
                 && strlen(PCSymbol) == input.len) {
@@ -1914,18 +1924,23 @@ materialize_input:
     STempComp            = pScratch->STempComp;
     cb_data_stack.p_next = p_callback_data->p_stack;
 
-    StrCompCopy(&CopyComp, pExpr);
-    KillPrefBlanksStrComp(&CopyComp);
-    KillPostBlanksStrComp(&CopyComp);
+    MaterializeExpressionView(&CopyComp, original);
 
     /* sort out local symbols like - and +++.  Do it now to get them out of the
        formula parser's way. */
 
-    if (chk_tmp_2(CopyComp.str.p_str, STRINGSIZE, &CopyComp, e_symbol_source_none)
-        == e_chk_tmp_error) {
+    switch (chk_tmp_2(CopyComp.str.p_str, STRINGSIZE, &CopyComp, e_symbol_source_none)) {
+    case e_chk_tmp_error:
         LEAVE;
+    case e_chk_tmp_yes:
+        /* Expanded temporary labels need an owned backup; ordinary input
+           keeps borrowing its live parent's immutable storage. */
+        StrCompCopy(&STempComp, &CopyComp);
+        original = as_strcomp_view_from(&STempComp, strlen(STempComp.str.p_str));
+        break;
+    default:
+        break;
     }
-    StrCompCopy(&STempComp, &CopyComp);
 
     /* Programmzaehler ? */
 
@@ -2085,7 +2100,7 @@ integer_result:
         } else if (
                 !operator_search_data.op_pos
                 || (operator_search_data.op_pos
-                    == (ptrdiff_t)strlen(CopyComp.str.p_str) - 1)) {
+                    == (ptrdiff_t)CompLen - 1)) {
             ThisArgCnt = 1;
         } else {
             ThisArgCnt = 2;
@@ -2096,10 +2111,11 @@ integer_result:
 
         /* Teilausdruecke rekursiv auswerten: */
 
-        Save = StrCompSplitRef(
-                &InArgs[0], &InArgs[1], &CopyComp,
-                CopyComp.str.p_str + operator_search_data.op_pos);
-        StrCompIncRefLeft(&InArgs[1], strlen(operator_search_data.p_best_op->Id) - 1);
+        as_strcomp_view_t operands = as_strcomp_view_from(&CopyComp, CompLen);
+        InArgs[0] = as_strcomp_view_sub(operands, 0, operator_search_data.op_pos);
+        InArgs[1] = as_strcomp_view_sub(operands,
+                operator_search_data.op_pos + operator_search_data.p_best_op->IdLen,
+                (size_t)-1);
         cb_data_stack.type       = e_operator;
         cb_data_stack.p_ident    = operator_search_data.p_best_op->Id;
         p_callback_data->p_stack = &cb_data_stack;
@@ -2109,12 +2125,11 @@ integer_result:
 
         if (operator_search_data.p_best_op->op_type == e_op_dyadic_short) {
             cb_data_stack.arg_index = 0;
-            EvalStrExpressionWithCallback(
+            EvalExpressionView(
                     &InArgs[0], &InVals[0], eval_flags, p_callback_data);
             lhs_evaluated = True;
             if ((InVals[0].Typ == TempInt)
                 && operator_search_data.p_best_op->pFunc(pErg, &InVals[0], NULL)) {
-                CopyComp.str.p_str[operator_search_data.op_pos] = Save;
                 LEAVE;
             }
         }
@@ -2122,13 +2137,13 @@ integer_result:
         /* OK, no short circuit.  But avoid evaluating lhs once again: */
 
         cb_data_stack.arg_index = 1;
-        EvalStrExpressionWithCallback(
+        EvalExpressionView(
                 &InArgs[1], &InVals[1], eval_flags, p_callback_data);
         if (op_arg_cnt == 2) {
             if (!lhs_evaluated) {
                 cb_data_stack.arg_index      = 0;
                 p_callback_data->p_other_arg = &InVals[1];
-                EvalStrExpressionWithCallback(
+                EvalExpressionView(
                         &InArgs[0], &InVals[0], eval_flags, p_callback_data);
                 p_callback_data->p_other_arg = NULL;
             }
@@ -2138,7 +2153,6 @@ integer_result:
             as_tempres_set_int(&InVals[0], 0);
             InVals[0].Relocs = NULL;
         }
-        CopyComp.str.p_str[operator_search_data.op_pos] = Save;
 
         /* Abbruch, falls dabei Fehler */
 
@@ -2186,9 +2200,9 @@ integer_result:
             for (z2 = first_op_index; z2 < 2; z2++) {
                 TypeMask = GetOpTypeMask(SumCombinations, z2);
                 if (!(TypeMask & InVals[z2].Typ)) {
-                    WrStrErrorPos(
+                    WrExpressionViewError(
                             DeduceExpectTypeErrMsgMask(TypeMask, InVals[z2].Typ),
-                            &InArgs[z2]);
+                            InArgs[z2]);
                 }
             }
             LEAVE;
@@ -2215,7 +2229,8 @@ integer_result:
     /* kein Operator gefunden: Klammerausdruck ? */
 
     if (operator_search_data.l_klamm != 0) {
-        tStrComp FName, FArg, Remainder;
+        tStrComp FName;
+        as_strcomp_view_t FArg, Remainder;
         char*    p_opening_pos;
 
         /* erste Klammer suchen, Funktionsnamen abtrennen */
@@ -2224,15 +2239,20 @@ integer_result:
 
         /* Funktionsnamen abschneiden */
 
-        StrCompSplitRef(&FName, &FArg, &CopyComp, p_opening_pos);
-        StrCompShorten(&FArg, 1);
+        as_strcomp_view_t whole = as_strcomp_view_from(
+                &CopyComp, strlen(CopyComp.str.p_str));
+        MaterializeExpressionView(&STempComp,
+                as_strcomp_view_sub(whole, 0, p_opening_pos - CopyComp.str.p_str));
+        FName = STempComp;
+        FArg = as_strcomp_view_sub(whole, p_opening_pos - CopyComp.str.p_str + 1,
+                whole.text.len - (p_opening_pos - CopyComp.str.p_str) - 2);
         KillPostBlanksStrComp(&FName);
 
         /* Nullfunktion: nur Argument */
 
         if (*FName.str.p_str == '\0') {
             /* No need to establish another callback data stack level in this case: */
-            EvalStrExpressionWithCallback(&FArg, pErg, eval_flags, p_callback_data);
+            EvalExpressionView(&FArg, pErg, eval_flags, p_callback_data);
             LEAVE;
         }
 
@@ -2256,21 +2276,23 @@ integer_result:
             p_callback_data->p_stack = &cb_data_stack;
             for (z1 = 0, cb_data_stack.arg_index = 0; z1 < ValFunc->ArguCnt;
                  z1++, cb_data_stack.arg_index++) {
-                if (!*FArg.str.p_str) {
+                if (!FArg.text.len) {
                     WrError(ErrNum_InvFuncArgCnt);
                     LEAVE2;
                 }
 
-                p_arg_split_pos = QuotPos(FArg.str.p_str, ',');
+                p_arg_split_pos = as_strref_find_quoted(FArg.text, ',');
                 if (p_arg_split_pos) {
-                    StrCompSplitRef(&FArg, &Remainder, &FArg, p_arg_split_pos);
+                    Remainder = as_strcomp_view_sub(FArg,
+                            p_arg_split_pos - FArg.text.data + 1, (size_t)-1);
+                    FArg = as_strcomp_view_sub(FArg, 0, p_arg_split_pos - FArg.text.data);
                 }
 
                 fnc_cb_data.p_arg_vals[z1] = (z1 < (int)as_array_size(InVals))
                                                      ? &InVals[z1]
                                                      : as_tempres_dyn_ini();
 
-                EvalStrExpressionWithCallback(
+                EvalExpressionView(
                         &FArg, fnc_cb_data.p_arg_vals[z1], eval_flags, p_callback_data);
                 /* Preserve the legacy function argument domain. Register values
                    previously stopped evaluation without a diagnostic; conditional
@@ -2280,7 +2302,7 @@ integer_result:
                     LEAVE2;
                 }
                 if (fnc_cb_data.p_arg_vals[z1]->Relocs) {
-                    WrStrErrorPos(ErrNum_NoRelocs, &FArg);
+                    WrExpressionViewError(ErrNum_NoRelocs, FArg);
                     FreeRelocs(&fnc_cb_data.p_arg_vals[z1]->Relocs);
                     LEAVE2;
                 }
@@ -2294,17 +2316,18 @@ integer_result:
                 if (p_arg_split_pos) {
                     FArg = Remainder;
                 } else {
-                    StrCompResetInline(&FArg);
+                    FArg.text.len = 0;
                 }
             }
-            if (*FArg.str.p_str) {
+            if (FArg.text.len) {
                 WrError(ErrNum_InvFuncArgCnt);
                 LEAVE2;
             }
-            StrCompMkTemp(
-                    &func_def_arg, ValFunc->Definition, strlen(ValFunc->Definition));
-            EvalStrExpressionWithCallback(
-                    &func_def_arg, pErg, eval_flags, &fnc_cb_data.cb_data);
+            size_t definition_len = strlen(ValFunc->Definition);
+            StrCompMkTemp(&func_def_arg, ValFunc->Definition, definition_len);
+            as_strcomp_view_t definition = as_strcomp_view_from(
+                    &func_def_arg, definition_len);
+            EvalExpressionView(&definition, pErg, eval_flags, &fnc_cb_data.cb_data);
             pErg->Flags |= PromotedFlags;
             pErg->AddrSpaceMask |= PromotedAddrSpaceMask;
             if (pErg->DataSize == eSymbolSizeUnknown) {
@@ -2328,32 +2351,38 @@ integer_result:
         /* symbolbezogene Funktionen */
 
         if (!strcmp(FName.str.p_str, "SYMTYPE")) {
-            as_tempres_set_int(pErg, GetSymbolType(&FArg));
+            MaterializeExpressionView(&STempComp, FArg);
+            as_tempres_set_int(pErg, GetSymbolType(&STempComp));
             LEAVE;
         }
 
         else if (!strcmp(FName.str.p_str, "DEFINED")) {
-            as_tempres_set_int(pErg, !!IsSymbolDefined(&FArg));
+            MaterializeExpressionView(&STempComp, FArg);
+            as_tempres_set_int(pErg, !!IsSymbolDefined(&STempComp));
             LEAVE;
         }
 
         else if (!strcmp(FName.str.p_str, "SYMEXIST")) {
-            as_tempres_set_int(pErg, !!is_symbol_existing(&FArg));
+            MaterializeExpressionView(&STempComp, FArg);
+            as_tempres_set_int(pErg, !!is_symbol_existing(&STempComp));
             LEAVE;
         }
 
         else if (!strcmp(FName.str.p_str, "SYMUSED")) {
-            as_tempres_set_int(pErg, !!IsSymbolUsed(&FArg));
+            MaterializeExpressionView(&STempComp, FArg);
+            as_tempres_set_int(pErg, !!IsSymbolUsed(&STempComp));
             LEAVE;
         }
 
         else if (!strcmp(FName.str.p_str, "ASSUMEDVAL")) {
-            as_assume_rec_t const* p_rec = assume_lookup(FArg.str.p_str);
+            as_assume_rec_t const* p_rec;
+            MaterializeExpressionView(&STempComp, FArg);
+            p_rec = assume_lookup(STempComp.str.p_str);
 
             if (p_rec) {
                 as_tempres_set_int(pErg, *(p_rec->p_dest));
             } else {
-                WrStrErrorPos(ErrNum_SymbolUndef, &FArg);
+                WrStrErrorPos(ErrNum_SymbolUndef, &STempComp);
             }
             LEAVE;
         }
@@ -2369,25 +2398,26 @@ integer_result:
         cb_data_stack.arg_index  = 0;
         p_callback_data->p_stack = &cb_data_stack;
         do {
-            p_arg_split_pos = QuotPos(FArg.str.p_str, ',');
-            if (p_arg_split_pos) {
-                StrCompSplitRef(&InArgs[cnt], &Remainder, &FArg, p_arg_split_pos);
-            } else {
-                InArgs[cnt] = FArg;
-            }
-            if (cnt < 3) {
-                EvalStrExpressionWithCallback(
-                        &InArgs[cnt], &InVals[cnt], eval_flags, p_callback_data);
-                if (InVals[cnt].Typ == TempNone) {
-                    LEAVE;
-                }
-                TReloc = InVals[cnt].Relocs;
-            } else {
+            if (cnt >= 3) {
                 WrError(ErrNum_InvFuncArgCnt);
                 LEAVE;
             }
+            p_arg_split_pos = as_strref_find_quoted(FArg.text, ',');
+            if (p_arg_split_pos) {
+                Remainder = as_strcomp_view_sub(FArg,
+                        p_arg_split_pos - FArg.text.data + 1, (size_t)-1);
+                InArgs[cnt] = as_strcomp_view_sub(FArg, 0, p_arg_split_pos - FArg.text.data);
+            } else {
+                InArgs[cnt] = FArg;
+            }
+            EvalExpressionView(
+                    &InArgs[cnt], &InVals[cnt], eval_flags, p_callback_data);
+            if (InVals[cnt].Typ == TempNone) {
+                LEAVE;
+            }
+            TReloc = InVals[cnt].Relocs;
             if (TReloc) {
-                WrStrErrorPos(ErrNum_NoRelocs, &InArgs[cnt]);
+                WrExpressionViewError(ErrNum_NoRelocs, InArgs[cnt]);
                 FreeRelocs(&TReloc);
                 LEAVE;
             }
@@ -2422,10 +2452,10 @@ integer_result:
                 TempResultToFloat(&InVals[z1]);
             }
             if (!(pFunction->ArgTypes[z1] & InVals[z1].Typ)) {
-                WrStrErrorPos(
+                WrExpressionViewError(
                         DeduceExpectTypeErrMsgMask(
                                 pFunction->ArgTypes[z1], InVals[z1].Typ),
-                        &InArgs[z1]);
+                        InArgs[z1]);
                 LEAVE;
             }
         }
@@ -2445,7 +2475,7 @@ integer_result:
     /* nichts dergleichen, dann einfaches Symbol: urspruenglichen Wert wieder
        herstellen, dann Pruefung auf $$-temporaere Symbole */
 
-    StrCompCopy(&CopyComp, &STempComp);
+    MaterializeExpressionView(&CopyComp, original);
     KillPrefBlanksStrComp(&CopyComp);
     KillPostBlanksStrComp(&CopyComp);
 
@@ -2510,6 +2540,14 @@ func_exit:
     pScratch->STempComp   = STempComp;
     pScratch->Next        = FreeExpressionScratch;
     FreeExpressionScratch = pScratch;
+}
+
+void EvalStrExpressionWithCallback(
+        tStrComp const* pExpr, TempResult* pErg, as_eval_flags_t eval_flags,
+        as_eval_cb_data_t* p_callback_data) {
+    as_strcomp_view_t expression = as_strcomp_view_from(
+            pExpr, strlen(pExpr->str.p_str));
+    EvalExpressionView(&expression, pErg, eval_flags, p_callback_data);
 }
 
 void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {

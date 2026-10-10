@@ -88,7 +88,7 @@ The diagnostic `span-integer-counts-20261009` runs all eleven workloads twice ag
 | local-e | 858,575 | 1,981,576 | 1,978,672 |
 | local-e-debug | 863,735 | 1,987,174 | 1,984,006 |
 
-The recognized literals are especially short, so avoided call setup, initialization and scratch handling are relevant alongside copying. Most copied bytes belong to the remaining symbol and compound-expression paths. The standalone quoted-string decoding trial below was discarded; recursive view propagation remains a separate candidate. Memory mapping remains a later experiment with the Windows/POSIX abstraction described above.
+The recognized literals are especially short, so avoided call setup, initialization and scratch handling are relevant alongside copying. Most copied bytes belong to the remaining symbol and compound-expression paths. The standalone quoted-string decoding trial below was discarded; the subsequent recursive view propagation stage was retained with the toolchain and workload limits recorded below. Memory mapping remains a later experiment with the Windows/POSIX abstraction described above.
 
 ## Ownership and interface boundaries
 
@@ -141,6 +141,50 @@ Positive reductions mean faster; negative reductions mean slower. Aggregates are
 Minimum available Windows host memory was 14,616 MiB. Native memory-pressure counters remained zero, with no swap-ins or swap-outs during the batch. The native sum of workload median CPU times fell by only 0.37%, a differently weighted measure from the geometric mean above. Improvements near 2% on some workloads were accompanied by regressions elsewhere, leaving Windows GCC and Linux GCC effectively unchanged overall and MSVC only 0.74% better in CPU time. Windows elapsed-time gains were larger than the corresponding CPU gains. These results do not establish a clear overall benefit sufficient to retain the change, so the implementation was discarded and no optimization commit was made.
 
 Complete candidate sources, experimental tests, frozen binaries, build/test logs, and results remain outside the source tree under `D:/tmp/asl-bench-20261006/output-experiments/span-quoted-20261009-r4`; native results are under the corresponding `output-experiments` directory in `/home/marzojr/asl-benchmark-20261005`. This rejects the standalone decoder change, rather than the broader borrowed-string plan: propagating views through the higher-frequency expression-copy paths remains a separate experiment.
+
+## Recursive operator and function views: retained
+
+This independent stage starts from report head `afa0296f`, whose production code is `68ca50da`. It retains the accepted integer optimization and does not include the discarded quoted-string decoder. The public expression interface still accepts terminated components; a private recursive interface takes an immutable positioned view with separately tracked physical bounds. Operator operands, parenthesized subexpressions, user-function arguments and definitions, and built-in function arguments propagate views without inserting terminators into their parent's storage. Every descriptor and its source remain live throughout the synchronous child evaluation.
+
+Ordinary expressions borrow the original input as their backup instead of unconditionally copying it into a second scratch buffer. Expanded temporary labels still receive an owned backup, preserving their generated spelling before callbacks run. Noninteger parsing and mutable target/caller callbacks keep an owned terminated working buffer; symbol-related built-ins and diagnostics receive terminated adapters when required. Function names also retain a writable buffer for legacy lookup and uppercase conversion. This removes the common backup copy and repeated length discovery at recursive integer leaves; it does not remove all expression input copies or change the existing floating and quoted-string leaves.
+
+The bounded comma scanner matches the unqualified `QuotPos` rules for quotes, escapes, parentheses and square brackets. Its unit test compares 66,430 generated short inputs against the existing quoted iterator and delimiter callback, with delimiter-like bytes immediately beyond the tested view. Positioned-view tests deliberately give diagnostic metadata a different length from the physical text. The integration test covers nested and five-argument user functions, quoted commas/brackets, precedence, parenthesized expressions, short-circuit suppression of undefined symbols, forward references and excessive built-in argument counts. The built-in argument guard now runs before storing a fourth operand, preserving error 1490 without accessing outside the three-element array.
+
+The first by-value descriptor variant, `span-recursive-20261010-r2`, passed all 332 tests. Its three-pair CPU screening reductions were +1.95% Windows GCC, +1.97% MSVC and -0.18% native Linux GCC, with substantial variation in early Linux cases. A portable follow-up passed the positioned descriptor by pointer at recursive call boundaries. `span-recursive-20261010-r3` passed all 332 tests and screened at +1.59%/+1.16%/+1.82% CPU reductions for those three toolchains. These are separate baseline comparisons, not a direct causal measurement of descriptor calling overhead.
+
+The final snapshot `span-recursive-final-20261010` builds all utilities and passes all 332 tests on each toolchain. Its normal executable `.text` sections match the screened pointer version on all three toolchains. The new integration fixture also passes with the baseline Windows GCC assembler. A separate negative-input probe produces exactly matching baseline/candidate diagnostics and exit status for operator type errors, function type errors, unknown functions, excessive function arguments and mismatched parentheses.
+
+Six focused native tests passed with AddressSanitizer and recoverable UndefinedBehaviorSanitizer checks, with leak detection disabled. No address errors were reported. This is not a clean UBSan result: the checker reports null-pointer field-address expressions in unchanged `asmmac.c:355` and `asmstructs.c:494`, and a null argument to a zero-length copy in unchanged `nonzstring.c:187`. These remain separate correctness follow-ups. The sanitizer build is never used for performance measurements.
+
+### Independent seven-pair confirmation
+
+The `confirmation` batch compares the final snapshot with `span-integer-final-20261009`, using normal optimized Windows GCC/MSVC and native Linux GCC binaries. All eleven workloads complete seven interleaved pairs after one warm-up per binary. Machine-code records and normalized listings match the baseline for every workload and toolchain. Native input, binaries and outputs remain on native ext4; all build and benchmark directories remain outside the source tree. Minimum available Windows host memory was 12,134 MiB; native swap-in/out deltas and memory-pressure counters were zero.
+
+Positive reductions mean faster, negative reductions mean slower. Aggregates are geometric means across the eleven workloads.
+
+| Toolchain | Elapsed-time reduction | Process CPU reduction |
+| --- | ---: | ---: |
+| Windows GCC | +2.38% | +0.68% |
+| Windows MSVC | +2.36% | +2.52% |
+| Native Linux GCC | +0.62% | +0.57% |
+
+| Workload | Windows GCC CPU reduction | Windows MSVC CPU reduction | Native Linux GCC CPU reduction |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | +0.00% | +2.17% | -4.50% |
+| Sonic 2 | +1.56% | +5.56% | +2.83% |
+| Sonic & Knuckles | -1.30% | +2.30% | +1.92% |
+| Big Fishing Derby | +0.00% | +3.28% | -0.54% |
+| Sonic Classic Heroes | -1.12% | +2.08% | +0.77% |
+| ScalerMacros-v1.asm | +0.00% | +3.45% | +1.47% |
+| ScalerMacros-v2.asm | -2.60% | +1.11% | +0.57% |
+| Madness 4 release | +2.52% | +1.21% | +0.45% |
+| Madness 4 debug | +2.98% | +2.26% | +0.13% |
+| local-e | +3.76% | +1.45% | +1.58% |
+| local-e-debug | +1.53% | +2.80% | +1.39% |
+
+Retain the portable pointer version: MSVC improves on every workload and confirms +2.52% mean CPU savings; Windows GCC and Linux GCC have smaller positive aggregates. Gains are not universal. Linux Sonic 1 is 4.50% slower in CPU time in confirmation, and Windows GCC has several small regressions. Windows process CPU times have 15.625 ms granularity, so small individual differences should not be treated as precise speed estimates. The report records these limits rather than claiming a uniform improvement or importing the larger screening percentages into the confirmed result.
+
+Complete source snapshots, normal and sanitizer binaries, test logs, diagnostic probes and raw timing results remain under the external `output-experiments` roots. The retained artifacts are `span-recursive-final-20261010` and the screened pointer version `span-recursive-20261010-r3`; the by-value trial is preserved separately. No private workload source, original source paths or manifests are committed. Profiles and future counted floating/quoted leaves can evaluate the remaining materialization boundaries independently.
 
 ## Floating conversion follow-up
 
