@@ -327,6 +327,13 @@ endif(CMAKE_CROSSCOMPILING)
 if(${CHECK_LOCALE})
     CHECK_INCLUDE_FILES("windef.h;winbase.h;winnls.h" W32_NLS)
     CHECK_INCLUDE_FILES("locale.h;langinfo.h" LOCALE_NLS)
+    if(LOCALE_NLS)
+        # Some SDKs provide langinfo.h before the target OS supports nl_langinfo
+        # (for example, Android API levels below 26).
+        include(CheckSymbolExists)
+        check_symbol_exists(nl_langinfo "locale.h;langinfo.h" HAVE_NL_LANGINFO)
+        set(LOCALE_NLS "${HAVE_NL_LANGINFO}")
+    endif()
     CHECK_INCLUDE_FILES(os2.h OS2_NLS)
 else()
     set(LOCALE_NLS FALSE)

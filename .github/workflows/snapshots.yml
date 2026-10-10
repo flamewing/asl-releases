@@ -160,6 +160,8 @@ jobs:
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         with:
           msystem: ${{ matrix.msystem }}
+          # Keep the 32-bit snapshot while the MINGW32 toolchain is available.
+          suppress-deprecation-warnings: msystem-mingw32
           install: >-
             base-devel git
           pacboy: >-
