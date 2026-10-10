@@ -15,6 +15,7 @@ permissions:
 env:
   GH_REPO: ${{ github.repository }}
   VERBOSE: "1"
+  ANDROID_NDK_VERSION: "30.0.16248370"
 
 jobs:
   activity-check:
@@ -134,7 +135,7 @@ jobs:
         if: ${{ startsWith(matrix.architecture, 'linux') }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y libboost-all-dev ninja-build ${{ matrix.depends }}
+          sudo apt-get install -y cmake ninja-build ${{ matrix.depends }}
       - name: Install dependencies (Mac OS)
         if: ${{ startsWith(matrix.architecture, 'macos') }}
         run: |
@@ -262,6 +263,13 @@ jobs:
           pandoc-version: "3.1.11"
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Select Android NDK
+        run: |
+          ndk_home="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
+          if [ ! -d "$ndk_home" ]; then
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$ANDROID_NDK_VERSION"
+          fi
+          echo "ASL_ANDROID_NDK_HOME=$ndk_home" >> "$GITHUB_ENV"
       - name: Build host tools
         run: |
           cmake -S . -B build-host
@@ -269,7 +277,7 @@ jobs:
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="$ASL_ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 \
             -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
       - name: Build

@@ -62,6 +62,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: "6.0.12"
+          update: true
       - name: Configure Host
         run: |
           cmake -S . -B build-host

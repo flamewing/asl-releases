@@ -57,8 +57,6 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          brew update
-          brew upgrade || true
           brew install cmake ninja
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
