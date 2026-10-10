@@ -1327,6 +1327,12 @@ define_executable(test_cpu2phys
 )
 add_test(NAME cpu2phys COMMAND test_cpu2phys)
 
+define_executable(test_nonzstring
+    tests/nonzstring.c
+    nonzstring.c strutil.c dynstr.c
+)
+add_test(NAME nonzstring COMMAND test_nonzstring)
+
 if(DEFINED ENV{VERBOSE})
     set(VERBOSE_MODE $ENV{VERBOSE})
 else()

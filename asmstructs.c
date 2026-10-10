@@ -365,7 +365,7 @@ void AddStruct(PStructRec StructRec, char* Name, Boolean Protest) {
         Node->Tree.Attribute = MomSectionHandle;
         Node->Defined        = FALSE;
         Node->StructRec      = StructRec;
-        TreeRoot             = &(StructRoot->Tree);
+        TreeRoot             = (PTree)StructRoot;
         EnterTree(&TreeRoot, (PTree)Node, StructAdder, &Protest);
         StructRoot = (PStructNode)TreeRoot;
     }
@@ -491,7 +491,7 @@ static void ClearNode(PTree Tree, void* pData) {
 void ClearStructList(void) {
     PTree TreeRoot;
 
-    TreeRoot   = &(StructRoot->Tree);
+    TreeRoot   = (PTree)StructRoot;
     StructRoot = NULL;
     DestroyTree(&TreeRoot, ClearNode, NULL);
 }

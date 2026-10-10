@@ -362,6 +362,7 @@ static Boolean EnterSymbolHashTable(
 
         openhash_key(pHash, It)   = pNew;
         openhash_value(pHash, It) = pNew;
+        free(pDest);
         return True;
     }
 
@@ -2900,7 +2901,7 @@ static void FreeSymbolEntry(PSymbolEntry* Node, Boolean Destroy) {
 
     if (Destroy) {
         free(*Node);
-        Node = NULL;
+        *Node = NULL;
     }
 }
 
@@ -2974,6 +2975,7 @@ static Boolean SymbolAdder(PTree* PDest, PTree Neu, void* pData) {
     /* Forward (none) definition shall not overwrite actual symbol type: */
 
     else if (((*Node)->SymWert.Typ != TempNone) && (NewEntry->SymWert.Typ == TempNone)) {
+        FreeSymbolEntry(&NewEntry, TRUE);
         return False;
     }
 
@@ -3038,7 +3040,7 @@ static Boolean SymbolAdder(PTree* PDest, PTree Neu, void* pData) {
         set_symbol_entry_flag(NewEntry, used, get_symbol_entry_flag(*Node, used));
         set_symbol_entry_flag(NewEntry, changeable, EnterStruct->MayChange);
 
-        /* since NewEntry will be copied over Node, free the latter's dynamic data: */
+        /* Release owned data before the hash table frees the replaced entry. */
 
         FreeSymbolEntry(Node, False);
         return True;

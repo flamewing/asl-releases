@@ -46,7 +46,9 @@ void as_nonz_dynstr_ini_c_str(as_nonz_dynstr_t* p_str, char const* p_src) {
 
     as_nonz_dynstr_ini(p_str, as_nonz_dynstr_roundup_len(len));
     p_str->len = (p_str->capacity < len) ? p_str->capacity : len;
-    memcpy(p_str->p_str, p_src, p_str->len);
+    if (p_str->len) {
+        memcpy(p_str->p_str, p_src, p_str->len);
+    }
 }
 
 /*!------------------------------------------------------------------------
@@ -103,7 +105,9 @@ size_t as_nonz_dynstr_to_c_str(
         if (TransLen > p_src->len) {
             TransLen = p_src->len;
         }
-        memcpy(p_dest, p_src->p_str, TransLen);
+        if (TransLen) {
+            memcpy(p_dest, p_src->p_str, TransLen);
+        }
         p_dest[TransLen] = '\0';
         return TransLen;
     } else {
@@ -130,7 +134,10 @@ size_t as_nonz_dynstr_copy(as_nonz_dynstr_t* p_dest, as_nonz_dynstr_t const* p_s
         if (trans_len > p_dest->capacity) {
             trans_len = p_dest->capacity;
         }
-        memcpy(p_dest->p_str, p_src->p_str, p_dest->len = trans_len);
+        p_dest->len = trans_len;
+        if (trans_len) {
+            memcpy(p_dest->p_str, p_src->p_str, trans_len);
+        }
     }
     return p_dest->len;
 }
@@ -184,7 +191,9 @@ size_t as_nonz_dynstr_append_raw(
     if ((size_t)src_len < trans_len) {
         trans_len = src_len;
     }
-    memcpy(p_dest->p_str + p_dest->len, p_src, trans_len);
+    if (trans_len) {
+        memcpy(p_dest->p_str + p_dest->len, p_src, trans_len);
+    }
     p_dest->len += trans_len;
     return trans_len;
 }

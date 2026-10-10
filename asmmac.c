@@ -298,7 +298,7 @@ void AddMacro(PMacroRec Neu, LongInt DefSect, Boolean Protest) {
     NewNode->Tree.Attribute = DefSect;
     NewNode->Contents       = Neu;
 
-    TreeRoot = &(MacroRoot->Tree);
+    TreeRoot = (PTree)MacroRoot;
     EnterTree(&TreeRoot, (PTree)NewNode, MacroAdder, &Protest);
     MacroRoot = (PMacroNode)TreeRoot;
 }
@@ -352,7 +352,7 @@ static void ClearMacroList_ClearNode(PTree Tree, void* pData) {
 void ClearMacroList(void) {
     PTree TreeRoot;
 
-    TreeRoot  = &(MacroRoot->Tree);
+    TreeRoot  = (PTree)MacroRoot;
     MacroRoot = NULL;
     DestroyTree(&TreeRoot, ClearMacroList_ClearNode, NULL);
 }
