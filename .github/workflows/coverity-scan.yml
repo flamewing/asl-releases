@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 env:
   SHA1: ${{ github.sha }}
@@ -24,19 +25,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Activity check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DATEUTC=$(curl -sL https://api.github.com/repos/flamewing/asl-releases/commits | jq -r '[.[]][0]' | jq -r '.commit.committer.date')
-          TIMESTAMP=$(date --utc -d "$DATEUTC" +%s)
-          DAYS=$(( ($(date --utc +%s) - $TIMESTAMP) / 86400 ))
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo REPO_ALIVE=true >> $GITHUB_ENV
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            REPO_ALIVE=true
           else
-            if [ $DAYS -gt 0 ]; then
-              echo REPO_ALIVE=false >> $GITHUB_ENV
+            # Only successful runs of this workflow and branch count as processed.
+            LAST_SUCCESSFUL_SHA=$(gh api --method GET \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/coverity-scan.yml/runs" \
+              -f branch="$GITHUB_REF_NAME" -f status=success -F per_page=1 \
+              --jq '.workflow_runs[0].head_sha // ""')
+            if [ "$LAST_SUCCESSFUL_SHA" = "$GITHUB_SHA" ]; then
+              REPO_ALIVE=false
             else
-              echo REPO_ALIVE=true >> $GITHUB_ENV
+              REPO_ALIVE=true
             fi
           fi
+          echo "REPO_ALIVE=$REPO_ALIVE" >> "$GITHUB_ENV"
       - name: Install dependencies
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
