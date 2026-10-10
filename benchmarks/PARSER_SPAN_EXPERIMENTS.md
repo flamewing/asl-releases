@@ -88,7 +88,7 @@ The diagnostic `span-integer-counts-20261009` runs all eleven workloads twice ag
 | local-e | 858,575 | 1,981,576 | 1,978,672 |
 | local-e-debug | 863,735 | 1,987,174 | 1,984,006 |
 
-The recognized literals are especially short, so avoided call setup, initialization and scratch handling are relevant alongside copying. Most copied bytes belong to the remaining symbol and compound-expression paths. Quoted-string decoding and recursive view propagation are the next implementation stages; memory mapping remains a separate later experiment with the Windows/POSIX abstraction described above.
+The recognized literals are especially short, so avoided call setup, initialization and scratch handling are relevant alongside copying. Most copied bytes belong to the remaining symbol and compound-expression paths. The standalone quoted-string decoding trial below was discarded; recursive view propagation remains a separate candidate. Memory mapping remains a later experiment with the Windows/POSIX abstraction described above.
 
 ## Ownership and interface boundaries
 
@@ -105,6 +105,42 @@ The recognized literals are especially short, so avoided call setup, initializat
 | Source lines | stdio reads into mutable dynamic line storage | Preserve newline, continuation, text-mode and EOF behavior; persistent macro storage cannot outlive its owner |
 
 The source has 52 `InternSymbol` assignment sites and eleven `DECLARE_AS_EVAL_CB` occurrences, rather than a single generic callback boundary. These counts are an inventory aid, not a count of unique runtime callbacks or a performance measurement. Input-file experiments must also distinguish physical source text from generated macro text; mapping source files does not eliminate copies of generated expansions.
+
+## Quoted-string decoding experiment: discarded
+
+The 2026-10-09 candidate `span-quoted-20261009-r4` decoded literal runs and ordinary escapes directly from an immutable view of the quoted interior, avoiding its unconditional allocation and copy. Decoded output remained owned. Interpolation lazily allocated a terminated copy of the remaining interior for the existing delimiter scanner, recursive evaluator and diagnostics; each expression retained its original source offset. This preserved the compatibility boundary rather than introducing a new quote scanner in the same experiment. Numeric escape parsing consumed a bounded view and preserved the existing hexadecimal, decimal and octal limits, including the accepted digitless `\x` escape.
+
+All 332 trial tests passed on Windows GCC, Windows MSVC and native Linux GCC. The trial added tests for nonterminated escape input with additional digits immediately beyond its boundary, embedded NUL and high bytes, empty literals, both quote styles, compound strings, repeated interpolation, nested quotes and parentheses. The integration test's independently specified bytes also matched the pre-experiment Windows GCC assembler. Those experimental tests and the implementation are preserved in the external candidate archive; they were removed from the source tree when the experiment was discarded.
+
+The first three-pair Windows screening completed all eleven workloads, with geometric mean elapsed-time/CPU reductions of +1.81%/+0.30% for GCC and -1.78%/-0.05% for MSVC. Linux screening failed before completing `local-e-debug`: the native benchmark filesystem became read-only while saving its warm-up log. Subsequent Ubuntu startup attempts failed with `Wsl/Service/CreateInstance/E_FAIL`, and Windows reported zero available bytes on C:. A seven-pair Windows confirmation was stopped after this host condition was discovered. The incomplete Linux and interrupted confirmation batches are excluded from the acceptance decision.
+
+On 2026-10-10, after the user relocated Ubuntu and Docker storage to E:, Ubuntu mounted writable with 883 GiB available and C: had free space again. The tested source snapshot was checked against the workspace, and a native write probe passed. A fresh independent `recovery-confirmation-20261010` batch completed seven interleaved pairs plus one warm-up per binary on all eleven workloads, comparing the candidate with `span-integer-final-20261009` (production code `68ca50da`). Machine-code records and normalized listings matched the baseline for every workload and toolchain. Timings use normal optimized executables, without profiling instrumentation.
+
+Positive reductions mean faster; negative reductions mean slower. Aggregates are geometric means across all eleven workloads.
+
+| Toolchain | Elapsed-time reduction | Process CPU reduction |
+| --- | ---: | ---: |
+| Windows GCC | +0.75% | -0.06% |
+| Windows MSVC | +2.39% | +0.74% |
+| Native Linux GCC | -0.05% | -0.05% |
+
+| Workload | Windows GCC CPU reduction | Windows MSVC CPU reduction | Native Linux GCC CPU reduction |
+| --- | ---: | ---: | ---: |
+| Sonic 1 | +0.00% | +0.00% | -4.06% |
+| Sonic 2 | -1.51% | +0.00% | -2.70% |
+| Sonic & Knuckles | +0.00% | +0.00% | +0.84% |
+| Big Fishing Derby | +0.00% | +1.59% | +1.02% |
+| Sonic Classic Heroes | +0.00% | +2.97% | +0.91% |
+| ScalerMacros-v1.asm | +0.00% | +0.00% | -0.85% |
+| ScalerMacros-v2.asm | +1.25% | +1.06% | -1.29% |
+| Madness 4 release | -0.61% | +0.00% | +1.80% |
+| Madness 4 debug | -0.59% | +1.11% | +2.26% |
+| local-e | +0.75% | +1.38% | +1.97% |
+| local-e-debug | +0.00% | +0.00% | -0.63% |
+
+Minimum available Windows host memory was 14,616 MiB. Native memory-pressure counters remained zero, with no swap-ins or swap-outs during the batch. The native sum of workload median CPU times fell by only 0.37%, a differently weighted measure from the geometric mean above. Improvements near 2% on some workloads were accompanied by regressions elsewhere, leaving Windows GCC and Linux GCC effectively unchanged overall and MSVC only 0.74% better in CPU time. Windows elapsed-time gains were larger than the corresponding CPU gains. These results do not establish a clear overall benefit sufficient to retain the change, so the implementation was discarded and no optimization commit was made.
+
+Complete candidate sources, experimental tests, frozen binaries, build/test logs, and results remain outside the source tree under `D:/tmp/asl-bench-20261006/output-experiments/span-quoted-20261009-r4`; native results are under the corresponding `output-experiments` directory in `/home/marzojr/asl-benchmark-20261005`. This rejects the standalone decoder change, rather than the broader borrowed-string plan: propagating views through the higher-frequency expression-copy paths remains a separate experiment.
 
 ## Floating conversion follow-up
 
