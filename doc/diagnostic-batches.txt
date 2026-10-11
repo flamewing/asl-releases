@@ -1220,3 +1220,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     exactly like numeric 58; missing unquoted separators retain 1350 and
     quoted address overflows retain their single primary range error.
     Validation: all 394 CTest cases pass with embedded/external catalogs.
+
+91. Separate KENBAK unchecked register-mask shift bug.
+    Reproduced SFTL 32 and SFTL 64 succeeding with register-A encoding.
+    WSL UBSan confirms shift exponent 32 too large at codekenbak.c:157.
+    Require 0..3 before shifting masks in both register paths; invalid numeric
+    or typed registers retain 1445 without undefined behavior. Tests cover
+    4/31/32/33/64/255 across shifts/rotates/CLEAR, primary errors, no rejected
+    words, register aliases and preceding valid bytes. WSL UBSan focused
+    suite passes with the fix.
+    Validation: all 395 CTest cases pass with embedded/external catalogs.

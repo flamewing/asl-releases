@@ -124,7 +124,7 @@ static tRegEvalResult DecodeReg(
         *pResult = RegDescr.Reg;
     }
 
-    if ((RegEvalResult == eIsReg) && !(1 & (RegMask >> *pResult))) {
+    if ((RegEvalResult == eIsReg) && ((*pResult >= 4) || !(1 & (RegMask >> *pResult)))) {
         WrStrErrorPos(ErrNum_InvReg, pArg);
         RegEvalResult = eRegAbort;
     }
@@ -154,7 +154,7 @@ static Boolean DecodeRegWithMemOpt(tStrComp const* pArg, Byte* pResult, Word Reg
         if (!EvalResult.OK) {
             return False;
         }
-        if (!(1 & (RegMask >> *pResult))) {
+        if ((*pResult >= 4) || !(1 & (RegMask >> *pResult))) {
             WrStrErrorPos(ErrNum_InvReg, pArg);
             return False;
         }

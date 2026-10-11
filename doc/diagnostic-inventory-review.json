@@ -1691,6 +1691,11 @@
       "file": "codefmc8.c",
       "issue": "DecodeBitAdr uses strchr for its separator, so a colon character literal in the address is split inside its quotes and rejected.",
       "status": "fixed in tranche 90; quote-aware separator search accepts character-literal addresses and preserves missing-separator/primary range failures"
+    },
+    {
+      "file": "codekenbak.c",
+      "issue": "Register masks are shifted by an unchecked UInt8 register/memory value; numeric 32/64 invokes undefined shift and is accepted as register A on Windows.",
+      "status": "fixed in tranche 91; require register value 0..3 before shifting in both register paths; WSL UBSan reproduces shift exponent 32 before fix and focused tests pass after, valid aliases/bytes preserved"
     }
   ]
 }
