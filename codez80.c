@@ -470,7 +470,10 @@ static void check_ez80_mpage(
         tStrComp const* p_arg) {
     if ((op_size != eSymbolSize24Bit) && !mFirstPassUnknownOrQuestionable(eval_flags)
         && (((address >> 16) & 0xff) != (unsigned)Reg_MBASE)) {
-        WrStrErrorPos(ErrNum_InAccPage, p_arg);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEZ80Page),
+                (LargeWord)address, (unsigned)((address >> 16) & 0xff), (unsigned)Reg_MBASE);
+        WrXErrorPos(ErrNum_InAccPage, detail, &p_arg->Pos);
     }
 }
 
@@ -650,10 +653,23 @@ static Boolean phys_2_cpu(
 
     if ((is_z180() || p_z280_data->translation_enabled)
         && !def_phys_2_cpu(addr_space, &address)) {
-        if (p_arg) {
-            WrStrErrorPos(ErrNum_InAccPageErr, p_arg);
+        char detail[240];
+        char mode[140];
+        const char* base_mode = getmessage(is_z180() ? Num_ErrMsgMappingZ180
+                : SupAllowed ? Num_ErrMsgMappingZ280Supervisor : Num_ErrMsgMappingZ280User);
+        if (is_z180()) {
+            strmaxcpy(mode, base_mode, sizeof(mode));
         } else {
-            WrError(ErrNum_CurrPCInInAccPageErr);
+            as_snprintf(mode, sizeof(mode), "%s (%s)", base_mode,
+                    getmessage(p_z280_data->program_data_separation
+                            ? Num_ErrMsgMappingSeparated : Num_ErrMsgMappingUnified));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPhysicalMapping),
+                (LargeWord)*p_address, SegNames[addr_space], mode);
+        if (p_arg) {
+            WrXErrorPos(ErrNum_InAccPageErr, detail, &p_arg->Pos);
+        } else {
+            WrXError(ErrNum_CurrPCInInAccPageErr, detail);
         }
         return False;
     }
@@ -4914,10 +4930,11 @@ static void encode_jp_core(Byte condition, adr_vals_t const* p_vals) {
     append_adr_vals(p_vals);
 }
 
-static IntType get_jr_dist(LongWord dest, LongInt* p_dist) {
+static IntType get_jr_dist(LongWord dest, LongInt* p_dist, Boolean* p_pc_ok) {
     LongWord curr_pc;
 
-    if (!get_logical_prog_counter(&curr_pc, 2)) {
+    *p_pc_ok = get_logical_prog_counter(&curr_pc, 2);
+    if (!*p_pc_ok) {
         return UInt0;
     }
 
@@ -4996,9 +5013,15 @@ static void DecodeJP(Word Code) {
             return;
         }
 
-        if (check_jr && (get_jr_dist(adr_vals.value, &dist) != UInt0)
-            && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
-            WrStrErrorPos(ErrNum_RelJumpPossible, &ArgStr[ArgCnt]);
+        if (check_jr) {
+            Boolean pc_ok;
+            IntType dist_type = get_jr_dist(adr_vals.value, &dist, &pc_ok);
+            if (!pc_ok) {
+                return;
+            }
+            if (dist_type != UInt0 && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
+                WrStrErrorPos(ErrNum_RelJumpPossible, &ArgStr[ArgCnt]);
+            }
         }
         encode_jp_core(Cond, &adr_vals);
         break;
@@ -5137,7 +5160,11 @@ static void DecodeJR(Word Code) {
         return;
     }
 
-    dist_type = get_jr_dist(dest, &dist);
+    Boolean pc_ok;
+    dist_type = get_jr_dist(dest, &dist, &pc_ok);
+    if (!pc_ok) {
+        return;
+    }
     if (dist_type == UInt0) {
         if (mFirstPassUnknownOrQuestionable(EvalResult.Flags)) {
             dist_type = is_z380() ? SInt24 : SInt8;
@@ -5193,7 +5220,11 @@ static void DecodeJ(Word Code) {
     case ModAbs:
         if ((condition <= 3) || (condition == 0xff)) {
             LongInt dist;
-            IntType dist_type = get_jr_dist(adr_vals.value, &dist);
+            Boolean pc_ok;
+            IntType dist_type = get_jr_dist(adr_vals.value, &dist, &pc_ok);
+            if (!pc_ok) {
+                return;
+            }
 
             if (dist_type != UInt0) {
                 encode_jr_core(

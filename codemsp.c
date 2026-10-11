@@ -12,6 +12,9 @@
 
 #include "codemsp.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -254,6 +257,22 @@ static void FillAdrPartsImm(tAdrParts* pAdrParts, LongWord Value, Boolean ForceL
     }
 }
 
+static void report_msp_displacement(
+        LongWord value, LongWord pc, Boolean symbolic, tStrComp const* arg) {
+    char detail[240];
+    LargeWord wrapped = value & 0xfffff;
+    LargeInt displacement = (wrapped & 0x80000)
+            ? (LargeInt)wrapped - 0x100000 : (LargeInt)wrapped;
+    if (symbolic) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMSPSymbolicRange),
+                displacement, wrapped, (LargeWord)pc);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMSPCallRange),
+                displacement, wrapped);
+    }
+    WrXErrorPos(ErrNum_OverRange, detail, &arg->Pos);
+}
+
 static Boolean DecodeAdr(
         tStrComp const* pArg, tExtMode ExtMode, Byte Mask, Boolean MayImm,
         tAdrParts* pAdrParts) {
@@ -401,9 +420,11 @@ static Boolean DecodeAdr(
         if (CurrPC <= 0xffff) {
             AdrWord = (EvalStrIntExpression(pArg, UInt16, &OK) - CurrPC) & 0xffff;
         } else {
-            AdrWord = (EvalStrIntExpression(pArg, UInt20, &OK) - CurrPC) & 0xfffff;
-            if ((AdrWord > 0x7fff) && (AdrWord < 0xf8000)) {
-                WrError(ErrNum_OverRange);
+            tSymbolFlags flags;
+            AdrWord = (EvalStrIntExpressionWithFlags(pArg, UInt20, &OK, &flags) - CurrPC) & 0xfffff;
+            if (OK && !mFirstPassUnknownOrQuestionable(flags)
+                && (AdrWord > 0x7fff) && (AdrWord < 0xf8000)) {
+                report_msp_displacement(AdrWord, CurrPC, True, pArg);
                 OK = False;
             }
         }
@@ -1091,7 +1112,7 @@ static void DecodeCALLA(Word Code) {
                 (AdrParts.Mode == eModeRegDisp)
                 && (((AdrParts.Val & 0xfffff) > 0x7fff)
                     && ((AdrParts.Val & 0xfffff) < 0xf8000))) {
-            WrError(ErrNum_OverRange);
+            report_msp_displacement(AdrParts.Val, 0, False, &ArgStr[1]);
         } else {
             WAsmCode[CodeLen >> 1] = 0x1340 | (AdrParts.Mode << 4) | (AdrParts.Part);
             CodeLen += 2;

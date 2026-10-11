@@ -1935,3 +1935,39 @@ Message ErrMsgAVRProgramPointerMode
 Message ErrMsgAVRProgramPointerOverlap
  "Zielregister R%u &uuml;berlappt Z (R31:R30), das durch Z+ erh&ouml;ht wird"
  "destination register R%u overlaps Z (R31:R30), which is incremented by Z+"
+
+Message ErrMsgEZ80Page
+ "Adresse 0x%lllx hat Seitenbyte 0x%x, MBASE ist 0x%x; Nicht-24-Bit-Adressierung erfordert dieselbe 64-KiB-Seite"
+ "address 0x%lllx has page byte 0x%x, assumed MBASE is 0x%x; non-24-bit addressing requires the same 64-KiB page"
+
+Message ErrMsgPhysicalMapping
+ "Physische Adresse 0x%lllx in %s kann mit %s nicht in eine CPU-Adresse &uuml;bersetzt werden"
+ "physical address 0x%lllx in %s cannot be translated to a CPU address using %s"
+
+Message ErrMsgMappingZ180
+ "Z180-MMU"
+ "Z180 MMU"
+
+Message ErrMsgMappingZ280User
+ "Z280-MMU im Benutzermodus"
+ "Z280 MMU in user mode"
+
+Message ErrMsgMappingZ280Supervisor
+ "Z280-MMU im Supervisormodus"
+ "Z280 MMU in supervisor mode"
+
+Message ErrMsgMSPSymbolicRange
+ "Nicht-erweiterte symbolische Verschiebung %llld (20-Bit-Wert 0x%lllx, PC-Basis 0x%lllx) au&szlig;erhalb [-32768,32767]"
+ "non-extended symbolic displacement %llld (wrapped 20-bit value 0x%lllx, PC base 0x%lllx) outside [-32768,32767]"
+
+Message ErrMsgMSPCallRange
+ "CALLA-Indexverschiebung %llld (20-Bit-Wert 0x%lllx) au&szlig;erhalb [-32768,32767]; erfordert vorzeichenbehaftete 16-Bit-Verschiebung"
+ "CALLA indexed displacement %llld (wrapped 20-bit value 0x%lllx) outside [-32768,32767]; requires signed 16-bit displacement"
+
+Message ErrMsgMappingSeparated
+ "getrennte CODE/DATA-Abbildung"
+ "separate CODE/DATA mapping"
+
+Message ErrMsgMappingUnified
+ "gemeinsame CODE/DATA-Abbildung"
+ "unified CODE/DATA mapping"

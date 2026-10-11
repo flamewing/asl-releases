@@ -161,6 +161,30 @@ manual, EXPECT fixtures, translations and source-position tests.
    eZ80 page assumptions, physical translation context and MSP430X signed
    displacement/wrap rules. Then expand manual review of the mechanical
    inventory; its entries are candidates, not confirmed required changes.
+   Implemented D20/D24 with English/German detail under -x. eZ80 warning
+   110 shows address/page byte versus MBASE and the non-24-bit page rule.
+   Translation errors 2270/2271 show the physical operand/PC address,
+   CODE/DATA space and Z180/Z280 MMU mode; Z280 includes user/supervisor
+   and separate/unified spaces. Do not infer a particular faulty bank.
+   MSP430X retains 1320 for its wrapped-field rejections and shows signed
+   displacement, wrapped 20-bit value, signed-16-bit bounds, the symbolic
+   PC base or CALLA indexed form. Preserve the low-64-KiB exception and
+   20-bit wrap, including CALLA PC-relative full-width encoding.
+   Reviewing adjacent callers exposed two problems. Branch distance checks
+   now propagate logical-PC translation failure separately from a distance
+   that is too large, avoiding a secondary error or use of unset distance.
+   MSP430X symbolic range checks above 64 KiB now wait for a resolved
+   address and successful evaluation, accepting valid forward references
+   previously rejected from placeholder values and retaining primary
+   expression errors. Resolved-address encoding rules remain unchanged.
+   Tests cover IDs/values/context/positions, translation modes, single
+   errors, deferred symbols, both signed endpoints, 20-bit wrap, the
+   low-page rule, full-width extended forms, German detail and golden
+   encodings captured before this batch. Numeric references updated;
+   existing EXPECT numbers remain valid. Further manual review of the
+   mechanical inventory remains follow-up work beyond D20/D24.
+   Validation: all 344 CTest cases pass with embedded and external message
+   catalogs; focused tests include English/German diagnostics and bytes.
 
 9. Unbalanced and mismatched brackets (additional user-requested scope).
    Distinguish an unexpected closing bracket, a mismatched closing bracket,
