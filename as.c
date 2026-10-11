@@ -1289,7 +1289,8 @@ static void IRP_OutProcessor(void) {
                 = FirstOutputTag->Tag->ParIter == 0 ? 1 : FirstOutputTag->Tag->ParIter;
         for (int z = 1; z <= ParIter; z++) {
             char const* p_param_name = GetStringListNext(&l);
-            CompressLine(p_param_name ? p_param_name : "", z, &s, CaseSensitive);
+            /* Only the modified line is needed; zero replacements are valid. */
+            (void)CompressLine(p_param_name ? p_param_name : "", z, &s, CaseSensitive);
         }
         AddStringListLast(&(FirstOutputTag->Tag->Lines), s.p_str);
         as_dynstr_free(&s);

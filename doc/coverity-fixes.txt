@@ -242,7 +242,8 @@ Pending findings reviewed without a new code change
   IRPN validates all ParamCnt placeholders and sets ParIter to ParamCnt.
   Invalid declarations discard the tag and consume through ENDM instead.
   Thus the trace's null-placeholder branch is not a valid installed tag.
-  No code change or triage-state change is needed for the return count.
+  Explicitly cast the replacement count to void and document that only
+  the modified line is needed. No Coverity triage state was changed.
 350653 and 350764, alink.c:ProcessFile
   The second batch now checks both PartRun and PartRun->RelocInfo before
   processing relocated records. Review the next scan to determine whether
