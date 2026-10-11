@@ -461,3 +461,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     the operand; it receives no format, bounds or converted value, so no
     additional numerical detail can be accurately generated at its sites.
     Validation: all 358 CTest cases pass with embedded/external catalogs.
+
+24. Complete function/operator numeric candidate review.
+    All three function.c historical sites and operator.c's bit-mirroring
+    site now retain 1320 with localized evaluated-value/constraint detail
+    under -x. TOUPPER/TOLOWER name the function and [0,255]; >< names the
+    operator and [1,32]; INT states its original symmetric magnitude check
+    against the host LargeSIntType maximum and displays the float argument.
+    These helpers do not receive operand positions. Preserve comparison,
+    floor/case/mirroring behavior, return types and evaluation order.
+    Tests cover both rejected bounds, primary errors, German detail,
+    accepted endpoints, forward operands and previous encoded bytes.
+    Validation: all 359 CTest cases pass with embedded/external catalogs.

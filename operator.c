@@ -12,6 +12,10 @@
 
 #include "operator.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+#include "strutil.h"
+
 #include "asmerr.h"
 #include "asmpars.h"
 #include "asmrelocs.h"
@@ -152,7 +156,10 @@ static Boolean BitMirrorOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVa
     }
 
     if ((pRVal->Contents.Int.Value < 1) || (pRVal->Contents.Int.Value > 32)) {
-        WrError(ErrNum_OverRange);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                "><", pRVal->Contents.Int.Value, (LargeInt)1, (LargeInt)32);
+        WrXError(ErrNum_OverRange, detail);
     } else {
         LargeWord Value = (LargeWord)pLVal->Contents.Int.Value;
         LargeWord Result = Value

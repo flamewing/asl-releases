@@ -12,6 +12,10 @@
 
 #include "function.h"
 
+#include "as.rsc"
+#include "asmsub.h"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmerr.h"
 #include "asmpars.h"
@@ -179,12 +183,19 @@ static Boolean FuncVAL(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
+static void report_character_argument_range(char const* name, LargeInt value) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+            name, value, (LargeInt)0, (LargeInt)255);
+    WrXError(ErrNum_OverRange, detail);
+}
+
 static Boolean FuncTOUPPER(
         TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
     if ((pArgs[0].Contents.Int.Value < 0) || (pArgs[0].Contents.Int.Value > 255)) {
-        WrError(ErrNum_OverRange);
+        report_character_argument_range("TOUPPER", pArgs[0].Contents.Int.Value);
     } else {
         as_tempres_set_int(pResult, as_toupper(pArgs[0].Contents.Int.Value));
     }
@@ -197,7 +208,7 @@ static Boolean FuncTOLOWER(
     UNUSED(ArgCnt);
 
     if ((pArgs[0].Contents.Int.Value < 0) || (pArgs[0].Contents.Int.Value > 255)) {
-        WrError(ErrNum_OverRange);
+        report_character_argument_range("TOLOWER", pArgs[0].Contents.Int.Value);
     } else {
         as_tempres_set_int(pResult, as_tolower(pArgs[0].Contents.Int.Value));
     }
@@ -321,7 +332,11 @@ static Boolean FuncINT(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 
     if (as_fabs(pArgs[0].Contents.Float) > IntTypeDefs[LargeSIntType].Max) {
         as_tempres_set_none(pResult);
-        WrError(ErrNum_OverRange);
+        char value[80], detail[200];
+        FloatString(value, sizeof(value), pArgs[0].Contents.Float);
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgFloatArgumentMagnitude),
+                "INT", value, IntTypeDefs[LargeSIntType].Max);
+        WrXError(ErrNum_OverRange, detail);
     } else {
         as_tempres_set_int(pResult, (LargeInt)floor(pArgs[0].Contents.Float));
     }

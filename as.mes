@@ -1313,6 +1313,14 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgIntegerArgumentRange
+ "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
+ "%s argument %llld outside [%llld,%llld]"
+
+Message ErrMsgFloatArgumentMagnitude
+ "%s-Argument %s hat einen Betrag gr&ouml;&szlig;er als %llld"
+ "%s argument %s has magnitude greater than %llld"
+
 Message ErrMsgCharTableRange
  "Zeichentabelle ab Index %llld mit L&auml;nge %llld &uuml;berschreitet [0,255]; h&ouml;chstens %llld Bytes passen"
  "character table mapping at index %llld with length %llld exceeds [0,255]; at most %llld bytes fit"
