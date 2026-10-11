@@ -1108,3 +1108,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     PC displacement and accepted bytes. Tests cover all shared callers,
     exact positions, endpoints, page wrap and typed/numeric aliases.
     Validation: all 391 CTest cases pass with embedded/external catalogs.
+
+79. Separate Padauk silent accumulator-pair rejection bug.
+    Reproduced ADDC [1],[2], SUBC [1],[2] and IDXM [2],[4] succeeding while
+    emitting nothing. Each now reports positioned 1350 with A,mem / mem,A
+    alternatives when neither operand is A. Preserve one-operand ADDC/SUBC,
+    both valid pair directions, word-address restrictions and accepted bytes.
+    Tests cover all three instructions on four core families, primary pair
+    diagnostics, no rejected words and preceding valid pair encodings.
+    Validation: all 392 CTest cases pass with embedded/external catalogs.

@@ -12,6 +12,9 @@
 
 #include "codepdk.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -516,6 +519,13 @@ static void DecodeSWAP(Word Code) {
     }
 }
 
+static void WrAccumulatorPair(void) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                "A, mem; mem, A");
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeADDC_SUBC(Word Code) {
     Word Address;
 
@@ -543,6 +553,8 @@ static void DecodeADDC_SUBC(Word Code) {
                 WAsmCode[CodeLen++]
                         = (AMCode(0x12 + Code, False) << DataMemBits) | Address;
             }
+        } else {
+            WrAccumulatorPair();
         }
         break;
     default:
@@ -828,6 +840,8 @@ static void DecodeIDXM(Word Code) {
             DecodeEvenAddr(&ArgStr[2], Code, 1);
         } else if (!as_strcasecmp(ArgStr[2].str.p_str, "A")) {
             DecodeEvenAddr(&ArgStr[1], Code, 0);
+        } else {
+            WrAccumulatorPair();
         }
     }
 }

@@ -1629,6 +1629,11 @@
       "file": "codescmp.c",
       "issue": "Absolute-address PC-relative decoding rejects provisional displacement of a first-pass unknown forward expression before its target resolves.",
       "status": "fixed in tranche 77; defer displacement-range rejection for first-pass unknown/questionable targets; all 14 memory/branch callers verified"
+    },
+    {
+      "file": "codepdk.c",
+      "issue": "ADDC/SUBC and IDXM two-operand decoders silently omit the instruction when neither operand is A.",
+      "status": "fixed in tranche 79; diagnose required A,mem / mem,A pair before evaluation; all four core families verified, valid bytes preserved"
     }
   ]
 }
