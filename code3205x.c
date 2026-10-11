@@ -202,8 +202,8 @@ static Word DecodeCond(int argp) {
             ;
 
         if (!pCondition->Name) {
-            WrError(ErrNum_UndefCond);
-            return ret;
+            WrStrErrorPos(ErrNum_UndefCond, &ArgStr[argp]);
+            return NOCONDITION;
         }
         ret &= pCondition->CodeAND;
         ret |= pCondition->CodeOR;
@@ -211,11 +211,11 @@ static Word DecodeCond(int argp) {
         cntc += pCondition->IsC;
         cntv += pCondition->IsV;
         cnttp += pCondition->IsTP;
+        if ((cnttp > 1) || (cntzl > 1) || (cntv > 1) || (cntc > 1)) {
+            WrStrErrorPos(ErrNum_UndefCond, &ArgStr[argp]);
+            return NOCONDITION;
+        }
         argp++;
-    }
-
-    if ((cnttp > 1) || (cntzl > 1) || (cntv > 1) || (cntc > 1)) {
-        WrStrErrorPos(ErrNum_UndefCond, &ArgStr[argp]);
     }
 
     return ret;
@@ -742,8 +742,11 @@ static void DecodeRETC(Word Index) {
     else if (Index && !ChkMinCPU(CPU32050))
         ;
     else {
-        CodeLen     = 1;
-        WAsmCode[0] = 0xec00 | (Index << 12) | DecodeCond(1);
+        Word condition = DecodeCond(1);
+        if (condition != NOCONDITION) {
+            CodeLen     = 1;
+            WAsmCode[0] = 0xec00 | (Index << 12) | condition;
+        }
     }
 }
 
@@ -902,8 +905,11 @@ static void DecodeXC(Word Index) {
                 WrXErrorPos((Mode < 1) ? ErrNum_UnderRange : ErrNum_OverRange,
                             detail, &ArgStr[1].Pos);
             } else {
-                CodeLen     = 1;
-                WAsmCode[0] = (0xd400 + (Mode << 12)) | DecodeCond(2);
+                Word condition = DecodeCond(2);
+                if (condition != NOCONDITION) {
+                    CodeLen     = 1;
+                    WAsmCode[0] = (0xd400 + (Mode << 12)) | condition;
+                }
             }
         }
     }

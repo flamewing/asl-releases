@@ -1594,6 +1594,11 @@
       "file": "codetms7.c",
       "issue": "Branch range checks reject provisional distances of first-pass unknown forward expressions such as target+1000 before the eventual target can resolve within range.",
       "status": "fixed in tranche 69; retain flags in regular branches and defer unknown/questionable range checks in regular, bit-test and DJNZ decoders"
+    },
+    {
+      "file": "code3205x.c",
+      "issue": "DecodeCond reports unknown/conflicting conditions but returns a valid encoding; duplicate condition position indexes beyond the argument list.",
+      "status": "fixed in tranche 72; return NOCONDITION immediately at the offending operand and suppress encoding in branch/return/XC callers; EXPECT regressions prove no words emitted"
     }
   ]
 }

@@ -1037,3 +1037,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover four CPUs, all restricted address callers, both range sides,
     indirect syntax, register choices, primary failures and preceding bytes.
     Validation: all 389 CTest cases pass with embedded/external catalogs.
+
+72. Separate TMS320C5x invalid-condition emission/position bug.
+    Reproduced BCND with an unknown condition, RETC with conflicting EQ/NEQ
+    and XC with an unknown condition emitting words despite their 1360 errors.
+    DecodeCond now returns its existing NOCONDITION sentinel immediately for
+    unknown/conflicting conditions, locating the current operand rather than
+    indexing past the argument list. Branch, return and XC callers suppress
+    emission. Preserve valid packed conditions and instruction bytes.
+    Tests cover all seven callers, all four conflicting condition groups,
+    exact error positions and EXPECT-wrapped invalid instructions followed
+    by NOP, proving only the NOP words are emitted.
+    Validation: all 389 CTest cases pass with embedded/external catalogs.
