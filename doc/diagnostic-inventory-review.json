@@ -1749,6 +1749,11 @@
       "file": "code960.c",
       "issue": "COBR rejects displacement 4092 with historical >4090 predicate, although Intel manual D.3 defines signed word displacement [-1024,1023], hence byte interval [-4096,4092].",
       "status": "fixed in tranche 101; use correct aligned upper displacement 4092 for all 16 target-bearing COBR callers and diagnostics, preserve other accepted encodings. Intel manual D.3: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf"
+    },
+    {
+      "file": "tipseudo.c",
+      "issue": "STRING/RSTRING upper-byte packing left-shifts accepted negative signed values, invoking undefined C behavior.",
+      "status": "fixed in tranche 102; mask to unsigned low-byte value before shift, both packing orders and preceding endpoint/negative bytes checked"
     }
   ]
 }

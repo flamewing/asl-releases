@@ -1330,3 +1330,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     4096, preserve lower/wrapped endpoints, alignment and preceding bytes.
     Source: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf
     Validation: all 397 CTest cases pass with embedded/external catalogs.
+
+102. TI STRING/RSTRING negative-byte packing semantics.
+    Packed-byte helpers shift signed negative values left when placing bytes
+    into the upper half of a word, invoking undefined C behavior for accepted
+    byte-domain values. Mask to the low byte before shifting in both helpers.
+    Preserve both packing orders and preceding negative/endpoint encodings.
+    Validation: all 398 CTest cases pass with embedded/external catalogs.
+    WSL UBSan reproduced left shift of negative value -1 before; focused test passes after.

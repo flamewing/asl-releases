@@ -225,7 +225,7 @@ static void wr_code_byte_hilo(Boolean* ok, int* adr, LargeInt val, tSymbolFlags 
     if ((*adr) & 1) {
         WAsmCode[((*adr)++) / 2] |= val & 0xff;
     } else {
-        WAsmCode[((*adr)++) / 2] = val << 8;
+        WAsmCode[((*adr)++) / 2] = (val & 0xff) << 8;
     }
     CodeLen = ((*adr) + 1) / 2;
 }
@@ -237,7 +237,7 @@ static void wr_code_byte_lohi(Boolean* ok, int* adr, LargeInt val, tSymbolFlags 
         return;
     }
     if ((*adr) & 1) {
-        WAsmCode[((*adr)++) / 2] |= val << 8;
+        WAsmCode[((*adr)++) / 2] |= (val & 0xff) << 8;
     } else {
         WAsmCode[((*adr)++) / 2] = val & 0xff;
     }
