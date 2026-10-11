@@ -10,6 +10,9 @@
 
 #include "stdinc.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -172,7 +175,10 @@ static Boolean decode_direct_word_address(tStrComp const* p_arg, Word* p_result)
         return False;
     }
     if (!mFirstPassUnknownOrQuestionable(eval_result.Flags) && (*p_result & 1)) {
-        WrStrErrorPos(ErrNum_AddrMustBeEven, p_arg);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandAlignment),
+                    (LargeWord)*p_result);
+        WrXErrorPos(ErrNum_AddrMustBeEven, detail, &p_arg->Pos);
         return False;
     }
     *p_result = (*p_result >> 1) & 0xff;
@@ -196,7 +202,10 @@ static Boolean decode_code_address(
     }
     ChkSpace(SegCode, p_eval_result->AddrSpaceMask);
     if (!mFirstPassUnknownOrQuestionable(p_eval_result->Flags) && (*p_result & 1)) {
-        WrStrErrorPos(ErrNum_AddrMustBeEven, p_arg);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandAlignment),
+                    (LargeWord)*p_result);
+        WrXErrorPos(ErrNum_AddrMustBeEven, detail, &p_arg->Pos);
         return False;
     }
     return True;
@@ -369,7 +378,14 @@ static tRegEvalResult chk_auto_increment(
         break;
     default:
     too_much:
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        {
+            char detail[240];
+            as_snprintf(detail, sizeof(detail),
+                        getmessage((op_size == eSymbolSize8Bit)
+                            ? Num_ErrMsgPALMByteModifiers : Num_ErrMsgPALMWordModifiers),
+                        n_full, n_half);
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+        }
         return eRegAbort;
     }
 
@@ -473,7 +489,27 @@ static adr_mode_t decode_adr(
 
 check_exit:
     if ((p_result->mode != ModNone) && !((mode_mask >> p_result->mode) & 1)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        char forms[180] = "", detail[260];
+        if (mode_mask & MModReg) {
+            strmaxcat(forms, "R0..R15, PC, ", sizeof(forms));
+        }
+        if (mode_mask & MModIReg) {
+            strmaxcat(forms, "(Rn) with optional update modifiers, ", sizeof(forms));
+        }
+        if (mode_mask & MModDir) {
+            strmaxcat(forms, "expr (even address 0..510), ", sizeof(forms));
+        }
+        if (mode_mask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (mode_mask & MModIO) {
+            strmaxcat(forms, "expr (I/O address 0..15), ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
         reset_adr_vals(p_result);
     }
     return p_result->mode;
@@ -518,22 +554,30 @@ static void put_code(Word code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     check_bra_dist(LongInt dist, Boolean silent)
+ * \fn     check_bra_dist(LongInt dist, Boolean silent, LargeWord pc_base, tStrComp const* operand)
  * \brief  check whether branch distance is valid for BRA instruction
  * \param  dist distance to check
  * \param  silent issue error messages if not?
+ * \param  pc_base instruction-specific PC base
+ * \param  operand branch target for diagnostic position
  * \return True if distance is OK
  * ------------------------------------------------------------------------ */
 
-static Boolean check_bra_dist(LongInt dist, Boolean silent) {
+static Boolean check_bra_dist(
+        LongInt dist, Boolean silent, LargeWord pc_base, tStrComp const* operand) {
     if ((dist > 256) || (dist < -256)) {
         if (!silent) {
-            WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeNonzero),
+                        (LargeInt)dist, (LargeInt)-256, (LargeInt)256, pc_base);
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &operand->Pos);
         }
         return False;
     } else if (!dist) {
         if (!silent) {
-            WrStrErrorPos(ErrNum_JmpDistIsZero, &ArgStr[1]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispZeroReserved), pc_base);
+            WrXErrorPos(ErrNum_JmpDistIsZero, detail, &operand->Pos);
         }
         return False;
     } else {
@@ -570,7 +614,7 @@ static Boolean put_bra(tStrComp const* p_arg, int pc_offset) {
         LongInt dist = address - (EProgCounter() + pc_offset);
 
         if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
-            && !check_bra_dist(dist, False)) {
+            && !check_bra_dist(dist, False, EProgCounter() + pc_offset, p_arg)) {
             return False;
         }
 
@@ -1172,7 +1216,7 @@ static void decode_jmp(Word code) {
                 if (decode_code_address(&addr_comp, &addr_or_reg, &eval_result)) {
                     LongInt dist = addr_or_reg - (EProgCounter() + 2);
 
-                    if (check_bra_dist(dist, True) && !force_long) {
+                    if (check_bra_dist(dist, True, EProgCounter() + 2, &addr_comp) && !force_long) {
                         /* JMP addr -> BRA addr */
                         encode_bra(dist);
                     }
@@ -1317,7 +1361,10 @@ static void make_pc_even(Word index) {
         if (DoPadding) {
             InsertPadding(1, False);
         } else {
-            WrError(ErrNum_AddrNotAligned);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                        (LargeWord)EProgCounter());
+            WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
         }
     }
 }

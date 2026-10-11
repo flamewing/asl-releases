@@ -1409,6 +1409,18 @@ Message ErrMsg6100ZeroPageTarget
  "Nullseitenziel 0x%lllx au&szlig;erhalb [0x%lllx,0x%lllx]"
  "zero-page target 0x%lllx outside [0x%lllx,0x%lllx]"
 
+Message ErrMsgPALMByteModifiers
+ "Indirekter Operand hat %d volle und %d halbe Modifikatoren; Byte-Operationen erlauben h&ouml;chstens vier volle und keine halben Modifikatoren"
+ "indirect operand has %d full and %d half modifiers; byte operations allow at most four full modifiers and no half modifiers"
+
+Message ErrMsgPALMWordModifiers
+ "Indirekter Operand hat %d volle und %d halbe Modifikatoren; Wort-Operationen erlauben insgesamt h&ouml;chstens zwei Modifikatoren"
+ "indirect operand has %d full and %d half modifiers; word operations allow at most two modifiers in total"
+
+Message ErrMsgBranchDispZeroReserved
+ "Sprungverschiebung 0 ist nicht codierbar (PC-Basis 0x%lllx); null ist reserviert"
+ "branch displacement 0 is not encodable (PC base 0x%lllx); zero is reserved"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

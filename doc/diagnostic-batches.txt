@@ -857,3 +857,18 @@ manual, EXPECT fixtures, translations and source-position tests.
     explicit IB, IB NOTHING, indirect field checks, page bounds across
     fields and accepted field/current-page bytes.
     Validation: all 382 CTest cases pass with embedded/external catalogs.
+
+56. Complete PALM historical modifier/mask/alignment/branch inventory review.
+    1350 gives actual full/half update counts with byte/word constraints,
+    or mask-specific accepted operand forms. Warning 180 gives actual odd
+    instruction PC and alignment; adjacent 1351 gives odd operand address.
+    BRA/RCALL 1370 shows signed displacement, [-256,256], reserved zero
+    and PC+2/PC+4; adjacent 1371 identifies zero and the same PC base.
+    Retain IDs, severity, padding, modifier grammar, flags and accepted
+    encodings, including JMP's silent relaxation to its long encoding.
+    InvOpSize fallback is internal and unreachable through current callers,
+    which all specify 8-/16-bit operations; retain defensive rejection.
+    Tests cover three CPUs, byte/word updates, shared masks, alignment,
+    displacement edges, zero, RCALL offsets, forward/undefined targets,
+    silent JMP fallback and preceding instruction bytes.
+    Validation: all 383 CTest cases pass with embedded/external catalogs.

@@ -1131,8 +1131,14 @@
         "ErrNum_InvOpSize": 1,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All five historical sites reviewed in tranche 56: actual full/half update counts and byte/word rules, mask-specific forms, instruction alignment and BRA/RCALL signed displacement constraints. InvOpSize default is unreachable through current callers (all pass 8/16-bit sizes); retain defensive fallback. Adjacent zero-displacement and operand-alignment diagnostics improved too. Preserve modifier grammar, padding, branch flags and JMP silent relaxation."
     },
     "codepdk.c": {
       "candidate_counts": {
