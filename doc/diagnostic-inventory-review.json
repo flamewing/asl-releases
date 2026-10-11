@@ -299,8 +299,11 @@
       "candidate_counts": {
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All historical branch range/direction candidates improved in tranche 28, plus failed-evaluation cascade fix."
     },
     "code62015.c": {
       "candidate_counts": {

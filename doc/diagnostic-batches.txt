@@ -520,3 +520,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     single primary failures, translations, accepted endpoints, forward
     registers, still-valid INA 15 and prior instruction bytes.
     Validation: all 362 CTest cases pass with embedded/external catalogs.
+
+28. Complete SC61860 relative-branch inventory review.
+    Both historical 1370 sites now report the original signed displacement,
+    actual directional interval and PC+1 at the target under -x. General
+    relative forms allow [-255,255], plus forms [0,255], minus/LOOP forms
+    [-255,0]; explicit zero remains accepted. Preserve unwrapped LongInt
+    arithmetic, Int16 target evaluation, sign/magnitude encoding and flags.
+    Failed target evaluation now returns before flags, range/direction
+    checks or encoding, removing the reproduced secondary 1370 after 1010.
+    Tests cover all 16 relative mnemonics, wrong directions and ranges,
+    source positions, one primary error, translations, endpoints, zero,
+    forward symbols, no-wrap behavior and preceding instruction bytes.
+    Validation: all 363 CTest cases pass with embedded/external catalogs.

@@ -24,6 +24,10 @@
 #include "asmitree.h"
 #include "chartrans.h"
 #include "code61860.h"
+
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -95,6 +99,15 @@ static void DecodeFixed(Word Index) {
     }
 }
 
+static void report_branch_distance(LongInt distance, Word index) {
+    char detail[180];
+    LargeInt minimum = (index & JR_PLUS) ? 0 : -255;
+    LargeInt maximum = (index & JR_MINUS) ? 0 : 255;
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, minimum, maximum, (LargeWord)(EProgCounter() + 1));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeRel(Word Index) {
     Word         OpCode = Index & 0x00ff;
     LongInt      disp;
@@ -105,14 +118,17 @@ static void DecodeRel(Word Index) {
         disp = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &ValOK, &flags)
                - (EProgCounter() + 1);
 
+        if (!ValOK) {
+            return;
+        }
         if (!mFirstPassUnknownOrQuestionable(flags)) {
             if (disp < -255 || disp > 255) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                report_branch_distance(disp, Index);
                 return;
             }
 
             if ((disp < 0 && (Index & JR_PLUS)) || (disp > 0 && (Index & JR_MINUS))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                report_branch_distance(disp, Index);
                 return;
             }
 
