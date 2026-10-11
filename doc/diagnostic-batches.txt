@@ -563,3 +563,20 @@ manual, EXPECT fixtures, translations and source-position tests.
     high-input-to-ASCII mappings. Existing ordinary/caret literals, final-bit
     terminators, branch behavior and source positions remain verified.
     Validation: all 364 CTest cases pass with embedded/external catalogs.
+
+31. Complete 4004/4040 historical accumulator/page and count-helper review.
+    Explicit ADD/SUB/LD/XCH accumulator syntax retains 1350 and identifies
+    required A at the first operand. JCN/JCM's cross-page rejection now
+    uses existing page-mismatch 1910 instead of misleading distance 1370;
+    it includes reference/target addresses, page bases and size, at the
+    target. The original Hi comparison and questionable-symbol predicate
+    remain unchanged. Preserve JCN/JCM's PC+2 and ISZ's PC+1 page references;
+    ISZ now supplies its known target position to the existing page helper.
+    Tests cover both CPU variants, every accumulator caller, branch alias,
+    different edge-page selections, exact IDs/positions, primary errors,
+    forward symbols, German detail and prior bytes. Existing 4004 fixtures
+    contain no EXPECT number for the changed JCN rejection.
+    Reviewed all three errmsg.c historical count sites: existing detail
+    already gives exact/range/either-or contracts and observed counts, with
+    a position when passed. No count-helper change is needed.
+    Validation: all 365 CTest cases pass with embedded/external catalogs.

@@ -206,8 +206,12 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "Both historical candidates improved in tranche 31; JCN page rejection now uses accurate 1910. Adjacent ISZ page check gains target location. Encoding and predicates retained."
     },
     "code42c00.c": {
       "candidate_counts": {
@@ -1330,8 +1334,11 @@
       "candidate_counts": {
         "ErrNum_WrongArgCnt": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_WrongArgCnt"
+      ],
+      "status": "complete",
+      "review_notes": "All three historical count-helper emitters already report exact/range/either-or contracts and observed counts, with position when available. Reviewed in tranche 31; unchanged."
     },
     "fourpseudo.c": {
       "candidate_counts": {

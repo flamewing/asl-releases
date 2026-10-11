@@ -12,6 +12,9 @@
 
 #include "code4004.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -246,7 +249,9 @@ static void DecodeAccReg(Word Code) {
     if (!ChkArgCnt(1, 2))
         ;
     else if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[1].str.p_str, "A"))) {
-        WrError(ErrNum_InvAddrMode);
+        char detail[100];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "A");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
     } else if (DecodeReg(&ArgStr[ArgCnt], &Erg)) {
         BAsmCode[0] = Lo(Code) + Erg;
         CodeLen     = 1;
@@ -290,7 +295,7 @@ static void DecodeISZ(Word Index) {
         ;
     else if (DecodeReg(&ArgStr[1], &Erg)) {
         Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt12, &OK, &Flags);
-        if (OK && ChkSamePage(EProgCounter() + 1, Adr, 8, Flags)) {
+        if (OK && ChkSamePagePos(EProgCounter() + 1, Adr, 8, Flags, &ArgStr[2])) {
             BAsmCode[0] = 0x70 + Erg;
             BAsmCode[1] = Lo(Adr);
             CodeLen     = 2;
@@ -336,7 +341,13 @@ static void DecodeJCN(Word Index) {
             if (OK) {
                 if (!mSymbolQuestionable(Flags)
                     && (Hi(EProgCounter() + 2) != Hi(AdrInt))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    char detail[240];
+                    LargeWord pc_base = EProgCounter() + 2;
+                    LargeWord page_mask = ~((LargeWord)0xff);
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPageMismatch),
+                            pc_base, pc_base & page_mask, (LargeWord)AdrInt,
+                            (LargeWord)AdrInt & page_mask, (LargeWord)256);
+                    WrXErrorPos(ErrNum_JmpTargOnDiffPage, detail, &ArgStr[2].Pos);
                 } else {
                     BAsmCode[0] |= 0x10;
                     BAsmCode[1] = Lo(AdrInt);
