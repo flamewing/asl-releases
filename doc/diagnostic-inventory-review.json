@@ -1949,6 +1949,11 @@
       "file": "codevax.c",
       "issue": "Scaled index parsing accepts PC/R15 and emits reserved mode 0x4f despite existing parser comment that PC is forbidden.",
       "status": "fixed in tranche 140; positioned 1439 with R0..R14 alternatives before encoding; three CPUs/PC-R15-alias rejection/no emission/all 15 valid index registers checked; VAX MACRO reference section 8.6.10 confirms reserved addressing mode fault"
+    },
+    {
+      "file": "codevax.c",
+      "issue": "Explicit index register parsing is optional and leaves unresolved/nonregister index suffix in the base expression; valid forward aliases fail with misleading bracket 1300.",
+      "status": "fixed in tranche 141; mandatory parsing supplies provisional register for aliases and returns after primary failure; three CPUs/forward general-SP-PC aliases/final undefined/nonregister error/no emission checked"
     }
   ]
 }

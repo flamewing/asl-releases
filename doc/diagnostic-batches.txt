@@ -1677,3 +1677,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     https://docs.vmssoftware.com/vsi-openvms-vax-macro-and-instruction-set-reference-manual/
     Three CPUs verify rejection/no emission and all 15 valid registers/aliases.
     Validation: all 410 CTest cases pass with embedded/external catalogs.
+
+141. VAX forward index aliases and primary index errors.
+    Treat explicit [index] as mandatory register parsing; optional lookup leaves
+    unresolved/nonregister suffix in base expression, producing bracket 1300
+    instead of resolving valid aliases or reporting index failures. Abort after
+    failed mandatory lookup. Three CPUs verify forward R2/SP and rejected PC
+    aliases, final undefined/nonregister primary errors and no emission.
+    Validation: all 410 CTest cases pass with embedded/external catalogs.

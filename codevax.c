@@ -354,7 +354,7 @@ static Boolean decode_adr(
         StrCompCopySub(&reg_comp, &arg, split_pos + 1, arg_len - split_pos - 2);
         KillPostBlanksStrComp(&reg_comp);
         KillPrefBlanksStrComp(&reg_comp);
-        switch (decode_reg(&reg_comp, &index_reg, False)) {
+        switch (decode_reg(&reg_comp, &index_reg, True)) {
         case eRegAbort:
             return False;
         case eIsReg:
@@ -368,7 +368,7 @@ static Boolean decode_adr(
             pc_value++;
             break;
         default:
-            break;
+            return reset_adr_vals(p_result);
         }
     } else {
         index_reg = 0;
