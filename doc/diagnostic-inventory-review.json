@@ -1550,8 +1550,11 @@
       "candidate_counts": {
         "ErrNum_OverRange": 8
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All eight OverRange candidates reviewed in tranche 103: two scaled floating Qxx/LQxx thresholds, five byte/word/long/packed integer callbacks, and TI34x DATA mixed 32-bit integer domain. Add actual value/full original interval at failing operand, preserve predicates and 1320 for both sides; source component passed through callbacks. Accepted string characters are already byte-domain by construction. Adjacent signed packing UB fixed in tranche 102."
     }
   },
   "followups": [
@@ -1754,6 +1757,11 @@
       "file": "tipseudo.c",
       "issue": "STRING/RSTRING upper-byte packing left-shifts accepted negative signed values, invoking undefined C behavior.",
       "status": "fixed in tranche 102; mask to unsigned low-byte value before shift, both packing orders and preceding endpoint/negative bytes checked"
+    },
+    {
+      "file": "tipseudo.c",
+      "issue": "Qxx/LQxx and TI34x DATA reject provisional first-pass forward expression values even when the final scaled/integer result is in range.",
+      "status": "confirmed during tranche 103; queued separately, Q15/LQ31 target+1 with target=-1 and DATA target+4294967296 with target=-4294967295"
     }
   ]
 }

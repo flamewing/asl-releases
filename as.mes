@@ -1309,6 +1309,10 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgScaledValueRange
+ "Skalierter %s-Wert %s au&szlig;erhalb [%s,%s]"
+ "scaled %s value %s outside [%s,%s]"
+
 Message ErrMsgRegisterGroupAlignment
  "Registernummer %u muss ein Vielfaches von %u sein"
  "register number %u must be a multiple of %u"

@@ -1338,3 +1338,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Preserve both packing orders and preceding negative/endpoint encodings.
     Validation: all 398 CTest cases pass with embedded/external catalogs.
     WSL UBSan reproduced left shift of negative value -1 before; focused test passes after.
+
+103. Complete TI pseudo-instruction range diagnostic review.
+    All eight historical 1320 sites now identify the failing operand and its
+    actual value/complete interval. BYTE/STRING/RSTRING use [-128,255], WORD
+    [-32768,65535], LONG and 34x DATA [-2147483648,4294967295]. Pass the source
+    component through packed-data callbacks, preserving translation/packing.
+    Qxx/LQxx report scaled value against their original floating thresholds;
+    retain existing asymmetric LQ lower threshold and 1320 on both sides.
+    Tests cover every site, upper/lower/scaled/second-argument failures, no
+    partial emission and preceding endpoint/fractional/packing bytes.
+    Validation: all 398 CTest cases pass with embedded/external catalogs.

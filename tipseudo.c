@@ -16,6 +16,9 @@
 
 #include "tipseudo.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "as_float.h"
 #include "asmdef.h"
@@ -48,6 +51,22 @@ static void define_untyped_label(void) {
     }
 }
 
+static void wr_integer_range(const tStrComp* arg, LargeInt value, LargeInt min, LargeInt max) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                OpPart.str.p_str, value, min, max);
+    WrXErrorPos(ErrNum_OverRange, detail, &arg->Pos);
+}
+
+static void wr_scaled_range(const tStrComp* arg, as_float_t value,
+                            const char* min, const char* max) {
+    char actual[80], detail[240];
+    FloatString(actual, sizeof(actual), value);
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgScaledValueRange),
+                OpPart.str.p_str, actual, min, max);
+    WrXErrorPos(ErrNum_OverRange, detail, &arg->Pos);
+}
+
 static void pseudo_qxx(Integer num) {
     tStrComp*  pArg;
     Boolean    ok = True;
@@ -70,7 +89,7 @@ static void pseudo_qxx(Integer num) {
 
         if ((res > 32767.49) || (res < -32768.49)) {
             ok = False;
-            WrError(ErrNum_OverRange);
+            wr_scaled_range(pArg, res, "-32768.49", "32767.49");
             break;
         }
         WAsmCode[CodeLen++] = res;
@@ -104,7 +123,7 @@ static void pseudo_lqxx(Integer num) {
 
         if ((res > 2147483647.49) || (res < -2147483647.49)) {
             ok = False;
-            WrError(ErrNum_OverRange);
+            wr_scaled_range(pArg, res, "-2147483647.49", "2147483647.49");
             break;
         }
         resli               = res;
@@ -117,7 +136,7 @@ static void pseudo_lqxx(Integer num) {
     }
 }
 
-typedef void (*tcallback)(Boolean*, int*, LargeInt, tSymbolFlags);
+typedef void (*tcallback)(Boolean*, int*, LargeInt, tSymbolFlags, const tStrComp*);
 
 static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
     Boolean    ok  = True;
@@ -159,14 +178,14 @@ static void pseudo_store(tcallback callback, Word MaxMultCharLen) {
                 cp   = (unsigned char*)t.Contents.str.p_str;
                 cend = cp + t.Contents.str.len;
                 while (cp < cend) {
-                    callback(&ok, &adr, *cp++ & 0xff, t.Flags);
+                    callback(&ok, &adr, *cp++ & 0xff, t.Flags, pArg);
                 }
             }
             break;
         }
         case TempInt:
         ToInt:
-            callback(&ok, &adr, t.Contents.Int.Value, t.Flags);
+            callback(&ok, &adr, t.Contents.Int.Value, t.Flags, pArg);
             break;
         default:
             ok = False;
@@ -185,9 +204,9 @@ func_exit:
     as_tempres_free(&t);
 }
 
-static void wr_code_byte(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+static void wr_code_byte(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
-        WrError(ErrNum_OverRange);
+        wr_integer_range(arg, val, (LargeInt)-128, (LargeInt)255LL);
         *ok = False;
         return;
     }
@@ -195,9 +214,9 @@ static void wr_code_byte(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags
     CodeLen            = *adr;
 }
 
-static void wr_code_word(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+static void wr_code_word(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int16)) {
-        WrError(ErrNum_OverRange);
+        wr_integer_range(arg, val, (LargeInt)-32768, (LargeInt)65535LL);
         *ok = False;
         return;
     }
@@ -205,9 +224,9 @@ static void wr_code_word(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags
     CodeLen            = *adr;
 }
 
-static void wr_code_long(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+static void wr_code_long(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int32)) {
-        WrError(ErrNum_OverRange);
+        wr_integer_range(arg, val, (LargeInt)-2147483648, (LargeInt)4294967295LL);
         *ok = False;
         return;
     }
@@ -216,9 +235,9 @@ static void wr_code_long(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags
     CodeLen            = *adr;
 }
 
-static void wr_code_byte_hilo(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+static void wr_code_byte_hilo(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
-        WrError(ErrNum_OverRange);
+        wr_integer_range(arg, val, (LargeInt)-128, (LargeInt)255LL);
         *ok = False;
         return;
     }
@@ -230,9 +249,9 @@ static void wr_code_byte_hilo(Boolean* ok, int* adr, LargeInt val, tSymbolFlags 
     CodeLen = ((*adr) + 1) / 2;
 }
 
-static void wr_code_byte_lohi(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags) {
+static void wr_code_byte_lohi(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int8)) {
-        WrError(ErrNum_OverRange);
+        wr_integer_range(arg, val, (LargeInt)-128, (LargeInt)255LL);
         *ok = False;
         return;
     }
@@ -711,7 +730,7 @@ static void DecodeDATA_TI34x(Word Code) {
             ToInt:
                 if (!RangeCheck(t.Contents.Int.Value, Int32)) {
                     OK = False;
-                    WrError(ErrNum_OverRange);
+                    wr_integer_range(pArg, t.Contents.Int.Value, (LargeInt)-2147483648LL, (LargeInt)4294967295LL);
                 } else {
                     DAsmCode[CodeLen++] = t.Contents.Int.Value;
                 }
