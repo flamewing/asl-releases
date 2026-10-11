@@ -1457,6 +1457,11 @@
       "file": "codemic8.c",
       "issue": "DecodeALU probes source with MustBeReg=True before its immediate fallback, emitting errors for supported immediate operands and duplicate errors for rotate forms.",
       "status": "fixed in tranche 41; optional register probe restores existing immediate encoder and single rotate rejection"
+    },
+    {
+      "file": "code3201x.c",
+      "issue": "Int4 negative shift count was converted to Word then used in 1 << count, invoking undefined shift behavior.",
+      "status": "fixed in tranche 43; preserve signed count and reject outside [0,15] before mask shift"
     }
   ]
 }

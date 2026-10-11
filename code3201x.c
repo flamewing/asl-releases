@@ -184,7 +184,7 @@ static void DecodeAdrShift(Word Index) {
         DecodeAdr(&ArgStr[1], AuxArgIndex, False);
         if (AdrOK) {
             Boolean OK;
-            Word    AdrWord;
+            LongInt AdrWord;
 
             if (!HasSh) {
                 OK      = True;
@@ -198,7 +198,8 @@ static void DecodeAdrShift(Word Index) {
                 }
             }
             if (OK) {
-                if ((pOrder->AllowShifts & (1 << AdrWord)) == 0) {
+                if ((AdrWord < 0) || (AdrWord >= 16)
+                        || ((pOrder->AllowShifts & (1 << AdrWord)) == 0)) {
                     WrError(ErrNum_InvShiftArg);
                 } else {
                     CodeLen     = 1;

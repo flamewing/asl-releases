@@ -699,3 +699,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     edges, no-wrap behavior, forward/undefined targets, exact IDs/positions
     and preceding bytes. Existing ALU fix regressions remain exercised.
     Validation: all 373 CTest cases pass with embedded/external catalogs.
+
+43. Separate TMS3201x invalid mask-shift bug.
+    Keep evaluated shift counts signed and reject counts outside [0,15]
+    before computing 1 << count. The former Word conversion turned negative
+    Int4 counts into 65528..65535 and invoked undefined C shift behavior.
+    Existing 1380 rejection and every nonnegative mask selection remain.
+    Tests cover all eight negative Int4 counts for all five shift callers
+    on both CPUs, plus golden bytes for accepted counts and sparse masks.
+    Message detail follows separately in tranche 44.
+    Validation: all 374 CTest cases pass with embedded/external catalogs.
+    WSL UndefinedBehaviorSanitizer reproduces old exponent 65535 failure;
+    the complete focused regression passes with the guarded implementation.
