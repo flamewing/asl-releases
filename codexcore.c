@@ -418,7 +418,7 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
                 Delta = -Delta;
             }
             WAsmCode[1] |= Delta & 0x3f;
-            WAsmCode[0] = 0xf00 | ((Delta >> 6) & 0x3ff);
+            WAsmCode[0] = 0xf000 | ((Delta >> 6) & 0x3ff);
             CodeLen     = 4;
         }
     }

@@ -1540,7 +1540,12 @@
     {
       "file": "codexcore.c",
       "issue": "Long automatic branch prefix uses 0x0f00 whereas other long-immediate encoders use 0xf000; verify against authoritative XS1 encoding before changing.",
-      "status": "needs ISA verification; diagnostic tranche preserves preceding bytes"
+      "status": "fixed in tranche 60; XS1 manual pp. 65/234 specifies 111100 prefix bits, automatic forward/backward branches now match explicit displacement encoders"
+    },
+    {
+      "file": "codexcore.c",
+      "issue": "Automatic long branches reject positive byte displacement 131070 even though XS1 permits the full unsigned 16-bit halfword displacement 65535 in either direction.",
+      "status": "confirmed against XS1 architecture manual pp. 62-65; fix separately in tranche 61"
     }
   ]
 }

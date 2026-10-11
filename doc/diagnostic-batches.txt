@@ -905,3 +905,18 @@ manual, EXPECT fixtures, translations and source-position tests.
     Existing automatic long-branch prefix 0x0f00 differs from other long
     immediate encoders' 0xf000; record for separate ISA verification.
     Validation: all 384 CTest cases pass with embedded/external catalogs.
+
+60. Separate XCore automatic long-branch prefix encoding bug.
+    Replace 0x0f00 with 0xf000: XS1 long immediate prefix bits 15..10
+    are 111100. Automatic BRU/BRF/BRT previously emitted a different
+    instruction prefix while explicit displacement encoders were correct.
+    Source: The XMOS XS1 Architecture (David May), pp. 62-65 and 234:
+    https://docs.alexrp.com/xcore/xmos_xs1.pdf
+    Tests pair automatic forward/backward conditional/unconditional branches
+    with the corresponding BRFU/BRBU/BRFF/BRBF/BRFT/BRBT encoders, covering
+    all six variants and high immediate bits. Update preceding long-branch
+    byte expectations. Historical t_xcore fixture changes exactly six bytes,
+    each prefix high byte 0x0f to 0xf0; the other 4,024 bytes are unchanged.
+    The same manual confirms positive endpoint 65535 halfwords is valid;
+    handle its separate automatic branch range off-by-one next.
+    Validation: all 384 CTest cases pass with embedded/external catalogs.
