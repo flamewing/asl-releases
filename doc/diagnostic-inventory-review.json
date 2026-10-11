@@ -1004,8 +1004,12 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 42: all three historical candidates identify rotate register syntax or short/long branch displacement, full interval and PC base. Word-address PC, UInt12 targets, unwrapped arithmetic, flags and encoding preserved; optional-register bug fixed separately in tranche 41."
     },
     "codemn1610.c": {
       "candidate_counts": {

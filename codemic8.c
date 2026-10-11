@@ -12,6 +12,9 @@
 
 #include "codemic8.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -154,7 +157,10 @@ static void DecodeALU(Word Index) {
             break;
         case eIsNoReg:
             if (!pOrder->MayImm) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                        "R0..R31");
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
             } else {
                 Boolean OK;
 
@@ -196,7 +202,11 @@ static void DecodeShortBranch(Word Index) {
         if (OK) {
             Dest -= EProgCounter();
             if (((Dest < -512) || (Dest > 511)) && !mSymbolQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)Dest, (LargeInt)-512, (LargeInt)511,
+                        (LargeWord)EProgCounter());
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 DAsmCode[0] = pOrder->Code | (Dest & 0x3ff);
                 CodeLen     = 1;
@@ -216,7 +226,11 @@ static void DecodeLongBranch(Word Index) {
         if (OK) {
             Dest -= EProgCounter();
             if (((Dest < -2048) || (Dest > 2047)) && !mSymbolQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)Dest, (LargeInt)-2048, (LargeInt)2047,
+                        (LargeWord)EProgCounter());
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 DAsmCode[0] = pOrder->Code | (Dest & 0xfff);
                 CodeLen     = 1;

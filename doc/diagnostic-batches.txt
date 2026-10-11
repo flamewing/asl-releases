@@ -688,3 +688,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     failures, undefined expressions and every ALU/rotate caller.
     Historical message detail follows separately in tranche 42.
     Validation: all 373 CTest cases pass with embedded/external catalogs.
+
+42. Complete Mico8 historical rotate/branch inventory review.
+    1350 identifies the rotate source's required R0..R31 register form.
+    Both 1370 sites report displacement, original short [-512,511] or
+    long [-2048,2047] interval and word-address PC base at the target.
+    Preserve UInt12 targets, unwrapped calculations, questionable-symbol
+    predicates, CPU-specific instruction tables and accepted encodings.
+    Tests cover every short/long branch on every applicable CPU, both range
+    edges, no-wrap behavior, forward/undefined targets, exact IDs/positions
+    and preceding bytes. Existing ALU fix regressions remain exercised.
+    Validation: all 373 CTest cases pass with embedded/external catalogs.
