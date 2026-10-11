@@ -1771,6 +1771,11 @@
       "file": "code370.c",
       "issue": "All four relative branch decoders reject provisional first-pass forward-expression distances before final symbols resolve.",
       "status": "fixed in tranche 105; defer range checks for first-pass unknown/questionable targets; all 23 branch aliases/callers verified, compound branches tested across five CPU names"
+    },
+    {
+      "file": "codesx20.c",
+      "issue": "RETW/MODE OR accepted negative Int8/Int4 values promoted to unsigned Word directly into opcode, emitting FFFF for -1 instead of byte/nibble equivalents.",
+      "status": "fixed in tranche 107; mask immediate field before opcode combination; both CPUs, negative endpoints, unsigned equivalents and range failures verified"
     }
   ]
 }

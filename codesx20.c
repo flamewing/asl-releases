@@ -401,7 +401,7 @@ static void DecodeRETW(Word Code) {
 
     Arg = EvalStrIntExpression(&ArgStr[1], Int8, &OK);
     if (OK) {
-        WAsmCode[CodeLen++] = Code | Arg;
+        WAsmCode[CodeLen++] = Code | (Arg & 0xff);
     }
 }
 
@@ -445,7 +445,7 @@ static void DecodeMODE(Word Code) {
 
     Arg = EvalStrIntExpressionWithResult(&ArgStr[1], Int4, &EvalResult);
     if (EvalResult.OK) {
-        WAsmCode[CodeLen++] = Code | Arg;
+        WAsmCode[CodeLen++] = Code | (Arg & 0xf);
         ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
 }

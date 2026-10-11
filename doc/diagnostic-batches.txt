@@ -1378,3 +1378,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     and accepted bytes; tests cover all callers, variable lengths, both bit
     encodings, primary positions and wrapped/endpoints.
     Validation: all 399 CTest cases pass with embedded/external catalogs.
+
+107. SX20/SX28 signed RETW/MODE field masking.
+    Accepted negative RETW Int8 and MODE Int4 values become unsigned words
+    then overwrite the complete opcode (both -1 emit FFFF). Mask to the byte
+    or nibble before combining with the opcode, as corresponding positive
+    bit-equivalent values already do. Tests cover both CPUs, -1 and negative
+    endpoints, unsigned equivalents and retained lower-range rejection.
+    Validation: all 400 CTest cases pass with embedded/external catalogs.
