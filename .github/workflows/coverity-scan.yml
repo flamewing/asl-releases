@@ -93,8 +93,12 @@ jobs:
             fi
             exit 1
           fi
-          # Coverity's official submission script requires HTTP 201 for acceptance.
-          if [ "$status_code" != "201" ]; then
+          # Coverity also returns HTTP 200 with an explicit success message.
+          # Do not treat an arbitrary HTTP 200 response as an accepted upload.
+          if [ "$status_code" != "201" ] && ! {
+            [ "$status_code" = "200" ] &&
+              grep -Fxq 'Build successfully submitted.' "$response_file"
+          }; then
             echo "Coverity submission was not accepted (HTTP $status_code)." >&2
             cat "$response_file" >&2
             exit 1
