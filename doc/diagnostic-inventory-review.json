@@ -1889,6 +1889,11 @@
       "file": "code8008.c",
       "issue": "Z80-style JP/J/CALL/RET invalid conditions silently discard instructions while assembly succeeds.",
       "status": "fixed in tranche 127; shared condition decoder emits positioned 1360 with eight accepted names; four callers/both CPUs/no emission/all accepted conditions checked"
+    },
+    {
+      "file": "code8008.c",
+      "issue": "Z80-style LD byte-register destination accepts pair source in decoder mask, then silently drops instruction without a pair switch case.",
+      "status": "fixed in tranche 128; reject pair source through mode mask with positioned 1350; all seven byte destinations/three pairs/both CPUs and original supported loads checked"
     }
   ]
 }

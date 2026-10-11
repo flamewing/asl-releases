@@ -561,7 +561,7 @@ static void DecodeLD(Word Index) {
         switch (DecodeAdr_Z80(&ArgStr[1], MModReg8 | MModReg16 | MModIHL, &DestAdrVals)) {
         case eModReg8:
             switch (DecodeAdr_Z80(
-                    &ArgStr[2], MModReg8 | MModReg16 | MModIHL | MModImm, &SrcAdrVals)) {
+                    &ArgStr[2], MModReg8 | MModIHL | MModImm, &SrcAdrVals)) {
             case eModReg8:
                 BAsmCode[CodeLen++] = 0xc0 | (DestAdrVals.Val << 3) | SrcAdrVals.Val;
                 break;

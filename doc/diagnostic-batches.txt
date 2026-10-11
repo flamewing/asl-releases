@@ -1569,3 +1569,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     names and stop encoding. Tests cover all four callers/two CPUs, EXPECT/no
     emission, all accepted conditions and original branch/call/return bytes.
     Validation: all 407 CTest cases pass with embedded/external catalogs.
+
+128. Intel 8008 silent register-pair load sources.
+    Z80-style LD byte-register destination permits register-pair source in
+    its decoder mask, but its switch has no pair case and silently emits nothing.
+    Remove that unsupported source mode from the mask so it emits positioned
+    1350. Tests cover all seven byte destinations/three pairs/two CPUs,
+    EXPECT/no emission and captured original register/memory/immediate/pair loads.
+    Validation: all 407 CTest cases pass with embedded/external catalogs.
