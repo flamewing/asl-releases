@@ -1332,8 +1332,13 @@
         "ErrNum_InvAddrMode": 2,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 48: all four historical candidates identify transfer pairs, memory forms or instruction alignment. Adjacent branch sites now distinguish odd displacement (1325) from even out-of-range displacement (1370). TFR pair failure correctly uses 1350 instead of 1320. Predicates, accepted encodings and nonfatal odd-PC warning preserved."
     },
     "codez8.c": {
       "candidate_counts": {

@@ -12,6 +12,9 @@
 
 #include "codexgate.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -122,6 +125,21 @@ static void DecodeFixed(Word Index) {
     }
 }
 
+static void report_branch_alignment(LongInt distance) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+            (LargeInt)distance, (LargeInt)2, (LargeWord)(EProgCounter() + 2));
+    WrXErrorPos(ErrNum_NotAligned, detail, &ArgStr[1].Pos);
+}
+
+static void report_branch_range(LongInt distance, LongInt minimum, LongInt maximum) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+            (LargeInt)distance, (LargeInt)minimum, (LargeInt)maximum,
+            (LargeWord)(EProgCounter() + 2), (LargeInt)2);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeBranch(Word Index) {
     LongInt      Dist;
     Boolean      OK;
@@ -132,9 +150,9 @@ static void DecodeBranch(Word Index) {
                - (EProgCounter() + 2);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && (Dist & 1)) {
-                WrError(ErrNum_NotAligned);
+                report_branch_alignment(Dist);
             } else if (!mSymbolQuestionable(Flags) && ((Dist < -512) || (Dist > 510))) {
-                WrError(ErrNum_NotAligned);
+                report_branch_range(Dist, -512, 510);
             } else {
                 WAsmCode[0] = Index | ((Dist >> 1) & 0x01ff);
                 CodeLen     = 2;
@@ -155,9 +173,9 @@ static void DecodeBRA(Word Index) {
                - (EProgCounter() + 2);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && (Dist & 1)) {
-                WrError(ErrNum_NotAligned);
+                report_branch_alignment(Dist);
             } else if (!mSymbolQuestionable(Flags) && ((Dist < -1024) || (Dist > 1022))) {
-                WrError(ErrNum_NotAligned);
+                report_branch_range(Dist, -1024, 1022);
             } else {
                 WAsmCode[0] = 0x3c00 | ((Dist >> 1) & 0x03ff);
                 CodeLen     = 2;
@@ -377,7 +395,10 @@ static void DecodeTFR(Word Index) {
         }
 
         if (!OK) {
-            WrError(ErrNum_OverRange);
+            char detail[200];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                    "(R0..R7,CCR), (CCR,R0..R7), (R0..R7,PC)");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         } else if (DecodeArgReg(RegIdx, &Reg)) {
             WAsmCode[0] |= (Reg << 8);
             CodeLen = 2;
@@ -406,6 +427,18 @@ static void DecodeCmp(Word Index) {
     }
 }
 
+static void report_memory_forms(Word code) {
+    char forms[200] = "", detail[280];
+    if (code == 0x4800) {
+        strmaxcat(forms, "#expr, ", sizeof(forms));
+    }
+    strmaxcat(forms,
+            "(Rn,#expr), (Rn,Rm), (Rn,-Rm), (Rn,Rm+), (#expr), (Rm), (-Rm), (Rm+); Rn/Rm=R0..R7",
+            sizeof(forms));
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
+}
+
 static void DecodeMem(Word Code) {
     Word DReg;
 
@@ -416,7 +449,7 @@ static void DecodeMem(Word Code) {
     else if (*ArgStr[2].str.p_str == '#') {
         /* Only allowed for LDW */
         if (Code != 0x4800) {
-            WrError(ErrNum_InvAddrMode);
+            report_memory_forms(Code);
         } else {
             Word    Val;
             Boolean OK;
@@ -429,7 +462,7 @@ static void DecodeMem(Word Code) {
             }
         }
     } else if (!IsIndirect(ArgStr[2].str.p_str)) {
-        WrError(ErrNum_InvAddrMode);
+        report_memory_forms(Code);
     } else {
         int      l = strlen(ArgStr[2].str.p_str) - 2;
         char*    pPos;
@@ -509,7 +542,10 @@ static void DecodeMem(Word Code) {
 static void check_pc_even(Word index) {
     UNUSED(index);
     if (Odd(EProgCounter())) {
-        WrError(ErrNum_AddrNotAligned);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                (LargeWord)EProgCounter());
+        WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
     }
 }
 

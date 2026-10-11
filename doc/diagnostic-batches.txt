@@ -761,3 +761,18 @@ manual, EXPECT fixtures, translations and source-position tests.
     [0xd0,0xff], both resolved invalid neighbors, missing symbols and all
     preceding pointer/target endpoint encodings.
     Validation: all 376 CTest cases pass with embedded/external catalogs.
+
+48. Complete XGATE historical transfer/memory/alignment inventory review.
+    TFR invalid operand pairs now use accurate 1350 instead of numeric
+    overflow 1320 and list accepted register/CCR/PC pairs at the operand.
+    Both memory-mode 1350 sites list accepted indexed/indirect syntax,
+    including the LDW-only immediate alternative. Odd instruction address
+    warning 180 gives actual PC and two-byte alignment, still nonfatal.
+    Adjacent branch rejection sites now distinguish odd distance 1325 from
+    even overflow 1370, showing signed displacement, exact conditional
+    [-512,510]/BRA [-1024,1022] interval, PC+2 and even requirement.
+    No existing EXPECT fixture references the corrected rejection IDs.
+    Tests cover every branch and memory caller, both range edges, alignment,
+    warning severity/position, primary undefined targets, forward symbols,
+    zero displacement, valid transfers/addressing and preceding bytes.
+    Validation: all 377 CTest cases pass with embedded/external catalogs.
