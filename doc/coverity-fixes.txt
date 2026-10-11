@@ -52,9 +52,49 @@ the expected error code; crashes fail the regression test.
 Full GCC/UCRT64 builds and all 335 CTest tests passed with both embedded
 message catalogs (ASL_EMBED_MESSAGES=ON) and external catalogs (OFF).
 
+Second batch: file errors and resource handling
+
+350665, 350683 and 350692, asmdebug.c
+  Stop debug-file processing after an unsuccessful open.
+350735 and 914360, as.c
+  Release a failed include's input tag; guard diagnostic access to an
+  absent input tag.
+350705 and 350673, asmallg.c:CodeBINCLUDE
+  Stop after open, file-size or seek errors; reject offsets beyond EOF.
+914397, asmallg.c:CodeString
+  Use the allocated string capacity instead of the size of its pointer.
+350666, bpemu.c:FExpand
+  Handle short destination buffers, failed current-directory queries and
+  paths without a separator; preserve in-place expansion.
+350751 and 350723, asmcode.c
+  Keep saved positions as long; check the record-end position and seeks.
+914376, codechunks.c:ReadCodeChunk
+  Check seek/length/allocation errors and support empty files.
+914384 and 659710, test_driver.c:compare_files
+  Validate lengths and actual read counts, and compare empty files safely.
+350725, stdhandl.c:stdhandl_init
+  Check fstat before reading its result.
+350743, 914340 and 914404, alink.c
+  Close the input file and correct two missing percent signs before
+  PRIu32. Validate relocation-reader results at their callers.
+350640, plist.c:ProcessSingle
+  Handle a rejected relocation block before traversing it. Together with
+  the first batch's bounds checks, this limits traversal by input size.
+914375, 914354 and 914414, das.c
+  Release HEX-parser resources on all exits, check reads and allocation,
+  and reject failed/truncated instruction retrieval before using bytes.
+
+Validation: all 336 tests passed with embedded and external catalogs.
+Added coverage for empty/equal/mismatching/missing comparison files, short
+path buffers, code-chunk reads, malformed HEX files, oversized BINCLUDE
+offsets and complete listing titles. Corrected the first batch's CPU name
+and Windows path separators so its assembler tests reach the intended
+register and macro code. These mappings still require a fresh scan;
+the report's format findings can refer to the same defective call sites.
+
 Remaining work
 
-The other findings have not been reviewed or fixed by this batch. Suggested
-next batches: assembler/debug file-error paths; CPU decoder correctness;
-remaining resource/read handling; format-string findings. The eight
+The other findings have not been fixed by these batches. Suggested next
+batches: CPU decoder correctness; remaining resource/read handling;
+format-string findings. The eight
 undecided findings still need their event traces and source-based review.

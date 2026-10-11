@@ -108,12 +108,20 @@ int ReadCodeChunk(
     }
 
     if (!Length) {
-        fseek(pFile, 0, SEEK_END);
-        Length = ftell(pFile);
-        fseek(pFile, 0, SEEK_SET);
+        long FileLength;
+        if (fseek(pFile, 0, SEEK_END) != 0 || (FileLength = ftell(pFile)) < 0
+            || fseek(pFile, 0, SEEK_SET) != 0) {
+            Result = EIO;
+            goto func_exit;
+        }
+        Length = (LargeWord)FileLength;
+    }
+    if (Length > (size_t)-1) {
+        Result = ENOMEM;
+        goto func_exit;
     }
 
-    pCode = (Byte*)malloc(Length);
+    pCode = (Byte*)malloc(Length ? (size_t)Length : 1);
     if (!pCode) {
         Result = ENOMEM;
         goto func_exit;

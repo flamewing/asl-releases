@@ -390,6 +390,9 @@ static void ProcessFile(char const* pSrcName, int Index) {
            the appended relocation info will be skipped in the next loop run. */
 
         else if ((Header == FileHeaderRDataRec) || (Header == FileHeaderRRelocRec)) {
+            if (!PartRun || !PartRun->RelocInfo) {
+                FormatError(SrcName, getmessage(Num_FormatInvRecordLenMsg));
+            }
             if (!Read4(f, &Addr)) {
                 chk_wr_read_error(SrcName);
             }
@@ -467,8 +470,11 @@ static void ProcessFile(char const* pSrcName, int Index) {
 
     if (msg_level >= e_msg_level_verbose) {
         printf("(");
-        printf(PRIu32, SumLen);
+        printf("%" PRIu32, SumLen);
         printf(" %s)\n", getmessage((SumLen == 1) ? Num_Byte : Num_Bytes));
+    }
+    if (fclose(f) != 0) {
+        ChkIO(SrcName);
     }
 }
 
@@ -669,7 +675,7 @@ int main(int argc, char** argv) {
     }
     if (UndefErr > 0) {
         fprintf(stderr, "\n");
-        fprintf(stderr, PRIu32, UndefErr);
+        fprintf(stderr, "%" PRIu32, UndefErr);
         fprintf(stderr, " %s\n",
                 getmessage((UndefErr == 1) ? Num_SumUndefSymbol : Num_SumUndefSymbols));
         return 1;

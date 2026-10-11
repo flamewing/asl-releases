@@ -114,7 +114,10 @@ void stdhandl_init(void) {
      */
     Redirected = NoRedir;
 #    else
-    fstat(NumStdOut, &stdout_stat);
+    if (fstat(NumStdOut, &stdout_stat) != 0) {
+        Redirected = NoRedir;
+        return;
+    }
     if (S_ISREG(stdout_stat.st_mode)) {
         Redirected = RedirToFile;
     }

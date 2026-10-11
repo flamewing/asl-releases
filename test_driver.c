@@ -123,6 +123,26 @@ static void dump_file(char const* data, size_t size) {
  * @param test_name The name of the test.
  * @return Returns true if the files are identical, false otherwise.
  */
+static bool read_binary_file(FILE* file, char const* name, char** data, size_t* size) {
+    long length;
+    if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0
+        || fseek(file, 0, SEEK_SET) != 0) {
+        printf("Failed to determine size of '%s'\n", name);
+        return false;
+    }
+    *size = (size_t)length;
+    *data = (char*)malloc(*size ? *size : 1);
+    if (!*data) {
+        printf("Failed to allocate %zu bytes for '%s'\n", *size, name);
+        return false;
+    }
+    if (fread(*data, 1, *size, file) != *size) {
+        printf("Failed to read '%s'\n", name);
+        return false;
+    }
+    return true;
+}
+
 static bool compare_files(
         char const* source_dir, char const* output_dir, char const* test_name) {
     char ori_file[PATH_BUFFER_SIZE];
@@ -145,33 +165,18 @@ static bool compare_files(
         return false;
     }
 
-    fseek(ori, 0, SEEK_END);
-    size_t ori_size = (size_t)ftell(ori);
-    fseek(ori, 0, SEEK_SET);
-    char* ori_data = (char*)malloc(ori_size);
-    if (ori_data == NULL) {
+    size_t ori_size, bin_size;
+    char *ori_data = NULL, *bin_data = NULL;
+    if (!read_binary_file(ori, ori_file, &ori_data, &ori_size)
+        || !read_binary_file(bin, bin_file, &bin_data, &bin_size)) {
         test_failed(test_name);
-        printf("Failed to allocate %zu bytes for '%s'\n", ori_size, ori_file);
-        fclose(ori);
-        fclose(bin);
-        return false;
-    }
-
-    fseek(bin, 0, SEEK_END);
-    size_t bin_size = (size_t)ftell(bin);
-    fseek(bin, 0, SEEK_SET);
-    char* bin_data = (char*)malloc(bin_size);
-    if (bin_data == NULL) {
-        test_failed(test_name);
-        printf("Failed to allocate %zu bytes for '%s'\n", bin_size, bin_file);
         free(ori_data);
+        free(bin_data);
         fclose(ori);
         fclose(bin);
         return false;
     }
 
-    fread(ori_data, 1, ori_size, ori);
-    fread(bin_data, 1, bin_size, bin);
     fclose(ori);
     fclose(bin);
 

@@ -39,7 +39,11 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
 #endif /* DRSEP */
     char *p, *p2;
 
+    if (!dest_size) {
+        return;
+    }
     strmaxcpy(Copy, p_src, sizeof(Copy));
+    *p_dest = '\0';
 
 #ifdef DRSEP
     p = strchr(Copy, DRSEP);
@@ -94,8 +98,10 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
         } else {
             DrvNum = toupper(*DrvPart) - '@';
         }
-        _getdcwd(DrvNum, p_dest, dest_size);
-        if (p_dest[1] == ':') {
+        if (!_getdcwd(DrvNum, p_dest, dest_size)) {
+            *p_dest = '\0';
+        }
+        if (*p_dest && dest_size > 1 && p_dest[1] == ':') {
             strmov(p_dest, p_dest + 2);
         }
     }
@@ -152,7 +158,11 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
         else if ((!strcmp(Copy, "..")) && (strlen(p_dest) > 1)) {
             p_dest[strlen(p_dest) - 1] = '\0';
             p2                         = strrchr(p_dest, PATHSEP);
-            p2[1]                      = '\0';
+            if (p2) {
+                p2[1] = '\0';
+            } else {
+                strmaxcpy(p_dest, SPATHSEP, dest_size);
+            }
         } else {
             strmaxcat(p_dest, Copy, dest_size);
             strmaxcat(p_dest, SPATHSEP, dest_size);

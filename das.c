@@ -191,14 +191,20 @@ static as_cmd_result_t CMD_BinFile(Boolean Negate, char const* pArg) {
     return e_cmd_arg;
 }
 
-static void ResizeBuffer(Byte** ppBuffer, LargeWord* pAllocLen, LargeWord ReqLen) {
+static Boolean ResizeBuffer(Byte** ppBuffer, LargeWord* pAllocLen, LargeWord ReqLen) {
+    if (ReqLen > (size_t)-1) {
+        return False;
+    }
     if (ReqLen > *pAllocLen) {
         void* pNew = *ppBuffer ? realloc(*ppBuffer, ReqLen) : malloc(ReqLen);
         if (pNew) {
             *ppBuffer  = (Byte*)pNew;
             *pAllocLen = ReqLen;
+        } else {
+            return False;
         }
     }
+    return True;
 }
 
 static Boolean GetByte(char** ppLine, Byte* pResult) {
@@ -252,6 +258,7 @@ static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
     LargeWord  LineBufferStart = 0, LineBufferAllocLen = 0, LineBufferLen = 0, Sum;
     tCodeChunk Chunk;
     unsigned   z;
+    int        error_num = 0;
 
     if (Negate || !*pArg) {
         return ArgError(Num_ErrMsgFileArgumentMissing, NULL);
@@ -263,8 +270,7 @@ static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
     }
 
     InitCodeChunk(&Chunk);
-    while (!feof(pFile)) {
-        fgets(Line, sizeof(Line), pFile);
+    while (fgets(Line, sizeof(Line), pFile)) {
         Len = strlen(Line);
         if ((Len > 0) && (Line[Len - 1] == '\n')) {
             Line[--Len] = '\0';
@@ -279,23 +285,29 @@ static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
         Sum   = 0;
         pLine = Line + 1;
         if (!GetByte(&pLine, &Tmp)) {
-            return ArgError(Num_ErrMsgInvalidHexData, pArg);
+            error_num = Num_ErrMsgInvalidHexData;
+            goto cleanup;
         }
-        ResizeBuffer(&pLineBuffer, &LineBufferAllocLen, Tmp);
+        if (!ResizeBuffer(&pLineBuffer, &LineBufferAllocLen, Tmp)) {
+            error_num = Num_ErrMsgCannotReadHexFile;
+            goto cleanup;
+        }
         LineBufferLen = Tmp;
         Sum += Tmp;
 
         LineBufferStart = 0;
         for (z = 0; z < 2; z++) {
             if (!GetByte(&pLine, &Tmp)) {
-                return ArgError(Num_ErrMsgInvalidHexData, pArg);
+                error_num = Num_ErrMsgInvalidHexData;
+                goto cleanup;
             }
             LineBufferStart = (LineBufferStart << 8) | Tmp;
             Sum += Tmp;
         }
 
         if (!GetByte(&pLine, &RecordType)) {
-            return ArgError(Num_ErrMsgInvalidHexData, pArg);
+            error_num = Num_ErrMsgInvalidHexData;
+            goto cleanup;
         }
         Sum += RecordType;
         if (RecordType != 0) {
@@ -304,36 +316,55 @@ static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
 
         for (z = 0; z < LineBufferLen; z++) {
             if (!GetByte(&pLine, &pLineBuffer[z])) {
-                return ArgError(Num_ErrMsgInvalidHexData, pArg);
+                error_num = Num_ErrMsgInvalidHexData;
+                goto cleanup;
             }
             Sum += pLineBuffer[z];
         }
 
         if (!GetByte(&pLine, &Tmp)) {
-            return ArgError(Num_ErrMsgInvalidHexData, pArg);
+            error_num = Num_ErrMsgInvalidHexData;
+            goto cleanup;
         }
         Sum += Tmp;
         if (Sum & 0xff) {
-            return ArgError(Num_ErrMsgHexDataChecksumError, pArg);
+            error_num = Num_ErrMsgHexDataChecksumError;
+            goto cleanup;
         }
 
         if (Chunk.Start + Chunk.Length == LineBufferStart) {
-            ResizeBuffer(&Chunk.pCode, &Chunk.Length, Chunk.Length + LineBufferLen);
-            memcpy(&Chunk.pCode[Chunk.Length - LineBufferLen], pLineBuffer,
-                   LineBufferLen);
+            if (!ResizeBuffer(&Chunk.pCode, &Chunk.Length, Chunk.Length + LineBufferLen)) {
+                error_num = Num_ErrMsgCannotReadHexFile;
+                goto cleanup;
+            }
+            if (LineBufferLen) {
+                memcpy(&Chunk.pCode[Chunk.Length - LineBufferLen], pLineBuffer,
+                       LineBufferLen);
+            }
         } else {
             if (Chunk.Length) {
                 FlushChunk(&Chunk);
             }
-            ResizeBuffer(&Chunk.pCode, &Chunk.Length, LineBufferLen);
-            memcpy(Chunk.pCode, pLineBuffer, LineBufferLen);
+            if (!ResizeBuffer(&Chunk.pCode, &Chunk.Length, LineBufferLen)) {
+                error_num = Num_ErrMsgCannotReadHexFile;
+                goto cleanup;
+            }
+            if (LineBufferLen) {
+                memcpy(Chunk.pCode, pLineBuffer, LineBufferLen);
+            }
             Chunk.Start = LineBufferStart;
         }
+    }
+    if (ferror(pFile)) {
+        error_num = Num_ErrMsgCannotReadHexFile;
+        goto cleanup;
     }
     if (Chunk.Length) {
         FlushChunk(&Chunk);
     }
 
+cleanup:
+    FreeCodeChunk(&Chunk);
     if (pLineBuffer) {
         free(pLineBuffer);
     }
@@ -341,7 +372,7 @@ static as_cmd_result_t CMD_HexFile(Boolean Negate, char const* pArg) {
         free(pDataBuffer);
     }
     fclose(pFile);
-    return e_cmd_ok;
+    return error_num ? ArgError(error_num, pArg) : e_cmd_arg;
 }
 
 static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
@@ -616,7 +647,11 @@ static void DisasmIterator(OneChunk const* pChunk, Boolean IsData, void* pUser) 
 
         PrTabs(pData->pDestFile, pData->MaxSrcLineLen, tabbedstrlen(Info.SrcLine));
         fprintf(pData->pDestFile, ";");
-        RetrieveCodeFromChunkList(&CodeChunks, Address, Code, Info.CodeLen);
+        if (!Info.CodeLen || Info.CodeLen > sizeof(Code)
+            || !RetrieveCodeFromChunkList(&CodeChunks, Address, Code, Info.CodeLen)) {
+            fprintf(stderr, "cannot retrieve disassembled instruction bytes\n");
+            exit(3);
+        }
         for (z = 0; z < Info.CodeLen; z++) {
             HexString(NumString, sizeof(NumString), Code[z], 2);
             fprintf(pData->pDestFile, " %s", NumString);
@@ -638,7 +673,9 @@ int main(int argc, char** argv) {
 
     strutil_init();
     nls_init();
-    NLS_Initialize(&argc, argv);
+    if (!NLS_Initialize(&argc, argv)) {
+        exit(4);
+    }
     dasmdef_init();
     cpulist_init();
     msg_level_init();

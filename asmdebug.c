@@ -149,6 +149,7 @@ static void DumpDebugInfo_MAP(void) {
     MAPFile = fopen(MAPName, "w");
     if (!MAPFile) {
         ChkIO(ErrNum_OpeningFile);
+        return;
     }
 
     Run     = LineInfoRoot;
@@ -225,6 +226,7 @@ static void DumpDebugInfo_Atmel(void) {
     OBJFile = fopen(OBJName, OPENWRMODE);
     if (!OBJFile) {
         ChkIO(ErrNum_OpeningFile);
+        return;
     }
 
     /* initialer Kopf, Positionen noch unbekannt */
@@ -324,6 +326,7 @@ static void DumpDebugInfo_NOICE(void) {
     MAPFile = fopen(MAPName, "w");
     if (!MAPFile) {
         ChkIO(ErrNum_OpeningFile);
+        return;
     }
 
     fprintf(MAPFile, "CASE %d\n", (CaseSensitive) ? 1 : 0);

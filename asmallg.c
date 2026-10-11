@@ -805,13 +805,13 @@ static void CodeString(Word Index) {
         } else {
             switch (Index) {
             case 0:
-                as_nonz_dynstr_to_c_str(PrtInitString, &tmp, sizeof(PrtInitString));
+                as_nonz_dynstr_to_c_str(PrtInitString, &tmp, STRINGSIZE);
                 break;
             case 1:
-                as_nonz_dynstr_to_c_str(PrtExitString, &tmp, sizeof(PrtExitString));
+                as_nonz_dynstr_to_c_str(PrtExitString, &tmp, STRINGSIZE);
                 break;
             case 2:
-                as_nonz_dynstr_to_c_str(PrtTitleString, &tmp, sizeof(PrtTitleString));
+                as_nonz_dynstr_to_c_str(PrtTitleString, &tmp, STRINGSIZE);
                 break;
             }
         }
@@ -1636,6 +1636,7 @@ static void CodeBINCLUDE(Word Index) {
     Boolean      OK, SaveTurnWords;
     tSymbolFlags Flags;
     LargeWord    OldPC;
+    long         FileLength;
     UNUSED(Index);
 
     if (!ChkArgCnt(1, 3))
@@ -1673,10 +1674,22 @@ static void CodeBINCLUDE(Word Index) {
             F = fopen(FNameArg.str.p_str, OPENRDMODE);
             if (F == NULL) {
                 ChkXIO(ErrNum_OpeningFile, FNameArg.str.p_str);
+                return;
             }
             errno = 0;
-            FSize = FileSize(F);
+            FileLength = FileSize(F);
+            if (FileLength < 0) {
+                ChkIO(ErrNum_FileReadError);
+                fclose(F);
+                return;
+            }
+            FSize = (LongWord)FileLength;
             ChkIO(ErrNum_FileReadError);
+            if ((Ofs > FSize) || (Len < -1)) {
+                fclose(F);
+                WrError(ErrNum_ShortRead);
+                return;
+            }
             if (Len == -1) {
                 if ((Len = FSize - Ofs) < 0) {
                     fclose(F);
@@ -1688,7 +1701,11 @@ static void CodeBINCLUDE(Word Index) {
                 WrError(ErrNum_AdrOverflow);
             } else {
                 errno = 0;
-                fseek(F, Ofs, SEEK_SET);
+                if (fseek(F, Ofs, SEEK_SET) != 0) {
+                    ChkIO(ErrNum_FileReadError);
+                    fclose(F);
+                    return;
+                }
                 ChkIO(ErrNum_FileReadError);
                 Rest          = Len;
                 SaveTurnWords = TurnWords;

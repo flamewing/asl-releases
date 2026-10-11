@@ -31,7 +31,7 @@
 #define CodeBufferSize 512
 
 static Word    LenSoFar;
-static LongInt RecPos, LenPos;
+static long RecPos, LenPos;
 static Boolean ThisRel;
 
 static Word     CodeBufferFill;
@@ -228,6 +228,7 @@ void NewRecord(LargeWord NStart) {
     LongInt  h;
     LongWord PC;
     Byte     Header;
+    long     EndPos;
 
     /* flush remaining code in buffer */
 
@@ -258,7 +259,11 @@ void NewRecord(LargeWord NStart) {
     else {
         /* store current position (=end of file) */
 
-        h = ftell(PrgFile);
+        EndPos = ftell(PrgFile);
+        if (EndPos < 0) {
+            ChkIO(ErrNum_FileReadError);
+            return;
+        }
 
         /* do we have reloc. info? - then change record type */
 
@@ -285,7 +290,7 @@ void NewRecord(LargeWord NStart) {
 
         /* go back to end of file */
 
-        if (fseek(PrgFile, h, SEEK_SET) != 0) {
+        if (fseek(PrgFile, EndPos, SEEK_SET) != 0) {
             ChkIO(ErrNum_FileReadError);
         }
 
@@ -356,7 +361,9 @@ void CloseFile(void) {
     as_snprintf(h, sizeof(h), "AS %s/%s-%s", Version, ARCHPRNAME, ARCHSYSNAME);
 
     NewRecord(ProgCounter());
-    fseek(PrgFile, RecPos, SEEK_SET);
+    if (fseek(PrgFile, RecPos, SEEK_SET) != 0) {
+        ChkIO(ErrNum_FileWriteError);
+    }
 
     if (StartAdrPresent) {
         Head = FileHeaderStartAdr;

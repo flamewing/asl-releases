@@ -4,6 +4,7 @@
 #include "addrspace.h"
 #include "bpemu.h"
 #include "cmdarg.h"
+#include "codechunks.h"
 #include "fileformat.h"
 #include "nlmessages.h"
 #include "nls.h"
@@ -192,6 +193,11 @@ int main(int argc, char** argv) {
     if (!strcmp(argv[1], "relocations")) {
         return relocations();
     }
+    if (!strcmp(argv[1], "small-path")) {
+        char path[3] = {'x', 'x', 'x'};
+        FExpand(path, sizeof(path), "..");
+        return !memchr(path, '\0', sizeof(path));
+    }
     if (argc < 3) {
         return 1;
     }
@@ -200,6 +206,21 @@ int main(int argc, char** argv) {
     }
     if (!strcmp(argv[1], "record")) {
         return record(argv[2], argv[0]);
+    }
+    if (!strcmp(argv[1], "chunk") && argc == 4) {
+        tCodeChunk chunk;
+        int ret, failed;
+        InitCodeChunk(&chunk);
+        ret = ReadCodeChunk(&chunk, argv[2], 0, 0, 1);
+        if (!strcmp(argv[3], "empty")) {
+            failed = ret != 0 || chunk.Length != 0;
+        } else if (!strcmp(argv[3], "data")) {
+            failed = ret != 0 || chunk.Length != 4 || memcmp(chunk.pCode, "test", 4);
+        } else {
+            failed = ret == 0;
+        }
+        FreeCodeChunk(&chunk);
+        return failed;
     }
     if (!strcmp(argv[1], "response") && argc == 4) {
         as_cmd_results_t results;

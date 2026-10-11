@@ -1,0 +1,12 @@
+file(MAKE_DIRECTORY "${TEST_DIR}")
+file(WRITE "${TEST_DIR}/empty.ori" "")
+file(WRITE "${TEST_DIR}/empty.bin" "")
+file(WRITE "${TEST_DIR}/equal.ori" "abc")
+file(WRITE "${TEST_DIR}/equal.bin" "abc")
+file(WRITE "${TEST_DIR}/different.ori" "abc")
+file(WRITE "${TEST_DIR}/different.bin" "ab")
+execute_process(COMMAND ${TEST_EMULATOR} "${TEST_PROGRAM}" "${TEST_DIR}"
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+if(NOT "${result}" STREQUAL "0")
+    message(FATAL_ERROR "File comparison regression: ${result}\n${output}\n${error}")
+endif()

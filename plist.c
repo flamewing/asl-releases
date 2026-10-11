@@ -110,6 +110,9 @@ static void ProcessSingle(char const* pFileName) {
             int          z;
 
             RelocInfo = ReadRelocInfo(ProgFile);
+            if (!RelocInfo) {
+                FormatError(pFileName, getmessage(Num_FormatInvRecordLenMsg));
+            }
             for (z = 0, PEntry = RelocInfo->RelocEntries; z < RelocInfo->RelocCount;
                  z++, PEntry++) {
                 printf("%s  %08lX        %3d:%d(%c)     %c%s\n",

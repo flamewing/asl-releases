@@ -2311,6 +2311,9 @@ static void ExpandINCLUDE_Core(tStrComp const* pArg, Boolean SearchPath) {
     Tag->Datei = fopen(FNameArg.str.p_str, "r");
     if (!Tag->Datei) {
         ChkStrIO(ErrNum_OpeningFile, pArg);
+        free(Tag->Buffer);
+        free(Tag);
+        return;
     }
     setvbuf(Tag->Datei, (char*)Tag->Buffer, _IOFBF, BufferArraySize);
 
@@ -3122,8 +3125,10 @@ static void ProcessFile(char* pFileName) {
                         break;
                     }
                 }
-                p_input_tag->GetPos(p_input_tag, Num, sizeof(Num), False);
-                WrConsoleLine(Num, False);
+                if (p_input_tag) {
+                    p_input_tag->GetPos(p_input_tag, Num, sizeof(Num), False);
+                    WrConsoleLine(Num, False);
+                }
                 fflush(stdout);
                 ListTime = NxtTime;
             }
