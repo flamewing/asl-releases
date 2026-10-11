@@ -319,9 +319,11 @@
         "ErrNum_JmpDistTooBig": 2
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "complete",
+      "review_notes": "All historical candidates reviewed in tranches 18 and 20. Evaluation and encoding behavior retained."
     },
     "code6805.c": {
       "candidate_counts": {

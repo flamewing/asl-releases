@@ -84,7 +84,7 @@ static void DecodeAdr(tStrComp const* pArg, Boolean MayImm) {
 
 chk:
     if ((AdrMode == ModImm) && (!MayImm)) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsg6804ImmediateDisallowed), &pArg->Pos);
         AdrMode = ModNone;
     }
 }
@@ -216,7 +216,7 @@ static void DecodeLDXI_LDYI(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*ArgStr[1].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgImmediateRequired), &ArgStr[1].Pos);
     } else {
         Boolean OK;
 
@@ -235,7 +235,7 @@ static void DecodeMVI(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (*ArgStr[2].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgImmediateRequired), &ArgStr[2].Pos);
     } else {
         tEvalResult EvalResult;
 

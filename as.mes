@@ -1313,6 +1313,14 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgImmediateRequired
+ "Dieser Operand erfordert einen unmittelbaren Wert mit # vor dem Ausdruck"
+ "this operand requires an immediate value with # before the expression"
+
+Message ErrMsg6804ImmediateDisallowed
+ "Unmittelbare Adressierung (#) ist hier nicht erlaubt; Adresse, (X) oder (Y) verwenden"
+ "immediate addressing (#) is not allowed here; use an address, (X) or (Y)"
+
 Message ErrMsgBranchDispRangeAligned
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx); muss ein Vielfaches von %llld sein"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx); must be a multiple of %llld"

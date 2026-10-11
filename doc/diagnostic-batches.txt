@@ -406,3 +406,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     tracked separately in diagnostic-inventory-review.json; a reviewed
     diagnostic family does not imply that the whole file is reviewed.
     Validation: all 355 CTest cases pass with embedded/external catalogs.
+
+20. Complete 6804 inventory review: immediate operand contracts.
+    Reviewed the remaining three invalid-address-mode sites. Error 1350
+    now explains that STA forbids immediate syntax and accepts an address,
+    (X) or (Y), or that LDXI/LDYI and MVI's source require #expression.
+    Highlight the rejected operand; retain evaluation and error precedence,
+    including early addressing rejection of an unresolved immediate store.
+    Tests cover every caller, source versus destination positions, one
+    primary error after division by zero, German detail and baseline bytes.
+    Validation: all 356 CTest cases pass with embedded/external catalogs.
