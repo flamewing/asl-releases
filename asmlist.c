@@ -74,7 +74,7 @@ void as_list_set_max_pc(LargeWord max_pc) {
 static void list_format_error(tErrorNum num, char fmt) {
     char err_str[10];
 
-    as_snprintf(err_str, sizeof(err_str), "%%c", fmt);
+    as_snprintf(err_str, sizeof(err_str), "%%%c", fmt);
     WrXError(num, err_str);
 }
 

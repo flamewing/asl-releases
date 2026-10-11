@@ -7,6 +7,15 @@ int main(int argc, char** argv) {
     if (argc != 2) {
         return 1;
     }
+    char path[PATH_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s" PATHSEP "stale.bin", argv[1]);
+    if (!remove_output(path) || !remove_output(path)) {
+        return 1;
+    }
+    snprintf(path, sizeof(path), "%s" PATHSEP "blocked", argv[1]);
+    if (remove_output(path)) {
+        return 1;
+    }
     return !compare_files(argv[1], argv[1], "empty")
            || !compare_files(argv[1], argv[1], "equal")
            || compare_files(argv[1], argv[1], "different")

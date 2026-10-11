@@ -3,6 +3,7 @@
 /*****************************************************************************/
 
 #include <stdbool.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,14 @@
 #define PATH_BUFFER_SIZE 4096
 
 static char io_buffer[32768];
+
+static bool remove_output(char const* name) {
+    if (remove(name) == 0 || errno == ENOENT) {
+        return true;
+    }
+    printf("Failed to remove '%s': %s\n", name, strerror(errno));
+    return false;
+}
 
 #ifdef _WIN32
 #    define PATHSEP "\\"
@@ -238,12 +247,15 @@ int main(int argc, char* argv[]) {
     printf("Running test %s...", test_name);
     printf("Test %s:\n", test_name);
 
-    snprintf(file_name, sizeof(file_name), "%s.bin", test_name);
-    remove(file_name);
-    snprintf(file_name, sizeof(file_name), "%s.log", test_name);
-    remove(file_name);
-    snprintf(file_name, sizeof(file_name), "%s.h", test_name);
-    remove(file_name);
+    char const* const extensions[] = {"bin", "log", "h"};
+    for (size_t i = 0; i < sizeof(extensions) / sizeof(*extensions); i++) {
+        snprintf(file_name, sizeof(file_name), "%s" PATHSEP "%s.%s",
+                 output_dir, test_name, extensions[i]);
+        if (!remove_output(file_name)) {
+            test_failed(test_name);
+            return 1;
+        }
+    }
 
     if (verbose) {
         print_doc(file_name, sizeof(file_name), source_dir, test_name);

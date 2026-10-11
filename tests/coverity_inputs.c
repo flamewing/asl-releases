@@ -207,6 +207,24 @@ int main(int argc, char** argv) {
     if (!strcmp(argv[1], "record")) {
         return record(argv[2], argv[0]);
     }
+    if (!strcmp(argv[1], "truncate-record")) {
+        Byte data[12];
+        FILE* file = fopen(argv[2], "rb");
+        if (!file) {
+            return 1;
+        }
+        size_t count = fread(data, 1, sizeof(data), file);
+        fclose(file);
+        if (count != sizeof(data)) {
+            return 1;
+        }
+        file = fopen(argv[2], "wb");
+        if (!file) {
+            return 1;
+        }
+        count = fwrite(data, 1, sizeof(data), file);
+        return fclose(file) != 0 || count != sizeof(data);
+    }
     if (!strcmp(argv[1], "chunk") && argc == 4) {
         tCodeChunk chunk;
         int ret, failed;

@@ -495,7 +495,7 @@ static void QueryInfo(void) {
 
 static void Locale_DateString(
         Word Year, Word Month, Word Day, char* Dest, size_t DestSize) {
-    struct tm tm;
+    struct tm tm = {0};
 
     tm.tm_year = Year - 1900;
     tm.tm_mon  = Month - 1;
@@ -503,17 +503,21 @@ static void Locale_DateString(
     tm.tm_hour = 0;
     tm.tm_min  = 0;
     tm.tm_sec  = 0;
+    tm.tm_isdst = -1;
+    /* Populate weekday/day-of-year fields used by locale date formats. */
+    (void)mktime(&tm);
     strftime(Dest, DestSize, NLSInfo.DateFmtStr, &tm);
 }
 
 static void Locale_TimeString(
         Word Hour, Word Minute, Word Second, Word Sec100, char* Dest, size_t DestSize) {
-    struct tm tm;
+    struct tm tm = {0};
 
     (void)Sec100;
     tm.tm_year = 0;
     tm.tm_mon  = 0;
     tm.tm_mday = 1;
+    tm.tm_wday = 1; /* 1900-01-01 was a Monday. */
     tm.tm_hour = Hour;
     tm.tm_min  = Minute;
     tm.tm_sec  = Second;

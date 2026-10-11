@@ -1,7 +1,7 @@
 Coverity fixes: reviewable batches, 2026-10-11
 
 Input report: coverity-triage.txt, reviewed revision a31c0b2.
-Scope: major findings and directly related input-validation defects.
+Scope: confirmed findings, starting with major input-validation defects.
 CID mappings below come from the report's function names and categories;
 the report contains no event traces or line numbers. A fresh Coverity scan
 must confirm closure, especially findings attributed to callers of shared
@@ -144,12 +144,53 @@ Validation: all 336 tests passed in both catalog configurations. Added
 binary comparison of inferred/explicit M16 operand sizes, preservation
 of upper 80296 address bytes, and M16 misaligned/out-of-range chain cases.
 
+Fifth batch: locale, I/O and diagnostics
+
+350744 and 350766, nls.c:Locale_DateString/Locale_TimeString
+  Initialize the entire struct tm. Compute date weekday/day-of-year with
+  mktime before formatting; give the time-only reference date its correct
+  weekday. Added a locale-format test on platforms with LOCALE_NLS.
+350660, p2hex.c:MeasureFile
+  Check file positions/lengths and fseek; bound addition by the actual file
+  size rather than adding the record length to an unchecked position.
+914381, test_driver.c:main
+  Check output removal failures (allow absent files). Remove stale output
+  in the actual output directory rather than the working directory.
+914410, asmlist.c:list_format_error
+  Use "%%%c" to report the actual invalid placeholder, such as %q.
+914337, as.c:cmd_int_syntax
+  Reject a NULL destination before the formatter calls strlen on it.
+  Reset the existing buffer in place, avoiding reinitialization leaks.
+
+Validation: all 336 tests passed in both catalog configurations. Added
+checks for stale/missing/unremovable output, the listing diagnostic's
+placeholder text, valid/truncated input to p2hex, and repeated command-line
+integer-syntax changes. Allocation failure was not injected. Windows uses
+W32_NLS, so the new LOCALE_NLS test requires the POSIX CI build; it was not
+run locally. No Coverity triage states have been changed.
+
+Review notes on the remaining confirmed labels
+
+914439, tempresult.c:TempResultToFloat
+  The scalar union conversion appears valid: the RHS is evaluated before
+  assignment. No overlapping memcpy is present. Request the event trace
+  before changing this code or reclassifying the finding.
+914416, codemsp.c:DecodeEmulOneToTwoX
+  Negative offsets masked to 20 bits are intentional; the 0xffffffff
+  immediate is recognized by FillAdrPartsImm as the -1 constant generator.
+  Existing MSP430X golden-output tests cover auto-increment emulation
+  with offsets -1, -2 and -4. No functional defect was established from
+  the supplied category/function information; request the event trace.
+914359 and 914373, alink.c, unspecified functions
+  The second batch corrected two missing percent signs before PRIu32,
+  matching extra-argument/mismatch symptoms. Other visible active formats
+  have matching argument counts. These two IDs need line/event traces or
+  a rescan to establish whether they are the same corrected call sites.
+
 Remaining work
 
-The other findings have not been fixed by these batches. Suggested next
-batches: CPU decoder correctness; remaining resource/read handling;
-format-string findings. The eight undecided findings still need their
-event traces and source-based review. TempResultToFloat's scalar union
-conversion appears valid: the right-hand value is evaluated before the
-assignment. Its reported overlapping-memory trace is needed before
-changing that code or reclassifying the finding.
+All confirmed labels in the supplied report now have a fix or a review
+note above. Closure still requires a rescan, especially the caller-based
+and defensive fixes whose exact traces were unavailable. The eight
+undecided findings need event traces and source-based review. No pending
+finding is counted as resolved by this ledger.

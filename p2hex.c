@@ -759,7 +759,7 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
     Byte     Header, InpCPU, InpSegment, Gran;
     Word     Length, TestID;
     LongWord Adr, EndAdr;
-    LongInt  NextPos;
+    long     NextPos, Size;
     LongWord ValidSegs;
     Boolean  doit;
 
@@ -785,10 +785,16 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
             if (!Read2(f, &Length)) {
                 chk_wr_read_error(FileName);
             }
-            NextPos = ftell(f) + Length;
-            if (NextPos > FileSize(f)) {
+            NextPos = ftell(f);
+            Size = FileSize(f);
+            if ((NextPos < 0) || (Size < 0)) {
+                ChkIO(FileName);
+                chk_wr_read_error(FileName);
+            }
+            if ((NextPos > Size) || (Length > Size - NextPos)) {
                 FormatError(FileName, getmessage(Num_FormatInvRecordLenMsg));
             }
+            NextPos += Length;
 
             if (ForceSegment != SegNone) {
                 ValidSegs = (1 << ForceSegment);
@@ -813,7 +819,10 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
                 }
             }
 
-            fseek(f, NextPos, SEEK_SET);
+            if (fseek(f, NextPos, SEEK_SET) != 0) {
+                ChkIO(FileName);
+                chk_wr_read_error(FileName);
+            }
         } else {
             SkipRecord(Header, FileName, f);
         }

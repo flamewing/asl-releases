@@ -1305,6 +1305,7 @@ add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DDAS_PROGRAM=$<TARGET_FILE:dasl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DP2HEX_PROGRAM=$<TARGET_FILE:p2hex>"
     "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
     "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CoverityInputs"
     -P "${CMAKE_SOURCE_DIR}/tests/coverity_inputs.cmake"
@@ -1315,6 +1316,12 @@ set_tests_properties(coverity_inputs PROPERTIES
 )
 
 define_executable(test_driver_io tests/test_driver_io.c)
+if(LOCALE_NLS)
+    define_executable(test_nls_locale tests/nls_locale.c $<TARGET_OBJECTS:ST_OBJECTS>)
+    target_link_libm(test_nls_locale)
+    add_test(NAME nls_locale COMMAND test_nls_locale)
+    set_tests_properties(nls_locale PROPERTIES ENVIRONMENT "TZ=UTC0")
+endif()
 add_test(NAME test_driver_io COMMAND ${CMAKE_COMMAND}
     "-DTEST_PROGRAM=$<TARGET_FILE:test_driver_io>"
     "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"

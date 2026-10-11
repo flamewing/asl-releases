@@ -4121,13 +4121,16 @@ static as_cmd_result_t CMD_Relaxed(Boolean Negate, char const* pArg) {
 }
 
 static as_cmd_result_t cmd_int_syntax(Boolean negate, char const* p_arg) {
+    if (!def_int_syntax.p_str) {
+        return e_cmd_err;
+    }
     if (negate) {
-        as_dynstr_ini_c_str(&def_int_syntax, "");
+        *def_int_syntax.p_str = '\0';
         return e_cmd_ok;
     } else {
         as_sdprcatf(
                 &def_int_syntax, "%s%s",
-                "," + !(def_int_syntax.p_str && *def_int_syntax.p_str), p_arg);
+                "," + !*def_int_syntax.p_str, p_arg);
         return e_cmd_arg;
     }
 }

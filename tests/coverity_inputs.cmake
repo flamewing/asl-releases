@@ -59,6 +59,7 @@ file(WRITE "${TEST_DIR}/binclude.asm" " cpu 68HC12\n binclude \"data.bin\",10\n"
 check_asl(2 binclude.asm)
 file(WRITE "${TEST_DIR}/title.asm" " cpu 68HC12\n title \"Coverity long title regression\"\n nop\n")
 check_asl(0 title.asm -L)
+check_asl(0 title.asm -intsyntax +0hex +intsyntax -intsyntax +0hex)
 file(READ "${TEST_DIR}/title.lst" listing)
 if(NOT listing MATCHES "Coverity long title regression")
     message(FATAL_ERROR "Listing title was truncated")
@@ -112,3 +113,17 @@ endif()
 
 file(WRITE "${TEST_DIR}/m16-chain.asm" " cpu m16\n expect 1325\n mov @(@r1,r2,1:4).w,r3.w\n endexpect\n expect 1320\n mov @(@r1,r2,100:4).w,r3.w\n endexpect\n nop\n")
 check_asl(0 m16-chain.asm)
+
+file(TO_NATIVE_PATH "${TEST_DIR}/title.asm" diagnostic_source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" -L -x -listline-prefix "%q" "${diagnostic_source}"
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error
+    WORKING_DIRECTORY "${TEST_DIR}" TIMEOUT 15)
+if(NOT "${result}" STREQUAL "3" OR NOT error MATCHES "%q")
+    message(FATAL_ERROR "Listing diagnostic did not name invalid %q: ${result}\n${error}")
+endif()
+
+file(TO_NATIVE_PATH "${TEST_DIR}/adjust-m16c" hex_base)
+check_exit(0 "${P2HEX_PROGRAM}" -r 0x-0x "${hex_base}")
+# Keep the record header but remove its declared data and EOF record.
+check_exit(0 "${TEST_PROGRAM}" truncate-record "${TEST_DIR}/adjust-m16c.p")
+check_exit(3 "${P2HEX_PROGRAM}" -r 0x-0x "${hex_base}")
