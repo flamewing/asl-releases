@@ -1288,3 +1288,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     preserve short/long/base/IP-relative accepted bytes. Regression checks
     cover all 20 memory instruction callers and prove no emission on failure.
     Validation: all 397 CTest cases pass with embedded/external catalogs.
+
+98. i960 forward-expression branch range guards.
+    CTRL and COBR branches reject provisional first-pass distances for forward
+    expressions even when the final target is four bytes away. Defer the range
+    check for first-pass unknown as well as questionable symbols, preserving
+    alignment, signed displacement intervals and encodings. Tests cover every
+    one of the 11 CTRL and 16 target-bearing COBR instruction aliases.
+    Validation: all 397 CTest cases pass with embedded/external catalogs.

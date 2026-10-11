@@ -1726,6 +1726,11 @@
       "file": "code960.c",
       "issue": "DecodeMem ignores failed Int32 displacement evaluation and still emits a memory instruction after a primary range/symbol error.",
       "status": "fixed in tranche 97; return failure before encoding, all 20 memory callers verified with EXPECT/no emission; short/long/base/IP-relative accepted bytes preserved"
+    },
+    {
+      "file": "code960.c",
+      "issue": "CTRL/COBR reject provisional displacement of first-pass unknown forward expressions before their targets resolve.",
+      "status": "fixed in tranche 98; defer range checks for first-pass unknown/questionable targets; all 27 target-bearing callers verified"
     }
   ]
 }

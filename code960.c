@@ -553,7 +553,7 @@ static void DecodeCobr(Word Index) {
             if (AdrInt & 3) {
                 WrError(ErrNum_NotAligned);
             } else if (
-                    !mSymbolQuestionable(Flags)
+                    !mFirstPassUnknownOrQuestionable(Flags)
                     && ((AdrInt < -4096) || (AdrInt > 4090))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
@@ -581,7 +581,7 @@ static void DecodeCtrl(Word Index) {
             if (AdrInt & 3) {
                 WrError(ErrNum_NotAligned);
             } else if (
-                    !mSymbolQuestionable(Flags)
+                    !mFirstPassUnknownOrQuestionable(Flags)
                     && ((AdrInt < -8388608) || (AdrInt > 8388604))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
