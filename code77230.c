@@ -228,6 +228,21 @@ static Boolean DecodeReg(char* Asc, LongWord* Erg, Register* Regs) {
     return False;
 }
 
+static void WrRegisterChoices(tStrComp const* operand, Register const* regs,
+                              LongWord min_code, LongWord max_code) {
+    char choices[320] = "", detail[400];
+    for (; regs->Name; regs++) {
+        if ((regs->Code >= min_code) && (regs->Code <= max_code)) {
+            if (*choices) {
+                strmaxcat(choices, ", ", sizeof(choices));
+            }
+            strmaxcat(choices, regs->Name, sizeof(choices));
+        }
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &operand->Pos);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Dekoder fuer Routinen */
 
@@ -260,10 +275,10 @@ static void DecodeMOV(Word Index) {
         return;
     }
     if (!DecodeReg(ArgStr[1].str.p_str, &DReg, DestRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(&ArgStr[1], DestRegs, 0, 31);
         Error = True;
     } else if (!DecodeReg(ArgStr[2].str.p_str, &SReg, SrcRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrRegisterChoices(&ArgStr[2], SrcRegs, 0, 31);
         Error = True;
     } else {
         AddComp(InstrMove, (SReg << 5) + DReg);
@@ -279,7 +294,7 @@ static void DecodeLDI(Word Index) {
         return;
     }
     if (!DecodeReg(ArgStr[1].str.p_str, &DReg, DestRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(&ArgStr[1], DestRegs, 0, 31);
         Error = True;
     } else {
         Src = EvalStrIntExpression(&ArgStr[2], Int24, &Error);
@@ -310,7 +325,7 @@ static void DecodeALU1(Word Index) {
     }
     if ((!DecodeReg(ArgStr[1].str.p_str, &DReg, DestRegs)) || (DReg < 16)
         || (DReg > 23)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(&ArgStr[1], DestRegs, 16, 23);
         Error = True;
     } else {
         AddComp(InstrALU, (Op->Code << 17) + (DReg & 7));
@@ -327,10 +342,10 @@ static void DecodeALU2(Word Index) {
     }
     if ((!DecodeReg(ArgStr[1].str.p_str, &DReg, DestRegs)) || (DReg < 16)
         || (DReg > 23)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(&ArgStr[1], DestRegs, 16, 23);
         Error = True;
     } else if (!DecodeReg(ArgStr[2].str.p_str, &SReg, ALUSrcRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrRegisterChoices(&ArgStr[2], ALUSrcRegs, 0, 3);
         Error = True;
     } else {
         AddComp(InstrALU, (Op->Code << 17) + (SReg << 3) + (DReg & 7));
@@ -650,7 +665,11 @@ static Boolean DecodePseudo(void) {
                 case TempInt:
                 ToInt:
                     if (!RangeCheck(t.Contents.Int.Value, Int32)) {
-                        WrStrErrorPos(ErrNum_OverRange, pArg);
+                        char detail[200];
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                                    "DW", t.Contents.Int.Value,
+                                    IntTypeDefs[Int32].Min, IntTypeDefs[Int32].Max);
+                        WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
                         OK = False;
                         break;
                     }

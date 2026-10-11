@@ -549,8 +549,12 @@
         "ErrNum_InvReg": 6,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical candidates reviewed in tranche 75: MOV/LDI destination, MOV source, ALU WR0..WR7 destinations and ALU-specific source lists derived from live register tables; DW evaluated value and full mixed signed/unsigned 32-bit interval, retaining 1320 on both sides. Separate adjacent emission and silent shift failures fixed in tranches 73/74."
     },
     "code78c10.c": {
       "candidate_counts": {

@@ -1069,3 +1069,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     expression/type errors. Tests cover both instructions, 47/63/64,
     unknown/final forward values, endpoints and absence of rejected words.
     Validation: all 390 CTest cases pass with embedded/external catalogs.
+
+75. Complete NEC 77230 historical register/data range review.
+    All six register rejection sites give caller-specific choices derived
+    from live destination/source/ALU tables; ALU destinations restrict that
+    table to WR0..WR7. DW overflow shows evaluated value and its complete
+    [-2147483648,4294967295] domain, retaining 1320 for both rejected sides.
+    Preserve register spelling, choices, mixed signed/unsigned data range,
+    positions and accepted words. Tests cover MOV/LDI domains, all 25 ALU
+    instructions, both DW failures/endpoints and preceding valid encodings.
+    Validation: all 390 CTest cases pass with embedded/external catalogs.
