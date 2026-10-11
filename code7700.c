@@ -414,7 +414,7 @@ static void DecodeRel(Word Index) {
                 AdrLong -= EProgCounter() + pOrder->Disp16;
             } else {
                 AdrLong -= EProgCounter() + pOrder->Disp8;
-                if (((AdrLong > 127) || (AdrLong < -128)) && !mSymbolQuestionable(Flags)
+                if (((AdrLong > 127) || (AdrLong < -128)) && !mFirstPassUnknownOrQuestionable(Flags)
                     && (pOrder->Disp16 != -1)) {
                     OK = True;
                     AdrLong -= pOrder->Disp16 - pOrder->Disp8;
@@ -423,7 +423,7 @@ static void DecodeRel(Word Index) {
             if (OK) /* d16 */
             {
                 if (((AdrLong < -32768) || (AdrLong > 32767))
-                    && !mSymbolQuestionable(Flags)) {
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_DistTooBig);
                 } else {
                     CodeLen     = 3;
@@ -434,7 +434,7 @@ static void DecodeRel(Word Index) {
             } else /* d8 */
             {
                 if (((AdrLong < -128) || (AdrLong > 127))
-                    && !mSymbolQuestionable(Flags)) {
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     CodeLen     = 2;
@@ -646,7 +646,7 @@ static void DecodeBBC_BBS(Word Code) {
                 if (!OK) {
                     CodeLen = 0;
                 } else if (
-                        !mSymbolQuestionable(Flags)
+                        !mFirstPassUnknownOrQuestionable(Flags)
                         && ((AdrLong < -128) || (AdrLong > 127))) {
                     WrError(ErrNum_JmpDistTooBig);
                     CodeLen = 0;
@@ -1067,7 +1067,7 @@ static void DecodePER(Word Code) {
 
             if (OK) {
                 if (((AdrLong < -32768) || (AdrLong > 32767))
-                    && !mSymbolQuestionable(Flags)) {
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     CodeLen     = 3;

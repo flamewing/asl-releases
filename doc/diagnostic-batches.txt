@@ -1704,3 +1704,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Record builder G/H capability inconsistency for separate opcode validation
     that distinguishes actual floating instructions from integer CLR aliases.
     Validation: all 410 CTest cases pass with embedded/external catalogs.
+
+144. MELPS7700/65816 forward branch distance constraints.
+    Short/long relative branches, PER and BBC/BBS reject provisional unresolved
+    forward expressions. Defer five range/length checks for first-pass unknown
+    or questionable symbols; keep accepted provisional width and final checks.
+    All 13 relative aliases/four CPUs/PER/both bit branches verify forward
+    targets, retained final error IDs and captured accepted encodings.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.

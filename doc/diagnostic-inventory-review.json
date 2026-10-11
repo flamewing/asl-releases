@@ -1968,6 +1968,11 @@
       "file": "codevax.c",
       "issue": "Generic format parser derives G/H capability masks; one/two/three-operand builders do not (e.g. MOVH assembles on MicroVAX-I, while EMODH fails existing H capability gate).",
       "status": "requires focused opcode/CPU validation: distinguish actual floating-point instructions from integer CLR aliases before changing acceptance; recorded during tranche 143, existing masks preserved"
+    },
+    {
+      "file": "code7700.c",
+      "issue": "Relative branch length selection/ranges, BBC/BBS and PER reject first-pass unknown forward expression distances before targets resolve.",
+      "status": "fixed in tranche 144; defer five checks for unknown/questionable symbols; all 13 relative aliases/four CPUs/PER/both bit branches/final errors/original bytes checked"
     }
   ]
 }
