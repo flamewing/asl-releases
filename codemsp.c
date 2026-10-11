@@ -578,6 +578,24 @@ static void DecodeTwoOpX(Word Code) {
     }
 }
 
+/* The destination PC is two bytes ahead of the source PC. Interpret the
+   encoded displacement at its actual width before adjusting it. */
+static Boolean AdjustEmulatedPCDisp(tAdrParts* pParts, unsigned Bits) {
+    LongWord const Sign = 1UL << (Bits - 1);
+    LongWord const Mask = (Sign << 1) - 1;
+    LongInt        Dist = pParts->Val & Mask;
+
+    if (Dist & Sign) {
+        Dist -= (LongInt)(Sign << 1);
+    }
+    if (Dist < -(LongInt)Sign + 2) {
+        WrError(ErrNum_DistTooBig);
+        return False;
+    }
+    pParts->Val = (LongWord)(Dist - 2) & Mask;
+    return True;
+}
+
 static void DecodeEmulOneToTwo(Word Code) {
     Byte      SrcSpec;
     tAdrParts SrcParts, DestParts;
@@ -636,13 +654,9 @@ static void DecodeEmulOneToTwo(Word Code) {
            complain on displacement overflow: */
 
         else if ((DestParts.Mode == eModeRegDisp) && (DestParts.Part == RegPC)) {
-            LongWord NewDist = DestParts.Val - 2;
-
-            if ((NewDist & 0x8000) != (DestParts.Val & 0x8000)) {
-                WrError(ErrNum_DistTooBig);
+            if (!AdjustEmulatedPCDisp(&DestParts, 16)) {
                 return;
             }
-            DestParts.Val = NewDist;
         }
 
         /* transform 0(Rn) as Dest back to @Rn as Src: */
@@ -736,13 +750,9 @@ static void DecodeEmulOneToTwoX(Word Code) {
            complain on displacement overflow: */
 
         else if ((DestParts.Mode == eModeRegDisp) && (DestParts.Part == RegPC)) {
-            LongWord NewDist = DestParts.Val - 2;
-
-            if ((NewDist & 0x8000) != (DestParts.Val & 0x8000)) {
-                WrError(ErrNum_DistTooBig);
+            if (!AdjustEmulatedPCDisp(&DestParts, 20)) {
                 return;
             }
-            DestParts.Val = NewDist;
         }
 
         /* transform 0(Rn) as Dest back to @Rn as Src: */

@@ -191,16 +191,13 @@ and Clang in the local default configuration.
 Review notes on the remaining confirmed labels
 
 914416, codemsp.c:DecodeEmulOneToTwoX
-  Negative offsets masked to 20 bits are intentional; the 0xffffffff
-  immediate is recognized by FillAdrPartsImm as the -1 constant generator.
-  Existing MSP430X golden-output tests cover auto-increment emulation
-  with offsets -1, -2 and -4. No functional defect was established from
-  the supplied category/function information; request the event trace.
+  The later five-CID report establishes that the warning concerns the
+  PC-relative destination adjustment, not auto-increment emulation.
+  See the eighth batch below, which supersedes the earlier assessment.
 914359 and 914373, alink.c, unspecified functions
-  The second batch corrected two missing percent signs before PRIu32,
-  matching extra-argument/mismatch symptoms. Other visible active formats
-  have matching argument counts. These two IDs need line/event traces or
-  a rescan to establish whether they are the same corrected call sites.
+  The five-CID report confirms these are the second batch's corrected
+  undefined-symbol count and linked-byte count, respectively (duplicates
+  of 914340 and 914404). Await rescan confirmation.
 
 Seventh batch: review of pending arithmetic findings
 
@@ -253,3 +250,19 @@ note above. Closure still requires a rescan, especially the caller-based
 and defensive fixes whose exact traces were unavailable. The eight
 undecided findings now have defensive fixes or review notes above. None
 is counted as closed before trace review or confirmation by a new scan.
+
+Eighth batch: MSP430 emulated PC-relative displacement (914416)
+
+Interpret the encoded source displacement as a signed 16-bit or 20-bit
+value before subtracting the destination PC's extra two bytes. Check the
+lower signed bound and mask the result back to its encoded width. This
+accepts 0 -> -2 and 1 -> -1, and uses bit 19 rather than bit 15 for MSP430X.
+The same defective check existed in non-X emulation and is corrected too.
+Architecture reference: TI MSP430x5xx/MSP430x6xx Family User's Guide,
+symbolic addressing, https://www.ti.com/lit/ug/slau208/slau208.pdf
+
+Validation: compare RLA/RLC and RLAX/RLCX byte output with explicit ADD/
+ADDC expansions for zero, small positive/negative, signed boundary, and
+unsigned encoded-negative offsets. Check both lower-bound rejection
+cases at each width, and extended offsets crossing bit 15. Full suites
+pass in both catalog configurations. Await Coverity rescan confirmation.
