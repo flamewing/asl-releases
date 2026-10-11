@@ -1934,6 +1934,11 @@
       "file": "codens32k.c",
       "issue": "RET/RETT/RXP, CXP and ENTER encode sentinel displacement after failed expression evaluation; ENTER displacement encoding overflow points at register list instead of allocation size.",
       "status": "fixed in tranche 135; guard shared encoding with EvalResult.OK and position ENTER overflow at argument 2; five mnemonics/three CPU generations/primary errors/no emission/forward expressions/original bytes checked"
+    },
+    {
+      "file": "asmerr.c / codens32k.c",
+      "issue": "NS32000 invalid PMMU register error 1444 has no ErrorNum2String mapping, displaying internal error/warning instead of invalid MMU register.",
+      "status": "fixed in tranche 138; map existing ID to localized MMU message, list currently selected PMMU register names on unknown/unavailable register errors; all four PMMUs/primary error/no emission checked"
     }
   ]
 }

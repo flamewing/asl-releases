@@ -463,15 +463,25 @@ static Boolean DecodeMMUReg(tStrComp const* pArg, Word* pResult) {
     for (z = 0; MMURegs[z].pName; z++) {
         if (!as_strcasecmp(pArg->str.p_str, MMURegs[z].pName)) {
             if (!((MMURegs[z].Mask >> MomPMMU) & 1)) {
-                WrStrErrorPos(ErrNum_InvPMMUReg, pArg);
-                return False;
+                goto error;
             }
             *pResult = MMURegs[z].Code;
             return CheckSup(MMURegs[z].Privileged, pArg);
         }
     }
-    WrStrErrorPos(ErrNum_InvPMMUReg, pArg);
+error: {
+    char Choices[400] = "";
+    for (z = 0; MMURegs[z].pName; z++) {
+        if ((MMURegs[z].Mask >> MomPMMU) & 1) {
+            if (*Choices) {
+                strmaxcat(Choices, ", ", sizeof(Choices));
+            }
+            strmaxcat(Choices, MMURegs[z].pName, sizeof(Choices));
+        }
+    }
+    WrOperandChoices(ErrNum_InvPMMUReg, pArg, Choices);
     return False;
+}
 }
 
 /*!------------------------------------------------------------------------

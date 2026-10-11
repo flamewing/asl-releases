@@ -798,6 +798,7 @@ static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
     case ErrNum_InvFMask:
         msgno = Num_ErrMsgInvFMask;
         break;
+    case ErrNum_InvPMMUReg:
     case ErrNum_InvMMUReg:
         msgno = Num_ErrMsgInvMMUReg;
         break;

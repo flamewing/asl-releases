@@ -1652,3 +1652,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     behavior and IDs. Review all 13 historical sites; leave unreachable internal
     size-conflict and indexed-immediate defensive checks with recorded reasons.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+138. NS32000 invalid PMMU register message mapping and choices.
+    Existing 1444 lacks an ErrorNum2String mapping and displays internal
+    error/warning. Map to existing localized invalid MMU register message,
+    retaining number; unknown/unavailable names show current PMMU register
+    choices from masks/table. All four PMMUs verify both failure classes,
+    actual base message/details/position and EXPECT/no emission.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.
