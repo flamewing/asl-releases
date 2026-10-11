@@ -286,3 +286,24 @@ immediate and displacements. Reject word offset 1 and long offsets 1..3.
 All 337 tests pass in both catalog configurations. The original warned
 scale path remains a false positive; the actual truncation bug is fixed.
 No Coverity triage states were changed.
+
+WSL follow-up: locale validation (350744, 350766)
+
+Validated the POSIX LOCALE_NLS implementation in Ubuntu WSL using GCC
+15.2.0 and a Debug CMake/Ninja build. The locale test target initially
+failed to link because including nls.c also requires the UTF-8 conversion
+functions; add chardefs.c to test_nls_locale's sources.
+
+The nls_locale CTest passed with TZ=UTC0. Direct repeat runs also passed
+with TZ=Europe/Paris, America/New_York and Pacific/Apia. The test checks
+weekday/day-of-year for leap day 2024-02-29 and 2026-10-11, and time output
+using the initialized 1900-01-01 reference date. This completes the local
+POSIX runtime validation deferred in the fifth batch. Coverity closure
+still awaits a rescan; no triage state was changed.
+
+Build/test logs are retained in the ignored build directory as
+coverity-wsl-configure-linux.log, coverity-wsl-locale-build-linux.log,
+coverity-wsl-locale-tests-linux.log and coverity-wsl-locale-timezones.log.
+To avoid CMake's recursive source glob traversing existing build trees
+over the Windows mount, the WSL build used a temporary Linux-filesystem
+copy of committed source plus the test-target dependency correction.
