@@ -500,6 +500,9 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Index, Word Mask) {
                 AdrCnt1[Index]    = 4;
             }
             break;
+        default:
+            WrError(ErrNum_UndefOpSizes);
+            return False;
         }
         if (OK) {
             AdrType[Index] = ModImm;

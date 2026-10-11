@@ -201,6 +201,9 @@ static Boolean DecodeAdr(tStrComp const* pArg, Byte Mask, tAdrResult* pResult) {
         case 1:
             pResult->Part = EvalStrIntExpressionOffs(pArg, 1, Int8, &OK);
             break;
+        default:
+            WrError(ErrNum_UndefOpSizes);
+            goto chk;
         }
         if (OK) {
             pResult->Mode = ModImm;

@@ -414,3 +414,17 @@ cursor. Full suites pass with embedded and external message catalogs.
   a conditional bounded-output model if they survive the next scan.
 
 No Coverity triage changes, models, push or scan submission were made.
+
+Priority evidence follow-up: remaining immediate-size switches (350729)
+
+The report establishes three occurrences, not just the ST9 occurrence
+listed in the initial triage summary. ST9 already diagnoses its unsupported
+size. Add explicit default diagnostics to the 75K0 and M16 immediate
+switches and return without using their uninitialized OK variables.
+Preserve supported sizes and existing unspecified-size handling.
+
+Validation: all 338 tests pass in both message-catalog configurations,
+including the existing 75K0, M16 and ST9 instruction suites. The report
+does not demonstrate an instruction reaching those unsupported-size
+paths; these changes make the local contract explicit. Await a scan of
+the fixed revision before claiming elimination of all three occurrences.
