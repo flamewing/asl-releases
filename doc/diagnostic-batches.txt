@@ -142,3 +142,20 @@ manual, EXPECT fixtures, translations and source-position tests.
    eZ80 page assumptions, physical translation context and MSP430X signed
    displacement/wrap rules. Then expand manual review of the mechanical
    inventory; its entries are candidates, not confirmed required changes.
+
+9. Unbalanced and mismatched brackets (additional user-requested scope).
+   Distinguish an unexpected closing bracket, a mismatched closing bracket,
+   and an opening bracket left unclosed at end of input. Show the current
+   bracket and the expected matching bracket where one exists; for an
+   unexpected closer with no open bracket, explicitly say that no closing
+   bracket was expected. For missing closers, show the unmatched opener,
+   expected closer and end-of-input condition rather than inventing a
+   current bracket. Locate the offending closer or unmatched opener.
+   Review shared expression parsing and backend-specific checks, including
+   M68K address components. Preserve each parser's supported bracket types,
+   quoting rules, nesting behavior and error precedence. Keep error 1300
+   where the cause is unbalanced/mismatched brackets; distinguish nesting
+   capacity failures rather than describing them as a bracket mismatch.
+   Update English/German messages and numeric documentation; test all cases,
+   mixed nesting, quoted brackets, source positions, single primary errors
+   and unchanged valid expression/address encodings.
