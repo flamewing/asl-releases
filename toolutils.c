@@ -203,25 +203,25 @@ void WriteRecordHeader(
                 = p_descr ? p_descr->get_granularity((as_addrspace_t)*Segment) : 1;
 
         if ((*Segment != SegCode) || (*Gran != def_granularity) || (*CPU >= 0x80)) {
-            if (fwrite(Header, 1, 1, f)) {
+            if (fwrite(Header, 1, 1, f) != 1) {
                 ChkIO(Name);
             }
-            if (fwrite(CPU, 1, 1, f)) {
+            if (fwrite(CPU, 1, 1, f) != 1) {
                 ChkIO(Name);
             }
-            if (fwrite(Segment, 1, 1, f)) {
+            if (fwrite(Segment, 1, 1, f) != 1) {
                 ChkIO(Name);
             }
-            if (fwrite(Gran, 1, 1, f)) {
+            if (fwrite(Gran, 1, 1, f) != 1) {
                 ChkIO(Name);
             }
         } else {
-            if (fwrite(CPU, 1, 1, f)) {
+            if (fwrite(CPU, 1, 1, f) != 1) {
                 ChkIO(Name);
             }
         }
     } else {
-        if (fwrite(CPU, 1, 1, f)) {
+        if (fwrite(CPU, 1, 1, f) != 1) {
             ChkIO(Name);
         }
     }

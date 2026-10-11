@@ -193,6 +193,59 @@ static int record(char const* mode, char const* prog_path) {
            || gran != data[3];
 }
 
+/* Complete object files for exercising the tool callers, not just their
+   shared parser. Relocation metadata follows its associated data record. */
+static int object_file(char const* mode, char const* path) {
+    Boolean reloc = !strncmp(mode, "reloc-", 6);
+    unsigned length = !strcmp(mode, "8193") ? 8193
+                      : !strcmp(mode, "65535") ? 65535 : 1;
+    size_t size = 12 + length + (reloc ? 13 : 0) + 2;
+    if (!strcmp(mode, "reloc-undefined")) {
+        size = 76;
+    }
+    Byte* data = (Byte*)calloc(size, 1);
+    FILE* file;
+    int result;
+    if (!data) {
+        return 1;
+    }
+    data[0] = FileMagic & 255;
+    data[1] = FileMagic >> 8;
+    data[2] = reloc ? FileHeaderRDataRec : FileHeaderDataRec;
+    data[3] = 0x7b;
+    data[4] = SegCode;
+    data[5] = !strcmp(mode, "gran-zero") ? 0 : 1;
+    data[10] = length & 255;
+    data[11] = length >> 8;
+    for (unsigned z = 0; z < length; z++) {
+        data[12 + z] = z & 255;
+    }
+    if (reloc) {
+        data[12 + length] = FileHeaderRelocInfo;
+        if (!strcmp(mode, "reloc-truncated")) {
+            size = 13 + length;
+        } else if (!strcmp(mode, "reloc-undefined")) {
+            put32(data + 14, 1); /* one relocation, no exports */
+            put32(data + 22, 8);
+            put32(data + 38, RelocTypeL8);
+            memcpy(data + 42, "missing", 8);
+            /* A second record must consume the next part after the first
+               record reports an unresolved symbol. */
+            memcpy(data + 50, data + 2, 11);
+            data[61] = FileHeaderRelocInfo;
+        }
+    }
+    file = fopen(path, "wb");
+    if (!file) {
+        free(data);
+        return 1;
+    }
+    result = fwrite(data, 1, size, file) != size;
+    result |= fclose(file) != 0;
+    free(data);
+    return result;
+}
+
 int main(int argc, char** argv) {
     nls_init();
     if (!NLS_Initialize(&argc, argv) || argc < 2) {
@@ -208,6 +261,9 @@ int main(int argc, char** argv) {
     }
     if (argc < 3) {
         return 1;
+    }
+    if (!strcmp(argv[1], "object") && argc == 4) {
+        return object_file(argv[2], argv[3]);
     }
     if (!strcmp(argv[1], "catalog")) {
         return catalog(argv[2]);

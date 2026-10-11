@@ -74,8 +74,12 @@ static LargeWord SegStarts[SegCount];
 
 static void BumpBuffer(LongInt MinSize) {
     if (MinSize > BufferSize) {
-        Buffer     = (Byte*)((BufferSize == 0) ? malloc(sizeof(Byte) * MinSize)
-                                               : realloc(Buffer, sizeof(Byte) * MinSize));
+        Byte* NewBuffer = (Byte*)realloc(Buffer, sizeof(Byte) * MinSize);
+        if (!NewBuffer) {
+            errno = ENOMEM;
+            chk_wr_read_error(TargName);
+        }
+        Buffer = NewBuffer;
         BufferSize = MinSize;
     }
 }
@@ -219,6 +223,10 @@ static void ReadSymbols(char const* pSrcName, int Index) {
             /* build up record */
 
             PNew          = (PPart)malloc(sizeof(TPart));
+            if (!PNew) {
+                errno = ENOMEM;
+                chk_wr_read_error(SrcName);
+            }
             PNew->Next    = NULL;
             PNew->FileNum = Index;
             PNew->RecNum  = cnt++;
@@ -253,7 +261,8 @@ static void ReadSymbols(char const* pSrcName, int Index) {
                 }
                 PNew->RelocInfo = ReadRelocInfo(f);
                 if (!PNew->RelocInfo) {
-                    ChkIO(SrcName);
+                    /* Premature EOF and invalid metadata need not set errno. */
+                    FormatError(SrcName, getmessage(Num_FormatRelocInfoMissing));
                 }
 
                 /* check for double-defined symbols */
@@ -312,6 +321,7 @@ static void ProcessFile(char const* pSrcName, int Index) {
     LongWord    SumLen;
     PRelocEntry PReloc;
     Boolean     UndefFlag, Found;
+    int         RecNum = 0;
 
     /* open this file - we're only reading */
 
@@ -355,6 +365,23 @@ static void ProcessFile(char const* pSrcName, int Index) {
         /* get header */
 
         ReadRecordHeader(&Header, &CPU, &Segment, &Gran, SrcName, f);
+
+        /* Match each data record to the part collected in the first pass.
+           A cursor belonging to the next file is not a valid substitute. */
+        if ((Header == FileHeaderDataRec) || (Header == FileHeaderRelocRec)
+            || (Header == FileHeaderRDataRec) || (Header == FileHeaderRRelocRec)) {
+            Boolean HasRelocInfo = (Header == FileHeaderRDataRec)
+                                   || (Header == FileHeaderRRelocRec);
+            Boolean MustReloc = (Header == FileHeaderRelocRec)
+                                || (Header == FileHeaderRRelocRec);
+            if (!PartRun || (PartRun->FileNum != Index)
+                || (PartRun->RecNum != RecNum++)
+                || (PartRun->MustReloc != MustReloc)
+                || (!!PartRun->RelocInfo != HasRelocInfo)
+                || (PartRun->Segment != Segment) || (PartRun->Gran != Gran)) {
+                FormatError(SrcName, getmessage(Num_FormatInvRecordLenMsg));
+            }
+        }
 
         /* records without relocation info do not need any processing - just
            pass them through */
@@ -450,10 +477,9 @@ static void ProcessFile(char const* pSrcName, int Index) {
                 if (fwrite(Buffer, 1, Len, TargFile) != Len) {
                     ChkIO(TargName);
                 }
-                if (PartRun) {
-                    PartRun = PartRun->Next;
-                }
             }
+            /* Unresolved symbols affect output, not input cursor position. */
+            PartRun = PartRun->Next;
             SumLen += Len;
         }
 

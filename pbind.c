@@ -185,6 +185,10 @@ int main(int argc, char** argv) {
     ioerrs_init(*argv);
 
     Buffer = (Byte*)malloc(sizeof(Byte) * BufferSize);
+    if (!Buffer) {
+        errno = ENOMEM;
+        chk_wr_read_error("pbind buffer");
+    }
 
     *target_name = '\0';
 

@@ -360,3 +360,57 @@ Subprocess tests retain fatal pointer-size-capacity and invalid-format
 behavior. All 338 tests pass in both message-catalog configurations.
 These are source-contract prerequisites; no model has been applied and
 the STRING_NULL CIDs are not counted as closed before the next analysis.
+
+Priority evidence follow-up: binary tool callers
+
+Input: Coverity-priority-validation-report.html and its validation-evidence
+directory, snapshot 121985 at a31c0b24. These are baseline traces, not a
+scan of the fixes. The shared chat provided partial evidence; the report
+was also available locally when this review completed.
+
+350639, eight occurrences across pbind, alink, p2hex and p2bin
+  The pbind length loop is bounded by min(8192, unsigned 16-bit length).
+  Its trace does not establish an array overflow. The shared record reader
+  already validates segments and encoded granularity before conversion.
+  Fix unchecked alink buffer growth using a temporary realloc pointer;
+  publish capacity only after success. Check alink part allocation and
+  pbind's fixed buffer allocation, and terminate on allocation failure.
+350653 and 350764, alink.c:ProcessFile
+  Existing guards cover the reported null cursor/metadata dereference.
+  Also validate file/record identity, relocation kind, segment and
+  granularity against the first pass before consuming each data record.
+  Advance the part cursor even when a record has unresolved symbols.
+  The demonstrated truncated-input crash is earlier in ReadSymbols:
+  ReadRelocInfo may fail with errno zero. Treat NULL as a fatal format
+  error instead of continuing after conditional ChkIO.
+
+The new external-catalog regression exposed reversed fwrite checks in
+WriteRecordHeader: successful single-byte writes incorrectly called ChkIO.
+Stale errno from catalog lookup then caused a false file error. Compare
+all those writes with the required count of one.
+
+Validation: generated complete object files exercise 8193- and 65535-byte
+records through pbind and alink, with exact payload comparison after
+p2bin conversion. Empty relocation metadata succeeds; truncated metadata
+exits normally with format error 3; zero granularity is rejected by p2bin,
+p2hex and alink. An unresolved relocation followed by a second record
+retains the expected undefined-symbol exit 1 rather than losing its part
+cursor. Full suites pass with embedded and external message catalogs.
+
+455954, 914329 and 914430
+  The baseline traces match the existing H8 size-mask and SH/Motorola
+  zero-width guards. No exact end-to-end decoder failure was reproduced
+  in the report. The constrained SH 16/32-bit path has a nonzero divisor;
+  preserve value-sensitive helper contracts when reviewing survivors.
+914439 and 914416
+  Concrete overlap and MSP430 displacement defects are already fixed
+  and tested. The report contains only the pre-fix snapshot.
+914335
+  Both reported shifts assume compute_bitfield_fragment copies a width
+  >=32 unchanged. Under valid partial-byte state it caps fragments at
+  eight bits; the conditional narrowing assignment loses that correlation
+  in the analyzer summary. The earlier zero-width fix addresses a separate
+  shift. These two reported occurrences support false-positive review or
+  a conditional bounded-output model if they survive the next scan.
+
+No Coverity triage changes, models, push or scan submission were made.
