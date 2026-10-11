@@ -391,7 +391,7 @@ static void DecodeRel(Word Code) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 CodeLen     = 1;
-                BAsmCode[0] = Code + ((AdrInt << 3) & 0xf8);
+                BAsmCode[0] = Code + (((Word)AdrInt << 3) & 0xf8);
             }
         }
     }

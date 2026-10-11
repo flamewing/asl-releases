@@ -1649,6 +1649,11 @@
       "file": "codest6.c",
       "issue": "DecodeAdr stores UInt16 result in signed 16-bit Integer, so data addresses 32768..65535 become negative, bypass >255 rejection and silently truncate to a byte.",
       "status": "fixed in tranche 82; use unsigned Word for evaluated addresses; reject the entire unsigned upper domain while preserving valid data/ROM-window encodings"
+    },
+    {
+      "file": "codest6.c",
+      "issue": "DecodeRel shifts a negative signed displacement left by three when encoding backward short branches, invoking undefined C behavior.",
+      "status": "fixed in tranche 83; cast to unsigned Word before packing; WSL UBSan reproduced left shift of negative value -1 before the fix and focused tests pass afterward, preceding backward bytes preserved"
     }
   ]
 }

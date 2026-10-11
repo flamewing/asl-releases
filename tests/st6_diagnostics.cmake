@@ -59,3 +59,8 @@ foreach(cpu ST6200 ST6218)
     check_diagnostic(address_type_${cpu} ${cpu} " ld a,65536" 1320 "65536 > 65535" 3 7)
     check_bytes(original_${cpu} ${cpu} " ld a,0\n ld a,255\n ld 255,a\n ldi 255,-1\n ld a,x\n ld (x),a\n add a,(y)\n inc w\n assume rombase:1\nrom equ 64,code\n ld a,rom" "1f001fff9fff0dffff35874fd51f40")
 endforeach()
+
+foreach(cpu ST6200 ST6218)
+    check_bytes(backward_original_${cpu} ${cpu} " org 256\n jrz pc-15\n jrnz pc-15\n jrc pc-15\n jrnc pc-15" "84808682")
+    check_bytes(backward_wrap_${cpu} ${cpu} " jrz 65535\n jrnz 65535\n jrc 65535\n jrnc 65535" "f4e8e6da")
+endforeach()

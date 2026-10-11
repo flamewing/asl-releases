@@ -1148,3 +1148,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover 256/32767/32768/65535/65536, single primary failures, no rejected
     words and preceding valid direct/register/ROM-window bytes on 12-/13-bit CPUs.
     Validation: all 393 CTest cases pass with embedded/external catalogs.
+
+83. Separate ST6 negative-displacement shift undefined behavior.
+    WSL GCC UBSan reproduced codest6.c:394 left shift of negative value -1
+    for JRZ to its current address. Cast signed displacement to unsigned Word
+    before left shifting and masking, preserving the encoded five-bit field
+    and signed 16-bit wrapped distance. All four backward branch bytes and
+    wrapped-address bytes remain unchanged on 12-/13-bit CPUs. WSL native
+    UBSan focused suite passes with the fix.
+    Validation: all 393 CTest cases pass with embedded/external catalogs.
