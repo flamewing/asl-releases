@@ -551,3 +551,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     converted to the translator's unsigned argument, producing -1, which
     then bypasses the >=128 check and is emitted as 0xff. Follow up next.
     Validation: all 364 CTest cases pass with embedded/external catalogs.
+
+30. Separate TBIL signed-character translation bug.
+    Pass literal source characters to as_chartrans_xlate as unsigned bytes,
+    and reject its negative/unmapped result instead of emitting it as 0xff.
+    High input bytes now correctly use the character table: untranslated
+    128..255 values fail the existing seven-bit range check, while explicitly
+    mapped high input bytes can produce valid seven-bit output. This fixes
+    both silent invalid acceptance and incorrect encoding of valid mappings.
+    Regression cases cover raw 128/255, a later byte in BC strings and valid
+    high-input-to-ASCII mappings. Existing ordinary/caret literals, final-bit
+    terminators, branch behavior and source positions remain verified.
+    Validation: all 364 CTest cases pass with embedded/external catalogs.

@@ -139,7 +139,11 @@ static Boolean append_str(
     size_t i;
 
     for (i = 0; i < p_str->len; i++) {
-        int trans = as_chartrans_xlate(CurrTransTable->p_table, p_str->p_str[i]);
+        int trans = as_chartrans_xlate(CurrTransTable->p_table, (unsigned char)p_str->p_str[i]);
+        if (trans < 0) {
+            WrStrErrorPos(ErrNum_UnmappedChar, p_arg);
+            return False;
+        }
         if (trans >= 0x80) {
             char detail[160];
             as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgStringByteRange),

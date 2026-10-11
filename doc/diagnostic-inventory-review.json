@@ -1184,7 +1184,7 @@
         "ErrNum_OverRange"
       ],
       "status": "complete",
-      "review_notes": "Both historical candidates improved in tranche 29, preserving branch encoding and zero-field syntax. Raw high-bit literal translation bug is tracked separately."
+      "review_notes": "Both historical candidates improved in tranche 29. Signed-character translation and unchecked unmapped result fixed separately in tranche 30."
     },
     "codetms7.c": {
       "candidate_counts": {
@@ -1402,7 +1402,7 @@
     {
       "file": "codetbil.c",
       "reason": "Signed high-bit input to as_chartrans_xlate yields -1, which bypasses the 7-bit range check and encodes 0xff. Reproduced pc \"\\128\" => 24ff with success. Cast source byte to unsigned char and reject unmapped results.",
-      "status": "pending"
+      "status": "fixed in tranche 30"
     }
   ]
 }

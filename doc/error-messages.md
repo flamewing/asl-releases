@@ -275,7 +275,7 @@ is described by:
 | 2280 | Error | field not accessible | none | The target memory field is inaccessible. |
 | 2281 | Error | target not in same field | none | Instruction and target must occupy the same memory field. |
 | 2290 | Error | invalid instruction combination | none | These instructions cannot be combined. |
-| 2300 | ⛔Error | unmapped character | The string or character constant | The selected code page does not define this character. |
+| 2300 | ⛔Error | unmapped character | The string or character constant; TBIL propagates a failed literal-byte mapping at the string operand. | The selected code page does not define this character. |
 | 2310 | Error | Invalid length of multi-character constant | none | Multi-character constants must contain one through four characters. |
 | 2320 | Fatal | No target set | none | Select a target with `CPU` or `-cpu` before emitting code or data. |
 | 2330 | Error | Invalid displacement length | none | This addressing mode does not permit the selected displacement length. |

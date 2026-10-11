@@ -116,3 +116,16 @@ check_bytes(ranges tbil [=[ org $100
 check_bytes(literal tbil [=[ pc "ABC"
  pc "^@^?"]=] "244142c32400ff")
 check_bytes(forward tbil " br after\n no\n:after\n no" "610808")
+
+# High-bit input must be translated as a byte, never as a negative char.
+check_diagnostic(raw-high tbil [=[ pc "\128"]=] 1320
+    "translated string byte 1 has value 128 outside [0,127]" 3 5)
+check_diagnostic(raw-last tbil [=[ pc "\255"]=] 1320
+    "translated string byte 1 has value 255 outside [0,127]" 3 5)
+check_diagnostic(branch-raw tbil [=[ bc .+2,"A\128"]=] 1320
+    "translated string byte 2 has value 128 outside [0,127]" 3 9)
+check_bytes(mapped-high tbil [=[ charset 128,65
+ pc "\128"
+ charset
+ charset 255,65
+ pc "\255"]=] "24c124c1")
