@@ -1815,6 +1815,11 @@
       "file": "code9900.c",
       "issue": "EvalDist rejects odd/out-of-range provisional distances of forward expressions before targets resolve, in both short branches and SRJ/ARJ.",
       "status": "fixed in tranche 115; defer unknown/questionable alignment/range checks; all 13 short branch aliases, eight CPUs and both four-byte callers verified"
+    },
+    {
+      "file": "code9900.c",
+      "issue": "Type17 SRJ/ARJ decoder ignores registered eCore990_12 CPU requirement and encodes these instructions on every CPU.",
+      "status": "fixed in tranche 116; use common CheckCore before operand evaluation/encoding; both opcodes reject on seven CPUs and preserve TI990/12 bytes/forward targets"
     }
   ]
 }

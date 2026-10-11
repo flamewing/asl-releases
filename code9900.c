@@ -470,7 +470,8 @@ static void DecodeType17(Word Index) {
     tOrder const* pOrder = &Type17Orders[Index];
     Word          Reg;
 
-    if (ChkArgCnt(2, 3) && DecodeReg(&ArgStr[ArgCnt], &Reg)) {
+    if (ChkArgCnt(2, 3) && CheckCore(pOrder->Flags & eCoreAll)
+        && DecodeReg(&ArgStr[ArgCnt], &Reg)) {
         Word    Delta, Dist;
         Boolean OK;
 

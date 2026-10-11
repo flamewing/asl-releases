@@ -1458,3 +1458,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     16-bit wrapping and InstrLen-based PC arithmetic. Tests cover all 13 short
     branch aliases, all eight CPUs and both four-byte SRJ/ARJ callers.
     Validation: all 402 CTest cases pass with embedded/external catalogs.
+
+116. 9900 SRJ/ARJ honor their registered CPU mask.
+    Type17 decoder ignores its instruction descriptor's eCore990_12 flag,
+    accepting SRJ/ARJ on every CPU (confirmed TMS9900 emits the word). Call
+    the common CheckCore before operand evaluation/encoding, as other typed
+    instruction decoders do. Tests reject both instructions with one positioned
+    1500/no emission on seven CPUs and retain TI990/12 bytes/forward targets.
+    Validation: all 402 CTest cases pass with embedded/external catalogs.
