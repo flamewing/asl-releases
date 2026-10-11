@@ -101,15 +101,14 @@ static void dissect_reg_cp1600(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecReg(const tStrComp *p_arg, Word *p_reg, Boolean errMsg)
+ * \fn     DecReg(const tStrComp *p_arg, Word *p_reg)
  * \brief  decode register (core name or symbol)
  * \param  p_arg source argument
  * \param  p_reg result buffer
- * \param  errMsg report error if argument is no register?
  * \return True if argument names a register
  * ------------------------------------------------------------------------ */
 
-static Boolean DecReg(tStrComp const* p_arg, Word* p_reg, Boolean errMsg) {
+static Boolean DecReg(tStrComp const* p_arg, Word* p_reg) {
     tRegDescr      reg_descr;
     tEvalResult    eval_result;
     tRegEvalResult reg_eval_result;
@@ -128,9 +127,7 @@ static Boolean DecReg(tStrComp const* p_arg, Word* p_reg, Boolean errMsg) {
         *p_reg = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
         return True;
     default:
-        if (errMsg) {
-            WrStrErrorPos(ErrNum_InvRegName, p_arg);
-        }
+        /* Mandatory register evaluation already reports the primary failure. */
         return False;
     }
 }
@@ -146,7 +143,7 @@ static void DecodeRegAdrMVO(Word Index) {
         Boolean      OK;
         tSymbolFlags flags;
 
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
 
@@ -174,11 +171,11 @@ static void DecodeRegRegMVO(Word Index) {
     PrefixedSDBD = False;
 
     if (ChkArgCnt(2, 2)) {
-        if (!DecReg(&ArgStr[1], &regs, True)) {
+        if (!DecReg(&ArgStr[1], &regs)) {
             return;
         }
 
-        if (!DecReg(&ArgStr[2], &regd, True)) {
+        if (!DecReg(&ArgStr[2], &regd)) {
             return;
         }
         if (regd == 0 || regd == 7) {
@@ -200,7 +197,7 @@ static void DecodeRegImmMVO(Word Index) {
         Boolean      OK;
         tSymbolFlags flags;
 
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
 
@@ -243,7 +240,7 @@ static void DecodeAdrReg(Word Index) {
             return;
         }
 
-        if (!DecReg(&ArgStr[2], &reg, True)) {
+        if (!DecReg(&ArgStr[2], &reg)) {
             return;
         }
 
@@ -261,7 +258,7 @@ static void DecodeRegReg(Word Index) {
     PrefixedSDBD = False;
 
     if (ChkArgCnt(2, 2)) {
-        if (!DecReg(&ArgStr[1], &regs, True)) {
+        if (!DecReg(&ArgStr[1], &regs)) {
             return;
         }
         if (Index & 0x0200) {
@@ -271,7 +268,7 @@ static void DecodeRegReg(Word Index) {
             }
         }
 
-        if (!DecReg(&ArgStr[2], &regd, True)) {
+        if (!DecReg(&ArgStr[2], &regd)) {
             return;
         }
 
@@ -298,7 +295,7 @@ static void DecodeImmReg(Word Index) {
             return;
         }
 
-        if (!DecReg(&ArgStr[2], &regd, True)) {
+        if (!DecReg(&ArgStr[2], &regd)) {
             return;
         }
 
@@ -332,7 +329,7 @@ static void DecodeRegDup(Word Index) {
     PrefixedSDBD = False;
 
     if (ChkArgCnt(1, 1)) {
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
 
@@ -357,6 +354,9 @@ static void DecodeBranch(Word Index) {
         }
 
         cond = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt4, &OK, &flags);
+        if (!OK) {
+            return;
+        }
         if (mFirstPassUnknownOrQuestionable(flags)) {
             w0_guess_mask |= 0x000f;
         }
@@ -410,7 +410,7 @@ static void DecodeReg(Word Index) {
     PrefixedSDBD = False;
 
     if (ChkArgCnt(1, 1)) {
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
 
@@ -436,7 +436,7 @@ static void DecodeShift(Word Index) {
     if (ChkArgCnt(1, 2)) {
         tSymbolFlags flags = eSymbolFlag_None;
 
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
         if (reg > 3) {
@@ -541,7 +541,7 @@ static void DecodeJump(Word Index) {
             return;
         }
 
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
         if (reg < 4 || reg > 6) {
@@ -570,7 +570,7 @@ static void DecodeJR(Word Index) {
     PrefixedSDBD = False;
 
     if (ChkArgCnt(1, 1)) {
-        if (!DecReg(&ArgStr[1], &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg)) {
             return;
         }
 

@@ -1476,3 +1476,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     unsigned byte interval. Retain IDs, predicates, warning emission/padding,
     accepted encodings and generic primary register evaluation from tranche 113.
     Validation: all 402 CTest cases pass with embedded/external catalogs.
+
+118. CP-1600 primary register failures and rejected BEXT emission.
+    Mandatory register evaluation already emits its error; stop adding a
+    secondary invalid-register-name diagnostic. BEXT overwrites failed
+    condition OK with target evaluation and emits FFFF 0000 after condition
+    16 fails UInt4; stop before target evaluation/encoding on condition failure.
+    Tests cover one positioned primary diagnostic, EXPECT/no emission,
+    register aliases and original accepted BEXT encoding.
+    Validation: all 403 CTest cases pass with embedded/external catalogs.

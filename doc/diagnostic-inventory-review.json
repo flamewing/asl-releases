@@ -1834,6 +1834,11 @@
       "file": "code9900.c",
       "issue": "Operand alignment warning is unreachable: IsWord is initialized False and never set by any instruction decoder.",
       "status": "requires focused follow-up of word/byte opcode classification; retained behavior during diagnostic detail review"
+    },
+    {
+      "file": "codecp1600.c",
+      "issue": "Mandatory register evaluation appends a duplicate invalid-register-name error; BEXT overwrites failed condition evaluation and emits FFFF 0000 despite UInt4 overflow.",
+      "status": "fixed in tranche 118; retain primary register diagnostic and stop BEXT on failed condition; no emission/aliases/valid encoding checked"
     }
   ]
 }
