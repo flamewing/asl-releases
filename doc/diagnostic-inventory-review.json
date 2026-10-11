@@ -1003,8 +1003,13 @@
         "ErrNum_InvShiftArg": 2,
         "ErrNum_WrongArgCnt": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_InvShiftArg",
+        "ErrNum_WrongArgCnt"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical candidates reviewed in tranche 93: mask-specific named/numeric register choices (index requires named X), shift count/full [1,4], LEFT/RIGHT direction, BIT count and jump one-or-three count helpers. Preserve aliases, first-pass shift handling, count-4 zero field, argument order and accepted bytes. Adjacent mask-shift UB and silent mode rejection fixed in tranches 91/92."
     },
     "codeko09.c": {
       "candidate_counts": {

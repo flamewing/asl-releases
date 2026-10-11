@@ -1239,3 +1239,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     all six jump callers and bit-address rejection, no rejected words and
     accepted direct/indirect jump bytes.
     Validation: all 395 CTest cases pass with embedded/external catalogs.
+
+93. Complete KENBAK historical register/shift/count review.
+    1445 lists live-mask named/numeric register choices while indexed forms
+    require named X. 1380 shows actual count and [1,4] or LEFT/RIGHT choices.
+    BIT 1110 uses expected/actual count; jump 1110 uses exact one-or-three
+    count helper, excluding the invalid two-operand gap. Preserve IDs,
+    aliases, first-pass count handling, zero-coded count 4 and accepted bytes.
+    Tests cover all shift/rotate forms, both register paths, indexed/register
+    masks, jump counts, bit counts, endpoints and forward counts.
+    Validation: all 395 CTest cases pass with embedded/external catalogs.

@@ -103,6 +103,27 @@ static void DissectReg_KENBAK(
     }
 }
 
+static void WrRegisterChoices(tStrComp const* operand, Word mask, Boolean numeric) {
+    char choices[120] = "", detail[180];
+    unsigned reg;
+    for (reg = 0; reg < 4; reg++) {
+        if (mask & (1 << reg)) {
+            char choice[24];
+            if (*choices) {
+                strmaxcat(choices, ", ", sizeof(choices));
+            }
+            if (numeric) {
+                as_snprintf(choice, sizeof(choice), "%c / %u", Regs[reg], reg);
+            } else {
+                as_snprintf(choice, sizeof(choice), "%c", Regs[reg]);
+            }
+            strmaxcat(choices, choice, sizeof(choices));
+        }
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &operand->Pos);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeReg(const tStrComp *pArg, Byte *pResult, Word RegMask, Boolean MustBeReg)
  * \brief  check whether argument is CPU register, including register aliases
@@ -128,7 +149,7 @@ static tRegEvalResult DecodeReg(
     }
 
     if ((RegEvalResult == eIsReg) && ((*pResult >= 4) || !(1 & (RegMask >> *pResult)))) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrRegisterChoices(pArg, RegMask, !MustBeReg);
         RegEvalResult = eRegAbort;
     }
 
@@ -158,7 +179,7 @@ static Boolean DecodeRegWithMemOpt(tStrComp const* pArg, Byte* pResult, Word Reg
             return False;
         }
         if ((*pResult >= 4) || !(1 & (RegMask >> *pResult))) {
-            WrStrErrorPos(ErrNum_InvReg, pArg);
+            WrRegisterChoices(pArg, RegMask, True);
             return False;
         }
         return True;
@@ -377,7 +398,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop) {
     /* other # of arguments not allowed */
 
     else {
-        WrError(ErrNum_WrongArgCnt);
+        (void)ChkArgCnt(1, 2);
         return False;
     }
 }
@@ -539,8 +560,7 @@ static void CodeJumpCommon(Word Code, tAdrData const* pAdrData) {
 static void CodeJump(Word Code) {
     tAdrData AdrData;
 
-    if ((ArgCnt != 1) && (ArgCnt != 3)) {
-        WrError(ErrNum_WrongArgCnt);
+    if (!ChkArgCntExtEitherOr(ArgCnt, 1, 3)) {
         return;
     }
     if (DecodeAdr(&ArgStr[ArgCnt], NULL, &AdrData, MModMemory)) {
@@ -557,8 +577,7 @@ static void CodeJump(Word Code) {
 static void CodeJumpGen(Word Code) {
     tAdrData AdrData;
 
-    if ((ArgCnt != 1) && (ArgCnt != 3)) {
-        WrError(ErrNum_WrongArgCnt);
+    if (!ChkArgCntExtEitherOr(ArgCnt, 1, 3)) {
         return;
     }
 
@@ -670,7 +689,10 @@ static void CodeShiftCore(Word Code, int ArgOffs) {
                 Count = 1;
             }
             if ((Count < 1) || (Count > 4)) {
-                WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[ArgOffs]);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            OpPart.str.p_str, (LargeInt)Count, (LargeInt)1, (LargeInt)4);
+                WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[ArgOffs].Pos);
                 return;
             }
         }
@@ -691,7 +713,9 @@ static void CodeShift2(Word Code) {
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "RIGHT")) {
             CodeShiftCore(Code, 2);
         } else {
-            WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[1]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "LEFT, RIGHT");
+            WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[1].Pos);
         }
     }
 }
