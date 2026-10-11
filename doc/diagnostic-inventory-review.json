@@ -130,8 +130,13 @@
         "ErrNum_OverRange": 1,
         "ErrNum_UnderRange": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvShiftArg",
+        "ErrNum_OverRange",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 44: all four historical candidates report byte-normalized SST page interval, full immediate interval, or signed shift count with exact mask choices. IDs, DAT syntax, Byte normalization, first-pass masks and encodings retained; undefined shift fixed separately in tranche 43."
     },
     "code3202x.c": {
       "candidate_counts": {

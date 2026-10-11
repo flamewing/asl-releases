@@ -711,3 +711,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     Validation: all 374 CTest cases pass with embedded/external catalogs.
     WSL UndefinedBehaviorSanitizer reproduces old exponent 65535 failure;
     the complete focused regression passes with the guarded implementation.
+
+44. Complete TMS3201x historical address/immediate/shift inventory review.
+    SST 1315 gives the existing byte-normalized [128,255] page requirement;
+    immediate 1315/1320 gives evaluated value and full instruction interval.
+    Shift 1380 reports the signed count and exact accepted mask choices:
+    ADD/LAC/SUB 0..15, SACH 0/1/4, SACL 0, locating the shift expression.
+    Preserve IDs, Byte normalization (including SST -1), DAT syntax,
+    first-pass masks, unknown shifts and all valid instruction encodings.
+    Tests cover both CPUs, all immediate helpers and shift masks, negative
+    counts, exact IDs/positions, range edges, forward/undefined symbols,
+    DAT evaluation failure, German detail and preceding accepted bytes.
+    Validation: all 374 CTest cases pass with embedded/external catalogs.

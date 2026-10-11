@@ -12,6 +12,9 @@
 
 #include "code3201x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -103,7 +106,10 @@ static void DecodeAdr(tStrComp const* pArg, int Aux, Boolean Must1) {
         }
         if (AdrOK) {
             if (Must1 && (h < 0x80) && !mFirstPassUnknown(EvalResult.Flags)) {
-                WrError(ErrNum_UnderRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)h, (LargeInt)128, (LargeInt)255);
+                WrXErrorPos(ErrNum_UnderRange, detail, &pArg->Pos);
                 AdrOK = False;
             } else {
                 AdrMode = h & 0x7f;
@@ -200,7 +206,21 @@ static void DecodeAdrShift(Word Index) {
             if (OK) {
                 if ((AdrWord < 0) || (AdrWord >= 16)
                         || ((pOrder->AllowShifts & (1 << AdrWord)) == 0)) {
-                    WrError(ErrNum_InvShiftArg);
+                    char choices[96] = "", detail[200], number[12];
+                    unsigned count;
+                    for (count = 0; count < 16; count++) {
+                        if (!(pOrder->AllowShifts & (1 << count))) {
+                            continue;
+                        }
+                        if (*choices) {
+                            strmaxcat(choices, ", ", sizeof(choices));
+                        }
+                        as_snprintf(number, sizeof(number), "%u", count);
+                        strmaxcat(choices, number, sizeof(choices));
+                    }
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAllowedShiftCounts),
+                            (LargeInt)AdrWord, choices);
+                    WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[2].Pos);
                 } else {
                     CodeLen     = 1;
                     WAsmCode[0] = pOrder->Code + AdrMode + (AdrWord << 8);
@@ -241,10 +261,13 @@ static void DecodeImm(Word Index) {
             if (mFirstPassUnknown(Flags)) {
                 AdrLong &= pOrder->Mask;
             }
-            if (AdrLong < pOrder->Min) {
-                WrError(ErrNum_UnderRange);
-            } else if (AdrLong > pOrder->Max) {
-                WrError(ErrNum_OverRange);
+            if ((AdrLong < pOrder->Min) || (AdrLong > pOrder->Max)) {
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)AdrLong,
+                        (LargeInt)pOrder->Min, (LargeInt)pOrder->Max);
+                WrXErrorPos((AdrLong < pOrder->Min) ? ErrNum_UnderRange : ErrNum_OverRange,
+                        detail, &ArgStr[1].Pos);
             } else {
                 CodeLen     = 1;
                 WAsmCode[0] = pOrder->Code + (AdrLong & pOrder->Mask);
