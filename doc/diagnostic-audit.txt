@@ -1,0 +1,278 @@
+Diagnostic specificity audit, 2026-10-11
+Baseline: 4730f629 (current master); local build/asl.exe.
+Tracking issue: #13, Improved error messages
+https://github.com/flamewing/asl-releases/issues/13
+
+Purpose
+
+Find rejection paths which know the cause, value, limit, operand or CPU
+constraint but emit a generic, incomplete or misleading message. This is
+historical audit and implementation backlog for that baseline. Progress is
+tracked separately in diagnostic-batches.txt.
+
+Coverage and evidence
+
+Mechanically scanned 213 root C sources. The inventory contains 2857 direct
+calls in selected diagnostic families, including 1389 invalid-address-mode,
+361 invalid-size, 302 invalid-register and 219 branch-distance call sites.
+These counts are candidates, NOT confirmed defects or a claim that every
+site needs changing. Dynamic/ternary diagnostic IDs, checking helpers,
+catalog files and non-C sources are outside this mechanical inventory.
+I manually reviewed the 24 groups below and ran 18 isolated assembler
+probes. Reproduction sources, actual output and exit status are saved in
+diagnostic-audit-reproductions.txt. All 18 exit with assembly errors as
+expected. The complete candidate inventory is diagnostic-audit-inventory.json.
+The generator/probe runner is audit_diagnostics.py (uses build/asl.exe).
+Baseline probes use the default diagnostic verbosity. Some integer-type
+checks already give the value and failed bound with -x; the missing M68K
+detail is the effective-address context and full encoding range. Dedicated
+decoder checks often lack even that existing extended detail.
+
+Evidence labels:
+  R = reproduced with the current executable AND inspected in source.
+  S = source-confirmed missing information; no dedicated runtime probe yet.
+Priority:
+  P1 = misleading cause, duplicate errors or common numeric diagnostics.
+  P2 = useful constraints/context missing from an otherwise accurate error.
+
+Recommended first batch: D01-D04, D09-D11. Keep existing numeric diagnostic
+IDs wherever their meaning is accurate, append context and locate the
+relevant operand. Separate new IDs are justified for genuinely different
+causes such as reserved zero branch displacement. Do not change encoding,
+relaxation, CPU support or acceptance while improving diagnostics.
+
+M68K
+
+D01 [P1,R] Inferred indexed displacement loses value and range.
+  code68k.c:1063,1090 (deduce_outdisp_size_32_16/_32_8), callers 1640,1698,1810;
+  address-register forms also use earlier integer-type evaluation at 1640/1692.
+  68000: move.w 128(a0,d0.w),d1 -> #1320 range overflow.
+  At PC=4096: target=4608; move.w target(pc,d0.w),d1 -> same message.
+  Known: computed displacement, inferred encoding, allowed width, CPU and
+  source component. Desired: effective-address displacement 128 outside
+  [-128,127]; for the PC case displacement 510 outside [-128,127], with
+  target 4608 and PC base 4098 as optional detail.
+  Address-register form encodes the expression itself; it is not inherently
+  label-PC. The PC form subtracts EProgCounter()+RelPos, not just line PC.
+  Preserve unknown/questionable-symbol handling and configured sign extension.
+  On this revision the illustrative cases produce range overflow rather
+  than invalid-address-mode; the missing-information issue still applies.
+
+D02 [P1,R] Explicit PC displacement overflow or unsupported extension.
+  code68k.c:1767,1820,1835,2065,2122 and ACheckFamily at 519.
+  target=1048576; move.w target.w(pc),d1 -> #1330 distance too big.
+  Known displacement 1044478 and signed 16-bit limit [-32768,32767].
+  Desired: effective-address displacement 1044478 outside [-32768,32767].
+  target=4608; move.w target.w(pc,d0.w),d1 -> #1505 mode unsupported on 68000.
+  This second case is a CPU restriction on an explicitly selected full
+  extension, not an 8-bit overflow. Explain the requested extension and
+  supporting CPU family; do not suggest silently replacing the explicit size.
+
+D03 [P1,R] Branch distance messages omit computed distance and width.
+  code68k.c:4442,4460,4545,5327,5376,5901,5949,6391.
+  bra.s *+200 -> #1370 jump distance too big.
+  Known distance 198 after subtracting the branch base, requested short
+  encoding and signed limits [-128,127]. Include these and the target operand.
+  Analogous opportunities: code6812.c:739,837,1266; code65.c:565,606,686,886;
+  the inventory includes many other backend instances requiring local review.
+  Preserve each backend's byte/word units and instruction-specific PC base.
+
+D04 [P1,R] Zero BSR displacement misreported as excessive distance.
+  code68k.c:4465-4468, DecodeBcc.
+  bsr.s *+2 -> #1370 jump distance too big, although displacement is zero.
+  Desired: short BSR cannot encode displacement 0; use a word displacement
+  or let the assembler select the size. Zero denotes an extension form and
+  BSR cannot be replaced by NOP. Keep this distinct from actual range errors.
+
+D05 [P2,R] Invalid index width reduced to invalid addressing mode.
+  code68k.c:881-891 ClassComp; generic caller at 1524.
+  move.w (a0,d0.b),d1 -> #1350 addressing mode not allowed here.
+  The parser has isolated suffix B. Say index-register size B is invalid;
+  expected W or L. Highlight the suffix/component. Do not treat expression
+  suffixes and register suffixes as interchangeable.
+
+D06 [P2,R] Invalid index scale loses both scale and accepted set.
+  code68k.c:898-919 ClassComp; caller at 1524.
+  move.w (a0,d0.w*3),d1 -> #1350 addressing mode not allowed here.
+  Known scale 3: explain allowed scales 1,2,4,8 subject to CPU restrictions.
+  ColdFire's explicit scale-8 rejection is a different, CPU-specific cause.
+
+D07 [P2,R] Legal scale on an unsupported CPU lacks feature detail.
+  code68k.c:1708-1711,1826-1829; ACheckFamily at 519.
+  move.w (a0,d0.w*2),d1 on 68000 -> #1505 unsupported addressing mode.
+  Existing error already names 68000, but it can additionally say scaled
+  indexing is the missing feature and identify the requested scale/size.
+  Derive supporting families from the capability tables, not CPU ordering.
+
+D08 [P2,R] Duplicate components reduced to invalid addressing mode.
+  code68k.c:1561-1583; related indirect-component checks at 1983,2010.
+  move.w 1(2,a0),d1 -> #1350 addressing mode not allowed here.
+  The parser knows an outer displacement already exists. Report duplicate
+  displacement and highlight the second component. Other explicit branches
+  can report too many components or duplicate index/base components, but
+  require tests of the normalization/swap rules before assigning the cause.
+
+D09 [P1,S] Alignment errors omit address and required alignment.
+  code68k.c:990-1001 ChkEven and 6534-6541 assure_pc_even.
+  Known operand address or program counter and CPU family. Report the actual
+  address and required even alignment, distinguishing instruction placement
+  from an operand's alignment. Preserve existing CPU/padding behavior.
+  The shared helper currently lacks an operand parameter; add one or pass
+  appropriate context from its callers rather than highlight arbitrary text.
+
+D10 [P1,R] Shift-count rejection duplicates errors and loses range.
+  code68k.c:2717-2734 DecodeShift, immediate evaluation in DecodeAdr.
+  lsl.w #9,d0 -> #1320 range overflow AND #1380 invalid shift argument.
+  The immediate validator knows the 1..8 domain; the enclosing decoder then
+  emits another error when decoding has already failed. Emit one message
+  with count 9 and allowed range [1,8]. Preserve register-count alternatives.
+  This needs a control-flow fix to suppress the secondary error, not merely
+  new wording at the final call site.
+
+D11 [P2,R] Memory shift size error omits the only supported size.
+  code68k.c:2741-2743 DecodeShift.
+  lsl.b (a0) -> #1130 invalid operand size.
+  Known memory addressing, requested B and required W. Say memory-form
+  shifts require word size. Keep register-form and ColdFire restrictions
+  distinct. This pattern warrants reviewing instruction-specific size tables.
+
+Other targets and shared helpers
+
+D12 [P1,R] HC12 auto-update magnitude loses the narrower domain.
+  code6812.c:510-513 DecodeAdr.
+  ldaa 9,x+ -> #1320 range overflow.
+  Known count 9; the preceding SInt8 evaluation succeeded, but auto-update
+  accepts only [-8,8], with zero deliberately becoming plain indexed mode.
+  Say auto-update count 9 outside [-8,8], highlighting the count operand.
+  Do not suggest that the evaluator's signed-byte domain is the hardware limit.
+
+D13 [P1,R] PowerPC branch range/alignment is incomplete or misleading.
+  code601.c:1122-1127 and 1157-1162.
+  b *+33554432 -> #1320 range overflow (missing signed encoding limits).
+  b *+2 -> #1375 jump distance is odd, although 2 is even.
+  Known displacement, absolute/relative bit, range and low-two-bit alignment.
+  Say displacement 2 must be a multiple of 4; range diagnostic can state
+  the current field bounds and separately explain alignment. Conditional
+  and unconditional forms have different bounds; do not share one constant.
+
+D14 [P2,S] Shared page check loses both addresses and page size.
+  errmsg.c:552-561 ChkSamePage; e.g. code51.c:1477,1483.
+  Emits #1910 jump target on different page while holding CurrAddr, DestAddr
+  and PageBits. Include source/target pages and page size, optionally the
+  legal target interval for the current page. Add optional source context
+  while retaining a compatibility wrapper for existing callers.
+  Respect the caller's chosen current address (often PC after the opcode).
+
+D15 [P2,R] 80C504 instruction-placement prohibition hides the condition.
+  code51.c:741-743 Chk504 and 1485-1486 DecodeABranch.
+  At ORG 2046, ajmp 1792 -> #1900 instruction must not start on this address.
+  Known CPU, PC and condition (PC & 0x7ff)==0x7fe. State that AJMP/ACALL on
+  80C504 cannot start at offset 0x7fe in the 2-KiB page; show current PC.
+
+D16 [P1,R] Built-in function arity loses function, expected and supplied count.
+  asmpars.c:2403,2447-2448.
+  dc.l SIN(1,2) -> #1490 wrong numbers of function arguments.
+  At the final check FName, cnt, MinNumArgs and MaxNumArgs are available.
+  Desired: SIN expects 1 argument, got 2, with expression location.
+  The earlier three-argument parser ceiling has a different evidence level:
+  it knows at least four, not necessarily the complete supplied count.
+  Do not claim an exact count without scanning the remaining quoted arguments.
+
+D17 [P2,S] User-defined function arity also loses its declaration contract.
+  asmpars.c:2281,2324.
+  ValFunc->ArguCnt and FName are known. The missing-argument branch knows
+  how many arguments were consumed; the extra-argument branch knows only
+  that more remain. Report expected count and exact/at-least actual count
+  as appropriate. Preserve quoted-comma handling and empty-argument semantics.
+
+D18 [P1,R/S] Data-directive range failures bypass detailed checking.
+  motpseudo.c:1161-1164; intpseudo.c:566,784,998,1337,1802,2404,3116.
+  dc.b -129 -> #1320 range overflow. This is below the accepted Int8 lower
+  bound (-128), yet the Motorola directive always chooses OverRange.
+  Values and IntTypeEnum/type-specific limits are available. Use the detailed
+  range checker, preserving the directive's signed/unsigned combined domain
+  (DC.B permits -128..255), rather than imposing SInt8's maximum 127.
+  The integer-pseudo sites need type-by-type review; some similarly choose
+  OverRange after a generic RangeCheck failure. Do not apply global replacement.
+
+D19 [P2,S] Zero structure dimension loses the positive-size requirement.
+  asmstructs.c:587-588.
+  UInt32 evaluation has succeeded, then Dimension<=0 issues #1315 underflow.
+  Report dimension 0 must be at least 1 with its existing expression position.
+  Do not introduce an artificial signed limit or claim negatives reach here.
+
+D20 [P2,S] Z80-family page and translation errors omit mapping context.
+  codez80.c:468-473 check_ez80_mpage; 649-657 phys_2_cpu.
+  The eZ80 page warning knows address, requested size and Reg_MBASE. State
+  actual high byte versus assumed MBASE and the non-24-bit mode constraint.
+  Translation failure knows physical address and address space; include them
+  and the active mapping mode. The failure alone does not establish which
+  individual bank/assumption is wrong, so do not invent a specific cause.
+
+D21 [P2,S] Addressing-mode minimum-CPU helper drops its known minimum.
+  errmsg.c:203-206 AChkMinCPUExtPos.
+  Unlike neighboring ChkMinCPUExt, which already looks up and reports MinCPU,
+  this helper emits only the generic error plus operand position. Include
+  the named minimum CPU while retaining source highlighting. CPUVar ordering
+  is only meaningful within the relevant backend's registration scheme.
+
+D22 [P2,S] M68K register-pair decoder collapses distinct syntax/type failures.
+  code68k.c:613-646 DecodeRegPair/CodeIndRegPair; callers 3815-3816,4067-4074.
+  Knows whether ':' is absent, which half fails register decoding, whether
+  a data register is required, and whether parentheses are missing.
+  Return structured failure detail or report once inside the decoder; explain
+  expected Dn:Dm or parenthesized pair syntax, locating the failing half.
+  Avoid a second pair error after a nested register evaluator already failed.
+
+D23 [P2,S] AVR LPM/ELPM decode valid but disallowed memory forms generically.
+  codeavr.c:881-884,909-912.
+  DecodeMem recognizes X/Y/Z variants, then only Z and Z+ are accepted here.
+  Distinguish unrecognized memory syntax from recognized X/Y/-Z that is
+  unavailable for this instruction; state expected Z or Z+.
+  The adjacent unpredictable-register warning knows R30/R31 overlap with
+  Z+ and can name that dependency. Preserve core-specific availability.
+
+D24 [P2,S] MSP430X displacement errors omit wrap/encoding context.
+  codemsp.c:405-407,1091-1094.
+  Known masked 20-bit displacement, CurrPC/addressing form and interval
+  that cannot be represented by the non-extended signed field. Explain the
+  signed displacement and the requested form, preserving 20-bit wraparound
+  and the low-64-KiB special rule. This is not safe to replace with a plain
+  check of the unsigned masked value against [-32768,32767].
+
+Implementation batches after the first
+
+2. Shared numeric/page helpers and data directives: D12-D15,D18,D19.
+   Introduce reusable detailed diagnostics where worthwhile, then migrate
+   individual backends with known PC base, bounds, units and symbol flags.
+3. Parser and constraint explanations: D05-D08,D16-D17,D21-D23.
+   Keep failure reasons at their origin instead of losing them in Boolean
+   returns; suppress secondary errors from already-failed nested decoders.
+4. Mapping/wrap-sensitive diagnostics: D20,D24, then manually expand the
+   candidate inventory to additional targets and shared assembler phases.
+
+Existing useful facilities and exclusions
+
+errmsg.c:40-75 report_error_range/ChkRangePos already print value versus
+failed bound and optionally locate the operand. asmpars.c:478 wraps this
+with IntTypeDefs limits. This is a good building block, though an effective-
+address-specific message may need both bounds plus CPU/PC context.
+errmsg.c:107-135 ChkArgCntExtPos already prints expected/actual counts.
+The CPU-support helpers often already name the supporting CPUs. An audit
+must inspect their final output before treating a generic enum name as a gap.
+An invalid mode genuinely incompatible with an opcode can remain generic
+if there is no reliable narrower cause; optionally list legal alternatives
+only when the decoder actually knows them. Avoid exhaustive lists of CPU
+modes or guessing what the user intended from malformed expressions.
+
+Acceptance criteria for later diagnostic changes
+
+Preserve error/warning severity, CPU restrictions, accepted source, emitted
+bytes and pass/relaxation behavior. Check known and forward-defined symbols,
+both range boundaries and adjacent failures, explicit and inferred sizes,
+PC-relative base calculations, sign extension, and alternate CPUs. Assert
+specific message detail and source position, plus absence of duplicate
+errors. Update EXPECT/error-ID fixtures only where the cause really changes.
+Add catalog translations and error-message documentation for any new IDs.
+Use AS's format helpers for numeric values; its custom integer formats are
+not interchangeable with host printf formats.

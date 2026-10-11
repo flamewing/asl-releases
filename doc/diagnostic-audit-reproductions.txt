@@ -1,0 +1,130 @@
+m68k-an-index
+ cpu 68000
+ org 4096
+ move.w 128(a0,d0.w),d1
+exit=2
+> > > diagnostic-audit-m68k-an-index.asm(3):9: error #1320: range overflow
+
+m68k-pc-index
+ cpu 68000
+ org 4096
+target equ 4608
+ move.w target(pc,d0.w),d1
+exit=2
+> > > diagnostic-audit-m68k-pc-index.asm(4):9: error #1320: range overflow
+
+m68k-pc-index-forced-word
+ cpu 68000
+ org 4096
+target equ 4608
+ move.w target.w(pc,d0.w),d1
+exit=2
+> > > diagnostic-audit-m68k-pc-index-forced-word.asm(4):9: error #1505: addressing mode not supported on 68000
+
+m68k-pc-word-overflow
+ cpu 68000
+ org 4096
+target equ 1048576
+ move.w target.w(pc),d1
+exit=2
+> > > diagnostic-audit-m68k-pc-word-overflow.asm(4): error #1330: distance too big
+
+m68k-zero-bsr
+ cpu 68000
+ org 4096
+ bsr.s *+2
+exit=2
+> > > diagnostic-audit-m68k-zero-bsr.asm(3): error #1370: jump distance too big
+
+m68k-far-branch
+ cpu 68000
+ org 4096
+ bra.s *+200
+exit=2
+> > > diagnostic-audit-m68k-far-branch.asm(3): error #1370: jump distance too big
+
+m68k-index-size
+ cpu 68000
+ org 4096
+ move.w (a0,d0.b),d1
+exit=2
+> > > diagnostic-audit-m68k-index-size.asm(3):13: error #1350: addressing mode not allowed here
+
+m68k-index-scale
+ cpu 68000
+ org 4096
+ move.w (a0,d0.w*3),d1
+exit=2
+> > > diagnostic-audit-m68k-index-scale.asm(3):13: error #1350: addressing mode not allowed here
+
+m68k-missing-scaling-feature
+ cpu 68000
+ org 4096
+ move.w (a0,d0.w*2),d1
+exit=2
+> > > diagnostic-audit-m68k-missing-scaling-feature.asm(3):13: error #1505: addressing mode not supported on 68000
+
+m68k-duplicate-displacement
+ cpu 68000
+ org 4096
+ move.w 1(2,a0),d1
+exit=2
+> > > diagnostic-audit-m68k-duplicate-displacement.asm(3): error #1350: addressing mode not allowed here
+
+m68k-shift-count
+ cpu 68000
+ org 4096
+ lsl.w #9,d0
+exit=2
+> > > diagnostic-audit-m68k-shift-count.asm(3): error #1320: range overflow
+> > > diagnostic-audit-m68k-shift-count.asm(3):8: error #1380: invalid argument for shifting
+
+m68k-memory-shift-size
+ cpu 68000
+ org 4096
+ lsl.b (a0)
+exit=2
+> > > diagnostic-audit-m68k-memory-shift-size.asm(3): error #1130: invalid operand size
+
+ppc-branch-alignment
+ cpu MPC601
+ org 4096
+ b *+2
+exit=2
+> > > diagnostic-audit-ppc-branch-alignment.asm(3): error #1375: jump distance is odd
+
+ppc-branch-range
+ cpu MPC601
+ org 4096
+ b *+33554432
+exit=2
+> > > diagnostic-audit-ppc-branch-range.asm(3): error #1320: range overflow
+
+hc12-auto-count
+ cpu 68HC12
+ org 4096
+ ldaa 9,x+
+exit=2
+> > > diagnostic-audit-hc12-auto-count.asm(3): error #1320: range overflow
+
+function-arity
+ cpu 68000
+ org 4096
+ dc.l SIN(1,2)
+exit=2
+> > > diagnostic-audit-function-arity.asm(3): error #1490: wrong numbers of function arguments
+
+mot-data-range
+ cpu 68000
+ org 4096
+ dc.b -129
+exit=2
+> > > diagnostic-audit-mot-data-range.asm(3): error #1320: range overflow
+
+80504-placement
+ cpu 80C504
+ org 4096
+ org 2046
+ ajmp 1792
+exit=2
+> > > diagnostic-audit-80504-placement.asm(4): error #1900: instruction must not start on this address
