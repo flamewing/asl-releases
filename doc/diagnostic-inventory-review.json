@@ -1209,8 +1209,12 @@
         "ErrNum_InstructionNotSupported": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 33: family restrictions list supported families using localized existing resources; code-address overflow reports selected ROM interval. Family ordering, flags and address encoding unchanged."
     },
     "codev60.c": {
       "candidate_counts": {

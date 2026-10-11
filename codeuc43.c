@@ -12,6 +12,9 @@
 
 #include "codeuc43.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -63,7 +66,19 @@ static void put_code(Word code) {
 
 static Boolean chk_family(family_t min_family) {
     if (p_curr_cpu_props->family < min_family) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        static char const* const family_names[]
+                = {"uCOM-45", "uCOM-44", "uCOM-43", "iso650"};
+        char detail[160];
+        unsigned family;
+        strmaxcpy(detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(detail));
+        for (family = min_family; family <= e_ucom_iso650; family++) {
+            if (family != (unsigned)min_family) {
+                strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(detail));
+            }
+            strmaxcat(detail, family_names[family], sizeof(detail));
+        }
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(detail));
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
         return False;
     }
     return True;
@@ -84,7 +99,11 @@ static Word decode_code_address(tStrComp const* p_arg, tEvalResult* p_eval_resul
         ChkSpace(SegCode, p_eval_result->AddrSpaceMask);
         if (!mFirstPassUnknownOrQuestionable(p_eval_result->Flags)
             && (address > SegLimits[SegCode])) {
-            WrStrErrorPos(ErrNum_OverRange, p_arg);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                    OpPart.str.p_str, (LargeInt)address,
+                    (LargeInt)0, (LargeInt)SegLimits[SegCode]);
+            WrXErrorPos(ErrNum_OverRange, detail, &p_arg->Pos);
             p_eval_result->OK = False;
         }
     }

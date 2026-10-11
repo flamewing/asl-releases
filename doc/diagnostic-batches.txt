@@ -591,3 +591,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     CMOS distinctions, primary undefined-symbol errors, forward ports
     and preceding instruction bytes.
     Validation: all 366 CTest cases pass with embedded/external catalogs.
+
+33. Complete uCOM-43/44/45 historical family and ROM-limit review.
+    1500 lists supported CPU families using the existing localized support
+    strings; the original minimum-family comparison remains unchanged.
+    1320 gives the evaluated target and selected CPU ROM interval at the
+    operand. Preserve address type, code-space checks, flags and encoding.
+    Tests exercise all restricted instruction callers, every non-iso CPU's
+    actual ROM maximum across JMP/CAL/JCP/CZP, undefined targets, family
+    rejection precedence, forward symbols, German detail and accepted bytes.
+    Validation: all 367 CTest cases pass with embedded/external catalogs.
