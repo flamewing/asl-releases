@@ -278,6 +278,14 @@ static void SetError(tErrorNum Code) {
     ErrFlag = True;
 }
 
+static void FreeChain(PChainRec pChain) {
+    while (pChain) {
+        PChainRec pNext = pChain->Next;
+        free(pChain);
+        pChain = pNext;
+    }
+}
+
 static PChainRec DecodeChain(tStrComp* pArg) {
     PChainRec      Rec;
     int            z;
@@ -418,7 +426,7 @@ static PChainRec DecodeChain(tStrComp* pArg) {
     } while (pCompSplit && !ErrFlag);
 
     if (ErrFlag) {
-        free(Rec);
+        FreeChain(Rec);
         return NULL;
     } else {
         return Rec;
@@ -747,6 +755,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Index, Word Mask) {
                                             += (RunChain->DispAcc >> 2) & 0x000f;
                                     RunChain->HasDisp = False;
                                 }
+                            } else {
+                                Error = True;
                             }
                             break;
 
@@ -825,6 +835,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Index, Word Mask) {
             /* Ende-Kennung fuer letztes Glied */
 
             AdrVals[Index][LastChain] += 0x8000;
+            FreeChain(RootChain);
         }
 
         return ChkAdr(Mask, Index);
@@ -2756,7 +2767,7 @@ static void DecodeSTC_STP(Word Code) {
             OpSize[2] = 2;
         }
         if (OpSize[1] == -1) {
-            OpSize[1] = OpSize[1];
+            OpSize[1] = OpSize[2];
         }
         if (OpSize[1] != OpSize[2]) {
             WrError(ErrNum_UndefOpSizes);

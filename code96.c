@@ -339,7 +339,7 @@ static tAdrType DecodeAdr(
                 WrStrErrorPos(ErrNum_NotAligned, pArg);
             } else {
                 BReg = AdrWord & 0xffff;
-                if ((!(BReg & 0xffff0000)) && ChkWork(&BReg) && !ForceSize) {
+                if ((!(AdrWord & 0xffff0000)) && ChkWork(&BReg) && !ForceSize) {
                     adr_type        = ModDir;
                     p_vals->val_cnt = 1;
                     p_vals->vals[0] = Lo(BReg);

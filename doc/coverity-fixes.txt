@@ -116,6 +116,34 @@ bytes for four M16C adjustments, and expression assertions for 32-bit,
 negative and partial-width bit mirroring. Existing Padauk structure tests
 exercise successful BIT creation; allocation failure was not injected.
 
+Fourth batch: remaining decoder paths
+
+350701, code96.c:DecodeAdr
+  Test the original 24-bit address before choosing direct addressing,
+  rather than testing a value already truncated to 16 bits.
+350693, codem16.c:DecodeSTC_STP
+  Infer an omitted source operand size from the destination operand size.
+350770, codem16.c:DecodeAdr
+  Release all remaining chain nodes when encoding stops on an error.
+  Also release nested nodes on parse errors. Stop the encoding loop when
+  a forced four-bit displacement is out of range (a related hang).
+455957, codemcore.c:DecodeAdr
+  Validate the size before deriving displacement masks by shifting.
+350729, codest9.c:DecodeAdr
+  Reject unsupported immediate sizes before reading OK. Current public
+  instruction paths initialize the size to byte/word, so reproducing the
+  reported uninitialized path still requires its Coverity event trace.
+350726, codens32k.c:GetOpSizeFromCode
+  Compare the masked four-bit size against 0x0f, its unknown-size sentinel,
+  instead of the unreachable 0xff. Existing registered integer opcodes
+  use known sizes; this restores the helper's intended unknown case.
+914369, codez80.c:DecodeEX
+  Remove a duplicate, unreachable AF-pair check.
+
+Validation: all 336 tests passed in both catalog configurations. Added
+binary comparison of inferred/explicit M16 operand sizes, preservation
+of upper 80296 address bytes, and M16 misaligned/out-of-range chain cases.
+
 Remaining work
 
 The other findings have not been fixed by these batches. Suggested next

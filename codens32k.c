@@ -1071,7 +1071,7 @@ static LongWord SizeCodeC(tSymbolSize Size) {
 static tSymbolSize GetOpSizeFromCode(Word Code) {
     Byte Size = Hi(Code) & 15;
 
-    return (Size == 0xff) ? eSymbolSizeUnknown : (tSymbolSize)Size;
+    return (Size == 0x0f) ? eSymbolSizeUnknown : (tSymbolSize)Size;
 }
 
 /*!------------------------------------------------------------------------

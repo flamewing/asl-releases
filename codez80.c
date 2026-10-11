@@ -4298,9 +4298,6 @@ static void DecodeEX(Word Index) {
         append_opcode(0x08);
         return;
 
-    } else if (ParAFPair()) {
-        append_opcode(0x08);
-        return;
     }
 
     src_len = strlen(ArgStr[2].str.p_str);

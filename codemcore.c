@@ -215,11 +215,18 @@ static Boolean DecodeArgCReg(int Index, Word* pErg) {
 
 static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     Word         Base    = 0xff, Tmp;
-    LongInt      DispAcc = 0, DMask = (1 << OpSize) - 1, DMax = 15 << OpSize;
+    LongInt      DispAcc = 0, DMask, DMax;
     Boolean      OK, FirstFlag = False;
     tSymbolFlags Flags;
     char*        Pos;
     tStrComp     Arg, Remainder;
+
+    if ((OpSize < eSymbolSize8Bit) || (OpSize > eSymbolSize32Bit)) {
+        WrError(ErrNum_InvOpSize);
+        return False;
+    }
+    DMask = (1 << OpSize) - 1;
+    DMax = 15 << OpSize;
 
     if (!IsIndirect(pArg->str.p_str)) {
         WrError(ErrNum_InvAddrMode);

@@ -157,6 +157,9 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             AdrVals[0] = Hi(AdrWord);
             AdrVals[1] = Lo(AdrWord);
             break;
+        default:
+            WrError(ErrNum_UndefOpSizes);
+            goto func_exit;
         }
         if (OK) {
             AdrMode = ModImm;
