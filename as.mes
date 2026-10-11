@@ -1309,6 +1309,34 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgBranchDispRange
+ "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
+ "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
+
+Message ErrMsgShortBSRZero
+ "Kurzes BSR kann Verschiebung 0 nicht kodieren; Wortverschiebung oder automatische Gr&ouml;&szlig;e verwenden"
+ "short BSR cannot encode displacement 0; use a word displacement or automatic size"
+
+Message ErrMsgOperandAlignment
+ "Operandenadresse 0x%lllx muss auf 2 Bytes ausgerichtet sein"
+ "operand address 0x%lllx must be aligned to 2 bytes"
+
+Message ErrMsgInstructionAlignment
+ "Befehlsadresse 0x%lllx muss auf 2 Bytes ausgerichtet sein"
+ "instruction address 0x%lllx must be aligned to 2 bytes"
+
+Message ErrMsgShiftCountRange
+ "Unmittelbare Schiebeanzahl %llld au&szlig;erhalb [1,8]"
+ "immediate shift count %llld outside [1,8]"
+
+Message ErrMsgMemoryShiftSize
+ "Schiebebefehle mit Speicheroperand erfordern Wortgr&ouml;&szlig;e (.W)"
+ "memory-form shifts require word size (.W)"
+
+Message ErrMsgMemoryShiftCount
+ "Schiebebefehle mit Speicheroperand erfordern Anzahl 1 (erhielt %llld)"
+ "memory-form shifts require count 1 (got %llld)"
+
 Message ErrMsgMinCPUSupported
  "ab %s unterst&uuml;tzt"
  "supported by %s and above"

@@ -21,10 +21,27 @@ manual, EXPECT fixtures, translations and source-position tests.
    of the embedded and external catalog configurations (GCC 16.2, Windows).
 
 2. M68K branches, alignment and shifts (D03,D04,D09,D10,D11).
-   Include branch distance/width/base, distinguish reserved zero BSR, show
-   alignment address/requirement, suppress secondary shift-count errors,
-   explain memory-form size restriction. Any new error ID for zero BSR
-   needs documentation and EXPECT-reference review.
+   Implemented: branch displacement/range/PC base and operand location;
+   distinct instruction/operand alignment warnings; immediate count range;
+   memory-shift word-size and count-1 requirements; one primary diagnostic
+   after failed count/register/expression evaluation. All detail follows -x.
+   Short BSR with displacement zero now uses existing error 1371 instead
+   of 1370. No new error number was needed. Documentation references were
+   reviewed; no existing M68K EXPECT fixture referenced this rejection.
+   Other IDs and warning severity are retained. The missing documentation
+   row for existing error 1391 is now included.
+   Forward shift counts exposed stale ImmSymFlags use before those flags
+   were populated. Use the current evaluation's flags, and defer memory
+   count checks on unknown symbols. This intentionally accepts valid forward
+   counts previously rejected as zero; genuinely undefined counts now report
+   the symbol error. Memory counts retain their signed evaluated value for
+   diagnostics rather than displaying a narrowed byte representation.
+   Tests cover one diagnostic per failure, exact values/ranges/locations,
+   branch PC bases +2/+4, integer/FPU/PMMU/ColdFire branches, BSR word/auto
+   forms, BRA-to-NOP warning, boundary bytes, forward shifts, soft ranges,
+   alignment padding/CPU differences and both catalog languages.
+   Validation: all 339 tests pass in each of the embedded and external
+   catalog configurations (GCC 16.2, Windows).
 
 3. M68K address syntax, CPU capabilities and register pairs
    (D05,D06,D07,D08,D22; CPU portion of D02).

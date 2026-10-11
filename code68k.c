@@ -990,13 +990,24 @@ tSymbolSize GetDispLen(LongInt Disp) {
     }
 }
 
-static void ChkEven(LongInt Adr) {
+static void report_m68k_alignment(
+        LargeWord address, Boolean instruction, tStrComp const* p_arg) {
+    char detail[120];
+
+    as_snprintf(
+            detail, sizeof(detail),
+            getmessage(instruction ? Num_ErrMsgInstructionAlignment
+                                   : Num_ErrMsgOperandAlignment), address);
+    WrXErrorPos(ErrNum_AddrNotAligned, detail, &p_arg->Pos);
+}
+
+static void ChkEven(LongInt Adr, tStrComp const* p_arg) {
     switch (pCurrCPUProps->Family) {
     case e68KGen1a:
     case e68KGen1b:
     case eColdfire:
         if (Odd(Adr)) {
-            WrError(ErrNum_AddrNotAligned);
+            report_m68k_alignment((LargeWord)(LongWord)Adr, False, p_arg);
         }
         break;
     default:
@@ -1016,7 +1027,7 @@ static void DecodeAbs(tStrComp const* pArg, tSymbolSize Size, tAdrResult* pResul
 
     if (ValOK) {
         if (!mFirstPassUnknown(Flags) && (OpSize > eSymbolSize8Bit)) {
-            ChkEven(HVal);
+            ChkEven(HVal, pArg);
         }
         HVal16 = HVal;
 
@@ -1085,6 +1096,39 @@ static Boolean check_ea_disp_range(
                         ? (warning ? ErrNum_WUnderRange : ErrNum_UnderRange)
                         : (warning ? ErrNum_WOverRange : ErrNum_OverRange);
     report_ea_disp_range(value, p_type->Min, p_type->Max, error_num, p_arg);
+    return False;
+}
+
+static void report_branch_range(
+        LongInt displacement, LongInt min, LongInt max, unsigned pc_offset,
+        tStrComp const* p_arg) {
+    char detail[160];
+
+    as_snprintf(
+            detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)displacement, (LargeInt)min, (LargeInt)max,
+            (LargeWord)(EProgCounter() + pc_offset));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &p_arg->Pos);
+}
+
+static void report_shift_range(LargeInt value, tErrorNum error_num, tStrComp const* p_arg) {
+    char detail[120];
+
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgShiftCountRange), value);
+    WrXErrorPos(error_num, detail, &p_arg->Pos);
+}
+
+static Boolean check_shift_range(
+        LargeInt value, IntType type, tStrComp const* p_arg, Boolean warning) {
+    tErrorNum error_num;
+
+    if (RangeCheck(value, type)) {
+        return True;
+    }
+    error_num = (value < IntTypeDefs[(int)type].Min)
+                        ? (warning ? ErrNum_WUnderRange : ErrNum_UnderRange)
+                        : (warning ? ErrNum_WOverRange : ErrNum_OverRange);
+    report_shift_range(value, error_num, p_arg);
     return False;
 }
 
@@ -1329,12 +1373,19 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
             }
             break;
         case eSymbolSizeShiftCnt: /* special arg 1..8 */
-            HVal8 = EvalStrIntExpressionWithResult(&ImmArg, UInt4, &eval_result);
+            HVal8 = EvalStrIntExpressionWithRangeCheck(
+                    &ImmArg, UInt4, &eval_result, check_shift_range);
             if (eval_result.OK) {
-                if (mFirstPassUnknown(pResult->ImmSymFlags)) {
+                /* ImmSymFlags is populated only after successful decoding. */
+                if (mFirstPassUnknown(eval_result.Flags)) {
                     HVal8 = 1;
                 }
-                eval_result.OK = ChkRange(HVal8, 1, 8);
+                if ((HVal8 < 1) || (HVal8 > 8)) {
+                    report_shift_range(
+                            HVal8, (HVal8 < 1) ? ErrNum_UnderRange : ErrNum_OverRange,
+                            &ImmArg);
+                    eval_result.OK = False;
+                }
             }
             if (eval_result.OK) {
                 append_adr_vals(pResult, (Word)((Byte)HVal8), 0x0007, eval_result.Flags);
@@ -2735,7 +2786,6 @@ static void DecodeLEA(Word Index) {
 
 static void DecodeShift(Word Index) {
     Boolean ValOK;
-    Byte    HVal8;
     Word    LFlag = (Index >> 2), Op = Index & 3;
 
     if (!ChkArgCnt(1, 2))
@@ -2761,6 +2811,9 @@ static void DecodeShift(Word Index) {
                     AdrResult.AdrMode = ModImm;
                     AdrResult.Vals[0] = 1;
                 }
+                if (AdrResult.AdrMode == ModNone) {
+                    return;
+                }
                 if ((AdrResult.AdrMode == ModData)
                     || ((AdrResult.AdrMode == ModImm) && (Lo(AdrResult.Vals[0]) >= 1)
                         && (Lo(AdrResult.Vals[0]) <= 8))) {
@@ -2778,22 +2831,36 @@ static void DecodeShift(Word Index) {
                 WrError(ErrNum_InvAddrMode);
             } else {
                 if (OpSize != eSymbolSize16Bit) {
-                    WrError(ErrNum_InvOpSize);
+                    WrXErrorPos(
+                            ErrNum_InvOpSize, getmessage(Num_ErrMsgMemoryShiftSize),
+                            &AttrPart.Pos);
                 } else {
+                    LargeInt shift_count;
+
                     WAsmCode[0] = 0xe0c0 | AdrResult.AdrPart | (Op << 9) | (LFlag << 8);
                     CopyAdrVals(1, &AdrResult);
                     if (2 == ArgCnt) {
-                        HVal8 = EvalStrIntExpressionOffs(
+                        tSymbolFlags count_flags;
+
+                        shift_count = EvalStrIntExpressionOffsWithFlags(
                                 &ArgStr[1], !!(*ArgStr[1].str.p_str == '#'), Int8,
-                                &ValOK);
+                                &ValOK, &count_flags);
+                        if (ValOK && mFirstPassUnknown(count_flags)) {
+                            shift_count = 1;
+                        }
                     } else {
-                        HVal8 = 1;
+                        shift_count = 1;
                         ValOK = True;
                     }
-                    if ((ValOK) && (HVal8 == 1)) {
+                    if ((ValOK) && (shift_count == 1)) {
                         CodeLen = 2 + AdrResult.Cnt;
-                    } else {
-                        WrStrErrorPos(ErrNum_Only1, &ArgStr[1]);
+                    } else if (ValOK) {
+                        char detail[120];
+
+                        as_snprintf(
+                                detail, sizeof(detail),
+                                getmessage(Num_ErrMsgMemoryShiftCount), shift_count);
+                        WrXErrorPos(ErrNum_Only1, detail, &ArgStr[1].Pos);
                     }
                 }
             }
@@ -4478,7 +4545,7 @@ static void DecodeBcc(Word CondCode) {
 
                 HVal16 = HVal;
                 if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_range(HVal, -32768, 32767, 2, &ArgStr[1]);
                 } else {
                     /* Code erzeugen */
 
@@ -4496,7 +4563,7 @@ static void DecodeBcc(Word CondCode) {
 
                 HVal8 = HVal;
                 if (!IsDisp8(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_range(HVal, -128, 127, 2, &ArgStr[1]);
                 }
 
                 /* cannot generate short BSR with zero displacement, and BSR cannot
@@ -4504,7 +4571,9 @@ static void DecodeBcc(Word CondCode) {
 
                 else if (
                         (HVal == 0) && IsBSR && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    WrXErrorPos(
+                            ErrNum_JmpDistIsZero, getmessage(Num_ErrMsgShortBSRZero),
+                            &ArgStr[1].Pos);
                 }
 
                 /* Code erzeugen */
@@ -4527,8 +4596,11 @@ static void DecodeBcc(Word CondCode) {
                was requested explicitly: */
 
             else if (!(pCurrCPUProps->SuppFlags & eFlagBranch32)) {
-                WrError(*AttrPart.str.p_str ? ErrNum_InstructionNotSupported
-                                            : ErrNum_JmpDistTooBig);
+                if (*AttrPart.str.p_str) {
+                    WrError(ErrNum_InstructionNotSupported);
+                } else {
+                    report_branch_range(HVal, -32768, 32767, 2, &ArgStr[1]);
+                }
             } else {
                 CodeLen     = 6;
                 WAsmCode[0] = 0x60ff | (CondCode << 8);
@@ -4581,7 +4653,7 @@ static void DecodeDBcc(Word CondCode) {
             HVal -= (EProgCounter() + 2);
             HVal16 = HVal;
             if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_range(HVal, -32768, 32767, 2, &ArgStr[2]);
             } else {
                 tAdrResult AdrResult;
 
@@ -5363,7 +5435,7 @@ static void DecodeFBcc(Word CondCode) {
 
             if ((OpSize == eSymbolSize32Bit) || (OpSize == eSymbolSize16Bit)) {
                 if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_range(HVal, -32768, 32767, 2, &ArgStr[1]);
                 } else {
                     CodeLen     = 4;
                     WAsmCode[0] = 0xf280 | CondCode;
@@ -5412,7 +5484,7 @@ static void DecodeFDBcc(Word CondCode) {
                     WAsmCode[2] = HVal16;
                     set_w_guessed(Flags, 2, 1, 0xffff);
                     if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_range(HVal, -32768, 32767, 4, &ArgStr[2]);
                     } else {
                         CodeLen = 6;
                     }
@@ -5937,7 +6009,7 @@ static void DecodePBcc(Word CondCode) {
 
             if ((OpSize == eSymbolSize32Bit) || (OpSize == eSymbolSize16Bit)) {
                 if (!IsDisp16(HVal) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_range(HVal, -32768, 32767, 2, &ArgStr[1]);
                 } else {
                     CodeLen     = 4;
                     WAsmCode[0] = 0xf080 | CondCode;
@@ -5985,7 +6057,7 @@ static void DecodePDBcc(Word CondCode) {
                     WAsmCode[2] = HVal16;
                     set_w_guessed(Flags, 2, 1, 0xffff);
                     if ((!IsDisp16(HVal)) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_range(HVal, -32768, 32767, 4, &ArgStr[2]);
                     } else {
                         CodeLen = 6;
                     }
@@ -6427,7 +6499,7 @@ static void DecodeCPBCBUSY(Word Code) {
                - (EProgCounter() + 2);
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && !IsDisp16(Dist)) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_range(Dist, -32768, 32767, 2, &ArgStr[1]);
             } else {
                 WAsmCode[0] = Code;
                 WAsmCode[1] = Dist & 0xffff;
@@ -6577,7 +6649,7 @@ static void assure_pc_even(Word index) {
         if (DoPadding) {
             InsertPadding(1, False);
         } else {
-            WrError(ErrNum_AddrNotAligned);
+            report_m68k_alignment((LargeWord)EProgCounter(), True, &OpPart);
         }
     }
 }
