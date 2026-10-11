@@ -1433,6 +1433,18 @@ set_tests_properties(cop4_diagnostics PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
 )
 
+add_test(NAME mico8_diagnostics COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MICO8Diagnostics"
+    -P "${CMAKE_SOURCE_DIR}/tests/mico8_diagnostics.cmake"
+)
+set_tests_properties(mico8_diagnostics PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+)
+
 add_test(NAME tlcs42_diagnostics COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"

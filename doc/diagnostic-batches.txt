@@ -677,3 +677,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     negative/positive endpoints, both placement edges and adjacent accepted
     PCs, forward operands, primary undefined errors, German and prior bytes.
     Validation: all 372 CTest cases pass with embedded/external catalogs.
+
+41. Separate Mico8 ALU optional-register probe bug.
+    Probe ALU source with MustBeReg=False so its existing immediate fallback
+    can run without an earlier invalid-register error. Before: ADD R0,1
+    failed despite MayImm and its Int8 encoder; ROR R0,1 emitted 1445+1350.
+    Now all ten immediate-capable ALU names encode the same golden bytes as
+    their explicit immediate mnemonics, and rotate forms issue one 1350.
+    Tests cover three CPUs, register/immediate aliases, Int8 endpoints and
+    failures, undefined expressions and every ALU/rotate caller.
+    Historical message detail follows separately in tranche 42.
+    Validation: all 373 CTest cases pass with embedded/external catalogs.

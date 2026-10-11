@@ -1448,6 +1448,11 @@
       "file": "codehmcs400.c",
       "issue": "DecodeAdr retains preceding operand/instruction mode after evaluation or RAM range failure, causing secondary errors or stale-mode encoding.",
       "status": "fixed in tranche 37; reset mode before every decode, accepted bytes and primary failures verified"
+    },
+    {
+      "file": "codemic8.c",
+      "issue": "DecodeALU probes source with MustBeReg=True before its immediate fallback, emitting errors for supported immediate operands and duplicate errors for rotate forms.",
+      "status": "fixed in tranche 41; optional register probe restores existing immediate encoder and single rotate rejection"
     }
   ]
 }

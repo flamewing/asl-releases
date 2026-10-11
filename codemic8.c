@@ -147,7 +147,7 @@ static void DecodeALU(Word Index) {
     LongWord  Src, DReg;
 
     if (ChkArgCnt(2, 2) && IsWReg(&ArgStr[1], &DReg, True)) {
-        switch (IsWReg(&ArgStr[2], &Src, True)) {
+        switch (IsWReg(&ArgStr[2], &Src, False)) {
         case eIsReg:
             DAsmCode[0] = pOrder->Code | (DReg << 8) | (Src << 3);
             CodeLen     = 1;
