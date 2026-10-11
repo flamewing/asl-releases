@@ -1565,6 +1565,18 @@ set_tests_properties(xcore_diagnostics PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
 )
 
+add_test(NAME mil1750_diagnostics COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MIL1750Diagnostics"
+    -P "${CMAKE_SOURCE_DIR}/tests/mil1750_diagnostics.cmake"
+)
+set_tests_properties(mil1750_diagnostics PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+)
+
 add_test(NAME ace_diagnostics COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"

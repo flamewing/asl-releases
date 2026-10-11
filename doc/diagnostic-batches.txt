@@ -932,3 +932,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     encoders, retain negative endpoint, reject the next even value for all
     three callers, and cover a forward-defined maximum target.
     Validation: all 384 CTest cases pass with embedded/external catalogs.
+
+62. Complete MIL-STD 1750 historical register/index/branch inventory review.
+    1445 lists actual general/base register sets at the rejected operand.
+    Three index 1350 sites replace terse !R0 with accepted R1..R15 choices.
+    1370 gives unwrapped word displacement, [-128,127] and current PC base.
+    Preserve IDs, literal register parser, bare R/leading-zero acceptance,
+    symbol flags, UInt16 target evaluation and preceding instruction bytes.
+    Tests cover all seven branch callers, both distance endpoints, zero,
+    no-wrap behavior, primary undefined errors, register/base/index sites,
+    source positions, forward targets and preceding accepted encodings.
+    Validation: all 385 CTest cases pass with embedded/external catalogs.

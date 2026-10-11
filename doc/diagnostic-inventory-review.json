@@ -89,8 +89,13 @@
         "ErrNum_InvReg": 2,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All six historical sites reviewed in tranche 62: general R0..R15 and base R12..R15/B12..B15 sets, R1..R15 index sets instead of !R0, and branch displacement [-128,127] from current word-address PC. Preserve literal register parsing (including bare R and leading zeros), unwrapped UInt16 targets, flags and IDs. Nearby ChkRange calls already expose evaluated immediate bound, and condition rejection locates its operand; no unrelated encoding change."
     },
     "code1802.c": {
       "candidate_counts": {

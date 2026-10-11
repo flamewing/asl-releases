@@ -17,6 +17,9 @@
 
 #include "code1750.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -96,11 +99,17 @@ static Boolean DecodeBaseReg(char const* pAsc, Word* pResult) {
     return True;
 }
 
+static void WrOperandChoices(tErrorNum error, unsigned index, char const* choices) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &ArgStr[index].Pos);
+}
+
 static Boolean DecodeArgReg(unsigned Index, Word* pResult) {
     Boolean Result = DecodeReg(ArgStr[Index].str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
+        WrOperandChoices(ErrNum_InvReg, Index, "R0..R15");
     }
     return Result;
 }
@@ -109,7 +118,7 @@ static Boolean DecodeArgBaseReg(unsigned Index, Word* pResult) {
     Boolean Result = DecodeBaseReg(ArgStr[Index].str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index]);
+        WrOperandChoices(ErrNum_InvReg, Index, "R12..R15, B12..B15");
     }
     return Result;
 }
@@ -127,7 +136,7 @@ static Boolean DecodeAdr(int StartIdx, int StopIdx) {
         if (!DecodeArgReg(StartIdx + 1, &AdrReg))
             ;
         else if (AdrReg == 0) {
-            WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[StartIdx + 1].Pos);
+            WrOperandChoices(ErrNum_InvAddrMode, StartIdx + 1, "R1..R15");
         } else {
             OK = True;
         }
@@ -337,7 +346,7 @@ static void DecodeBX(Word Code) {
     else if (!DecodeArgReg(2, &Rx))
         ;
     else if (0 == Rx) {
-        WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[2].Pos);
+        WrOperandChoices(ErrNum_InvAddrMode, 2, "R1..R15");
     } else {
         PutCode(Code | (Br << 8) | Rx);
     }
@@ -352,7 +361,10 @@ static void DecodeICR(Word Code) {
 
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((Diff < -128) || (Diff > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                            Diff, (LargeInt)-128, (LargeInt)127, (LargeWord)EProgCounter());
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 PutCode(Code | (Diff & 0xff));
             }
@@ -457,7 +469,7 @@ static void DecodeXIO(Word Code) {
             if (!DecodeArgReg(3, &Ri))
                 ;
             else if (Ri == 0) {
-                WrXErrorPos(ErrNum_InvAddrMode, "!R0", &ArgStr[3].Pos);
+                WrOperandChoices(ErrNum_InvAddrMode, 3, "R1..R15");
             } else {
                 PutCode(Code | (Ra << 4) | Ri);
                 PutCode(Cmd);
