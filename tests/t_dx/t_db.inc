@@ -15,7 +15,7 @@
 	db	256
 	endexpect
 	db	-128
-	expect	1320
+	expect	1315
 	db	-129
 	endexpect
 	db	10,20,30

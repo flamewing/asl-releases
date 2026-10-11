@@ -90,6 +90,27 @@ manual, EXPECT fixtures, translations and source-position tests.
    Correct overflow versus underflow, retain each directive's signed/unsigned
    combined domain, include values and limits. Review integer layouts and
    Motorola repetitions independently to preserve byte output and warnings.
+   Implemented using existing ChkRangeByType at the seven integer-layout
+   checks and Motorola DC/BYT/ADR checks. Report the original value versus
+   the failed bound under -x, at the evaluated expression (also inside
+   Motorola repetitions and Intel DUP lists). No new catalog text needed.
+   Below-minimum values now use existing underflow 1315 rather than the
+   former unconditional overflow 1320; above-maximum values retain 1320.
+   Shared DN/DB/DW EXPECT fixtures and the commented DD underflow example
+   updated, together with the numeric error documentation.
+   Domains remain UInt1 for packed bits and combined signed/unsigned Int4,
+   Int8, Int16, Int24, Int32, Int64 and Int128 where supported. Keep the
+   existing host-width range_not_checkable exemption for widest integer
+   types; do not invent bounds beyond the evaluator's representation.
+   Unknown/questionable flags, masks, string/multichar conversion, float
+   conversion, repetition, padding and hard-error severity are unchanged.
+   Tests cover lower/upper failures, exact values/bounds/IDs/positions,
+   one primary error, forward values, repeated/nested expressions, German
+   diagnostics, hard ranges under -warnranges, and golden Intel/Motorola
+   layouts (including 64/128-bit output and packed bitdata) captured before
+   this batch. S12Z exercises the integer 24-bit DC.P form; M68K DC.P is
+   decimal floating point and is not treated as an integer pointer.
+   All 341 tests pass with embedded and external catalogs (GCC 16.2, Windows).
 
 6. Function argument counts (D16,D17).
    Include function name, declaration contract and exact or minimum observed

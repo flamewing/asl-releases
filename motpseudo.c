@@ -137,8 +137,7 @@ void DecodeMotoBYT(Word flags) {
                 case TempInt:
                 ToInt:
                     if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                        && !RangeCheck(t.Contents.Int.Value, Int8)) {
-                        WrStrErrorPos(ErrNum_OverRange, &Arg);
+                        && !ChkRangeByType(t.Contents.Int.Value, Int8, &Arg)) {
                         OK = False;
                     } else if (SetMaxCodeLen(CodeLen + Rep)) {
                         WrError(ErrNum_CodeOverflow);
@@ -270,8 +269,7 @@ void DecodeMotoADR(Word flags) {
                         Res.Contents.Int.Value &= 0xffff;
                     }
                     if (!mSymbolQuestionable(Res.Flags)
-                        && !RangeCheck(Res.Contents.Int.Value, Int16)) {
-                        WrError(ErrNum_OverRange);
+                        && !ChkRangeByType(Res.Contents.Int.Value, Int16, &Arg)) {
                         Res.Typ = TempNone;
                     }
                     Cnt = 1;
@@ -1159,8 +1157,7 @@ void DecodeMotoDC(Word flags) {
                     }
                 } else if (
                         !mFirstPassUnknownOrQuestionable(t.Flags)
-                        && !RangeCheck(t.Contents.Int.Value, IntTypeEnum)) {
-                    WrError(ErrNum_OverRange);
+                        && !ChkRangeByType(t.Contents.Int.Value, IntTypeEnum, &Arg)) {
                     OK = False;
                 } else if (SetMaxCodeLen(CodeLen + (Rep * WSize))) {
                     WrError(ErrNum_CodeOverflow);

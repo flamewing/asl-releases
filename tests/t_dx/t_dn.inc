@@ -42,6 +42,6 @@
 	expect	360
 	dn	-8
 	endexpect
-	expect	1320
+	expect	1315
 	dn	-9
 	endexpect

@@ -12,7 +12,7 @@
 ;	dd	4294967296
 ;	endexpect
 	dd	-2147483648
-;	expect	1320		; TODO: leave out until we have common large int arithmetic
+;	expect	1315		; TODO: leave out until we have common large int arithmetic
 ;	dd	-2147483649
 ;	endexpect
 	dd	4 dup(10,20,30)	; all three values duplicated

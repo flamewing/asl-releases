@@ -562,9 +562,8 @@ static Boolean LayoutBit(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         if (mFirstPassUnknown(t.Flags)) {
             t.Contents.Int.Value &= 0x1;
         }
-        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int.Value, UInt1)) {
-            WrStrErrorPos(ErrNum_OverRange, pExpr);
-        } else {
+        if (mSymbolQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, UInt1, pExpr)) {
             if (!pCtx->Put1I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
@@ -780,9 +779,8 @@ static Boolean LayoutNibble(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         if (mFirstPassUnknown(t.Flags)) {
             t.Contents.Int.Value &= 0xf;
         }
-        if (!mSymbolQuestionable(t.Flags) && !RangeCheck(t.Contents.Int.Value, Int4)) {
-            WrStrErrorPos(ErrNum_OverRange, pExpr);
-        } else {
+        if (mSymbolQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, Int4, pExpr)) {
             if (!pCtx->Put4I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
@@ -992,11 +990,8 @@ static Boolean LayoutByte(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         }
         if (!allow_int) {
             WrStrErrorPos(ErrNum_StringButInt, pExpr);
-        } else if (
-                !mSymbolQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int.Value, Int8)) {
-            WrStrErrorPos(ErrNum_OverRange, pExpr);
-        } else {
+        } else if (mSymbolQuestionable(t.Flags)
+                   || ChkRangeByType(t.Contents.Int.Value, Int8, pExpr)) {
             if (!pCtx->Put8I(t.Contents.Int.Value, t.Flags, pCtx)) {
                 LEAVE;
             }
@@ -1332,10 +1327,8 @@ static Boolean LayoutWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             if (mFirstPassUnknown(t.Flags)) {
                 t.Contents.Int.Value &= 0xffff;
             }
-            if (!mSymbolQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int.Value, Int16)) {
-                WrStrErrorPos(ErrNum_OverRange, pExpr);
-            } else {
+            if (mSymbolQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, Int16, pExpr)) {
                 if (!pCtx->Put16I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
@@ -1797,10 +1790,8 @@ static Boolean LayoutDoubleWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) 
             if (mFirstPassUnknown(t.Flags)) {
                 t.Contents.Int.Value &= 0xfffffffful;
             }
-            if (!mSymbolQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int.Value, Int32)) {
-                WrStrErrorPos(ErrNum_OverRange, pExpr);
-            } else {
+            if (mSymbolQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, Int32, pExpr)) {
                 if (!pCtx->Put32I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
@@ -2399,10 +2390,8 @@ static Boolean LayoutQuadWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (pCtx->Put64I) {
-            if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int.Value, Int64)) {
-                WrStrErrorPos(ErrNum_OverRange, pExpr);
-            } else {
+            if (mFirstPassUnknownOrQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, Int64, pExpr)) {
                 if (!pCtx->Put64I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }
@@ -3111,10 +3100,8 @@ static Boolean LayoutOctaWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
     case TempInt:
     ToInt:
         if (pCtx->Put128I) {
-            if (!mFirstPassUnknownOrQuestionable(t.Flags)
-                && !RangeCheck(t.Contents.Int.Value, Int128)) {
-                WrStrErrorPos(ErrNum_OverRange, pExpr);
-            } else {
+            if (mFirstPassUnknownOrQuestionable(t.Flags)
+                || ChkRangeByType(t.Contents.Int.Value, Int128, pExpr)) {
                 if (!pCtx->Put128I(t.Contents.Int.Value, t.Flags, pCtx)) {
                     LEAVE;
                 }

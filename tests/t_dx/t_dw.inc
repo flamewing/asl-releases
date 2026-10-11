@@ -15,7 +15,7 @@
 	dw	65536
 	endexpect
 	dw	-32768
-	expect	1320
+	expect	1315
 	dw	-32769
 	endexpect
 	dw	10,20,30
