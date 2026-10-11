@@ -1129,3 +1129,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     it. Tests cover four cores, operand masks, capability restrictions, typed
     RAM/IO overflow, bit counts, structure syntax and preceding encodings.
     Validation: all 392 CTest cases pass with embedded/external catalogs.
+
+81. Separate Padauk negative typed-address encoding bug.
+    Reproduced MOV A,ram-1 and MOV A,port-1 with zero typed symbols emitting
+    0xffff words. Both implicit typed address paths now check the lower bound
+    as well as the upper one, reporting positioned 1315 with actual value and
+    selected interval below zero. Unknown provisional negative addresses use
+    the existing segment-mask handling. Preserve signed immediates and valid
+    typed-address bytes. Tests cover both spaces on all four cores, rejection
+    without emitted words, zero/upper endpoints, MOV A,-1 and forward symbols.
+    Validation: all 392 CTest cases pass with embedded/external catalogs.

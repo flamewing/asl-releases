@@ -1639,6 +1639,11 @@
       "file": "codepdk.c",
       "issue": "ADDC/SUBC and IDXM two-operand decoders silently omit the instruction when neither operand is A.",
       "status": "fixed in tranche 79; diagnose required A,mem / mem,A pair before evaluation; all four core families verified, valid bytes preserved"
+    },
+    {
+      "file": "codepdk.c",
+      "issue": "Implicit typed DATA/IO address paths check only the upper limit; a typed -1 becomes 0xffff and corrupts the whole instruction word while assembly succeeds.",
+      "status": "fixed in tranche 81; reject known negative typed addresses with positioned 1315/full interval, mask unknown provisional negative addresses consistently with existing upper handling; signed immediates and valid endpoint bytes preserved"
     }
   ]
 }

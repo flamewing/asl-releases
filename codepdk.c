@@ -89,7 +89,7 @@ static void WrTypedAddressRange(tStrComp const* operand, char const* space,
     char detail[200];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
                 space, (LargeInt)value, (LargeInt)0, limit);
-    WrXErrorPos(ErrNum_OverRange, detail, &operand->Pos);
+    WrXErrorPos((value < 0) ? ErrNum_UnderRange : ErrNum_OverRange, detail, &operand->Pos);
 }
 
 /*!------------------------------------------------------------------------
@@ -210,10 +210,10 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
     if (EvalResult.OK) {
         if (EvalResult.AddrSpaceMask == 1 << SegIO) {
             if (mFirstPassUnknown(EvalResult.Flags)
-                && (AddrOrImm > (LongInt)SegLimits[SegIO])) {
+                && ((AddrOrImm < 0) || (AddrOrImm > (LongInt)SegLimits[SegIO]))) {
                 AddrOrImm &= SegLimits[SegIO];
             }
-            if (AddrOrImm > (LongInt)SegLimits[SegIO]) {
+            if ((AddrOrImm < 0) || (AddrOrImm > (LongInt)SegLimits[SegIO])) {
                 WrTypedAddressRange(pArg, "IO", AddrOrImm, SegLimits[SegIO]);
             } else {
                 AdrMode  = ModIO;
@@ -221,10 +221,10 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
             }
         } else if (EvalResult.AddrSpaceMask == 1 << SegData) {
             if (mFirstPassUnknown(EvalResult.Flags)
-                && (AddrOrImm > (LongInt)SegLimits[SegData])) {
+                && ((AddrOrImm < 0) || (AddrOrImm > (LongInt)SegLimits[SegData]))) {
                 AddrOrImm &= SegLimits[SegData];
             }
-            if (AddrOrImm > (LongInt)SegLimits[SegData]) {
+            if ((AddrOrImm < 0) || (AddrOrImm > (LongInt)SegLimits[SegData])) {
                 WrTypedAddressRange(pArg, "DATA", AddrOrImm, SegLimits[SegData]);
             } else {
                 AdrMode  = ModMem;
