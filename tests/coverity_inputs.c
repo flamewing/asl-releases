@@ -292,7 +292,9 @@ int main(int argc, char** argv) {
         } else if (!strcmp(argv[2], "invalid-format")) {
             char buffer[64];
             char const* format = "%q";
-            as_snprintf(buffer, sizeof(buffer), format);
+            /* Keep the deliberately invalid format nonliteral, but provide
+               an unused argument for NDK's -Werror=format-security check. */
+            as_snprintf(buffer, sizeof(buffer), format, 0);
         }
         return 1;
     }
