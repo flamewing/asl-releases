@@ -642,3 +642,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     immediate-expression errors. Golden bytes and forward operands verify
     accepted code is unchanged. Historical diagnostic detail follows next.
     Validation: all 370 CTest cases pass with embedded/external catalogs.
+
+38. Complete HMCS400 historical RAM/operand inventory review.
+    1320 reports evaluated RAM address and selected CPU interval at the
+    operand. Shared 1350 lists mask-specific register, memory, immediate
+    and MR forms; one-operand bit forms explicitly require CA.
+    Retain existing IDs, all three CPU limits, first-pass predicates and
+    W's two-bit immediate size selection. Tests cover direct helper callers,
+    representative LD/XCH/CP masks, all bit callers, size boundaries, three
+    CPU endpoint encodings, forward addresses and preceding bytes.
+    Validation: all 370 CTest cases pass with embedded/external catalogs.

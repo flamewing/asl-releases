@@ -12,6 +12,9 @@
 
 #include "codehmcs400.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -148,7 +151,11 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
     AdrVal = EvalStrIntExpressionWithResult(pArg, DataIntType, &EvalResult);
     if (EvalResult.OK) {
         if (!mFirstPassUnknown(EvalResult.Flags) && (AdrVal > SegLimits[SegData])) {
-            WrError(ErrNum_OverRange);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                    OpPart.str.p_str, (LargeInt)AdrVal,
+                    (LargeInt)0, (LargeInt)SegLimits[SegData]);
+            WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
         } else {
             AdrMode = ModDir;
             AdrVal &= IntTypeDefs[DataIntType].Mask;
@@ -160,7 +167,24 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
 AdrFound:
 
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
-        WrError(ErrNum_InvAddrMode);
+        static char const* const forms_by_mode[] = {
+            "A", "B", "X", "Y", "W", "M", "M+", "M-", "SPX", "SPY",
+            "#expr", "expr", "MR0..MR15"
+        };
+        char forms[160] = "", detail[240];
+        unsigned mode;
+        for (mode = 0; mode < as_array_size(forms_by_mode); mode++) {
+            if (!(Mask & (1 << mode))) {
+                continue;
+            }
+            strmaxcat(forms, forms_by_mode[mode], sizeof(forms));
+            strmaxcat(forms, ", ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }
@@ -681,7 +705,9 @@ static void DecodeBit(Word Code) {
         if (!as_strcasecmp(ArgStr[1].str.p_str, "CA")) {
             WAsmCode[CodeLen++] = Hi(Code);
         } else {
-            WrError(ErrNum_InvAddrMode);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "CA");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         }
     } else if (ChkArgCnt(2, 2)) {
         Boolean  OK;

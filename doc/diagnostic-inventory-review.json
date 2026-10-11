@@ -892,8 +892,12 @@
         "ErrNum_InvAddrMode": 2,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 38: three historical candidates now state actual RAM interval, mask-specific forms, or CA bit operand. Existing IDs, CPU limits, size selection and unknown-symbol predicate retained; stale-mode bug handled separately in tranche 37."
     },
     "codeimp16.c": {
       "candidate_counts": {
