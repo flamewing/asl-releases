@@ -515,8 +515,8 @@ Message ErrMsgJmpDistIsZero
  "jump distance is zero"
 
 Message ErrMsgDistIsOdd
- "Sprungdistanz ist ungerade"
- "jump distance is odd"
+ "Sprungziel oder Sprungdistanz ist nicht korrekt ausgerichtet"
+ "jump target or displacement is not properly aligned"
 
 Message ErrMsgSkipTargetMismatch
  "Skip-Ziel passt nicht"
@@ -1871,3 +1871,35 @@ Message ErrMsgTooManyComponents
 Message ErrMsgUnsupportedScale
  "Indexskalierung %u wird von der gew&auml;hlten CPU nicht unterst&uuml;tzt"
  "index scale %u is unsupported by the selected CPU"
+
+Message ErrMsgAutoUpdateRange
+ "Auto-Update-Anzahl %llld au&szlig;erhalb [-8,8]"
+ "auto-update count %llld outside [-8,8]"
+
+Message ErrMsgBranchAddressAlignment
+ "Absolute Sprungadresse %llld muss ein Vielfaches von 4 sein"
+ "absolute branch address %llld must be a multiple of 4"
+
+Message ErrMsgBranchDisplacementAlignment
+ "Sprungdistanz %llld muss ein Vielfaches von 4 sein"
+ "branch displacement %llld must be a multiple of 4"
+
+Message ErrMsgBranchAddressRange
+ "Absolute Sprungadresse %llld au&szlig;erhalb [%llld,%llld]; muss ein Vielfaches von 4 sein"
+ "absolute branch address %llld outside [%llld,%llld]; must be a multiple of 4"
+
+Message ErrMsgBranchFieldRange
+ "Sprungdistanz %llld au&szlig;erhalb [%llld,%llld]; muss ein Vielfaches von 4 sein"
+ "branch displacement %llld outside [%llld,%llld]; must be a multiple of 4"
+
+Message ErrMsgPageMismatch
+ "Adressen 0x%lllx (Seite 0x%lllx) und 0x%lllx (Seite 0x%lllx) auf verschiedenen Seiten; Seitengr&ouml;&szlig;e 0x%lllx"
+ "addresses 0x%lllx (page 0x%lllx) and 0x%lllx (page 0x%lllx) are on different pages; page size 0x%lllx"
+
+Message ErrMsg504Placement
+ "AJMP/ACALL auf 80C504 darf nicht bei 0x%lllx beginnen (Offset 0x7fe in einer 2-KiB-Seite)"
+ "AJMP/ACALL on 80C504 cannot start at 0x%lllx (offset 0x7fe in a 2-KiB page)"
+
+Message ErrMsgPositiveDimension
+ "Arraydimension 0 muss mindestens 1 sein"
+ "array dimension 0 must be at least 1"

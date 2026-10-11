@@ -21,6 +21,8 @@
 #include "as_endian.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "as.rsc"
+#include "nlmessages.h"
 #include "headids.h"
 #include "intpseudo.h"
 #include "onoff_common.h"
@@ -1107,6 +1109,25 @@ static void DecodeCMPI_CMPLI(Word Code) {
 
 /* Spruenge */
 
+static void report_branch_constraint(
+        LongInt value, LongInt minimum, LongInt maximum, Word code,
+        tErrorNum error, tStrComp const* arg) {
+    char detail[240];
+    Boolean absolute = !!(code & 2);
+    if (error == ErrNum_DistIsOdd) {
+        as_snprintf(detail, sizeof(detail),
+                getmessage(absolute ? Num_ErrMsgBranchAddressAlignment
+                                    : Num_ErrMsgBranchDisplacementAlignment),
+                (LargeInt)value);
+    } else {
+        as_snprintf(detail, sizeof(detail),
+                getmessage(absolute ? Num_ErrMsgBranchAddressRange
+                                    : Num_ErrMsgBranchFieldRange),
+                (LargeInt)value, (LargeInt)minimum, (LargeInt)maximum);
+    }
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
 static void DecodeB_BL_BA_BLA(Word Code) {
     LongWord     LCode = Code;
     LongInt      Dist;
@@ -1120,11 +1141,13 @@ static void DecodeB_BL_BA_BLA(Word Code) {
                 Dist -= EProgCounter();
             }
             if (!mSymbolQuestionable(Flags) && (Dist > 0x1ffffff)) {
-                WrError(ErrNum_OverRange);
+                report_branch_constraint(Dist, -0x2000000l, 0x1fffffcl, Code,
+                        ErrNum_OverRange, &ArgStr[1]);
             } else if (!mSymbolQuestionable(Flags) && (Dist < -0x2000000l)) {
-                WrError(ErrNum_UnderRange);
+                report_branch_constraint(Dist, -0x2000000l, 0x1fffffcl, Code,
+                        ErrNum_UnderRange, &ArgStr[1]);
             } else if ((Dist & 3) != 0) {
-                WrError(ErrNum_DistIsOdd);
+                report_branch_constraint(Dist, 0, 0, Code, ErrNum_DistIsOdd, &ArgStr[1]);
             } else {
                 or_d_guessed(Flags, 0, 1, 0x03fffffc);
                 PutCode((TO_U32(18) << 26) + (Dist & 0x03fffffc) + LCode);
@@ -1155,11 +1178,13 @@ static void DecodeBC_BCL_BCA_BCLA(Word Code) {
                         Dist -= EProgCounter();
                     }
                     if (!mSymbolQuestionable(Flags) && (Dist > 0x7fff)) {
-                        WrError(ErrNum_OverRange);
+                        report_branch_constraint(Dist, -0x8000l, 0x7ffcl, Code,
+                                ErrNum_OverRange, &ArgStr[3]);
                     } else if (!mSymbolQuestionable(Flags) && (Dist < -0x8000l)) {
-                        WrError(ErrNum_UnderRange);
+                        report_branch_constraint(Dist, -0x8000l, 0x7ffcl, Code,
+                                ErrNum_UnderRange, &ArgStr[3]);
                     } else if ((Dist & 3) != 0) {
-                        WrError(ErrNum_DistIsOdd);
+                        report_branch_constraint(Dist, 0, 0, Code, ErrNum_DistIsOdd, &ArgStr[3]);
                     } else {
                         or_d_guessed(src1_flags, 0, 1, 0x1f << 21);
                         or_d_guessed(src2_flags, 0, 1, 0x1f << 16);

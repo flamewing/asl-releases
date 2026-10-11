@@ -541,22 +541,37 @@ int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkSamePage(LargeWord Addr1, LargeWord Addr2, unsigned PageBits)
+ * \fn     ChkSamePagePos(CurrAddr, DestAddr, PageBits, DestFlags, p_comp)
  * \brief  check whether two addresses are of same page
  * \param  CurrAddr, DestAddr addresses to check
  * \param  PageBits page size in bits
  * \param  DestFlags symbol flags of DestAddr
+ * \param  p_comp optional source component for the diagnostic
  * \return TRUE if OK
  * ------------------------------------------------------------------------ */
 
-Boolean ChkSamePage(
+Boolean ChkSamePagePos(
         LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits,
-        tSymbolFlags DestFlags) {
+        tSymbolFlags DestFlags, const struct sStrComp* p_comp) {
     LargeWord Mask   = ~((1ul << PageBits) - 1);
     Boolean   Result = ((CurrAddr & Mask) == (DestAddr & Mask))
                        || mFirstPassUnknownOrQuestionable(DestFlags);
     if (!Result) {
-        WrError(ErrNum_JmpTargOnDiffPage);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPageMismatch),
+                CurrAddr, CurrAddr & Mask, DestAddr, DestAddr & Mask,
+                (LargeWord)1 << PageBits);
+        if (p_comp) {
+            WrXErrorPos(ErrNum_JmpTargOnDiffPage, detail, &p_comp->Pos);
+        } else {
+            WrXError(ErrNum_JmpTargOnDiffPage, detail);
+        }
     }
     return Result;
+}
+
+Boolean ChkSamePage(
+        LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits,
+        tSymbolFlags DestFlags) {
+    return ChkSamePagePos(CurrAddr, DestAddr, PageBits, DestFlags, NULL);
 }

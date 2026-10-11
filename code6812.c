@@ -23,6 +23,8 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "as.rsc"
+#include "nlmessages.h"
 #include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
@@ -496,6 +498,9 @@ static adr_mode_t DecodeAdr(
             } else {
                 AdrWord = EvalStrIntExpressionWithFlags(
                         &ArgStr[Start], SInt8, &OK, &p_adr_vals->symflags);
+                if (!OK) {
+                    goto chk;
+                }
                 if (mFirstPassUnknown(p_adr_vals->symflags)) {
                     AdrWord = 1;
                 }
@@ -507,10 +512,12 @@ static adr_mode_t DecodeAdr(
                     p_adr_vals->values[0] = (p_adr_vals->values[0] << 6);
                     p_adr_vals->count     = 1;
                     adr_mode              = ModIdx;
-                } else if (AdrWord > 8) {
-                    WrError(ErrNum_OverRange);
-                } else if (AdrWord < -8) {
-                    WrError(ErrNum_UnderRange);
+                } else if (AdrWord > 8 || AdrWord < -8) {
+                    char detail[120];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAutoUpdateRange),
+                            (LargeInt)AdrWord);
+                    WrXErrorPos(AdrWord > 8 ? ErrNum_OverRange : ErrNum_UnderRange,
+                            detail, &ArgStr[Start].Pos);
                 } else {
                     if (AdrWord < 0) {
                         DecFlag = !DecFlag;

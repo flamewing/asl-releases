@@ -63,7 +63,28 @@ manual, EXPECT fixtures, translations and source-position tests.
 4. Other numeric/page/placement checks (D12,D13,D14,D15,D19).
    HC12 auto-update domain, PowerPC branch bounds and four-byte alignment,
    shared page context, 80C504 placement rule and positive array dimensions.
-   Each architecture needs its own units, base, flags and boundary cases.
+   Implemented with English/German detail under -x and source positions.
+   IDs 1315/1320, 1375, 1900 and 1910 remain unchanged. The main text for
+   1375 now describes misalignment rather than asserting an odd distance;
+   PowerPC details distinguish absolute addresses from relative displacement,
+   show aligned field endpoints and require multiples of four. Existing
+   range/alignment check order and unknown-symbol behavior are preserved.
+   HC12 reports its [-8,8] auto-update domain and stops after failed count
+   evaluation. Zero still produces ordinary indexed addressing. Structures
+   report that dimension zero must be at least one, retaining UInt32 checks
+   and first-pass evaluation requirements.
+   ChkSamePagePos accepts optional operand context; ChkSamePage remains a
+   compatibility wrapper. Both addresses/page bases and the page size are
+   reported without assuming caller argument order. MCS-51 callers supply
+   operand positions, keeping their original current/next-PC reference.
+   80C504 AJMP/ACALL identifies the instruction address and forbidden page
+   offset. Automatic short/long instruction selection is unchanged.
+   Numeric documentation and EXPECT references reviewed; no IDs renumbered.
+   Tests cover exact IDs/details/positions, single errors, independent PPC
+   field bounds/alignment, HC12 counts, page boundaries and the legacy
+   wrapper, 80C504 neighbors, structures, forward symbols, translations and
+   golden byte output captured from the previous build. All 340 tests pass
+   with embedded and external catalogs (GCC 16.2, Windows).
 
 5. Data-directive range reporting (D18).
    Correct overflow versus underflow, retain each directive's signed/unsigned

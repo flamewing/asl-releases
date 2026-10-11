@@ -25,6 +25,8 @@
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
+#include "as.rsc"
+#include "nlmessages.h"
 #include "fileformat.h"
 #include "headids.h"
 #include "intformat.h"
@@ -1474,16 +1476,19 @@ static void DecodeABranch(Word Index) {
         if (EvalResult.OK) {
             ChkSpace(SegCode, EvalResult.AddrSpaceMask);
             if (MomCPU == CPU80C390) {
-                if (ChkSamePage(EProgCounter() + 3, AdrLong, 19, EvalResult.Flags)) {
+                if (ChkSamePagePos(EProgCounter() + 3, AdrLong, 19, EvalResult.Flags, &ArgStr[1])) {
                     append_abranch19_and_guess(
                             0x01 + (Index << 4), AdrLong, EvalResult.Flags);
                     TransferRelocs(ProgCounter() - 3, RelocTypeABranch19);
                 }
             } else {
-                if (!ChkSamePage(EProgCounter(), AdrLong, 11, EvalResult.Flags))
+                if (!ChkSamePagePos(EProgCounter(), AdrLong, 11, EvalResult.Flags, &ArgStr[1]))
                     ;
                 else if (Chk504(EProgCounter())) {
-                    WrError(ErrNum_NotOnThisAddress);
+                    char detail[160];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg504Placement),
+                            (LargeWord)EProgCounter());
+                    WrXErrorPos(ErrNum_NotOnThisAddress, detail, &OpPart.Pos);
                 } else {
                     append_abranch11_and_guess(
                             0x01 + (Index << 4), AdrLong, EvalResult.Flags);
@@ -1527,7 +1532,7 @@ static void DecodeLBranch(Word Index) {
                 TransferRelocs(ProgCounter() - 3, RelocTypeB24);
             } else {
                 if ((MomCPU >= CPU80251)
-                    && !ChkSamePage(EProgCounter() + 3, AdrLong, 16, EvalResult.Flags))
+                    && !ChkSamePagePos(EProgCounter() + 3, AdrLong, 16, EvalResult.Flags, &ArgStr[1]))
                     ;
                 else {
                     PutCode(0x02 + (Index << 4));
@@ -1645,7 +1650,7 @@ static void DecodeCALL(Word Index) {
                 TransferRelocs(ProgCounter() - 2, RelocTypeABranch11);
             } else if (MomCPU < CPU8051) {
                 WrError(ErrNum_JmpTargOnDiffPage);
-            } else if (ChkSamePage(AdrLong, EProgCounter() + 3, 16, Flags)) {
+            } else if (ChkSamePagePos(AdrLong, EProgCounter() + 3, 16, Flags, &ArgStr[1])) {
                 PutCode(0x12);
                 append_word_and_guess(AdrLong, Flags);
             }

@@ -585,7 +585,8 @@ void ExpandStruct(PStructRec StructRec, char const* p_struct_name) {
                 goto func_exit;
             }
             if (dimensions[DimensionCnt].Dimension <= 0) {
-                WrStrErrorPos(ErrNum_UnderRange, &Arg);
+                WrXErrorPos(ErrNum_UnderRange,
+                        getmessage(Num_ErrMsgPositiveDimension), &Arg.Pos);
                 goto func_exit;
             }
             DimensionCnt++;

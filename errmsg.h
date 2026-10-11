@@ -370,6 +370,10 @@ extern int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
 #define ChkExactCPUMask(CPUMask, FirstCPU) \
     ChkExactCPUMaskExt(CPUMask, FirstCPU, ErrNum_InstructionNotSupported)
 
+extern Boolean ChkSamePagePos(
+        LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits,
+        tSymbolFlags DestFlags, const struct sStrComp* p_comp);
+
 extern Boolean ChkSamePage(
         LargeWord CurrAddr, LargeWord DestAddr, unsigned PageBits,
         tSymbolFlags DestFlags);
