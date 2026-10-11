@@ -11,6 +11,9 @@
 
 #include "code1802.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -82,6 +85,13 @@ static void DecodeReg(Word Index) {
     }
 }
 
+static void report_operand_range(tErrorNum error, LargeInt value, LargeInt minimum, LargeInt maximum) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+            OpPart.str.p_str, value, minimum, maximum);
+    WrXErrorPos(error, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeRegNoZero(Word Index) {
     tOrder const* pOrder = RegNoZeroOrders + Index;
 
@@ -94,7 +104,7 @@ static void DecodeRegNoZero(Word Index) {
         if (!OK) {
             CodeLen = 0;
         } else if (!mFirstPassUnknown(Flags) && (0 == Reg)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            report_operand_range(ErrNum_InvReg, Reg, 1, 15);
             CodeLen = 0;
         } else {
             BAsmCode[CodeLen - 1] |= Reg;
@@ -225,7 +235,7 @@ static void DecodeIO(Word Index) {
                 BAsmCode[0] = 1;
             }
             if (BAsmCode[0] == 0) {
-                WrError(ErrNum_UnderRange);
+                report_operand_range(ErrNum_UnderRange, BAsmCode[0], 1, 7);
             } else {
                 BAsmCode[0] |= pOrder->Code;
                 CodeLen = 1;

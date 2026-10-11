@@ -1313,6 +1313,10 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgOperandChoices
+ "Operand muss %s sein"
+ "operand must be %s"
+
 Message ErrMsgPICTargetRange
  "PIC-Wortziel %llld au&szlig;erhalb [0,%llld] f&uuml;r %s"
  "PIC word target %llld outside [0,%llld] for %s"

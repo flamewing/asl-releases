@@ -507,3 +507,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     detail, forward/undefined targets, vector syntax variants, signed
     coordinates, accepted endpoints and preceding golden encodings.
     Validation: all 361 CTest cases pass with embedded/external catalogs.
+
+27. Complete KCPSM3, 1802 and Nanoprocessor fixed operand review.
+    Both KCPSM3 historical mode rejections retain 1350 and identify the
+    required ENABLE / DISABLE or INTERRUPT keyword at the operand.
+    1802 LDN's excluded register zero retains 1445 and reports [1,15];
+    OUT/INP's zero port retains 1315 and reports [1,7] at the operand.
+    Nanoprocessor OTA/OTR excluded device 15 and direct-control value 7
+    retain 1320 with actual value and [0,14]/[0,6]. Existing evaluator types,
+    first-pass rules, instruction restrictions and error order are retained.
+    Tests cover every caller, all seven 1802-family CPUs, source positions,
+    single primary failures, translations, accepted endpoints, forward
+    registers, still-valid INA 15 and prior instruction bytes.
+    Validation: all 362 CTest cases pass with embedded/external catalogs.

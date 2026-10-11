@@ -12,6 +12,9 @@
 
 #include "codenano.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -109,6 +112,13 @@ static void DecodeRegImm(Word Index) {
     }
 }
 
+static void report_operand_range(Word value, Word maximum) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+            OpPart.str.p_str, (LargeInt)value, (LargeInt)0, (LargeInt)maximum);
+    WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeDev(Word Index) {
     if (ChkArgCnt(1, 1)) {
         Word    dev;
@@ -120,7 +130,7 @@ static void DecodeDev(Word Index) {
         }
         if (Index == 0x50 && dev == 15) /* OTA 15 not allowed */
         {
-            WrError(ErrNum_OverRange);
+            report_operand_range(dev, 14);
             return;
         }
 
@@ -147,7 +157,7 @@ static void DecodeDevImm(Word Index) {
 
         if (dev == 15) /* OTR 15,xx not allowed */
         {
-            WrError(ErrNum_OverRange);
+            report_operand_range(dev, 14);
             return;
         }
 
@@ -167,7 +177,7 @@ static void DecodeDirect(Word Index) {
             return;
         }
         if (val == 7) {
-            WrError(ErrNum_OverRange);
+            report_operand_range(val, 6);
             return;
         }
 

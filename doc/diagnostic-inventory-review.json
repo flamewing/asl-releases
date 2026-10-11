@@ -97,8 +97,12 @@
         "ErrNum_InvReg": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "All historical fixed operand constraint candidates improved in tranche 27; existing IDs and evaluation/encoding behavior retained."
     },
     "code2650.c": {
       "candidate_counts": {
@@ -893,8 +897,11 @@
       "candidate_counts": {
         "ErrNum_InvAddrMode": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode"
+      ],
+      "status": "complete",
+      "review_notes": "All historical fixed operand constraint candidates improved in tranche 27; existing IDs and evaluation/encoding behavior retained."
     },
     "codekcpsm.c": {
       "candidate_counts": {
@@ -1008,8 +1015,11 @@
       "candidate_counts": {
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All historical fixed operand constraint candidates improved in tranche 27; existing IDs and evaluation/encoding behavior retained."
     },
     "codens32k.c": {
       "candidate_counts": {

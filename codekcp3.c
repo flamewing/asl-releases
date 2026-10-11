@@ -12,6 +12,9 @@
 
 #include "codekcp3.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -244,7 +247,9 @@ static void DecodeReti(Word Index) {
             DAsmCode[0] = 0x38001;
             CodeLen     = 1;
         } else {
-            WrError(ErrNum_InvAddrMode);
+            char detail[120];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "ENABLE / DISABLE");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         }
     }
 }
@@ -252,7 +257,9 @@ static void DecodeReti(Word Index) {
 static void DecodeInt(Word Index) {
     if (ChkArgCnt(1, 1)) {
         if (as_strcasecmp(ArgStr[1].str.p_str, "INTERRUPT")) {
-            WrError(ErrNum_InvAddrMode);
+            char detail[120];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "INTERRUPT");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         } else {
             DAsmCode[0] = 0x3c000 | Index;
             CodeLen     = 1;
