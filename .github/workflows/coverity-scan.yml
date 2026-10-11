@@ -69,6 +69,9 @@ jobs:
         if: ${{ env.REPO_ALIVE == 'true' }}
         run: |
           export PATH=/tmp/cov-analysis-linux64/bin:$PATH
+          if ! cov-build --version; then
+            echo "Coverity version query unavailable; see the capture banner below."
+          fi
           cov-build --dir cov-int cmake --build build --parallel
       - name: Submit the result to Coverity Scan
         env:

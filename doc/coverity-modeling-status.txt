@@ -1,0 +1,162 @@
+Coverity modeling follow-up, 2026-10-11
+
+Input: Coverity-modeling-report.html and Coverity-modeling-inventory.csv.
+Reported revision: a31c0b24de653f968f303dba0a5abeeee416c733.
+116 CIDs; one representative occurrence per CID, not all occurrences.
+Historical/current status is unverified. No models or triage changes uploaded.
+
+Current work and acceptance:
+  Bounds: 914425/914398 share the already fixed file-read validation.
+  Bounds: 455939 has a portable unsigned zero-count loop (775aaeb).
+  Fatal paths: true fatal helpers are annotated (775aaeb); ChkIO still returns
+    with errno zero. Remaining failed-open correlation needs analyzer review.
+  Formatter termination: zero-capacity no-access behavior and bounded-output
+    tests now establish runtime contracts (c08e73a). Inspect inferred capacity mapping;
+    do not substitute libc return rules or treat custom conversions as libc.
+  Catalog strings: bounded loader validation already exists; fallback storage
+    and borrowed lifetimes are explicit. Models must retain initialization,
+    termination, alias/lifetime and invalid-index shared-buffer behavior.
+  Wrappers: preserve conditional no-write paths and existing-string input.
+  Custom format dialect: 33 CIDs require checker grammar/configuration research
+    for the hosted analyzer. Existing PRINTF_FORMAT_ATTR uses standard grammar;
+    do not broadly suppress libc or all project-format diagnostics.
+  Callback: 914370 stack pointer escapes to recursive callbacks. Retain
+    arg_index = 0; do not declare every stack field read. Concrete callback
+    read on the short-circuit path still needs confirmation before suppression.
+
+Analyzer validation still required:
+  Use the same revision/configuration for baseline and modeled analysis.
+  Validate wrong-type/missing-argument formats, unterminated input and bounds
+    negatives as well as disappearance of false positives. Retain the existing
+    pointer-size fatal guard and conditional ChkIO behavior.
+  Scan downloads the current capture tool each run; workflow logs its version.
+    Capture-tool version alone does not establish the hosted analyzer version.
+  Review all occurrences for the 55 CIDs with multiple reported occurrences.
+
+Reference: https://docs.blackduck.com/r/coverity/2026.3/coverity-documentation/custom-api-models.html
+
+Validation completed:
+  All 338 tests pass in native Windows embedded and external catalog builds.
+  WSL Ubuntu GCC 15.2.0 Debug: formatter_contracts and nls_locale pass with
+    AS_USE_INT128=OFF and ON. Logs are in the ignored build directory as
+    coverity-modeling-wsl-tests-OFF.log and -ON.log.
+  No local Coverity model compilation/analysis was available. The workflow's
+    version-log query is nonfatal if unsupported and needs the next CI run.
+
+CID | family | captured source | selected occurrence / occurrence count
+350661 | Conditional fatal paths | pbind.c:79 | 3 / 3
+350668 | Conditional fatal paths | plist.c:60 | 1 / 1
+350690 | Conditional fatal paths | alink.c:333 | 1 / 1
+350738 | Conditional fatal paths | p2hex.c:771 | 2 / 2
+350759 | Conditional fatal paths | alink.c:199 | 1 / 1
+455938 | Catalog strings | asmpars.c:4726 | 2 / 2
+455939 | Bounds: source review before modeling | codeh16.c:261 | 1 / 1
+455940 | Formatter termination | code1802.c:295 | 1 / 1
+455941 | Formatter termination | asmpars.c:4977 | 1 / 1
+455942 | Catalog strings | asmpars.c:4470 | 2 / 2
+455943 | Catalog strings | p2hex.c:143 | 4 / 4
+455944 | Formatter termination | p2hex.c:1178 | 5 / 5
+455945 | Formatter termination | code3203x.c:1579 | 15 / 15
+455946 | Catalog strings | plist.c:244 | 7 / 7
+455947 | Catalog strings | errmsg.c:494 | 2 / 2
+455948 | Catalog strings | alink.c:430 | 4 / 4
+455949 | Catalog strings | asmpars.c:5111 | 2 / 2
+455950 | Formatter termination | codeh8_5.c:789 | 3 / 3
+455951 | Catalog strings | errmsg.c:229 | 1 / 1
+455952 | Formatter termination | code68k.c:6602 | 4 / 4
+455958 | Catalog strings | plist.c:124 | 3 / 3
+455959 | Catalog strings | asmpars.c:4061 | 2 / 2
+455960 | Formatter-dependent wrapper | asmallg.c:645 | 4 / 4
+455961 | Formatter termination | codeh16.c:403 | 3 / 3
+455962 | Catalog strings | errmsg.c:260 | 1 / 1
+455964 | Formatter termination | asmallg.c:1306 | 1 / 1
+455965 | Formatter termination | code68k.c:6570 | 4 / 4
+455966 | Catalog strings | toolutils.c:87 | 3 / 3
+455967 | Formatter termination | asmsub.c:945 | 3 / 3
+455968 | Catalog strings | errmsg.c:155 | 1 / 1
+455970 | Catalog strings | as.c:2447 | 2 / 2
+455971 | Catalog strings | alink.c:190 | 2 / 2
+455972 | Catalog strings | asmstructs.c:471 | 2 / 2
+455973 | Catalog strings | p2hex.c:749 | 2 / 2
+455974 | Formatter termination | asmstructs.c:620 | 4 / 4
+455975 | Catalog strings | asmmac.c:121 | 2 / 2
+455977 | Catalog strings | asmpars.c:4897 | 2 / 2
+455978 | Formatter termination | code6809.c:1248 | 1 / 1
+455979 | Formatter termination | code68k.c:6585 | 4 / 4
+455980 | Formatter termination | p2bin.c:648 | 4 / 4
+455981 | Formatter termination | asmpars.c:4858 | 4 / 4
+455982 | Formatter termination | asmcode.c:376 | 1 / 1
+455983 | Catalog strings | errmsg.c:120 | 4 / 4
+455984 | Catalog strings | errmsg.c:182 | 1 / 1
+455986 | Catalog strings | as.c:3503 | 3 / 3
+455987 | Catalog strings | as.c:4859 | 4 / 4
+455988 | Catalog strings | asminclist.c:80 | 2 / 2
+455990 | Catalog strings | alink.c:542 | 7 / 7
+455991 | Catalog strings | errmsg.c:360 | 1 / 1
+455992 | Catalog strings | cmdarg.c:96 | 1 / 1
+455993 | Catalog strings | errmsg.c:538 | 2 / 2
+455997 | Catalog strings | code6816.c:119 | 2 / 2
+455998 | Catalog strings | asmpars.c:5013 | 2 / 2
+455999 | Catalog strings | errmsg.c:404 | 1 / 1
+456000 | Catalog strings | pbind.c:219 | 7 / 7
+456001 | Catalog strings | asmerr.c:1237 | 4 / 4
+456003 | Catalog strings | asmmac.c:464 | 2 / 2
+456006 | Catalog strings | asmerr.c:731 | 3 / 3
+456008 | Formatter-dependent wrapper | asmallg.c:1523 | 1 / 1
+456010 | Catalog strings | asmsub.c:1362 | 5 / 5
+914327 | Custom format dialect | cpu2phys.c:309 | 1 / 1
+914328 | Custom format dialect | asmdebug.c:340 | 1 / 1
+914330 | Formatter termination | entryaddress.c:95 | 1 / 1
+914331 | Catalog strings | das.c:240 | 2 / 2
+914333 | Formatter-dependent wrapper | literals.c:114 | 2 / 2
+914339 | Custom format dialect | asmlist.c:62 | 1 / 1
+914341 | Custom format dialect | das.c:96 | 1 / 1
+914342 | Catalog strings | das.c:124 | 1 / 1
+914343 | Formatter termination | codeko09.c:710 | 1 / 1
+914344 | Custom format dialect | errmsg.c:48 | 1 / 1
+914346 | Custom format dialect | asmpars.c:2757 | 1 / 1
+914347 | Custom format dialect | asmstructs.c:615 | 1 / 1
+914348 | Custom format dialect | das.c:427 | 1 / 1
+914350 | Custom format dialect | code51.c:2322 | 1 / 1
+914353 | Custom format dialect | motpseudo.c:616 | 1 / 1
+914356 | Catalog strings | das.c:682 | 3 / 3
+914357 | Custom format dialect | codeh8_5.c:784 | 1 / 1
+914358 | Catalog strings | p2hex.c:147 | 4 / 4
+914363 | Catalog strings | toolutils.c:94 | 3 / 3
+914370 | Callback data flow | asmpars.c:2128 | 1 / 1
+914372 | Formatter termination | das.c:435 | 2 / 2
+914374 | Catalog strings | codez80.c:1980 | 1 / 1
+914378 | Formatter-dependent wrapper | asmpars.c:1045 | 1 / 1
+914379 | Formatter-dependent wrapper | deco87c800.c:1565 | 9 / 9
+914380 | Custom format dialect | asmallg.c:310 | 1 / 1
+914382 | Custom format dialect | asmpars.c:4216 | 1 / 1
+914383 | Custom format dialect | asmstructs.c:643 | 1 / 1
+914385 | Custom format dialect | tempresult.c:311 | 1 / 1
+914386 | Custom format dialect | asmallg.c:303 | 1 / 1
+914387 | Custom format dialect | asmallg.c:300 | 1 / 1
+914389 | Custom format dialect | cpu2phys.c:322 | 1 / 1
+914391 | Formatter termination | asmerr.c:1302 | 1 / 1
+914392 | Custom format dialect | asmpars.c:4190 | 1 / 1
+914394 | Formatter termination | das.c:97 | 1 / 1
+914398 | Bounds: source review before modeling | test_driver.c:186 | 2 / 2
+914402 | Custom format dialect | cpu2phys.c:313 | 1 / 1
+914403 | Formatter termination | code340xx.c:2272 | 8 / 8
+914405 | Formatter-dependent wrapper | literals.c:228 | 4 / 4
+914407 | Formatter termination | deco87c800.c:102 | 1 / 1
+914411 | Custom format dialect | asmdebug.c:358 | 1 / 1
+914412 | Custom format dialect | literals.c:82 | 1 / 1
+914413 | Formatter termination | code340xx.c:2279 | 1 / 1
+914417 | Custom format dialect | code78c10.c:1258 | 1 / 1
+914418 | Custom format dialect | literals.c:86 | 1 / 1
+914419 | Custom format dialect | asmsub.c:675 | 1 / 1
+914423 | Custom format dialect | asmallg.c:666 | 1 / 1
+914425 | Bounds: source review before modeling | test_driver.c:184 | 2 / 2
+914426 | Formatter termination | literals.c:98 | 8 / 8
+914427 | Custom format dialect | asmpars.c:4210 | 1 / 1
+914429 | Custom format dialect | code51.c:2353 | 1 / 1
+914431 | Custom format dialect | code68k.c:3480 | 1 / 1
+914433 | Custom format dialect | asmallg.c:294 | 1 / 1
+914437 | Custom format dialect | asmdebug.c:350 | 1 / 1
+914440 | Custom format dialect | decpseudo.c:74 | 1 / 1
+914442 | Catalog strings | code86.c:931 | 1 / 1
+914443 | Custom format dialect | entryaddress.c:94 | 1 / 1
