@@ -1685,3 +1685,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     failed mandatory lookup. Three CPUs verify forward R2/SP and rejected PC
     aliases, final undefined/nonregister primary errors and no emission.
     Validation: all 410 CTest cases pass with embedded/external catalogs.
+
+142. VAX addressing/length/index/branch/count diagnostics.
+    Six addressing sites name mask alternatives, valid indexed base forms,
+    unsupported deferred predecrement or incompatible B/W/L prefixes. Two
+    warnings identify actual index register modified by base addressing.
+    Branches show signed byte/word displacement interval and exact PC base.
+    Variable aliases show their two registered operand counts. Preserve error
+    IDs, predicates, warning emission and original accepted bytes; three CPUs
+    cover all contracts, bounds, warning behavior and count alternatives.
+    Validation: all 410 CTest cases pass with embedded/external catalogs.

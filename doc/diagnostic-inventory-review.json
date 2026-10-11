@@ -1441,8 +1441,15 @@
         "ErrNum_Unpredictable": 2,
         "ErrNum_WrongArgCnt": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_InvAddrMode",
+        "ErrNum_Unpredictable",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_WrongArgCnt"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 139 removes duplicate historical register error and guards descriptor access. Tranche 142 reviews six addressing contracts (mask alternatives, indexed register/immediate base, post/pre-decrement or register-deferred length prefix), two modified-base/index warnings, byte/word branch displacement bounds and allowed operand counts from the two registered variants of each variable mnemonic. IDs/predicates/bytes unchanged. CPU capability helper and internal immediate-size default remain for final review; follow-ups 140/141 fix PC index encoding and forward index aliases."
     },
     "codevector.c": {
       "candidate_counts": {

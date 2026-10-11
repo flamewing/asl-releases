@@ -2303,3 +2303,11 @@ Message ErrMsgNS32LMRUnpredictable
 Message ErrMsgVAXIndexRegister
  "Indexregister muss R0..R14 (AP/FP/SP) sein; PC/R15 ist nicht als Indexregister erlaubt"
  "index register must be R0..R14 (AP/FP/SP); PC/R15 cannot be an index register"
+
+Message ErrMsgLengthPrefixForm
+ "L&auml;ngenpr&auml;fix %c^ ist bei %s nicht erlaubt"
+ "length prefix %c^ is not allowed with %s"
+
+Message ErrMsgModifiedIndexRegister
+ "Indexregister R%u wird von der Basisadressierung %s ver&auml;ndert"
+ "index register R%u is modified by base addressing %s"

@@ -253,10 +253,44 @@ static void append_adr_vals_int(
  * \return True if success
  * ------------------------------------------------------------------------ */
 
+static void wr_address_forms(tStrComp const* p_arg, char const* forms) {
+    char detail[500];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+}
+
+static void wr_length_form(tStrComp const* p_arg, char length, char const* form) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgLengthPrefixForm), length, form);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+}
+
+static void wr_modified_index(tStrComp const* p_arg, unsigned reg, char const* form) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgModifiedIndexRegister), reg, form);
+    WrXErrorPos(ErrNum_Unpredictable, detail, &p_arg->Pos);
+}
+
 static Boolean check_mode_mask(
         unsigned mode_mask, unsigned act_mask, tStrComp* p_arg, adr_vals_t* p_result) {
     if (!(mode_mask & act_mask)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        char forms[350] = "";
+        if (mode_mask & MModReg) {
+            strmaxcat(forms, "Rn; ", sizeof(forms));
+        }
+        if (mode_mask & MModMem) {
+            strmaxcat(forms, "(Rn), displacement(Rn), target, @target, @#address, (Rn)+ or -(Rn); ", sizeof(forms));
+        }
+        if (mode_mask & MModLit) {
+            strmaxcat(forms, "S^#value; ", sizeof(forms));
+        }
+        if (mode_mask & MModImm) {
+            strmaxcat(forms, "I^#value; ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        wr_address_forms(p_arg, forms);
         return reset_adr_vals(p_result);
     } else {
         return True;
@@ -379,7 +413,7 @@ static Boolean decode_adr(
     switch (decode_reg(&arg, &reg, False)) {
     case eIsReg:
         if (index_reg && !deferred) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            wr_address_forms(p_arg, "(Rn)[Rx], displacement(Rn)[Rx], @(Rn)+[Rx] or -(Rn)[Rx]");
             return reset_adr_vals(p_result);
         }
         p_result->vals[p_result->count++] = reg | (deferred ? 0x60 : 0x50);
@@ -426,7 +460,7 @@ static Boolean decode_adr(
             Byte* p_specifier;
 
             if (index_reg) {
-                WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+                wr_address_forms(p_arg, "(Rn)[Rx], displacement(Rn)[Rx], @(Rn)+[Rx] or -(Rn)[Rx]");
                 return reset_adr_vals(p_result);
             }
 
@@ -545,11 +579,11 @@ static Boolean decode_adr(
         if (eRegAbort == reg_eval_result) {
             return reset_adr_vals(p_result);
         } else if (len_spec) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            wr_length_form(p_arg, len_spec, deferred ? "@(Rn)+" : "(Rn)+");
             return reset_adr_vals(p_result);
         }
         if (index_reg && (reg == (index_reg & 0xf))) {
-            WrStrErrorPos(ErrNum_Unpredictable, p_arg);
+            wr_modified_index(p_arg, reg, deferred ? "@(Rn)+" : "(Rn)+");
         }
         p_result->vals[p_result->count++] = reg | (deferred ? 0x90 : 0x80);
         return check_mode_mask(mode_mask, MModMem, p_arg, p_result);
@@ -561,11 +595,15 @@ static Boolean decode_adr(
         if (eRegAbort == reg_eval_result) {
             return reset_adr_vals(p_result);
         } else if (deferred || len_spec) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            if (deferred) {
+                wr_address_forms(p_arg, "-(Rn), @(Rn)+ or @displacement(Rn)");
+            } else {
+                wr_length_form(p_arg, len_spec, "-(Rn)");
+            }
             return reset_adr_vals(p_result);
         }
         if (index_reg && (reg == (index_reg & 0xf))) {
-            WrStrErrorPos(ErrNum_Unpredictable, p_arg);
+            wr_modified_index(p_arg, reg, "-(Rn)");
         }
         p_result->vals[p_result->count++] = reg | 0x70;
         return check_mode_mask(mode_mask, MModMem, p_arg, p_result);
@@ -591,7 +629,7 @@ static Boolean decode_adr(
 
         if (!*disp_arg.str.p_str && !deferred) {
             if (len_spec) {
-                WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+                wr_length_form(p_arg, len_spec, "(Rn)");
                 return reset_adr_vals(p_result);
             }
             p_result->vals[p_result->count++] = reg | 0x60;
@@ -790,7 +828,11 @@ static Boolean decode_branch(tStrComp* p_arg, adr_vals_t* p_result, LongWord pc_
             return False;
         check:
             if (!RangeCheck(dist, range_int)) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, p_arg);
+                char detail[200];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                            (LargeInt)dist, IntTypeDefs[range_int].Min, (LargeInt)IntTypeDefs[range_int].Max,
+                            (LargeWord)(pc_value + GetSymbolSizeBytes(act_op_size)));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &p_arg->Pos);
                 return False;
             }
         }
@@ -1057,7 +1099,13 @@ static void decode_var_arg(Word index) {
             return;
         }
     }
-    WrError(ErrNum_WrongArgCnt);
+    {
+        char detail[180];
+        int first = (int)gen_orders[p_var_arg_order->gen_indices[0]].arg_cnt;
+        int second = (int)gen_orders[p_var_arg_order->gen_indices[1]].arg_cnt;
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgArgCntEitherOr), first, second, ArgCnt);
+        WrXError(ErrNum_WrongArgCnt, detail);
+    }
 }
 
 /*!------------------------------------------------------------------------
