@@ -1429,6 +1429,14 @@ Message ErrMsgRepeatedParallelField
  "Parallele Operation enth&auml;lt bereits das Feld %s"
  "parallel operation already contains the %s field"
 
+Message ErrMsgOLMS50APForm
+ "expr (0..%llld; 0..15 oder Bits 7..4 = P = %llld)"
+ "expr (0..%llld; 0..15 or bits 7..4 = P = %llld)"
+
+Message ErrMsgOLMS50PageSelection
+ "Adresse 0x%lllx hat Bits 7..4 = %llld; erlaubt sind Adressen 0..15 oder Bits 7..4 gleich ASSUME P = %llld"
+ "address 0x%lllx has bits 7..4 = %llld; allowed are addresses 0..15 or bits 7..4 matching ASSUME P = %llld"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

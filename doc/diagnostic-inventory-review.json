@@ -1129,8 +1129,12 @@
         "ErrNum_InvAddrMode": 6,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical sites reviewed in tranche 68: mask-specific forms, @expr indirect requirement, zero-page PAGE restriction, RDAR/MVAR modifier choices, and CPU-direction branch ranges at PC+1. Adjacent 2090 exposes actual bits7..4 selector and ASSUME P instead of claiming a full-page interval (6052 intentionally retains higher-bit aliasing). Preserve data integer types, original page-mask behavior, IDs, flags and accepted bytes. Separate branch/JMPIO fixes in tranches 65-67."
     },
     "codepalm.c": {
       "candidate_counts": {

@@ -12,6 +12,9 @@
 
 #include "codeol50.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -121,6 +124,12 @@ static IntType  CodeIntType, DataIntType;
 
 /*-------------------------------------------------------------------------*/
 
+static void WrOperandChoices(unsigned index, char const* choices) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[index].Pos);
+}
+
 static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
     Boolean      OK;
     tSymbolFlags Flags;
@@ -155,14 +164,38 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
         } else if (Mask & MModAX) {
             AdrMode = ModAX;
         } else {
-            WrError(ErrNum_AddrOnDifferentPage);
+            char detail[240];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOLMS50PageSelection),
+                        (LargeWord)AdrVal, (LargeInt)((AdrVal >> 4) & 15), (LargeInt)PRegAssume);
+            WrXErrorPos(ErrNum_AddrOnDifferentPage, detail, &pArg->Pos);
         }
     }
 
 AdrFound:
 
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[180] = "", part[120], detail[260];
+        if (Mask & MModACC) {
+            strmaxcat(forms, "ACC, ", sizeof(forms));
+        }
+        if (Mask & MModAX) {
+            as_snprintf(part, sizeof(part), "expr (0..%llld), ",
+                        (LargeInt)IntTypeDefs[DataIntType].Max);
+            strmaxcat(forms, part, sizeof(forms));
+        } else if (Mask & MModAP) {
+            as_snprintf(part, sizeof(part), getmessage(Num_ErrMsgOLMS50APForm),
+                        (LargeInt)IntTypeDefs[DataIntType].Max, (LargeInt)PRegAssume);
+            strmaxcat(forms, part, sizeof(forms));
+            strmaxcat(forms, ", ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }
@@ -324,7 +357,7 @@ static void DecodeJMPIO(Word Code) {
         return;
     }
     if (*ArgStr[1].str.p_str != '@') {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        WrOperandChoices(1, "@expr");
         return;
     }
     {
@@ -412,7 +445,11 @@ static void DecodeRel(Word Index) {
 
         if (((Distance < MinDist) || (Distance > MaxDist))
             && !mFirstPassUnknownOrQuestionable(Flags)) {
-            WrError(ErrNum_JmpDistTooBig);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)Distance, (LargeInt)MinDist, (LargeInt)MaxDist,
+                        (LargeWord)(EProgCounter() + 1));
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
         } else {
             if (Distance >= 0) {
                 WAsmCode[0] = 0;
@@ -438,7 +475,7 @@ static void DecodeCtrl(Word Index) {
             break;
         case ModAP:
             if (!pOrder->AllowAP && (AdrVal & 0x100)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(1, "#expr, expr (0..15)");
             } else {
                 WAsmCode[0] = pOrder->APCode | AdrVal;
                 CodeLen     = 1;
@@ -597,7 +634,7 @@ static void DecodeMem(Word Index) {
             if (!strcmp(ArgStr[1].str.p_str, "-")) {
                 WAsmCode[0] |= 0x0010;
             } else if (strcmp(ArgStr[1].str.p_str, "+")) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(1, "+, -");
                 return;
             }
             if (ArgCnt < 2) {
@@ -611,13 +648,13 @@ static void DecodeMem(Word Index) {
                 } else if (!as_strcasecmp(ArgStr[2].str.p_str, "L")) {
                     WAsmCode[0] |= 0x0200;
                 } else {
-                    WrError(ErrNum_InvAddrMode);
+                    WrOperandChoices(2, "Z, N, L");
                     return;
                 }
                 if (ArgCnt < 3) {
                     CodeLen = 1;
                 } else if (as_strcasecmp(ArgStr[3].str.p_str, "L")) {
-                    WrError(ErrNum_InvAddrMode);
+                    WrOperandChoices(3, "L");
                     return;
                 } else {
                     WAsmCode[0] |= 0x0200;

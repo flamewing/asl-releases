@@ -990,3 +990,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover forward labels/endpoints on all five CPUs, resolved excessive
     distances and single undefined-target errors across eight branch aliases.
     Validation: all 387 CTest cases pass with embedded/external catalogs.
+
+68. Complete OLMS-50 historical operand/control/modifier/branch review.
+    1350 lists mask-specific forms, @expr, PAGE zero-page choices and
+    RDAR/MVAR modifier choices. 1370 gives signed distance, CPU-dependent
+    [0,31]/[-32,31] interval and word-address PC+1 at the target operand.
+    Adjacent 2090 gives actual address selector bits 7..4 and ASSUME P,
+    preserving existing 6052 higher-bit aliasing rather than falsely stating
+    a single full-address page interval. Preserve IDs, data types, direction
+    masks and preceding accepted encodings. Tests cover five CPUs, all ALU
+    and branch callers, zero/selected/full addresses, control/memory forms,
+    primary failures, forward targets, exact positions and preceding bytes.
+    Validation: all 387 CTest cases pass with embedded/external catalogs.
