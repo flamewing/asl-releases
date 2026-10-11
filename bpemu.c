@@ -276,9 +276,13 @@ int FSearch(
 long FileSize(FILE* file) {
     long Save = ftell(file), Size;
 
-    fseek(file, 0, SEEK_END);
+    if ((Save < 0) || (fseek(file, 0, SEEK_END) != 0)) {
+        return -1;
+    }
     Size = ftell(file);
-    fseek(file, Save, SEEK_SET);
+    if (fseek(file, Save, SEEK_SET) != 0) {
+        return -1;
+    }
     return Size;
 }
 

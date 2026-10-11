@@ -34,3 +34,7 @@ Message IOErrBHeaderMsg
 Message ErrMsgTerminating
  "Das Programm wird beendet!"
  "program terminated!"
+
+Message FormatInvRecordHeaderMsg
+ "ung"CH_ue"ltiger Record-Header"
+ "invalid record header"

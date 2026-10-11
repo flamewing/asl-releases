@@ -14,6 +14,7 @@
 
 #include "addrspace.h"
 #include "as_endian.h"
+#include "bpemu.h"
 #include "cmdarg.h"
 #include "fileformat.h"
 #include "headids.h"
@@ -171,9 +172,20 @@ void ReadRecordHeader(
 
             *CPU     = *Header;
             p_descr  = FindFamilyById(*CPU);
+            if (!p_descr) {
+                FormatError(Name, catgetmessage(&MsgCat, Num_FormatInvRecordHeaderMsg));
+            }
             *Header  = FileHeaderDataRec;
             *Segment = SegCode;
             *Gran    = p_descr->get_granularity((as_addrspace_t)*Segment);
+        }
+        if ((*Header == FileHeaderDataRec) || (*Header == FileHeaderRDataRec)
+            || (*Header == FileHeaderRelocRec) || (*Header == FileHeaderRRelocRec)) {
+            if ((*Segment <= SegNone) || (*Segment >= SegCount) || !*Gran
+                || ((*Gran > 0xf8) && (*Gran != 0xfc) && (*Gran != 0xfe)
+                    && (*Gran != 0xff))) {
+                FormatError(Name, catgetmessage(&MsgCat, Num_FormatInvRecordHeaderMsg));
+            }
         }
     }
 }
@@ -296,86 +308,88 @@ void SkipRecord(Byte Header, char const* Name, FILE* f) {
 }
 
 PRelocInfo ReadRelocInfo(FILE* f) {
-    PRelocInfo   PInfo;
-    PRelocEntry  PEntry;
-    PExportEntry PExp;
-    Boolean      OK = FALSE;
-    LongWord     StringLen, StringPos;
-    LongInt      z;
+    PRelocInfo PInfo = (PRelocInfo)calloc(1, sizeof(*PInfo));
+    LongWord   StringLen, StringPos;
+    LongInt    z;
+    long       Position, Size;
+    size_t     Remaining;
 
-    /* get memory for structure */
-
-    PInfo = (PRelocInfo)malloc(sizeof(TRelocInfo));
-    if (PInfo != NULL) {
-        PInfo->RelocEntries  = NULL;
-        PInfo->ExportEntries = NULL;
-        PInfo->Strings       = NULL;
-
-        /* read global numbers */
-
-        if ((Read4(f, &PInfo->RelocCount)) && (Read4(f, &PInfo->ExportCount))
-            && (Read4(f, &StringLen))) {
-            /* allocate memory */
-
-            PInfo->RelocEntries
-                    = (PRelocEntry)malloc(sizeof(TRelocEntry) * PInfo->RelocCount);
-            if ((PInfo->RelocCount == 0) || (PInfo->RelocEntries != NULL)) {
-                PInfo->ExportEntries
-                        = (PExportEntry)malloc(sizeof(TExportEntry) * PInfo->ExportCount);
-                if ((PInfo->ExportCount == 0) || (PInfo->ExportEntries != NULL)) {
-                    PInfo->Strings = (char*)malloc(sizeof(char) * StringLen);
-                    if ((StringLen == 0) || (PInfo->Strings != NULL)) {
-                        /* read relocation entries */
-
-                        for (z = 0, PEntry = PInfo->RelocEntries; z < PInfo->RelocCount;
-                             z++, PEntry++) {
-                            if (!Read8(f, &PEntry->Addr)) {
-                                break;
-                            }
-                            if (!Read4(f, &StringPos)) {
-                                break;
-                            }
-                            PEntry->Name = PInfo->Strings + StringPos;
-                            if (!Read4(f, &PEntry->Type)) {
-                                break;
-                            }
-                        }
-
-                        /* read export entries */
-
-                        for (z = 0, PExp = PInfo->ExportEntries; z < PInfo->ExportCount;
-                             z++, PExp++) {
-                            if (!Read4(f, &StringPos)) {
-                                break;
-                            }
-                            PExp->Name = PInfo->Strings + StringPos;
-                            if (!Read4(f, &PExp->Flags)) {
-                                break;
-                            }
-                            if (!Read8(f, &PExp->Value)) {
-                                break;
-                            }
-                        }
-
-                        /* read strings */
-
-                        if (z == PInfo->ExportCount) {
-                            OK = ((fread(PInfo->Strings, 1, StringLen, f)) == StringLen);
-                        }
-                    }
-                }
-            }
-        }
+    if (!PInfo) {
+        return NULL;
+    }
+    if (!Read4(f, &PInfo->RelocCount) || !Read4(f, &PInfo->ExportCount)
+        || !Read4(f, &StringLen) || (PInfo->RelocCount < 0)
+        || (PInfo->ExportCount < 0)) {
+        goto invalid;
     }
 
-    if (!OK) {
-        if (PInfo != NULL) {
-            DestroyRelocInfo(PInfo);
-            PInfo = NULL;
-        }
+    /* Each on-disk entry takes 16 bytes. Bound allocations by the input
+       before multiplying counts or constructing pointers into the strings. */
+    Position = ftell(f);
+    Size = FileSize(f);
+    if ((Position < 0) || (Size < Position)) {
+        goto invalid;
+    }
+    Remaining = (size_t)(Size - Position);
+    if ((size_t)PInfo->RelocCount > Remaining / 16
+        || (size_t)PInfo->RelocCount > (size_t)-1 / sizeof(TRelocEntry)) {
+        goto invalid;
+    }
+    Remaining -= (size_t)PInfo->RelocCount * 16;
+    if ((size_t)PInfo->ExportCount > Remaining / 16
+        || (size_t)PInfo->ExportCount > (size_t)-1 / sizeof(TExportEntry)) {
+        goto invalid;
+    }
+    Remaining -= (size_t)PInfo->ExportCount * 16;
+    if (StringLen > Remaining) {
+        goto invalid;
     }
 
+    PInfo->RelocEntries = (PRelocEntry)malloc(sizeof(TRelocEntry) * PInfo->RelocCount);
+    PInfo->ExportEntries = (PExportEntry)malloc(sizeof(TExportEntry) * PInfo->ExportCount);
+    PInfo->Strings = (char*)malloc(StringLen);
+    if ((PInfo->RelocCount && !PInfo->RelocEntries)
+        || (PInfo->ExportCount && !PInfo->ExportEntries)
+        || (StringLen && !PInfo->Strings)) {
+        goto invalid;
+    }
+
+    for (z = 0; z < PInfo->RelocCount; z++) {
+        PRelocEntry PEntry = &PInfo->RelocEntries[z];
+        if (!Read8(f, &PEntry->Addr) || !Read4(f, &StringPos)
+            || (StringPos >= StringLen) || !Read4(f, &PEntry->Type)) {
+            goto invalid;
+        }
+        PEntry->Name = PInfo->Strings + StringPos;
+    }
+    for (z = 0; z < PInfo->ExportCount; z++) {
+        PExportEntry PExp = &PInfo->ExportEntries[z];
+        if (!Read4(f, &StringPos) || (StringPos >= StringLen)
+            || !Read4(f, &PExp->Flags) || !Read8(f, &PExp->Value)) {
+            goto invalid;
+        }
+        PExp->Name = PInfo->Strings + StringPos;
+    }
+    if (StringLen && (fread(PInfo->Strings, 1, StringLen, f) != StringLen)) {
+        goto invalid;
+    }
+    for (z = 0; z < PInfo->RelocCount; z++) {
+        char const* Name = PInfo->RelocEntries[z].Name;
+        if (!memchr(Name, '\0', StringLen - (Name - PInfo->Strings))) {
+            goto invalid;
+        }
+    }
+    for (z = 0; z < PInfo->ExportCount; z++) {
+        char const* Name = PInfo->ExportEntries[z].Name;
+        if (!memchr(Name, '\0', StringLen - (Name - PInfo->Strings))) {
+            goto invalid;
+        }
+    }
     return PInfo;
+
+invalid:
+    DestroyRelocInfo(PInfo);
+    return NULL;
 }
 
 void DestroyRelocInfo(PRelocInfo PInfo) {
@@ -383,11 +397,11 @@ void DestroyRelocInfo(PRelocInfo PInfo) {
         free(PInfo->Strings);
         PInfo->Strings = NULL;
     }
-    if ((PInfo->ExportCount > 0) && (PInfo->RelocEntries != NULL)) {
+    if (PInfo->RelocEntries != NULL) {
         free(PInfo->RelocEntries);
         PInfo->RelocEntries = NULL;
     }
-    if ((PInfo->RelocCount > 0) && (PInfo->ExportEntries != NULL)) {
+    if (PInfo->ExportEntries != NULL) {
         free(PInfo->ExportEntries);
         PInfo->ExportEntries = NULL;
     }

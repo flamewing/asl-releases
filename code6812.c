@@ -183,7 +183,11 @@ static Boolean DecodeBaseReg(char const* pAsc, Byte* pErg) {
 static Boolean ValidReg(char const* Asc_o) {
     Byte   Dummy;
     String Asc;
-    int    l = strlen(Asc_o);
+    size_t l = strlen(Asc_o);
+
+    if (l >= sizeof(Asc)) {
+        return False;
+    }
 
     if ((*Asc_o == '-') || (*Asc_o == '+')) {
         strcpy(Asc, Asc_o + 1);

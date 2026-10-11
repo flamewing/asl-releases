@@ -247,23 +247,23 @@ static as_cmd_result_t ProcessFile(
     as_cmd_result_t ret = e_cmd_ok;
 
     strmaxcpy(Name, Name_O, STRINGSIZE);
-    KillPrefBlanks(OneLine);
 
     KeyFile = fopen(Name, "r");
     if (!KeyFile) {
         strmaxcpy(
                 p_results->error_arg, catgetmessage(&MsgCat, Num_ErrMsgKeyFileNotFound),
                 sizeof(p_results->error_arg));
-        ret = e_cmd_err;
+        return e_cmd_err;
     }
     while (!feof(KeyFile) && (ret == e_cmd_ok)) {
         errno = 0;
         ReadLn(KeyFile, OneLine);
-        if ((errno != 0) && !feof(KeyFile)) {
+        if (ferror(KeyFile) || ((errno != 0) && !feof(KeyFile))) {
             strmaxcpy(
                     p_results->error_arg, catgetmessage(&MsgCat, Num_ErrMsgKeyFileError),
                     sizeof(p_results->error_arg));
             ret = e_cmd_err;
+            break;
         }
         ret = DecodeLine(p_cmd_recs, cmd_rec_cnt, OneLine, p_results);
     }

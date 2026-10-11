@@ -1238,7 +1238,7 @@ static Boolean IRP_GetPos(
             if (Lauf == NULL) {
                 *buffer = '\0';
             } else {
-                strcpy(buffer, Lauf->Content);
+                strmaxcpy(buffer, Lauf->Content, sizeof(buffer));
                 Lauf = Lauf->Next;
                 for (z = 2; z <= ParIter && Lauf != NULL; z++) {
                     strmaxcat(buffer, ",", sizeof(buffer));

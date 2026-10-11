@@ -30,6 +30,7 @@ static char const* IdentString = "AS Message Catalog - not readable\n\032\004";
 static char const* EOpenMsg = "cannot open msg file";
 static char const* ERdMsg   = "cannot read from msg file";
 static char const* EIndMsg  = "string table index error";
+static char const* EAllocMsg = "out of memory";
 
 static TMsgCat DefaultCatalog = {NULL, NULL, 0};
 
@@ -74,9 +75,15 @@ static int seek_raw(as_raw_msg_struct_t* p_raw, size_t offset, int whence) {
         new_pos = offset;
         break;
     case SEEK_CUR:
+        if (offset > p_raw->data_length - p_raw->rd_ptr) {
+            return -1;
+        }
         new_pos = p_raw->rd_ptr + offset;
         break;
     case SEEK_END:
+        if (offset) {
+            return -1;
+        }
         new_pos = p_raw->data_length + offset;
         break;
     default:
@@ -147,6 +154,7 @@ static as_raw_msg_struct_t* create_raw_file(char const* p_file_name) {
     FILE*                p_file   = NULL;
     as_raw_msg_struct_t* p_result = NULL;
     Boolean              success  = False;
+    long                 file_length;
 
     p_file = fopen(p_file_name, OPENRDMODE);
     if (!p_file) {
@@ -156,12 +164,16 @@ static as_raw_msg_struct_t* create_raw_file(char const* p_file_name) {
     if (!p_result) {
         goto func_exit;
     }
-    fseek(p_file, 0, SEEK_END);
-    p_result->data_length = ftell(p_file);
+    if (fseek(p_file, 0, SEEK_END) != 0 || (file_length = ftell(p_file)) < 0) {
+        goto func_exit;
+    }
+    p_result->data_length = (size_t)file_length;
     if (p_result->data_length >= 65535u) {
         p_result->data_length = 65535u;
     }
-    fseek(p_file, 0, SEEK_SET);
+    if (fseek(p_file, 0, SEEK_SET) != 0) {
+        goto func_exit;
+    }
 
     p_result->p_data = (Byte*)malloc(p_result->data_length);
     if (p_result->data_length && !p_result->p_data) {
@@ -296,6 +308,9 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
     do {
         ptr = str;
         do {
+            if (ptr == str + sizeof(str)) {
+                error(EIndMsg);
+            }
             if (read_raw(ptr, 1, 1, p_msg_raw) != 1) {
                 error(ERdMsg);
             }
@@ -311,6 +326,9 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
             if (!read_raw_4(p_msg_raw, &CtryCnt)) {
                 error(ERdMsg);
             }
+            if ((CtryCnt < 0) || (CtryCnt > (LongInt)(sizeof(Ctrys) / sizeof(*Ctrys)))) {
+                error(EIndMsg);
+            }
             for (z = 0; z < CtryCnt; z++) {
                 if (!read_raw_4(p_msg_raw, Ctrys + z)) {
                     error(ERdMsg);
@@ -318,6 +336,11 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
             }
             if (!read_raw_4(p_msg_raw, &MomPos)) {
                 error(ERdMsg);
+            }
+            if ((MomPos < 0) || (MomLength <= 0)
+                || ((size_t)MomPos > p_msg_raw->data_length)
+                || ((size_t)MomLength > p_msg_raw->data_length - (size_t)MomPos)) {
+                error(EIndMsg);
             }
             if (DefPos == -1) {
                 DefPos    = MomPos;
@@ -340,12 +363,26 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
 
     /* read pointer table */
 
-    seek_raw(p_msg_raw, MomPos, SEEK_SET);
+    if ((MomPos < 0) || (MomLength <= 0)
+        || seek_raw(p_msg_raw, (size_t)MomPos, SEEK_SET)) {
+        error(EIndMsg);
+    }
     if (!read_raw_4(p_msg_raw, &StrStart)) {
         error(ERdMsg);
     }
-    p_cat->MsgCount    = (StrStart - MomPos) >> 2;
+    if ((StrStart <= MomPos) || ((StrStart - MomPos) & 3)
+        || ((size_t)StrStart > p_msg_raw->data_length)
+        || ((size_t)MomLength > p_msg_raw->data_length - (size_t)StrStart)) {
+        error(EIndMsg);
+    }
+    p_cat->MsgCount    = (StrStart - MomPos) / 4;
+    if ((size_t)p_cat->MsgCount > (size_t)-1 / sizeof(LongInt)) {
+        error(EIndMsg);
+    }
     p_cat->StrPosis    = (LongInt*)malloc(sizeof(LongInt) * p_cat->MsgCount);
+    if (!p_cat->StrPosis) {
+        error(EAllocMsg);
+    }
     p_cat->StrPosis[0] = 0;
     if ((int)read_raw(p_cat->StrPosis + 1, 4, p_cat->MsgCount - 1, p_msg_raw) + 1
         != p_cat->MsgCount) {
@@ -355,18 +392,30 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
         DSwap(p_cat->StrPosis + 1, (p_cat->MsgCount - 1) << 2);
     }
     for (z = 1; z < p_cat->MsgCount; z++) {
-        p_cat->StrPosis[z] -= StrStart;
-        if ((p_cat->StrPosis[z] < 0) || (p_cat->StrPosis[z] >= MomLength)) {
+        if ((p_cat->StrPosis[z] < StrStart)
+            || (p_cat->StrPosis[z] - StrStart >= MomLength)) {
             error(EIndMsg);
         }
+        p_cat->StrPosis[z] -= StrStart;
     }
 
     /* read string table */
 
-    seek_raw(p_msg_raw, StrStart, SEEK_SET);
+    if (seek_raw(p_msg_raw, (size_t)StrStart, SEEK_SET)) {
+        error(EIndMsg);
+    }
     p_cat->MsgBlock = (char*)malloc(MomLength);
+    if (!p_cat->MsgBlock) {
+        error(EAllocMsg);
+    }
     if ((int)read_raw(p_cat->MsgBlock, 1, MomLength, p_msg_raw) != MomLength) {
         error(ERdMsg);
+    }
+    for (z = 0; z < p_cat->MsgCount; z++) {
+        if (!memchr(p_cat->MsgBlock + p_cat->StrPosis[z], '\0',
+                    MomLength - p_cat->StrPosis[z])) {
+            error(EIndMsg);
+        }
     }
 
     /* character replacement according to runtime codepage */
@@ -453,7 +502,7 @@ void msg_catalog_open_file(
                 /* If we were found via PATH (no slashes in argv[0]/p_exe_path), look up
                    this path and replace bin/ with lib/ for 'companion path': */
 
-                if (!p_msg_raw && !strrchr(p_exe_path, PATHSEP)
+                if (!p_msg_raw && p_exe_path && !strrchr(p_exe_path, PATHSEP)
                     && !FSearch(Dest, sizeof(Dest), p_exe_path, NULL, ptr)) {
                     char* pSep2;
 
@@ -500,6 +549,9 @@ void msg_catalog_open_buffer(
         LongInt msg_id1, LongInt msg_id2) {
     as_raw_msg_struct_t* p_raw = (as_raw_msg_struct_t*)calloc(1, sizeof(*p_raw));
 
+    if (!p_raw) {
+        error(EAllocMsg);
+    }
     p_raw->p_data         = (Byte*)p_buffer;
     p_raw->data_allocated = False;
     p_raw->data_length    = buffer_size;

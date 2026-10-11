@@ -1,0 +1,60 @@
+Coverity fixes: first batch, 2026-10-11
+
+Input report: coverity-triage.txt, reviewed revision a31c0b2.
+Scope: major findings and directly related input-validation defects.
+CID mappings below come from the report's function names and categories;
+the report contains no event traces or line numbers. A fresh Coverity scan
+must confirm closure, especially findings attributed to callers of shared
+record readers. No Coverity triage state has been changed by these fixes.
+
+Major findings addressed
+
+350669, code6812.c:ValidReg
+  Reject overlong register candidates before copying into a fixed buffer.
+350677, as.c:IRP_GetPos
+  Bound the first iteration-argument copy used in diagnostic formatting.
+350685 and 350712, cmdarg.c:ProcessFile
+  Return on failure to open a response file; remove the read of an
+  uninitialized line buffer. Preserve read errors instead of overwriting
+  them with the result of parsing an empty line.
+914334, nlmessages.c:msg_catalog_open_file
+  Validate catalog country counts, lengths, positions, pointer-table size,
+  string offsets and terminators before allocation or access. Check file
+  seeks, file lengths and allocations in both file and embedded paths.
+350634, toolutils.c:ReadRelocInfo
+  Bound allocations by the remaining input and allocation arithmetic;
+  reject negative counts, truncated entries and invalid string offsets or
+  unterminated names. Correct the reversed count checks in cleanup.
+350651, p2hex.c:MeasureFile
+  Reject zero/invalid granularity in the shared ReadRecordHeader function
+  before address conversion can divide by it. Validate segment identifiers
+  before they are shifted or used as array indices.
+350639, pbind.c:ProcessFile
+  Harden the shared record-header boundary against invalid segments and
+  unknown compact CPU identifiers. The exact array-index trace is absent
+  from the report, so this CID needs scan/trace confirmation.
+
+Related findings addressed
+
+350650 and 350742, bpemu.c:FileSize
+  Check ftell/fseek failures; never pass a negative saved position to fseek.
+914345, nlmessages.c:parse_raw_file
+  Validate signed catalog fields before deriving read sizes and pointers.
+914364, cmdarg.c:ProcessFile
+  Return/preserve file-open and read errors rather than overwriting them.
+
+Validation
+
+The coverity_inputs CTest exercises malformed and valid catalogs,
+relocation blocks and record headers, missing/valid response files, and
+long register/macro inputs. Fatal parser cases must exit normally with
+the expected error code; crashes fail the regression test.
+Full GCC/UCRT64 builds and all 335 CTest tests passed with both embedded
+message catalogs (ASL_EMBED_MESSAGES=ON) and external catalogs (OFF).
+
+Remaining work
+
+The other findings have not been reviewed or fixed by this batch. Suggested
+next batches: assembler/debug file-error paths; CPU decoder correctness;
+remaining resource/read handling; format-string findings. The eight
+undecided findings still need their event traces and source-based review.

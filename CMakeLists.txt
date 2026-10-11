@@ -1289,6 +1289,28 @@ endif()
 
 enable_testing()
 
+define_executable(test_coverity_inputs
+    tests/coverity_inputs.c
+    $<TARGET_OBJECTS:ST_OBJECTS>
+    $<TARGET_OBJECTS:NLS_OBJECTS>
+    $<TARGET_OBJECTS:CMDLINE_COMMON>
+    $<TARGET_OBJECTS:TOOLS_COMMON>
+    $<TARGET_OBJECTS:HEADIDS_COMMON>
+    $<TARGET_OBJECTS:ADDRSPACE_COMMON>
+)
+target_link_libm(test_coverity_inputs)
+add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}
+    "-DTEST_PROGRAM=$<TARGET_FILE:test_coverity_inputs>"
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CoverityInputs"
+    -P "${CMAKE_SOURCE_DIR}/tests/coverity_inputs.cmake"
+)
+set_tests_properties(coverity_inputs PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};ASL_COVERITY_TEST_CMD="
+)
+
 define_executable(test_forward_refs
     tests/forward_refs.c trees.c
 )
