@@ -12,6 +12,9 @@
 
 #include "codescmp.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -94,6 +97,12 @@ static Boolean DecodeRegCore(char const* p_arg, tRegInt* p_result, tSymbolSize* 
  * \return eval result
  * ------------------------------------------------------------------------ */
 
+static void WrOperandChoices(Word id, tStrComp const* operand, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(id, detail, &operand->Pos);
+}
+
 static Boolean ChkRegSize(tSymbolSize req_size, tSymbolSize act_size) {
     return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
 }
@@ -114,7 +123,10 @@ static tRegEvalResult DecodeReg(
 
     if (reg_eval_result == eIsReg) {
         if (!ChkRegSize(req_size, eval_result.DataSize)) {
-            WrStrErrorPos(ErrNum_InvOpSize, p_arg);
+            WrOperandChoices(ErrNum_InvOpSize, p_arg,
+                             (req_size == eSymbolSize16Bit)
+                                 ? "P0..P3, PC, expr (0..3)"
+                                 : "E, expr (-128..127)");
             reg_eval_result = must_be_reg ? eIsNoReg : eRegAbort;
         }
     }
@@ -216,7 +228,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, Boolean MayInc, Byte PCDisp, Byte
 
         if (*Left.str.p_str == '@') {
             if (!MayInc) {
-                WrError(ErrNum_InvAddrMode);
+                char detail[240];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                            "disp(P0..P3), E(P1..P3), target");
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
                 return False;
             }
             StrCompIncRefLeft(&Left, 1);
@@ -225,14 +240,17 @@ static Boolean DecodeAdr(tStrComp const* pArg, Boolean MayInc, Byte PCDisp, Byte
         /* Programmer's manual says that 'Auto-indexing requires ..., and a pointer
          * register (other than PC)...' : */
         if (*Arg == (4 | REG_PC)) {
-            WrStrErrorPos(ErrNum_InvReg, &Right);
+            WrOperandChoices(ErrNum_InvReg, &Right, "P1..P3, expr (1..3)");
             return False;
         }
         switch (DecodeReg(&Left, &BAsmCode[1], NULL, eSymbolSize8Bit, False)) {
         case eIsReg:
             /* 0x80 -> use E register only applies if pointer register is not P0(PC): */
             if (*Arg == REG_PC) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &Left);
+                char detail[240];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                            "disp(P0), E(P1..P3)");
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &Left.Pos);
                 return False;
             }
             break;
@@ -275,7 +293,11 @@ static Boolean DecodeAdr(tStrComp const* pArg, Boolean MayInc, Byte PCDisp, Byte
 
         else if (!mFirstPassUnknownOrQuestionable(Flags)
                  && (Disp > 0x7f) && (Disp < 0xf80)) {
-            WrError(ErrNum_DistTooBig);
+            char detail[200];
+            LargeInt distance = (Disp & 0x800) ? (LargeInt)Disp - 0x1000 : (LargeInt)Disp;
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                        distance, (LargeInt)-128, (LargeInt)127, (LargeWord)PCVal);
+            WrXErrorPos(ErrNum_DistTooBig, detail, &pArg->Pos);
         } else {
             BAsmCode[1] = Disp & 0xff;
             *Arg        = REG_PC;

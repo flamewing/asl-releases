@@ -1309,6 +1309,10 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgAddressDispRangePC
+ "Adressverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
+ "address displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
+
 Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"

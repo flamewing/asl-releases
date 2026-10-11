@@ -1228,9 +1228,14 @@
         "ErrNum_InvOpSize": 1,
         "ErrNum_InvReg": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 76 removes redundant InvReg errors from pointer-order and JS callers: pointer evaluation always supplies the primary size/range/undefined error. Two of three historical InvReg sites reviewed; remaining auto-index register constraint and other families pending."
+      "reviewed_diagnostic_families": [
+        "ErrNum_DistTooBig",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
+        "ErrNum_InvReg"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical sites reviewed in tranches 76/78: redundant pointer caller errors removed, typed register choices, required non-auto address forms, non-PC auto pointer and E-displacement forms, signed 12-bit wrapped PC-relative address distance/full interval/actual page-local PC base. Preserve PC preincrement, page wrapping, typed/numeric aliases and existing IDs. Separate forward-expression rejection fixed in tranche 77."
     },
     "codest6.c": {
       "candidate_counts": {

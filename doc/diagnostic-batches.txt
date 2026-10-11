@@ -1097,3 +1097,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     worked. Tests cover all 14 shared memory/branch callers, eventual valid
     and excessive values, single undefined errors and page-wrap bytes.
     Validation: all 391 CTest cases pass with embedded/external catalogs.
+
+78. Complete SC/MP historical size/mode/pointer/displacement review.
+    1130 identifies typed pointer/displacement choices. 1350 lists permitted
+    non-auto address forms or distinguishes E(P1..P3) from numeric disp(P0).
+    Auto-index 1445 identifies required non-PC pointer P1..P3 / numeric 1..3.
+    1330 shows signed 12-bit wrapped address displacement, [-128,127] and
+    actual page-local PC base; preserve memory PC+1 versus branch PC+2.
+    Keep IDs, page-local wrap, preincrement, register aliases, signed -128
+    PC displacement and accepted bytes. Tests cover all shared callers,
+    exact positions, endpoints, page wrap and typed/numeric aliases.
+    Validation: all 391 CTest cases pass with embedded/external catalogs.
