@@ -12,6 +12,9 @@
 
 #include "codeol40.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -118,7 +121,21 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
 AdrFound:
 
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[160] = "", detail[240];
+        for (pNot = Notations; pNot->pAsc; pNot++) {
+            if (Mask & (1 << pNot->AdrMode)) {
+                strmaxcat(forms, pNot->pAsc, sizeof(forms));
+                strmaxcat(forms, ", ", sizeof(forms));
+            }
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "expr, #expr, ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }
@@ -220,7 +237,10 @@ static void DecodeLD(Word Code) {
                     BAsmCode[CodeLen++] = 0x68;
                     BAsmCode[CodeLen++] = AdrVal;
                 } else if (AdrVal) {
-                    WrError(ErrNum_OverRange);
+                    char detail[160];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                                "LD T", (LargeInt)AdrVal, (LargeInt)0, (LargeInt)0);
+                    WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[2].Pos);
                 } else {
                     BAsmCode[CodeLen++] = 0x68;
                 }
@@ -270,7 +290,9 @@ static void DecodeBit(Word Code) {
         if (!as_strcasecmp(ArgStr[1].str.p_str, "C")) {
             BAsmCode[CodeLen++] = Hi(Code);
         } else {
-            WrError(ErrNum_InvAddrMode);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "C");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         }
     } else if (ChkArgCnt(1, 2)) {
         Boolean  OK;
@@ -316,7 +338,10 @@ static void CodeTHB(Word Code) {
             if ((MomCPU == CPU5840) || (MomCPU == CPU5842)) {
                 BAsmCode[CodeLen++] = Lo(Code) | (ImmVal & 1);
             } else if (ImmVal) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            "THB", (LargeInt)ImmVal, (LargeInt)0, (LargeInt)0);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[CodeLen++] = Lo(Code);
             }
@@ -349,7 +374,7 @@ static void CodeImm4(Word Code) {
 static void CodeLTI(Word Code) {
     if (ChkArgCnt(0, 1) && (ChkExactCPUMask(Hi(Code), CPU5840) >= 0)) {
         Boolean OK     = True;
-        Word    ImmVal = ArgCnt ? EvalStrIntExpression(&ArgStr[1], Int8, &OK) : 0;
+        LongInt ImmVal = ArgCnt ? EvalStrIntExpression(&ArgStr[1], Int8, &OK) : 0;
 
         if (OK) {
             /* LTI can only load 0 into timer on smaller devices */
@@ -358,7 +383,10 @@ static void CodeLTI(Word Code) {
                 BAsmCode[CodeLen++] = Lo(Code);
                 BAsmCode[CodeLen++] = Lo(ImmVal);
             } else if (ImmVal != 0) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            "LTI", (LargeInt)ImmVal, (LargeInt)0, (LargeInt)0);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[CodeLen++] = Lo(Code);
             }

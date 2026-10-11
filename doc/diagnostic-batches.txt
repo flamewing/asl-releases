@@ -825,3 +825,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     all five CPUs, Int4/Int8 overflow, forward values and preceding bytes.
     Leave diagnostic improvements for the following tranche.
     Validation: all 381 CTest cases pass with embedded/external catalogs.
+
+53. Complete OLMS-40 historical operand/zero-value inventory review.
+    Shared 1350 lists notation and immediate alternatives after CPU mask
+    pruning. One-operand bit instructions identify required C under -x.
+    LD T, LTI and THB 1320 show actual nonzero value and [0,0] interval
+    on restricted CPUs. Retain Byte normalization for LD T, while keeping
+    LTI signed evaluated value available for accurate negative detail.
+    IDs, CPU flags, masks, zero and preceding accepted encodings unchanged.
+    Tests cover all five CPUs, both bit forms, every shared mask caller,
+    zero/nonzero/negative timer values, THB-variable CPUs and primary errors.
+    Validation: all 381 CTest cases pass with embedded/external catalogs.

@@ -1104,8 +1104,12 @@
         "ErrNum_InvAddrMode": 2,
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All five historical sites reviewed in tranche 53: mask-specific forms after CPU pruning, C-only one-operand bit forms, and zero-only LD T/LTI/THB restrictions with actual value. LD T retains Byte normalization; LTI retains evaluated signed value for detail. Shared CPU/page helpers already supply their contracts. Separate stale-mode fix in tranche 52."
     },
     "codeol50.c": {
       "candidate_counts": {
