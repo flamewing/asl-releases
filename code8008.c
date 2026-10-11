@@ -12,6 +12,9 @@
 
 #include "code8008.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -96,7 +99,7 @@ static Boolean DecodeReg16(char* Asc, Byte* pErg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeCondition_Z80(const char *pAsc, Byte *pResult)
+ * \fn     DecodeCondition_Z80(const tStrComp *pArg, Byte *pResult)
  * \brief  decode Z80-style conditions for JP CALL RET
  * \param  pAsc source argument
  * \param  dest buffer
@@ -105,14 +108,18 @@ static Boolean DecodeReg16(char* Asc, Byte* pErg) {
 
 static char const Conditions[][4] = {"NC", "NZ", "P", "PO", "C", "Z", "M", "PE"};
 
-static Boolean DecodeCondition_Z80(char const* pAsc, Byte* pResult) {
+static Boolean DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult) {
     for (*pResult = 0; *pResult < sizeof(Conditions) / sizeof(*Conditions);
          (*pResult)++) {
-        if (!as_strcasecmp(pAsc, Conditions[*pResult])) {
+        if (!as_strcasecmp(pArg->str.p_str, Conditions[*pResult])) {
             *pResult = *pResult << 3;
             return True;
         }
     }
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices),
+                "NC / NZ / P / PO / C / Z / M / PE");
+    WrXErrorPos(ErrNum_UndefCond, detail, &pArg->Pos);
     return False;
 }
 
@@ -272,7 +279,7 @@ static void DecodeJP(Word Code) {
     if (ArgCnt == 2) {
         Byte Cond;
 
-        if (DecodeCondition_Z80(ArgStr[1].str.p_str, &Cond)) {
+        if (DecodeCondition_Z80(&ArgStr[1], &Cond)) {
             DecodeJmpCore(0x40 | Cond);
         }
     } else {
@@ -298,7 +305,7 @@ static void DecodeJ(Word Code) {
     case 2: {
         Byte Condition;
 
-        if (DecodeCondition_Z80(ArgStr[1].str.p_str, &Condition)) {
+        if (DecodeCondition_Z80(&ArgStr[1], &Condition)) {
             DecodeJmpCore(0x40 | Condition);
         }
         break;
@@ -339,7 +346,7 @@ static void DecodeCALL(Word Code) {
     if (ArgCnt == 2) {
         Byte Cond;
 
-        if (DecodeCondition_Z80(ArgStr[1].str.p_str, &Cond)) {
+        if (DecodeCondition_Z80(&ArgStr[1], &Cond)) {
             DecodeJmpCore(0x42 | Cond);
         }
     } else {
@@ -359,7 +366,7 @@ static void DecodeRET(Word Code) {
         if (1 == ArgCnt) {
             Byte Cond;
 
-            if (DecodeCondition_Z80(ArgStr[1].str.p_str, &Cond)) {
+            if (DecodeCondition_Z80(&ArgStr[1], &Cond)) {
                 BAsmCode[CodeLen++] = 0x03 | Cond;
             }
         } else {

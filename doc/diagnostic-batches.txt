@@ -1561,3 +1561,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     displacement [-128,127] and word PC. Adjacent skip/segment names use tables.
     Preserve masks, wrapping, IDs, warning emission and original valid bytes.
     Validation: all 406 CTest cases pass with embedded/external catalogs.
+
+127. Intel 8008 silent invalid conditional instructions.
+    Z80-style JP/J/CALL/RET condition decoder returns false without a diagnostic;
+    all four silently drop invalid instructions and assembly succeeds on both CPUs.
+    Carry source position into the shared decoder, issue 1360 with accepted eight
+    names and stop encoding. Tests cover all four callers/two CPUs, EXPECT/no
+    emission, all accepted conditions and original branch/call/return bytes.
+    Validation: all 407 CTest cases pass with embedded/external catalogs.

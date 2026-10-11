@@ -1884,6 +1884,11 @@
       "file": "code2650.c",
       "issue": "Relative/absolute page helpers reject first-pass unknown forward expressions before final page/distance resolves.",
       "status": "fixed in tranche 124; defer all three page/distance checks for unknown/questionable symbols; all 26 callers/aliases and final page errors checked"
+    },
+    {
+      "file": "code8008.c",
+      "issue": "Z80-style JP/J/CALL/RET invalid conditions silently discard instructions while assembly succeeds.",
+      "status": "fixed in tranche 127; shared condition decoder emits positioned 1360 with eight accepted names; four callers/both CPUs/no emission/all accepted conditions checked"
     }
   ]
 }
