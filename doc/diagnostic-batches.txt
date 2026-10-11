@@ -1203,3 +1203,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     encodings after MOVW and reject values outside the byte domain. Tests
     cover width isolation, primary overflow positions and forward immediates.
     Validation: all 394 CTest cases pass with embedded/external catalogs.
+
+89. Complete F2MC8L historical mode/register/branch review.
+    1350 lists current-mask forms, byte/word immediate domains and required
+    address:bit syntax. Stack 1445 gives A/IX choices. 1370 shows signed
+    16-bit wrapped displacement, [-128,127] and PC+2/PC+3 at the target.
+    Preserve IDs, register/index/address forms, width and accepted bytes.
+    Tests cover masks and immediate widths, all branch aliases, primary bit
+    errors, endpoints/wrap, exact positions and preceding operand encodings.
+    Validation: all 394 CTest cases pass with embedded/external catalogs.

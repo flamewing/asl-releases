@@ -12,6 +12,9 @@
 
 #include "codefmc8.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -67,6 +70,12 @@ static int  OpSize;
 
 /*--------------------------------------------------------------------------*/
 /* Adressdekoder */
+
+static void WrAddressForms(tStrComp const* operand, char const* forms) {
+    char detail[480];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+}
 
 static void DecodeAdr(tStrComp const* pArg, unsigned Mask) {
     Boolean OK;
@@ -183,7 +192,47 @@ static void DecodeAdr(tStrComp const* pArg, unsigned Mask) {
     /* erlaubt ? */
 
     if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0)) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[400] = "";
+        if (Mask & MModAcc) {
+            strmaxcat(forms, "A, ", sizeof(forms));
+        }
+        if (Mask & MModExt) {
+            strmaxcat(forms, "expr (0..65535), ", sizeof(forms));
+        }
+        else if (Mask & MModDir) {
+            strmaxcat(forms, "expr (0..255), ", sizeof(forms));
+        }
+        if (Mask & MModIIX) {
+            strmaxcat(forms, "@IX+disp (-128..127), ", sizeof(forms));
+        }
+        if (Mask & MModIEP) {
+            strmaxcat(forms, "@EP, ", sizeof(forms));
+        }
+        if (Mask & MModIA) {
+            strmaxcat(forms, "@A, ", sizeof(forms));
+        }
+        if (Mask & MModReg) {
+            strmaxcat(forms, "R0..R7, ", sizeof(forms));
+        }
+        if (Mask & MModReg16) {
+            strmaxcat(forms, "SP, IX, EP, ", sizeof(forms));
+        }
+        if (Mask & MModT) {
+            strmaxcat(forms, "T, ", sizeof(forms));
+        }
+        if (Mask & MModPC) {
+            strmaxcat(forms, "PC, ", sizeof(forms));
+        }
+        if (Mask & MModPS) {
+            strmaxcat(forms, "PS, ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, OpSize ? "#expr (-32768..65535), " : "#expr (-128..255), ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        WrAddressForms(pArg, forms);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }
@@ -196,7 +245,7 @@ static Boolean DecodeBitAdr(tStrComp const* pArg, Byte* Adr, Byte* Bit) {
 
     sep = strchr(pArg->str.p_str, ':');
     if (!sep) {
-        WrError(ErrNum_InvAddrMode);
+        WrAddressForms(pArg, "expr (0..255):bit (0..7)");
         return FALSE;
     }
     StrCompSplitRef(&AddrArg, &BitArg, pArg, sep);
@@ -254,6 +303,13 @@ static void DecodeALU(Word Code) {
     }
 }
 
+static void WrBranchRange(Integer distance, LargeWord pc_base, tStrComp const* operand) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)distance, (LargeInt)-128, (LargeInt)127, pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &operand->Pos);
+}
+
 static void DecodeRel(Word Code) {
     Integer      Adr;
     Boolean      OK;
@@ -264,7 +320,7 @@ static void DecodeRel(Word Code) {
               - (EProgCounter() + 2);
         if (OK) {
             if (((Adr < -128) || (Adr > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(Adr, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 BAsmCode[0] = Code;
                 BAsmCode[1] = Adr & 0xff;
@@ -723,7 +779,7 @@ static void DecodeBitBr(Word Index) {
               - (EProgCounter() + 3);
         if (OK) {
             if (((Adr < -128) || (Adr > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(Adr, EProgCounter() + 3, &ArgStr[2]);
             } else {
                 BAsmCode[0] = 0xb0 + (Index << 3) + Bit;
                 BAsmCode[1] = BAdr; /* reverse for F2MC8? */
@@ -777,7 +833,9 @@ static void DecodeStack(Word Index) {
             break;
         case ModReg16:
             if (AdrPart != 2) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "A, IX");
+                WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = 0x41 + (Index << 4);
                 CodeLen     = 1;

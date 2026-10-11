@@ -902,8 +902,13 @@
         "ErrNum_InvReg": 1,
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All six historical sites reviewed in tranche 89: mask-specific registers/direct/extended/indexed/immediate forms with byte/word domains, bit address:bit syntax, A/IX-only stack register choices, signed 16-bit wrapped branch displacement [-128,127] at PC+2/+3. Preserve forms/widths and accepted encodings. Separate primary bit errors, provisional branches and stale width fixed in tranches 86/87/88. Quoted colon bit-address splitting is a separately reproduced follow-up."
     },
     "codeh16.c": {
       "candidate_counts": {
@@ -1681,6 +1686,11 @@
       "file": "codefmc8.c",
       "issue": "MOVW leaves OpSize=1 across instructions; CMP then evaluates byte immediates as words, emits an extra byte for CMP A,#1 and accepts/truncates CMP R0,#256.",
       "status": "fixed in tranche 88; reset default operand size at every instruction dispatch, MOVW still selects word mode explicitly; all six CMP immediate addressing forms verified before/after MOVW"
+    },
+    {
+      "file": "codefmc8.c",
+      "issue": "DecodeBitAdr uses strchr for its separator, so a colon character literal in the address is split inside its quotes and rejected.",
+      "status": "reproduced; quote-aware separator follow-up pending"
     }
   ]
 }
