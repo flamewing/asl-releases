@@ -1425,6 +1425,10 @@ Message ErrMsgBranchDispZeroReserved
  "Sprungverschiebung 0 ist nicht codierbar (PC-Basis 0x%lllx); null ist reserviert"
  "branch displacement 0 is not encodable (PC base 0x%lllx); zero is reserved"
 
+Message ErrMsgRepeatedParallelField
+ "Parallele Operation enth&auml;lt bereits das Feld %s"
+ "parallel operation already contains the %s field"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

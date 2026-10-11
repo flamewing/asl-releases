@@ -12,6 +12,9 @@
 
 #include "code7720.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -75,9 +78,32 @@ static Boolean DecodeReg(char* Asc, LongWord* Code, TReg* Regs) {
     return False;
 }
 
+static void WrRegisterChoices(unsigned index, TReg const* regs) {
+    char choices[256] = "", detail[320];
+    for (; regs->Name; regs++) {
+        strmaxcat(choices, regs->Name, sizeof(choices));
+        strmaxcat(choices, ", ", sizeof(choices));
+    }
+    if (*choices) {
+        choices[strlen(choices) - 2] = '\0';
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[index].Pos);
+}
+
+static void WrAccumulatorChoices(unsigned index) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "ACCA, ACCB");
+    WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[index].Pos);
+}
+
 static Boolean ChkOpPresent(OpComps Comp) {
     if ((UsedOpFields & (1l << Comp)) != 0) {
-        WrError(ErrNum_InvParAddrMode);
+        static char const* const field_names[] = { "MOV", "ALU", "DPL", "DPH", "RP", "RET" };
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRepeatedParallelField),
+                    field_names[Comp]);
+        WrXErrorPos(ErrNum_InvParAddrMode, detail, &OpPart.Pos);
         return False;
     } else {
         UsedOpFields |= 1l << Comp;
@@ -199,7 +225,7 @@ static void DecodeALU2(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[2].str.p_str, &Src, ALUSrcRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrRegisterChoices(2, ALUSrcRegs);
     } else {
         if ((strlen(ArgStr[1].str.p_str) == 4)
             && (!as_strncasecmp(ArgStr[1].str.p_str, "ACC", 3))) {
@@ -209,7 +235,7 @@ static void DecodeALU2(Word Code) {
             }
         }
         if (Acc == 0xff) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            WrAccumulatorChoices(1);
         } else {
             ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos)
                        + (Src << ALUSrcPos);
@@ -234,7 +260,7 @@ static void DecodeALU1(Word Code) {
             }
         }
         if (Acc == 0xff) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            WrAccumulatorChoices(1);
         } else {
             ActCode |= (((LongWord)Code) << ALUPos) + (Acc << AccPos);
         }
@@ -300,7 +326,7 @@ static void DecodeLDI(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg, DestRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(1, DestRegs);
     } else {
         Value = EvalStrIntExpression(&ArgStr[2], Int16, &OK);
         if (OK) {
@@ -351,9 +377,9 @@ static void DecodeMOV(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Dest, DestRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrRegisterChoices(1, DestRegs);
     } else if (!DecodeReg(ArgStr[2].str.p_str, &Src, SrcRegs)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrRegisterChoices(2, SrcRegs);
     } else {
         ActCode |= Dest + (Src << 4);
     }

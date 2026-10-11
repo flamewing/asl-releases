@@ -533,8 +533,11 @@
       "candidate_counts": {
         "ErrNum_InvReg": 6
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg"
+      ],
+      "status": "complete",
+      "review_notes": "All six historical register rejection sites reviewed in tranche 63: live CPU-specific destination/source/ALU table choices and ACCA/ACCB. Adjacent duplicate parallel-field rejection identifies MOV/ALU/DPL/DPH/RP/RET. Preserve register sets, field tracking and packed words. Data ranges already use ChkRange with evaluated bound; no unrelated changes."
     },
     "code77230.c": {
       "candidate_counts": {
@@ -1551,6 +1554,11 @@
       "file": "codexcore.c",
       "issue": "Automatic long branches reject positive byte displacement 131070 even though XS1 permits the full unsigned 16-bit halfword displacement 65535 in either direction.",
       "status": "fixed in tranche 61; positive byte displacement 131070 now accepted and agrees with explicit 65535-halfword encoders, next value still rejected"
+    },
+    {
+      "file": "code7720.c",
+      "issue": "DecodeOP uppercases a component with operands but not a bare component, rejecting lowercase OP dpinc although OP DPINC works.",
+      "status": "reproduced during tranche 63; fix separately in tranche 64"
     }
   ]
 }

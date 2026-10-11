@@ -1577,6 +1577,18 @@ set_tests_properties(mil1750_diagnostics PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
 )
 
+add_test(NAME upd772x_diagnostics COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/UPD772xDiagnostics"
+    -P "${CMAKE_SOURCE_DIR}/tests/upd772x_diagnostics.cmake"
+)
+set_tests_properties(upd772x_diagnostics PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+)
+
 add_test(NAME ace_diagnostics COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"

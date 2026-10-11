@@ -943,3 +943,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     no-wrap behavior, primary undefined errors, register/base/index sites,
     source positions, forward targets and preceding accepted encodings.
     Validation: all 385 CTest cases pass with embedded/external catalogs.
+
+63. Complete NEC 7720/7725 historical register-choice inventory review.
+    Six 1445 sites list live CPU-specific destination/source/ALU choices
+    or ACCA/ACCB at the rejected operand; 7725-only @TRB appears only there.
+    Adjacent parallel conflict 1355 identifies repeated MOV/ALU/DPL/DPH/RP/
+    RET field at the operation. Retain IDs, register tables, field tracking
+    and existing packed instruction words. Tests cover both CPUs, LD/LDI/
+    MOV, every ALU caller, all six parallel fields, positions and preceding
+    accepted packed words. Lowercase bare OP components are separately
+    rejected because their opcode is not normalized; fix in tranche 64.
+    Validation: all 386 CTest cases pass with embedded/external catalogs.
