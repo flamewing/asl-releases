@@ -490,3 +490,20 @@ manual, EXPECT fixtures, translations and source-position tests.
     size rejection is a defensive guard: all sizes accepted by the current
     Motorola attribute parser have a supported GetWSize result; retain it.
     Validation: all 360 CTest cases pass with embedded/external catalogs.
+
+26. Complete PIC16C5x/PIC16C8x/vector historical numerical review.
+    Both PIC target overflow sites retain 1320 and report the interpreted
+    word address, actual CPU-specific ROM interval and selected CPU at the
+    target. Preserve 16C8x's AddCodeSpace exclusion and Word interpretation
+    of negative Int16 targets. Adjacent PIC16C5x CALL rejection retains 1905
+    and identifies the destination's set bit 8, rather than leaving its
+    non-contiguous permitted target domain unexplained.
+    SVEC's sole historical overflow now locates the scale operand and
+    reports [0,3]. Its adjacent 1325 rejection reports signed coordinates
+    and the multiple-of-256 requirement at the pair. Existing range/order,
+    symbol handling, page-selection instructions and encodings are retained.
+    Tests cover all ten supported PIC variants, CALL/GOTO, range and bit-8
+    rejection precedence, signed interpretation, source positions, German
+    detail, forward/undefined targets, vector syntax variants, signed
+    coordinates, accepted endpoints and preceding golden encodings.
+    Validation: all 361 CTest cases pass with embedded/external catalogs.

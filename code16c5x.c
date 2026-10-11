@@ -12,6 +12,9 @@
 
 #include "code16c5x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -130,9 +133,15 @@ static void DecodeCALL_GOTO(Word Code) {
 
         if (EvalResult.OK) {
             if (AdrWord > SegLimits[SegCode]) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPICTargetRange),
+                        (LargeInt)AdrWord, (LargeInt)(SegLimits[SegCode]), MomCPUIdent);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else if ((Code & 0x100) && ((AdrWord & 0x100) != 0)) {
-                WrError(ErrNum_NotFromThisAddress);
+                char detail[150];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPICCallTargetBit),
+                        (LargeWord)AdrWord);
+                WrXErrorPos(ErrNum_NotFromThisAddress, detail, &ArgStr[1].Pos);
             } else {
                 ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                 if (((ProgCounter() ^ AdrWord) & 0x200) != 0) {

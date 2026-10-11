@@ -12,6 +12,9 @@
 
 #include "code16c8x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -154,7 +157,10 @@ static void DecodeJump(Word Index) {
         Word AdrWord = EvalStrIntExpressionWithResult(&ArgStr[1], Int16, &EvalResult);
         if (EvalResult.OK) {
             if (AdrWord > (SegLimits[SegCode] - AddCodeSpace)) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPICTargetRange),
+                        (LargeInt)AdrWord, (LargeInt)(SegLimits[SegCode] - AddCodeSpace), MomCPUIdent);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 Word XORVal, Mask, RegBit;
 

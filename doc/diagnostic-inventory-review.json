@@ -67,15 +67,21 @@
       "candidate_counts": {
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All historical candidates improved in tranche 26, plus adjacent PIC CALL bit-8 and SVEC coordinate alignment checks. Encoding and operand evaluation retained."
     },
     "code16c8x.c": {
       "candidate_counts": {
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All historical candidates improved in tranche 26, plus adjacent PIC CALL bit-8 and SVEC coordinate alignment checks. Encoding and operand evaluation retained."
     },
     "code1750.c": {
       "candidate_counts": {
@@ -1210,8 +1216,11 @@
       "candidate_counts": {
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All historical candidates improved in tranche 26, plus adjacent PIC CALL bit-8 and SVEC coordinate alignment checks. Encoding and operand evaluation retained."
     },
     "codewe32.c": {
       "candidate_counts": {

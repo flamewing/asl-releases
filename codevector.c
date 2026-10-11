@@ -230,11 +230,18 @@ static void DecodeSVec(Word Index) {
     else if (!DecodeXY(&ArgStr[1], &X, &Y, True))
         ;
     else if ((X & 0xff) || (Y & 0xff)) {
-        WrError(ErrNum_NotAligned);
+        char detail[180];
+        LargeInt x = (X & 0x400) ? -(LargeInt)(X & 0x3ff) : (LargeInt)X;
+        LargeInt y = (Y & 0x400) ? -(LargeInt)(Y & 0x3ff) : (LargeInt)Y;
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgVectorCoordinatesAlignment), x, y);
+        WrXErrorPos(ErrNum_NotAligned, detail, &ArgStr[1].Pos);
     } else if (!DecodeScale(&ArgStr[2], &Scale))
         ;
     else if (Scale > 3) {
-        WrError(ErrNum_OverRange);
+        char detail[150];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                "SVEC", (LargeInt)Scale, (LargeInt)0, (LargeInt)3);
+        WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[2].Pos);
     } else if (!DecodeBright(&ArgStr[3], &Bright))
         ;
     else {

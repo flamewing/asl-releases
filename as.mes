@@ -1313,6 +1313,18 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgPICTargetRange
+ "PIC-Wortziel %llld au&szlig;erhalb [0,%llld] f&uuml;r %s"
+ "PIC word target %llld outside [0,%llld] for %s"
+
+Message ErrMsgPICCallTargetBit
+ "CALL-Ziel 0x%lllx hat Bit 8 gesetzt; Bit 8 muss gel&ouml;scht sein"
+ "CALL target 0x%lllx has bit 8 set; bit 8 must be clear"
+
+Message ErrMsgVectorCoordinatesAlignment
+ "SVEC-Koordinaten (%llld,%llld) m&uuml;ssen jeweils Vielfache von 256 sein"
+ "SVEC coordinates (%llld,%llld) must each be multiples of 256"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"
