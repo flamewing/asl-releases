@@ -872,3 +872,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     displacement edges, zero, RCALL offsets, forward/undefined targets,
     silent JMP fallback and preceding instruction bytes.
     Validation: all 383 CTest cases pass with embedded/external catalogs.
+
+57. Separate XCore branch target evaluation cascade.
+    Return immediately when UInt32 branch target evaluation fails, before
+    provisional distance alignment/range checks or instruction encoding.
+    Reproduced BRF R0,4294967297 issuing 1320 followed by 1325 before fix.
+    Tests cover BRU/BRF/BRT overflow, undefined target and expression failure,
+    exactly one primary error, and preceding short/long/indirect branch bytes.
+    Validation: all 384 CTest cases pass with embedded/external catalogs.

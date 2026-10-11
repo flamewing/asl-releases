@@ -1521,6 +1521,11 @@
       "file": "codeol40.c",
       "issue": "DecodeAdr retains the preceding operand mode when expression evaluation fails, producing secondary mode errors or stale-mode encoding.",
       "status": "fixed in tranche 52; initialize ModNone on entry, single primary failures and accepted bytes verified"
+    },
+    {
+      "file": "codexcore.c",
+      "issue": "Code_branch_core ignores failed target evaluation and diagnoses/encodes its provisional result, causing secondary alignment/range errors.",
+      "status": "fixed in tranche 57; return before branch checks on failed evaluation, all three callers verified"
     }
   ]
 }

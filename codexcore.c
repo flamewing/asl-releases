@@ -357,6 +357,9 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
 
     Delta = EvalStrIntExpressionWithFlags(&ArgStr[DistArgIndex], UInt32, &OK, &Flags)
             - (EProgCounter() + 2);
+    if (!OK) {
+        return;
+    }
     if (mFirstPassUnknown(Flags)) {
         Delta &= 0x1fffe;
     }
