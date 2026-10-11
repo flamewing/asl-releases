@@ -1743,7 +1743,12 @@
     {
       "file": "code960.c",
       "issue": "Scale parser falls through its 0..4 encoding loop for scale 32 with remaining value 1, accepts encoding 5 reserved by Intel manual Table D-3.",
-      "status": "confirmed during tranche 99; queued separately, manual https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf section 3.3.2 and Table D-3"
+      "status": "fixed in tranche 100; validate full strtol long result in 1..16 and power-of-two before deriving scale encoding; reserved 32 and narrowing/overflow aliases rejected, all five accepted scale bytes and 20 callers checked. Intel manual section 3.3.2/Table D-3: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf"
+    },
+    {
+      "file": "code960.c",
+      "issue": "COBR rejects displacement 4092 with historical >4090 predicate, although Intel manual D.3 defines signed word displacement [-1024,1023], hence byte interval [-4096,4092].",
+      "status": "confirmed during tranche 99; queued separately; https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf section D.3"
     }
   ]
 }

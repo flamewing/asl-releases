@@ -1309,3 +1309,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     warning behavior and bytes. Tests cover all 27 target-bearing branches,
     register groups/types, memory failures, accepted endpoints and wrapping.
     Validation: all 397 CTest cases pass with embedded/external catalogs.
+
+100. i960 reserved/narrowed index-scale rejection.
+    The old loop accepted scale 32 as encoding 5 after its 0..4 iterations.
+    Intel CA/CF manual section 3.3.2 and Table D-3 permits only 1,2,4,8,16;
+    encoding 5 is reserved and faults. Validate full strtol long value before
+    narrowing/encoding, requiring a power of two in [1,16]. This also prevents
+    huge values wrapping to valid scales on platforms with 64-bit long.
+    Retain syntax/positioned 1350, accepted five scale bytes and all 20 memory
+    callers; EXPECT regressions prove no instruction emitted on invalid scale.
+    Source: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf
+    Validation: all 397 CTest cases pass with embedded/external catalogs.
+    WSL: 64-bit-long parser accepted scale 4294967297 before; focused suite passes after.

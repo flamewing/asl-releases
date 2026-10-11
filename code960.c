@@ -368,7 +368,8 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
     LongInt  DispAcc;
     LongWord Base, Index, Scale, Mode;
     Boolean  Done;
-    int      ArgLen, Scale2;
+    int      ArgLen;
+    long     Scale2;
     char *   p, *p2, *end;
     Boolean  OK;
     tStrComp Arg = *pArg, RegArg, ScaleArg;
@@ -401,16 +402,11 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                 if (p2) {
                     StrCompSplitRef(&RegArg, &ScaleArg, &RegArg, p2);
                     Scale2 = strtol(ScaleArg.str.p_str, &end, 10);
-                    if (*end != '\0') {
+                    if (*end != '\0' || Scale2 < 1 || Scale2 > 16
+                        || (Scale2 & (Scale2 - 1))) {
                         return ScaleError(&ScaleArg);
                     }
-                    for (Scale = 0; Scale < 5; Scale++, Scale2 = Scale2 >> 1) {
-                        if (Odd(Scale2)) {
-                            break;
-                        }
-                    }
-                    if (Scale2 != 1) {
-                        return ScaleError(&ScaleArg);
+                    for (Scale = 0; Scale2 > 1; Scale++, Scale2 >>= 1) {
                     }
                 }
                 if (DecodeIReg(&RegArg, &Index, True) != eIsReg) {
