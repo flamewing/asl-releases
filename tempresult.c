@@ -268,16 +268,18 @@ int as_tempres_cmp(TempResult const* p_res1, TempResult const* p_res2) {
 
 int TempResultToFloat(TempResult* pResult) {
     switch (pResult->Typ) {
-    case TempInt:
-        pResult->Contents.Float =
+    case TempInt: {
+        as_float_t const value =
 #ifdef AS_HAS128
                 /* Weird problems converting negative int128_t values
                    to long double when Valgrind is active: */
                 (QuadInt)
 #endif
                         pResult->Contents.Int.Value;
+        pResult->Contents.Float = value;
         pResult->Typ = TempFloat;
         break;
+    }
     case TempFloat:
         break;
     default:

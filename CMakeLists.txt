@@ -1382,6 +1382,12 @@ define_executable(test_cpu2phys
 )
 add_test(NAME cpu2phys COMMAND test_cpu2phys)
 
+define_executable(test_tempresult_float
+    tests/tempresult_float.c tempresult.c nonzstring.c strutil.c dynstr.c
+)
+target_link_libm(test_tempresult_float)
+add_test(NAME tempresult_float COMMAND test_tempresult_float)
+
 define_executable(test_nonzstring
     tests/nonzstring.c
     nonzstring.c strutil.c dynstr.c

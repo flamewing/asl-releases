@@ -169,12 +169,24 @@ integer-syntax changes. Allocation failure was not injected. Windows uses
 W32_NLS, so the new LOCALE_NLS test requires the POSIX CI build; it was not
 run locally. No Coverity triage states have been changed.
 
-Review notes on the remaining confirmed labels
+Sixth batch: integer-to-floating assignment semantics
 
 914439, tempresult.c:TempResultToFloat
-  The scalar union conversion appears valid: the RHS is evaluated before
-  assignment. No overlapping memcpy is present. Request the event trace
-  before changing this code or reclassifying the finding.
+  Convert into a local as_float_t before assigning the floating union
+  member. Integer and floating objects overlap but have incompatible
+  types, violating C11 6.5.16.1 paragraph 3. RHS-before-store sequencing
+  does not remove that additional constraint. This corrects the earlier
+  review assessment. Preserve the AS_HAS128 QuadInt cast and metadata.
+  Source: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
+
+Validation: the production-type tempresult_float test covers integer
+conversion and metadata, unchanged floats including negative zero/NaN,
+and unsupported types using the real string cleanup implementation.
+All 337 tests passed with embedded and external catalogs. Closure of
+914439 is awaiting the next Coverity scan; no triage state was changed.
+
+Review notes on the remaining confirmed labels
+
 914416, codemsp.c:DecodeEmulOneToTwoX
   Negative offsets masked to 20 bits are intentional; the 0xffffffff
   immediate is recognized by FillAdrPartsImm as the -1 constant generator.
