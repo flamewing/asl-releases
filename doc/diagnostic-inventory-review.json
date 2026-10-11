@@ -1,0 +1,1334 @@
+{
+  "scope": "Semantic review of every candidate in diagnostic-audit-inventory.json. Original locations/counts are historical, not current source positions. A completed diagnostic family does not mean the whole file is complete. Already useful diagnostics need no edit.",
+  "baseline": "4730f629",
+  "files": {
+    "asmallg.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "asmerr.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "asmpars.c": {
+      "candidate_counts": {
+        "ErrNum_InvFuncArgCnt": 4,
+        "ErrNum_InvReg": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "asmstructs.c": {
+      "candidate_counts": {
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code166.c": {
+      "candidate_counts": {
+        "ErrNum_DistIsOdd": 3,
+        "ErrNum_InAccPage": 6,
+        "ErrNum_InvAddrMode": 7,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_OverRange": 7,
+        "ErrNum_UnderRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code16c5x.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code16c8x.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code1750.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code1802.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code2650.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvReg": 10
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code29k.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3201x.c": {
+      "candidate_counts": {
+        "ErrNum_InvShiftArg": 1,
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3202x.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvShiftArg": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3203x.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 20,
+        "ErrNum_InvReg": 9,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_Unpredictable": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3205x.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_InvReg": 1,
+        "ErrNum_UnderRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3206x.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 104,
+        "ErrNum_InvReg": 3,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 1,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code3254x.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InvAddrMode": 11
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code340xx.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 21,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_OverRange": 3,
+        "ErrNum_UnderRange": 2,
+        "ErrNum_Unpredictable": 1,
+        "ErrNum_WrongArgCnt": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code370.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_JmpDistTooBig": 4
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code4004.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code42c00.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code47c00.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 21,
+        "ErrNum_OverRange": 4
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code48.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InstructionNotSupported": 2,
+        "ErrNum_InvAddrMode": 35,
+        "ErrNum_InvReg": 1,
+        "ErrNum_NotOnThisAddress": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code51.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 40,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 9,
+        "ErrNum_NotOnThisAddress": 1,
+        "ErrNum_OverRange": 5,
+        "ErrNum_Unpredictable": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code53c8xx.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 35,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code56k.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 22,
+        "ErrNum_InvReg": 39,
+        "ErrNum_InvRegPair": 3,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 8,
+        "ErrNum_UnderRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code601.c": {
+      "candidate_counts": {
+        "ErrNum_DistIsOdd": 2,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_OverRange": 2,
+        "ErrNum_UnderRange": 2
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6100.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPageErr": 1,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code61860.c": {
+      "candidate_counts": {
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code62015.c": {
+      "candidate_counts": {
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InvReg": 6,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code65.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 8,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_NotOnThisAddress": 1,
+        "ErrNum_OverRange": 2,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code68.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6804.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6805.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvReg": 3,
+        "ErrNum_JmpDistTooBig": 7
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6809.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 2,
+        "ErrNum_ConfOpSizes": 2,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 10,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 1,
+        "ErrNum_WrongArgCnt": 4
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6812.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvReg": 16,
+        "ErrNum_InvRegPair": 2,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 2,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code6816.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 7,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code68k.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 3,
+        "ErrNum_AddrNotAligned": 2,
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_DistTooBig": 5,
+        "ErrNum_InstructionNotSupported": 14,
+        "ErrNum_InvAddrMode": 15,
+        "ErrNum_InvOpSize": 98,
+        "ErrNum_InvReg": 7,
+        "ErrNum_InvRegList": 3,
+        "ErrNum_InvRegPair": 5,
+        "ErrNum_InvShiftArg": 1,
+        "ErrNum_JmpDistTooBig": 9,
+        "ErrNum_Unpredictable": 1,
+        "ErrNum_WrongArgCnt": 2
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code68rs08.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 2,
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 7
+      },
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed"
+    },
+    "code7000.c": {
+      "candidate_counts": {
+        "ErrNum_DistIsOdd": 2,
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InstructionNotSupported": 3,
+        "ErrNum_InvAddrMode": 38,
+        "ErrNum_InvOpSize": 13,
+        "ErrNum_InvReg": 16,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 5,
+        "ErrNum_UnderRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code75k0.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 1,
+        "ErrNum_AddrNotAligned": 4,
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 56,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code75xx.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code7700.c": {
+      "candidate_counts": {
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InvAddrMode": 9,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code7720.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 6
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code77230.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 6,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code78c10.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 52,
+        "ErrNum_InvReg": 9,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 2,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code78k0.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 30,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code78k2.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 15,
+        "ErrNum_InvReg": 3,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code78k3.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 35,
+        "ErrNum_InvReg": 9,
+        "ErrNum_InvRegList": 2,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code78k4.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 89,
+        "ErrNum_InvReg": 6,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code8008.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvReg": 9,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code807x.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 8,
+        "ErrNum_InvReg": 3,
+        "ErrNum_OverRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code85.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 32,
+        "ErrNum_InvOpSize": 2,
+        "ErrNum_InvReg": 2,
+        "ErrNum_InvRegPair": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code86.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 2,
+        "ErrNum_DistTooBig": 2,
+        "ErrNum_InstructionNotSupported": 2,
+        "ErrNum_InvAddrMode": 13,
+        "ErrNum_InvOpSize": 14,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code870c.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 11,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code87c800.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 34,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 2,
+        "ErrNum_Unpredictable": 6
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code8x30x.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 6,
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_InvReg": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code90c141.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 13,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code9331.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 7,
+        "ErrNum_InvReg": 9,
+        "ErrNum_InvShiftArg": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code96.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_OverRange": 4,
+        "ErrNum_UnderRange": 4
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code960.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_InvReg": 1,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code96c141.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_DistTooBig": 4,
+        "ErrNum_InvAddrMode": 15,
+        "ErrNum_InvOpSize": 13,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 6,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code97c241.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 3,
+        "ErrNum_DistIsOdd": 5,
+        "ErrNum_InvAddrMode": 29,
+        "ErrNum_InvOpSize": 11,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 6,
+        "ErrNum_UnderRange": 5
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "code9900.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 2,
+        "ErrNum_DistIsOdd": 1,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeace.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeavr.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InstructionNotSupported": 2,
+        "ErrNum_InvAddrMode": 6,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_Unpredictable": 3,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codec16c.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 16,
+        "ErrNum_InvOpSize": 2,
+        "ErrNum_InvReg": 3,
+        "ErrNum_InvRegList": 2,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codecop4.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_NotOnThisAddress": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codecop8.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codecp1600.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 5,
+        "ErrNum_InvShiftArg": 2,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codecp3f.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvShiftArg": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codecr16.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 9,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codef8.c": {
+      "candidate_counts": {
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codefmc16.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 4,
+        "ErrNum_InvAddrMode": 12,
+        "ErrNum_InvReg": 5,
+        "ErrNum_JmpDistTooBig": 5
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codefmc8.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeh16.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 13,
+        "ErrNum_InvOpSize": 4,
+        "ErrNum_InvReg": 4,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 3,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeh8_3.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 5,
+        "ErrNum_InvOpSize": 16,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_OverRange": 2,
+        "ErrNum_UnderRange": 1,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeh8_5.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 6,
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InvAddrMode": 16,
+        "ErrNum_InvOpSize": 19,
+        "ErrNum_InvRegList": 2,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 1,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codehmcs400.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeimp16.c": {
+      "candidate_counts": {
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 8,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codekcp3.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codekcpsm.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codekenbak.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 2,
+        "ErrNum_InvShiftArg": 2,
+        "ErrNum_WrongArgCnt": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeko09.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 7,
+        "ErrNum_InvReg": 8,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codem16.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 3,
+        "ErrNum_DistIsOdd": 2,
+        "ErrNum_InvAddrMode": 34,
+        "ErrNum_InvOpSize": 27,
+        "ErrNum_InvRegList": 1,
+        "ErrNum_InvShiftArg": 1,
+        "ErrNum_JmpDistTooBig": 7,
+        "ErrNum_Unpredictable": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codem16c.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 2,
+        "ErrNum_InvAddrMode": 58,
+        "ErrNum_InvOpSize": 31,
+        "ErrNum_InvReg": 4,
+        "ErrNum_JmpDistTooBig": 6,
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codemcore.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_DistIsOdd": 2,
+        "ErrNum_InvAddrMode": 7,
+        "ErrNum_InvOpSize": 2,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 4,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codemic8.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codemn1610.c": {
+      "candidate_counts": {
+        "ErrNum_InvReg": 14,
+        "ErrNum_InvShiftArg": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 4
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codemn2610.c": {
+      "candidate_counts": {
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_InvReg": 6,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codemsp.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 21,
+        "ErrNum_DistIsOdd": 1,
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_InvOpSize": 10,
+        "ErrNum_InvReg": 3,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codenano.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codens32k.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 4,
+        "ErrNum_InvRegList": 1,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_Unpredictable": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeol40.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeol50.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 6,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codepalm.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codepdk.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_OverRange": 3,
+        "ErrNum_WrongArgCnt": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codepdp11.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_DistIsOdd": 2,
+        "ErrNum_InstructionNotSupported": 2,
+        "ErrNum_InvAddrMode": 4,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codepseudo.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1,
+        "ErrNum_UnderRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "coderx.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 9,
+        "ErrNum_InstructionNotSupported": 4,
+        "ErrNum_InvAddrMode": 12,
+        "ErrNum_InvOpSize": 3,
+        "ErrNum_InvReg": 1,
+        "ErrNum_InvRegList": 5,
+        "ErrNum_JmpDistTooBig": 7,
+        "ErrNum_OverRange": 15
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codes12z.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 14,
+        "ErrNum_InvOpSize": 15,
+        "ErrNum_InvReg": 14,
+        "ErrNum_InvRegList": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_WrongArgCnt": 2
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codescmp.c": {
+      "candidate_counts": {
+        "ErrNum_DistTooBig": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codest6.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_OverRange": 1,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codest7.c": {
+      "candidate_counts": {
+        "ErrNum_InstructionNotSupported": 14,
+        "ErrNum_InvAddrMode": 3,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codest9.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 12,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codesx20.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InvAddrMode": 7
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codetbil.c": {
+      "candidate_counts": {
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codetms7.c": {
+      "candidate_counts": {
+        "ErrNum_InvAddrMode": 1,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codeuc43.c": {
+      "candidate_counts": {
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codev60.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 2,
+        "ErrNum_InvAddrMode": 9,
+        "ErrNum_InvOpSize": 9,
+        "ErrNum_JmpDistTooBig": 3,
+        "ErrNum_OverRange": 3,
+        "ErrNum_Unpredictable": 6
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codevax.c": {
+      "candidate_counts": {
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 6,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_Unpredictable": 2,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codevector.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codewe32.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 4,
+        "ErrNum_InstructionNotSupported": 3,
+        "ErrNum_InvAddrMode": 11,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_Unpredictable": 1,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codexa.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InvAddrMode": 24,
+        "ErrNum_InvOpSize": 27,
+        "ErrNum_InvReg": 3,
+        "ErrNum_InvRegPair": 1,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_OverRange": 2,
+        "ErrNum_Unpredictable": 10
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codexcore.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_JmpDistTooBig": 1,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codexgate.c": {
+      "candidate_counts": {
+        "ErrNum_AddrNotAligned": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codez8.c": {
+      "candidate_counts": {
+        "ErrNum_InAccPage": 1,
+        "ErrNum_InstructionNotSupported": 1,
+        "ErrNum_InvAddrMode": 6,
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_InvReg": 2,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codez80.c": {
+      "candidate_counts": {
+        "ErrNum_AddrModeNotSupported": 2,
+        "ErrNum_CurrPCInInAccPageErr": 1,
+        "ErrNum_InAccPage": 2,
+        "ErrNum_InAccPageErr": 1,
+        "ErrNum_InstructionNotSupported": 5,
+        "ErrNum_InvAddrMode": 161,
+        "ErrNum_InvOpSize": 2,
+        "ErrNum_InvReg": 7,
+        "ErrNum_JmpDistTooBig": 5,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "codez8000.c": {
+      "candidate_counts": {
+        "ErrNum_ConfOpSizes": 1,
+        "ErrNum_InvAddrMode": 2,
+        "ErrNum_InvOpSize": 28,
+        "ErrNum_InvReg": 3,
+        "ErrNum_JmpDistTooBig": 2,
+        "ErrNum_WrongArgCnt": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "errmsg.c": {
+      "candidate_counts": {
+        "ErrNum_WrongArgCnt": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "fourpseudo.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "function.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "intpseudo.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 7
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "motpseudo.c": {
+      "candidate_counts": {
+        "ErrNum_InvOpSize": 1,
+        "ErrNum_OverRange": 3
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "operator.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 1
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    },
+    "tipseudo.c": {
+      "candidate_counts": {
+        "ErrNum_OverRange": 8
+      },
+      "reviewed_diagnostic_families": [],
+      "status": "pending full inventory review"
+    }
+  },
+  "followups": [
+    {
+      "file": "code68rs08.c",
+      "reason": "decode_brset_brclr_core tests ArgStr[2] for X/D[X], ignoring arg_index for suffix bit syntax. Verify and fix separately from branch-message-only tranche."
+    }
+  ]
+}

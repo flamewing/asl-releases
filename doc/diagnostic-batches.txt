@@ -388,3 +388,21 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both ranges/endpoints, exact positions, one primary error,
     wrap, forward/undefined targets, German detail and prior golden bytes.
     Validation: all 354 CTest cases pass with embedded/external catalogs.
+
+19. Further inventory review: HC16 branches and target evaluation errors.
+    Implemented all seven 1370 rejection sites with localized range/PC+6
+    detail at the target under -x. Regular short/long and subroutine forms
+    additionally state the existing multiple-of-2 requirement, with 1325
+    identifying the odd displacement and PC base. Bit-test forms retain
+    their existing lack of alignment rejection and automatic short/long
+    selection, including the strict <127 short selection boundary.
+    DecodeRel/DecodeLRel/DecodeBsr now return after evaluation failure,
+    preventing a secondary 1325 based on the failed evaluator's value.
+    Alignment checks wait for resolved symbols, as range checks do.
+    UInt24/UInt20 evaluation, unwrapped distances and encodings are retained.
+    Tests cover all range/alignment paths, accepted endpoints, bit addressing
+    forms, exact positions, German detail, forward targets, evaluation error
+    precedence and golden bytes. The entire historical inventory is now
+    tracked separately in diagnostic-inventory-review.json; a reviewed
+    diagnostic family does not imply that the whole file is reviewed.
+    Validation: all 355 CTest cases pass with embedded/external catalogs.

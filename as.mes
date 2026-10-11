@@ -1313,6 +1313,14 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgBranchDispRangeAligned
+ "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx); muss ein Vielfaches von %llld sein"
+ "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx); must be a multiple of %llld"
+
+Message ErrMsgBranchDispAlignment
+ "Sprungverschiebung %llld muss ein Vielfaches von %llld sein (PC-Basis 0x%lllx)"
+ "branch displacement %llld must be a multiple of %llld (PC base 0x%lllx)"
+
 Message ErrMsgShortBSRZero
  "Kurzes BSR kann Verschiebung 0 nicht kodieren; Wortverschiebung oder automatische Gr&ouml;&szlig;e verwenden"
  "short BSR cannot encode displacement 0; use a word displacement or automatic size"

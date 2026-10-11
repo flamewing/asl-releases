@@ -283,6 +283,23 @@ static void DecodeEmu(Word Index) {
     }
 }
 
+static void report_branch_distance(LongInt distance, LongInt minimum, LongInt maximum,
+        Boolean aligned, tStrComp const* target) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail),
+            getmessage(aligned ? Num_ErrMsgBranchDispRangeAligned : Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)minimum, (LargeInt)maximum,
+            (LargeWord)(EProgCounter() + 6), (LargeInt)2);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
+static void report_branch_alignment(LongInt distance, tStrComp const* target) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+            (LargeInt)distance, (LargeInt)2, (LargeWord)(EProgCounter() + 6));
+    WrXErrorPos(ErrNum_NotAligned, detail, &target->Pos);
+}
+
 static void DecodeRel(Word Code) {
     Boolean      OK;
     tSymbolFlags Flags;
@@ -291,12 +308,15 @@ static void DecodeRel(Word Code) {
     if (ChkArgCnt(1, 1)) {
         AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags)
                   - EProgCounter() - 6;
-        if (AdrLong & 1) {
-            WrError(ErrNum_NotAligned);
+        if (!OK) {
+            return;
+        }
+        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+            report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (Code & 0x8000) {
             if (!mSymbolQuestionable(Flags)
                 && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrLong, -32768, 32767, True, &ArgStr[1]);
             } else {
                 BAsmCode[0] = 0x37;
                 BAsmCode[1] = Lo(Code) + 0x80;
@@ -307,7 +327,7 @@ static void DecodeRel(Word Code) {
         } else {
             if (!mSymbolQuestionable(Flags)
                 && ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrLong, -128, 127, True, &ArgStr[1]);
             } else {
                 BAsmCode[0] = 0xb0 + Lo(Code);
                 BAsmCode[1] = AdrLong & 0xff;
@@ -325,12 +345,15 @@ static void DecodeLRel(Word Code) {
     if (ChkArgCnt(1, 1)) {
         AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags)
                   - EProgCounter() - 6;
-        if (AdrLong & 1) {
-            WrError(ErrNum_NotAligned);
+        if (!OK) {
+            return;
+        }
+        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+            report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (
                 !mSymbolQuestionable(Flags)
                 && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) {
-            WrError(ErrNum_JmpDistTooBig);
+            report_branch_distance(AdrLong, -32768, 32767, True, &ArgStr[1]);
         } else {
             BAsmCode[0] = Hi(Code);
             BAsmCode[1] = Lo(Code);
@@ -650,7 +673,7 @@ static void DecodeBrBit(Word Index) {
                     } else if (
                             !mSymbolQuestionable(Flags)
                             && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
                         BAsmCode[0] = 0x0a + AdrPart + Index;
                         BAsmCode[2] = 0;
@@ -663,7 +686,7 @@ static void DecodeBrBit(Word Index) {
                 case ModDisp16:
                     if (!mSymbolQuestionable(Flags)
                         && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
                         BAsmCode[0] = 0x0a + AdrPart + Index;
                         memcpy(BAsmCode + 2, AdrVals, 2);
@@ -675,7 +698,7 @@ static void DecodeBrBit(Word Index) {
                 case ModAbs:
                     if (!mSymbolQuestionable(Flags)
                         && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
                         BAsmCode[0] = 0x3a | Index;
                         memcpy(BAsmCode + 2, AdrVals, 2);
@@ -719,11 +742,14 @@ static void DecodeBsr(Word Index) {
     if (ChkArgCnt(1, 1)) {
         AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt24, &OK, &Flags)
                   - EProgCounter() - 6;
-        if (AdrLong & 1) {
-            WrError(ErrNum_NotAligned);
+        if (!OK) {
+            return;
+        }
+        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+            report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (
                 !mSymbolQuestionable(Flags) & ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) {
-            WrError(ErrNum_JmpDistTooBig);
+            report_branch_distance(AdrLong, -128, 127, True, &ArgStr[1]);
         } else {
             BAsmCode[0] = 0x36;
             BAsmCode[1] = AdrLong & 0xff;
