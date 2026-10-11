@@ -891,3 +891,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     WSL GCC/UBSan reproduces signed overflow in the preceding decoder;
     corrected decoder passes the focused XCore suite under UBSan.
     Validation: all 384 CTest cases pass with embedded/external catalogs.
+
+59. Complete XCore historical immediate/alignment/branch inventory review.
+    Three 1320 sites show actual short-form immediate and [0,11] interval.
+    Instruction warning 180 gives actual PC and two-byte alignment.
+    Long-branch 1370 gives signed wrapped distance, existing asymmetric
+    [-131070,131068] interval, PC+4 and even constraint; adjacent 1325
+    gives odd short-form PC+2 distance and required multiple of two.
+    Preserve IDs, unknown-value masks, signed-32-bit wrap, short/long choice,
+    zero displacement and preceding encodings. Tests cover all immediate
+    and branch callers, sparse upper limits, both long and short endpoints,
+    alignment, primary failures, forward expressions and accepted bytes.
+    Existing automatic long-branch prefix 0x0f00 differs from other long
+    immediate encoders' 0xf000; record for separate ISA verification.
+    Validation: all 384 CTest cases pass with embedded/external catalogs.

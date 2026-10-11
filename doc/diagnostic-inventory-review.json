@@ -1353,8 +1353,13 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All five historical sites reviewed in tranche 59: actual short-form immediate and [0,11] interval, instruction alignment, and long-branch displacement [-131070,131068], PC+4 and even constraint. Adjacent branch alignment shows PC+2 distance. Preserve first-pass masking, signed-32-bit wrapping, asymmetric upper limit, short/long selection and existing bytes. Separate evaluation/overflow fixes in tranches 57/58."
     },
     "codexgate.c": {
       "candidate_counts": {
@@ -1531,6 +1536,11 @@
       "file": "codexcore.c",
       "issue": "Long-branch Delta -= 2 can overflow signed 32-bit arithmetic after a valid UInt32 target produces INT32_MIN short displacement.",
       "status": "fixed in tranche 58; perform correction with unsigned 32-bit arithmetic before restoring signed distance, preserving wrap semantics"
+    },
+    {
+      "file": "codexcore.c",
+      "issue": "Long automatic branch prefix uses 0x0f00 whereas other long-immediate encoders use 0xf000; verify against authoritative XS1 encoding before changing.",
+      "status": "needs ISA verification; diagnostic tranche preserves preceding bytes"
     }
   ]
 }

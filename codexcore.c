@@ -12,6 +12,9 @@
 
 #include "codexcore.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -139,7 +142,10 @@ static void Code_2rus(Word Index) {
         }
         if (OK) {
             if (Op3 > 11) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[3]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgImmediateValueRange),
+                            (LargeInt)Op3, (LargeInt)0, (LargeInt)11);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[3].Pos);
             } else {
                 WAsmCode[0] = Index | ((Op3 & 3) << 0) | ((Op2 & 3) << 2)
                               | ((Op1 & 3) << 4) | (UpVal(Op3, Op2, Op1, 0) << 6);
@@ -186,7 +192,10 @@ static void Code_l2rus(Word Index) {
         }
         if (OK) {
             if (Op3 > 11) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[3]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgImmediateValueRange),
+                            (LargeInt)Op3, (LargeInt)0, (LargeInt)11);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[3].Pos);
             } else {
                 WAsmCode[0] = 0xf800 | ((Op3 & 3) << 0) | ((Op2 & 3) << 2)
                               | ((Op1 & 3) << 4) | (UpVal(Op3, Op2, Op1, 0) << 6);
@@ -288,7 +297,10 @@ static void Code_rus(Word Index) {
         }
         if (OK) {
             if (Op2 > 11) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgImmediateValueRange),
+                            (LargeInt)Op2, (LargeInt)0, (LargeInt)11);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[2].Pos);
             } else {
                 unsigned Up = UpVal(Op2, Op1, 0, 0) + 27;
 
@@ -367,7 +379,10 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
     /* distance must be even */
 
     if (Delta & 1) {
-        WrError(ErrNum_NotAligned);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                    (LargeInt)Delta, (LargeInt)2, (LargeWord)(EProgCounter() + 2));
+        WrXErrorPos(ErrNum_NotAligned, detail, &ArgStr[DistArgIndex].Pos);
     }
 
     /* short branch possible? */
@@ -390,7 +405,11 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
 
         Delta = (LongInt)((LongWord)Delta - 2);
         if ((Delta < -131070) || (Delta >= 131070)) {
-            WrError(ErrNum_JmpDistTooBig);
+            char detail[200];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                        (LargeInt)Delta, (LargeInt)-131070, (LargeInt)131068,
+                        (LargeWord)(EProgCounter() + 4), (LargeInt)2);
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[DistArgIndex].Pos);
         } else {
             Delta /= 2;
             WAsmCode[1] = Code;
@@ -467,7 +486,10 @@ static void Code_lr2r(Word Index) {
 static void check_pc_even(Word index) {
     UNUSED(index);
     if (Odd(EProgCounter())) {
-        WrError(ErrNum_AddrNotAligned);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                    (LargeWord)EProgCounter());
+        WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
     }
 }
 
