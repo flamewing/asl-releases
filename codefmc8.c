@@ -263,7 +263,7 @@ static void DecodeRel(Word Code) {
         Adr = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags)
               - (EProgCounter() + 2);
         if (OK) {
-            if (((Adr < -128) || (Adr > 127)) && !mSymbolQuestionable(Flags)) {
+            if (((Adr < -128) || (Adr > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 BAsmCode[0] = Code;
@@ -722,7 +722,7 @@ static void DecodeBitBr(Word Index) {
         Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &OK, &Flags)
               - (EProgCounter() + 3);
         if (OK) {
-            if (((Adr < -128) || (Adr > 127)) && !mSymbolQuestionable(Flags)) {
+            if (((Adr < -128) || (Adr > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 BAsmCode[0] = 0xb0 + (Index << 3) + Bit;

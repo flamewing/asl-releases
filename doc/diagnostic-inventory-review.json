@@ -1671,6 +1671,11 @@
       "file": "codefmc8.c",
       "issue": "SETB/CLRB/BBC/BBS callers append InvAddrMode after DecodeBitAdr has already reported failed address/bit expression evaluation.",
       "status": "fixed in tranche 86; bit parser reports missing separator itself, callers encode only on parser success and retain primary type/range/symbol failures"
+    },
+    {
+      "file": "codefmc8.c",
+      "issue": "Regular and bit relative branches reject first-pass unknown forward-expression provisional distances before final targets resolve.",
+      "status": "fixed in tranche 87; defer unknown/questionable displacement checks in both decoders; all 14 branch aliases/callers verified"
     }
   ]
 }
