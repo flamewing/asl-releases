@@ -1341,6 +1341,18 @@ Message ErrMsgVectorCoordinatesAlignment
  "SVEC-Koordinaten (%llld,%llld) m&uuml;ssen jeweils Vielfache von 256 sein"
  "SVEC coordinates (%llld,%llld) must each be multiples of 256"
 
+Message ErrMsgIntegerArgumentNonzero
+ "%s-Argument %llld muss in [%llld,%llld] liegen; Null ist nicht erlaubt"
+ "%s argument %llld must be in [%llld,%llld]; zero is not allowed"
+
+Message ErrMsgCOP410XAD
+ "COP410 XAD erfordert Operanden 3,15 (erhalten %llld,%llld)"
+ "COP410 XAD requires operands 3,15 (got %llld,%llld)"
+
+Message ErrMsgForbiddenInstructionRange
+ "%s darf nicht bei 0x%lllx beginnen; verbotenes Intervall [0x%lllx,0x%lllx]"
+ "%s cannot start at 0x%lllx; forbidden interval [0x%lllx,0x%lllx]"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"

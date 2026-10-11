@@ -665,3 +665,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     targets, wrapped/high relative targets, signed endpoints, forward
     symbols, primary undefined errors and preceding accepted bytes.
     Validation: all 371 CTest cases pass with embedded/external catalogs.
+
+40. Complete COP4 historical immediate/operand/placement inventory review.
+    AISC retains 1315 for zero and describes its accepted Int4 interval
+    [-8,15] with zero excluded. COP410 XAD retains 1350, identifies required
+    operands 3,15 and actual values, and locates the first wrong operand.
+    JSRP 1900 identifies current PC and forbidden [0x80,0xff] placement;
+    adjacent target 1905 describes its exact [0x80,0xbe] interval.
+    Preserve selected CPU checks, first-pass substitutions, rejection order
+    and instruction encodings. Tests cover four CPUs, each rejection case,
+    negative/positive endpoints, both placement edges and adjacent accepted
+    PCs, forward operands, primary undefined errors, German and prior bytes.
+    Validation: all 372 CTest cases pass with embedded/external catalogs.

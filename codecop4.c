@@ -12,6 +12,10 @@
 
 #include "codecop4.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+#include "strutil.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -128,7 +132,10 @@ static void DecodeAISC(Word Index) {
         }
         if (OK) {
             if (!Val) {
-                WrError(ErrNum_UnderRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentNonzero),
+                        OpPart.str.p_str, (LargeInt)Val, (LargeInt)-8, (LargeInt)15);
+                WrXErrorPos(ErrNum_UnderRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[CodeLen++] = 0x50 | (Val & 0x0f);
             }
@@ -185,7 +192,11 @@ static void DecodeXAD(Word Index) {
             }
             if (OK) {
                 if ((MomCPU < CPUCOP420) && ((Reg1 != 3) || (Reg2 != 15))) {
-                    WrError(ErrNum_InvAddrMode);
+                    char detail[160];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgCOP410XAD),
+                            (LargeInt)Reg1, (LargeInt)Reg2);
+                    WrXErrorPos(ErrNum_InvAddrMode, detail,
+                            &ArgStr[(Reg1 != 3) ? 1 : 2].Pos);
                 } else {
                     BAsmCode[CodeLen++] = 0x23;
                     BAsmCode[CodeLen++] = 0x80 | (Reg1 << 4) | Reg2;
@@ -260,9 +271,16 @@ static void DecodeJSRP(Word Index) {
         }
         if (OK) {
             if (((Addr >> 6) != 2) || (Addr == 0xbf)) {
-                WrError(ErrNum_NotFromThisAddress);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)Addr, (LargeInt)0x80, (LargeInt)0xbe);
+                WrXErrorPos(ErrNum_NotFromThisAddress, detail, &ArgStr[1].Pos);
             } else if ((EProgCounter() >> 7) == 1) {
-                WrError(ErrNum_NotOnThisAddress);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgForbiddenInstructionRange),
+                        OpPart.str.p_str, (LargeWord)EProgCounter(),
+                        (LargeWord)0x80, (LargeWord)0xff);
+                WrXErrorPos(ErrNum_NotOnThisAddress, detail, &OpPart.Pos);
             } else {
                 BAsmCode[CodeLen++] = 0x80 | (Addr & 0x3f);
             }
