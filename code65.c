@@ -116,7 +116,9 @@ static Boolean CPUAllowed(Word Flag) {
 }
 
 static void InsNOP(void) {
-    memmove(BAsmCode, BAsmCode + 1, CodeLen);
+    memmove(BAsmCode + 1, BAsmCode, CodeLen);
+    copy_basmcode_guessed(1, 0, CodeLen);
+    set_basmcode_guessed(0, 1, 0);
     CodeLen++;
     BAsmCode[0] = NOPCode;
 }
@@ -2920,7 +2922,7 @@ static void DeinitFields(void) {
 
 static void MakeCode_65(void) {
     This_CLI_SEI_Flag = (Memo("CLI") || Memo("SEI"));
-    This_ADC_SBC_Flag = (Memo("ADC ") || Memo("SBC"));
+    This_ADC_SBC_Flag = (Memo("ADC") || Memo("SBC"));
 
     /* Pseudoanweisungen */
 

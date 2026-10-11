@@ -101,7 +101,7 @@ check_bytes(bar-endpoints 65C19 " org $1000\n bar $1234,#$45,*+132\n bas $1234,#
     "e23412457ff234124580")
 check_bytes(melps-endpoints MELPS740
     " org $1000\n bbc 0,a,*+129\n bbs 0,$12,*-125\n cli\n bbc 0,a,*+130\n sei\n bbs 0,$12,*-124"
-    "137f07128058ea808078ea800000")
+    "137f07128058ea137f78ea071280")
 check_bytes(wrap-end 6502 " org $fffe\n bne 0" "d000")
 check_bytes(wrap-start 6502 " bne $ff82" "d080")
 check_bytes(forward-short 6502 " org $1000\n bne target\ntarget equ $1004" "d002")

@@ -281,6 +281,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     followed by ordinary and bit-branch instructions, ADC/SBC erratum
     insertion, correct opcodes/operands and the branch PC-base adjustment.
     Existing fixtures may contain the buggy encodings; review replacements.
+    Implemented the rightward instruction shift and matching guessed-byte
+    mask move, clearing the inserted NOP's mask. Also corrected Memo("ADC ")
+    to Memo("ADC"), enabling the already-intended ADC workaround as for SBC.
+    Dedicated byte tests cover accumulator/memory BBC/BBS after CLI/SEI,
+    SEC/CLC/CLD after both ADC and SBC, forward targets, unaffected sequences,
+    other CPUs and the existing PLP trailing NOP. Batch 11's golden fixture
+    now expects the proper NOP/opcode/operand bytes. Existing t_65 fixture
+    passed without changes.
+    Validation: all 348 CTest cases pass with embedded/external catalogs.
 
 13. Continue manual branch inventory review: HC12.
     Add displacement/range/PC-base detail to code6812.c branch checks,
