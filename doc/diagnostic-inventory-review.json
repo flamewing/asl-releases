@@ -1810,6 +1810,11 @@
       "file": "code9900.c",
       "issue": "BYTE does not mark integer range failure unsuccessful, leaving preceding/subsequent valid values emitted after an overflow diagnostic.",
       "status": "fixed in tranche 114; mark failure and use existing CodeLen cleanup to discard the whole directive; all eight CPUs, lower/upper/string-preceded errors and valid bytes verified"
+    },
+    {
+      "file": "code9900.c",
+      "issue": "EvalDist rejects odd/out-of-range provisional distances of forward expressions before targets resolve, in both short branches and SRJ/ARJ.",
+      "status": "fixed in tranche 115; defer unknown/questionable alignment/range checks; all 13 short branch aliases, eight CPUs and both four-byte callers verified"
     }
   ]
 }

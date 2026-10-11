@@ -220,11 +220,11 @@ static Boolean EvalDist(tStrComp const* pArg, Word* pResult, Word InstrLen) {
     AdrInt = EvalStrIntExpressionOffsWithFlags(
                      pArg, !!(*pArg->str.p_str == '@'), UInt16, &OK, &Flags)
              - (EProgCounter() + InstrLen);
-    if (OK && !mSymbolQuestionable(Flags) && Odd(AdrInt)) {
+    if (OK && !mFirstPassUnknownOrQuestionable(Flags) && Odd(AdrInt)) {
         WrStrErrorPos(ErrNum_DistIsOdd, pArg);
         OK = False;
     }
-    if (OK && !mSymbolQuestionable(Flags) && ((AdrInt < -256) || (AdrInt > 254))) {
+    if (OK && !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -256) || (AdrInt > 254))) {
         WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
         OK = False;
     }

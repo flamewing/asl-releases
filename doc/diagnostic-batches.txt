@@ -1450,3 +1450,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     eight CPUs, lower/upper overflow after data/string values, no emission
     and retained integer/character endpoint bytes.
     Validation: all 402 CTest cases pass with embedded/external catalogs.
+
+115. 9900 provisional forward branch alignment/range guards.
+    EvalDist reports odd displacement or out-of-range distance for unresolved
+    forward expressions whose final target is even and two bytes away. Defer
+    both checks for first-pass unknown/questionable targets; preserve signed
+    16-bit wrapping and InstrLen-based PC arithmetic. Tests cover all 13 short
+    branch aliases, all eight CPUs and both four-byte SRJ/ARJ callers.
+    Validation: all 402 CTest cases pass with embedded/external catalogs.
