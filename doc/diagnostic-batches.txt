@@ -1668,3 +1668,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     nonregister aliases, EXPECT/no emission for known nonregister aliases,
     original base-address bytes and forward register aliases.
     Validation: all 410 CTest cases pass with embedded/external catalogs.
+
+140. VAX reserved PC index register encoding.
+    Index parser comment forbids PC but does not enforce it; MOVL (R0)[PC],R1
+    emits D0 4F 60 51. Reject PC/R15 (including aliases) before index bytes,
+    with positioned 1439 and valid register choices. VAX MACRO/Instruction Set
+    reference section 8.6.10 identifies PC index as reserved addressing fault:
+    https://docs.vmssoftware.com/vsi-openvms-vax-macro-and-instruction-set-reference-manual/
+    Three CPUs verify rejection/no emission and all 15 valid registers/aliases.
+    Validation: all 410 CTest cases pass with embedded/external catalogs.

@@ -2299,3 +2299,7 @@ Message ErrMsgRegisterTypeMismatch
 Message ErrMsgNS32LMRUnpredictable
  "LMR nach %s (Registercode %u) hat unvorhersehbares Verhalten"
  "LMR to %s (register code %u) has unpredictable execution"
+
+Message ErrMsgVAXIndexRegister
+ "Indexregister muss R0..R14 (AP/FP/SP) sein; PC/R15 ist nicht als Indexregister erlaubt"
+ "index register must be R0..R14 (AP/FP/SP); PC/R15 cannot be an index register"

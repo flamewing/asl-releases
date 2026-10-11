@@ -12,6 +12,8 @@
 
 #include "codevax.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -356,6 +358,11 @@ static Boolean decode_adr(
         case eRegAbort:
             return False;
         case eIsReg:
+            if (index_reg == REG_PC) {
+                WrXErrorPos(ErrNum_InvIndexReg, getmessage(Num_ErrMsgVAXIndexRegister),
+                            &reg_comp.Pos);
+                return reset_adr_vals(p_result);
+            }
             StrCompShorten(&arg, arg_len - split_pos);
             p_result->vals[p_result->count++] = (index_reg |= 0x40);
             pc_value++;
