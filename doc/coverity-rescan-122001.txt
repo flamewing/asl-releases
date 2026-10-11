@@ -1,0 +1,55 @@
+Coverity snapshot 122001 review (2026-10-11)
+Analyzed revision: 9732bf21c3cd49e9dea028bf260ac54b5abdd641
+183 detected; seven new; 94 newly eliminated; 15 outstanding for triage.
+
+Confirmed bugs / Fix Submitted
+
+914457, 914461: catalog test failure paths leak MsgBlock/StrPosis (three
+and two occurrences). Commit 223a801 routes all exits through cleanup.
+Severity Minor: leaks occur in the regression executable on assertion failure.
+350660: MeasureFile ignores fseek failure. Commit 765e621 checks the return
+and terminates with a read error even if errno is zero. Severity Moderate.
+
+False Positive / Ignore
+
+914459: both object_file bounds traces require mutually exclusive mode
+strings (8193 and reloc-undefined). Commit 223a801 explicitly sets the
+one-byte payload beside the fixed 76-byte layout to expose the invariant.
+350669: ValidReg checks strlen < sizeof(Asc) before copying. The copy now
+uses the checked length in memcpy, including the terminator and sign removal.
+350640: ReadRecordHeader validates Segment before plist indexes SegNames.
+Data-record Segment is 1..10; SegNames has SegCountPlusStruct (12) entries.
+350651: ReadRecordHeader rejects zero/invalid Gran before MeasureFile divides.
+350639: all six surviving occurrences were reviewed. Two alink fread sinks
+and two BumpBufferLen sinks use the validated 16-bit length and checked
+allocation. The pbind loop takes at most 8192 bytes per iteration from an
+unsigned length <=65535. The p2bin last-address helper receives validated,
+nonzero Gran. These traces lose shared-reader/allocation constraints.
+914334: parse_raw_file validates signed lengths, positions, counts, ranges,
+offsets and string terminators before catalog access; the remaining trace
+loses these helper constraints. Original catalog defects were already fixed.
+914335: the two bitfield shift traces lose compute_bitfield_fragment's
+correlation. For partial-byte updates the fragment is 1..8 bits with an
+offset inside that byte; neither warned shift reaches the type width.
+Previous isolated UBSan verification covered 4224 cases, and the helper
+bounds audit covered 262144 cases. Existing zero-width fix is separate.
+914420: all four DispSize5 callers first use ChkDisp5, which rejects invalid
+Size2Scale values. The trace's -1 scale cannot reach division. The real
+missing MOV validation was already fixed before this snapshot.
+
+Intentional / Ignore (Minor)
+
+914455, 914456: tmpfile is deliberately used for benign, generated parser
+fixtures in an isolated test executable, with no credentials or external
+untrusted contents. Keep the portable test implementation. This disposition
+does not assert that every platform's tmpfile implementation is secure.
+914458, 914460: LargeWord > SIZE_MAX portability guards are constant false
+for the analyzed 64/64 configuration, but protect narrower size_t or wider
+LargeWord configurations. LargeWord can be 32, 64 or 128 bits. Keep guards.
+
+Validation and follow-up
+
+GCC 16.2 Windows builds and all 338 tests pass in each of the embedded and
+external catalog configurations. No models are necessary for these triage
+dispositions. Push the fix commits and rescan to verify elimination; fixing
+or classifying a finding locally does not prove elimination in a later scan.

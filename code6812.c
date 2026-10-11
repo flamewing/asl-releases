@@ -190,9 +190,10 @@ static Boolean ValidReg(char const* Asc_o) {
     }
 
     if ((*Asc_o == '-') || (*Asc_o == '+')) {
-        strcpy(Asc, Asc_o + 1);
+        /* The checked length includes the terminator after removing a sign. */
+        memcpy(Asc, Asc_o + 1, l);
     } else {
-        strcpy(Asc, Asc_o);
+        memcpy(Asc, Asc_o, l + 1);
         if ((l > 0) && ((Asc_o[l - 1] == '-') || (Asc_o[l - 1] == '+'))) {
             Asc[l - 1] = '\0';
         }

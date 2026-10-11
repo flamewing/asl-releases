@@ -465,3 +465,11 @@ The surviving trace is MeasureFile's unchecked fseek to NextPos after a
 data record. Check its result and terminate through chk_wr_read_error on
 failure, even if errno is zero. Full 338-test suites pass with both catalog
 configurations, including auto-range conversion of large valid records.
+
+Rescan 122001: explicit register-copy bounds (350669)
+
+ValidReg already rejects lengths at or above sizeof(Asc). Replace strcpy
+with memcpy using that checked length, including the terminator and
+accounting for an optional leading sign. This preserves accepted inputs
+and makes the existing bound explicit. Both complete 338-test suites pass.
+The complete surviving-finding review is in coverity-rescan-122001.txt.
