@@ -1660,3 +1660,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     choices from masks/table. All four PMMUs verify both failure classes,
     actual base message/details/position and EXPECT/no emission.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+139. VAX displacement-base primary register failures.
+    Mandatory base register evaluation already reports errors; remove duplicate
+    backend 1445. Read descriptor only after successful register evaluation.
+    Three CPUs verify one primary error for malformed/undefined names and
+    nonregister aliases, EXPECT/no emission for known nonregister aliases,
+    original base-address bytes and forward register aliases.
+    Validation: all 410 CTest cases pass with embedded/external catalogs.

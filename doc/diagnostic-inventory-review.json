@@ -1939,6 +1939,11 @@
       "file": "asmerr.c / codens32k.c",
       "issue": "NS32000 invalid PMMU register error 1444 has no ErrorNum2String mapping, displaying internal error/warning instead of invalid MMU register.",
       "status": "fixed in tranche 138; map existing ID to localized MMU message, list currently selected PMMU register names on unknown/unavailable register errors; all four PMMUs/primary error/no emission checked"
+    },
+    {
+      "file": "codevax.c",
+      "issue": "Mandatory displacement-base register parsing adds a second invalid-register error after evaluator failure; decode_reg also reads register descriptor even when evaluation failed.",
+      "status": "fixed in tranche 139; retain primary error and read descriptor only on eIsReg; three CPUs/undefined-malformed names/nonregister aliases/no emission/valid forward register aliases checked"
     }
   ]
 }

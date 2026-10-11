@@ -202,7 +202,9 @@ static tRegEvalResult decode_reg(
                 p_arg, &reg_descr, &eval_result, eSymbolSizeUnknown, must_be_reg);
     }
 
-    *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
+    if (reg_eval_result == eIsReg) {
+        *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
+    }
     return reg_eval_result;
 }
 
@@ -575,7 +577,6 @@ static Boolean decode_adr(
         KillPostBlanksStrComp(&reg_arg);
 
         if (decode_reg(&reg_arg, &reg, True) != eIsReg) {
-            WrStrErrorPos(ErrNum_InvReg, &reg_arg);
             return reset_adr_vals(p_result);
         }
 
