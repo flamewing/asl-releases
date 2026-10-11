@@ -1002,3 +1002,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     and branch callers, zero/selected/full addresses, control/memory forms,
     primary failures, forward targets, exact positions and preceding bytes.
     Validation: all 387 CTest cases pass with embedded/external catalogs.
+
+69. Separate TMS7000 provisional forward-expression branch rejection.
+    Retain symbol flags for regular relative branches; defer range rejection
+    for first-pass unknown/questionable targets in all three branch decoders.
+    Reproduced JMP, BTJO and DJNZ target+1000 failing immediately although
+    later target EQU resolves the final expression to displacement 1.
+    Tests cover ten CPUs, regular/bit/port-bit/DJNZ forms, both accumulator
+    and register-dependent instruction lengths, resolved excessive values,
+    single undefined-target errors and preceding accepted branch bytes.
+    Validation: all 388 CTest cases pass with embedded/external catalogs.

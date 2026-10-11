@@ -249,12 +249,14 @@ static void DecodeFixed(Word Index) {
 
 static void DecodeRel8(Word Index) {
     if (ChkArgCnt(1, 1)) {
-        Boolean OK;
-        Integer AdrInt
-                = EvalStrIntExpression(&ArgStr[1], UInt16, &OK) - (EProgCounter() + 2);
+        Boolean      OK;
+        tSymbolFlags Flags;
+        Integer AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt16, &OK, &Flags)
+                         - (EProgCounter() + 2);
 
         if (OK) {
-            if ((AdrInt > 127) || (AdrInt < -128)) {
+            if (!mFirstPassUnknownOrQuestionable(Flags)
+                && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 CodeLen     = 2;
@@ -409,7 +411,7 @@ static void DecodeALU2(Word Index) {
             if (!OK) {
                 CodeLen = 0;
             } else if (
-                    !mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+                    !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
                 CodeLen = 0;
             } else {
@@ -480,7 +482,7 @@ static void DecodeDJNZ(Word code) {
             if (!OK) {
                 CodeLen = 0;
             } else if (
-                    !mSymbolQuestionable(Flags) & ((AdrInt > 127) || (AdrInt < -128))) {
+                    !mFirstPassUnknownOrQuestionable(Flags) & ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
                 OK = False;
             }

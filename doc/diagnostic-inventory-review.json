@@ -1578,6 +1578,11 @@
       "file": "codeol50.c",
       "issue": "Forward-only MSM5054/5055/5056 branches reject first-pass unknown target placeholder 0 as negative PC+1 displacement, preventing forward labels from resolving.",
       "status": "fixed in tranche 67; defer range rejection while target is first-pass unknown or questionable, forward labels now resolve on all CPUs"
+    },
+    {
+      "file": "codetms7.c",
+      "issue": "Branch range checks reject provisional distances of first-pass unknown forward expressions such as target+1000 before the eventual target can resolve within range.",
+      "status": "fixed in tranche 69; retain flags in regular branches and defer unknown/questionable range checks in regular, bit-test and DJNZ decoders"
     }
   ]
 }
