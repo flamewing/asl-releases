@@ -601,3 +601,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     actual ROM maximum across JMP/CAL/JCP/CZP, undefined targets, family
     rejection precedence, forward symbols, German detail and accepted bytes.
     Validation: all 367 CTest cases pass with embedded/external catalogs.
+
+34. Complete KCPSM historical address-mode inventory review.
+    Sole 1350 candidate now lists the forms enabled by the original mask,
+    including registers, immediate/direct expressions and indexed syntax,
+    and locates the rejected operand. Evaluation and masks are unchanged.
+    Tests cover all ALU/shift/IO callers, CALL/JUMP masks, register aliases,
+    forward targets, undefined immediates and preceding accepted bytes.
+    Reproduced CALL #12 rejection: its mask uses ordinal ModImm (4) instead
+    of bit MModImm (16), leaving its immediate encoding case unreachable.
+    Keep that acceptance bug separate in the next commit.
+    Validation: all 368 CTest cases pass with embedded/external catalogs.

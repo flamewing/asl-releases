@@ -12,6 +12,9 @@
 
 #include "codekcpsm.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -213,7 +216,24 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask, int Segment) {
 
 chk:
     if ((AdrType != ModNone) && ((Mask & (1 << AdrType)) == 0)) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[160] = "", detail[240];
+        if (Mask & MModWReg) {
+            strmaxcat(forms, "S0..S15, ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (Mask & MModAbs) {
+            strmaxcat(forms, "expr, ", sizeof(forms));
+        }
+        if (Mask & MModInd) {
+            strmaxcat(forms, "(S0..S15), expr(S0..S15), ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         AdrType = ModNone;
     }
 }

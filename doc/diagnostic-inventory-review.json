@@ -918,8 +918,11 @@
       "candidate_counts": {
         "ErrNum_InvAddrMode": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 34: sole historical candidate now lists actual operand mask forms and locates the rejected operand. CALL immediate-mask bug reproduced and deferred to separate tranche 35."
     },
     "codekenbak.c": {
       "candidate_counts": {
@@ -1418,6 +1421,11 @@
       "file": "codetbil.c",
       "reason": "Signed high-bit input to as_chartrans_xlate yields -1, which bypasses the 7-bit range check and encodes 0xff. Reproduced pc \"\\128\" => 24ff with success. Cast source byte to unsigned char and reject unmapped results.",
       "status": "fixed in tranche 30"
+    },
+    {
+      "file": "codekcpsm.c",
+      "issue": "CALL uses ModImm ordinal instead of MModImm mask, rejecting #target despite its encoder handling immediate targets.",
+      "status": "reproduced; fix in tranche 35"
     }
   ]
 }
