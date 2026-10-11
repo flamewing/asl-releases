@@ -1914,6 +1914,11 @@
       "file": "codens32k.c",
       "issue": "Mandatory forward register aliases receive an unknown-size provisional register, then fail NS32000 size matching before resolution.",
       "status": "fixed in tranche 133; retain requested size for unresolved mandatory register placeholder; three CPU generations/all index scales/SAVE/undefined and wrong-size primary errors checked"
+    },
+    {
+      "file": "codens32k.c",
+      "issue": "Explicit target(PC) continues after failed displacement encoding and emits reserved address mode 0x13.",
+      "status": "fixed in tranche 134; propagate encoding failure before setting PC-relative mode; both bounds on 32-bit CPUs/no emission/original encodings/forward targets checked"
     }
   ]
 }

@@ -1619,3 +1619,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     register type matching and final undefined-register errors. Tests cover three
     CPU generations, four scales, SAVE, undefined aliases and wrong-size registers.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+134. NS32000 explicit PC-relative encoding failures.
+    Failed target(PC) displacement encoding reaches the success path with reserved
+    address mode 0x13; confirmed EXPECT 1370 still emits MOVD bytes. Return failure
+    before setting PC-relative mode, matching the common PC-relative helper.
+    Tests cover both bounds on 32-bit CPUs, one primary error/no emission,
+    captured valid bytes and forward targets; preserve ranges and error IDs.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.

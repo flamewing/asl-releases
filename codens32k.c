@@ -819,14 +819,15 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
             }
             goto chk;
         IsPCRel:
-            if (EncodeDisplacement(
+            if (!EncodeDisplacement(
                         OutDispVal - EProgCounter(), pDest,
                         mFirstPassUnknownOrQuestionable(OutEvalResult.Flags)
                                 ? ErrNum_None
                                 : ErrNum_JmpDistTooBig,
                         &OutDisp)) {
-                pDest->Code = AddrCode_MemSpace + 3;
+                return False;
             }
+            pDest->Code = AddrCode_MemSpace + 3;
             goto chk;
         case eIsNoReg: {
             tStrComp InDisp;
