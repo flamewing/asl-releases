@@ -1595,3 +1595,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     severity, predicates, low-field masking and emitted bytes. Tests cover
     both bounds, unknown assumptions, accepted endpoints/wrapping and warnings.
     Validation: all 408 CTest cases pass with embedded/external catalogs.
+
+131. TMS320C54x addressing contracts and full historical inventory review.
+    Eleven historical mode sites identify indirect patterns/aux-register bounds,
+    MMR extension-word prohibition, mask forms, reduced X/Y forms and count,
+    TS/X/Y matching accumulators, SQUR A, MACA/MACAR/MASA B, MASAR T or numeric load shift.
+    Track source argument with existing global decoded-address state for positioned
+    MakeXY failure at all callers. Preserve predicates/IDs and accepted encodings.
+    Validation: all 408 CTest cases pass with embedded/external catalogs.

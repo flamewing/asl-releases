@@ -1457,6 +1457,26 @@ Message ErrMsgC54DPWindow
  "Adresse 0x%lllx verwendet DP-Seite %llld; ASSUME DP=%llld w&auml;hlt [0x%lllx,0x%lllx]"
  "address 0x%lllx uses DP page %llld; ASSUME DP=%llld selects [0x%lllx,0x%lllx]"
 
+Message ErrMsgC54IndirectForms
+ "ARx bedeutet AR0..AR7, n ist ein 16-Bit-Ausdruck; erlaubte Adressierungsformen: %s"
+ "ARx denotes AR0..AR7, n is a 16-bit expression; allowed addressing forms: %s"
+
+Message ErrMsgC54NoExtensionWord
+ "Diese speicherabgebildete Registerform erlaubt kein Erweiterungswort; *ARx-Modifikatoren ohne (n) verwenden"
+ "this memory-mapped-register form cannot encode an extension word; use *ARx modifiers without (n)"
+
+Message ErrMsgC54TwoXYOperands
+ "Diese Form erfordert zwei X/Y-Speicheroperanden (erhielt %u)"
+ "this form requires two X/Y memory operands (got %u)"
+
+Message ErrMsgMatchingAccumulators
+ "Quellakkumulator %s und Zielakkumulator %s m&uuml;ssen f&uuml;r %s &uuml;bereinstimmen"
+ "source accumulator %s and destination accumulator %s must match for %s"
+
+Message ErrMsgC54ImmediateLoadShift
+ "Unmittelbares Laden erlaubt keine TS-Schiebeweite; numerische Schiebeweite 0..16 verwenden"
+ "immediate load cannot use TS shift; use a numeric shift 0..16"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"

@@ -205,10 +205,11 @@
         "ErrNum_InvAddrMode": 11
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_InAccPage"
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 130 reviews both historical InAccPage warnings: actual DP page/window or SP wrapped offset/bounds, explicit NOTHING assumptions and operand position. Original predicates/wrapping/warning emission retained. Eleven InvAddrMode sites still require full review."
+      "status": "complete",
+      "review_notes": "All thirteen historical candidates reviewed in tranches 130-131: DP/SP warning windows/NOTHING, indirect patterns and MMR extension-word limit, mask forms, reduced X/Y contract/count, matching special accumulators and SQUR/MACA/MACAR/MASA/MASAR/immediate load restrictions. Source argument tracked alongside decoded mode/values for MakeXY diagnostics. Predicates, IDs, warning bytes and accepted encodings retained."
     },
     "code340xx.c": {
       "candidate_counts": {

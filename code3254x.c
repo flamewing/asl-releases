@@ -90,6 +90,7 @@ static CPUVar CPU320C541;
 static IntType  OpSize;
 static ShortInt AdrMode;
 static Word     AdrVals[3];
+static tStrComp const* AdrArg;
 
 static Boolean ThisPar, ThisMachineInstruction;
 static Word    LastOpCode;
@@ -125,6 +126,13 @@ static void WrDataWindow(tStrComp const* arg, Word address, Word offset, Boolean
     WrXErrorPos(ErrNum_InAccPage, detail, &arg->Pos);
 }
 
+static void WrChoices(tStrComp const* arg, char const* choices, Boolean forms) {
+    char detail[300];
+    as_snprintf(detail, sizeof(detail),
+                getmessage(forms ? Num_ErrMsgAddressForms : Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
 #define IndirCnt 16
     static char const Patterns[IndirCnt][9]
@@ -134,6 +142,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
              "ARx(n)", "+ARx(n)", "+ARx(n)%", "(n)"};
     Boolean OK;
 
+    AdrArg = pArg;
     AdrMode = ModNone;
     AdrCnt  = 0;
 
@@ -218,7 +227,17 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
         }
 
         if (!OK) {
-            WrError(ErrNum_InvAddrMode);
+            char patterns[350], detail[550];
+            int index;
+            *patterns = '\0';
+            for (index = 0; index < IndirCnt; index++) {
+                if (ForcePageZero && strchr(Patterns[index], 'n')) continue;
+                if (*patterns) strmaxcat(patterns, " / ", sizeof(patterns));
+                strmaxcat(patterns, "*", sizeof(patterns));
+                strmaxcat(patterns, Patterns[index], sizeof(patterns));
+            }
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgC54IndirectForms), patterns);
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         } else {
             /* decode offset ? pConst... /must/ be set if such a pattern was successfully
                decoded! */
@@ -227,7 +246,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
                 /* MMR-style instructions do not allow an extension word */
 
                 if (ForcePageZero) {
-                    WrError(ErrNum_InvAddrMode);
+                    WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgC54NoExtensionWord), &pArg->Pos);
                     OK = False;
                 } else {
                     tStrComp Start, Remainder;
@@ -288,7 +307,22 @@ done:
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
         AdrMode = ModNone;
         AdrCnt  = 0;
-        WrError(ErrNum_InvAddrMode);
+        char forms[240];
+        *forms = '\0';
+        if (Mask & MModAcc) strmaxcat(forms, "A / B", sizeof(forms));
+        if (Mask & MModAReg) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "AR0..AR7", sizeof(forms));
+        }
+        if (Mask & MModMem) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "address / *ARx", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "#expression / expression", sizeof(forms));
+        }
+        WrChoices(pArg, forms, True);
     }
     return (AdrMode != ModNone);
 }
@@ -312,7 +346,7 @@ static Boolean MakeXY(Word* Dest, Boolean Quarrel) {
     }
 
     if ((Quarrel) && (!Result)) {
-        WrError(ErrNum_InvAddrMode);
+        WrChoices(AdrArg, "*ARx / *ARx- / *ARx+ / *ARx+0% (x=2..5)", True);
     }
 
     return Result;
@@ -437,7 +471,9 @@ static void DecodeXY(Word Index) {
     Word              TmpX, TmpY;
 
     if (ArgCnt != 2) {
-        WrError(ErrNum_InvAddrMode);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgC54TwoXYOperands), (unsigned)ArgCnt);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &OpPart.Pos);
     } else if (ThisPar) {
         WrError(ErrNum_ParNotPossible);
     } else if ((LastRep) && (!POrder->IsRepeatable)) {
@@ -584,7 +620,10 @@ static void DecodeADDSUB(Word Index) {
             if (Shift == 255) /* TS case */
             {
                 if (*AdrVals != DestAcc) {
-                    WrError(ErrNum_InvAddrMode);
+                    char detail[200];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMatchingAccumulators),
+                                *AdrVals ? "B" : "A", DestAcc ? "B" : "A", "TS");
+                    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[ArgCnt - 1].Pos);
                 } else if (ThisPar) {
                     WrError(ErrNum_ParNotPossible);
                 } else {
@@ -596,7 +635,10 @@ static void DecodeADDSUB(Word Index) {
             else if (Shift == 254) /* XY case */
             {
                 if (*AdrVals != DestAcc) {
-                    WrError(ErrNum_InvAddrMode);
+                    char detail[200];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMatchingAccumulators),
+                                *AdrVals ? "B" : "A", DestAcc ? "B" : "A", "X/Y");
+                    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[ArgCnt - 1].Pos);
                 } else if (ThisPar) {
                     WrError(ErrNum_ParNotPossible);
                 } else {
@@ -885,7 +927,7 @@ static void DecodeSQUR(Word Index) {
         switch (AdrMode) {
         case ModAcc:
             if (*AdrVals) {
-                WrError(ErrNum_InvAddrMode);
+                WrChoices(&ArgStr[1], "A", False);
             } else {
                 WAsmCode[0] |= 0xf48d;
                 CodeLen = 1;
@@ -1196,7 +1238,7 @@ static void DecodeMac(Word Index) {
         ;
     else {
         if ((ArgCnt == 2) && (as_strcasecmp(ArgStr[2].str.p_str, "B"))) {
-            WrError(ErrNum_InvAddrMode);
+            WrChoices(&ArgStr[2], "B", False);
         } else if (DecodeAdr(&ArgStr[1], MModMem)) {
             WAsmCode[0] = (POrder->Code & 0xff00) | (*AdrVals);
             if (AdrCnt) {
@@ -1297,7 +1339,7 @@ static void DecodeMASAR(Word Index) {
     else if (ThisPar) {
         WrError(ErrNum_ParNotPossible);
     } else if (as_strcasecmp(ArgStr[1].str.p_str, "T")) {
-        WrError(ErrNum_InvAddrMode);
+        WrChoices(&ArgStr[1], "T", False);
     } else if (DecodeAdr(&ArgStr[ArgCnt], MModAcc)) {
         WAsmCode[0] = (*AdrVals << 8);
         if (ArgCnt == 3) {
@@ -1953,7 +1995,7 @@ static void DecodeLD(Word Index) {
                 break;
             case ModImm:
                 if (Shift == 0xff) {
-                    WrError(ErrNum_InvAddrMode);
+                    WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgC54ImmediateLoadShift), &ArgStr[2].Pos);
                 } else if (ThisPar) {
                     WrError(ErrNum_ParNotPossible);
                 } else if (ChkRange(Shift, 0, 16)) {
