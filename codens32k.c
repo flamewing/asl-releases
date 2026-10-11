@@ -65,6 +65,19 @@ typedef struct {
     IntType     MemIntType;
 } tCPUProps;
 
+static tCPUProps const CPUProps[] = {
+        { "NS16008",    eCoreGen1, eFPU16081, ePMMU16082, UInt24},
+        { "NS32008",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
+        { "NS08032",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
+        { "NS16032",    eCoreGen1, eFPU16081, ePMMU16082, UInt24},
+        { "NS32016",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
+        { "NS32032",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
+        { "NS32332", eCoreGen1Ext, eFPU32381, ePMMU32382, UInt32},
+        {"NS32CG16",    eCoreGenE, eFPU32181, ePMMU32082, UInt24},
+        { "NS32532",    eCoreGen2, eFPU32381, ePMMU32532, UInt32},
+        {      NULL,    eCoreNone,  eFPUNone,  ePMMUNone,  UInt1}
+};
+
 static char FPUNames[eFPUCount][8]
         = {"OFF", "NS16081", "NS32081", "NS32181", "NS32381", "NS32580"};
 
@@ -139,7 +152,23 @@ static Boolean CheckCore(unsigned CoreMask) {
     if ((CoreMask >> pCurrCPUProps->CPUType) & 1) {
         return True;
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+    {
+        char Detail[500];
+        tCPUProps const* pCPU;
+        Boolean First = True;
+        strmaxcpy(Detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(Detail));
+        for (pCPU = CPUProps; pCPU->pName; pCPU++) {
+            if ((CoreMask >> pCPU->CPUType) & 1) {
+                if (!First) {
+                    strmaxcat(Detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(Detail));
+                }
+                strmaxcat(Detail, pCPU->pName, sizeof(Detail));
+                First = False;
+            }
+        }
+        strmaxcat(Detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(Detail));
+        WrXErrorPos(ErrNum_InstructionNotSupported, Detail, &OpPart.Pos);
+    }
     return False;
 }
 
@@ -603,9 +632,23 @@ static Boolean EncodeDisplacement(
         pDest->Disp[pDest->DispCnt++] = Disp & 0xff;
         return True;
     } else {
-    error:
-        WrStrErrorPos(ErrorNum, pArg);
+    error: {
+        char Detail[200];
+        if (ErrorNum == ErrNum_None) {
+            WrStrErrorPos(ErrorNum, pArg);
+        } else {
+            if (ErrorNum == ErrNum_JmpDistTooBig) {
+                as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                            (LargeInt)Disp, (LargeInt)-520093696, (LargeInt)536870911,
+                            (LargeWord)EProgCounter());
+            } else {
+                as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgEADispRange),
+                            (LargeInt)Disp, (LargeInt)-520093696, (LargeInt)536870911);
+            }
+            WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+        }
         return False;
+    }
     }
 }
 
@@ -744,7 +787,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
                                      : "R0/R2/R4/R6 (even register pair start)");
             return False;
         } else if (!(AddrModeMask & (MAllowReg | MAllowRegPair))) {
-            WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+            WrOperandChoices(ErrNum_InvAddrMode, pArg,
+                             "@address, displacement(R0..R7/FP/SP/SB), target(PC), EXT(index)+displacement or TOS");
             return False;
         } else {
             pDest->Code = AddrCode_Reg + RegValue;
@@ -863,7 +907,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
 
             SplitPos = FindDispBaseSplit(InnerArg.str.p_str, &ArgLen);
             if (SplitPos < 0) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &InnerArg);
+                WrOperandChoices(ErrNum_InvAddrMode, &InnerArg, "R0..R7, FP, SP, SB, PC or displacement(FP/SP/SB/EXT)");
                 return False;
             }
             StrCompSplitRef(&InDisp, &InnerArg, &InnerArg, &InnerArg.str.p_str[SplitPos]);
@@ -2003,7 +2047,10 @@ static void DecodeLMR_SMR(Word Code) {
         && DecodeAdr(&ArgStr[2], &AdrVals, MAllowReg | (IsStore ? 0 : MAllowImm))
         && DecodeMMUReg(&ArgStr[1], &Reg)) {
         if (!IsStore && (Reg >= 14)) {
-            WrStrErrorPos(ErrNum_Unpredictable, &ArgStr[1]);
+            char Detail[160];
+            as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgNS32LMRUnpredictable),
+                        ArgStr[1].str.p_str, (unsigned)Reg);
+            WrXErrorPos(ErrNum_Unpredictable, Detail, &ArgStr[1].Pos);
         }
         PutCode((((LongWord)AdrVals.Code) << 19) | ((LongWord)Reg << 15)
                         | (Lo(Code) << 10) | (SizeCodeI(OpSize) << 8) | 0x1e,
@@ -3175,18 +3222,7 @@ static void SwitchTo_NS32K(void* pUser) {
  * \brief  register target to AS
  * ------------------------------------------------------------------------ */
 
-static tCPUProps const CPUProps[] = {
-        { "NS16008",    eCoreGen1, eFPU16081, ePMMU16082, UInt24},
-        { "NS32008",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
-        { "NS08032",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
-        { "NS16032",    eCoreGen1, eFPU16081, ePMMU16082, UInt24},
-        { "NS32016",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
-        { "NS32032",    eCoreGen1, eFPU32081, ePMMU32082, UInt24},
-        { "NS32332", eCoreGen1Ext, eFPU32381, ePMMU32382, UInt32},
-        {"NS32CG16",    eCoreGenE, eFPU32181, ePMMU32082, UInt24},
-        { "NS32532",    eCoreGen2, eFPU32381, ePMMU32532, UInt32},
-        {      NULL,    eCoreNone,  eFPUNone,  ePMMUNone,  UInt1}
-};
+
 
 void codens32k_init(void) {
     tCPUProps const* pRun;

@@ -1187,13 +1187,17 @@
         "ErrNum_Unpredictable": 1
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_ConfOpSizes",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
         "ErrNum_InvReg",
         "ErrNum_InvRegList",
         "ErrNum_InvRegPair",
-        "ErrNum_InvOpSize"
+        "ErrNum_Unpredictable"
       ],
-      "status": "partial",
-      "review_notes": "Tranche 136 reviews seven historical register sites: typed size mismatch (including F64 accepting F32), dynamic control-register choices, R0..R7 list/index members, FP/SP/SB nested base registers, bracketed list syntax and even pair starts. Addressing contracts, core mask, size conflict and unpredictable LMR warning remain."
+      "status": "complete",
+      "review_notes": "All 13 historical candidates reviewed in tranches 136/137. Seven register contracts identify required types, names, lists and pairs. Three addressing sites: direct registers disallowed names memory forms; unknown nested base names register/nested forms; indexed-immediate guard is unreachable because scale parsing clears MAllowImm before base decoding, retained as defensive check. CheckCore names eligible CPUs; LMR warning identifies selected register/code. ConfOpSizes is unreachable with current call paths: each instruction resets OpSize, multistage decoders ResetOpSize or assign converted size before selecting again; retained defensive check. Adjacent EncodeDisplacement failures show actual signed value and existing asymmetric interval, with PC base for 1370; predicates/error IDs/provisional ErrNum_None behavior unchanged. Emission/evaluation/forward alias follow-ups fixed separately in 132-135."
     },
     "codeol40.c": {
       "candidate_counts": {

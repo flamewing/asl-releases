@@ -2295,3 +2295,7 @@ Message ErrMsgVectorClosing
 Message ErrMsgRegisterTypeMismatch
  "Register %s hat Typ %s; erforderlich ist %s"
  "register %s has type %s; required %s"
+
+Message ErrMsgNS32LMRUnpredictable
+ "LMR nach %s (Registercode %u) hat unvorhersehbares Verhalten"
+ "LMR to %s (register code %u) has unpredictable execution"

@@ -1643,3 +1643,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     populated control-register names. Preserve IDs, predicates and type rules;
     tests cover three generations and wrong classes, pair parity and list syntax.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+137. NS32000 displacement/address/core diagnostics and historical review.
+    Direct-register prohibition and nested base parse errors name address forms;
+    core mask lists eligible CPU names, LMR warning names register/code. Adjacent
+    displacement encoding errors show actual signed displacement and original
+    asymmetric interval, including PC base for 1370. Retain provisional error
+    behavior and IDs. Review all 13 historical sites; leave unreachable internal
+    size-conflict and indexed-immediate defensive checks with recorded reasons.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.
