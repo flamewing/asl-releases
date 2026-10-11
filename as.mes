@@ -1377,6 +1377,14 @@ Message ErrMsgEscapeDigitBase
  "Ziffer '%c' ist in einer Zeichen-Escape-Sequenz zur Basis %llld ung&uuml;ltig"
  "digit '%c' is invalid for base %llld in a character escape"
 
+Message ErrMsgRepeatedIndexRegister
+ "Indexregister %s kommt mehrfach in der Adresse vor"
+ "index register %s occurs more than once in the address"
+
+Message ErrMsgTooManyAddressDisplacements
+ "Indexadresse erlaubt h&ouml;chstens einen Verschiebungsausdruck"
+ "indexed address allows at most one displacement expression"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

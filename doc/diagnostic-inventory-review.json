@@ -754,8 +754,12 @@
         "ErrNum_InvAddrMode": 4,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All five historical sites reviewed in tranche 51: mask-specific operand forms, quote-aware missing/mismatched indexed brackets (1300), repeated X and displacement components, and JP displacement [-31,31] at PC+1. Failed components now return before mode selection, preventing secondary errors. CPU restrictions and accepted encodings preserved."
     },
     "codeavr.c": {
       "candidate_counts": {

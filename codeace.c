@@ -12,6 +12,9 @@
 
 #include "codeace.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -74,12 +77,35 @@ static Boolean  OpSize;
 
 /*---------------------------------------------------------------------------*/
 
-static void ChkAdr(Word Mask) {
+static void ChkAdr(Word Mask, tStrComp const* operand) {
     if ((AdrMode == ModXDisp) && !ChkMinCPUExt(CPUACE1202, ErrNum_AddrModeNotSupported)) {
         AdrMode = ModNone;
     } else if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0)) {
         AdrMode = ModNone;
-        WrError(ErrNum_InvAddrMode);
+        char forms[200] = "", detail[280];
+        if (Mask & MModAcc) {
+            strmaxcat(forms, "A, ", sizeof(forms));
+        }
+        if (Mask & MModX) {
+            strmaxcat(forms, "X, ", sizeof(forms));
+        }
+        if (Mask & MModXInd) {
+            strmaxcat(forms, "[X], [0], ", sizeof(forms));
+        }
+        if ((Mask & MModXDisp) && (MomCPU >= CPUACE1202)) {
+            strmaxcat(forms, "[X,disp], [disp,X], [disp] (disp=1..255), ", sizeof(forms));
+        }
+        if (Mask & MModDir) {
+            strmaxcat(forms, "expr, ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
     }
 }
 
@@ -118,7 +144,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
     else if (*pArg->str.p_str == '[') {
         ArgLen = strlen(pArg->str.p_str);
         if (pArg->str.p_str[ArgLen - 1] != ']') {
-            WrError(ErrNum_InvAddrMode);
+            WrBracketError(pArg, "()[]{}", True);
         } else {
             tStrComp Arg, Remainder;
 
@@ -134,19 +160,21 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
                 KillPostBlanksStrComp(&Arg);
                 if (!as_strcasecmp(Arg.str.p_str, "X")) {
                     if (XOcc) {
-                        WrError(ErrNum_InvAddrMode);
-                        break;
+                        char detail[160];
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRepeatedIndexRegister), "X");
+                        WrXErrorPos(ErrNum_InvAddrMode, detail, &Arg.Pos);
+                        return;
                     } else {
                         XOcc = True;
                     }
                 } else if (DispOcc) {
-                    WrError(ErrNum_InvAddrMode);
-                    break;
+                    WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTooManyAddressDisplacements), &Arg.Pos);
+                    return;
                 } else {
                     AdrVal = EvalStrIntExpressionOffs(
                             &Arg, !!(*Arg.str.p_str == '#'), UInt8, &OK);
                     if (!OK) {
-                        break;
+                        return;
                     }
                     DispOcc = True;
                 }
@@ -173,7 +201,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
         }
     }
 
-    ChkAdr(Mask);
+    ChkAdr(Mask, pArg);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -444,7 +472,11 @@ static void DecodeJP(Word Index) {
                - (EProgCounter() + 1);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((Dist > 31) || (Dist < -31))) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)Dist, (LargeInt)-31, (LargeInt)31,
+                        (LargeWord)(EProgCounter() + 1));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = (Dist >= 0) ? 0xe0 + Dist : 0xc0 - Dist;
                 CodeLen     = 1;

@@ -802,3 +802,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     choices, both displacement edges, 12-/16-bit CPUs, no-wrap behavior,
     forward/undefined expressions, exact IDs/positions and accepted bytes.
     Validation: all 379 CTest cases pass with embedded/external catalogs.
+
+51. Complete ACE historical indexed-operand/branch inventory review.
+    Shared 1350 lists mask- and CPU-specific forms; repeated X and excess
+    displacement expressions identify the rejected component. Missing or
+    mismatched indexed delimiters use accurate, quote-aware bracket 1300.
+    Failed components return before mode selection, preventing secondary
+    errors (CLR [X,X] previously issued two 1350 errors). JP 1370 shows
+    signed displacement, [-31,31] and PC+1 at the target operand.
+    Preserve implicit-X [disp] syntax, zero-displacement indirect encoding,
+    UInt12 targets, CPU restrictions and preceding instruction bytes.
+    Tests cover both CPUs, operand contracts, bracket kinds and positions,
+    quoted delimiters, duplicate components, primary evaluation failures,
+    branch endpoints, forward symbols and preceding accepted bytes.
+    Validation: all 380 CTest cases pass with embedded/external catalogs.
