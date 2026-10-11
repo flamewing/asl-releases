@@ -458,3 +458,10 @@ the fixed 76-byte layout, making the allocation/write invariant local.
 Validation: all 338 tests pass with embedded and external catalogs;
 complete object fixtures still preserve both large payloads and the
 two-record undefined-symbol diagnostic. Await another scan for elimination.
+
+Rescan 122001: checked p2bin measurement seek (350660)
+
+The surviving trace is MeasureFile's unchecked fseek to NextPos after a
+data record. Check its result and terminate through chk_wr_read_error on
+failure, even if errno is zero. Full 338-test suites pass with both catalog
+configurations, including auto-range conversion of large valid records.

@@ -417,7 +417,9 @@ static void MeasureFile(char const* FileName, LongWord Offset) {
                 }
             }
 
-            fseek(f, NextPos, SEEK_SET);
+            if (fseek(f, NextPos, SEEK_SET) != 0) {
+                chk_wr_read_error(FileName);
+            }
         } else {
             SkipRecord(Header, FileName, f);
         }
