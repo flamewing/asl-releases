@@ -92,6 +92,8 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
     tNotation const* pNot;
     Boolean          OK;
 
+    AdrMode = ModNone;
+
     if (MomCPU != CPU5840) {
         Mask &= ~(MModX | MModY | MModZ | MModTL | MModTH);
     }

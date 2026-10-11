@@ -1501,6 +1501,11 @@
       "file": "code75xx.c",
       "issue": "CALT first-pass unknown target is forced to 0xc0, below minimum 0xd0, rejecting forward references before resolution.",
       "status": "fixed in tranche 47; provisional target forced into [0xd0,0xff], forward endpoints and resolved errors verified"
+    },
+    {
+      "file": "codeol40.c",
+      "issue": "DecodeAdr retains the preceding operand mode when expression evaluation fails, producing secondary mode errors or stale-mode encoding.",
+      "status": "fixed in tranche 52; initialize ModNone on entry, single primary failures and accepted bytes verified"
     }
   ]
 }
