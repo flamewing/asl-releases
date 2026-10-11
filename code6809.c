@@ -12,6 +12,9 @@
 
 #include "code6809.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -773,7 +776,11 @@ static void DecodeRel(Word Index) {
             AdrInt -= EProgCounter() + 2 + Ord(LongFlag) + Ord(ExtFlag);
             if (!mSymbolQuestionable(Flags) && !LongFlag
                 && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)AdrInt, (LargeInt)-128, (LargeInt)127,
+                        (LargeWord)(EProgCounter() + 2 + Ord(LongFlag) + Ord(ExtFlag)));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 CodeLen = 1 + Ord(ExtFlag);
                 if (LongFlag) {

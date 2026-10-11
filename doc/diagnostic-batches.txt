@@ -353,3 +353,22 @@ manual, EXPECT fixtures, translations and source-position tests.
     selecting changes. Preserve short/long selection, supported CPU variants,
     arithmetic widths, opcode-prefix lengths and unresolved-symbol behavior;
     verify endpoints, source positions and valid encodings.
+    Implemented the single short-branch 1370 rejection in DecodeRel, with
+    English/German displacement/range/PC-base detail under -x at the target.
+    Retain [-128,127] after the existing signed 16-bit wrap and PC+2.
+    Mnemonics explicitly select short or long branches; there is no automatic
+    promotion, and no new long-branch rejection was introduced. Target types,
+    symbol checks, long opcodes and three-/four-byte PC bases are unchanged.
+    Tests cover 6809/6809UNDOC/6309, both rejected/accepted short endpoints,
+    BRA/BNE/BSR, long signed endpoints, LBRA/LBSR versus prefixed conditional
+    forms, address wrap, forward targets, undefined symbols, German detail,
+    exact source positions and single errors. Baseline bytes and numeric
+    documentation are checked.
+    Validation: all 352 CTest cases pass with embedded/external catalogs;
+    existing EXPECT diagnostic numbers remain valid.
+
+17. Continue manual inventory review: RS08 branches.
+    Inspect code68rs08.c relative, bit-test and compare/decrement checks
+    before selecting changes. Retain each operand form, displacement width,
+    instruction-specific PC base, CPU restrictions and symbol handling;
+    verify boundaries, source positions and valid encodings.
