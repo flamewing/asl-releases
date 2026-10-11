@@ -388,7 +388,7 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
     else {
         /* correct delta for longer instruction */
 
-        Delta -= 2;
+        Delta = (LongInt)((LongWord)Delta - 2);
         if ((Delta < -131070) || (Delta >= 131070)) {
             WrError(ErrNum_JmpDistTooBig);
         } else {

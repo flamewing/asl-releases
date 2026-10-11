@@ -1526,6 +1526,11 @@
       "file": "codexcore.c",
       "issue": "Code_branch_core ignores failed target evaluation and diagnoses/encodes its provisional result, causing secondary alignment/range errors.",
       "status": "fixed in tranche 57; return before branch checks on failed evaluation, all three callers verified"
+    },
+    {
+      "file": "codexcore.c",
+      "issue": "Long-branch Delta -= 2 can overflow signed 32-bit arithmetic after a valid UInt32 target produces INT32_MIN short displacement.",
+      "status": "fixed in tranche 58; perform correction with unsigned 32-bit arithmetic before restoring signed distance, preserving wrap semantics"
     }
   ]
 }

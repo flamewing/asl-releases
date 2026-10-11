@@ -880,3 +880,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover BRU/BRF/BRT overflow, undefined target and expression failure,
     exactly one primary error, and preceding short/long/indirect branch bytes.
     Validation: all 384 CTest cases pass with embedded/external catalogs.
+
+58. Separate XCore long-branch signed displacement correction overflow.
+    Correct long displacement via unsigned 32-bit subtraction then restore
+    signed distance, preserving existing wrap calculation without signed
+    overflow. Target 2147483650 at PC 0 produces initial INT32_MIN, where
+    preceding Delta -= 2 invokes undefined behavior before range rejection.
+    Tests cover this target for BRU/BRF/BRT, primary failures and all preceding
+    short/long/register branch bytes. Accepted intervals remain unchanged.
+    WSL GCC/UBSan reproduces signed overflow in the preceding decoder;
+    corrected decoder passes the focused XCore suite under UBSan.
+    Validation: all 384 CTest cases pass with embedded/external catalogs.
