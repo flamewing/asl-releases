@@ -84,14 +84,14 @@ void AddSuffix(char* pName, unsigned NameSize, char const* Suff) {
     }
 }
 
-void FormatError(char const* Name, char const* Detail) {
+AS_NORETURN void FormatError(char const* Name, char const* Detail) {
     fprintf(stderr, "%s%s%s (%s)\n", catgetmessage(&MsgCat, Num_FormatErr1aMsg), Name,
             catgetmessage(&MsgCat, Num_FormatErr1bMsg), Detail);
     fprintf(stderr, "%s\n", catgetmessage(&MsgCat, Num_FormatErr2Msg));
     exit(3);
 }
 
-static void wr_io_str(char const* p_name, char const* p_error_msg) {
+AS_NORETURN static void wr_io_str(char const* p_name, char const* p_error_msg) {
     fprintf(stderr, "%s%s%s\n", catgetmessage(&MsgCat, Num_IOErrAHeaderMsg), p_name,
             catgetmessage(&MsgCat, Num_IOErrBHeaderMsg));
 
@@ -103,12 +103,13 @@ static void wr_io_str(char const* p_name, char const* p_error_msg) {
 }
 
 void ChkIO(char const* Name) {
+    /* This helper returns when errno is zero; only wr_io_str is fatal. */
     if (errno) {
         wr_io_str(Name, GetErrorMsg(errno));
     }
 }
 
-void chk_wr_read_error(char const* p_name) {
+AS_NORETURN void chk_wr_read_error(char const* p_name) {
     wr_io_str(p_name, errno ? GetErrorMsg(errno) : GetReadErrorMsg());
 }
 

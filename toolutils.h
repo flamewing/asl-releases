@@ -46,10 +46,10 @@ extern void DelSuffix(char* Name);
 
 extern void AddSuffix(char* Name, unsigned NameSize, char const* Suff);
 
-extern void FormatError(char const* Name, char const* Detail);
+AS_NORETURN void FormatError(char const* Name, char const* Detail);
 
 extern void ChkIO(char const* Name);
-extern void chk_wr_read_error(char const* p_name);
+AS_NORETURN void chk_wr_read_error(char const* p_name);
 extern int  chkio_fprintf(FILE* p_file, char const* p_name, char const* p_fmt, ...)
 #ifdef __GNUC__
         __attribute__((format(printf, 3, 4)))

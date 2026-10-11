@@ -11,6 +11,7 @@
 #include "toolutils.h"
 
 #include <string.h>
+#include <errno.h>
 
 static void put32(Byte* dest, LongWord value) {
     for (int z = 0; z < 4; z++, value >>= 8) {
@@ -206,6 +207,24 @@ int main(int argc, char** argv) {
     }
     if (!strcmp(argv[1], "record")) {
         return record(argv[2], argv[0]);
+    }
+    if (!strcmp(argv[1], "io-contract")) {
+        toolutils_init(argv[0]);
+        if (!strcmp(argv[2], "errno-zero")) {
+            errno = 0;
+            ChkIO("test file");
+            return 0;
+        }
+        if (!strcmp(argv[2], "errno-nonzero")) {
+            errno = EIO;
+            ChkIO("test file");
+        } else if (!strcmp(argv[2], "read-error")) {
+            errno = 0;
+            chk_wr_read_error("test file");
+        } else if (!strcmp(argv[2], "format-error")) {
+            FormatError("test file", "invalid header");
+        }
+        return 1;
     }
     if (!strcmp(argv[1], "truncate-record")) {
         Byte data[12];

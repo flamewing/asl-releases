@@ -17,6 +17,10 @@ endfunction()
 
 check_exit(0 "${TEST_PROGRAM}" relocations)
 check_exit(0 "${TEST_PROGRAM}" small-path)
+check_exit(0 "${TEST_PROGRAM}" io-contract errno-zero)
+check_exit(2 "${TEST_PROGRAM}" io-contract errno-nonzero)
+check_exit(2 "${TEST_PROGRAM}" io-contract read-error)
+check_exit(3 "${TEST_PROGRAM}" io-contract format-error)
 check_exit(0 "${TEST_PROGRAM}" catalog valid)
 foreach(case negative-length huge-length negative-position countries
         negative-countries empty-table huge-table misaligned-table

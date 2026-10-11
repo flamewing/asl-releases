@@ -307,3 +307,29 @@ coverity-wsl-locale-tests-linux.log and coverity-wsl-locale-timezones.log.
 To avoid CMake's recursive source glob traversing existing build trees
 over the Windows mount, the WSL build used a temporary Linux-filesystem
 copy of committed source plus the test-target dependency correction.
+
+Modeling-report follow-up: source contracts and bounds
+
+Report: Coverity-modeling-report.html, 116 Modeling Required CIDs at a31c0b2.
+914425 and 914398, test_driver.c:compare_files/dump_file
+  The second batch already checks both seeks, negative ftell, allocation,
+  full read counts and cleanup through read_binary_file. These two bounds
+  findings share the corrected 914384/659710 path. Await the next scan.
+455939, codeh16.c:AppendToAdrValsBySize/AppendBySize
+  Use an unsigned countdown rather than converting Cnt - 1 to signed int.
+  A zero count now explicitly performs no writes, even with a one-past
+  destination. Preserve the helper's actual zero-capable size mapping.
+350661, 350668, 350690, 350738, 350759, tool file readers
+  Declare the genuinely fatal FormatError, chk_wr_read_error and wr_io_str
+  helpers AS_NORETURN (C11/C++11). ChkIO remains conditional: errno zero
+  returns, errno nonzero terminates. These annotations alone do not prove
+  the fopen/errno correlation or close every occurrence of these CIDs.
+
+Validation: all 337 tests passed in both message-catalog configurations.
+New subprocess tests confirm ChkIO returns with zero errno, exits 2 with
+nonzero errno, and read/format errors exit 2/3 respectively. An isolated
+ignored-build harness extracts the production H16 routines and uses the
+real GetSymbolSizeBytes implementation for 44 boundary cases, including
+zero count at a full array and rejection of insufficient space. GCC with
+undefined-behavior traps passed. No Coverity models or triage changes
+have been uploaded; closure still requires analyzer confirmation.

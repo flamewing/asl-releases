@@ -19,6 +19,12 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+#    define AS_NORETURN [[noreturn]]
+#else
+#    define AS_NORETURN _Noreturn
+#endif
+
 #ifdef _MSC_VER
 #    include <stddef.h>
 #    ifdef _USE_ATTRIBUTES_FOR_SAL

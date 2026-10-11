@@ -233,11 +233,10 @@ static unsigned GetH16SymbolSizeBytes(tSymbolSize Size) {
 }
 
 static unsigned AppendBySize(Byte* pDest, LongInt Value, tSymbolSize OpSize) {
-    int      z;
     unsigned Cnt = GetH16SymbolSizeBytes(OpSize);
 
-    for (z = Cnt - 1; z >= 0; z--) {
-        pDest[z] = Value & 0xff;
+    for (unsigned z = Cnt; z > 0; --z) {
+        pDest[z - 1] = Value & 0xff;
         Value >>= 8;
     }
     return Cnt;
