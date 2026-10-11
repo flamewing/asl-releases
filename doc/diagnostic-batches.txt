@@ -1404,3 +1404,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both CPUs, every historical site, register/bit/branch warnings,
     preserved warning bytes, special MOV/JMP forms and CALL acceptance.
     Validation: all 400 CTest cases pass with embedded/external catalogs.
+
+110. SX20/SX28 quoted-period bit-address separator.
+    SETB '.'.0 splits the period inside its quoted address and emits two 1020
+    errors. Use quote-aware separator search so the character literal behaves
+    like numeric address 46. Test all four bit instructions plus named BIT
+    definitions on both CPUs against identical numeric-equivalent bytes.
+    Validation: all 400 CTest cases pass with embedded/external catalogs.

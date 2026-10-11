@@ -1785,6 +1785,11 @@
       "file": "codesx20.c",
       "issue": "MOVSZ ++/-- register parse failures fall into generic invalid addressing mode, adding a secondary 1350 after range/symbol errors.",
       "status": "fixed in tranche 108; recognize prefix before evaluation and retain the primary failure; both prefixes and valid encodings verified"
+    },
+    {
+      "file": "codesx20.c",
+      "issue": "Bit-address separator strchr splits a period character literal inside its quotes; SETB period-literal .0 emits two invalid-symbol diagnostics instead of accepted numeric address 46.",
+      "status": "fixed in tranche 110; quote-aware separator search, all four bit instructions and BIT definitions verified on both CPUs against numeric equivalent bytes"
     }
   ]
 }

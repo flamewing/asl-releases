@@ -136,7 +136,7 @@ static Boolean DecodeBitSymbol(
         tStrComp const* pArg, Word* pBitSymbol, tEvalResult* pEvalResult) {
     char* pSplit;
 
-    pSplit = strchr(pArg->str.p_str, '.');
+    pSplit = QuotPos(pArg->str.p_str, '.');
     if (!pSplit) {
         *pBitSymbol = EvalStrIntExpressionWithResult(pArg, UInt11, pEvalResult);
         if (pEvalResult->OK) {
