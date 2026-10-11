@@ -1186,8 +1186,14 @@
         "ErrNum_InvRegPair": 1,
         "ErrNum_Unpredictable": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_InvRegList",
+        "ErrNum_InvRegPair",
+        "ErrNum_InvOpSize"
+      ],
+      "status": "partial",
+      "review_notes": "Tranche 136 reviews seven historical register sites: typed size mismatch (including F64 accepting F32), dynamic control-register choices, R0..R7 list/index members, FP/SP/SB nested base registers, bracketed list syntax and even pair starts. Addressing contracts, core mask, size conflict and unpredictable LMR warning remain."
     },
     "codeol40.c": {
       "candidate_counts": {

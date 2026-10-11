@@ -12,6 +12,9 @@
 
 #include "codens32k.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+#include "symbolsize.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -81,6 +84,12 @@ typedef struct {
 #define MAllowImm     (1 << 0)
 #define MAllowReg     (1 << 1)
 #define MAllowRegPair (1 << 2)
+
+static void WrOperandChoices(tErrorNum ErrorNum, tStrComp const* pArg, char const* Choices) {
+    char Detail[700];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgOperandChoices), Choices);
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
 
 static tCtlReg *CtlRegs, *MMURegs;
 
@@ -367,7 +376,11 @@ static tRegEvalResult DecodeReg(
     }
 
     if ((RegEvalResult == eIsReg) && !MatchRegSize(EvalResult.DataSize, ChkRegSize)) {
-        WrStrErrorPos(ErrNum_InvOpSize, pArg);
+        char Detail[180];
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgRegisterTypeMismatch),
+                    pArg->str.p_str, GetSymbolSizeName(EvalResult.DataSize),
+                    (ChkRegSize == eSymbolSizeFloat64Bit) ? "F32/F64" : GetSymbolSizeName(ChkRegSize));
+        WrXErrorPos(ErrNum_InvOpSize, Detail, &pArg->Pos);
         RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
     }
 
@@ -394,7 +407,16 @@ static Boolean DecodeCtlReg(tStrComp const* pArg, Word* pResult) {
             return CheckSup(CtlRegs[z].Privileged, pArg);
         }
     }
-    WrStrErrorPos(ErrNum_InvReg, pArg);
+    {
+        char Choices[400] = "";
+        for (z = 0; CtlRegs[z].pName; z++) {
+            if (z) {
+                strmaxcat(Choices, ", ", sizeof(Choices));
+            }
+            strmaxcat(Choices, CtlRegs[z].pName, sizeof(Choices));
+        }
+        WrOperandChoices(ErrNum_InvReg, pArg, Choices);
+    }
     return False;
 }
 
@@ -439,7 +461,7 @@ static Boolean DecodeRegList(tStrComp const* pArg, Boolean BitRev, Byte* pResult
     char*    pSep;
 
     if ((l < 2) || (pArg->str.p_str[0] != '[') || (pArg->str.p_str[l - 1] != ']')) {
-        WrStrErrorPos(ErrNum_InvRegList, pArg);
+        WrOperandChoices(ErrNum_InvRegList, pArg, "[R0..R7, ...]");
         return False;
     }
 
@@ -457,7 +479,7 @@ static Boolean DecodeRegList(tStrComp const* pArg, Boolean BitRev, Byte* pResult
             return False;
         }
         if (Reg >= 8) {
-            WrStrErrorPos(ErrNum_InvReg, &Part);
+            WrOperandChoices(ErrNum_InvReg, &Part, "R0..R7");
             return False;
         }
         *pResult |= 1 << (BitRev ? 7 - Reg : Reg);
@@ -663,7 +685,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
             return False;
         }
         if (IndexReg >= 8) {
-            WrStrErrorPos(ErrNum_InvReg, &Mid);
+            WrOperandChoices(ErrNum_InvReg, &Mid, "R0..R7");
             return False;
         }
 
@@ -717,7 +739,9 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
             pArg, &RegValue, NULL, IsFloat ? OpSize : eSymbolSize32Bit, False)) {
     case eIsReg:
         if (NeedEvenReg && (RegValue & 1)) {
-            WrStrErrorPos(ErrNum_InvRegPair, pArg);
+            WrOperandChoices(ErrNum_InvRegPair, pArg,
+                             IsFloat ? "F0/F2/F4/F6 or L0/L2/L4/L6 (even register pair start)"
+                                     : "R0/R2/R4/R6 (even register pair start)");
             return False;
         } else if (!(AddrModeMask & (MAllowReg | MAllowRegPair))) {
             WrStrErrorPos(ErrNum_InvAddrMode, pArg);
@@ -868,7 +892,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
                     return False;
                 }
                 if (RegValue < 8) {
-                    WrStrErrorPos(ErrNum_InvReg, &InnerArg);
+                    WrOperandChoices(ErrNum_InvReg, &InnerArg, "FP, SP or SB");
                     return False;
                 }
                 pDest->Code = AddrCode_MemRelative + (RegValue - 8);

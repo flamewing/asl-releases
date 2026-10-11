@@ -2291,3 +2291,7 @@ Message ErrMsgVectorOpeningEnd
 Message ErrMsgVectorClosing
  "Vektorkoordinaten erfordern abschlie&szlig;ende Klammer ')'; gefunden '%c'"
  "vector coordinates require final closing bracket ')'; got '%c'"
+
+Message ErrMsgRegisterTypeMismatch
+ "Register %s hat Typ %s; erforderlich ist %s"
+ "register %s has type %s; required %s"

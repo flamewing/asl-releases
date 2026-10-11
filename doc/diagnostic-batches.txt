@@ -1635,3 +1635,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     size argument 2 instead of register list. Three CPU generations/all five
     mnemonics verify one primary error, no emission, original and forward bytes.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+136. NS32000 register contracts.
+    Typed registers identify actual/required class (I32/F32/F64), including F32
+    acceptance for F64 operands. Name R0..R7 list/index members, FP/SP/SB nested
+    bases, bracketed list syntax, even integer/float pair starts, and dynamically
+    populated control-register names. Preserve IDs, predicates and type rules;
+    tests cover three generations and wrong classes, pair parity and list syntax.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.
