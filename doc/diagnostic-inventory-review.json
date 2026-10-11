@@ -1666,6 +1666,11 @@
       "file": "codest6.c",
       "issue": "Regular and bit-test relative branch decoders reject provisional distances of first-pass unknown forward expressions before final symbols resolve.",
       "status": "fixed in tranche 84; defer range checks for first-pass unknown/questionable expressions, all six branch callers verified on both CPU address-width families"
+    },
+    {
+      "file": "codefmc8.c",
+      "issue": "SETB/CLRB/BBC/BBS callers append InvAddrMode after DecodeBitAdr has already reported failed address/bit expression evaluation.",
+      "status": "fixed in tranche 86; bit parser reports missing separator itself, callers encode only on parser success and retain primary type/range/symbol failures"
     }
   ]
 }

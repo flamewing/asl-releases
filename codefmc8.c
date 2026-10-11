@@ -196,6 +196,7 @@ static Boolean DecodeBitAdr(tStrComp const* pArg, Byte* Adr, Byte* Bit) {
 
     sep = strchr(pArg->str.p_str, ':');
     if (!sep) {
+        WrError(ErrNum_InvAddrMode);
         return FALSE;
     }
     StrCompSplitRef(&AddrArg, &BitArg, pArg, sep);
@@ -536,9 +537,7 @@ static void DecodeBit(Word Index) {
 
     if (!ChkArgCnt(1, 1))
         ;
-    else if (!DecodeBitAdr(&ArgStr[1], &Adr, &Bit)) {
-        WrError(ErrNum_InvAddrMode);
-    } else {
+    else if (DecodeBitAdr(&ArgStr[1], &Adr, &Bit)) {
         BAsmCode[0] = 0xa0 + (Index << 3) + Bit;
         BAsmCode[1] = Adr;
         CodeLen     = 2;
@@ -719,9 +718,7 @@ static void DecodeBitBr(Word Index) {
 
     if (!ChkArgCnt(2, 2))
         ;
-    else if (!DecodeBitAdr(&ArgStr[1], &BAdr, &Bit)) {
-        WrError(ErrNum_InvAddrMode);
-    } else {
+    else if (DecodeBitAdr(&ArgStr[1], &BAdr, &Bit)) {
         Adr = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt16, &OK, &Flags)
               - (EProgCounter() + 3);
         if (OK) {

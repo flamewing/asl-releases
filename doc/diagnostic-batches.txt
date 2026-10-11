@@ -1177,3 +1177,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     families, warning positions and bytes, assumptions/NOTHING, modes,
     branch endpoints/wrap/forward expressions and primary failures.
     Validation: all 393 CTest cases pass with embedded/external catalogs.
+
+86. Separate F2MC8L redundant bit-address error bug.
+    Reproduced SETB 256:0 giving 1320 followed by generic 1350. The bit parser
+    now owns missing-separator 1350; all four callers encode only on success
+    and retain primary address/bit evaluation errors. Preserve accepted bit
+    instructions and missing-separator error category. Tests cover SETB/CLRB/
+    BBC/BBS, both expression components, exact primary positions, missing
+    separator, no rejected words and preceding packed bit/branch bytes.
+    Validation: all 394 CTest cases pass with embedded/external catalogs.
