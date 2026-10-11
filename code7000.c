@@ -920,6 +920,11 @@ static adr_mode_t decode_adr(
     adr_mode = ModNone;
     reset_adr_vals(p_vals);
 
+    if ((op_size != eSymbolSizeUnknown) && !GetSymbolSizeBytes(op_size)) {
+        WrStrErrorPos(ErrNum_InvOpSize, pArg);
+        return adr_mode;
+    }
+
     switch (decode_cpu_reg(
             pArg, &p_vals->part, &p_vals->part_op_size, eSymbolSizeUnknown, False)) {
     case eIsReg:

@@ -644,6 +644,9 @@ static LongWord get_byte_bit_field_le_core(
 
 static void set_byte_bit_field_be_core(
         Byte* p_dest, unsigned start, LongWord field_value, unsigned field_length) {
+    if (!field_length) {
+        return;
+    }
     if (field_length < 32) {
         field_value <<= (32 - field_length);
     }

@@ -1282,6 +1282,11 @@ void DecodeMotoDS(Word flags) {
 
     UNUSED(flags);
 
+    if (!WSize) {
+        WrError(ErrNum_InvOpSize);
+        return;
+    }
+
     if (ChkArgCnt(1, 1)) {
         Boolean      ValOK;
         tSymbolFlags Flags;

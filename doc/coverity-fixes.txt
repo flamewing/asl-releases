@@ -184,6 +184,9 @@ conversion and metadata, unchanged floats including negative zero/NaN,
 and unsupported types using the real string cleanup implementation.
 All 337 tests passed with embedded and external catalogs. Closure of
 914439 is awaiting the next Coverity scan; no triage state was changed.
+Separately compiling the full production source before/after at -O3
+produced identical TempResultToFloat function assembly with both GCC
+and Clang in the local default configuration.
 
 Review notes on the remaining confirmed labels
 
@@ -199,10 +202,54 @@ Review notes on the remaining confirmed labels
   have matching argument counts. These two IDs need line/event traces or
   a rescan to establish whether they are the same corrected call sites.
 
+Seventh batch: review of pending arithmetic findings
+
+914335, asmcode.c:set_byte_bit_field_be_core
+  Return immediately for a zero-width field, matching the little-endian
+  no-op behavior and avoiding an unsigned shift by 32. A native isolated
+  harness extracts the production core routines and compares bit-by-bit
+  writes and readback for 4,224 cases per compiler (both endiannesses,
+  offsets 0..15, widths 0..32, four values). GCC and Clang passed with
+  shift sanitization configured to trap; this harness is in the ignored
+  build directory, not a permanent repository test.
+455954, codeh8_3.c:DecodeReg
+  Bound accepted register sizes to byte/word/long before shifting the
+  size mask. Ordinary register aliases use these three sizes. The exact
+  reported invalid-size path still needs its event trace or rescan.
+914329, code7000.c:decode_adr
+  Reject a specified size whose byte count is zero before address
+  displacement scaling. Preserve the existing unknown-size handling.
+914430, motpseudo.c:DecodeMotoDS
+  Reject unsupported sizes before using GetWSize's zero result as a
+  divisor. Supported Motorola attribute sizes retain their behavior.
+  Both division findings still need trace/rescan confirmation of the
+  reported paths, since normal callers constrain their operand sizes.
+
+Validation: all 337 repository tests passed in both catalog configurations,
+including H8 register aliases, SH addressing and Motorola data directives.
+These pending IDs remain provisional; no Coverity triage state was changed.
+
+Pending findings reviewed without a new code change
+
+914420, coderx.c:DispSize5
+  All three callers first call ChkDisp5, which ensures valid scale and
+  displacement range when known. Unknown first-pass expressions can
+  exceed Byte, but encoding consumes only the low five displacement bits;
+  later passes range-check the resolved value. Request the event trace
+  before treating that narrowing as an actual faulty final encoding.
+914388, as.c:IRP_OutProcessor
+  CompressLine returns a replacement count; zero replacements are valid,
+  and the caller needs the changed line rather than that count. Ignoring
+  this return is intentional. Confirm the warned call from the event trace.
+350653 and 350764, alink.c:ProcessFile
+  The second batch now checks both PartRun and PartRun->RelocInfo before
+  processing relocated records. Review the next scan to determine whether
+  those guards cover the original reported paths.
+
 Remaining work
 
 All confirmed labels in the supplied report now have a fix or a review
 note above. Closure still requires a rescan, especially the caller-based
 and defensive fixes whose exact traces were unavailable. The eight
-undecided findings need event traces and source-based review. No pending
-finding is counted as resolved by this ledger.
+undecided findings now have defensive fixes or review notes above. None
+is counted as closed before trace review or confirmation by a new scan.

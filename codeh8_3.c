@@ -212,7 +212,9 @@ static tRegEvalResult DecodeReg(
         *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
     }
 
-    if ((RegEvalResult == eIsReg) && !((SizeMask >> *pSize) & 1)) {
+    if ((RegEvalResult == eIsReg)
+        && ((*pSize < eSymbolSize8Bit) || (*pSize > eSymbolSize32Bit)
+            || !((SizeMask >> *pSize) & 1))) {
         WrStrErrorPos(ErrNum_InvOpSize, pArg);
         return MustBeReg ? eIsNoReg : eRegAbort;
     }
