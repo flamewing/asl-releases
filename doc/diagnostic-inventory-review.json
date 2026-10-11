@@ -1442,14 +1442,16 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_InvReg",
+        "ErrNum_InstructionNotSupported",
         "ErrNum_InvAddrMode",
-        "ErrNum_Unpredictable",
+        "ErrNum_InvOpSize",
+        "ErrNum_InvReg",
         "ErrNum_JmpDistTooBig",
+        "ErrNum_Unpredictable",
         "ErrNum_WrongArgCnt"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 139 removes duplicate historical register error and guards descriptor access. Tranche 142 reviews six addressing contracts (mask alternatives, indexed register/immediate base, post/pre-decrement or register-deferred length prefix), two modified-base/index warnings, byte/word branch displacement bounds and allowed operand counts from the two registered variants of each variable mnemonic. IDs/predicates/bytes unchanged. CPU capability helper and internal immediate-size default remain for final review; follow-ups 140/141 fix PC index encoding and forward index aliases."
+      "status": "complete",
+      "review_notes": "All 13 historical candidates reviewed in 139/142/143. Primary register error no longer duplicated; six addressing contracts identify mask alternatives/indexed bases/length prefixes; two warnings identify modified base/index register; branches show bounds/PC base; variable aliases show both counts. Capability helper lists CPUs satisfying existing masks. Immediate-size default is unreachable for registered operand sizes: 8/16/32/64/128-bit integers and DEC F/D/G/H handled explicitly; unknown size is used only by branch decoding, dispatched separately. Preserve defensive default. Separate follow-ups fix PC index encoding and forward aliases (140/141); investigate builder capability consistency separately."
     },
     "codevector.c": {
       "candidate_counts": {
@@ -1961,6 +1963,11 @@
       "file": "codevax.c",
       "issue": "Explicit index register parsing is optional and leaves unresolved/nonregister index suffix in the base expression; valid forward aliases fail with misleading bracket 1300.",
       "status": "fixed in tranche 141; mandatory parsing supplies provisional register for aliases and returns after primary failure; three CPUs/forward general-SP-PC aliases/final undefined/nonregister error/no emission checked"
+    },
+    {
+      "file": "codevax.c",
+      "issue": "Generic format parser derives G/H capability masks; one/two/three-operand builders do not (e.g. MOVH assembles on MicroVAX-I, while EMODH fails existing H capability gate).",
+      "status": "requires focused opcode/CPU validation: distinguish actual floating-point instructions from integer CLR aliases before changing acceptance; recorded during tranche 143, existing masks preserved"
     }
   ]
 }

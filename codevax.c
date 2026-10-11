@@ -59,6 +59,23 @@ typedef struct {
     cpu_cap_t caps;
 } cpu_props_t;
 
+static cpu_props_t const cpu_props[] = {
+        { "MicroVAX-I", e_cpu_cap_float_g | e_cpu_cap_string_mvax},
+        {"MicroVAX-II",                         e_cpu_cap_float_g},
+        { "VAX-11/725",                   e_cpu_cap_all_no_vector},
+        { "VAX-11/730",                   e_cpu_cap_all_no_vector},
+        { "VAX-11/750",                   e_cpu_cap_all_no_vector}, /* g/h optional */
+        { "VAX-11/780",                   e_cpu_cap_all_no_vector}, /* g/h optional */
+        { "VAX-11/782",                   e_cpu_cap_all_no_vector}, /* g/h optional */
+        { "VAX-11/785",                   e_cpu_cap_all_no_vector}, /* g/h optional */
+        {   "VAX-8200",                   e_cpu_cap_all_no_vector},
+        {   "VAX-8300",                   e_cpu_cap_all_no_vector},
+        {   "VAX-8500",                   e_cpu_cap_all_no_vector},
+        {   "VAX-8600",                   e_cpu_cap_all_no_vector},
+        {   "VAX-8650",                   e_cpu_cap_all_no_vector},
+        {   "VAX-8800",                   e_cpu_cap_all_no_vector},
+};
+
 typedef struct {
     int gen_indices[4];
 } var_arg_order_t;
@@ -908,7 +925,21 @@ static void append_opcode(Word op_code) {
 
 static Boolean chk_required_caps(Word required_caps) {
     if ((p_curr_cpu_props->caps & required_caps) != required_caps) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        char detail[700];
+        cpu_props_t const* p_cpu;
+        Boolean first = True;
+        strmaxcpy(detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(detail));
+        for (p_cpu = cpu_props; p_cpu < cpu_props + as_array_size(cpu_props); p_cpu++) {
+            if ((p_cpu->caps & required_caps) == required_caps) {
+                if (!first) {
+                    strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(detail));
+                }
+                strmaxcat(detail, p_cpu->name, sizeof(detail));
+                first = False;
+            }
+        }
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(detail));
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
         return False;
     } else {
         return True;
@@ -1861,22 +1892,7 @@ static void initpass_vax(void) {
  * \brief  register VAX target
  * ------------------------------------------------------------------------ */
 
-static cpu_props_t const cpu_props[] = {
-        { "MicroVAX-I", e_cpu_cap_float_g | e_cpu_cap_string_mvax},
-        {"MicroVAX-II",                         e_cpu_cap_float_g},
-        { "VAX-11/725",                   e_cpu_cap_all_no_vector},
-        { "VAX-11/730",                   e_cpu_cap_all_no_vector},
-        { "VAX-11/750",                   e_cpu_cap_all_no_vector}, /* g/h optional */
-        { "VAX-11/780",                   e_cpu_cap_all_no_vector}, /* g/h optional */
-        { "VAX-11/782",                   e_cpu_cap_all_no_vector}, /* g/h optional */
-        { "VAX-11/785",                   e_cpu_cap_all_no_vector}, /* g/h optional */
-        {   "VAX-8200",                   e_cpu_cap_all_no_vector},
-        {   "VAX-8300",                   e_cpu_cap_all_no_vector},
-        {   "VAX-8500",                   e_cpu_cap_all_no_vector},
-        {   "VAX-8600",                   e_cpu_cap_all_no_vector},
-        {   "VAX-8650",                   e_cpu_cap_all_no_vector},
-        {   "VAX-8800",                   e_cpu_cap_all_no_vector},
-};
+
 
 void codevax_init(void) {
     cpu_props_t const* p_prop;

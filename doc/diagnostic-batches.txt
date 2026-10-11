@@ -1695,3 +1695,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     IDs, predicates, warning emission and original accepted bytes; three CPUs
     cover all contracts, bounds, warning behavior and count alternatives.
     Validation: all 410 CTest cases pass with embedded/external catalogs.
+
+143. VAX CPU-capability diagnostic and historical inventory completion.
+    Capability mismatch lists CPUs satisfying the existing required mask; tests
+    distinguish H/CRC/string subsets on both MicroVAX variants. Preserve masks,
+    IDs and acceptance. All 13 historical sites now reviewed; internal immediate
+    size default cannot be reached by registered operand sizes, recorded unchanged.
+    Record builder G/H capability inconsistency for separate opcode validation
+    that distinguishes actual floating instructions from integer CLR aliases.
+    Validation: all 410 CTest cases pass with embedded/external catalogs.
