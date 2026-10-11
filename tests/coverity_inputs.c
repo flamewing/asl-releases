@@ -8,6 +8,7 @@
 #include "fileformat.h"
 #include "nlmessages.h"
 #include "nls.h"
+#include "strutil.h"
 #include "toolutils.h"
 
 #include <string.h>
@@ -82,6 +83,12 @@ static int catalog(char const* mode) {
     msg_catalog_open_buffer(&cat, data, pos, 1234, 5678);
     if (cat.MsgCount != 2 || strcmp(catgetmessage(&cat, 0), "hello")
         || strcmp(catgetmessage(&cat, 1), "world")) {
+        return 1;
+    }
+    char* fallback = catgetmessage(&cat, -1);
+    if (!strstr(fallback, "-1") || !memchr(fallback, '\0', STRINGSIZE)
+        || catgetmessage(&cat, cat.MsgCount) != fallback
+        || !strstr(fallback, "2") || strcmp(catgetmessage(&cat, 0), "hello")) {
         return 1;
     }
     free(cat.MsgBlock);
@@ -223,6 +230,13 @@ int main(int argc, char** argv) {
             chk_wr_read_error("test file");
         } else if (!strcmp(argv[2], "format-error")) {
             FormatError("test file", "invalid header");
+        } else if (!strcmp(argv[2], "pointer-capacity")) {
+            char buffer[64];
+            as_snprintf(buffer, sizeof(char*), "%s", "test");
+        } else if (!strcmp(argv[2], "invalid-format")) {
+            char buffer[64];
+            char const* format = "%q";
+            as_snprintf(buffer, sizeof(buffer), format);
         }
         return 1;
     }

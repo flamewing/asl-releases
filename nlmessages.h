@@ -22,6 +22,9 @@ typedef struct {
     LongInt *StrPosis, MsgCount;
 } TMsgCat, *PMsgCat;
 
+/* Borrowed NUL-terminated strings from an initialized, validated catalog.
+   Valid-index pointers live with the catalog. Invalid indices use one shared
+   static buffer overwritten by the next invalid-index lookup. Do not free. */
 extern char* catgetmessage(PMsgCat Catalog, int Num);
 
 extern void msg_catalog_open_file(

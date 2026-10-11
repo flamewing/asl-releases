@@ -1341,6 +1341,9 @@ define_executable(test_strmaxprep2
 )
 add_test(NAME strmaxprep2 COMMAND test_strmaxprep2)
 
+define_executable(test_formatter_contracts tests/formatter_contracts.c strutil.c dynstr.c)
+add_test(NAME formatter_contracts COMMAND test_formatter_contracts)
+
 define_executable(test_strcomp_span
     tests/strcomp_span.c
     strcomp.c strutil.c dynstr.c

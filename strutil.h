@@ -52,6 +52,11 @@ typedef struct {
 extern void    as_format_context_reset(as_format_ctx_t* p_context);
 extern Boolean as_format_context_consume(as_format_ctx_t* p_context, char ch);
 
+/* Bounded formatters return characters actually stored (excluding NUL).
+   With zero capacity they return zero without accessing destination/format.
+   With positive capacity, replace initializes the destination; append requires
+   an existing NUL within that capacity. Both retain space for the final NUL.
+   Passing sizeof(char*) as the capacity remains a fatal usage error. */
 extern int as_vsnprcatf(char* pDest, size_t DestSize, char const* pFormat, va_list ap);
 extern int as_vsnprintf(char* pDest, size_t DestSize, char const* pFormat, va_list ap);
 extern int as_snprcatf(

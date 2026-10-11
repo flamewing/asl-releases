@@ -209,11 +209,7 @@ char* catgetmessage(PMsgCat Catalog, int Num) {
     if ((Num >= 0) && (Num < Catalog->MsgCount)) {
         return Catalog->MsgBlock + Catalog->StrPosis[Num];
     } else {
-        static char* umess = NULL;
-
-        if (!umess) {
-            umess = (char*)malloc(sizeof(char) * STRINGSIZE);
-        }
+        static char umess[STRINGSIZE];
         as_snprintf(
                 umess, STRINGSIZE, "catgetmessage: message number %d does not exist",
                 Num);

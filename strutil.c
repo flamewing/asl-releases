@@ -695,6 +695,11 @@ int as_sdprintf(as_dynstr_t* p_dest, char const* pFormat, ...) {
 int as_vsnprcatf(char* pDest, size_t DestSize, char const* pFormat, va_list ap) {
     dest_format_context_t ctx;
 
+    /* No destination or format access is needed when nothing can be stored. */
+    if (!DestSize) {
+        return 0;
+    }
+
     if (DestSize == sizeof(char*)) {
         fprintf(stderr, "pointer size passed to as_vsnprcatf\n");
         exit(2);

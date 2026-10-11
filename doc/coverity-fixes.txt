@@ -333,3 +333,30 @@ real GetSymbolSizeBytes implementation for 44 boundary cases, including
 zero count at a full array and rejection of insufficient space. GCC with
 undefined-behavior traps passed. No Coverity models or triage changes
 have been uploaded; closure still requires analyzer confirmation.
+
+Modeling-report follow-up: bounded formatting and catalog lifetime
+
+The 25 formatter-termination findings and six formatter-dependent wrappers
+require the real bounded-output contract, not libc snprintf's return rules
+or grammar. Make capacity zero return zero before destination strlen or
+format parsing; NULL/zero-capacity calls now perform no memory access.
+Document positive-capacity initialization/termination, append's existing
+string precondition, actual-stored-length returns and the pointer-size
+capacity guard. Dynamic variants retain their allocation/growth behavior.
+
+The 43 catalog-string findings must retain borrowed ownership and loader
+preconditions. Bounded terminator checks already exist from the first
+batch. Replace the invalid-index fallback's unchecked lazy malloc with a
+static array, preserving shared-buffer lifetime and eliminating its NULL
+allocation path. Document that valid-index pointers live with the loaded
+catalog and invalid-index calls overwrite the same fallback buffer.
+
+Validation: formatter_contracts covers all four bounded API variants,
+capacity one, truncation, canaries outside the capacity, append prefixes,
+NULL/zero-capacity, empty output, custom LargeWord/radix conversion and
+dynamic growth. Catalog tests check first/last index, negative/out-of-range
+fallback, repeated fallback pointer identity, and unchanged catalog data.
+Subprocess tests retain fatal pointer-size-capacity and invalid-format
+behavior. All 338 tests pass in both message-catalog configurations.
+These are source-contract prerequisites; no model has been applied and
+the STRING_NULL CIDs are not counted as closed before the next analysis.
