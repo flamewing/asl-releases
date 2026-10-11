@@ -348,8 +348,13 @@
         "ErrNum_InvReg": 6,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_DistTooBig",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All eight historical sites reviewed in tranche 95: signed BP/PX/PY displacement/full interval, core register width mismatch (8/16/20 bits), complete supported MV/EX pairs, ADC/SBC A requirement, unwrapped JR [-255,255] and PC+2. Adjacent 1331 displays canonical 20-bit target/current 64-KiB pages. Preserve byte-vs-pair distinctions, operand order, masks and encodings. Separate failed-JR-evaluation guard fixed in tranche 94."
     },
     "code65.c": {
       "candidate_counts": {

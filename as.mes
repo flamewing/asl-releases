@@ -1309,6 +1309,14 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgRegisterPairs
+ "Erlaubte Registerpaare: %s"
+ "allowed register pairs: %s"
+
+Message ErrMsgRegisterWidthMismatch
+ "Register %s hat %d Bits; %s erfordert %d Bits"
+ "register %s has width %d bits; %s requires %d bits"
+
 Message ErrMsgST6ROMWindow
  "ROM-Adresse 0x%lllx verwendet die 64-Byte-Seite %llld; ASSUME ROMBASE=%s"
  "ROM address 0x%lllx uses 64-byte page %llld; ASSUME ROMBASE=%s"

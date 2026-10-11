@@ -1257,3 +1257,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all five JR aliases, single primary overflow/undefined errors,
     exact positions and EXPECT-wrapped failures proving no emitted words.
     Validation: all 396 CTest cases pass with embedded/external catalogs.
+
+95. Complete SC62015 historical displacement/register/branch review.
+    1330 gives signed internal BP/PX/PY displacement and [-128,127]. 1445
+    identifies actual/required core register width (8/16/20 bits), supported
+    MV/EX register pairs or ADC/SBC A requirement. 1370 gives unwrapped
+    displacement, [-255,255] and PC+2. Adjacent 1331 identifies canonical
+    20-bit target/current pages and 64-KiB page size, preserving the original
+    20-bit page mask and separate unwrapped distance arithmetic. Preserve IDs,
+    register classes, operand order and preceding bytes. Tests cover all
+    historical callers, internal bases, special-register pairs, primary
+    failures, page/range constraints, endpoints and forward expressions.
+    Validation: all 396 CTest cases pass with embedded/external catalogs.

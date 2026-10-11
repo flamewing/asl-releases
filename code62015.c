@@ -12,6 +12,9 @@
 
 #include "code62015.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -133,6 +136,25 @@ static Boolean IsCoreReg(Byte reg) {
     return (reg < 8) ? True : False;
 }
 
+static void WrRegisterPairs(char const* pairs) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterPairs), pairs);
+    WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[2].Pos);
+}
+
+static void WrRegisterWidth(Byte dest, Byte source) {
+    char detail[240];
+    if (IsCoreReg(dest) && IsCoreReg(source)) {
+        int dest_bits = RegSize(dest) == 3 ? 20 : 8 * RegSize(dest);
+        int source_bits = RegSize(source) == 3 ? 20 : 8 * RegSize(source);
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterWidthMismatch),
+                    ArgStr[2].str.p_str, source_bits, ArgStr[1].str.p_str, dest_bits);
+        WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[2].Pos);
+    } else {
+        WrRegisterPairs("A,B; BA/I,BA/I; X/Y/U/S,X/Y/U/S");
+    }
+}
+
 static Boolean DecodeInternal(
         tStrComp const* pArg, Byte* pMode, Byte* pDisp, char const* pPReg) {
     size_t       i;
@@ -209,7 +231,10 @@ static Boolean DecodeInternal(
     val = EvalStrIntExpressionWithFlags(&temp, UInt8, &OK, &flags) * sign;
     if (OK) {
         if (!mFirstPassUnknownOrQuestionable(flags) && (val > 127 || val < -128)) {
-            WrStrErrorPos(ErrNum_DistTooBig, pArg);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                        (LargeInt)val, (LargeInt)-128, (LargeInt)127);
+            WrXErrorPos(ErrNum_DistTooBig, detail, &pArg->Pos);
             return False;
         }
         *pMode = mode;
@@ -509,8 +534,7 @@ static void DecodeMV(Word Index) {
 
                 if (!Index && reg1 < 8 && reg2 < 8 && RegSize(reg1) > 1) {
                     if (RegSize(reg1) != RegSize(reg2)) {
-                        WrStrErrorPos(
-                                ErrNum_InvReg, &ArgStr[2]); /* Register size conflict */
+                        WrRegisterWidth(reg1, reg2);
                         return;
                     }
 
@@ -520,7 +544,7 @@ static void DecodeMV(Word Index) {
                     return;
                 }
 
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+                WrRegisterPairs("A,B; B,A; BA/I,BA/I; X/Y/U/S,X/Y/U/S");
                 return;
             }
 
@@ -888,14 +912,13 @@ static void DecodeEX(Word Index) {
         if (DecodeReg(&ArgStr[1], &reg1)) {
             if (DecodeReg(&ArgStr[2], &reg2)) {
                 if (RegSize(reg1) != RegSize(reg2)) {
-                    WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]); /* Register size conflict */
+                    WrRegisterWidth(reg1, reg2);
                     return;
                 }
 
                 if (RegSize(reg1) == 1) {
                     if (reg1 != RegA || reg2 != RegB) {
-                        WrStrErrorPos(
-                                ErrNum_InvReg, &ArgStr[2]); /* Register size conflict */
+                        WrRegisterPairs("A,B");
                         return;
                     }
 
@@ -911,7 +934,7 @@ static void DecodeEX(Word Index) {
                     }
                 }
 
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+                WrRegisterPairs("A,B; BA/I,BA/I; X/Y/U/S,X/Y/U/S");
                 return;
             }
 
@@ -1077,7 +1100,9 @@ static void DecodeADC(Word Index) {
                     return;
                 }
 
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "A");
+                WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[1].Pos);
                 return;
             }
 
@@ -1544,7 +1569,13 @@ static void DecodeJR(Word Index) {
         }
         if (!mFirstPassUnknownOrQuestionable(flags)
             && (addr & 0xf0000) != (EProgCounter() & 0xf0000)) {
-            WrStrErrorPos(ErrNum_TargOnDiffPage, &ArgStr[1]);
+            char detail[240];
+            LargeWord target = (LongWord)addr & 0xfffff;
+            LargeWord pc = EProgCounter();
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPageMismatch),
+                        target, target & 0xf0000, pc, pc & 0xf0000,
+                        (LargeWord)0x10000);
+            WrXErrorPos(ErrNum_TargOnDiffPage, detail, &ArgStr[1].Pos);
             return;
         }
 
@@ -1552,7 +1583,11 @@ static void DecodeJR(Word Index) {
 
         if (!mFirstPassUnknownOrQuestionable(flags)) {
             if (disp < -255 || disp > 255) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                            (LargeInt)disp, (LargeInt)-255, (LargeInt)255,
+                            (LargeWord)(EProgCounter() + 2));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
                 return;
             }
 
