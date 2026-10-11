@@ -1721,6 +1721,11 @@
       "file": "code62015.c",
       "issue": "Malformed internal indirect addressing subtracts a null closing-parenthesis pointer and repeated address probes emit duplicate bracket/invalid-argument errors.",
       "status": "fixed in tranche 96; check delimiters once before decoding with quote-aware matching, guard null before pointer subtraction; primary delimiter positions and valid quoted/nested forms verified"
+    },
+    {
+      "file": "code960.c",
+      "issue": "DecodeMem ignores failed Int32 displacement evaluation and still emits a memory instruction after a primary range/symbol error.",
+      "status": "fixed in tranche 97; return failure before encoding, all 20 memory callers verified with EXPECT/no emission; short/long/base/IP-relative accepted bytes preserved"
     }
   ]
 }

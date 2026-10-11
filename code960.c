@@ -418,6 +418,10 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
         OK      = True;
     }
 
+    if (!OK) {
+        return -1;
+    }
+
     if (Base == IPREG) {
         DispAcc -= EProgCounter() + 8;
         if (Index != NOREG) {
