@@ -1559,6 +1559,16 @@
       "file": "code7720.c",
       "issue": "DecodeOP uppercases a component with operands but not a bare component, rejecting lowercase OP dpinc although OP DPINC works.",
       "status": "fixed in tranche 64; normalize every initial OP component, lowercase/mixed-case bare components now match uppercase encodings"
+    },
+    {
+      "file": "codeol50.c",
+      "issue": "DecodeJMPIO tests positive ChkArgCnt in an empty if, bypassing CPU/@ checks for valid arity; unconditional decoding then strips any first character, accepting JMPIO 12 as @2.",
+      "status": "fixed in tranche 65; reject invalid count/prefix before decoding, valid JMP/JMPIO indirect bytes preserved"
+    },
+    {
+      "file": "codeol50.c",
+      "issue": "DecodeRel ignores failed target evaluation, causing secondary 1370 after 1320 for MSM5054 BEQ 1024 and potentially encoding provisional values.",
+      "status": "reproduced; fix separately in tranche 66"
     }
   ]
 }

@@ -963,3 +963,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     NOP/DPL/DPH/RP/RET fields with uppercase encodings on both CPUs and
     verify repeated fields and unknown components retain their primary IDs.
     Validation: all 386 CTest cases pass with embedded/external catalogs.
+
+65. Separate OLMS-50 JMPIO operand-validation control-flow bug.
+    Require successful arity/CPU checks, then require @, returning before
+    decoding on either failure. The positive ChkArgCnt empty-if previously
+    bypassed prefix validation and its unconditional decode block stripped
+    arbitrary first characters: JMPIO 12 succeeded as an indirect jump to 2.
+    Tests cover all five CPUs, missing @, absent/excess operands, primary
+    undefined indirect addresses and unchanged JMP/JMPIO endpoint bytes.
+    Validation: all 387 CTest cases pass with embedded/external catalogs.

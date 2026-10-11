@@ -319,12 +319,13 @@ static void DecodeAPAX(Word Index) {
 }
 
 static void DecodeJMPIO(Word Code) {
-    if (ChkArgCnt(1, 1))
-        ;
-    else if (ChkExactCPUMask(M_5054 | M_5055 | M_5056 | M_6051 | M_6052, CPU5054) < 0)
-        ;
-    else if (*ArgStr[1].str.p_str != '@') {
-        WrError(ErrNum_InvAddrMode);
+    if (!ChkArgCnt(1, 1)
+        || (ChkExactCPUMask(M_5054 | M_5055 | M_5056 | M_6051 | M_6052, CPU5054) < 0)) {
+        return;
+    }
+    if (*ArgStr[1].str.p_str != '@') {
+        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        return;
     }
     {
         tStrComp Arg;
