@@ -294,3 +294,22 @@ manual, EXPECT fixtures, translations and source-position tests.
 13. Continue manual branch inventory review: HC12.
     Add displacement/range/PC-base detail to code6812.c branch checks,
     preserving its branch forms, units and unknown-symbol behavior.
+    Implemented the three 1370 rejection sites: short branches [-128,127]
+    with PC+2, loops [-256,255] with PC+3, and bit branches [-128,127]
+    with PC+3+encoded-address length. Reuse English/German range detail
+    under -x at the target operand. Keep all address types, questionable
+    symbol checks, CPU behavior and encoding decisions; no new long-branch
+    range check or change to partial output on a failed bit branch.
+    Tests cover both edges, direct/extended and all three indexed address
+    lengths, PC-relative memory addressing, HC12X wide targets, forward
+    symbols, primary expression errors, German text and source positions.
+    Golden-byte checks cover short/long/loop/bit forms and both CPUs.
+    Boundary tests preserve HC12's unwrapped short displacement and the
+    existing full-width long-branch wrap. Numeric documentation updated.
+    Validation: all 349 CTest cases pass with embedded/external catalogs;
+    existing EXPECT diagnostic numbers remain valid.
+
+14. Continue manual inventory review: 6800-family branches.
+    Inspect branch and loop rejection paths in code68.c before
+    selecting changes; keep each CPU's operand syntax, arithmetic width,
+    PC bases and unresolved-symbol behavior. Verify endpoints and bytes.
