@@ -101,6 +101,46 @@ static unsigned ChkZero(char* s, Byte* pErg) {
     }
 }
 
+static void report_address_range(Word address, Word maximum, Boolean forced,
+        tStrComp const* operand) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail),
+            getmessage(forced ? Num_ErrMsgForcedShortAddressRange : Num_ErrMsgAddressRange),
+            (LargeInt)address, (LargeInt)0, (LargeInt)maximum);
+    WrXErrorPos(forced ? ErrNum_ConfOpSizes : ErrNum_NoShortAddr, detail, &operand->Pos);
+}
+
+static void report_index_form(Byte start, Byte stop) {
+    char detail[120];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIndexFormRequired), ",X");
+    WrXErrorPos(ErrNum_InvReg, detail,
+            (*(ArgStr[start].str.p_str) != 0) ? &ArgStr[start].Pos : &ArgStr[stop].Pos);
+}
+
+static void report_address_forms(Word mask, tStrComp const* operand) {
+    char forms[80] = "", detail[150];
+    if (mask & MModImm) {
+        strmaxcat(forms, "#expr, ", sizeof(forms));
+    }
+    if (mask & (MModDir | MModExt)) {
+        strmaxcat(forms, "expr, ", sizeof(forms));
+    }
+    if (mask & (MModTny | MModSrt)) {
+        strmaxcat(forms, "<expr, ", sizeof(forms));
+    }
+    if (mask & MModIX) {
+        strmaxcat(forms, ",X / D[X], ", sizeof(forms));
+    }
+    if (mask & MModX) {
+        strmaxcat(forms, "X, ", sizeof(forms));
+    }
+    if (*forms) {
+        forms[strlen(forms) - 2] = '\0';
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+}
+
 static void DecodeAdr(Byte Start, Byte Stop, Word Mask) {
     Boolean      OK;
     tSymbolFlags Flags;
@@ -116,7 +156,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask) {
             && (!as_strcasecmp(ArgStr[Stop].str.p_str, "X"))) {
             AdrMode = ModIX;
         } else {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+            report_index_form(Start, Stop);
             goto chk;
         }
     }
@@ -159,7 +199,7 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask) {
                     AdrWord &= 0xff;
                 }
                 if (Hi(AdrWord) != 0) {
-                    WrError(ErrNum_NoShortAddr);
+                    report_address_range(AdrWord, 255, False, &ArgStr[Start]);
                 } else {
                     AdrCnt     = 1;
                     AdrVals[0] = Lo(AdrWord);
@@ -177,19 +217,20 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask) {
                             if (AdrVals[0] <= 0x0f) {
                                 AdrMode = ModTny;
                             } else {
-                                WrError(ErrNum_ConfOpSizes);
+                                report_address_range(AdrWord, 15, True, &ArgStr[Start]);
                             }
                             return;
                         } else if (Mask & MModSrt) {
                             if (AdrVals[0] <= 0x1f) {
                                 AdrMode = ModSrt;
                             } else {
-                                WrError(ErrNum_ConfOpSizes);
+                                report_address_range(AdrWord, 31, True, &ArgStr[Start]);
                             }
                             return;
                         } else {
                             AdrMode = ModNone;
-                            WrError(ErrNum_NoShortAddr);
+                            WrXErrorPos(ErrNum_NoShortAddr, getmessage(Num_ErrMsgForcedShortUnavailable),
+                                    &ArgStr[Start].Pos);
                             return;
                         }
                     }
@@ -210,7 +251,8 @@ static void DecodeAdr(Byte Start, Byte Stop, Word Mask) {
 
 chk:
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_forms(Mask, (*(ArgStr[Start].str.p_str) != 0)
+                        ? &ArgStr[Start] : &ArgStr[Stop]);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }
@@ -370,7 +412,7 @@ static void DecodeCBEQ(Word Index) {
         }
     } else if (ArgCnt == 3) {
         if ((*(ArgStr[1].str.p_str) != 0) || (as_strcasecmp(ArgStr[2].str.p_str, "X"))) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+            report_index_form(1, 2);
         } else {
             BAsmCode[0] = 0x31;
             BAsmCode[1] = 0x0e;

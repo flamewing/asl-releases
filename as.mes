@@ -1313,6 +1313,26 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgAddressForms
+ "Erlaubte Adressierungsformen: %s"
+ "allowed addressing forms: %s"
+
+Message ErrMsgIndexFormRequired
+ "Indizierte Adressierung erfordert %s"
+ "indexed addressing requires %s"
+
+Message ErrMsgAddressRange
+ "Adresse %llld au&szlig;erhalb [%llld,%llld] f&uuml;r diese Adressierungsform"
+ "address %llld outside [%llld,%llld] for this addressing form"
+
+Message ErrMsgForcedShortAddressRange
+ "Adresse %llld au&szlig;erhalb [%llld,%llld] f&uuml;r erzwungene kurze Adressierung (<)"
+ "address %llld outside [%llld,%llld] for forced short addressing (<)"
+
+Message ErrMsgForcedShortUnavailable
+ "Erzwungene kurze Adressierung (<) ist f&uuml;r diesen Operanden nicht verf&uuml;gbar"
+ "forced short addressing (<) is not available for this operand"
+
 Message ErrMsgImmediateRequired
  "Dieser Operand erfordert einen unmittelbaren Wert mit # vor dem Ausdruck"
  "this operand requires an immediate value with # before the expression"

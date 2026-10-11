@@ -416,3 +416,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover every caller, source versus destination positions, one
     primary error after division by zero, German detail and baseline bytes.
     Validation: all 356 CTest cases pass with embedded/external catalogs.
+
+21. Complete RS08 historical inventory review: operand contracts.
+    Forced < addressing reports its actual address and tiny [0,15] or
+    short [0,31] limit under -x, retaining 1131. Direct overflow retains
+    1340 with [0,255]; unavailable forced short addressing identifies <.
+    The shared mode-mask rejection lists its actual accepted syntax and
+    highlights the operand (or X for an empty-displacement pair).
+    Both indexed syntax rejection sites retain 1445, explain the required
+    ,X form and identify a nonempty displacement instead of a valid X.
+    Existing evaluation, unknown-symbol behavior, numeric IDs and encodings
+    are preserved. Tests cover every rejection and accepted boundary,
+    direct/forced address forms, exact positions, one primary error,
+    German detail, valid forward short operands and prior golden bytes.
+    Validation: all 357 CTest cases pass with embedded/external catalogs.

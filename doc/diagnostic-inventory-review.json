@@ -409,9 +409,13 @@
         "ErrNum_JmpDistTooBig": 7
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_ConfOpSizes",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "complete",
+      "review_notes": "All historical candidates reviewed in tranches 17 and 21, plus adjacent 1340 short-address checks. Separate suffix-bit operand bug remains in followups."
     },
     "code7000.c": {
       "candidate_counts": {
