@@ -788,3 +788,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     operand positions, both displacement endpoints, wrapping, zero, forward
     targets, undefined symbols and preceding accepted bytes.
     Validation: all 378 CTest cases pass with embedded/external catalogs.
+
+50. Complete Fairchild F8 historical CPU/pair/shift/branch inventory review.
+    1500 lists the two selections that actually enable the CMOS flag;
+    LR 1350 lists accepted operand pairs and register/selector alternatives.
+    1370 reports signed displacement, [-128,127] and PC+1 at the branch target.
+    In-domain but unsupported SL/SR counts now accurately use existing 1380
+    instead of overflow 1320, showing actual count and exact choices 1/4.
+    UInt3 type overflow remains 1320. No existing EXPECT fixture refers
+    to the corrected in-domain shift category. Preserve first-pass flags,
+    unwrapped calculation, register names and preceding instruction bytes.
+    Tests cover CPU-flag selections, every branch/shift caller, sparse count
+    choices, both displacement edges, 12-/16-bit CPUs, no-wrap behavior,
+    forward/undefined expressions, exact IDs/positions and accepted bytes.
+    Validation: all 379 CTest cases pass with embedded/external catalogs.

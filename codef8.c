@@ -12,6 +12,9 @@
 
 #include "codef8.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -82,7 +85,13 @@ static void DecodeFixed(Word Code) {
     if (!ChkArgCnt(0, 0))
         ;
     else if ((Code & Flg_CMOS) && (!(MomCPUFlags & Flg_CMOS))) {
-        WrError(ErrNum_InstructionNotSupported);
+        char detail[160];
+        strmaxcpy(detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(detail));
+        strmaxcat(detail, "MK38CP70/02", sizeof(detail));
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(detail));
+        strmaxcat(detail, "MK38C70", sizeof(detail));
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(detail));
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
     } else {
         BAsmCode[0] = Code;
         CodeLen     = 1;
@@ -174,7 +183,11 @@ static void DecodeBranchCore(tStrComp const* pArg, Word Code) {
            - (EProgCounter() + 1);
     if (OK) {
         if (!mSymbolQuestionable(Flags) && ((Dist < -128) || (Dist > 127))) {
-            WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                    (LargeInt)Dist, (LargeInt)-128, (LargeInt)127,
+                    (LargeWord)(EProgCounter() + 1));
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &pArg->Pos);
         } else {
             BAsmCode[0] = Code;
             BAsmCode[1] = Dist & 0xff;
@@ -248,7 +261,10 @@ static void DecodeLR(Word Code) {
     } else if (ArgPair("W", "J")) {
         BAsmCode[CodeLen++] = 0x1d;
     } else {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                "(A,R), (R,A), (DC,Q), (DC,H), (Q,DC), (H,DC), (K,P), (P,K), (P0,Q), (J,W), (W,J); R=0..15/J/HU/HL/S/I/D/KU/KL/QU/QL/IS");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
     }
 }
 
@@ -267,7 +283,10 @@ static void DecodeShift(Word Code) {
             } else if (mFirstPassUnknown(Flags) || (Cnt == 1)) {
                 BAsmCode[CodeLen++] = Code;
             } else {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgShiftCountChoices),
+                        (LargeInt)Cnt, (LargeInt)1, (LargeInt)4);
+                WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[1].Pos);
             }
         }
     }

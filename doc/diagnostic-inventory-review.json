@@ -850,8 +850,14 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 50: four historical candidates describe actual CMOS CPU choices, LR pair forms, signed branch displacement/range/PC+1, or exact shift choices. In-domain illegal shifts correctly use 1380 instead of 1320; UInt3 overflow still uses 1320. Original flags, unwrapped arithmetic and valid opcodes retained."
     },
     "codefmc16.c": {
       "candidate_counts": {
