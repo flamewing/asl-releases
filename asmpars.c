@@ -1596,6 +1596,9 @@ static void ClearExpressionScratch(void) {
 typedef struct operator_search_cb_data {
     as_quoted_iterator_cb_data_t data;
     sint                         l_klamm, r_klamm, w_klamm;
+    String                       bracket_stack;
+    size_t                       bracket_depth;
+    Boolean                      bracket_error;
     ptrdiff_t                    op_pos;
     as_operator_t const*         p_best_op;
     char const*                  p_after_last_op_start;
@@ -1629,6 +1632,22 @@ static int operator_search_cb(
         char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) {
     operator_search_cb_data_t* p_data     = (operator_search_cb_data_t*)p_cb_data;
     int                        extra_skip = 0;
+
+    if (*p_pos == '(' || *p_pos == '{') {
+        if (p_data->bracket_depth < sizeof(p_data->bracket_stack)) {
+            p_data->bracket_stack[p_data->bracket_depth++] = *p_pos;
+        } else {
+            p_data->bracket_error = True;
+        }
+    } else if (*p_pos == ')' || *p_pos == '}') {
+        if (!p_data->bracket_depth
+            || p_data->bracket_stack[p_data->bracket_depth - 1]
+                    != (*p_pos == ')' ? '(' : '{')) {
+            p_data->bracket_error = True;
+        } else {
+            p_data->bracket_depth--;
+        }
+    }
 
     switch (*p_pos) {
     case '(':
@@ -2059,6 +2078,8 @@ integer_result:
     operator_search_data.l_klamm               = 0;
     operator_search_data.r_klamm               = 0;
     operator_search_data.w_klamm               = 0;
+    operator_search_data.bracket_depth         = 0;
+    operator_search_data.bracket_error         = False;
     operator_search_data.found_op_cnt          = 0;
     if (!target_operators->Id && !p_callback_data->p_operators->Id) {
         use_builtin_op_chains(&operator_search_data);
@@ -2093,8 +2114,9 @@ integer_result:
 
     /* Klammerfehler ? */
 
-    if (operator_search_data.l_klamm != operator_search_data.r_klamm) {
-        WrStrErrorPos(ErrNum_BrackErr, &CopyComp);
+    if (operator_search_data.bracket_error || operator_search_data.bracket_depth
+        || operator_search_data.l_klamm != operator_search_data.r_klamm) {
+        WrBracketError(&CopyComp, "(){}", True);
         LEAVE;
     }
 

@@ -231,7 +231,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
 
         pStart = RQuotPos(Arg.str.p_str, '[');
         if (!pStart) {
-            WrError(ErrNum_BrackErr);
+            WrBracketErrorPos(&Arg, ArgLen - 1, ']', 0, False);
             goto AdrFound;
         }
 

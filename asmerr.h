@@ -30,6 +30,11 @@ extern void WrXErrorPos(
 
 extern void WrStrErrorPos(tErrorNum Num, const struct sStrComp* pStrComp);
 
+/* Describe a delimiter failure at one character of the original component. */
+extern void WrBracketErrorPos(const struct sStrComp* arg, size_t offset,
+        char actual, char expected, Boolean missing);
+extern void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quoted);
+
 extern void CodeEXPECT(Word Code);
 extern void CodeENDEXPECT(Word Code);
 

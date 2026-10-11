@@ -24,6 +24,7 @@
 #include "nlmessages.h"
 #include "stdhandl.h"
 #include "strutil.h"
+#include "striter.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -1315,6 +1316,90 @@ void WrStrErrorPos(tErrorNum Num, const struct sStrComp* pStrComp) {
     } else {
         WrError(Num);
     }
+}
+
+void WrBracketErrorPos(const struct sStrComp* arg, size_t offset,
+        char actual, char expected, Boolean missing) {
+    char detail[180];
+    tLineComp pos = arg->Pos;
+    pos.StartCol += offset;
+    pos.Len = 1;
+    if (missing) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBracketMissing), actual, expected);
+    } else if (expected) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBracketMismatch), actual, expected);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBracketUnexpected), actual);
+    }
+    WrXErrorPos(ErrNum_BrackErr, detail, &pos);
+}
+
+typedef struct {
+    as_quoted_iterator_cb_data_t iterator;
+    const struct sStrComp* arg;
+    const char* pairs;
+    const char** stack;
+    size_t depth;
+    Boolean failed;
+} bracket_error_data_t;
+
+static int bracket_error_cb(const char* pos, as_quoted_iterator_cb_data_t* iterator) {
+    bracket_error_data_t* data = (bracket_error_data_t*)iterator;
+    const char* pair = strchr(data->pairs, *pos);
+    if (!pair) {
+        return 0;
+    }
+    if (!((pair - data->pairs) & 1)) {
+        data->stack[data->depth++] = pos;
+    } else {
+        char expected = data->depth
+                ? strchr(data->pairs, *data->stack[data->depth - 1])[1] : 0;
+        if (*pos != expected) {
+            WrBracketErrorPos(data->arg, pos - data->arg->str.p_str, *pos, expected, False);
+            data->failed = True;
+            return -1;
+        }
+        data->depth--;
+    }
+    return 0;
+}
+
+/* Called only after a parser has identified a bracket failure. Its caller
+   supplies that parser's bracket alphabet and quote policy. */
+void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quoted) {
+    bracket_error_data_t data;
+    size_t length = strlen(arg->str.p_str);
+    data.arg = arg;
+    data.pairs = pairs;
+    data.stack = (const char**)malloc((length + 1) * sizeof(*data.stack));
+    if (!data.stack) {
+        WrStrErrorPos(ErrNum_BrackErr, arg);
+        return;
+    }
+    data.depth = 0;
+    data.failed = False;
+    data.iterator.callback_before = False;
+    data.iterator.qualify_quote = QualifyQuote;
+    if (quoted) {
+        as_iterate_str_quoted(arg->str.p_str, bracket_error_cb, &data.iterator);
+    } else {
+        for (const char* pos = arg->str.p_str; *pos; pos++) {
+            if (bracket_error_cb(pos, &data.iterator) < 0) {
+                break;
+            }
+        }
+    }
+    if (!data.failed) {
+        if (data.depth) {
+            const char* opener = data.stack[data.depth - 1];
+            WrBracketErrorPos(arg, opener - arg->str.p_str, *opener,
+                    strchr(pairs, *opener)[1], True);
+        } else {
+            /* A caller may have discarded a delimiter before this check. */
+            WrStrErrorPos(ErrNum_BrackErr, arg);
+        }
+    }
+    free(data.stack);
 }
 
 /*!------------------------------------------------------------------------

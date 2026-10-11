@@ -1490,7 +1490,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         case '{':
             if (locStack == -1 || tokenStack[locStack] != GetMatchingBrace(token)) {
                 /* Stack underflow or mismatched braces. */
-                WrError(ErrNum_BrackErr);
+                WrBracketError(&Arg, "()[]{}", False);
                 goto chk;
             }
             /* Pop from stack and store current position */
@@ -1504,7 +1504,13 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         case '}':
             if (locStack == sizeof(tokenStack) - 1) {
                 /* Stack overflow. */
-                WrError(ErrNum_BrackErr);
+                char detail[120];
+                tLineComp pos = Arg.Pos;
+                pos.StartCol += tPos;
+                pos.Len = 1;
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBracketCapacity),
+                        (unsigned)sizeof(tokenStack));
+                WrXErrorPos(ErrNum_BrackErr, detail, &pos);
                 goto chk;
             }
             /* Push into stack and store current position */
@@ -1519,7 +1525,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
     if (locStack != -1) {
         /* Unbalanced parenthesis/square brackets/curly braces */
-        WrError(ErrNum_BrackErr);
+        WrBracketError(&Arg, "()[]{}", False);
         goto chk;
     }
 
@@ -1603,7 +1609,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     if (locStack == -1
                         || tokenStack[locStack] != GetMatchingBrace(token)) {
                         /* Stack underflow or mismatched curly braces. */
-                        WrError(ErrNum_BrackErr);
+                        WrBracketError(&IndirComps, "()[]{}", False);
                         goto chk;
                     }
                     /* Pop from stack */
@@ -1614,7 +1620,13 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 case '{':
                     if (locStack == sizeof(tokenStack) - 1) {
                         /* Stack overflow. */
-                        WrError(ErrNum_BrackErr);
+                        char detail[120];
+                        tLineComp pos = IndirComps.Pos;
+                        pos.StartCol += pCompSplit - IndirComps.str.p_str;
+                        pos.Len = 1;
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBracketCapacity),
+                                (unsigned)sizeof(tokenStack));
+                        WrXErrorPos(ErrNum_BrackErr, detail, &pos);
                         goto chk;
                     }
                     /* Push into stack */

@@ -112,7 +112,7 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
         StrCompShorten(pArg, 1);
         pSep = RQuotPos(pArg->str.p_str, '[');
         if (!pSep) {
-            WrStrErrorPos(ErrNum_BrackErr, pArg);
+            WrBracketErrorPos(pArg, ArgLen - 1, ']', 0, False);
             goto check;
         }
 

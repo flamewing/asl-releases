@@ -1971,3 +1971,19 @@ Message ErrMsgMappingSeparated
 Message ErrMsgMappingUnified
  "gemeinsame CODE/DATA-Abbildung"
  "unified CODE/DATA mapping"
+
+Message ErrMsgBracketUnexpected
+ "Unerwartete schlie&szlig;ende Klammer '%c'; keine schlie&szlig;ende Klammer erwartet"
+ "unexpected closing bracket '%c'; no closing bracket expected"
+
+Message ErrMsgBracketMismatch
+ "Falsche schlie&szlig;ende Klammer '%c'; erwartet '%c'"
+ "mismatched closing bracket '%c'; expected '%c'"
+
+Message ErrMsgBracketMissing
+ "Nicht geschlossene Klammer '%c'; erwartet '%c' vor Eingabeende"
+ "unclosed bracket '%c'; expected '%c' before end of input"
+
+Message ErrMsgBracketCapacity
+ "Klammer-Verschachtelung &uuml;berschreitet die Parsergrenze von %u"
+ "bracket nesting exceeds parser limit of %u"

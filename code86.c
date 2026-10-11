@@ -730,7 +730,7 @@ static tAdrType DecodeAdr(tStrComp const* pArg, unsigned type_mask) {
 
             pIndirEnd = RQuotPos(Arg.str.p_str, ']');
             if (!pIndirEnd) {
-                WrStrErrorPos(ErrNum_BrackErr, &Arg);
+                WrBracketError(pArg, "[]", True);
                 goto chk_type;
             }
 

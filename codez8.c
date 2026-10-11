@@ -612,7 +612,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
         StrCompShorten(&Right, 1);
         p = RQuotPos(pArg->str.p_str, '(');
         if (!p) {
-            WrStrErrorPos(ErrNum_BrackErr, pArg);
+            WrBracketErrorPos(pArg, l - 1, ')', 0, False);
             return False;
         }
         StrCompSplitRef(&Left, &Right, &Right, p);

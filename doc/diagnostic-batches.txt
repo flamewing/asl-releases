@@ -202,3 +202,28 @@ manual, EXPECT fixtures, translations and source-position tests.
    Update English/German messages and numeric documentation; test all cases,
    mixed nesting, quoted brackets, source positions, single primary errors
    and unchanged valid expression/address encodings.
+   Implemented shared expressions, M68K address components, x86 missing
+   square-bracket closers, Motorola repetition counts and unexpected
+   closers in 78K2/78K3/78K4, Z8 and Padauk operands. Error 1300 remains;
+   English/German detail under -x gives the actual/expected delimiter or
+   unmatched opener/end-of-input condition, with single-character positions.
+   The expression scanner now checks nesting order as well as counts,
+   catching malformed balanced sequences and unmatched curly braces. It
+   continues to recognize only () and {}, with its existing quote iterator.
+   M68K retains its raw-character address scans and ()[]{} alphabet;
+   its existing stack-capacity failures explicitly report that limit.
+   A reporting-only scanner runs after failure, using the caller's alphabet
+   and quote policy. Backends that already removed a closer report directly
+   at its original position rather than rescanning the shortened operand.
+   Focused tests cover all three cases, nesting/order, quotes, positions,
+   single primary errors and golden bytes captured before this batch.
+   Validation: all 345 CTest cases pass with embedded and external message
+   catalogs. Existing EXPECT numbers remain valid; numeric docs updated.
+
+10. Remaining backend-specific delimiter diagnostics.
+    Review 370, 8X30X, 9900, TMS7, NS32K, 960, KCPSM and vector operands.
+    Their remaining 1300 callers include raw strings, already-split operands
+    and mandatory outer delimiters. Preserve those grammars; distinguish a
+    required opening delimiter from an unbalanced pair. INCLUDE's missing
+    quote also uses 1300 and currently continues into a file-opening error;
+    review that control flow separately from expression brackets.

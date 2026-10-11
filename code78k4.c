@@ -436,7 +436,7 @@ static Boolean DecodeAdr(
 
         pStart = RQuotPos(Arg.str.p_str, '[');
         if (!pStart) {
-            WrError(ErrNum_BrackErr);
+            WrBracketErrorPos(pArg, ArgLen - 1, ']', 0, False);
             goto AdrFound;
         }
 

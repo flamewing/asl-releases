@@ -64,7 +64,7 @@ static Boolean CutRep(
 
         pEnd = QuotPos(Src.str.p_str + 1, ']');
         if (!pEnd) {
-            WrError(ErrNum_BrackErr);
+            WrBracketError(&Src, "[]", True);
             return False;
         } else {
             StrCompSplitRef(&RepArg, pDest, &Src, pEnd);
