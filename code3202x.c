@@ -11,6 +11,9 @@
 
 #include "code3202x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -76,6 +79,19 @@ static Word EvalARExpression(tStrComp const* pArg, Boolean* OK) {
 
 /* ---------------------------------------------------------------------- */
 
+static void report_indirect_forms(tStrComp const* operand) {
+    tAdrMode const* mode;
+    char forms[160] = "", detail[240];
+    for (mode = AdrModes; mode->Name; mode++) {
+        if (*forms) {
+            strmaxcat(forms, ", ", sizeof(forms));
+        }
+        strmaxcat(forms, mode->Name, sizeof(forms));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+}
+
 static Boolean DecodeAdr(tStrComp const* pArg, int MinArgCnt, int aux, Boolean Must1) {
     tAdrMode const* pAdrMode = AdrModes;
     Byte            h;
@@ -95,7 +111,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, int MinArgCnt, int aux, Boolean M
             return False;
         }
         if (Must1 && (h >= 0x80) && !mFirstPassUnknown(EvalResult.Flags)) {
-            WrError(ErrNum_UnderRange);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                    OpPart.str.p_str, (LargeInt)h, (LargeInt)0, (LargeInt)127);
+            WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             return False;
         }
         AdrMode = h & 0x7f;
@@ -168,7 +187,7 @@ static void DecodeJmp(Word Code) {
             OK = DecodeAdr(&ArgStr[2], 1, 3, False);
             if (OK && (AdrMode < 0x80)) {
                 OK = False;
-                WrError(ErrNum_InvAddrMode);
+                report_indirect_forms(&ArgStr[2]);
             }
         } else {
             OK      = True;
@@ -235,7 +254,13 @@ static void DecodeShiftAdr(Word Index) {
             }
             if (OK) {
                 if (pOrder->AllowShifts < AdrWord) {
-                    WrError(ErrNum_InvShiftArg);
+                    char detail[160];
+                    LargeInt count = (AdrWord & 0x8000)
+                            ? (LargeInt)AdrWord - 0x10000 : (LargeInt)AdrWord;
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            OpPart.str.p_str, count, (LargeInt)0,
+                            (LargeInt)pOrder->AllowShifts);
+                    WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[2].Pos);
                 } else {
                     CodeLen     = 1;
                     WAsmCode[0] = pOrder->Code | AdrMode | (AdrWord << 8);
@@ -390,7 +415,7 @@ static void DecodeNORM(Word Code) {
     if (ChkArgCnt(1, 1)) {
         if (DecodeAdr(&ArgStr[1], 1, 2, False)) {
             if (AdrMode < 0x80) {
-                WrError(ErrNum_InvAddrMode);
+                report_indirect_forms(&ArgStr[1]);
             } else {
                 CodeLen     = 1;
                 WAsmCode[0] = 0xce82 | (AdrMode & 0x70);

@@ -723,3 +723,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     counts, exact IDs/positions, range edges, forward/undefined symbols,
     DAT evaluation failure, German detail and preceding accepted bytes.
     Validation: all 374 CTest cases pass with embedded/external catalogs.
+
+45. Complete TMS320C2x historical indirect/page/shift inventory review.
+    NORM and explicit branch address-mode 1350 list actual indirect syntax
+    and locate the offending operand. Shift 1380 shows signed count and
+    full per-instruction interval, retaining original Word comparison.
+    SST/SST1's byte-normalized value above 127 now accurately uses existing
+    1320 instead of underflow 1315 and shows [0,127] at the operand.
+    No existing EXPECT fixture refers to that changed rejection. Preserve
+    Byte normalization (including accepted SST 256), first-pass predicates,
+    contract-before-symbol rejection and accepted encodings.
+    Tests cover three CPUs, every branch and shift caller, both SST forms,
+    negative/high counts, exact IDs/positions, forward/undefined symbols,
+    operand rejection precedence and preceding bytes.
+    Validation: all 375 CTest cases pass with embedded/external catalogs.

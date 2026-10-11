@@ -144,8 +144,13 @@
         "ErrNum_InvShiftArg": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvShiftArg",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 45: both indirect-only sites list exact recognized syntax; shift failure displays signed count/full instruction interval. SST/SST1 normalized-byte overflow now correctly uses 1320 rather than misleading 1315. No historical EXPECT fixture references this rejection; normalization, unknown flags and encodings unchanged."
     },
     "code3203x.c": {
       "candidate_counts": {
