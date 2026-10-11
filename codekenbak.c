@@ -12,6 +12,9 @@
 
 #include "codekenbak.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -172,8 +175,33 @@ static Boolean DecodeRegWithMemOpt(tStrComp const* pArg, Byte* pResult, Word Reg
  * \return true if successfully decoded
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkMode(Word ModeMask, tAdrData* pAdrData) {
-    return !!((ModeMask >> pAdrData->Mode) & 1);
+static Boolean ChkMode(Word ModeMask, tAdrData* pAdrData, tStrComp const* operand) {
+    if ((ModeMask >> pAdrData->Mode) & 1) {
+        return True;
+    } else {
+        char forms[200] = "", detail[260];
+        if (ModeMask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (ModeMask & MModMemory) {
+            strmaxcat(forms, "expr, A, B, X, P, ", sizeof(forms));
+        }
+        if (ModeMask & MModIndirect) {
+            strmaxcat(forms, "(expr), ", sizeof(forms));
+        }
+        if (ModeMask & MModIndexed) {
+            strmaxcat(forms, "expr,X, ", sizeof(forms));
+        }
+        if (ModeMask & MModIndirectIndexed) {
+            strmaxcat(forms, "(expr),X, ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+        return False;
+    }
 }
 
 static Boolean DecodeAdr(
@@ -195,7 +223,7 @@ static Boolean DecodeAdr(
 
             pAdrData->Mode = 3;
             pAdrData->Val  = EvalStrIntExpressionOffs(pArg1, 1, Int8, &OK);
-            return OK && ChkMode(ModeMask, pAdrData);
+            return OK && ChkMode(ModeMask, pAdrData, pArg1);
         }
     }
 
@@ -210,7 +238,7 @@ static Boolean DecodeAdr(
     switch (DecodeReg(&Arg, &pAdrData->Val, 15, False)) {
     case eIsReg:
         pAdrData->Mode |= 4;
-        return ChkMode(ModeMask, pAdrData);
+        return ChkMode(ModeMask, pAdrData, pArg1);
     case eRegAbort:
         return False;
     default: {
@@ -218,7 +246,7 @@ static Boolean DecodeAdr(
 
         pAdrData->Val = EvalStrIntExpression(&Arg, UInt8, &OK);
         pAdrData->Mode |= 4;
-        return OK && ChkMode(ModeMask, pAdrData);
+        return OK && ChkMode(ModeMask, pAdrData, pArg1);
     }
     }
 }

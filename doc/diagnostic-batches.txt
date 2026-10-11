@@ -1230,3 +1230,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     words, register aliases and preceding valid bytes. WSL UBSan focused
     suite passes with the fix.
     Validation: all 395 CTest cases pass with embedded/external catalogs.
+
+92. Separate KENBAK silent addressing-mode rejection bug.
+    Reproduced JPD #1 succeeding while emitting only the following NOOP.
+    ChkMode now reports positioned 1350 with current-mask forms when a
+    recognized address mode is disallowed. Preserve primary expression
+    errors, accepted direct/indirect/indexed modes and aliases. Tests cover
+    all six jump callers and bit-address rejection, no rejected words and
+    accepted direct/indirect jump bytes.
+    Validation: all 395 CTest cases pass with embedded/external catalogs.

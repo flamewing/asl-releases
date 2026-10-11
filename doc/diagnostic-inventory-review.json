@@ -1696,6 +1696,11 @@
       "file": "codekenbak.c",
       "issue": "Register masks are shifted by an unchecked UInt8 register/memory value; numeric 32/64 invokes undefined shift and is accepted as register A on Windows.",
       "status": "fixed in tranche 91; require register value 0..3 before shifting in both register paths; WSL UBSan reproduces shift exponent 32 before fix and focused tests pass after, valid aliases/bytes preserved"
+    },
+    {
+      "file": "codekenbak.c",
+      "issue": "ChkMode returns false for disallowed recognized addressing modes without issuing any diagnostic; JPD #1 silently emits nothing while assembly succeeds.",
+      "status": "fixed in tranche 92; report positioned 1350 with current mask forms on rejection; all six jump callers and bit-address path verified, accepted modes preserved"
     }
   ]
 }
