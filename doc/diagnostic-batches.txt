@@ -981,3 +981,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Forward-only CPUs also reject unknown labels' first-pass negative
     placeholder, a separate existing problem to correct in tranche 67.
     Validation: all 387 CTest cases pass with embedded/external catalogs.
+
+67. Separate OLMS-50 forward-branch first-pass placeholder rejection.
+    Defer distance rejection for first-pass unknown as well as questionable
+    targets. Forward-only 5054/5055/5056 CPUs previously rejected provisional
+    target 0 as a negative displacement before a forward label could resolve.
+    Preserve known-target direction/interval checks and instruction width.
+    Tests cover forward labels/endpoints on all five CPUs, resolved excessive
+    distances and single undefined-target errors across eight branch aliases.
+    Validation: all 387 CTest cases pass with embedded/external catalogs.

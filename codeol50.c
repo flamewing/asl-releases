@@ -411,7 +411,7 @@ static void DecodeRel(Word Index) {
         }
 
         if (((Distance < MinDist) || (Distance > MaxDist))
-            && !mSymbolQuestionable(Flags)) {
+            && !mFirstPassUnknownOrQuestionable(Flags)) {
             WrError(ErrNum_JmpDistTooBig);
         } else {
             if (Distance >= 0) {

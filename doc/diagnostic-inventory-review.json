@@ -1573,7 +1573,7 @@
     {
       "file": "codeol50.c",
       "issue": "Forward-only MSM5054/5055/5056 branches reject first-pass unknown target placeholder 0 as negative PC+1 displacement, preventing forward labels from resolving.",
-      "status": "reproduced with BEQ target followed by NOP and target:NOP; fix separately in tranche 67"
+      "status": "fixed in tranche 67; defer range rejection while target is first-pass unknown or questionable, forward labels now resolve on all CPUs"
     }
   ]
 }
