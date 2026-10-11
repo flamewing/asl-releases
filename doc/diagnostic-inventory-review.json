@@ -175,8 +175,13 @@
         "ErrNum_InvReg": 1,
         "ErrNum_UnderRange": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical candidates reviewed in tranche 71: CPU-specific indirect forms for branch/NORM, immediate/BMAR requirements for block transfers, CPU-specific SETC/CLRC bit choices, word-normalized restricted address [0,127], XC [1,2]. Correct overflow categories from 1315 to 1320 for restricted address and XC 3. Preserve existing first-pass flags, normalization, encodings and CPU checks. Adjacent condition parser failure handling merits a separate follow-up."
     },
     "code3206x.c": {
       "candidate_counts": {

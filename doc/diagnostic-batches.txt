@@ -1024,3 +1024,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     branch aliases, accumulator/register/port lengths, exact positions,
     range endpoints, address wrap and preceding operand bytes.
     Validation: all 388 CTest cases pass with embedded/external catalogs.
+
+71. Complete TMS320C5x historical operand/bit/range review.
+    CPU-specific indirect modes for branch/NORM and immediate/BMAR block
+    transfer requirements now accompany 1350 at the rejected operand.
+    SETC/CLRC 1445 lists the selected CPU bit names. Restricted address
+    failures show word-normalized value and [0,127], correcting their former
+    underflow 1315 to overflow 1320. XC gives actual value and [1,2], retaining
+    1315 below the interval and correcting XC 3 to 1320. No historical EXPECT
+    fixture references these changed categories. Preserve normalization,
+    first-pass handling, CPU restrictions and accepted instruction bytes.
+    Tests cover four CPUs, all restricted address callers, both range sides,
+    indirect syntax, register choices, primary failures and preceding bytes.
+    Validation: all 389 CTest cases pass with embedded/external catalogs.

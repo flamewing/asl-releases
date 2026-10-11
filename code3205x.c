@@ -9,6 +9,9 @@
 
 #include "code3205x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -93,6 +96,26 @@ static Word EvalARExpression(tStrComp const* pArg, Boolean* OK) {
 
 /* ---------------------------------------------------------------------- */
 
+static void WrAddressForms(tStrComp const* operand, char const* forms) {
+    char detail[400];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+}
+
+static void WrIndirectForms(tStrComp const* operand) {
+    char forms[240] = "";
+    tAdrMode const* mode;
+    for (mode = AdrModes; mode->Name; mode++) {
+        if (MomCPU >= mode->MinCPU) {
+            if (*forms) {
+                strmaxcat(forms, ", ", sizeof(forms));
+            }
+            strmaxcat(forms, mode->Name, sizeof(forms));
+        }
+    }
+    WrAddressForms(operand, forms);
+}
+
 static Boolean DecodeAdr(tStrComp const* pArg, int MinArgCnt, int aux, Boolean Must1) {
     Word        h;
     tAdrMode*   pAdrMode = AdrModes;
@@ -129,7 +152,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, int MinArgCnt, int aux, Boolean M
         /* Adresslage pruefen */
 
         if (Must1 && (h >= 0x80) && !mFirstPassUnknown(EvalResult.Flags)) {
-            WrError(ErrNum_UnderRange);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        "address", (LargeInt)h, (LargeInt)0, (LargeInt)127);
+            WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             return False;
         }
 
@@ -245,7 +271,7 @@ static void DecodeCmdJmp(Word Index) {
         } else if (ArgCnt > 1) {
             OK = DecodeAdr(&ArgStr[2], 1, 3, False);
             if ((AdrMode < 0x80) && (OK)) {
-                WrError(ErrNum_InvAddrMode);
+                WrIndirectForms(&ArgStr[2]);
                 OK = FALSE;
             }
             AdrMode &= 0x7f;
@@ -426,7 +452,7 @@ static void DecodeBLDD(Word Index) {
             WAsmCode[0] = 0xa900 | AdrMode;
         }
     } else {
-        WrError(ErrNum_InvAddrMode); /* invalid addr mode */
+        WrAddressForms(&ArgStr[1], (MomCPU >= CPU32050) ? "#expr, BMAR (either operand)" : "#expr (either operand)");
     }
 }
 
@@ -448,7 +474,7 @@ static void DecodeBLPD(Word Index) {
             WAsmCode[0] = 0xa500 | AdrMode;
         }
     } else {
-        WrError(ErrNum_InvAddrMode); /* invalid addressing mode */
+        WrAddressForms(&ArgStr[1], (MomCPU >= CPU32050) ? "#expr, BMAR" : "#expr");
     }
 }
 
@@ -468,7 +494,19 @@ static void DecodeCLRSETC(Word Index) {
                 return;
             }
         }
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]); /* invalid instruction */
+        {
+            char choices[120] = "", detail[180];
+            for (pBitTable = BitTable; pBitTable->name; pBitTable++) {
+                if (MomCPU >= pBitTable->MinCPU) {
+                    if (*choices) {
+                        strmaxcat(choices, ", ", sizeof(choices));
+                    }
+                    strmaxcat(choices, pBitTable->name, sizeof(choices));
+                }
+            }
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+            WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[1].Pos);
+        }
     }
 }
 
@@ -690,7 +728,7 @@ static void DecodeNORM(Word Index) {
 
     if (ChkArgCnt(1, 2) && DecodeAdr(&ArgStr[1], 1, 2, False)) {
         if (AdrMode < 0x80) {
-            WrError(ErrNum_InvAddrMode);
+            WrIndirectForms(&ArgStr[1]);
         } else {
             CodeLen     = 1;
             WAsmCode[0] = 0xa080 | (AdrMode & 0x7f);
@@ -858,7 +896,11 @@ static void DecodeXC(Word Index) {
         Mode = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt2, &OK, &Flags);
         if (OK) {
             if ((Mode != 1) && (Mode != 2) && !mFirstPassUnknown(Flags)) {
-                WrError(ErrNum_UnderRange);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            "XC", (LargeInt)Mode, (LargeInt)1, (LargeInt)2);
+                WrXErrorPos((Mode < 1) ? ErrNum_UnderRange : ErrNum_OverRange,
+                            detail, &ArgStr[1].Pos);
             } else {
                 CodeLen     = 1;
                 WAsmCode[0] = (0xd400 + (Mode << 12)) | DecodeCond(2);
