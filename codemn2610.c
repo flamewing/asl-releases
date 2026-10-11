@@ -12,6 +12,9 @@
 
 #include "codemn2610.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -78,6 +81,27 @@ static Boolean DecodeTable(char const* pArg, Word* pResult, tCodeTable const* pT
     return False;
 }
 
+static void WrChoices(tStrComp const* arg, tErrorNum number, char const* choices, Boolean forms) {
+    char detail[360];
+    as_snprintf(detail, sizeof(detail),
+                getmessage(forms ? Num_ErrMsgAddressForms : Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(number, detail, &arg->Pos);
+}
+
+static void WrTableChoices(tStrComp const* arg, tErrorNum number, tCodeTable const* table, unsigned mask) {
+    char choices[280];
+    *choices = '\0';
+    for (; table->pName; table++) {
+        if (*table->pName && (mask & (1u << table->Code))) {
+            if (*choices) {
+                strmaxcat(choices, " / ", sizeof(choices));
+            }
+            strmaxcat(choices, table->pName, sizeof(choices));
+        }
+    }
+    WrChoices(arg, number, choices, False);
+}
+
 static tCodeTable const RegCodes[] = {
         { "R0", 0},
         { "R1", 1},
@@ -97,7 +121,7 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* pResult, Byte Mask) {
     Boolean Result = DecodeRegCore(pArg->str.p_str, pResult) && (Mask & (1 << *pResult));
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrTableChoices(pArg, ErrNum_InvReg, RegCodes, Mask);
     }
     return Result;
 }
@@ -113,7 +137,7 @@ static Boolean DecodeDReg(tStrComp const* pArg) {
     Boolean Result = DecodeDRegCore(pArg->str.p_str, &DummyReg) && !DummyReg;
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrChoices(pArg, ErrNum_InvReg, "DR0", False);
     }
     return Result;
 }
@@ -145,7 +169,7 @@ static Boolean DecodeSkip(tStrComp const* pArg, Word* pResult) {
     Boolean Result = DecodeSkipCore(pArg->str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_UndefCond, pArg);
+        WrTableChoices(pArg, ErrNum_UndefCond, SkipCodes, ~0u);
     }
     return Result;
 }
@@ -171,7 +195,7 @@ static Boolean DecodeEE(tStrComp const* pArg, Word* pResult) {
     Boolean Result = DecodeEECore(pArg->str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrTableChoices(pArg, ErrNum_InvReg, EECodes, ~0u);
     }
     return Result;
 }
@@ -203,7 +227,7 @@ static Boolean DecodeBR(tStrComp const* pArg, Word* pResult) {
     Boolean Result = DecodeBRCore(pArg->str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_UnknownSegReg, pArg);
+        WrTableChoices(pArg, ErrNum_UnknownSegReg, BRCodes, ~0u);
     }
     return Result;
 }
@@ -222,7 +246,7 @@ static Boolean DecodeSOrAllBReg(
                          : DecodeAllBRCore(pArg->str.p_str, pResult, IsWrite);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrTableChoices(pArg, ErrNum_InvReg, IsS ? SRegCodes : AllBRCodes + IsWrite, ~0u);
     }
     return Result;
 }
@@ -246,7 +270,7 @@ static Boolean DecodeHReg(tStrComp const* pArg, Word* pResult, Boolean IsWrite) 
     Result             = DecodeHRegCore(pArg->str.p_str, pResult);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+        WrTableChoices(pArg, ErrNum_InvReg, HRegCodes, ~0u);
     }
     return Result;
 }
@@ -260,11 +284,22 @@ static Boolean DecodeHReg(tStrComp const* pArg, Word* pResult, Boolean IsWrite) 
  * \return resulting offset
  * ------------------------------------------------------------------------ */
 
+static void WrSegmentOffset(LongWord address, LongWord offset, Word base, LongWord max,
+                            tErrorNum number, tStrComp const* arg) {
+    char detail[320];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSegmentOffsetRange),
+                (LargeWord)address, (LargeWord)offset, (LargeWord)max,
+                BRCodes[base].pName, (LargeInt)BaseRegVals[base],
+                (LargeWord)(BaseRegVals[base] << 14));
+    WrXErrorPos(number, detail, &arg->Pos);
+}
+
 static Word ChkPage(LongWord Addr, Word Base, tStrComp const* pArg) {
+    LongWord OriginalAddr = Addr;
     Addr -= BaseRegVals[Base] << 14;
     Addr &= SegLimits[SegCode];
     if ((Addr >= 0x10000ul) && pArg) {
-        WrStrErrorPos(ErrNum_InAccPage, pArg);
+        WrSegmentOffset(OriginalAddr, Addr, Base, 0xffff, ErrNum_InAccPage, pArg);
     }
     return Addr & 0xffff;
 }
@@ -313,7 +348,7 @@ static Boolean DecodeMem(tStrComp* pArg, Word* pResult) {
         if (R == 2) {
             if (DispIndirect) /* ((disp)(IC)), (disp)(IC) not possible */
             {
-                WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+                WrChoices(pArg, ErrNum_InvAddrMode, "disp(IC) / (disp(IC))", True);
                 return False;
             } else /* (disp(IC)) */
             {
@@ -322,7 +357,7 @@ static Boolean DecodeMem(tStrComp* pArg, Word* pResult) {
             }
         } else if (TotIndirect) /* (disp(Xn)), ((disp)(Xn)) not possible */
         {
-            WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+            WrChoices(pArg, ErrNum_InvAddrMode, "disp(X0) / (disp)(X0) / disp(X1) / (disp)(X1)", True);
             return False;
         } else /* disp(Xn), (disp)(Xn) */
         {
@@ -398,7 +433,7 @@ static Boolean DecodeMem(tStrComp* pArg, Word* pResult) {
             Word Offset = ChkPage(Addr, 0, NULL);
 
             if (!mFirstPassUnknownOrQuestionable(Flags) && (Offset > 255)) {
-                WrStrErrorPos(ErrNum_OverRange, pArg);
+                WrSegmentOffset(Addr, Offset, 0, 255, ErrNum_OverRange, pArg);
                 return False;
             } else {
                 *pResult = ((TotIndirect ? 2 : 0) << 11) | (Offset & 0xff);
@@ -411,7 +446,10 @@ static Boolean DecodeMem(tStrComp* pArg, Word* pResult) {
 
             if (!mFirstPassUnknownOrQuestionable(Flags)
                 && ((Disp > 127) || (Disp < -128))) {
-                WrStrErrorPos(ErrNum_DistTooBig, pArg);
+                char detail[240];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                            (LargeInt)Disp, (LargeInt)-128, (LargeInt)127, (LargeWord)EProgCounter());
+                WrXErrorPos(ErrNum_DistTooBig, detail, &pArg->Pos);
                 return False;
             } else {
                 *pResult = (1 << 11) | (Disp & 0xff);
@@ -469,9 +507,27 @@ static Boolean DecodeIReg(tStrComp* pStrArg, Word* pResult, Word Mask, Word Allo
     }
     return True;
 
-error:
-    WrStrErrorPos(ErrNum_InvAddrMode, pStrArg);
+error: {
+    static char const* names[] = {"R1", "R2", "R3", "R4", "X0", "X1"};
+    static char const* formats[] = {"(%s)", "-(%s)", "(%s)+"};
+    static Word const numbers[] = {0, 1, 2, 3, 2, 3};
+    char choices[280], form[30];
+    unsigned mode, index;
+    *choices = '\0';
+    for (mode = 1; mode <= 3; mode++) {
+        for (index = 0; index < as_array_size(names); index++) {
+            if ((((mode << 6) | numbers[index]) & Mask) == Allowed) {
+                if (*choices) {
+                    strmaxcat(choices, " / ", sizeof(choices));
+                }
+                as_snprintf(form, sizeof(form), formats[mode - 1], names[index]);
+                strmaxcat(choices, form, sizeof(choices));
+            }
+        }
+    }
+    WrChoices(pStrArg, ErrNum_InvAddrMode, choices, True);
     return False;
+}
 }
 
 /*--------------------------------------------------------------------------*/
@@ -668,7 +724,7 @@ static Boolean ChkCarry(int StartIndex, Boolean* pHasCarryArg, Word* pCarryVal) 
         *pCarryVal    = *pHasCarryArg && (ArgStr[StartIndex].str.p_str[0] != '0');
         Result        = (ArgCnt == StartIndex) || *pHasCarryArg;
         if (!Result) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[StartIndex]);
+            WrChoices(&ArgStr[StartIndex], ErrNum_InvReg, "C / 0 / 1", False);
         }
         return Result;
     }
@@ -743,7 +799,7 @@ static void DecodeBL_BALL(Word Code) {
     else if (!ChkMinCPU(CPUMN1613))
         ;
     else if (!IsIndirect(ArgStr[1].str.p_str)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvAddrMode, "(address)", True);
     } else {
         Boolean  OK;
         LongWord Addr = EvalStrIntExpression(&ArgStr[1], UInt18, &OK);

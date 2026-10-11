@@ -1550,3 +1550,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     size at target operand; relative failures show wrapped displacement [-64,63]
     and PC+2/zero base (data vs branch detail). Preserve IDs, masks and encodings.
     Validation: all 405 CTest cases pass with embedded/external catalogs.
+
+126. MN1610/MN1613 alternate-backend diagnostic inventory.
+    Six register restrictions name table/mask choices, including read/write
+    hardware/segment registers and carry token. Four mode errors describe
+    IC/indexed displacement forms, exact masked indirect-register alternatives
+    (including BLK's fixed R2/R1), or required long indirect parentheses.
+    Zero-page offset and inaccessible-segment warning show address, computed
+    offset/bounds and ASSUME register/base; IC-relative failure shows signed
+    displacement [-128,127] and word PC. Adjacent skip/segment names use tables.
+    Preserve masks, wrapping, IDs, warning emission and original valid bytes.
+    Validation: all 406 CTest cases pass with embedded/external catalogs.

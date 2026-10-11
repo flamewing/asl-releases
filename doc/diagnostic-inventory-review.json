@@ -1131,8 +1131,15 @@
         "ErrNum_InvReg": 6,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_DistTooBig",
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All thirteen historical candidates reviewed in tranche 126: table/mask-specific register sets, IC/indexed/indirect memory forms, forced zero-page wrapped offset, signed IC-relative range and inaccessible segment warning with address/offset/ASSUME base. Adjacent skip and segment-register table errors also identify choices. Original predicates, offset truncation/wrapping, warning emission and accepted encodings preserved."
     },
     "codemsp.c": {
       "candidate_counts": {

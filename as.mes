@@ -1437,6 +1437,10 @@ Message ErrMsgWordFieldRange
  "Wortwert %llld au&szlig;erhalb [0,%llld] bei BITS %u"
  "word value %llld outside [0,%llld] for BITS %u"
 
+Message ErrMsgSegmentOffsetRange
+ "Adresse 0x%lllx ergibt Segmentoffset 0x%lllx au&szlig;erhalb [0,0x%lllx] mit %s=%llld (Basis 0x%lllx)"
+ "address 0x%lllx gives segment offset 0x%lllx outside [0,0x%lllx] with %s=%llld (base 0x%lllx)"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"
