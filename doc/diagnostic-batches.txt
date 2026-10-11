@@ -1296,3 +1296,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     alignment, signed displacement intervals and encodings. Tests cover every
     one of the 11 CTRL and 16 target-bearing COBR instruction aliases.
     Validation: all 397 CTest cases pass with embedded/external catalogs.
+
+99. Complete i960 historical diagnostic review and related address constraints.
+    1760/1445 identify actual register number and group-start multiple (2/4).
+    1350 lists mask-specific integer/FP/constant forms, distinguishes repeated
+    base/index components, gives accepted index scales and forbids IP+index.
+    1320 identifies actual rejected constant and permitted 0.0/1.0. Branch
+    1325/1370 identify signed 32-bit wrapped displacement, four-byte alignment
+    and PC base; CTRL interval is [-8388608,8388604], COBR aligned interval
+    [-4096,4088] (retain the historical >4090 predicate). Instruction warning
+    180 gives actual PC and four-byte requirement at opcode. Preserve IDs,
+    warning behavior and bytes. Tests cover all 27 target-bearing branches,
+    register groups/types, memory failures, accepted endpoints and wrapping.
+    Validation: all 397 CTest cases pass with embedded/external catalogs.

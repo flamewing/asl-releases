@@ -1309,6 +1309,34 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgRegisterGroupAlignment
+ "Registernummer %u muss ein Vielfaches von %u sein"
+ "register number %u must be a multiple of %u"
+
+Message ErrMsgFloatConstantChoices
+ "Konstante %s nicht erlaubt; erlaubte Konstanten: 0.0 / 1.0"
+ "constant %s not allowed; accepted constants: 0.0 / 1.0"
+
+Message ErrMsgExtraIndexRegister
+ "Adresse enth&auml;lt mehr als ein Indexregister"
+ "address contains more than one index register"
+
+Message ErrMsgExtraBaseRegister
+ "Adresse enth&auml;lt mehr als ein Basisregister"
+ "address contains more than one base register"
+
+Message ErrMsgIndexScaleChoices
+ "Indexskalierung %s nicht erlaubt; erlaubte Skalierungen: 1,2,4,8,16"
+ "index scale %s not allowed; accepted scales: 1,2,4,8,16"
+
+Message ErrMsgIPRelativeIndex
+ "IP-relative Adressierung erlaubt kein Indexregister"
+ "IP-relative addressing cannot use an index register"
+
+Message ErrMsgInstructionAlignmentN
+ "Befehlsadresse 0x%lllx muss auf %llld Bytes ausgerichtet sein"
+ "instruction address 0x%lllx must be aligned to %llld bytes"
+
 Message ErrMsgRegisterPairs
  "Erlaubte Registerpaare: %s"
  "allowed register pairs: %s"

@@ -12,6 +12,9 @@
 
 #include "code960.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -97,11 +100,29 @@ static CPUVar CPU80960;
 
 /*--------------------------------------------------------------------------*/
 
-static Boolean ChkAdr(int AMode, Byte Mask, LongWord* Erg, LongWord* Mode) {
-    UNUSED(Erg);
+static void WrRegisterGroup(tErrorNum num, const tStrComp* arg, LongWord reg, OpType type) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterGroupAlignment),
+                (unsigned)reg, (unsigned)(OpMasks[type] + 1));
+    WrXErrorPos(num, detail, &arg->Pos);
+}
 
+static Boolean ChkAdr(int AMode, Byte Mask, const tStrComp* arg, OpType type, LongWord* Mode) {
     if (!(Mask & (1 << AMode))) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[240] = "", detail[300];
+        if (Mask & MModReg) {
+            strmaxcat(forms, "R0..R15 / G0..G15 (FP/PFP/SP/RIP)", sizeof(forms));
+        }
+        if (Mask & MModFReg) {
+            if (*forms) strmaxcat(forms, "; ", sizeof(forms));
+            strmaxcat(forms, "FP0..FP3", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            if (*forms) strmaxcat(forms, "; ", sizeof(forms));
+            strmaxcat(forms, type == IntOp ? "0..31" : "0.0 / 1.0", sizeof(forms));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
         return False;
     } else {
         *Mode = (AMode != ModReg);
@@ -281,13 +302,13 @@ static Boolean DecodeAdr(
         switch (DataSize) {
         case eSymbolSize32Bit:
             if ((*Erg) & OpMasks[Type]) {
-                WrStrErrorPos(ErrNum_InvRegPair, pArg);
+                WrRegisterGroup(ErrNum_InvRegPair, pArg, *Erg, Type);
                 return False;
             } else {
-                return ChkAdr(ModReg, Mask, Erg, Mode);
+                return ChkAdr(ModReg, Mask, pArg, Type, Mode);
             }
         case eSymbolSizeFloat64Bit:
-            return ChkAdr(ModFReg, Mask, Erg, Mode);
+            return ChkAdr(ModFReg, Mask, pArg, Type, Mode);
         default:
             break;
         }
@@ -309,17 +330,20 @@ static Boolean DecodeAdr(
             } else if (FVal == 1.0) {
                 *Erg = 22;
             } else {
-                WrError(ErrNum_OverRange);
+                char value[80], detail[180];
+                FloatString(value, sizeof(value), FVal);
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgFloatConstantChoices), value);
+                WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
                 EvalResult.OK = False;
             }
             if (EvalResult.OK) {
-                return ChkAdr(ModImm, Mask, Erg, Mode);
+                return ChkAdr(ModImm, Mask, pArg, Type, Mode);
             }
         }
     } else {
         *Erg = EvalStrIntExpressionWithResult(pArg, UInt5, &EvalResult);
         if (EvalResult.OK) {
-            return ChkAdr(ModImm, Mask, Erg, Mode);
+            return ChkAdr(ModImm, Mask, pArg, Type, Mode);
         }
     }
     return False;
@@ -328,8 +352,15 @@ static Boolean DecodeAdr(
 #define NOREG 33
 #define IPREG 32
 
-static int AddrError(tErrorNum Num) {
-    WrError(Num);
+static int AddrError(const tStrComp* arg, int message) {
+    WrXErrorPos(ErrNum_InvAddrMode, getmessage(message), &arg->Pos);
+    return -1;
+}
+
+static int ScaleError(const tStrComp* arg) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIndexScaleChoices), arg->str.p_str);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
     return -1;
 }
 
@@ -356,7 +387,7 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
             switch (Arg.str.p_str[ArgLen - 1]) {
             case ']':
                 if (Index != NOREG) {
-                    return AddrError(ErrNum_InvAddrMode);
+                    return AddrError(pArg, Num_ErrMsgExtraIndexRegister);
                 }
                 for (p = Arg.str.p_str + ArgLen - 1; p > Arg.str.p_str && *p != '['; p--) {
                 }
@@ -371,7 +402,7 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                     StrCompSplitRef(&RegArg, &ScaleArg, &RegArg, p2);
                     Scale2 = strtol(ScaleArg.str.p_str, &end, 10);
                     if (*end != '\0') {
-                        return AddrError(ErrNum_InvAddrMode);
+                        return ScaleError(&ScaleArg);
                     }
                     for (Scale = 0; Scale < 5; Scale++, Scale2 = Scale2 >> 1) {
                         if (Odd(Scale2)) {
@@ -379,7 +410,7 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                         }
                     }
                     if (Scale2 != 1) {
-                        return AddrError(ErrNum_InvAddrMode);
+                        return ScaleError(&ScaleArg);
                     }
                 }
                 if (DecodeIReg(&RegArg, &Index, True) != eIsReg) {
@@ -389,7 +420,7 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                 break;
             case ')':
                 if (Base != NOREG) {
-                    return AddrError(ErrNum_InvAddrMode);
+                    return AddrError(pArg, Num_ErrMsgExtraBaseRegister);
                 }
                 for (p = Arg.str.p_str + ArgLen - 1; p > Arg.str.p_str && *p != '('; p--) {
                 }
@@ -425,7 +456,7 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
     if (Base == IPREG) {
         DispAcc -= EProgCounter() + 8;
         if (Index != NOREG) {
-            return AddrError(ErrNum_InvAddrMode);
+            return AddrError(pArg, Num_ErrMsgIPRelativeIndex);
         } else {
             *Erg = (5 << 10);
             *Ext = DispAcc;
@@ -523,6 +554,21 @@ static void DecodeReg(Word Index) {
     }
 }
 
+static void WrBranchConstraint(const tStrComp* arg, LongInt disp, LongInt min, LongInt max,
+                               Boolean alignment) {
+    char detail[240];
+    if (alignment) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                    (LargeInt)disp, (LargeInt)4, (LargeWord)EProgCounter());
+        WrXErrorPos(ErrNum_NotAligned, detail, &arg->Pos);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                    (LargeInt)disp, (LargeInt)min, (LargeInt)max,
+                    (LargeWord)EProgCounter(), (LargeInt)4);
+        WrXErrorPos(ErrNum_JmpDistTooBig, detail, &arg->Pos);
+    }
+}
+
 static void DecodeCobr(Word Index) {
     CobrOrder*   Op = CobrOrders + Index;
     LongWord     S1Reg, S1Mode;
@@ -551,11 +597,11 @@ static void DecodeCobr(Word Index) {
         }
         if (OK) {
             if (AdrInt & 3) {
-                WrError(ErrNum_NotAligned);
+                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4088, True);
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags)
                     && ((AdrInt < -4096) || (AdrInt > 4090))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4088, False);
             } else {
                 DAsmCode[0] = (Op->Code << 24) + (S1Reg << 19) + (S2Reg << 14)
                               + (S1Mode << 13) + (AdrInt & 0x1ffc);
@@ -579,11 +625,11 @@ static void DecodeCtrl(Word Index) {
         }
         if (OK) {
             if (AdrInt & 3) {
-                WrError(ErrNum_NotAligned);
+                WrBranchConstraint(&ArgStr[1], AdrInt, -8388608, 8388604, True);
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags)
                     && ((AdrInt < -8388608) || (AdrInt > 8388604))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchConstraint(&ArgStr[1], AdrInt, -8388608, 8388604, False);
             } else {
                 DAsmCode[0] = (Op->Code << 24) + (AdrInt & 0xfffffc);
                 CodeLen     = 4;
@@ -604,7 +650,7 @@ static void DecodeMemO(Word Index) {
     else if ((Op->RegPos > 0) && (DecodeIReg(&ArgStr[Op->RegPos], &Reg, True) != eIsReg))
         ;
     else if (Reg & OpMasks[Op->Type]) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[Op->RegPos]);
+        WrRegisterGroup(ErrNum_InvReg, &ArgStr[Op->RegPos], Reg, Op->Type);
     } else if ((MemType = DecodeMem(&ArgStr[MemPos], &Mem, DAsmCode + 1)) >= 0) {
         DAsmCode[0] = (Op->Code << 24) + (Reg << 19) + Mem;
         CodeLen     = (1 + MemType) << 2;
@@ -664,7 +710,10 @@ static void check_alignment(Word index) {
     /* Befehlszaehler nicht ausgerichtet? */
 
     if (EProgCounter() & 3) {
-        WrError(ErrNum_AddrNotAligned);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignmentN),
+                    (LargeWord)EProgCounter(), (LargeInt)4);
+        WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
     }
 }
 

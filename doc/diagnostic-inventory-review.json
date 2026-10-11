@@ -734,8 +734,16 @@
         "ErrNum_JmpDistTooBig": 2,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_InvRegPair",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical sites reviewed in tranche 99: register group-start alignment, mask-specific operand forms, permitted constants, signed 32-bit wrapped CTRL/COBR displacement/alignment and four-byte instruction alignment warning. Related five memory-address rejection paths identify repeated components, scale choices and forbidden IP/index combination. Preserve IDs, severity, encoding/range predicates; report COBR effective aligned maximum 4088 while retaining historical >4090 predicate. Adjacent evaluation/forward-expression bugs fixed in tranches 97/98."
     },
     "code96c141.c": {
       "candidate_counts": {
@@ -1731,6 +1739,11 @@
       "file": "code960.c",
       "issue": "CTRL/COBR reject provisional displacement of first-pass unknown forward expressions before their targets resolve.",
       "status": "fixed in tranche 98; defer range checks for first-pass unknown/questionable targets; all 27 target-bearing callers verified"
+    },
+    {
+      "file": "code960.c",
+      "issue": "Scale parser falls through its 0..4 encoding loop for scale 32 with remaining value 1, accepts encoding 5 reserved by Intel manual Table D-3.",
+      "status": "confirmed during tranche 99; queued separately, manual https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf section 3.3.2 and Table D-3"
     }
   ]
 }
