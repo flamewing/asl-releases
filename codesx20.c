@@ -262,12 +262,14 @@ static void DecodeMOVSZ(Word Code) {
     }
 
     if (!as_strcasecmp(ArgStr[1].str.p_str, "W")) {
-        if (!strncmp(ArgStr[2].str.p_str, "--", 2) && DecodeReg(&ArgStr[2], 2, &Reg)) {
-            WAsmCode[CodeLen++] = 0x2c0 | Reg;
-        } else if (
-                !strncmp(ArgStr[2].str.p_str, "++", 2)
-                && DecodeReg(&ArgStr[2], 2, &Reg)) {
-            WAsmCode[CodeLen++] = 0x3c0 | Reg;
+        if (!strncmp(ArgStr[2].str.p_str, "--", 2)) {
+            if (DecodeReg(&ArgStr[2], 2, &Reg)) {
+                WAsmCode[CodeLen++] = 0x2c0 | Reg;
+            }
+        } else if (!strncmp(ArgStr[2].str.p_str, "++", 2)) {
+            if (DecodeReg(&ArgStr[2], 2, &Reg)) {
+                WAsmCode[CodeLen++] = 0x3c0 | Reg;
+            }
         } else {
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
         }

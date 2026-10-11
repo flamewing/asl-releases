@@ -1776,6 +1776,11 @@
       "file": "codesx20.c",
       "issue": "RETW/MODE OR accepted negative Int8/Int4 values promoted to unsigned Word directly into opcode, emitting FFFF for -1 instead of byte/nibble equivalents.",
       "status": "fixed in tranche 107; mask immediate field before opcode combination; both CPUs, negative endpoints, unsigned equivalents and range failures verified"
+    },
+    {
+      "file": "codesx20.c",
+      "issue": "MOVSZ ++/-- register parse failures fall into generic invalid addressing mode, adding a secondary 1350 after range/symbol errors.",
+      "status": "fixed in tranche 108; recognize prefix before evaluation and retain the primary failure; both prefixes and valid encodings verified"
     }
   ]
 }

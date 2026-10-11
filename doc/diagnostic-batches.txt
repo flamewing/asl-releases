@@ -1386,3 +1386,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     bit-equivalent values already do. Tests cover both CPUs, -1 and negative
     endpoints, unsigned equivalents and retained lower-range rejection.
     Validation: all 400 CTest cases pass with embedded/external catalogs.
+
+108. SX20 MOVSZ primary register-expression failures.
+    Recognized ++/-- syntax with a failed register expression adds 1350 after
+    primary overflow/undefined-symbol diagnostics. Separate syntax recognition
+    from evaluation, retaining only the primary failure and emitting no word.
+    Tests cover both prefixes, source positions, EXPECT/no emission and valid
+    increment/decrement byte encodings.
+    Validation: all 400 CTest cases pass with embedded/external catalogs.
