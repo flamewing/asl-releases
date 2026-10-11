@@ -13,6 +13,9 @@
 
 #include "codecp1600.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -134,6 +137,19 @@ static Boolean DecReg(tStrComp const* p_arg, Word* p_reg) {
 
 /*---------------------------------------------------------------------------*/
 
+static void WrRegChoices(tStrComp const* p_arg, char const* choices) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &p_arg->Pos);
+}
+
+static void WrWordFieldRange(tStrComp const* p_arg, LargeInt value) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgWordFieldRange),
+                value, (LargeInt)(0xffff - Mask), (unsigned)Bits);
+    WrXErrorPos(ErrNum_OverRange, detail, &p_arg->Pos);
+}
+
 static void DecodeRegAdrMVO(Word Index) {
     PrefixedSDBD = False;
 
@@ -153,7 +169,7 @@ static void DecodeRegAdrMVO(Word Index) {
         }
 
         if (!mFirstPassUnknownOrQuestionable(flags) && (adr & Mask)) {
-            WrError(ErrNum_OverRange);
+            WrWordFieldRange(&ArgStr[2], (LargeInt)adr);
             return;
         }
 
@@ -179,7 +195,7 @@ static void DecodeRegRegMVO(Word Index) {
             return;
         }
         if (regd == 0 || regd == 7) {
-            WrError(ErrNum_InvReg);
+            WrRegChoices(&ArgStr[2], "R1..R6 / SP");
             return;
         }
 
@@ -205,12 +221,12 @@ static void DecodeRegImmMVO(Word Index) {
         if (!OK) {
             return;
         }
-        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRange(val, -32768, 65535)) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRangePos(val, -32768, 65535, &ArgStr[2])) {
             return;
         }
 
         if (!mFirstPassUnknownOrQuestionable(flags) && (val & Mask)) {
-            WrError(ErrNum_OverRange);
+            WrWordFieldRange(&ArgStr[2], (LargeInt)val);
             return;
         }
 
@@ -236,7 +252,7 @@ static void DecodeAdrReg(Word Index) {
         }
 
         if (!mFirstPassUnknownOrQuestionable(flags) && (adr & Mask)) {
-            WrError(ErrNum_OverRange);
+            WrWordFieldRange(&ArgStr[1], (LargeInt)adr);
             return;
         }
 
@@ -263,7 +279,7 @@ static void DecodeRegReg(Word Index) {
         }
         if (Index & 0x0200) {
             if (regs == 0 || regs == 7) {
-                WrError(ErrNum_InvReg);
+                WrRegChoices(&ArgStr[1], "R1..R6 / SP");
                 return;
             }
         }
@@ -291,7 +307,7 @@ static void DecodeImmReg(Word Index) {
         if (!OK) {
             return;
         }
-        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRange(val, -32768, 65535)) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRangePos(val, -32768, 65535, &ArgStr[1])) {
             return;
         }
 
@@ -387,7 +403,12 @@ static void DecodeBranch(Word Index) {
     }
 
     if (!mFirstPassUnknownOrQuestionable(flags) && (WAsmCode[1] & Mask)) {
-        WrError(ErrNum_JmpDistTooBig);
+        char detail[240];
+        LargeInt max = 0xffff - Mask;
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                    (LargeInt)adr - ((LargeInt)PC + 2), -max - 1, max,
+                    (LargeWord)PC + 2);
+        WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
         return;
     }
 
@@ -417,7 +438,7 @@ static void DecodeReg(Word Index) {
         if (Index == 0x0030) {
             /* GSWD */
             if (reg > 3) {
-                WrError(ErrNum_InvReg);
+                WrRegChoices(&ArgStr[1], "R0..R3");
                 return;
             }
         }
@@ -440,7 +461,7 @@ static void DecodeShift(Word Index) {
             return;
         }
         if (reg > 3) {
-            WrError(ErrNum_InvReg);
+            WrRegChoices(&ArgStr[1], "R0..R3");
             return;
         }
 
@@ -461,7 +482,10 @@ static void DecodeShift(Word Index) {
             } else if (val == 2) {
                 bit = 0x0004;
             } else {
-                WrError(ErrNum_InvShiftArg);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgShiftCountChoices),
+                            (LargeInt)val, (LargeInt)1, (LargeInt)2);
+                WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[2].Pos);
                 return;
             }
         }
@@ -498,7 +522,10 @@ static void DecodeOptionalImm(Word Index) {
             } else if (val == 2) {
                 bit = 0x0001;
             } else {
-                WrError(ErrNum_InvShiftArg);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentChoices),
+                            OpPart.str.p_str, (LargeInt)val, "1, 2");
+                WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[1].Pos);
                 return;
             }
             if (mFirstPassUnknownOrQuestionable(flags)) {
@@ -551,7 +578,7 @@ static void DecodeJump(Word Index) {
             return;
         }
         if (reg < 4 || reg > 6) {
-            WrError(ErrNum_InvReg);
+            WrRegChoices(&ArgStr[1], "R4..R6 / SP");
             return;
         }
         reg = (reg - 4) << 8;
@@ -722,7 +749,7 @@ static void DecodeBITS(Word Index) {
     if (!OK) {
         return;
     }
-    if (ChkRange(val, 10, 16)) {
+    if (ChkRangePos(val, 10, 16, &ArgStr[1])) {
         Bits = val;
         Mask = ~((1 << val) - 1);
     }

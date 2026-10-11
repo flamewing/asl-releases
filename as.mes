@@ -1433,6 +1433,10 @@ Message ErrMsgIntegerArgumentChoices
  "%s-Wert %llld nicht erlaubt; erlaubte Werte: %s"
  "%s value %llld not allowed; accepted values: %s"
 
+Message ErrMsgWordFieldRange
+ "Wortwert %llld au&szlig;erhalb [0,%llld] bei BITS %u"
+ "word value %llld outside [0,%llld] for BITS %u"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"

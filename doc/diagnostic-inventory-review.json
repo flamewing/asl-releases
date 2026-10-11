@@ -874,8 +874,14 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_InvShiftArg",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All eleven historical candidates reviewed in tranches 118-121: five register subsets, two discrete shift/variant choices, three BITS-dependent word intervals and asymmetric branch interval with word PC base. Adjacent correctness fixes preserve primary errors, reject failed BEXT, defer provisional constraints and discard failed directive data; accepted bytes retained."
     },
     "codecp3f.c": {
       "candidate_counts": {

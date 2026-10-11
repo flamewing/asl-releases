@@ -1504,3 +1504,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both bounds/all directives, primary position, EXPECT/no emission,
     rejected strings and captured original endpoint/string bytes.
     Validation: all 403 CTest cases pass with embedded/external catalogs.
+
+121. CP-1600 diagnostic details and full historical inventory review.
+    All five register restrictions name accepted sets at the actual operand;
+    shift and optional NOP/SIN variants name evaluated count/accepted choices.
+    Three masked word fields show value, BITS width and full unsigned interval;
+    branches show actual displacement, asymmetric interval and word PC base.
+    Related full immediate/BITS ranges now locate the argument. Preserve IDs,
+    masks, backward distance-minus-one encoding and all accepted bytes.
+    Validation: all 403 CTest cases pass with embedded/external catalogs.
