@@ -1139,3 +1139,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     typed-address bytes. Tests cover both spaces on all four cores, rejection
     without emitted words, zero/upper endpoints, MOV A,-1 and forward symbols.
     Validation: all 392 CTest cases pass with embedded/external catalogs.
+
+82. Separate ST6 signed address-temporary truncation bug.
+    Reproduced LD A,32768 and LD A,65535 succeeding as byte addresses 0 and
+    255. Store the UInt16 evaluation result in unsigned Word, so the existing
+    >255 check rejects all excessive addresses. Preserve primary type errors,
+    CPU restrictions, register/direct aliases and accepted ROM-window bytes.
+    Tests cover 256/32767/32768/65535/65536, single primary failures, no rejected
+    words and preceding valid direct/register/ROM-window bytes on 12-/13-bit CPUs.
+    Validation: all 393 CTest cases pass with embedded/external catalogs.

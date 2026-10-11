@@ -63,7 +63,7 @@ static void ResetAdr(void) {
 }
 
 static void DecodeAdr(tStrComp const* pArg, Byte Mask) {
-    Integer     AdrInt;
+    Word        AdrInt;
     tEvalResult EvalResult;
 
     ResetAdr();
