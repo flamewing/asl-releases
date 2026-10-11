@@ -1603,3 +1603,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Track source argument with existing global decoded-address state for positioned
     MakeXY failure at all callers. Preserve predicates/IDs and accepted encodings.
     Validation: all 408 CTest cases pass with embedded/external catalogs.
+
+132. NS32000 scaled-index primary evaluation failures.
+    Scaled indexing checks register restrictions only when DecodeReg succeeds,
+    continuing after evaluation/type errors and emitting an index instruction
+    (confirmed EXPECT 1130 leaves MOVD bytes for F0 index). Abort failed mandatory
+    index parsing before base address encoding. Tests cover three CPU generations,
+    all four scale codes, one primary error, EXPECT/no emission and captured bytes.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.

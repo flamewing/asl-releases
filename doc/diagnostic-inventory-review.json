@@ -1904,6 +1904,11 @@
       "file": "code8008.c",
       "issue": "Z80-style LD byte-register destination accepts pair source in decoder mask, then silently drops instruction without a pair switch case.",
       "status": "fixed in tranche 128; reject pair source through mode mask with positioned 1350; all seven byte destinations/three pairs/both CPUs and original supported loads checked"
+    },
+    {
+      "file": "codens32k.c",
+      "issue": "Scaled index parser continues after mandatory register evaluation/type failure, emitting instruction bytes despite the diagnostic.",
+      "status": "fixed in tranche 132; abort failed index parsing before base address encoding; three CPU generations/all scale codes/primary errors/no emission/valid bytes checked"
     }
   ]
 }

@@ -655,8 +655,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
             return False;
         }
         IndexCode = AddrCode_ScaledIndex + (pScaleIndex - IndexChars);
-        if ((DecodeReg(&Mid, &IndexReg, NULL, eSymbolSize32Bit, True) == eIsReg)
-            && (IndexReg >= 8)) {
+        if (DecodeReg(&Mid, &IndexReg, NULL, eSymbolSize32Bit, True) != eIsReg) {
+            return False;
+        }
+        if (IndexReg >= 8) {
             WrStrErrorPos(ErrNum_InvReg, &Mid);
             return False;
         }
