@@ -1800,6 +1800,11 @@
       "file": "code8x30x.c",
       "issue": "Forward IV objects and explicit length symbols produce premature ConfOpSizes errors in XMIT/arithmetic/XEC/NZT before resolution.",
       "status": "fixed in tranche 111; decode IV expression flags, defer provisional lengths/comparisons and preserve automatic inference; five reproduced paths plus forward destination/final mismatch checked on both CPUs"
+    },
+    {
+      "file": "code9900.c",
+      "issue": "Plain register parsing appends secondary InvAddrMode after primary evaluation failures; empty indirect * / *+ silently uses R0 and unguarded strlen-1 indexing.",
+      "status": "fixed in tranche 113; retain primary register diagnostic, require indirect register expression before encoding, guard trailing-character access; all eight CPUs and valid modes verified"
     }
   ]
 }

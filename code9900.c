@@ -12,6 +12,9 @@
 
 #include "code9900.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -111,11 +114,19 @@ static Boolean DecodeAdr(tStrComp const* pArg) {
         tStrComp IArg;
 
         StrCompRefRight(&IArg, pArg, 1);
-        if (IArg.str.p_str[strlen(IArg.str.p_str) - 1] == '+') {
+        size_t length = strlen(IArg.str.p_str);
+        if (length && IArg.str.p_str[length - 1] == '+') {
             IncFlag = True;
             StrCompShorten(&IArg, 1);
         } else {
             IncFlag = False;
+        }
+        if (!*IArg.str.p_str) {
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                        "*R0..*R15 / *R0+..*R15+");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
+            return False;
         }
         if (DecodeReg(&IArg, &AdrPart)) {
             AdrPart += 0x10 + (Ord(IncFlag) << 5);
@@ -165,12 +176,8 @@ static Boolean DecodeAdr(tStrComp const* pArg) {
         return False;
     }
 
-    if (DecodeReg(pArg, &AdrPart)) {
-        return True;
-    } else {
-        WrError(ErrNum_InvAddrMode);
-        return False;
-    }
+    /* Register evaluation owns the primary type/range/symbol diagnostic. */
+    return DecodeReg(pArg, &AdrPart);
 }
 
 static Boolean DecodeBitField(tStrComp* pArg, Word* pResult) {

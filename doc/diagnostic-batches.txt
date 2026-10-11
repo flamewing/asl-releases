@@ -1432,3 +1432,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all ten sites on both CPUs, automatic/explicit/zero-encoded
     lengths, forward/final failures and unchanged known/eight-bit encodings.
     Validation: all 401 CTest cases pass with embedded/external catalogs.
+
+113. 9900 primary register failures and empty indirect operands.
+    Plain register expression failures append a secondary 1350 after primary
+    range/symbol/syntax errors; let register evaluation own the failure.
+    Bare * / *+ also silently become indirect R0 through empty evaluation;
+    require a register expression with positioned indirect-form detail.
+    Guard empty length before trailing-character indexing. Tests cover all
+    eight CPUs, both operand positions, EXPECT/no emission and original valid
+    register/indirect/absolute/indexed byte encodings.
+    Validation: all 402 CTest cases pass with embedded/external catalogs.
