@@ -737,3 +737,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     negative/high counts, exact IDs/positions, forward/undefined symbols,
     operand rejection precedence and preceding bytes.
     Validation: all 375 CTest cases pass with embedded/external catalogs.
+
+46. Complete NEC 75xx historical pointer/target inventory review.
+    1350 lists HL-/HL+/HL and 7508-only DL/DE forms at the pointer operand.
+    CAL 1320 lists its four disjoint eight-byte target intervals; LHLT/CALT
+    1320 gives evaluated target and full [0xc0,0xcf]/[0xd0,0xff] interval.
+    Retain IDs for lower/upper failures, CPU selection, masks, first-pass
+    substitutions and accepted encodings. Tests cover all pointer callers,
+    every target interval endpoint/gap, both CPUs, source positions, forward
+    CAL targets, primary errors, German detail and preceding bytes.
+    Reproduced separate CALT forward-target bug: its unknown-address guess
+    forces 0xc0, below accepted minimum 0xd0, immediately issuing 1320.
+    Correct that first-pass substitution separately in tranche 47.
+    Validation: all 376 CTest cases pass with embedded/external catalogs.

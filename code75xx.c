@@ -13,6 +13,9 @@
 
 #include "code75xx.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -122,7 +125,10 @@ static void DecodePR(Word Index) {
     } else if ((MomCPU == CPU7508) && (!as_strcasecmp(ArgStr[1].str.p_str, "DE"))) {
         PutCode(Index | 0x01);
     } else {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                (MomCPU == CPU7508) ? "HL-, HL+, HL, DL, DE" : "HL-, HL+, HL");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
     }
 }
 
@@ -185,7 +191,10 @@ static void DecodeCAL(Word Index) {
         }
         if (EvalResult.OK) {
             if ((Address & 0x338) != 0x100) {
-                WrError(ErrNum_OverRange);
+                char detail[200];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg7566CALTarget),
+                        (LargeWord)Address);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 PutCode(Index | ((Address & 0x0c0) >> 3) | (Address & 7));
             }
@@ -205,7 +214,10 @@ static void DecodeLHLT(Word Index) {
         }
         if (EvalResult.OK) {
             if ((Address < 0xc0) || (Address > 0xcf)) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)Address, (LargeInt)192, (LargeInt)207);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 PutCode(Index | (Address & 0xf));
             }
@@ -225,7 +237,10 @@ static void DecodeCALT(Word Index) {
         }
         if (EvalResult.OK) {
             if ((Address < 0xd0) || (Address > 0xff)) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)Address, (LargeInt)208, (LargeInt)255);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 PutCode(Index | (Address & 0x3f));
             }

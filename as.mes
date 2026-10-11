@@ -1353,6 +1353,10 @@ Message ErrMsgForbiddenInstructionRange
  "%s darf nicht bei 0x%lllx beginnen; verbotenes Intervall [0x%lllx,0x%lllx]"
  "%s cannot start at 0x%lllx; forbidden interval [0x%lllx,0x%lllx]"
 
+Message ErrMsg7566CALTarget
+ "CAL-Ziel 0x%lllx muss in [0x100,0x107], [0x140,0x147], [0x180,0x187] oder [0x1c0,0x1c7] liegen"
+ "CAL target 0x%lllx must be in [0x100,0x107], [0x140,0x147], [0x180,0x187] or [0x1c0,0x1c7]"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"

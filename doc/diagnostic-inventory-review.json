@@ -502,8 +502,12 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 46: all four historical candidates identify CPU-specific pointer forms, CAL disjoint target intervals or LHLT/CALT target interval. IDs, masks and known-address encoding unchanged; first-pass CALT placeholder defect reproduced for separate tranche 47."
     },
     "code7700.c": {
       "candidate_counts": {
@@ -1472,6 +1476,11 @@
       "file": "code3201x.c",
       "issue": "Int4 negative shift count was converted to Word then used in 1 << count, invoking undefined shift behavior.",
       "status": "fixed in tranche 43; preserve signed count and reject outside [0,15] before mask shift"
+    },
+    {
+      "file": "code75xx.c",
+      "issue": "CALT first-pass unknown target is forced to 0xc0, below minimum 0xd0, rejecting forward references before resolution.",
+      "status": "reproduced; fix separately in tranche 47"
     }
   ]
 }
