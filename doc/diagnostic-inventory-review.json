@@ -1790,6 +1790,11 @@
       "file": "codesx20.c",
       "issue": "Bit-address separator strchr splits a period character literal inside its quotes; SETB period-literal .0 emits two invalid-symbol diagnostics instead of accepted numeric address 46.",
       "status": "fixed in tranche 110; quote-aware separator search, all four bit instructions and BIT definitions verified on both CPUs against numeric equivalent bytes"
+    },
+    {
+      "file": "code8x30x.c",
+      "issue": "Forward IV objects and explicit length symbols produce premature ConfOpSizes errors in XMIT/arithmetic/XEC/NZT before resolution.",
+      "status": "fixed in tranche 111; decode IV expression flags, defer provisional lengths/comparisons and preserve automatic inference; five reproduced paths plus forward destination/final mismatch checked on both CPUs"
     }
   ]
 }

@@ -37,6 +37,7 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* Erg, ShortInt* ErgLen) {
     Boolean OK;
     Word    Acc;
     LongInt Adr;
+    tSymbolFlags Flags;
     char*   z;
     int     Len = strlen(pArg->str.p_str);
 
@@ -98,9 +99,9 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* Erg, ShortInt* ErgLen) {
 
     /* IV - Objekte */
 
-    Adr = EvalStrIntExpression(pArg, UInt24, &OK);
+    Adr = EvalStrIntExpressionWithFlags(pArg, UInt24, &OK, &Flags);
     if (OK) {
-        *ErgLen = Adr & 7;
+        *ErgLen = mFirstPassUnknownOrQuestionable(Flags) ? -1 : Adr & 7;
         *Erg    = 0x10 | ((Adr & 0x10) >> 1) | ((Adr & 0x700) >> 8);
         return True;
     } else {
@@ -139,7 +140,7 @@ static Boolean GetLen(tStrComp const* pArg, Word* Erg, tSymbolFlags* pFlags) {
     if (!OK) {
         return False;
     }
-    if (mFirstPassUnknown(*pFlags)) {
+    if (mFirstPassUnknownOrQuestionable(*pFlags)) {
         *Erg = 8;
     }
     if (!ChkRange(*Erg, 1, 8)) {
@@ -225,7 +226,8 @@ static void DecodeXMIT(Word Code) {
                 if (Rot == 0xffff) {
                     Rot = (SrcLen == -1) ? 0 : SrcLen;
                 }
-                if ((SrcLen != -1) && (Rot != SrcLen)) {
+                if ((SrcLen != -1) && (Rot != SrcLen)
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_ConfOpSizes);
                 } else {
                     Adr = EvalStrIntExpression(&ArgStr[1], Int5, &OK);
@@ -289,7 +291,8 @@ static void DecodeAri(Word Code) {
                     if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen)) {
                         if (SrcReg < 16) {
                             WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-                        } else if ((SrcLen != -1) && (SrcLen != Rot)) {
+                        } else if ((SrcLen != -1) && (SrcLen != Rot)
+                                   && !mFirstPassUnknownOrQuestionable(Flags)) {
                             WrError(ErrNum_ConfOpSizes);
                         } else {
                             WAsmCode[0]
@@ -311,7 +314,7 @@ static void DecodeAri(Word Code) {
 
                 OK = GetLen(&ArgStr[2], &Rot, &Flags);
                 if (OK) {
-                    if (mFirstPassUnknown(Flags)) {
+                    if (mFirstPassUnknownOrQuestionable(Flags)) {
                         Rot = DestLen;
                     }
                     if (DestLen == -1) {
@@ -383,7 +386,8 @@ static void DecodeXEC(Word Code) {
                         if (Rot == 0xffff) {
                             Rot = (SrcLen == -1) ? 0 : SrcLen;
                         }
-                        if ((SrcLen != -1) && (Rot != SrcLen)) {
+                        if ((SrcLen != -1) && (Rot != SrcLen)
+                            && !mFirstPassUnknownOrQuestionable(Flags)) {
                             WrError(ErrNum_ConfOpSizes);
                         } else {
                             WAsmCode[0] = EvalStrIntExpression(&DispArg, UInt5, &OK);
@@ -443,7 +447,8 @@ static void DecodeNZT(Word Code) {
                 if (Rot == 0xffff) {
                     Rot = (SrcLen == -1) ? 0 : SrcLen;
                 }
-                if ((SrcLen != -1) && (Rot != SrcLen)) {
+                if ((SrcLen != -1) && (Rot != SrcLen)
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_ConfOpSizes);
                 } else {
                     Adr = EvalStrIntExpressionWithFlags(

@@ -1411,3 +1411,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     like numeric address 46. Test all four bit instructions plus named BIT
     definitions on both CPUs against identical numeric-equivalent bytes.
     Validation: all 400 CTest cases pass with embedded/external catalogs.
+
+111. 8x30x provisional IV symbol/length guards.
+    Forward IV objects and explicit lengths prematurely conflict with known
+    operand lengths in XMIT/arithmetic/XEC/NZT. Read register-object flags and
+    treat unknown/questionable lengths as unspecified. Defer explicit length
+    comparisons for provisional symbols, retaining destination-based automatic
+    length inference and final mismatch rejection. Tests reproduce all five
+    failing paths, forward destinations and known invalid final lengths on
+    both CPUs; known-symbol original bytes retained.
+    Validation: all 401 CTest cases pass with embedded/external catalogs.
