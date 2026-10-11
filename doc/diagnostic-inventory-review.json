@@ -314,8 +314,13 @@
         "ErrNum_InstructionNotSupported": 1,
         "ErrNum_InvAddrMode": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InAccPageErr",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_InvAddrMode"
+      ],
+      "status": "complete",
+      "review_notes": "All five historical sites reviewed in tranche 54: supported CPU via positioned minimum-CPU helper, invalid I/Z/L option at its letter, Z/L conflict, literal ISZ/DCA requiring I, and forced zero-page target plus field-specific interval. Preserve field/page masks, literal allocation, flags and accepted encodings. Adjacent field/current-page messages will be reviewed separately."
     },
     "code61860.c": {
       "candidate_counts": {

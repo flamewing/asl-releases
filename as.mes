@@ -1385,6 +1385,22 @@ Message ErrMsgTooManyAddressDisplacements
  "Indexadresse erlaubt h&ouml;chstens einen Verschiebungsausdruck"
  "indexed address allows at most one displacement expression"
 
+Message ErrMsg6100AddressOption
+ "Adressoption '%c' unzul&auml;ssig; erlaubt sind I (indirekt), Z (Nullseite) und L (Literal)"
+ "invalid address option '%c'; allowed options are I (indirect), Z (zero page) and L (literal)"
+
+Message ErrMsg6100LiteralZeroPage
+ "L (Literal) darf nicht mit Z (Nullseite) kombiniert werden"
+ "L (literal) cannot be combined with Z (zero page)"
+
+Message ErrMsg6100LiteralIndirect
+ "ISZ/DCA mit L (Literal) erfordert I (indirekt)"
+ "ISZ/DCA with L (literal) requires I (indirect)"
+
+Message ErrMsg6100ZeroPageTarget
+ "Nullseitenziel 0x%lllx au&szlig;erhalb [0x%lllx,0x%lllx]"
+ "zero-page target 0x%lllx outside [0x%lllx,0x%lllx]"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

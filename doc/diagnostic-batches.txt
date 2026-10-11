@@ -836,3 +836,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all five CPUs, both bit forms, every shared mask caller,
     zero/nonzero/negative timer values, THB-variable CPUs and primary errors.
     Validation: all 381 CTest cases pass with embedded/external catalogs.
+
+54. Complete IM6100 historical CPU/options/zero-page inventory review.
+    1500 uses existing localized, positioned minimum-CPU helper for 6120.
+    1350 identifies invalid I/Z/L option at its character, conflicting Z/L,
+    or missing I for literal ISZ/DCA. Forced zero-page 2270 shows actual
+    target and field-specific zero-page interval at the target operand.
+    Retain IDs, option parsing, field/page masks, flags, literal allocation
+    and accepted bytes. Tests cover every memory-reference caller, both
+    CPUs, all CPU-restricted callers, literal restrictions, field zero-page
+    ranges, zero/current-page endpoints, forward symbols and preceding bytes.
+    Validation: all 382 CTest cases pass with embedded/external catalogs.

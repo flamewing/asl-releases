@@ -12,6 +12,9 @@
 
 #include "code6100.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -98,11 +101,9 @@ static Boolean ChkValidInst(Word Index) {
         return False;
     }
 
-    if (Flags & F_6120) {
-        if (MomCPU < CPU6120) {
-            WrError(ErrNum_InstructionNotSupported);
-            return False;
-        }
+    if ((Flags & F_6120)
+        && !AChkMinCPUExtPos(CPU6120, ErrNum_InstructionNotSupported, &OpPart)) {
+        return False;
     }
 
     if (Flags & F_Panel) {
@@ -154,16 +155,22 @@ static void DecodeMR(Word Index) {
                 Literal = True;
                 break;
             default:
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+                char detail[200];
+                tStrComp component;
+                StrCompRefRight(&component, &ArgStr[1], i);
+                StrCompShorten(&component, strlen(component.str.p_str) - 1);
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg6100AddressOption),
+                            ArgStr[1].str.p_str[i]);
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &component.Pos);
                 return;
             }
         }
         if (!CurrPage && Literal) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsg6100LiteralZeroPage), &ArgStr[1].Pos);
             return;
         }
         if (Literal && !Indirect && (NCode == 02000 || NCode == 03000)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsg6100LiteralIndirect), &ArgStr[1].Pos);
             return;
         }
         adrPos = 2;
@@ -223,7 +230,11 @@ static void DecodeMR(Word Index) {
 
         if (!CurrPage && (Adr & 07600)) {
             /* Not in ZERO page */
-            WrError(ErrNum_InAccPageErr);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg6100ZeroPageTarget),
+                        (LargeWord)Adr, (LargeWord)(Adr & 070000),
+                        (LargeWord)((Adr & 070000) | 00177));
+            WrXErrorPos(ErrNum_InAccPageErr, detail, &ArgStr[adrPos].Pos);
             return;
         }
         if (!(Adr & 07600)) {
