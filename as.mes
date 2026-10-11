@@ -1581,6 +1581,10 @@ Message ErrMsgMemoryShiftCount
  "Schiebebefehle mit Speicheroperand erfordern Anzahl 1 (erhielt %llld)"
  "memory-form shifts require count 1 (got %llld)"
 
+Message ErrMsgOptionalExtensionDisabled
+ "%s-Erweiterung ist ausgeschaltet; mit %s ON einschalten"
+ "%s extension is disabled; use %s ON to enable it"
+
 Message ErrMsgMinCPUSupported
  "ab %s unterst&uuml;tzt"
  "supported by %s and above"

@@ -12,6 +12,9 @@
 
 #include "codepdp11.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -234,6 +237,8 @@ static void onoff_ext_add(unsigned ext, Boolean def_value) {
  * \return True if usage is OK
  * ------------------------------------------------------------------------ */
 
+static void wr_cpu_extension_error(unsigned ext);
+
 static Boolean check_cpu_ext(unsigned ext) {
     unsigned mask = 1 << ext;
 
@@ -244,11 +249,7 @@ static Boolean check_cpu_ext(unsigned ext) {
             && ext_avail[ext]) {
         return True;
     } else {
-        if (ext < e_ext_opt_cnt) {
-            WrXErrorPos(ErrNum_InstructionNotSupported, ext_names[ext], &OpPart.Pos);
-        } else {
-            WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
-        }
+        wr_cpu_extension_error(ext);
         return False;
     }
 }
@@ -421,7 +422,25 @@ static Boolean decode_imm8(tStrComp const* p_arg, Word* p_value) {
 
 static Boolean check_mode_mask(unsigned mode_mask, unsigned act_mask, tStrComp* p_arg) {
     if (!(mode_mask & act_mask)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        char forms[240], detail[300];
+        *forms = '\0';
+        if (mode_mask & MModReg) {
+            strmaxcat(forms, op_size >= eSymbolSizeFloat32Bit ? "AC0..AC5" : "%0..%7", sizeof(forms));
+        }
+        if (mode_mask & MModMem) {
+            if (*forms) {
+                strmaxcat(forms, " / ", sizeof(forms));
+            }
+            strmaxcat(forms, "@Rn / (Rn)+ / -(Rn) / displacement(Rn) / target (also deferred with @)", sizeof(forms));
+        }
+        if (mode_mask & MModImm) {
+            if (*forms) {
+                strmaxcat(forms, " / ", sizeof(forms));
+            }
+            strmaxcat(forms, "#immediate", sizeof(forms));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
         return False;
     } else {
         return True;
@@ -629,7 +648,9 @@ static Boolean decode_ac_03(tStrComp* p_arg, Word* p_result) {
     }
     *p_result = adr_vals.mode & 7;
     if (*p_result > 3) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "AC0..AC3");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
         return False;
     }
     return True;
@@ -1082,7 +1103,9 @@ static void decode_cis_ld(Word code) {
     if (ChkArgCnt(1, 1) && check_cpu_ext(e_ext_cis)
         && decode_adr(&ArgStr[1], &adr_vals, EProgCounter() + 2, MModMem)) {
         if ((adr_vals.mode & 070) != 020) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "(Rn)+");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         } else {
             append_word(code | (adr_vals.mode & 07));
         }
@@ -1233,12 +1256,19 @@ static void decode_branch(Word code) {
 
         if (eval_result.OK) {
             if ((dist & 1) && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-                WrStrErrorPos(ErrNum_DistIsOdd, &ArgStr[1]);
+                char detail[240];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                            (LargeInt)dist, (LargeInt)2, (LargeWord)EProgCounter() + 2);
+                WrXErrorPos(ErrNum_DistIsOdd, detail, &ArgStr[1].Pos);
             } else {
                 dist /= 2;
                 if (!RangeCheck(dist, SInt8)
                     && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-                    WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                    char detail[240];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                                (LargeInt)dist * 2, (LargeInt)-256, (LargeInt)254,
+                                (LargeWord)EProgCounter() + 2, (LargeInt)2);
+                    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
                 } else {
                     append_word((code & 0xff00) | (dist & 0x00ff));
                 }
@@ -1266,12 +1296,19 @@ static void decode_sob(Word code) {
             return;
         }
         if ((dist & 1) && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-            WrStrErrorPos(ErrNum_DistIsOdd, &ArgStr[2]);
+            char detail[240];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                        (LargeInt)dist, (LargeInt)2, (LargeWord)EProgCounter() + 2);
+            WrXErrorPos(ErrNum_DistIsOdd, detail, &ArgStr[2].Pos);
         } else {
             dist /= 2;
             if (((dist > 0) || (dist < -63))
                 && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
+                char detail[240];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                            (LargeInt)dist * 2, (LargeInt)-126, (LargeInt)0,
+                            (LargeWord)EProgCounter() + 2, (LargeInt)2);
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[2].Pos);
             } else {
                 append_word(
                         (code & 0177000) | ((reg_adr_vals.mode & 7) << 6)
@@ -1508,10 +1545,13 @@ static Boolean decode_adr_01(tStrComp* p_arg, adr_vals_t* p_vals) {
             break;
         }
         /* else fall-through */
-    default:
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+    default: {
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "(Rn) / @(Rn) / @0(Rn)");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
         reset_adr_vals(p_vals);
         return False;
+    }
     }
     return True;
 }
@@ -1612,7 +1652,10 @@ static void check_alignment(Word index) {
         if (DoPadding) {
             InsertPadding(1, False);
         } else {
-            WrError(ErrNum_AddrNotAligned);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                        (LargeWord)EProgCounter());
+            WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
         }
     }
 }
@@ -2317,6 +2360,30 @@ static cpu_props_t const cpu_props[] = {
 
         {          "WD16", UInt16,                                0, e_cpu_flag_wd16 | e_cpu_flag_sob_sxt},
 };
+
+static void wr_cpu_extension_error(unsigned ext) {
+    char detail[700];
+    unsigned mask = 1 << ext;
+    if ((ext < e_ext_opt_cnt) && (p_curr_cpu_props->opt_flags & mask)) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOptionalExtensionDisabled),
+                    ext_names[ext], ext_names[ext]);
+    } else {
+        cpu_props_t const* p_prop;
+        Boolean first = True;
+        strmaxcpy(detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(detail));
+        for (p_prop = cpu_props; p_prop < cpu_props + as_array_size(cpu_props); p_prop++) {
+            if ((p_prop->flags | p_prop->opt_flags) & mask) {
+                if (!first) {
+                    strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(detail));
+                }
+                strmaxcat(detail, p_prop->name, sizeof(detail));
+                first = False;
+            }
+        }
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(detail));
+    }
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
+}
 
 void codepdp11_init(void) {
     cpu_props_t const* p_prop;

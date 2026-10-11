@@ -1522,3 +1522,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     failures, odd/far target positions, EXPECT/no emission and captured original
     endpoint/forward encodings on PDP-11 and WD16.
     Validation: all 404 CTest cases pass with embedded/external catalogs.
+
+123. PDP-11/WD16 diagnostic details and full historical inventory review.
+    Branch/SOB constraints show byte displacement, aligned interval and PC+2;
+    mask failures show allowed register/memory/immediate forms; specialized
+    FP11 AC0..3, CIS post-increment and WD16 zero-displacement modes name forms.
+    Alignment warning shows instruction PC. CPU gates distinguish disabled
+    optional extension (enable directive) from unsupported CPU (eligible CPU list).
+    Immediate-size default remains unchanged: instruction handlers set only
+    supported sizes or unknown, which already has a dedicated diagnostic.
+    Preserve IDs, predicates, padding behavior and original accepted bytes.
+    Validation: all 404 CTest cases pass with embedded/external catalogs; focused tests also pass after C11 case-block cleanup.

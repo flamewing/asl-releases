@@ -1231,8 +1231,16 @@
         "ErrNum_InvOpSize": 1,
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_DistIsOdd",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All twelve historical candidates reviewed in tranches 122-123: branch/SOB actual aligned displacement intervals and PC+2; mode masks, AC subset, CIS/WD16 forms; instruction alignment; disabled optional extensions vs CPU availability. Immediate invalid-size default is unreachable with instruction-set sizes (8/16/32/F32/F64), while unknown has its dedicated diagnostic; unchanged. SOB primary failure/position fixed separately. Predicates/IDs/accepted bytes retained."
     },
     "codepseudo.c": {
       "candidate_counts": {
