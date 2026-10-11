@@ -1749,9 +1749,10 @@ static void DecodeMOV(Word Index) {
             return;
         }
 
-        if (DecodeRelative(&ArgStr[2], &regd, &disp, &flags)) { /* (4) */
-            if ((size == 0x00 && imm >= -128 && imm < 256)
-                || (size != 0x00 && imm >= 0 && imm < 256)) {
+        if (DecodeRelative(&ArgStr[2], &regd, &disp, &flags2)) { /* (4) */
+            if (((size == 0x00 && imm >= -128 && imm < 256)
+                 || (size != 0x00 && imm >= 0 && imm < 256))
+                && ChkDisp5(size, disp, flags2)) {
                 disp2 = DispSize5(size, disp);
 
                 BAsmCode[0] = 0x3C | size;

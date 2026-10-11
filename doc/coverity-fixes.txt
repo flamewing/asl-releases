@@ -229,15 +229,20 @@ These pending IDs remain provisional; no Coverity triage state was changed.
 Pending findings reviewed without a new code change
 
 914420, coderx.c:DispSize5
-  All three callers first call ChkDisp5, which ensures valid scale and
-  displacement range when known. Unknown first-pass expressions can
-  exceed Byte, but encoding consumes only the low five displacement bits;
-  later passes range-check the resolved value. Request the event trace
-  before treating that narrowing as an actual faulty final encoding.
+  The warned negative-scale path is unreachable through valid decoded
+  instruction attributes. However, the five-CID report identifies a fourth
+  caller, immediate MOV to relative memory, which lacked ChkDisp5 and
+  silently truncated resolved displacements. See the ninth batch below;
+  this supersedes the earlier assessment based on only three callers.
 914388, as.c:IRP_OutProcessor
   CompressLine returns a replacement count; zero replacements are valid,
   and the caller needs the changed line rather than that count. Ignoring
-  this return is intentional. Confirm the warned call from the event trace.
+  this return is intentional. The five-CID report confirms the call site.
+  IRP/IRPC require a valid placeholder before installing the output tag;
+  IRPN validates all ParamCnt placeholders and sets ParIter to ParamCnt.
+  Invalid declarations discard the tag and consume through ENDM instead.
+  Thus the trace's null-placeholder branch is not a valid installed tag.
+  No code change or triage-state change is needed for the return count.
 350653 and 350764, alink.c:ProcessFile
   The second batch now checks both PartRun and PartRun->RelocInfo before
   processing relocated records. Review the next scan to determine whether
@@ -266,3 +271,17 @@ ADDC expansions for zero, small positive/negative, signed boundary, and
 unsigned encoded-negative offsets. Check both lower-bound rejection
 cases at each width, and extended offsets crossing bit 15. Full suites
 pass in both catalog configurations. Await Coverity rescan confirmation.
+
+Ninth batch: RX immediate MOV displacement encoding (914420 review)
+
+Require ChkDisp5 before selecting immediate-to-relative compact MOV.
+Resolved displacements above 31 scaled units now use the existing wider
+encoding; misaligned word/long operands are rejected. Decode displacement
+flags into flags2 to preserve the immediate's own first-pass flags.
+
+Validation: golden byte checks for byte displacements 0, 31, 32, 255, 256;
+word 0, 62, 64, 512; long 0, 124, 128, 1024. Repeat using forward-referenced
+immediate and displacements. Reject word offset 1 and long offsets 1..3.
+All 337 tests pass in both catalog configurations. The original warned
+scale path remains a false positive; the actual truncation bug is fixed.
+No Coverity triage states were changed.
