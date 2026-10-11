@@ -593,11 +593,11 @@ static void DecodeCobr(Word Index) {
         }
         if (OK) {
             if (AdrInt & 3) {
-                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4088, True);
+                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4092, True);
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags)
-                    && ((AdrInt < -4096) || (AdrInt > 4090))) {
-                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4088, False);
+                    && ((AdrInt < -4096) || (AdrInt > 4092))) {
+                WrBranchConstraint(&ArgStr[3], AdrInt, -4096, 4092, False);
             } else {
                 DAsmCode[0] = (Op->Code << 24) + (S1Reg << 19) + (S2Reg << 14)
                               + (S1Mode << 13) + (AdrInt & 0x1ffc);

@@ -1321,3 +1321,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Source: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf
     Validation: all 397 CTest cases pass with embedded/external catalogs.
     WSL: 64-bit-long parser accepted scale 4294967297 before; focused suite passes after.
+
+101. i960 COBR valid positive displacement endpoint.
+    Intel manual D.3 defines signed word displacements [-1024,1023], hence
+    aligned byte interval [-4096,4092]. The historical >4090 check rejects
+    representable 4092. Correct predicate and diagnostic upper bound to 4092.
+    Tests verify this endpoint for all 16 target-bearing COBR opcodes, reject
+    4096, preserve lower/wrapped endpoints, alignment and preceding bytes.
+    Source: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf
+    Validation: all 397 CTest cases pass with embedded/external catalogs.

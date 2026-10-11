@@ -743,7 +743,7 @@
         "ErrNum_OverRange"
       ],
       "status": "complete",
-      "review_notes": "All seven historical sites reviewed in tranche 99: register group-start alignment, mask-specific operand forms, permitted constants, signed 32-bit wrapped CTRL/COBR displacement/alignment and four-byte instruction alignment warning. Related five memory-address rejection paths identify repeated components, scale choices and forbidden IP/index combination. Preserve IDs, severity, encoding/range predicates; report COBR effective aligned maximum 4088 while retaining historical >4090 predicate. Adjacent evaluation/forward-expression bugs fixed in tranches 97/98."
+      "review_notes": "All seven historical sites reviewed in tranche 99: register group-start alignment, mask-specific operand forms, permitted constants, signed 32-bit wrapped CTRL/COBR displacement/alignment and four-byte instruction alignment warning. Related five memory-address rejection paths identify repeated components, scale choices and forbidden IP/index combination. Preserve IDs, severity, encoding/range predicates; report COBR effective aligned maximum 4088 while retaining historical >4090 predicate. Adjacent evaluation/forward-expression bugs fixed in tranches 97/98. Tranche 101 subsequently corrects the COBR upper bound/diagnostic to 4092 after Intel manual D.3 verification."
     },
     "code96c141.c": {
       "candidate_counts": {
@@ -1748,7 +1748,7 @@
     {
       "file": "code960.c",
       "issue": "COBR rejects displacement 4092 with historical >4090 predicate, although Intel manual D.3 defines signed word displacement [-1024,1023], hence byte interval [-4096,4092].",
-      "status": "confirmed during tranche 99; queued separately; https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf section D.3"
+      "status": "fixed in tranche 101; use correct aligned upper displacement 4092 for all 16 target-bearing COBR callers and diagnostics, preserve other accepted encodings. Intel manual D.3: https://datasheets.chipdb.org/Intel/80960/manuals/27071003.pdf"
     }
   ]
 }
