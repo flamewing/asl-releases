@@ -2565,9 +2565,9 @@ void EvalExpression(char const* pExpr, TempResult* pErg) {
     EvalStrExpression(&Expr, pErg);
 }
 
-LargeInt EvalStrIntExprWithResultAndCallback(
+static LargeInt eval_str_int_expr_with_range_check(
         tStrComp const* pComp, IntType Type, tEvalResult* pResult,
-        as_eval_cb_data_t* p_callback_data) {
+        as_eval_cb_data_t* p_callback_data, as_int_range_check_t range_check) {
     TempResult t;
     LargeInt   Result = -1;
 
@@ -2609,8 +2609,10 @@ LargeInt EvalStrIntExprWithResultAndCallback(
         Result &= IntTypeDefs[(int)Type].Mask;
     }
 
-    pResult->OK = HardRanges ? ChkRangeByType(Result, Type, pComp)
-                             : ChkRangeWarnByType(Result, Type, pComp);
+    pResult->OK = range_check
+                          ? range_check(Result, Type, pComp, !HardRanges)
+                          : (HardRanges ? ChkRangeByType(Result, Type, pComp)
+                                        : ChkRangeWarnByType(Result, Type, pComp));
     if (!pResult->OK) {
         if (HardRanges) {
             FreeRelocs(&LastRelocs);
@@ -2625,6 +2627,21 @@ LargeInt EvalStrIntExprWithResultAndCallback(
 func_exit:
     as_tempres_free(&t);
     return Result;
+}
+
+LargeInt EvalStrIntExprWithResultAndCallback(
+        tStrComp const* pComp, IntType Type, tEvalResult* pResult,
+        as_eval_cb_data_t* p_callback_data) {
+    return eval_str_int_expr_with_range_check(pComp, Type, pResult, p_callback_data, NULL);
+}
+
+LargeInt EvalStrIntExpressionWithRangeCheck(
+        tStrComp const* pComp, IntType Type, tEvalResult* pResult,
+        as_int_range_check_t range_check) {
+    as_eval_cb_data_t cb_data;
+
+    as_eval_cb_data_ini(&cb_data, NULL);
+    return eval_str_int_expr_with_range_check(pComp, Type, pResult, &cb_data, range_check);
 }
 
 LargeInt EvalStrIntExpressionWithResult(

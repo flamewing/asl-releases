@@ -1305,6 +1305,10 @@ Message ErrMsgCannotSplitArg
  "Kann Argument nicht in Teile aufspalten"
  "failed splitting argument into parts"
 
+Message ErrMsgEADispRange
+ "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
+ "effective address displacement %llld outside [%llld,%llld]"
+
 Message ErrMsgMinCPUSupported
  "ab %s unterst&uuml;tzt"
  "supported by %s and above"

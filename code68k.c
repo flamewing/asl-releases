@@ -13,6 +13,7 @@
 #include "code68k.h"
 
 #include "as_endian.h"
+#include "as.rsc"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -27,6 +28,7 @@
 #include "ieeefloat.h"
 #include "motpseudo.h"
 #include "nls.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -1060,6 +1062,32 @@ static char GetMatchingBrace(char token) {
     return '\0';
 }
 
+static void report_ea_disp_range(
+        LargeInt disp, LargeInt min, LargeInt max, tErrorNum error_num,
+        tStrComp const* p_arg) {
+    char detail[160];
+
+    as_snprintf(
+            detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+            disp, min, max);
+    WrXErrorPos(error_num, detail, &p_arg->Pos);
+}
+
+static Boolean check_ea_disp_range(
+        LargeInt value, IntType type, tStrComp const* p_arg, Boolean warning) {
+    tIntTypeDef const* p_type = &IntTypeDefs[(int)type];
+    tErrorNum error_num;
+
+    if (RangeCheck(value, type)) {
+        return True;
+    }
+    error_num = (value < p_type->Min)
+                        ? (warning ? ErrNum_WUnderRange : ErrNum_UnderRange)
+                        : (warning ? ErrNum_WOverRange : ErrNum_OverRange);
+    report_ea_disp_range(value, p_type->Min, p_type->Max, error_num, p_arg);
+    return False;
+}
+
 static tSymbolSize deduce_outdisp_size_32_16(
         LongInt* p_disp, tEvalResult const* p_eval_result, tStrComp const* p_arg) {
     if (IsDisp16(*p_disp)) {
@@ -1082,7 +1110,9 @@ static tSymbolSize deduce_outdisp_size_32_16(
     }
 #endif
     else {
-        WrStrErrorPos((*p_disp > 0) ? ErrNum_OverRange : ErrNum_UnderRange, p_arg);
+        report_ea_disp_range(
+                *p_disp, -32768, 32767,
+                (*p_disp > 0) ? ErrNum_OverRange : ErrNum_UnderRange, p_arg);
         return eSymbolSizeUnknown;
     }
 }
@@ -1109,7 +1139,9 @@ static tSymbolSize deduce_outdisp_size_32_8(
     }
 #endif
     else {
-        WrStrErrorPos((*p_disp > 0) ? ErrNum_OverRange : ErrNum_UnderRange, p_arg);
+        report_ea_disp_range(
+                *p_disp, -128, 127,
+                (*p_disp > 0) ? ErrNum_OverRange : ErrNum_UnderRange, p_arg);
         return eSymbolSizeUnknown;
     }
 }
@@ -1624,8 +1656,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                                                                        : SInt16;
                     }
 
-                    HVal = EvalStrIntExpressionWithResult(
-                            &OutDisp, DispIntType, &eval_result);
+                    HVal = EvalStrIntExpressionWithRangeCheck(
+                            &OutDisp, DispIntType, &eval_result, check_ea_disp_range);
                     if (!eval_result.OK) {
                         return ModNone;
                     }
@@ -1689,8 +1721,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                                           : ((OutDispLen >= eSymbolSize16Bit) ? SInt16
                                                                               : SInt8);
                 }
-                HVal = EvalStrIntExpressionWithResult(
-                        &OutDisp, DispIntType, &eval_result);
+                HVal = EvalStrIntExpressionWithRangeCheck(
+                        &OutDisp, DispIntType, &eval_result, check_ea_disp_range);
                 if (!eval_result.OK) {
                     return ModNone;
                 }
@@ -1764,7 +1796,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     pResult->AdrPart = 0x3a;
                     if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
                         && !IsDisp16(HVal)) {
-                        WrError(ErrNum_DistTooBig);
+                        report_ea_disp_range(
+                                HVal, -32768, 32767, ErrNum_DistTooBig, &OutDisp);
                         return ModNone;
                     }
                     pResult->AdrMode = ModPC;
@@ -1817,7 +1850,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 case eSymbolSize8Bit:
                     if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
                         && !IsDisp8(HVal)) {
-                        WrError(ErrNum_DistTooBig);
+                        report_ea_disp_range(
+                                HVal, -128, 127, ErrNum_DistTooBig, &OutDisp);
                         return ModNone;
                     }
                     append_adr_vals(
@@ -1832,7 +1866,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 case eSymbolSize16Bit:
                     if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
                         && !IsDisp16(HVal)) {
-                        WrError(ErrNum_DistTooBig);
+                        report_ea_disp_range(
+                                HVal, -32768, 32767, ErrNum_DistTooBig, &OutDisp);
                         return ModNone;
                     }
                     append_adr_vals_const(pResult, ext_word | 0x120);
@@ -2062,7 +2097,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     case eSymbolSize16Bit:
                         if (!IsDisp16(HVal)
                             && !mFirstPassUnknownOrQuestionable(symbol_flags)) {
-                            WrError(ErrNum_DistTooBig);
+                            report_ea_disp_range(
+                                    HVal, -32768, 32767, ErrNum_DistTooBig,
+                                    &AdrComps[0].Comp);
                             return ModNone;
                         }
                         goto PCIs16;
@@ -2119,7 +2156,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         }
                     case eSymbolSize16Bit:
                         if (!IsDisp16(HVal)) {
-                            WrError(ErrNum_DistTooBig);
+                            report_ea_disp_range(
+                                    HVal, -32768, 32767, ErrNum_DistTooBig,
+                                    &AdrComps[0].Comp);
                             return ModNone;
                         }
                     AnIs16:

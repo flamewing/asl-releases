@@ -246,6 +246,14 @@ extern LargeInt EvalStrIntExpressionWithFlags(
         tSymbolFlags* pFlags);
 extern LargeInt EvalStrIntExpressionWithResult(
         const struct sStrComp* pExpr, IntType Type, struct sEvalResult* pResult);
+
+/* A range checker returns False after reporting an out-of-range value.
+   warning is True for soft ranges; the evaluator retains masking/cleanup. */
+typedef Boolean (*as_int_range_check_t)(
+        LargeInt value, IntType type, const struct sStrComp* p_comp, Boolean warning);
+extern LargeInt EvalStrIntExpressionWithRangeCheck(
+        const struct sStrComp* pExpr, IntType Type, struct sEvalResult* pResult,
+        as_int_range_check_t range_check);
 extern LargeInt EvalStrIntExprWithResultAndCallback(
         const struct sStrComp* pExpr, IntType Type, struct sEvalResult* pResult,
         as_eval_cb_data_t* p_callback_data);

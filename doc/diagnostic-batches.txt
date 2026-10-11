@@ -1,0 +1,56 @@
+Improved diagnostics implementation batches (GitHub #13)
+https://github.com/flamewing/asl-releases/issues/13
+
+Audit IDs refer to diagnostic-audit.txt, based on revision 4730f629.
+Preserve existing error numbers unless the meaning itself changes. For
+each batch, review error-messages.md, numeric references elsewhere in the
+manual, EXPECT fixtures, translations and source-position tests.
+
+1. M68K effective-address numeric diagnostics (D01; range portion of D02).
+   Implemented: computed displacement, full allowed range, operand position.
+   Keep 1315/1320/1330 and warning 255/260. Details follow existing -x behavior.
+   English/German catalogs updated; documentation describes these arguments.
+   The evaluator accepts an optional range-check callback so the original
+   integer type, unknown-symbol masking, soft ranges and relocation cleanup
+   remain in the same code path. M68K uses it for address-register operands;
+   PC-relative checks report the displacement after subtracting the PC base.
+   Unsupported explicit extensions remain CPU errors; handled in batch 3.
+   Tests: exact IDs/values/ranges/positions with one error per failure;
+   boundary bytes, forward symbols, 68020 extension bytes, German detail,
+   large values and soft-range warning/masking. All 339 tests pass in each
+   of the embedded and external catalog configurations (GCC 16.2, Windows).
+
+2. M68K branches, alignment and shifts (D03,D04,D09,D10,D11).
+   Include branch distance/width/base, distinguish reserved zero BSR, show
+   alignment address/requirement, suppress secondary shift-count errors,
+   explain memory-form size restriction. Any new error ID for zero BSR
+   needs documentation and EXPECT-reference review.
+
+3. M68K address syntax, CPU capabilities and register pairs
+   (D05,D06,D07,D08,D22; CPU portion of D02).
+   Keep specific reasons from parsing/CPU checks; locate invalid suffix,
+   scale, duplicate component or failing register-pair half. Preserve
+   normalization rules, aliases and nested-evaluator error handling.
+
+4. Other numeric/page/placement checks (D12,D13,D14,D15,D19).
+   HC12 auto-update domain, PowerPC branch bounds and four-byte alignment,
+   shared page context, 80C504 placement rule and positive array dimensions.
+   Each architecture needs its own units, base, flags and boundary cases.
+
+5. Data-directive range reporting (D18).
+   Correct overflow versus underflow, retain each directive's signed/unsigned
+   combined domain, include values and limits. Review integer layouts and
+   Motorola repetitions independently to preserve byte output and warnings.
+
+6. Function argument counts (D16,D17).
+   Include function name, declaration contract and exact or minimum observed
+   count. Preserve quoted commas, empty arguments and user-function semantics.
+
+7. Remaining CPU/operand constraints (D21,D23).
+   Minimum-CPU detail with source position; AVR LPM/ELPM accepted forms and
+   pointer/register overlap. Check actual helper output before changing it.
+
+8. Mapping/wrap-sensitive checks and further inventory review (D20,D24).
+   eZ80 page assumptions, physical translation context and MSP430X signed
+   displacement/wrap rules. Then expand manual review of the mechanical
+   inventory; its entries are candidates, not confirmed required changes.
