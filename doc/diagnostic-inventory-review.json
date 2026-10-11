@@ -1654,6 +1654,11 @@
       "file": "codest6.c",
       "issue": "DecodeRel shifts a negative signed displacement left by three when encoding backward short branches, invoking undefined C behavior.",
       "status": "fixed in tranche 83; cast to unsigned Word before packing; WSL UBSan reproduced left shift of negative value -1 before the fix and focused tests pass afterward, preceding backward bytes preserved"
+    },
+    {
+      "file": "codest6.c",
+      "issue": "Regular and bit-test relative branch decoders reject provisional distances of first-pass unknown forward expressions before final symbols resolve.",
+      "status": "fixed in tranche 84; defer range checks for first-pass unknown/questionable expressions, all six branch callers verified on both CPU address-width families"
     }
   ]
 }

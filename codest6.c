@@ -387,7 +387,7 @@ static void DecodeRel(Word Code) {
                          - (EProgCounter() + 1);
 
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt < -16) || (AdrInt > 15))) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -16) || (AdrInt > 15))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 CodeLen     = 1;
@@ -551,7 +551,7 @@ static void DecodeJRR_JRS(Word Code) {
         AdrInt      = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], UInt16, &OK, &Flags)
                       - (EProgCounter() + 3);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 CodeLen     = 3;

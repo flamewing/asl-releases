@@ -1157,3 +1157,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     wrapped-address bytes remain unchanged on 12-/13-bit CPUs. WSL native
     UBSan focused suite passes with the fix.
     Validation: all 393 CTest cases pass with embedded/external catalogs.
+
+84. Separate ST6 provisional forward-expression branch rejection.
+    Reproduced JRZ target+1000 at ORG 256 failing 1370 before a later EQU
+    resolves it to displacement 1. Regular and bit-test decoders now defer
+    their range checks while first-pass unknown/questionable. Preserve final
+    5-/8-bit signed intervals, signed 16-bit wrap, instruction lengths and
+    accepted bytes. Tests cover all six callers on 12-/13-bit CPUs, eventual
+    valid/excessive expressions and single primary undefined-symbol errors.
+    Validation: all 393 CTest cases pass with embedded/external catalogs.
