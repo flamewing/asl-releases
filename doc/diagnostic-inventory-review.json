@@ -1619,6 +1619,11 @@
       "file": "codescmp.c",
       "issue": "Pointer-order and JS callers add InvReg after pointer decoding has already emitted the primary operand-size/range/undefined diagnostic.",
       "status": "fixed in tranche 76; emit only on successful pointer decoding and retain the primary failure"
+    },
+    {
+      "file": "codescmp.c",
+      "issue": "Absolute-address PC-relative decoding rejects provisional displacement of a first-pass unknown forward expression before its target resolves.",
+      "status": "fixed in tranche 77; defer displacement-range rejection for first-pass unknown/questionable targets; all 14 memory/branch callers verified"
     }
   ]
 }

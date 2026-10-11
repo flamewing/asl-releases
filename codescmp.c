@@ -273,7 +273,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, Boolean MayInc, Byte PCDisp, Byte
            (-128) does not signify usage of E register, and can be used at
            this place: */
 
-        else if ((Disp > 0x7f) && (Disp < 0xf80)) {
+        else if (!mFirstPassUnknownOrQuestionable(Flags)
+                 && (Disp > 0x7f) && (Disp < 0xf80)) {
             WrError(ErrNum_DistTooBig);
         } else {
             BAsmCode[1] = Disp & 0xff;

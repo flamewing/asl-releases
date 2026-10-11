@@ -1088,3 +1088,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all three pointer orders and JS, size/range/undefined errors,
     one exact-position error per failure, rejected words and preceding bytes.
     Validation: all 391 CTest cases pass with embedded/external catalogs.
+
+77. Separate SC/MP provisional forward-expression range rejection.
+    Reproduced JMP target+1000 at ORG 256 failing 1330 although later
+    target EQU resolves it to displacement 1. Defer the displacement check
+    while first-pass unknown/questionable; preserve final range/page checks,
+    12-bit page-local wrap and accepted bytes. Plain forward labels already
+    worked. Tests cover all 14 shared memory/branch callers, eventual valid
+    and excessive values, single undefined errors and page-wrap bytes.
+    Validation: all 391 CTest cases pass with embedded/external catalogs.
