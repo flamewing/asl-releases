@@ -750,3 +750,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     forces 0xc0, below accepted minimum 0xd0, immediately issuing 1320.
     Correct that first-pass substitution separately in tranche 47.
     Validation: all 376 CTest cases pass with embedded/external catalogs.
+
+47. Separate NEC 7508 CALT forward-target placeholder bug.
+    Force bit 4 as well as bits 6/7 for unknown targets so the provisional
+    value lies in accepted [0xd0,0xff], replacing the invalid 0xc0 guess.
+    Known-address evaluation and final encoding remain unchanged. Forward
+    targets now resolve instead of failing in pass one; missing targets
+    give primary 1010, and resolved out-of-range targets still give 1320.
+    Tests cover forward values across every high-nibble transition through
+    [0xd0,0xff], both resolved invalid neighbors, missing symbols and all
+    preceding pointer/target endpoint encodings.
+    Validation: all 376 CTest cases pass with embedded/external catalogs.

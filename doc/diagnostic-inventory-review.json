@@ -507,7 +507,7 @@
         "ErrNum_OverRange"
       ],
       "status": "complete",
-      "review_notes": "Tranche 46: all four historical candidates identify CPU-specific pointer forms, CAL disjoint target intervals or LHLT/CALT target interval. IDs, masks and known-address encoding unchanged; first-pass CALT placeholder defect reproduced for separate tranche 47."
+      "review_notes": "Tranche 46: all four historical candidates identify CPU-specific pointer forms, CAL disjoint target intervals or LHLT/CALT target interval. IDs, masks and known-address encoding unchanged. Tranche 47 fixes CALT first-pass placeholder separately."
     },
     "code7700.c": {
       "candidate_counts": {
@@ -1480,7 +1480,7 @@
     {
       "file": "code75xx.c",
       "issue": "CALT first-pass unknown target is forced to 0xc0, below minimum 0xd0, rejecting forward references before resolution.",
-      "status": "reproduced; fix separately in tranche 47"
+      "status": "fixed in tranche 47; provisional target forced into [0xd0,0xff], forward endpoints and resolved errors verified"
     }
   ]
 }

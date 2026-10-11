@@ -233,7 +233,8 @@ static void DecodeCALT(Word Index) {
                 = EvalStrIntExpressionWithResult(&ArgStr[1], CodeIntType, &EvalResult);
 
         if (mFirstPassUnknown(EvalResult.Flags)) {
-            Address = (Address & 0x00ff) | 0x00c0;
+            /* Keep the provisional target inside CALT's [0xd0,0xff] interval. */
+            Address = (Address & 0x00ff) | 0x00d0;
         }
         if (EvalResult.OK) {
             if ((Address < 0xd0) || (Address > 0xff)) {
