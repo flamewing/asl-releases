@@ -1012,3 +1012,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     and register-dependent instruction lengths, resolved excessive values,
     single undefined-target errors and preceding accepted branch bytes.
     Validation: all 388 CTest cases pass with embedded/external catalogs.
+
+70. Complete TMS7000 historical operand/register/branch/TRAP review.
+    1350 lists mask-specific forms and #/% aliases at the operand; 1445
+    identifies the required B index register at the offending component.
+    1370 reports signed 16-bit wrapped displacement, [-128,127] and the
+    instruction-specific PC base for regular, bit-test and DJNZ branches.
+    TRAP 1320 gives the evaluated value and full [0,23] interval.
+    Preserve IDs, numeric register/port and accumulator aliases, wrapped
+    arithmetic, instruction lengths and accepted encodings. Tests cover
+    branch aliases, accumulator/register/port lengths, exact positions,
+    range endpoints, address wrap and preceding operand bytes.
+    Validation: all 388 CTest cases pass with embedded/external catalogs.

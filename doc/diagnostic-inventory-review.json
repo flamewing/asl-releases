@@ -1281,8 +1281,14 @@
         "ErrNum_JmpDistTooBig": 3,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All six historical candidates reviewed in tranche 70: mask-specific address forms, B-only indexed register, signed 16-bit wrapped branch distance and instruction-specific PC base, and TRAP value/full interval. Preserve A/B register/address aliases, numeric register/port domains, #/% aliases and encoding lengths. Tranche 69 separately fixes provisional forward-expression rejection in all three branch decoders."
     },
     "codeuc43.c": {
       "candidate_counts": {

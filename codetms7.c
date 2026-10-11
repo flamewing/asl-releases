@@ -12,6 +12,9 @@
 
 #include "codetms7.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -56,9 +59,41 @@ static Byte     AdrVals[2];
 /*---------------------------------------------------------------------------*/
 /* helpers */
 
-static void ChkAdr(Word Mask) {
+static void ChkAdr(Word Mask, tStrComp const* operand) {
     if ((AdrType != -1) && ((Mask & (1L << AdrType)) == 0)) {
-        WrError(ErrNum_InvAddrMode);
+        char forms[320] = "", detail[400];
+        if (Mask & (MModAccA | MModReg | MModAbs)) {
+            strmaxcat(forms, "A, ", sizeof(forms));
+        }
+        if (Mask & (MModAccB | MModReg | MModAbs)) {
+            strmaxcat(forms, "B, ", sizeof(forms));
+        }
+        if (Mask & MModReg) {
+            strmaxcat(forms, "R0..R255, expr (0..255), ", sizeof(forms));
+        }
+        if (Mask & MModPort) {
+            strmaxcat(forms, "P0..P255, expr (256..511), ", sizeof(forms));
+        }
+        if (Mask & MModAbs) {
+            strmaxcat(forms, "expr, @expr, ", sizeof(forms));
+        }
+        if (Mask & MModBRel) {
+            strmaxcat(forms, "expr(B), @expr(B), ", sizeof(forms));
+        }
+        if (Mask & MModIReg) {
+            strmaxcat(forms, "*expr, ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, %expr, ", sizeof(forms));
+        }
+        if (Mask & MModImmBRel) {
+            strmaxcat(forms, "#expr(B), %expr(B), ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
         AdrType = ModNone;
         AdrCnt  = 0;
     }
@@ -87,7 +122,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             AdrVals[1] = 0;
             AdrType    = ModAbs;
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     }
 
@@ -104,7 +139,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             AdrVals[1] = 1;
             AdrType    = ModAbs;
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     }
 
@@ -143,7 +178,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 AdrType = ModImm;
             }
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     }
 
@@ -153,7 +188,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
             AdrCnt  = 1;
             AdrType = ModIReg;
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     }
 
@@ -208,7 +243,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 AdrType    = ModAbs;
             }
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     } else {
         tStrComp Left, Right;
@@ -223,10 +258,12 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 AdrCnt     = 2;
                 AdrType    = ModBRel;
             } else {
-                WrStrErrorPos(ErrNum_InvReg, &Right);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "B");
+                WrXErrorPos(ErrNum_InvReg, detail, &Right.Pos);
             }
         }
-        ChkAdr(Mask);
+        ChkAdr(Mask, pArg);
         return;
     }
 }
@@ -247,6 +284,13 @@ static void DecodeFixed(Word Index) {
     }
 }
 
+static void WrBranchRange(Integer distance, LargeWord pc_base, tStrComp const* operand) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)distance, (LargeInt)-128, (LargeInt)127, pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &operand->Pos);
+}
+
 static void DecodeRel8(Word Index) {
     if (ChkArgCnt(1, 1)) {
         Boolean      OK;
@@ -257,7 +301,7 @@ static void DecodeRel8(Word Index) {
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags)
                 && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(AdrInt, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 CodeLen     = 2;
                 BAsmCode[0] = Index;
@@ -412,7 +456,7 @@ static void DecodeALU2(Word Index) {
                 CodeLen = 0;
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(AdrInt, EProgCounter() + CodeLen + 1, &ArgStr[3]);
                 CodeLen = 0;
             } else {
                 BAsmCode[CodeLen++] = AdrInt & 0xff;
@@ -483,7 +527,7 @@ static void DecodeDJNZ(Word code) {
                 CodeLen = 0;
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags) & ((AdrInt > 127) || (AdrInt < -128))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(AdrInt, EProgCounter() + CodeLen + 1, &ArgStr[2]);
                 OK = False;
             }
             if (!OK) {
@@ -833,7 +877,10 @@ static void DecodeTRAP(Word Index) {
         }
         if (OK) {
             if (BAsmCode[0] > 23) {
-                WrError(ErrNum_OverRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            "TRAP", (LargeInt)BAsmCode[0], (LargeInt)0, (LargeInt)23);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = 0xff - BAsmCode[0];
                 CodeLen     = 1;
