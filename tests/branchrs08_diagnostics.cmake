@@ -102,3 +102,15 @@ check_bytes(decrement 68RS08 " org $1000\n dbnza *+129\n dbnzx *-125\n dbnz $20,
 check_bytes(bits 68RS08 " org $1000\n brset0 $12,*+130\n brclr 7,$20,*-125\n brset 0,d[x],*+130\n brclr 0,x,*-125" "00127f0f2080000e7f010f80")
 check_bytes(forward 68RS08 " org $1000\n cbeq $20,target\ntarget equ $1008" "312005")
 
+
+# Suffix bit syntax must recognize the address operand, as explicit bits do.
+check_bytes(suffix-brset-x 68RS08 " brset0 x,*+3\n brset1 x,*+3\n brset2 x,*+3\n brset3 x,*+3\n brset4 x,*+3\n brset5 x,*+3\n brset6 x,*+3\n brset7 x,*+3" "000f00020f00040f00060f00080f000a0f000c0f000e0f00")
+check_bytes(suffix-brset-dx 68RS08 " brset0 d[x],*+3\n brset1 d[x],*+3\n brset2 d[x],*+3\n brset3 d[x],*+3\n brset4 d[x],*+3\n brset5 d[x],*+3\n brset6 d[x],*+3\n brset7 d[x],*+3" "000e00020e00040e00060e00080e000a0e000c0e000e0e00")
+check_bytes(suffix-brclr-x 68RS08 " brclr0 x,*+3\n brclr1 x,*+3\n brclr2 x,*+3\n brclr3 x,*+3\n brclr4 x,*+3\n brclr5 x,*+3\n brclr6 x,*+3\n brclr7 x,*+3" "010f00030f00050f00070f00090f000b0f000d0f000f0f00")
+check_bytes(suffix-brclr-dx 68RS08 " brclr0 d[x],*+3\n brclr1 d[x],*+3\n brclr2 d[x],*+3\n brclr3 d[x],*+3\n brclr4 d[x],*+3\n brclr5 d[x],*+3\n brclr6 d[x],*+3\n brclr7 d[x],*+3" "010e00030e00050e00070e00090e000b0e000d0e000f0e00")
+check_diagnostic(suffix-x-high 68RS08 " org $1000\n brset0 x,*+131" 1370
+    "branch displacement 128 outside [-128,127] (PC base 0x1003)" 4 11)
+check_diagnostic(suffix-dx-low 68RS08 " org $1000\n brclr7 d[x],*-126" 1370
+    "branch displacement -129 outside [-128,127] (PC base 0x1003)" 4 14)
+check_diagnostic(suffix-undefined 68RS08 " brset0 x,missing" 1010 "symbol undefined" 3 11)
+check_bytes(suffix-forward 68RS08 " brclr7 d[x],target\ntarget equ 5" "0f0e02")

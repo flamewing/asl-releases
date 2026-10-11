@@ -430,3 +430,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     direct/forced address forms, exact positions, one primary error,
     German detail, valid forward short operands and prior golden bytes.
     Validation: all 357 CTest cases pass with embedded/external catalogs.
+
+22. Separate RS08 bit-test operand bug discovered during review.
+    decode_brset_brclr_core now uses arg_index for X/D[X] recognition,
+    as its numeric address evaluation and sibling BSET/BCLR already do.
+    Suffix BRSETn/BRCLRn previously inspected the target operand instead
+    of the address, then incorrectly evaluated X/D[X] as a symbol/expression.
+    Explicit-bit syntax and numeric addresses are unchanged. Tests cover all
+    16 suffix mnemonics with X and D[X], compare bytes with the preceding
+    executable's explicit-bit forms, and check range/undefined/forward
+    targets with exact target positions and one primary error.
+    Validation: all 357 CTest cases pass with embedded/external catalogs.

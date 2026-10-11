@@ -415,7 +415,7 @@
         "ErrNum_JmpDistTooBig"
       ],
       "status": "complete",
-      "review_notes": "All historical candidates reviewed in tranches 17 and 21, plus adjacent 1340 short-address checks. Separate suffix-bit operand bug remains in followups."
+      "review_notes": "All historical candidates reviewed in tranches 17 and 21, plus adjacent 1340 short-address checks. Suffix-bit operand bug fixed separately in tranche 22."
     },
     "code7000.c": {
       "candidate_counts": {
@@ -1334,7 +1334,8 @@
   "followups": [
     {
       "file": "code68rs08.c",
-      "reason": "decode_brset_brclr_core tests ArgStr[2] for X/D[X], ignoring arg_index for suffix bit syntax. Verify and fix separately from branch-message-only tranche."
+      "reason": "decode_brset_brclr_core tests ArgStr[2] for X/D[X], ignoring arg_index for suffix bit syntax. Verify and fix separately from branch-message-only tranche.",
+      "status": "fixed in tranche 22"
     }
   ]
 }

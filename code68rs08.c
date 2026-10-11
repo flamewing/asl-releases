@@ -672,9 +672,9 @@ static void decode_bset_bclr_2(Word code) {
 static void decode_brset_brclr_core(Word code, int arg_index) {
     Boolean ok = True;
 
-    if (!as_strcasecmp(ArgStr[2].str.p_str, "D[X]")) {
+    if (!as_strcasecmp(ArgStr[arg_index].str.p_str, "D[X]")) {
         BAsmCode[1] = 0x0e;
-    } else if (!as_strcasecmp(ArgStr[2].str.p_str, "X")) {
+    } else if (!as_strcasecmp(ArgStr[arg_index].str.p_str, "X")) {
         BAsmCode[1] = 0x0f;
     } else {
         BAsmCode[1] = EvalStrIntExpression(&ArgStr[arg_index], Int8, &ok);
