@@ -1761,7 +1761,7 @@
     {
       "file": "tipseudo.c",
       "issue": "Qxx/LQxx and TI34x DATA reject provisional first-pass forward expression values even when the final scaled/integer result is in range.",
-      "status": "confirmed during tranche 103; queued separately, Q15/LQ31 target+1 with target=-1 and DATA target+4294967296 with target=-4294967295"
+      "status": "fixed in tranche 104; evaluate Qxx/LQxx with flags and use zero provisional value before scaling/casting unresolved expressions; defer DATA integer range rejection consistently with other TI stores; actual known failures and accepted bytes retained"
     }
   ]
 }

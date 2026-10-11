@@ -82,10 +82,14 @@ static void pseudo_qxx(Integer num) {
             break;
         }
 
-        res = as_ldexp(EvalStrFloatExpression(pArg, &ok), num);
+        tEvalResult result;
+        res = EvalStrFloatExpressionWithResult(pArg, &result);
+        ok = result.OK;
         if (!ok) {
             break;
         }
+        /* Do not scale/cast an unresolved provisional value. */
+        res = mFirstPassUnknownOrQuestionable(result.Flags) ? 0 : as_ldexp(res, num);
 
         if ((res > 32767.49) || (res < -32768.49)) {
             ok = False;
@@ -116,10 +120,14 @@ static void pseudo_lqxx(Integer num) {
             break;
         }
 
-        res = as_ldexp(EvalStrFloatExpression(pArg, &ok), num);
+        tEvalResult result;
+        res = EvalStrFloatExpressionWithResult(pArg, &result);
+        ok = result.OK;
         if (!ok) {
             break;
         }
+        /* Do not scale/cast an unresolved provisional value. */
+        res = mFirstPassUnknownOrQuestionable(result.Flags) ? 0 : as_ldexp(res, num);
 
         if ((res > 2147483647.49) || (res < -2147483647.49)) {
             ok = False;
@@ -728,7 +736,8 @@ static void DecodeDATA_TI34x(Word Code) {
             switch (t.Typ) {
             case TempInt:
             ToInt:
-                if (!RangeCheck(t.Contents.Int.Value, Int32)) {
+                if (!mFirstPassUnknownOrQuestionable(t.Flags)
+                    && !RangeCheck(t.Contents.Int.Value, Int32)) {
                     OK = False;
                     wr_integer_range(pArg, t.Contents.Int.Value, (LargeInt)-2147483648LL, (LargeInt)4294967295LL);
                 } else {

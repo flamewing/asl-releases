@@ -1349,3 +1349,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover every site, upper/lower/scaled/second-argument failures, no
     partial emission and preceding endpoint/fractional/packing bytes.
     Validation: all 398 CTest cases pass with embedded/external catalogs.
+
+104. TI fixed-point/data provisional forward-expression guards.
+    Q15/LQ31 target+1 (target=-1) and 34x DATA target+4294967296
+    (target=-4294967295) previously fail range checks before symbols resolve.
+    Evaluate Qxx/LQxx with flags and choose zero provisional value before
+    scaling/casting unknown/questionable operands. Defer DATA integer rejection
+    as other TI stores already do. Preserve known range failures and valid
+    bytes; tests include forward results at scale 99 without unsafe casts.
+    Validation: all 398 CTest cases pass with embedded/external catalogs.
