@@ -222,8 +222,12 @@
         "ErrNum_InvAddrMode": 4,
         "ErrNum_JmpDistTooBig": 4
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All eight historical sites reviewed in tranche 106: mask-specific address forms/immediate domain, two disjoint bit-address intervals with actual address, ST non-stack operand alternatives, and four relative branch displacement/PC-base sites. Correct packed nonbranch bit error source from ArgStr[0] to actual bit operand. Preserve IDs, operand aliases, 16-bit displacement wrapping and accepted bytes; provisional branch checks fixed in tranche 105."
     },
     "code4004.c": {
       "candidate_counts": {

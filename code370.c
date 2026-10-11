@@ -12,6 +12,9 @@
 
 #include "code370.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -108,6 +111,39 @@ static char* HasDisp(tStrComp const* arg, Boolean* valid) {
     WrBracketError(arg, "()", False);
     *valid = False;
     return NULL;
+}
+
+static void WrAddressForms(const tStrComp* arg, Word mask) {
+    static const char* const forms[] = {
+        "A", "B", "R0..R255 / 0..255 / A / B", "P0..P255 / 1000h..10ffh",
+        "expression", "expression(B)", "disp(SP)", "@Rn",
+        "disp(Rn)", "#expression", "#expression(B)", "#disp(Rn)"
+    };
+    char choices[640] = "", detail[800];
+    for (unsigned mode = 0; mode < as_array_size(forms); mode++) {
+        if (mask & (1 << mode)) {
+            if (*choices) strmaxcat(choices, "; ", sizeof(choices));
+            strmaxcat(choices, mode == ModImm
+                        ? (OpSize == eSymbolSize16Bit ? "#expression (-32768..65535)"
+                                                     : "#expression (-128..255)")
+                        : forms[mode], sizeof(choices));
+        }
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
+static void WrBitAddress(const tStrComp* arg, Word address) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg370BitAddress), (LargeWord)address);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
+static void WrBranchRange(const tStrComp* arg, Integer displacement, LargeWord pc) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)displacement, (LargeInt)-128, (LargeInt)127, pc);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &arg->Pos);
 }
 
 static adr_mode_t DecodeAdrRel(
@@ -303,7 +339,7 @@ static adr_mode_t DecodeAdrRel(
 
 chk:
     if ((adr_mode != ModNone) && (!(Mask & (1 << adr_mode)))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        WrAddressForms(pArg, Mask);
         adr_mode = ModNone;
         reset_adr_vals(p_vals);
     }
@@ -379,7 +415,7 @@ static Boolean DecodeBitExpr(int Start, int Stop, LongWord* pResult) {
             }
             if (Addr & 0xef00) /* 00h...0ffh, 1000h...10ffh allowed */
             {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[Stop]);
+                WrBitAddress(&ArgStr[Stop], Addr);
                 return False;
             }
         }
@@ -626,7 +662,7 @@ static void DecodeRel8(Word Code) {
 
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                WrBranchRange(&ArgStr[1], AdrInt, EProgCounter() + 2);
             } else {
                 PutCode(Code);
                 set_b_guessed(Flags, CodeLen, 1, 0xff);
@@ -865,7 +901,7 @@ static void DecodeALU2(Word Code) {
                 CodeLen = 0;
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
+                WrBranchRange(&ArgStr[3], AdrInt, EProgCounter() + CodeLen + 1);
                 CodeLen = 0;
             } else {
                 set_b_guessed(Flags, CodeLen, 1, 0xff);
@@ -919,7 +955,7 @@ static void DecodeABReg(Word Code) {
             BAsmCode[0] = 0xf3 + Code;
             CodeLen     = 1;
         } else {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            WrAddressForms(&ArgStr[1], MModAccA | MModAccB | MModReg);
         }
     } else {
         adr_vals_t adr_vals;
@@ -948,7 +984,7 @@ static void DecodeABReg(Word Code) {
                 CodeLen = 0;
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
+                WrBranchRange(&ArgStr[2], AdrInt, EProgCounter() + CodeLen + 1);
                 CodeLen = 0;
             } else {
                 set_b_guessed(Flags, CodeLen, 1, 0xff);
@@ -983,7 +1019,7 @@ static void DecodeBit(Word Code) {
             CodeLen     = 3;
             break;
         default:
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[ArgCnt - 1]);
+            WrBitAddress(&ArgStr[ArgCnt - Rela], Addr);
         }
         if ((CodeLen != 0) && Rela) {
             tSymbolFlags Flags;
@@ -995,7 +1031,7 @@ static void DecodeBit(Word Code) {
                 CodeLen = 0;
             } else if (
                     !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
+                WrBranchRange(&ArgStr[ArgCnt], AdrInt, EProgCounter() + CodeLen + 1);
                 CodeLen = 0;
             } else {
                 set_b_guessed(Flags, CodeLen, 1, 0xff);

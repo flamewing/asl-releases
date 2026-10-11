@@ -1366,3 +1366,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     accepted bytes. Tests cover all 18 short-branch aliases and both BTJ/JBIT
     aliases plus DJNZ across all five CPU names; final displacement is one.
     Validation: all 399 CTest cases pass with embedded/external catalogs.
+
+106. Complete TMS370 address/bit/branch diagnostic review.
+    1350 lists current mask forms and byte/word immediate domain; identifies
+    actual bit operand address and disjoint [0,255]/[4096,4351] intervals.
+    Non-stack ST rejection lists accumulator/register alternatives. Packed
+    nonbranch bit errors formerly point at ArgStr[0]/column 0; select actual
+    bit operand consistently for packed and explicit/relative forms. Four
+    1370 sites give signed 16-bit wrapped displacement, [-128,127] and actual
+    PC base (fixed/variable instruction length). Preserve IDs, aliases, syntax
+    and accepted bytes; tests cover all callers, variable lengths, both bit
+    encodings, primary positions and wrapped/endpoints.
+    Validation: all 399 CTest cases pass with embedded/external catalogs.
