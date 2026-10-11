@@ -13,6 +13,7 @@
 #include "asmallg.h"
 
 #include "as.h"
+#include "as.rsc"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -1587,7 +1588,7 @@ static void CodeLISTING(Word Index) {
     }
 }
 
-void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPath) {
+Boolean INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPath) {
     size_t l = strlen(pArg->str.p_str), offs = 0;
     int    this_pass;
 
@@ -1596,8 +1597,12 @@ void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPat
         if ((l > 1) && (pArg->str.p_str[l - 1] == '"')) {
             l -= 2;
         } else {
-            WrStrErrorPos(ErrNum_BrackErr, pArg);
-            return;
+            char detail[180];
+            tLineComp pos = pArg->Pos;
+            pos.Len = 1;
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIncludeQuote), '"', '"');
+            WrXErrorPos(ErrNum_BrackErr, detail, &pos);
+            return False;
         }
     }
     StrCompCopySub(pDest, pArg, offs, l);
@@ -1623,9 +1628,10 @@ void INCLUDE_SearchCore(tStrComp* pDest, tStrComp const* pArg, Boolean SearchPat
                 FExpand(pDest->str.p_str, STRINGSIZE, FoundFileName);
             }
         } else {
-            return;
+            return True;
         }
     }
+    return True;
 }
 
 static void CodeBINCLUDE(Word Index) {
@@ -1669,7 +1675,9 @@ static void CodeBINCLUDE(Word Index) {
             String   FNameArgStr;
 
             StrCompMkTemp(&FNameArg, FNameArgStr, sizeof(FNameArgStr));
-            INCLUDE_SearchCore(&FNameArg, &ArgStr[1], True);
+            if (!INCLUDE_SearchCore(&FNameArg, &ArgStr[1], True)) {
+                return;
+            }
 
             F = fopen(FNameArg.str.p_str, OPENRDMODE);
             if (F == NULL) {

@@ -1987,3 +1987,19 @@ Message ErrMsgBracketMissing
 Message ErrMsgBracketCapacity
  "Klammer-Verschachtelung &uuml;berschreitet die Parsergrenze von %u"
  "bracket nesting exceeds parser limit of %u"
+
+Message ErrMsgIncludeQuote
+ "Nicht geschlossenes Anf&uuml;hrungszeichen '%c'; erwartet '%c' vor Ende des Dateinamens"
+ "unclosed quote '%c'; expected '%c' before end of file name"
+
+Message ErrMsgVectorOpening
+ "Vektorkoordinaten erfordern &ouml;ffnende Klammer '('; gefunden '%c'"
+ "vector coordinates require opening bracket '('; got '%c'"
+
+Message ErrMsgVectorOpeningEnd
+ "Vektorkoordinaten erfordern &ouml;ffnende Klammer '('; Eingabeende erreicht"
+ "vector coordinates require opening bracket '('; reached end of input"
+
+Message ErrMsgVectorClosing
+ "Vektorkoordinaten erfordern abschlie&szlig;ende Klammer ')'; gefunden '%c'"
+ "vector coordinates require final closing bracket ')'; got '%c'"

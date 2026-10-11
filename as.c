@@ -2286,7 +2286,9 @@ static void ExpandINCLUDE_Core(tStrComp const* pArg, Boolean SearchPath) {
     PInputTag Tag;
 
     StrCompMkTemp(&FNameArg, FNameArgStr, sizeof(FNameArgStr));
-    INCLUDE_SearchCore(&FNameArg, pArg, SearchPath);
+    if (!INCLUDE_SearchCore(&FNameArg, pArg, SearchPath)) {
+        return;
+    }
 
     /* Tag erzeugen */
 

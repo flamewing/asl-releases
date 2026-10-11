@@ -227,3 +227,30 @@ manual, EXPECT fixtures, translations and source-position tests.
     required opening delimiter from an unbalanced pair. INCLUDE's missing
     quote also uses 1300 and currently continues into a file-opening error;
     review that control flow separately from expression brackets.
+    Implemented all remaining direct backend 1300 callers. Displacement
+    and rotation scans in 370/8X30X/9900 now retain the source component
+    and distinguish malformed delimiters from absence of displacement;
+    their callers stop after the primary error. TMS7 and KCPSM also stop
+    after delimiter failures. Backward scans in these paths and 960 no
+    longer step before their operand buffers. NS32K reports the original
+    EXT opener even though the operand split already removed it.
+    Vector coordinates distinguish mandatory opening/final closing
+    delimiters from mismatched closers; a trailing character after a
+    balanced pair is not described as an unclosed pair. Empty coordinate
+    tails cannot form a pointer before the buffer.
+    INCLUDE_SearchCore returns failure for an unclosed filename quote.
+    INCLUDE/BINCLUDE stop before using its uninitialized output, creating
+    an input tag or opening a file. Error 1300 locates the opening quote
+    and states the expected quote/end-of-filename condition. Successful
+    filename search and existing delimiter/quote grammars are unchanged.
+    Validation: all 346 CTest cases pass with embedded/external catalogs.
+    Focused tests check IDs, positions, single errors and German detail;
+    golden bytes from the preceding executable cover every affected CPU.
+    Quoted/unquoted INCLUDE, filenames with spaces and BINCLUDE still
+    work, and EXPECT tests confirm assembly resumes after malformed quotes.
+
+11. Expand manual inventory review: 65xx relative branches.
+    Review code65.c branch-distance checks from D03's follow-up examples.
+    Report the computed displacement, instruction-specific PC base and
+    encoding range; preserve CPU variants, forward-symbol handling and
+    existing branch selection. Verify endpoints and valid encoded bytes.

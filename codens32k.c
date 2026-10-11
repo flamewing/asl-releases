@@ -737,7 +737,9 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
         StrCompSplitRef(&Left, &Mid, pArg, pSplit - 1);
         pSplit = FindClosingParenthese(Mid.str.p_str);
         if (!pSplit) {
-            WrStrErrorPos(ErrNum_BrackErr, pArg);
+            /* StrCompSplitRef has already removed the opening delimiter. */
+            WrBracketErrorPos(pArg, Mid.Pos.StartCol - pArg->Pos.StartCol - 1,
+                    '(', ')', True);
             return False;
         }
         StrCompSplitRef(&Mid, &Right, &Mid, pSplit);

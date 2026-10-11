@@ -171,11 +171,12 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask, int Segment) {
     ArgLen = strlen(pArg->str.p_str);
     if ((ArgLen >= 4) && (pArg->str.p_str[ArgLen - 1] == ')')) {
         p = pArg->str.p_str + ArgLen - 1;
-        while ((p >= pArg->str.p_str) && (*p != '(')) {
+        while ((p > pArg->str.p_str) && (*p != '(')) {
             p--;
         }
         if (*p != '(') {
-            WrError(ErrNum_BrackErr);
+            WrBracketError(pArg, "()", False);
+            return;
         } else {
             tStrComp RegComp, DispComp;
 

@@ -76,35 +76,28 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* Erg) {
     return OK;
 }
 
-static char* HasDisp(char* Asc) {
-    char* p;
-    int   Lev, Len = strlen(Asc);
-
-    if ((Len >= 2) && (Asc[Len - 1] == ')')) {
-        p   = Asc + Len - 2;
-        Lev = 0;
-        while ((p >= Asc) && (Lev != -1)) {
-            switch (*p) {
-            case '(':
-                Lev--;
-                break;
-            case ')':
-                Lev++;
-                break;
-            }
-            if (Lev != -1) {
-                p--;
-            }
-        }
-        if (Lev != -1) {
-            WrError(ErrNum_BrackErr);
-            p = NULL;
-        }
-    } else {
-        p = NULL;
+static char* HasDisp(tStrComp const* arg, Boolean* valid) {
+    char* start = arg->str.p_str;
+    size_t length = strlen(start);
+    unsigned level = 1;
+    *valid = True;
+    if (length < 2 || start[length - 1] != ')') {
+        return NULL;
     }
-
-    return p;
+    /* Stop at the beginning without forming a pointer before the buffer. */
+    for (char* pos = start + length - 1; pos > start;) {
+        --pos;
+        if (*pos == '(') {
+            if (!--level) {
+                return pos;
+            }
+        } else if (*pos == ')') {
+            level++;
+        }
+    }
+    WrBracketError(arg, "()", False);
+    *valid = False;
+    return NULL;
 }
 
 static Boolean DecodeAdr(tStrComp const* pArg) {
@@ -135,7 +128,10 @@ static Boolean DecodeAdr(tStrComp const* pArg) {
         tStrComp IArg;
 
         StrCompRefRight(&IArg, pArg, 1);
-        p = HasDisp(IArg.str.p_str);
+        p = HasDisp(&IArg, &OK);
+        if (!OK) {
+            return False;
+        }
         if (!p) {
             tSymbolFlags Flags;
 

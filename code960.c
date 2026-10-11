@@ -358,13 +358,11 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                 if (Index != NOREG) {
                     return AddrError(ErrNum_InvAddrMode);
                 }
-                for (p = Arg.str.p_str + ArgLen - 1; p >= Arg.str.p_str; p--) {
-                    if (*p == '[') {
-                        break;
-                    }
+                for (p = Arg.str.p_str + ArgLen - 1; p > Arg.str.p_str && *p != '['; p--) {
                 }
-                if (p < Arg.str.p_str) {
-                    return AddrError(ErrNum_BrackErr);
+                if (*p != '[') {
+                    WrBracketErrorPos(&Arg, ArgLen - 1, ']', 0, False);
+                    return -1;
                 }
                 StrCompShorten(&Arg, 1);
                 StrCompSplitRef(&Arg, &RegArg, &Arg, p);
@@ -393,13 +391,11 @@ static int DecodeMem(tStrComp const* pArg, LongWord* Erg, LongWord* Ext) {
                 if (Base != NOREG) {
                     return AddrError(ErrNum_InvAddrMode);
                 }
-                for (p = Arg.str.p_str + ArgLen - 1; p >= Arg.str.p_str; p--) {
-                    if (*p == '(') {
-                        break;
-                    }
+                for (p = Arg.str.p_str + ArgLen - 1; p > Arg.str.p_str && *p != '('; p--) {
                 }
-                if (p < Arg.str.p_str) {
-                    return AddrError(ErrNum_BrackErr);
+                if (*p != '(') {
+                    WrBracketErrorPos(&Arg, ArgLen - 1, ')', 0, False);
+                    return -1;
                 }
                 StrCompShorten(&Arg, 1);
                 StrCompSplitRef(&Arg, &RegArg, &Arg, p);

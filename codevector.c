@@ -13,6 +13,9 @@
 
 #include "codevector.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -20,6 +23,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
+#include "strutil.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -104,14 +108,36 @@ static Boolean DecodeXY(tStrComp* pArg, Word* pX, Word* pY, Boolean Signed) {
     KillPostBlanksStrComp(pArg);
 
     if (*pArg->str.p_str != '(') {
-        WrError(ErrNum_BrackErr);
+        char detail[160];
+        tLineComp pos = pArg->Pos;
+        pos.Len = *pArg->str.p_str ? 1 : 0;
+        if (*pArg->str.p_str) {
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgVectorOpening),
+                    *pArg->str.p_str);
+        } else {
+            strmaxcpy(detail, getmessage(Num_ErrMsgVectorOpeningEnd), sizeof(detail));
+        }
+        WrXErrorPos(ErrNum_BrackErr, detail, &pos);
+        return False;
+    }
+    if (!pArg->str.p_str[1]) {
+        WrBracketErrorPos(pArg, 0, '(', ')', True);
         return False;
     }
     StrCompRefRight(&Tot, pArg, 1);
 
     pEnd = Tot.str.p_str + strlen(Tot.str.p_str) - 1;
     if (*pEnd != ')') {
-        WrError(ErrNum_BrackErr);
+        if (strchr("]}", *pEnd)) {
+            WrBracketErrorPos(pArg, pEnd - pArg->str.p_str, *pEnd, ')', False);
+        } else {
+            char detail[160];
+            tLineComp pos = pArg->Pos;
+            pos.StartCol += pEnd - pArg->str.p_str;
+            pos.Len = 1;
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgVectorClosing), *pEnd);
+            WrXErrorPos(ErrNum_BrackErr, detail, &pos);
+        }
         return False;
     }
     *pEnd = '\0';

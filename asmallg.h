@@ -37,7 +37,8 @@ extern void CodeREG(Word Index);
 extern void CodeNAMEREG(Word Index);
 extern void CodeINTSYNTAX(Word Index);
 
-extern void INCLUDE_SearchCore(
+/* False means the filename was rejected; pDest must not be used then. */
+extern Boolean INCLUDE_SearchCore(
         struct sStrComp* pDest, const struct sStrComp* pArg, Boolean SearchPath);
 
 extern void codeallg_init(void);

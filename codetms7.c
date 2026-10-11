@@ -161,6 +161,10 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
 
     l = strlen(Expr.str.p_str);
     if ((*Expr.str.p_str) && (Expr.str.p_str[l - 1] == ')')) {
+        if (l == 1) {
+            WrBracketError(&Expr, "()", False);
+            return;
+        }
         p   = Expr.str.p_str + l - 2;
         Lev = 0;
         while ((p >= Expr.str.p_str) && (Lev != -1)) {
@@ -172,13 +176,15 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 Lev++;
                 break;
             }
-            if (Lev != -1) {
+            if (Lev != -1 && p > Expr.str.p_str) {
                 p--;
+            } else {
+                break;
             }
         }
-        if (p < Expr.str.p_str) {
-            WrError(ErrNum_BrackErr);
-            p = NULL;
+        if (Lev != -1) {
+            WrBracketError(&Expr, "()", False);
+            return;
         }
     } else {
         p = NULL;

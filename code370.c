@@ -86,35 +86,28 @@ static void append_adr_vals(adr_vals_t const* p_vals) {
     CodeLen += p_vals->count;
 }
 
-static char* HasDisp(char* Asc) {
-    char* p;
-    int   Lev;
-
-    if ((*Asc) && (Asc[strlen(Asc) - 1] == ')')) {
-        p   = Asc + strlen(Asc) - 2;
-        Lev = 0;
-        while ((p >= Asc) && (Lev != -1)) {
-            switch (*p) {
-            case '(':
-                Lev--;
-                break;
-            case ')':
-                Lev++;
-                break;
-            }
-            if (Lev != -1) {
-                p--;
-            }
-        }
-        if (p < Asc) {
-            WrXError(ErrNum_BrackErr, Asc);
-            return NULL;
-        }
-    } else {
-        p = NULL;
+static char* HasDisp(tStrComp const* arg, Boolean* valid) {
+    char* start = arg->str.p_str;
+    size_t length = strlen(start);
+    unsigned level = 1;
+    *valid = True;
+    if (!length || start[length - 1] != ')') {
+        return NULL;
     }
-
-    return p;
+    /* Stop at the beginning without forming a pointer before the buffer. */
+    for (char* pos = start + length - 1; pos > start;) {
+        --pos;
+        if (*pos == '(') {
+            if (!--level) {
+                return pos;
+            }
+        } else if (*pos == ')') {
+            level++;
+        }
+    }
+    WrBracketError(arg, "()", False);
+    *valid = False;
+    return NULL;
 }
 
 static adr_mode_t DecodeAdrRel(
@@ -163,7 +156,10 @@ static adr_mode_t DecodeAdrRel(
         tStrComp Arg;
 
         StrCompRefRight(&Arg, pArg, 1);
-        p = HasDisp(Arg.str.p_str);
+        p = HasDisp(&Arg, &OK);
+        if (!OK) {
+            return ModNone;
+        }
         if (!p) {
             switch (OpSize) {
             case eSymbolSize8Bit:
@@ -233,7 +229,10 @@ static adr_mode_t DecodeAdrRel(
         goto chk;
     }
 
-    p = HasDisp(pArg->str.p_str);
+    p = HasDisp(pArg, &OK);
+    if (!OK) {
+        return ModNone;
+    }
 
     if (!p) {
         HVal = EvalStrIntExpressionWithFlags(pArg, Int16, &OK, &p_vals->flags);

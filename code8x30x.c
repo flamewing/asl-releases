@@ -108,36 +108,28 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* Erg, ShortInt* ErgLen) {
     }
 }
 
-static char* HasDisp(char* Asc) {
-    int   Lev;
-    char* z;
-    int   l = strlen(Asc);
-
-    if (Asc[l - 1] == ')') {
-        z   = Asc + l - 2;
-        Lev = 0;
-        while ((z >= Asc) && (Lev != -1)) {
-            switch (*z) {
-            case '(':
-                Lev--;
-                break;
-            case ')':
-                Lev++;
-                break;
-            }
-            if (Lev != -1) {
-                z--;
-            }
-        }
-        if (Lev != -1) {
-            WrError(ErrNum_BrackErr);
-            return NULL;
-        }
-    } else {
-        z = NULL;
+static char* HasDisp(tStrComp const* arg, Boolean* valid) {
+    char* start = arg->str.p_str;
+    size_t length = strlen(start);
+    unsigned level = 1;
+    *valid = True;
+    if (!length || start[length - 1] != ')') {
+        return NULL;
     }
-
-    return z;
+    /* Stop at the beginning without forming a pointer before the buffer. */
+    for (char* pos = start + length - 1; pos > start;) {
+        --pos;
+        if (*pos == '(') {
+            if (!--level) {
+                return pos;
+            }
+        } else if (*pos == ')') {
+            level++;
+        }
+    }
+    WrBracketError(arg, "()", False);
+    *valid = False;
+    return NULL;
 }
 
 static Boolean GetLen(tStrComp const* pArg, Word* Erg, tSymbolFlags* pFlags) {
@@ -258,7 +250,10 @@ static void DecodeAri(Word Code) {
         {
             if (ArgCnt == 2) /* wenn nur zwei Operanden und Ziel Register... */
             {
-                p = HasDisp(ArgStr[1].str.p_str); /* kann eine Rotation dabei sein */
+                p = HasDisp(&ArgStr[1], &OK); /* kann eine Rotation dabei sein */
+                if (!OK) {
+                    return;
+                }
                 if (p) {                          /* jau! */
                     tStrComp RegArg, RotArg;
 
@@ -354,7 +349,10 @@ static void DecodeXEC(Word Code) {
     UNUSED(Code);
 
     if (ChkArgCnt(1, 2)) {
-        p = HasDisp(ArgStr[1].str.p_str);
+        p = HasDisp(&ArgStr[1], &OK);
+        if (!OK) {
+            return;
+        }
         if (!p) {
             WrError(ErrNum_InvAddrMode);
         } else {
