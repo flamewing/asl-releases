@@ -1194,3 +1194,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     PC+2/PC+3 bases, final range checks and instruction widths. Tests cover
     all 14 branch callers, final valid/excessive and undefined targets.
     Validation: all 394 CTest cases pass with embedded/external catalogs.
+
+88. Separate F2MC8L stale immediate-width encoding bug.
+    Reproduced CMP A,#1 after MOVW emitting an extra zero byte and CMP
+    R0,#256 accepting/truncating a word to zero. Reset the default byte width
+    at instruction dispatch; MOVW still explicitly selects word immediates.
+    All six CMP immediate address forms now match their preceding standalone
+    encodings after MOVW and reject values outside the byte domain. Tests
+    cover width isolation, primary overflow positions and forward immediates.
+    Validation: all 394 CTest cases pass with embedded/external catalogs.

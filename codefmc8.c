@@ -881,6 +881,7 @@ static void DeinitFields(void) {
 /* Interface zu AS */
 
 static void MakeCode_F2MC8(void) {
+    OpSize = 0;
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

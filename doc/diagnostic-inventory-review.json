@@ -1676,6 +1676,11 @@
       "file": "codefmc8.c",
       "issue": "Regular and bit relative branches reject first-pass unknown forward-expression provisional distances before final targets resolve.",
       "status": "fixed in tranche 87; defer unknown/questionable displacement checks in both decoders; all 14 branch aliases/callers verified"
+    },
+    {
+      "file": "codefmc8.c",
+      "issue": "MOVW leaves OpSize=1 across instructions; CMP then evaluates byte immediates as words, emits an extra byte for CMP A,#1 and accepts/truncates CMP R0,#256.",
+      "status": "fixed in tranche 88; reset default operand size at every instruction dispatch, MOVW still selects word mode explicitly; all six CMP immediate addressing forms verified before/after MOVW"
     }
   ]
 }
