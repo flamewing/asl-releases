@@ -1599,6 +1599,11 @@
       "file": "code3205x.c",
       "issue": "DecodeCond reports unknown/conflicting conditions but returns a valid encoding; duplicate condition position indexes beyond the argument list.",
       "status": "fixed in tranche 72; return NOCONDITION immediately at the offending operand and suppress encoding in branch/return/XC callers; EXPECT regressions prove no words emitted"
+    },
+    {
+      "file": "code77230.c",
+      "issue": "DecodeLDI inverts Error after both invalid destination and expression evaluation, turning an invalid destination into success and emitting a zero load.",
+      "status": "fixed in tranche 73; invert expression success only after expression evaluation; failed destination remains an error and suppresses following components and emission"
     }
   ]
 }

@@ -280,8 +280,8 @@ static void DecodeLDI(Word Index) {
         Error = True;
     } else {
         Src = EvalStrIntExpression(&ArgStr[2], Int24, &Error);
+        Error = !Error;
     }
-    Error = !Error;
     if (!Error) {
         AddComp(InstrLDI, (Src << 5) + DReg);
     }

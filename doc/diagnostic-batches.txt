@@ -1049,3 +1049,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     exact error positions and EXPECT-wrapped invalid instructions followed
     by NOP, proving only the NOP words are emitted.
     Validation: all 389 CTest cases pass with embedded/external catalogs.
+
+73. Separate NEC 77230 invalid-LDI-destination emission bug.
+    Reproduced LDI invalid,1 emitting a zero immediate load after 1445.
+    Keep destination failure as an error; invert expression-evaluation success
+    only inside the expression path. Invalid destinations no longer emit or
+    decode trailing parallel components. Preserve successful LDI encodings.
+    Tests cover invalid destination with known/undefined immediate, invalid
+    immediate with valid destination, single primary errors and EXPECT-wrapped
+    invalid loads followed by NOP, proving only the NOP word is emitted.
+    Preceding valid load/MOV/ALU words remain byte-for-byte unchanged.
+    Validation: all 390 CTest cases pass with embedded/external catalogs.
