@@ -447,10 +447,10 @@ static Boolean DecodeIntIndirect(
         return False;
     }
     pEnd = FindClosingParenthese(temp.str.p_str + 1);
-    pos  = pEnd - temp.str.p_str + 1;
     if (!pEnd) {
         return False;
     }
+    pos = pEnd - temp.str.p_str + 1;
 
     StrCompMkTemp(&temp2, Temp2, sizeof(Temp2));
     StrCompCopySub(&temp2, &temp, pos, strlen(temp.str.p_str) - pos);
@@ -1833,6 +1833,13 @@ static void DeinitFields(void) {
 /*---------------------------------------------------------------------------*/
 
 static void MakeCode_SC62015(void) {
+    /* Address decoding probes several forms. Reject malformed delimiters once,
+       before those probes can repeat an expression error or emit bytes. */
+    for (int arg = 1; arg <= ArgCnt; arg++) {
+        if (!CheckBrackets(&ArgStr[arg], "()[]{}", True)) {
+            return;
+        }
+    }
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

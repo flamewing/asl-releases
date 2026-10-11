@@ -1716,6 +1716,11 @@
       "file": "code62015.c",
       "issue": "DecodeJR ignores failed target evaluation and then checks/encodes its provisional result, causing page/range cascades after primary type or symbol failures.",
       "status": "fixed in tranche 94; return after failed evaluation before page/distance checks and encoding; all five callers verified"
+    },
+    {
+      "file": "code62015.c",
+      "issue": "Malformed internal indirect addressing subtracts a null closing-parenthesis pointer and repeated address probes emit duplicate bracket/invalid-argument errors.",
+      "status": "fixed in tranche 96; check delimiters once before decoding with quote-aware matching, guard null before pointer subtraction; primary delimiter positions and valid quoted/nested forms verified"
     }
   ]
 }

@@ -85,3 +85,11 @@ check_bytes(jr_lower SC62015 " org 253\n jr 0" "13ff")
 check_bytes(forward SC62015 " org 256\n jr target+1000\ntarget equ -741" "1201")
 
 check_diagnostic(target_page SC62015 " jr 10000h" 1331 "addresses 0x10000 (page 0x10000) and 0x0 (page 0x0) are on different pages; page size 0x10000" 3 5)
+
+check_diagnostic(bracket_mismatch SC62015 " mv a,[(bp]" 1300 "mismatched closing bracket ']'; expected ')'" 3 11)
+check_diagnostic(bracket_missing SC62015 " mv a,[(bp)" 1300 "unclosed bracket '['; expected ']' before end of input" 3 7)
+check_diagnostic(bracket_extra SC62015 " mv a,[(bp))]" 1300 "mismatched closing bracket ')'; expected ']'" 3 12)
+check_diagnostic(bracket_dest SC62015 " mv [(bp],a" 1300 "mismatched closing bracket ']'; expected ')'" 3 9)
+check_bytes(bracket_reject SC62015 " expect 1300\n mv a,[(bp]\n endexpect\n nop" "00")
+check_bytes(bracket_characters SC62015 " db '[',']','(',')','{','}'" "5b5d28297b7d")
+check_bytes(nested_address SC62015 " mv a,[(bp)+1]" "98800001")

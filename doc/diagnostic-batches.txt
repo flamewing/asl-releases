@@ -1269,3 +1269,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     historical callers, internal bases, special-register pairs, primary
     failures, page/range constraints, endpoints and forward expressions.
     Validation: all 396 CTest cases pass with embedded/external catalogs.
+
+96. SC62015 malformed-address delimiters and null-pointer subtraction.
+    MV A,[(BP] previously emitted two identical unclosed-parenthesis errors
+    followed by invalid argument. Check delimiter balance once before address
+    probes, with quote-aware matching of parentheses, brackets and braces.
+    Report one 1300 at the mismatched/missing/extra delimiter and emit no bytes.
+    Factor the existing bracket reporter into a reusable Boolean check while
+    preserving its post-failure generic fallback. Move DecodeIntIndirect's
+    null check before pointer subtraction. Tests cover both operand positions,
+    EXPECT/no emission, quoted bracket characters and valid nested addressing.
+    Validation: all 396 CTest cases pass with embedded/external catalogs.

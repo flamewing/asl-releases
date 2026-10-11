@@ -1364,9 +1364,8 @@ static int bracket_error_cb(const char* pos, as_quoted_iterator_cb_data_t* itera
     return 0;
 }
 
-/* Called only after a parser has identified a bracket failure. Its caller
-   supplies that parser's bracket alphabet and quote policy. */
-void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quoted) {
+/* Check only the caller's delimiter alphabet, using its quote policy. */
+Boolean CheckBrackets(const struct sStrComp* arg, const char* pairs, Boolean quoted) {
     bracket_error_data_t data;
     size_t length = strlen(arg->str.p_str);
     data.arg = arg;
@@ -1374,7 +1373,7 @@ void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quote
     data.stack = (const char**)malloc((length + 1) * sizeof(*data.stack));
     if (!data.stack) {
         WrStrErrorPos(ErrNum_BrackErr, arg);
-        return;
+        return False;
     }
     data.depth = 0;
     data.failed = False;
@@ -1394,12 +1393,19 @@ void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quote
             const char* opener = data.stack[data.depth - 1];
             WrBracketErrorPos(arg, opener - arg->str.p_str, *opener,
                     strchr(pairs, *opener)[1], True);
-        } else {
-            /* A caller may have discarded a delimiter before this check. */
-            WrStrErrorPos(ErrNum_BrackErr, arg);
+            data.failed = True;
         }
     }
     free(data.stack);
+    return !data.failed;
+}
+
+/* Called after a parser has identified a bracket failure; retain the generic
+   fallback if that parser already discarded the offending delimiter. */
+void WrBracketError(const struct sStrComp* arg, const char* pairs, Boolean quoted) {
+    if (CheckBrackets(arg, pairs, quoted)) {
+        WrStrErrorPos(ErrNum_BrackErr, arg);
+    }
 }
 
 /*!------------------------------------------------------------------------
