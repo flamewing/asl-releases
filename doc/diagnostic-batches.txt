@@ -379,3 +379,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     direct/X/D[X]/,X forms, both bit syntaxes, range endpoints, 14-bit limits,
     forward/undefined symbols, positions, German detail and baseline bytes.
     Validation: all 353 CTest cases pass with embedded/external catalogs.
+
+18. Further inventory review: 6804 branches.
+    Implemented both 1370 rejection sites with localized displacement,
+    full range and PC base at the target operand under -x. Preserve signed
+    16-bit wrap, Int16 evaluation, segment checks, unknown-symbol behavior,
+    [-16,15]/PC+1 for relative branches and [-128,127]/PC+3 for bit tests.
+    Tests cover both ranges/endpoints, exact positions, one primary error,
+    wrap, forward/undefined targets, German detail and prior golden bytes.
+    Validation: all 354 CTest cases pass with embedded/external catalogs.

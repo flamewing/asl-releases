@@ -12,6 +12,9 @@
 
 #include "code6804.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -115,6 +118,14 @@ static void DecodeFixed(Word Index) {
 
 /* relative/absolute Spruenge */
 
+static void report_branch_distance(Integer distance, Integer minimum, Integer maximum,
+        LongWord pc_base, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)minimum, (LargeInt)maximum, (LargeWord)pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeRel(Word Code) {
     if (ChkArgCnt(1, 1)) {
         tEvalResult EvalResult;
@@ -124,7 +135,7 @@ static void DecodeRel(Word Code) {
         if (EvalResult.OK) {
             if (!mSymbolQuestionable(EvalResult.Flags)
                 && ((AdrInt < -16) || (AdrInt > 15))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, -16, 15, EProgCounter() + 1, &ArgStr[1]);
             } else {
                 CodeLen     = 1;
                 BAsmCode[0] = Code + (AdrInt & 0x1f);
@@ -299,7 +310,7 @@ static void DecodeBRSET_BRCLR(Word Code) {
                 if (EvalResult.OK) {
                     if (!mSymbolQuestionable(EvalResult.Flags)
                         && ((AdrInt < -128) || (AdrInt > 127))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrInt, -128, 127, EProgCounter() + 3, &ArgStr[3]);
                     } else {
                         ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                         BAsmCode[2] = AdrInt & 0xff;
