@@ -1430,6 +1430,11 @@
       "file": "codekcpsm.c",
       "issue": "CALL uses ModImm ordinal instead of MModImm mask, rejecting #target despite its encoder handling immediate targets.",
       "status": "fixed in tranche 35; all five CALL conditions and UInt8 endpoints verified"
+    },
+    {
+      "file": "codehmcs400.c",
+      "issue": "DecodeAdr retains preceding operand/instruction mode after evaluation or RAM range failure, causing secondary errors or stale-mode encoding.",
+      "status": "fixed in tranche 37; reset mode before every decode, accepted bytes and primary failures verified"
     }
   ]
 }

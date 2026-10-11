@@ -631,3 +631,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     shifts and operand spellings, zero/intermediate/high invalid counts,
     forward counts, primary errors, source positions, German and prior bytes.
     Validation: all 369 CTest cases pass with embedded/external catalogs.
+
+37. Separate HMCS400 stale operand-mode bug.
+    DecodeAdr now initializes AdrMode to ModNone before each operand.
+    Previously range/evaluation failure retained the preceding decoded mode,
+    causing spurious 1350 after 1320/1010 and permitting stale-mode encoding
+    when the prior mode happened to satisfy the next mask.
+    Reproduced LD 160,A and LD missing,A double diagnostics; tests now require
+    one primary error, including failures following another instruction and
+    immediate-expression errors. Golden bytes and forward operands verify
+    accepted code is unchanged. Historical diagnostic detail follows next.
+    Validation: all 370 CTest cases pass with embedded/external catalogs.

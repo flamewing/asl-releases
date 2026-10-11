@@ -69,6 +69,8 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
     tEvalResult EvalResult;
     int         l;
 
+    AdrMode = ModNone;
+
     if (!as_strcasecmp(pArg->str.p_str, "A")) {
         AdrMode = ModA;
         goto AdrFound;
