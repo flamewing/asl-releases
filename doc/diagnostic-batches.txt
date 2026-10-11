@@ -612,3 +612,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     of bit MModImm (16), leaving its immediate encoding case unreachable.
     Keep that acceptance bug separate in the next commit.
     Validation: all 368 CTest cases pass with embedded/external catalogs.
+
+35. Separate KCPSM CALL immediate-mask bug.
+    Replace ordinal ModImm with mask MModImm, allowing the existing immediate
+    encoding path to accept #target as intended by its switch and JUMP peer.
+    Verify immediate and plain targets produce identical golden bytes for
+    all five conditions at 0/255, forward targets and UInt8 range rejection.
+    Register rejection and all preceding valid encodings remain verified.
+    Validation: all 368 CTest cases pass with embedded/external catalogs.

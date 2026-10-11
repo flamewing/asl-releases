@@ -347,7 +347,7 @@ static void DecodeCALL(Word Code) {
             return;
         }
 
-        DecodeAdr(&ArgStr[ArgCnt], MModAbs | ModImm, SegCode);
+        DecodeAdr(&ArgStr[ArgCnt], MModAbs | MModImm, SegCode);
         switch (AdrType) {
         case ModAbs:
         case ModImm:

@@ -922,7 +922,7 @@
         "ErrNum_InvAddrMode"
       ],
       "status": "complete",
-      "review_notes": "Tranche 34: sole historical candidate now lists actual operand mask forms and locates the rejected operand. CALL immediate-mask bug reproduced and deferred to separate tranche 35."
+      "review_notes": "Tranche 34: sole historical candidate now lists actual operand mask forms and locates the rejected operand. Tranche 35 separately fixes CALL immediate-mask typo with both syntax forms tested."
     },
     "codekenbak.c": {
       "candidate_counts": {
@@ -1425,7 +1425,7 @@
     {
       "file": "codekcpsm.c",
       "issue": "CALL uses ModImm ordinal instead of MModImm mask, rejecting #target despite its encoder handling immediate targets.",
-      "status": "reproduced; fix in tranche 35"
+      "status": "fixed in tranche 35; all five CALL conditions and UInt8 endpoints verified"
     }
   ]
 }
