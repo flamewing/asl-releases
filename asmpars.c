@@ -537,7 +537,7 @@ IntType GetUIntTypeByBits(unsigned Bits) {
     return UInt0;
 }
 
-static Boolean ProcessBk(char** Start, char* Erg) {
+static Boolean ProcessBk(char** Start, char* Erg, tStrComp const* p_escape) {
     LongInt System = 0, Acc = 0, Digit = 0;
     char    ch;
     int     cnt;
@@ -614,7 +614,13 @@ static Boolean ProcessBk(char** Start, char* Erg) {
                 (*Start)++;
                 cnt++;
                 if (Digit >= System) {
-                    WrError(ErrNum_OverRange);
+                    char detail[140];
+                    tLineComp position = p_escape->Pos;
+                    position.StartCol += *Start - p_escape->str.p_str - 1;
+                    position.Len = 1;
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEscapeDigitBase),
+                            ch, (LargeInt)System);
+                    WrXErrorPos(ErrNum_OverRange, detail, &position);
                     return False;
                 }
                 Acc = (Acc * System) + Digit;
@@ -1346,8 +1352,10 @@ static void ConstStringVal(tStrComp const* pExpr, TempResult* pDest, Boolean* pR
         else {
             char Res, *pNext = Copy.str.p_str;
 
-            if (!ProcessBk(&pNext, &Res)) {
+            if (!ProcessBk(&pNext, &Res, &Copy)) {
                 as_tempres_set_none(pDest);
+                /* A recognized string already issued its escape diagnostic. */
+                *pResult = True;
                 LEAVE;
             }
             as_nonz_dynstr_append_raw(&pDest->Contents.str, &Res, 1);

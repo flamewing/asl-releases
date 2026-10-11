@@ -7,16 +7,24 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Both historical candidates improved in tranche 23."
     },
     "asmerr.c": {
       "candidate_counts": {
         "ErrNum_OverRange": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Both historical candidates map FP converter errors and already locate the source operand. No converter format, bounds or evaluated value is available in this generic result helper; unchanged."
     },
     "asmpars.c": {
       "candidate_counts": {
@@ -24,15 +32,23 @@
         "ErrNum_InvReg": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvFuncArgCnt",
+        "ErrNum_InvReg",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical candidates reviewed: function contracts in tranche 6; octal escape detail and cascade in tranche 23. Final unknown register-name rejection already locates the operand; the generic helper has no backend register set."
     },
     "asmstructs.c": {
       "candidate_counts": {
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Only historical candidate is positive array dimension, improved in tranche 4."
     },
     "code166.c": {
       "candidate_counts": {

@@ -978,7 +978,10 @@ static void CodeCHARSET(Word Index) {
                                                                 ab Start */
 
                             if (Start + l > 256) {
-                                WrError(ErrNum_OverRange);
+                                char detail[180];
+                                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgCharTableRange),
+                                        (LargeInt)Start, (LargeInt)l, (LargeInt)(256 - Start));
+                                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[2].Pos);
                             } else {
                                 LongWord z;
 
@@ -1437,7 +1440,10 @@ static void CodeASSUME(Word Index) {
             } else {
                 if (!as_strcasecmp(ValPart.str.p_str, "NOTHING")) {
                     if (p_rec->nothing_value == -1) {
-                        WrError(ErrNum_InvAddrMode);
+                        char detail[160];
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAssumeNothingUnavailable),
+                                RegPart.str.p_str, (LargeInt)p_rec->min_value, (LargeInt)p_rec->max_value);
+                        WrXErrorPos(ErrNum_InvAddrMode, detail, &ValPart.Pos);
                     } else {
                         *(p_rec->p_dest) = p_rec->nothing_value;
                     }

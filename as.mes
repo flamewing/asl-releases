@@ -1313,6 +1313,18 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgCharTableRange
+ "Zeichentabelle ab Index %llld mit L&auml;nge %llld &uuml;berschreitet [0,255]; h&ouml;chstens %llld Bytes passen"
+ "character table mapping at index %llld with length %llld exceeds [0,255]; at most %llld bytes fit"
+
+Message ErrMsgAssumeNothingUnavailable
+ "ASSUME %s unterst&uuml;tzt NOTHING nicht; Wert in [%llld,%llld] erwartet"
+ "ASSUME %s does not support NOTHING; expected a value in [%llld,%llld]"
+
+Message ErrMsgEscapeDigitBase
+ "Ziffer '%c' ist in einer Zeichen-Escape-Sequenz zur Basis %llld ung&uuml;ltig"
+ "digit '%c' is invalid for base %llld in a character escape"
+
 Message ErrMsgAddressForms
  "Erlaubte Adressierungsformen: %s"
  "allowed addressing forms: %s"

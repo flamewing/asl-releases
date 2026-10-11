@@ -441,3 +441,23 @@ manual, EXPECT fixtures, translations and source-position tests.
     executable's explicit-bit forms, and check range/undefined/forward
     targets with exact target positions and one primary error.
     Validation: all 357 CTest cases pass with embedded/external catalogs.
+
+23. Shared inventory review: tables, ASSUME and character escapes.
+    CHARSET overflow retains 1320, identifies the mapping start and string
+    length, states [0,255] and the number of bytes that still fit, and
+    highlights the string. ASSUME's unsupported NOTHING value retains
+    1350, names the register and accepted numeric interval at the keyword.
+    An invalid octal digit in a character escape retains 1320, reports
+    the digit/base and highlights the single offending digit. A rejected
+    escape is now treated as a handled string failure, preventing retry as
+    a symbol expression and a misleading second invalid-symbol error.
+    Tests cover boundaries, later escapes, exact positions, translations,
+    primary expression errors, mapping reset and unchanged escape bytes.
+    All remaining historical asmpars.c candidates were reviewed: function
+    counts are already improved in tranche 6; the register-name rejection
+    has the operand but no backend-specific register set available here.
+    asmstructs.c's dimension check was improved in tranche 4. asmerr.c's
+    FP disposal helper already maps converter failure classes and locates
+    the operand; it receives no format, bounds or converted value, so no
+    additional numerical detail can be accurately generated at its sites.
+    Validation: all 358 CTest cases pass with embedded/external catalogs.
