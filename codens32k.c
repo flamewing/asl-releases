@@ -1198,7 +1198,7 @@ static void DecodeRET(Word Code) {
         }
 
         ClearAdrVals(&AdrVals);
-        if (EncodeDisplacement(
+        if (EvalResult.OK && EncodeDisplacement(
                     Value, &AdrVals,
                     mFirstPassUnknownOrQuestionable(EvalResult.Flags) ? ErrNum_None
                                                                       : ErrNum_OverRange,
@@ -1222,7 +1222,7 @@ static void DecodeCXP(Word Code) {
         tAdrVals AdrVals;
 
         ClearAdrVals(&AdrVals);
-        if (EncodeDisplacement(
+        if (EvalResult.OK && EncodeDisplacement(
                     Value, &AdrVals,
                     mFirstPassUnknownOrQuestionable(EvalResult.Flags) ? ErrNum_None
                                                                       : ErrNum_OverRange,
@@ -1249,11 +1249,11 @@ static void DecodeENTER(Word Code) {
         tAdrVals AdrVals;
 
         ClearAdrVals(&AdrVals);
-        if (EncodeDisplacement(
+        if (EvalResult.OK && EncodeDisplacement(
                     Value, &AdrVals,
                     mFirstPassUnknownOrQuestionable(EvalResult.Flags) ? ErrNum_None
                                                                       : ErrNum_OverRange,
-                    &ArgStr[1])) {
+                    &ArgStr[2])) {
             PutCode(Code, 1);
             BAsmCode[CodeLen++] = RegList;
             AppendDisp(&AdrVals);

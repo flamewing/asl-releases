@@ -1919,6 +1919,11 @@
       "file": "codens32k.c",
       "issue": "Explicit target(PC) continues after failed displacement encoding and emits reserved address mode 0x13.",
       "status": "fixed in tranche 134; propagate encoding failure before setting PC-relative mode; both bounds on 32-bit CPUs/no emission/original encodings/forward targets checked"
+    },
+    {
+      "file": "codens32k.c",
+      "issue": "RET/RETT/RXP, CXP and ENTER encode sentinel displacement after failed expression evaluation; ENTER displacement encoding overflow points at register list instead of allocation size.",
+      "status": "fixed in tranche 135; guard shared encoding with EvalResult.OK and position ENTER overflow at argument 2; five mnemonics/three CPU generations/primary errors/no emission/forward expressions/original bytes checked"
     }
   ]
 }

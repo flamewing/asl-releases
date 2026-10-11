@@ -1627,3 +1627,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both bounds on 32-bit CPUs, one primary error/no emission,
     captured valid bytes and forward targets; preserve ranges and error IDs.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+135. NS32000 control-displacement primary failures and ENTER position.
+    RET/RETT/RXP, CXP and ENTER ignore EvalResult.OK, encoding evaluator sentinel
+    after failed integer evaluation (EXPECT 1133 ENTER emits 82 01 7F). Guard
+    encoding with evaluation result; point ENTER encoding overflow at allocation
+    size argument 2 instead of register list. Three CPU generations/all five
+    mnemonics verify one primary error, no emission, original and forward bytes.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.
