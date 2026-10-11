@@ -313,3 +313,23 @@ manual, EXPECT fixtures, translations and source-position tests.
     Inspect branch and loop rejection paths in code68.c before
     selecting changes; keep each CPU's operand syntax, arithmetic width,
     PC bases and unresolved-symbol behavior. Verify endpoints and bytes.
+    Implemented both 1370 rejection sites in code68.c. Ordinary branches
+    report [-128,127] with PC+2; HC11 BRSET/BRCLR include the address bytes
+    and any prefix in PC+3+PrefCnt+AdrCnt. Reuse English/German range detail
+    under -x at the target operand. Preserve signed 16-bit arithmetic,
+    target types, CPU gates, original symbol-flag checks and operand splitting.
+    There is no separate loop range check in this backend.
+    Tests cover errors and golden endpoint bytes for all five CPU variants,
+    direct/X/Y bit forms, the extra Y prefix, space-separated operands,
+    forward references, undefined targets, single errors and exact positions.
+    Both ordinary and prefixed bit branches retain address-boundary wrap;
+    the displayed PC base is the unwrapped value. German detail and numeric
+    documentation are checked too.
+    Validation: all 350 CTest cases pass with embedded/external catalogs;
+    existing EXPECT diagnostic numbers remain valid.
+
+15. Continue manual inventory review: 6805-family branches.
+    Inspect relative, bit-test and compare/decrement branch checks in
+    code6805.c before selecting changes. Preserve each CPU's displacement
+    arithmetic, operand syntax, instruction lengths and symbol handling;
+    verify endpoints, source positions and valid encodings.

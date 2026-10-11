@@ -409,6 +409,13 @@ static void DecodeFixed(Word Index) {
     }
 }
 
+static void report_branch_distance(Integer distance, LongWord pc_base, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127, (LargeWord)pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeRel(Word Index) {
     RelOrder const* pOrder = &RelOrders[Index];
     Integer         AdrInt;
@@ -420,7 +427,7 @@ static void DecodeRel(Word Index) {
         if (OK) {
             AdrInt -= EProgCounter() + 2;
             if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 CodeLen     = 2;
                 BAsmCode[0] = pOrder->Code;
@@ -536,7 +543,8 @@ static void DecodeBRxx(Word Index) {
                     AdrInt -= EProgCounter() + 3 + PrefCnt + AdrCnt;
                     if (((AdrInt < -128) || (AdrInt > 127))
                         && !mFirstPassUnknownOrQuestionable(address_flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrInt,
+                                EProgCounter() + 3 + PrefCnt + AdrCnt, &ArgStr[ArgCnt]);
                     } else {
                         CodeLen           = PrefCnt + 3 + AdrCnt;
                         BAsmCode[PrefCnt] = 0x12 + Index;
