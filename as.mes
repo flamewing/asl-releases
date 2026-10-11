@@ -1409,6 +1409,10 @@ Message ErrMsgInstructionAlignment
  "Befehlsadresse 0x%lllx muss auf 2 Bytes ausgerichtet sein"
  "instruction address 0x%lllx must be aligned to 2 bytes"
 
+Message ErrMsgShiftCountChoices
+ "Schiebeweite %llld muss %llld oder %llld sein"
+ "shift count %llld must be %llld or %llld"
+
 Message ErrMsgShiftCountRange
  "Unmittelbare Schiebeanzahl %llld au&szlig;erhalb [1,8]"
  "immediate shift count %llld outside [1,8]"

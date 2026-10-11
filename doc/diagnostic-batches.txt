@@ -620,3 +620,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     all five conditions at 0/255, forward targets and UInt8 range rejection.
     Register rejection and all preceding valid encodings remain verified.
     Validation: all 368 CTest cases pass with embedded/external catalogs.
+
+36. Complete Olympia CP-3F historical operand/shift inventory review.
+    Shared 1350 lists allowed register, immediate, direct and indirect forms
+    from the decoder mask. The LD indirect store restriction identifies
+    required (Z(X)); shift 1380 shows evaluated count and exact choices 1/4.
+    Preserve masks, operand size evaluation, unknown/questionable rules,
+    automatic short-immediate selection and all accepted encodings.
+    Tests cover representative LD masks, every arithmetic caller, both
+    shifts and operand spellings, zero/intermediate/high invalid counts,
+    forward counts, primary errors, source positions, German and prior bytes.
+    Validation: all 369 CTest cases pass with embedded/external catalogs.

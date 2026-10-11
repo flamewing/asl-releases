@@ -12,6 +12,9 @@
 
 #include "codecp3f.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -217,7 +220,26 @@ static adr_mode_t decode_adr(
 
 fini:
     if ((p_vals->mode != e_mode_none) && !((mask >> p_vals->mode) & 1)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        static char const* const forms_by_mode[] = {
+            "A", "V", "W", "X", "Y", "S", "T", "ST", "#expr", "#<expr",
+            "expr (0..11), (ST), (ST)-, (ST)+", "Q(X), Q(Y)",
+            "Z(X), Z(Y)", "(Z(X)), (Z(Y))"
+        };
+        char forms[240] = "", detail[320];
+        unsigned mode;
+        for (mode = 0; mode < as_array_size(forms_by_mode); mode++) {
+            if (!(mask & (1 << mode))
+                    || ((mode == e_mode_imm_short) && (mask & MModeImm))) {
+                continue;
+            }
+            strmaxcat(forms, forms_by_mode[mode], sizeof(forms));
+            strmaxcat(forms, ", ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
         reset_adr_vals(p_vals);
     }
     return p_vals->mode;
@@ -489,7 +511,10 @@ static void decode_ld(Word code) {
             break;
         case e_mode_iz:
             if (dest_adr_vals.value) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices),
+                        "(Z(X))");
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
             } else {
                 switch (decode_adr(
                         &ArgStr[2], &src_adr_vals, MModeA, eSymbolSizeUnknown)) {
@@ -595,7 +620,10 @@ static void decode_srl_sla(Word code) {
             shift_cnt = 1;
         }
         if ((shift_cnt != 1) && (shift_cnt != 4)) {
-            WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[shift_arg_index]);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgShiftCountChoices),
+                    (LargeInt)shift_cnt, (LargeInt)1, (LargeInt)4);
+            WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[shift_arg_index].Pos);
             return;
         }
         break;
