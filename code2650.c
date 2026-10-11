@@ -12,6 +12,9 @@
 
 #include "code2650.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -58,6 +61,12 @@ static Boolean DecodeReg(char const* pAsc, Byte* pRes) {
  * \return true if success
  * ------------------------------------------------------------------------ */
 
+static void WrOperandChoices(tStrComp const* arg, tErrorNum number, char const* choices) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(number, detail, &arg->Pos);
+}
+
 static Boolean DecodeCondition(tStrComp const* p_arg, Byte* p_ret) {
     char const* p_asc = p_arg->str.p_str;
 
@@ -95,15 +104,28 @@ static Boolean DecodeCondition(tStrComp const* p_arg, Byte* p_ret) {
 #define PAGE_MASK 0x1fff
 
 static Boolean page_rel_ok(
-        Word dest, Word src, tSymbolFlags flags, Word* p_dist, Boolean is_branch) {
+        Word dest, Word src, tSymbolFlags flags, Word* p_dist, Boolean is_branch, tStrComp const* arg) {
     if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mFirstPassUnknownOrQuestionable(flags)) {
-        WrError(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPageMismatch),
+                    (LargeWord)dest, (LargeWord)(dest & ~PAGE_MASK),
+                    (LargeWord)src, (LargeWord)(src & ~PAGE_MASK), (LargeWord)0x2000);
+        WrXErrorPos(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage,
+                    detail, &arg->Pos);
         return False;
     }
 
     *p_dist = (dest - src) & PAGE_MASK;
     if (((*p_dist < 0x1fc0) && (*p_dist > 0x3f)) && !mFirstPassUnknownOrQuestionable(flags)) {
-        WrError(is_branch ? ErrNum_JmpDistTooBig : ErrNum_DistTooBig);
+        char detail[240];
+        LargeInt disp = *p_dist;
+        if (disp >= 0x1000) {
+            disp -= 0x2000;
+        }
+        as_snprintf(detail, sizeof(detail),
+                    getmessage(is_branch ? Num_ErrMsgBranchDispRange : Num_ErrMsgAddressDispRangePC),
+                    disp, (LargeInt)-64, (LargeInt)63, (LargeWord)src);
+        WrXErrorPos(is_branch ? ErrNum_JmpDistTooBig : ErrNum_DistTooBig, detail, &arg->Pos);
         return False;
     }
 
@@ -122,9 +144,14 @@ static Boolean page_rel_ok(
  * ------------------------------------------------------------------------ */
 
 static Boolean page_abs_ok(
-        Word dest, Word src, tSymbolFlags flags, Word* p_dest, Boolean is_branch) {
+        Word dest, Word src, tSymbolFlags flags, Word* p_dest, Boolean is_branch, tStrComp const* arg) {
     if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mFirstPassUnknownOrQuestionable(flags)) {
-        WrError(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPageMismatch),
+                    (LargeWord)dest, (LargeWord)(dest & ~PAGE_MASK),
+                    (LargeWord)src, (LargeWord)(src & ~PAGE_MASK), (LargeWord)0x2000);
+        WrXErrorPos(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage,
+                    detail, &arg->Pos);
         return False;
     }
 
@@ -154,7 +181,7 @@ static void DecodeOneReg(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         BAsmCode[0] = Index | Reg;
         CodeLen     = 1;
@@ -173,9 +200,9 @@ static void DecodeOneReg_NoZero(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R1..R3");
     } else if (!Reg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R1..R3");
     } else {
         BAsmCode[0] = Index | Reg;
         CodeLen     = 1;
@@ -194,7 +221,7 @@ static void DecodeLODZ(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         /* LODZ R0 shall be encoded as IORZ R0 */
         BAsmCode[0] = Reg ? (Index | Reg) : 0x60;
@@ -221,7 +248,7 @@ static void DecodeRegImm(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         BAsmCode[1] = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
         if (OK) {
@@ -243,7 +270,7 @@ static void DecodeRegAbs(Word code) {
     if (!ChkArgCnt(2, 4))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &dest_reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         Boolean      ok, ind_flag = *ArgStr[2].str.p_str == '*';
         Word         abs_val;
@@ -252,7 +279,7 @@ static void DecodeRegAbs(Word code) {
 
         abs_val = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[2], ind_flag, ADDR_INT, &ok, &flags);
-        if (ok && page_abs_ok(abs_val, EProgCounter() + 3, flags, &abs_val, False)) {
+        if (ok && page_abs_ok(abs_val, EProgCounter() + 3, flags, &abs_val, False, &ArgStr[2])) {
             BAsmCode[0] = code;
             BAsmCode[1] = Hi(abs_val);
             BAsmCode[2] = Lo(abs_val);
@@ -264,9 +291,9 @@ static void DecodeRegAbs(Word code) {
                 CodeLen = 3;
             } else {
                 if (!DecodeReg(ArgStr[3].str.p_str, &index_reg)) {
-                    WrStrErrorPos(ErrNum_InvReg, &ArgStr[3]);
+                    WrOperandChoices(&ArgStr[3], ErrNum_InvReg, "R0..R3");
                 } else if (dest_reg != 0) {
-                    WrError(ErrNum_InvAddrMode);
+                    WrOperandChoices(&ArgStr[1], ErrNum_InvAddrMode, "R0");
                 } else {
                     BAsmCode[0] |= index_reg;
                     if (ArgCnt == 3) {
@@ -279,7 +306,7 @@ static void DecodeRegAbs(Word code) {
                         BAsmCode[1] |= 0x20;
                         CodeLen = 3;
                     } else {
-                        WrError(ErrNum_InvAddrMode);
+                        WrOperandChoices(&ArgStr[4], ErrNum_InvAddrMode, "+ / -");
                     }
                 }
             }
@@ -299,7 +326,7 @@ static void DecodeRegRel(Word code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         Word         dest, dist;
         tSymbolFlags flags;
@@ -309,7 +336,7 @@ static void DecodeRegRel(Word code) {
         ind_flag    = *ArgStr[2].str.p_str == '*';
         dest        = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[2], ind_flag, ADDR_INT, &ok, &flags);
-        if (ok && page_rel_ok(dest, EProgCounter() + 2, flags, &dist, False)) {
+        if (ok && page_rel_ok(dest, EProgCounter() + 2, flags, &dist, False, &ArgStr[2])) {
             BAsmCode[1] = dist & 0x7f;
             if (ind_flag) {
                 BAsmCode[1] |= 0x80;
@@ -357,7 +384,7 @@ static void DecodeCondRel(Word code) {
         ind_flag    = *ArgStr[2].str.p_str == '*';
         dest        = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[2], ind_flag, ADDR_INT, &ok, &flags);
-        if (ok && page_rel_ok(dest, EProgCounter() + 2, flags, &dist, True)) {
+        if (ok && page_rel_ok(dest, EProgCounter() + 2, flags, &dist, True, &ArgStr[2])) {
             BAsmCode[1] = dist & 0x7f;
             if (ind_flag) {
                 BAsmCode[1] |= 0x80;
@@ -375,7 +402,7 @@ static void DecodeRegAbs2(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrOperandChoices(&ArgStr[1], ErrNum_InvReg, "R0..R3");
     } else {
         BAsmCode[0] = Index | Reg;
         IndFlag     = *ArgStr[2].str.p_str == '*';
@@ -399,9 +426,9 @@ static void DecodeBrAbs(Word Index) {
     if (!ChkArgCnt(1, 2))
         ;
     else if ((ArgCnt == 2) && (!DecodeReg(ArgStr[2].str.p_str, &Reg))) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrOperandChoices(&ArgStr[2], ErrNum_InvReg, "R0..R3");
     } else if (Reg != 3) {
-        WrError(ErrNum_InvAddrMode);
+        WrOperandChoices(&ArgStr[2], ErrNum_InvAddrMode, "R3");
     } else {
         BAsmCode[0] = Index | Reg;
         IndFlag     = *ArgStr[1].str.p_str == '*';
@@ -442,7 +469,7 @@ static void DecodeZero(Word code) {
         ind_flag    = *ArgStr[1].str.p_str == '*';
         dest        = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[1], ind_flag, ADDR_INT, &ok, &flags);
-        if (ok && page_rel_ok(dest, 0x0000, flags, &dist, True)) {
+        if (ok && page_rel_ok(dest, 0x0000, flags, &dist, True, &ArgStr[1])) {
             BAsmCode[1] = dist & 0x7f;
             if (ind_flag) {
                 BAsmCode[1] |= 0x80;

@@ -1542,3 +1542,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     eight absolute data callers, both zero-relative branches and final page errors.
     Preserve same-page requirement, 8-KiB displacement wrapping and byte encodings.
     Validation: all 405 CTest cases pass with embedded/external catalogs.
+
+125. Signetics 2650 diagnostic details and full historical inventory review.
+    Ten register restrictions identify R0..R3 or STRZ R1..R3 at operand;
+    indexed data names required R0 and +/- modifier, indexed BXA/BSXA names R3.
+    Adjacent page helpers identify both actual addresses/page bases and 8-KiB
+    size at target operand; relative failures show wrapped displacement [-64,63]
+    and PC+2/zero base (data vs branch detail). Preserve IDs, masks and encodings.
+    Validation: all 405 CTest cases pass with embedded/external catalogs.

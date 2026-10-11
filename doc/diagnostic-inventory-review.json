@@ -114,8 +114,12 @@
         "ErrNum_InvAddrMode": 3,
         "ErrNum_InvReg": 10
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg"
+      ],
+      "status": "complete",
+      "review_notes": "All thirteen historical candidates reviewed in tranches 124-125: ten explicit register sets, indexed data R0/modifier and indexed absolute branch R3. Adjacent ternary page/distance errors show addresses/page size or wrapped signed displacement/PC base at target. Defer provisional page constraints; preserve original masks, IDs, absolute branch whole-address-space behavior and accepted bytes."
     },
     "code29k.c": {
       "candidate_counts": {
