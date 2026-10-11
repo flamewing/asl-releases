@@ -1358,3 +1358,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     as other TI stores already do. Preserve known range failures and valid
     bytes; tests include forward results at scale 99 without unsafe casts.
     Validation: all 398 CTest cases pass with embedded/external catalogs.
+
+105. TMS370 provisional forward-expression branch guards.
+    All four relative branch decoders prematurely reject first-pass unknown
+    forward expression distances. Defer their range checks for unknown as well
+    as questionable symbols. Preserve signed 16-bit wrapping, PC bases and
+    accepted bytes. Tests cover all 18 short-branch aliases and both BTJ/JBIT
+    aliases plus DJNZ across all five CPU names; final displacement is one.
+    Validation: all 399 CTest cases pass with embedded/external catalogs.

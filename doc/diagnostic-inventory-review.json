@@ -1762,6 +1762,11 @@
       "file": "tipseudo.c",
       "issue": "Qxx/LQxx and TI34x DATA reject provisional first-pass forward expression values even when the final scaled/integer result is in range.",
       "status": "fixed in tranche 104; evaluate Qxx/LQxx with flags and use zero provisional value before scaling/casting unresolved expressions; defer DATA integer range rejection consistently with other TI stores; actual known failures and accepted bytes retained"
+    },
+    {
+      "file": "code370.c",
+      "issue": "All four relative branch decoders reject provisional first-pass forward-expression distances before final symbols resolve.",
+      "status": "fixed in tranche 105; defer range checks for first-pass unknown/questionable targets; all 23 branch aliases/callers verified, compound branches tested across five CPU names"
     }
   ]
 }

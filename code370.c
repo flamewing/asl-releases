@@ -625,7 +625,7 @@ static void DecodeRel8(Word Code) {
                          - (EProgCounter() + 2);
 
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
             } else {
                 PutCode(Code);
@@ -864,7 +864,7 @@ static void DecodeALU2(Word Code) {
             if (!OK) {
                 CodeLen = 0;
             } else if (
-                    !mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+                    !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
                 CodeLen = 0;
             } else {
@@ -947,7 +947,7 @@ static void DecodeABReg(Word Code) {
             if (!OK) {
                 CodeLen = 0;
             } else if (
-                    !mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+                    !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
                 CodeLen = 0;
             } else {
@@ -994,7 +994,7 @@ static void DecodeBit(Word Code) {
             if (!OK) {
                 CodeLen = 0;
             } else if (
-                    !mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+                    !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
                 WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
                 CodeLen = 0;
             } else {
