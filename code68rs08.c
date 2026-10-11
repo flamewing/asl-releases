@@ -12,6 +12,9 @@
 
 #include "code68rs08.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -276,6 +279,13 @@ static void DecodeMOV(Word Index) {
     }
 }
 
+static void report_branch_distance(LongInt distance, LongWord pc_base, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127, (LargeWord)pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeRel(Word Index) {
     BaseOrder*   pOrder = RelOrders + Index;
     Boolean      OK;
@@ -287,7 +297,7 @@ static void DecodeRel(Word Index) {
                  - (EProgCounter() + 2);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 CodeLen     = 2;
                 BAsmCode[0] = pOrder->Code;
@@ -317,7 +327,7 @@ static void DecodeCBEQx(Word Index) {
                      - (EProgCounter() + 3);
             if (OK) {
                 if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, EProgCounter() + 3, &ArgStr[2]);
                 } else {
                     BAsmCode[0] = 0x41;
                     BAsmCode[2] = AdrInt & 0xff;
@@ -351,7 +361,7 @@ static void DecodeCBEQ(Word Index) {
                      - (EProgCounter() + 3);
             if (OK) {
                 if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, EProgCounter() + 3, &ArgStr[2]);
                 } else {
                     BAsmCode[2] = AdrInt & 0xff;
                     CodeLen     = 3;
@@ -368,7 +378,7 @@ static void DecodeCBEQ(Word Index) {
                      - (EProgCounter() + 3);
             if (OK) {
                 if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, EProgCounter() + 3, &ArgStr[3]);
                 } else {
                     BAsmCode[2] = AdrInt & 0xff;
                     CodeLen     = 3;
@@ -390,7 +400,7 @@ static void DecodeDBNZx(Word Index) {
                  - (EProgCounter() + ((Index == 0) ? 3 : 2));
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, EProgCounter() + ((Index == 0) ? 3 : 2), &ArgStr[1]);
             } else if (Index == 0) {
                 BAsmCode[0] = 0x3b;
                 BAsmCode[1] = 0x0f;
@@ -433,7 +443,7 @@ static void DecodeDBNZ(Word Index) {
                      - (EProgCounter() + Disp);
             if (OK) {
                 if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, EProgCounter() + Disp, &ArgStr[ArgCnt]);
                 } else {
                     BAsmCode[Disp - 1] = AdrInt & 0xff;
                     CodeLen            = Disp;
@@ -637,7 +647,7 @@ static void decode_brset_brclr_core(Word code, int arg_index) {
                   - (EProgCounter() + 3);
         if (ok) {
             if (!mSymbolQuestionable(flags) && ((address < -128) || (address > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(address, EProgCounter() + 3, &ArgStr[arg_index + 1]);
             } else {
                 CodeLen     = 3;
                 BAsmCode[0] = code;

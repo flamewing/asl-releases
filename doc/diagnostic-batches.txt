@@ -372,3 +372,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     before selecting changes. Retain each operand form, displacement width,
     instruction-specific PC base, CPU restrictions and symbol handling;
     verify boundaries, source positions and valid encodings.
+    Implemented all seven 1370 rejection sites with localized displacement,
+    [-128,127] and PC-base detail at the target operand under -x. Retain the
+    existing unwrapped LongInt calculation, UInt14 target type, symbol flags,
+    PC+2/PC+3 bases and BRN pseudo encoding. Tests cover all decoder paths,
+    direct/X/D[X]/,X forms, both bit syntaxes, range endpoints, 14-bit limits,
+    forward/undefined symbols, positions, German detail and baseline bytes.
+    Validation: all 353 CTest cases pass with embedded/external catalogs.
