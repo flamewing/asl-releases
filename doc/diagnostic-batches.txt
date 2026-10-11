@@ -473,3 +473,20 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both rejected bounds, primary errors, German detail,
     accepted endpoints, forward operands and previous encoded bytes.
     Validation: all 359 CTest cases pass with embedded/external catalogs.
+
+25. Complete shared four-bit DATA/equate and previous layout review.
+    fourpseudo.c's single historical range rejection retains 1320 and
+    reports DATA's evaluated integer with its actual signed/unsigned domain
+    at the expression, including the CODE versus DATA segment type.
+    Both custom equate range failures retain 1315/1320 and show the value
+    and complete interval at the argument. Preserve the existing 32-bit-host
+    upper-bound exemption, first-pass and questionable symbol handling.
+    Tests cover both sides of custom intervals, byte/nibble DATA domains,
+    exact IDs/positions, primary errors, German detail, forward symbols and
+    valid bytes verified against the preceding external-catalog executable.
+    Reviewed all seven intpseudo.c and all four motpseudo.c historical sites:
+    the numeric layouts already use ChkRangeByType after tranche 5, retaining
+    source positions and evaluator-representable bounds. The remaining DS
+    size rejection is a defensive guard: all sizes accepted by the current
+    Motorola attribute parser have a supported GetWSize result; retain it.
+    Validation: all 360 CTest cases pass with embedded/external catalogs.

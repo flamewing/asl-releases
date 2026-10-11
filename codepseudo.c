@@ -16,6 +16,9 @@
 
 #include "codepseudo.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -205,6 +208,13 @@ void code_equate_type(as_addrspace_t dest_seg, IntType int_type) {
     }
 }
 
+static void report_equate_range(tErrorNum error, LargeInt value, LargeInt minimum, LargeInt maximum) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+            OpPart.str.p_str, value, minimum, maximum);
+    WrXErrorPos(error, detail, &ArgStr[1].Pos);
+}
+
 void code_equate_range(as_addrspace_t dest_seg, LargeInt min_value, LargeInt max_value) {
     if (ChkArgCnt(1, 1)) {
         Boolean      ok;
@@ -214,14 +224,14 @@ void code_equate_range(as_addrspace_t dest_seg, LargeInt min_value, LargeInt max
         value = EvalStrIntExpressionWithFlags(&ArgStr[1], LargeIntType, &ok, &flags);
         if (ok && !mFirstPassUnknown(flags)) {
             if (min_value > value) {
-                WrError(ErrNum_UnderRange);
+                report_equate_range(ErrNum_UnderRange, value, min_value, max_value);
             } else if (
 #ifndef AS_HAS64
                     (!(max_value & 0x80000000ul))
                     && /* cannot check >=2G range if LargeInt is 32 bits */
 #endif
                     (value > max_value))
-                WrError(ErrNum_OverRange);
+                report_equate_range(ErrNum_OverRange, value, min_value, max_value);
             else {
                 code_equate_core(value, dest_seg);
             }

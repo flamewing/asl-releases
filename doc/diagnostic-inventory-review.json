@@ -1071,8 +1071,12 @@
         "ErrNum_OverRange": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Both custom equate range failures improved in tranche 25, preserving IDs and the 32-bit-host range exemption."
     },
     "coderx.c": {
       "candidate_counts": {
@@ -1307,8 +1311,11 @@
       "candidate_counts": {
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Single historical range rejection improved in tranche 25, preserving 1320 on both sides of the domain."
     },
     "function.c": {
       "candidate_counts": {
@@ -1324,16 +1331,23 @@
       "candidate_counts": {
         "ErrNum_OverRange": 7
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical numeric layout range checks already improved in tranche 5; source-position and host-representable bounds verified."
     },
     "motpseudo.c": {
       "candidate_counts": {
         "ErrNum_InvOpSize": 1,
         "ErrNum_OverRange": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvOpSize",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All three historical numeric range checks already improved in tranche 5. Defensive DS size rejection cannot occur for the current accepted Motorola attribute sizes; unchanged."
     },
     "operator.c": {
       "candidate_counts": {

@@ -16,6 +16,10 @@
 
 #include "fourpseudo.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+#include "strutil.h"
+
 #include "asmdef.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -156,7 +160,11 @@ void DecodeDATA(IntType CodeIntType, IntType DataIntType) {
             ToInt:
                 if (!mSymbolQuestionable(t.Flags)
                     && !RangeCheck(t.Contents.Int.Value, ValIntType)) {
-                    WrStrErrorPos(ErrNum_OverRange, pArg);
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            OpPart.str.p_str, t.Contents.Int.Value,
+                            IntTypeDefs[ValIntType].Min, IntTypeDefs[ValIntType].Max);
+                    WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
                     ValOK = False;
                 } else if (ValMask <= 0xff) {
                     BAsmCode[CodeLen++] = t.Contents.Int.Value & ValMask;
