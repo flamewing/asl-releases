@@ -117,8 +117,12 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 39: indirect-only forms list register syntax; combined jump failure reports both actual absolute and relative constraints. Adjacent alignment gives target/multiple-of-four requirement. Existing ID 1370 and signed-32-bit relative/unsigned target behavior retained."
     },
     "code3201x.c": {
       "candidate_counts": {

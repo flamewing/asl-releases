@@ -652,3 +652,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     representative LD/XCH/CP masks, all bit callers, size boundaries, three
     CPU endpoint encodings, forward addresses and preceding bytes.
     Validation: all 370 CTest cases pass with embedded/external catalogs.
+
+39. Complete AM29xxx historical indirect/jump inventory review.
+    Indirect-only 1350 lists accepted register syntax at the target.
+    1370 reports both failed encoding choices: unsigned absolute target
+    [0,0x3fffff] and signed displacement [-0x20000,0x1ffff] from the PC.
+    Adjacent 1325 identifies the evaluated target and four-byte alignment.
+    Preserve original arithmetic, relative-first selection, questionable
+    flags, error order and encoding masks. A target outside the absolute
+    interval remains valid if its signed relative displacement fits.
+    Tests cover four CPUs, indirect aliases, exact IDs/positions, unsigned
+    targets, wrapped/high relative targets, signed endpoints, forward
+    symbols, primary undefined errors and preceding accepted bytes.
+    Validation: all 371 CTest cases pass with embedded/external catalogs.

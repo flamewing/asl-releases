@@ -12,6 +12,9 @@
 
 #include "code29k.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -449,7 +452,10 @@ static void DecodeJmp(Word Index) {
         return;
     case eIsNoReg:
         if (Immediate) {
-            WrError(ErrNum_InvAddrMode);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                    "R0..R255, GR0..GR127, LR0..LR127");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[ArgCnt].Pos);
         } else {
             if (!pOrder->HasReg) {
                 Dest = 0;
@@ -463,14 +469,27 @@ static void DecodeJmp(Word Index) {
                 AdrInt = AdrLong - EProgCounter();
                 if (OK) {
                     if ((AdrLong & 3) != 0) {
-                        WrError(ErrNum_NotAligned);
+                        char detail[160];
+                        as_snprintf(detail, sizeof(detail),
+                                getmessage(Num_ErrMsgBranchAddressAlignment), (LargeInt)AdrLong);
+                        WrXErrorPos(ErrNum_NotAligned, detail, &ArgStr[ArgCnt].Pos);
                     } else if ((AdrInt <= 0x1ffff) && (AdrInt >= -0x20000)) {
                         CodeLen = 4;
                         AdrLong -= EProgCounter();
                         DAsmCode[0] = (pOrder->Code << 24) + ((AdrLong & 0x3fc00) << 6)
                                       + (Dest << 8) + ((AdrLong & 0x3fc) >> 2);
                     } else if (!mSymbolQuestionable(Flags) && (AdrLong > 0x3fffff)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        char detail[320], relative[160];
+                        as_snprintf(detail, sizeof(detail),
+                                getmessage(Num_ErrMsgBranchAddressRange),
+                                (LargeInt)AdrLong, (LargeInt)0, (LargeInt)0x3fffff);
+                        as_snprintf(relative, sizeof(relative),
+                                getmessage(Num_ErrMsgBranchDispRange),
+                                (LargeInt)AdrInt, (LargeInt)-0x20000, (LargeInt)0x1ffff,
+                                (LargeWord)EProgCounter());
+                        strmaxcat(detail, "; ", sizeof(detail));
+                        strmaxcat(detail, relative, sizeof(detail));
+                        WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[ArgCnt].Pos);
                     } else {
                         CodeLen     = 4;
                         DAsmCode[0] = ((pOrder->Code + 1) << 24)
