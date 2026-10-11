@@ -333,3 +333,23 @@ manual, EXPECT fixtures, translations and source-position tests.
     code6805.c before selecting changes. Preserve each CPU's displacement
     arithmetic, operand syntax, instruction lengths and symbol handling;
     verify endpoints, source positions and valid encodings.
+    Implemented all seven 1370 rejection sites: ordinary relative branches,
+    immediate/direct/postincrement/indexed/SP CBEQ forms, accumulator/X and
+    memory/indexed/SP DBNZ forms, and both suffix/explicit bit-test syntax.
+    Reuse English/German range detail under -x at the target operand, with
+    [-128,127] and the instruction's existing PC base (+2, +3 or +4).
+    Preserve LongInt displacement calculation without adding address wrap,
+    UInt13 versus UInt16 targets, CPU gates, flags and operand/encoding logic.
+    Tests cover all four CPU variants, every compare/decrement address form,
+    positive/negative range errors, golden endpoint bytes, SP prefixes,
+    both bit syntaxes, 13-/16-bit address boundaries, forward targets and
+    primary expression errors. IDs, exact positions, single errors, German
+    detail and the numeric documentation are covered.
+    Validation: all 351 CTest cases pass with embedded/external catalogs;
+    existing EXPECT diagnostic numbers remain valid.
+
+16. Continue manual inventory review: 6809-family branches.
+    Inspect code6809.c relative and conditional branch checks before
+    selecting changes. Preserve short/long selection, supported CPU variants,
+    arithmetic widths, opcode-prefix lengths and unresolved-symbol behavior;
+    verify endpoints, source positions and valid encodings.
