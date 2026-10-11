@@ -1117,3 +1117,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all three instructions on four core families, primary pair
     diagnostics, no rejected words and preceding valid pair encodings.
     Validation: all 392 CTest cases pass with embedded/external catalogs.
+
+80. Complete Padauk historical address/range/bit-count review.
+    Mask-specific forms accompany 1350, including typed DATA/IO expressions;
+    I/O-only bit operations identify I/O bit forms. Typed upper address 1320
+    shows evaluated value and CPU-selected segment interval. Bit counts now
+    use count-helper detail; missing structure bit separator retains 1110
+    and gives element.bit / element,bit syntax. Preserve IDs and bytes.
+    Historical third 1320 guard is unreachable with current Byte-sized RAM/IO
+    limits: AutoIntType remains Int8, already guaranteeing [-128,255]. Retain
+    it. Tests cover four cores, operand masks, capability restrictions, typed
+    RAM/IO overflow, bit counts, structure syntax and preceding encodings.
+    Validation: all 392 CTest cases pass with embedded/external catalogs.

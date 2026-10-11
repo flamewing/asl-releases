@@ -78,6 +78,20 @@ static Byte     DataMemBits, DataBitMemBits, CodeMemBits, IOMemBits;
 static Word     AccInstOffs;
 static ShortInt OpSize;
 
+static void WrAddressForms(Word id, tStrComp const* operand, char const* forms) {
+    char detail[400];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(id, detail, &operand->Pos);
+}
+
+static void WrTypedAddressRange(tStrComp const* operand, char const* space,
+                                LongInt value, LargeInt limit) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                space, (LargeInt)value, (LargeInt)0, limit);
+    WrXErrorPos(ErrNum_OverRange, detail, &operand->Pos);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeAdr(tStrComp *pArg, Word Mask, IntType MemIntType, Word *pResult)
  * \brief  decode address expression
@@ -200,7 +214,7 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
                 AddrOrImm &= SegLimits[SegIO];
             }
             if (AddrOrImm > (LongInt)SegLimits[SegIO]) {
-                WrStrErrorPos(ErrNum_OverRange, pArg);
+                WrTypedAddressRange(pArg, "IO", AddrOrImm, SegLimits[SegIO]);
             } else {
                 AdrMode  = ModIO;
                 *pResult = AddrOrImm;
@@ -211,7 +225,7 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
                 AddrOrImm &= SegLimits[SegData];
             }
             if (AddrOrImm > (LongInt)SegLimits[SegData]) {
-                WrStrErrorPos(ErrNum_OverRange, pArg);
+                WrTypedAddressRange(pArg, "DATA", AddrOrImm, SegLimits[SegData]);
             } else {
                 AdrMode  = ModMem;
                 *pResult = AddrOrImm;
@@ -232,7 +246,23 @@ static tAdrMode DecodeAdr(tStrComp* pArg, Word Mask, IntType MemIntType, Word* p
 
 check:
     if ((AdrMode != ModNone) && (!(Mask & (1 << AdrMode)))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        char forms[320] = "";
+        if (Mask & MModAcc) {
+            strmaxcat(forms, "A, ", sizeof(forms));
+        }
+        if (Mask & MModMem) {
+            strmaxcat(forms, "[expr], disp[expr], expr[index], expr (DATA), ", sizeof(forms));
+        }
+        if (Mask & MModIO) {
+            strmaxcat(forms, "IO(expr), expr (IO), ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, expr (absolute), ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        WrAddressForms(ErrNum_InvAddrMode, pArg, forms);
         AdrMode = ModNone;
     }
     return AdrMode;
@@ -375,7 +405,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop) {
     /* other # of arguments not allowed */
 
     else {
-        WrError(ErrNum_WrongArgCnt);
+        (void)ChkArgCnt(1, 2);
         return False;
     }
 }
@@ -889,7 +919,8 @@ static void DecodeBitOpIO(Word Code) {
             WAsmCode[CodeLen++]
                     = (Code << (3 + IOMemBits)) | (BitPos << IOMemBits) | Address;
         } else {
-            WrError(ErrNum_InvAddrMode);
+            WrAddressForms(ErrNum_InvAddrMode, &ArgStr[1],
+                           "IO(expr).bit, IO(expr), bit; expr (IO bit)");
         }
     }
 }
@@ -946,7 +977,9 @@ static void DecodeBIT(Word Code) {
             break;
         default:
         fail:
-            WrError(ErrNum_WrongArgCnt);
+            if (ChkArgCnt(1, 2)) {
+                WrAddressForms(ErrNum_WrongArgCnt, &ArgStr[1], "element.bit; element, bit");
+            }
             return;
         }
 
