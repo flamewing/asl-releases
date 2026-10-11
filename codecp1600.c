@@ -152,7 +152,7 @@ static void DecodeRegAdrMVO(Word Index) {
             return;
         }
 
-        if (adr & Mask) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && (adr & Mask)) {
             WrError(ErrNum_OverRange);
             return;
         }
@@ -205,11 +205,11 @@ static void DecodeRegImmMVO(Word Index) {
         if (!OK) {
             return;
         }
-        if (!ChkRange(val, -32768, 65535)) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRange(val, -32768, 65535)) {
             return;
         }
 
-        if (val & Mask) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && (val & Mask)) {
             WrError(ErrNum_OverRange);
             return;
         }
@@ -235,7 +235,7 @@ static void DecodeAdrReg(Word Index) {
             return;
         }
 
-        if (adr & Mask) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && (adr & Mask)) {
             WrError(ErrNum_OverRange);
             return;
         }
@@ -291,7 +291,7 @@ static void DecodeImmReg(Word Index) {
         if (!OK) {
             return;
         }
-        if (!ChkRange(val, -32768, 65535)) {
+        if (!mFirstPassUnknownOrQuestionable(flags) && !ChkRange(val, -32768, 65535)) {
             return;
         }
 
@@ -386,7 +386,7 @@ static void DecodeBranch(Word Index) {
         WAsmCode[1] = PC + 2 - adr - 1;
     }
 
-    if (WAsmCode[1] & Mask) {
+    if (!mFirstPassUnknownOrQuestionable(flags) && (WAsmCode[1] & Mask)) {
         WrError(ErrNum_JmpDistTooBig);
         return;
     }
@@ -453,6 +453,9 @@ static void DecodeShift(Word Index) {
                 return;
             }
 
+            if (mFirstPassUnknownOrQuestionable(flags)) {
+                val = 1;
+            }
             if (val == 1) {
                 bit = 0x0000;
             } else if (val == 2) {
@@ -487,6 +490,9 @@ static void DecodeOptionalImm(Word Index) {
                 return;
             }
 
+            if (mFirstPassUnknownOrQuestionable(flags)) {
+                val = 1;
+            }
             if (val == 1) {
                 bit = 0x0000;
             } else if (val == 2) {

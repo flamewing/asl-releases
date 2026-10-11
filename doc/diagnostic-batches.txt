@@ -1485,3 +1485,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover one positioned primary diagnostic, EXPECT/no emission,
     register aliases and original accepted BEXT encoding.
     Validation: all 403 CTest cases pass with embedded/external catalogs.
+
+119. CP-1600 provisional forward field/count/branch guards.
+    Defer three masked word-field checks, two full integer interval checks
+    and branch distance checks for first-pass unknown/questionable values.
+    Use accepted count 1 provisionally for shift and NOP/SIN fields before
+    choices checking, preserving guessed field masks and original encodings.
+    Tests cover all eight shifts, both optional variants, three word fields,
+    prefixed immediate and B/BEXT forward targets plus final invalid count.
+    Validation: all 403 CTest cases pass with embedded/external catalogs.
