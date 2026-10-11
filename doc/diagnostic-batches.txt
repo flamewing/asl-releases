@@ -115,6 +115,24 @@ manual, EXPECT fixtures, translations and source-position tests.
 6. Function argument counts (D16,D17).
    Include function name, declaration contract and exact or minimum observed
    count. Preserve quoted commas, empty arguments and user-function semantics.
+   Implemented: existing error 1490 includes function name, expected count
+   or accepted interval, and supplied count, with English/German detail
+   under -x at the function name. Existing numeric references/EXPECT IDs
+   remain valid; the error-number table describes the new detail.
+   Built-in calls whose argument parsing finishes report an exact count.
+   User-function missing arguments report the consumed count. Extra user
+   arguments report at least declaration-count+1; the built-in three-slot
+   ceiling reports at least four. Do not evaluate or scan the unused tail
+   just to claim a complete count. At that ceiling, known functions report
+   their declaration; unknown names report the parser's maximum instead.
+   Evaluation order, deferred unknown symbols, relocation checks, register
+   argument behavior, quoted delimiters, zero-argument functions and legacy
+   empty/trailing argument behavior are preserved. No new call is accepted
+   or rejected. Tests cover all count branches, nested calls, variable
+   built-in contracts, user functions with more than three parameters,
+   source positions, single primary errors, evaluation precedence, German
+   detail and golden output captured from the preceding build. All 342
+   tests pass with embedded and external catalogs (GCC 16.2, Windows).
 
 7. Remaining CPU/operand constraints (D21,D23).
    Minimum-CPU detail with source position; AVR LPM/ELPM accepted forms and

@@ -1852,6 +1852,24 @@ static void WrExpressionViewError(tErrorNum error, as_strcomp_view_t source) {
     StrCompFree(&component);
 }
 
+static void report_function_arg_count(
+        tStrComp const* name, unsigned minimum, unsigned maximum,
+        unsigned actual, Boolean at_least) {
+    String detail;
+    if (minimum == maximum) {
+        as_snprintf(detail, sizeof(detail),
+                getmessage(at_least ? Num_ErrMsgFunctionCountAtLeast
+                                    : Num_ErrMsgFunctionCount),
+                name->str.p_str, minimum, actual);
+    } else {
+        as_snprintf(detail, sizeof(detail),
+                getmessage(at_least ? Num_ErrMsgFunctionRangeAtLeast
+                                    : Num_ErrMsgFunctionRange),
+                name->str.p_str, minimum, maximum, actual);
+    }
+    WrXErrorPos(ErrNum_InvFuncArgCnt, detail, &name->Pos);
+}
+
 static void EvalExpressionView(
         as_strcomp_view_t const* expression, TempResult* pErg,
         as_eval_flags_t eval_flags,
@@ -2278,7 +2296,8 @@ integer_result:
             for (z1 = 0, cb_data_stack.arg_index = 0; z1 < ValFunc->ArguCnt;
                  z1++, cb_data_stack.arg_index++) {
                 if (!FArg.text.len) {
-                    WrError(ErrNum_InvFuncArgCnt);
+                    report_function_arg_count(&FName, ValFunc->ArguCnt,
+                            ValFunc->ArguCnt, z1, False);
                     LEAVE2;
                 }
 
@@ -2321,7 +2340,8 @@ integer_result:
                 }
             }
             if (FArg.text.len) {
-                WrError(ErrNum_InvFuncArgCnt);
+                report_function_arg_count(&FName, ValFunc->ArguCnt,
+                        ValFunc->ArguCnt, ValFunc->ArguCnt + 1, True);
                 LEAVE2;
             }
             size_t definition_len = strlen(ValFunc->Definition);
@@ -2400,7 +2420,18 @@ integer_result:
         p_callback_data->p_stack = &cb_data_stack;
         do {
             if (cnt >= 3) {
-                WrError(ErrNum_InvFuncArgCnt);
+                /* Only the first three arguments have been evaluated. Do not
+                   evaluate the tail just to count it or change error precedence. */
+                pFunction = function_find(FName.str.p_str);
+                if (pFunction) {
+                    report_function_arg_count(&FName, pFunction->MinNumArgs,
+                            pFunction->MaxNumArgs, cnt + 1, True);
+                } else {
+                    String detail;
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgFunctionParserLimit),
+                            FName.str.p_str, (unsigned)(cnt + 1));
+                    WrXErrorPos(ErrNum_InvFuncArgCnt, detail, &FName.Pos);
+                }
                 LEAVE;
             }
             p_arg_split_pos = as_strref_find_quoted(FArg.text, ',');
@@ -2445,7 +2476,8 @@ integer_result:
         /* argument checking */
 
         if ((cnt < pFunction->MinNumArgs) || (cnt > pFunction->MaxNumArgs)) {
-            WrError(ErrNum_InvFuncArgCnt);
+            report_function_arg_count(&FName, pFunction->MinNumArgs,
+                    pFunction->MaxNumArgs, cnt, False);
             LEAVE;
         }
         for (z1 = 0; z1 < cnt; z1++) {

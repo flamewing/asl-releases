@@ -1903,3 +1903,23 @@ Message ErrMsg504Placement
 Message ErrMsgPositiveDimension
  "Arraydimension 0 muss mindestens 1 sein"
  "array dimension 0 must be at least 1"
+
+Message ErrMsgFunctionCount
+ "Funktion %s: Argumentzahl %u erforderlich, erhalten %u"
+ "function %s: argument count %u required, got %u"
+
+Message ErrMsgFunctionCountAtLeast
+ "Funktion %s: Argumentzahl %u erforderlich, mindestens %u erhalten"
+ "function %s: argument count %u required, got at least %u"
+
+Message ErrMsgFunctionRange
+ "Funktion %s: Argumentzahl muss in [%u,%u] liegen, erhalten %u"
+ "function %s: argument count must be in [%u,%u], got %u"
+
+Message ErrMsgFunctionRangeAtLeast
+ "Funktion %s: Argumentzahl muss in [%u,%u] liegen, mindestens %u erhalten"
+ "function %s: argument count must be in [%u,%u], got at least %u"
+
+Message ErrMsgFunctionParserLimit
+ "Funktion %s: Parser erlaubt h&ouml;chstens 3 Argumente, mindestens %u erhalten"
+ "function %s: parser accepts at most 3 arguments, got at least %u"
