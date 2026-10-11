@@ -443,3 +443,18 @@ Validation: extract the actual acceptance block from the workflow and run
 it under Bash against ten responses: LF, CRLF plus warning, whitespace,
 no final newline, HTTP 201, empty/unrelated/error-prefixed/extended HTTP 200
 bodies, and HTTP 503 containing the success sentence. All checks pass.
+
+Rescan 122001: test-helper allocations (914457, 914461, 914459)
+
+Analyzed revision 9732bf21; 183 detected, seven new, 94 eliminated.
+914457 and 914461 identify real leaks when catalog assertions return early.
+Route both failure returns and success through cleanup of MsgBlock and
+StrPosis. This covers all three/two reported occurrences respectively.
+914459 has two bounds occurrences based on contradictory mode comparisons:
+the trace assumes mode is both 8193 and reloc-undefined. Those names are
+mutually exclusive. Explicitly set the payload length to one alongside
+the fixed 76-byte layout, making the allocation/write invariant local.
+
+Validation: all 338 tests pass with embedded and external catalogs;
+complete object fixtures still preserve both large payloads and the
+two-record undefined-symbol diagnostic. Await another scan for elimination.

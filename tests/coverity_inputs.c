@@ -26,6 +26,7 @@ static int catalog(char const* mode) {
     size_t     pos        = sizeof(ident) - 1;
     size_t     length_pos, count_pos, table_pos, string_pos;
     TMsgCat    cat = {NULL, NULL, 0};
+    int        result = 1;
 
     memcpy(data, ident, pos);
     put32(data + pos, 1234);
@@ -83,17 +84,19 @@ static int catalog(char const* mode) {
     msg_catalog_open_buffer(&cat, data, pos, 1234, 5678);
     if (cat.MsgCount != 2 || strcmp(catgetmessage(&cat, 0), "hello")
         || strcmp(catgetmessage(&cat, 1), "world")) {
-        return 1;
+        goto cleanup;
     }
     char* fallback = catgetmessage(&cat, -1);
     if (!strstr(fallback, "-1") || !memchr(fallback, '\0', STRINGSIZE)
         || catgetmessage(&cat, cat.MsgCount) != fallback
         || !strstr(fallback, "2") || strcmp(catgetmessage(&cat, 0), "hello")) {
-        return 1;
+        goto cleanup;
     }
+    result = 0;
+cleanup:
     free(cat.MsgBlock);
     free(cat.StrPosis);
-    return 0;
+    return result;
 }
 
 static int relocations(void) {
@@ -201,6 +204,8 @@ static int object_file(char const* mode, char const* path) {
                       : !strcmp(mode, "65535") ? 65535 : 1;
     size_t size = 12 + length + (reloc ? 13 : 0) + 2;
     if (!strcmp(mode, "reloc-undefined")) {
+        /* The fixed layout below contains two one-byte data records. */
+        length = 1;
         size = 76;
     }
     Byte* data = (Byte*)calloc(size, 1);
