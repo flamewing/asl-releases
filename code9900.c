@@ -58,6 +58,18 @@ typedef struct {
     Byte        CoreFlags;
 } tCPUProps;
 
+static tCPUProps const CPUProps[] = {
+        { "TI990/4",                      eCore9900},
+        {"TI990/10", eCore990_10 | eCoreFlagSupMode},
+        {"TI990/12", eCore990_12 | eCoreFlagSupMode},
+        { "TMS9900",                      eCore9900},
+        { "TMS9940",                      eCore9940},
+        { "TMS9995",                      eCore9995},
+        {"TMS99105",  eCore99105 | eCoreFlagSupMode},
+        {"TMS99110",  eCore99110 | eCoreFlagSupMode},
+        {      NULL,                      eCoreNone},
+};
+
 typedef struct {
     Word Code;
     Byte Flags;
@@ -151,7 +163,10 @@ static Boolean DecodeAdr(tStrComp const* pArg) {
                 AdrPart = 0x20;
                 AdrCnt  = 1;
                 if (!mFirstPassUnknown(Flags) && IsWord && Odd(AdrVal)) {
-                    WrError(ErrNum_AddrNotAligned);
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandAlignment),
+                                (LargeWord)AdrVal);
+                    WrXErrorPos(ErrNum_AddrNotAligned, detail, &IArg.Pos);
                 }
                 return True;
             }
@@ -162,7 +177,10 @@ static Boolean DecodeAdr(tStrComp const* pArg) {
             StrCompShorten(&Reg, 1);
             if (DecodeReg(&Reg, &AdrPart)) {
                 if (AdrPart == 0) {
-                    WrStrErrorPos(ErrNum_InvReg, &Reg);
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices),
+                                "R1..R15");
+                    WrXErrorPos(ErrNum_InvReg, detail, &Reg.Pos);
                 } else {
                     AdrVal = EvalStrIntExpression(&Disp, Int16, &OK);
                     if (OK) {
@@ -221,11 +239,18 @@ static Boolean EvalDist(tStrComp const* pArg, Word* pResult, Word InstrLen) {
                      pArg, !!(*pArg->str.p_str == '@'), UInt16, &OK, &Flags)
              - (EProgCounter() + InstrLen);
     if (OK && !mFirstPassUnknownOrQuestionable(Flags) && Odd(AdrInt)) {
-        WrStrErrorPos(ErrNum_DistIsOdd, pArg);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                    (LargeInt)AdrInt, (LargeInt)2, (LargeWord)(EProgCounter() + InstrLen));
+        WrXErrorPos(ErrNum_DistIsOdd, detail, &pArg->Pos);
         OK = False;
     }
     if (OK && !mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -256) || (AdrInt > 254))) {
-        WrStrErrorPos(ErrNum_JmpDistTooBig, pArg);
+        char detail[240];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                    (LargeInt)AdrInt, (LargeInt)-256, (LargeInt)254,
+                    (LargeWord)(EProgCounter() + InstrLen), (LargeInt)2);
+        WrXErrorPos(ErrNum_JmpDistTooBig, detail, &pArg->Pos);
         OK = False;
     }
     if (OK) {
@@ -260,7 +285,21 @@ static void CheckSupMode(void) {
 
 static Boolean CheckCore(Byte CoreReqFlags) {
     if (!(CoreReqFlags & pCurrCPUProps->CoreFlags)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        char detail[300];
+        Boolean first = True;
+        tCPUProps const* pProp;
+        strmaxcpy(detail, getmessage(Num_ErrMsgOnlyCPUSupported1), sizeof(detail));
+        for (pProp = CPUProps; pProp->pName; pProp++) {
+            if (pProp->CoreFlags & CoreReqFlags) {
+                if (!first) {
+                    strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupportedOr), sizeof(detail));
+                }
+                strmaxcat(detail, pProp->pName, sizeof(detail));
+                first = False;
+            }
+        }
+        strmaxcat(detail, getmessage(Num_ErrMsgOnlyCPUSupported2), sizeof(detail));
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
         return False;
     } else {
         return True;
@@ -269,7 +308,10 @@ static Boolean CheckCore(Byte CoreReqFlags) {
 
 static Boolean CheckNotMode3(tStrComp const* pArg) {
     if ((AdrPart & 0x30) == 0x30) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        char detail[200];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                    "R0..R15 / *Rn / @address / @displacement(R1..R15)");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         return False;
     } else {
         return True;
@@ -711,11 +753,12 @@ static void DecodeRTWP(Word Code) {
         }
         if (mFirstPassUnknown(EvalResult.Flags)) {
             Variant = 0;
-        } else if (Variant > MaxVariant) {
-            WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
-            return;
-        } else if (Variant == 3) {
-            WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
+        } else if ((Variant > MaxVariant) || (Variant == 3)) {
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentChoices),
+                        "RTWP", (LargeInt)Variant, MaxVariant ? "0, 1, 2, 4" : "0");
+            WrXErrorPos(Variant > MaxVariant ? ErrNum_OverRange : ErrNum_InvArg,
+                        detail, &ArgStr[1].Pos);
             return;
         }
         break;
@@ -748,7 +791,10 @@ static void DecodeBYTE(Word Code) {
                     t.Contents.Int.Value &= 0xff;
                 }
                 if (!RangeCheck(t.Contents.Int.Value, Int8)) {
-                    WrStrErrorPos(ErrNum_OverRange, pArg);
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                                "BYTE", t.Contents.Int.Value, (LargeInt)-128, (LargeInt)255);
+                    WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
                     OK = False;
                 } else if (SetMaxCodeLen(CodeLen + 1)) {
                     WrStrErrorPos(ErrNum_CodeOverflow, pArg);
@@ -888,7 +934,10 @@ static void make_pc_even(Word index) {
         if (DoPadding) {
             InsertPadding(1, False);
         } else {
-            WrError(ErrNum_AddrNotAligned);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                        (LargeWord)EProgCounter());
+            WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
         }
     }
 }
@@ -1284,17 +1333,7 @@ static void InitCode_TI990(void) {
     DefCkpt = CKPT_NOTHING; /* CKPT NOTHING */
 }
 
-static tCPUProps const CPUProps[] = {
-        { "TI990/4",                      eCore9900},
-        {"TI990/10", eCore990_10 | eCoreFlagSupMode},
-        {"TI990/12", eCore990_12 | eCoreFlagSupMode},
-        { "TMS9900",                      eCore9900},
-        { "TMS9940",                      eCore9940},
-        { "TMS9995",                      eCore9995},
-        {"TMS99105",  eCore99105 | eCoreFlagSupMode},
-        {"TMS99110",  eCore99110 | eCoreFlagSupMode},
-        {      NULL,                      eCoreNone},
-};
+
 
 void code9900_init(void) {
     tCPUProps const* pProp;

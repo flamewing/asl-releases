@@ -790,8 +790,17 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_DistIsOdd",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All ten historical candidates reviewed in tranches 113-117: primary register errors/empty indirect forms, rejected auto-increment alternatives, indexed R1..R15, operand/instruction alignment, signed branch displacement with PC base, CPU availability and RTWP/BYTE ranges. Preserve original error IDs, wrapping, warning/padding behavior and all accepted encodings; defer provisional branch constraints and honor Type17 CPU masks."
     },
     "codeace.c": {
       "candidate_counts": {
@@ -1820,6 +1829,11 @@
       "file": "code9900.c",
       "issue": "Type17 SRJ/ARJ decoder ignores registered eCore990_12 CPU requirement and encodes these instructions on every CPU.",
       "status": "fixed in tranche 116; use common CheckCore before operand evaluation/encoding; both opcodes reject on seven CPUs and preserve TI990/12 bytes/forward targets"
+    },
+    {
+      "file": "code9900.c",
+      "issue": "Operand alignment warning is unreachable: IsWord is initialized False and never set by any instruction decoder.",
+      "status": "requires focused follow-up of word/byte opcode classification; retained behavior during diagnostic detail review"
     }
   ]
 }

@@ -1466,3 +1466,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     instruction decoders do. Tests reject both instructions with one positioned
     1500/no emission on seven CPUs and retain TI990/12 bytes/forward targets.
     Validation: all 402 CTest cases pass with embedded/external catalogs.
+
+117. 9900 diagnostic details and full historical inventory review.
+    Displacement errors show actual signed distance, aligned [-256,254] range
+    and two-/four-byte PC base; instruction warnings show two-byte alignment.
+    Operand-warning helper is dormant (IsWord is never set); recorded for follow-up. Indexed R0 names allowed registers, auto-increment rejection
+    names accepted forms, CPU gates list accepted CPUs from the same flags.
+    RTWP names discrete variants (3 remains reserved), BYTE names full signed/
+    unsigned byte interval. Retain IDs, predicates, warning emission/padding,
+    accepted encodings and generic primary register evaluation from tranche 113.
+    Validation: all 402 CTest cases pass with embedded/external catalogs.

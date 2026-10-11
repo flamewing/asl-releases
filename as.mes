@@ -1429,6 +1429,10 @@ Message ErrMsgImmediateValueRange
  "Unmittelbarer Wert %llld au&szlig;erhalb [%llld,%llld]"
  "immediate value %llld outside [%llld,%llld]"
 
+Message ErrMsgIntegerArgumentChoices
+ "%s-Wert %llld nicht erlaubt; erlaubte Werte: %s"
+ "%s value %llld not allowed; accepted values: %s"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"
