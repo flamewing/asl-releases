@@ -144,7 +144,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int MinArgCnt, int aux, Boolean M
     else {
         /* auf dieser CPU nicht erlaubter Modus ? */
 
-        if (!ChkMinCPUExt(pAdrMode->MinCPU, ErrNum_AddrModeNotSupported)) {
+        if (!AChkMinCPUPos(pAdrMode->MinCPU, pArg)) {
             return False;
         }
 

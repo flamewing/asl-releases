@@ -203,7 +203,15 @@ extern Boolean ChkMinCPUExt(CPUVar MinCPU, tErrorNum ErrorNum) {
 Boolean AChkMinCPUExtPos(
         CPUVar MinCPU, tErrorNum ErrorNum, const struct sStrComp* pComp) {
     if (MomCPU < MinCPU) {
-        WrStrErrorPos(ErrorNum, pComp);
+        tCPUDef const* pCPUDef = LookupCPUDefByVar(MinCPU);
+        if (pCPUDef) {
+            char detail[100];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMinCPUSupported),
+                    pCPUDef->Name);
+            WrXErrorPos(ErrorNum, detail, &pComp->Pos);
+        } else {
+            WrStrErrorPos(ErrorNum, pComp);
+        }
         return False;
     }
     return True;

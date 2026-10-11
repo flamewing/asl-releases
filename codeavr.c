@@ -12,6 +12,9 @@
 
 #include "codeavr.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -879,12 +882,17 @@ static void DecodeLPM(Word Index) {
         else if (!DecodeArgReg(1, &Reg, AllRegMask))
             ;
         else if (!DecodeMem(ArgStr[2].str.p_str, &Adr)) {
-            WrError(ErrNum_InvAddrMode);
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRProgramPointerSyntax), &ArgStr[2].Pos);
         } else if ((Adr != 0x00) && (Adr != 0x11)) {
-            WrError(ErrNum_InvAddrMode);
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRProgramPointerMode), &ArgStr[2].Pos);
         } else {
             if (((Reg == 30) || (Reg == 31)) && (Adr == 0x11)) {
-                WrError(ErrNum_Unpredictable);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRProgramPointerOverlap),
+                        (unsigned)Reg);
+                WrXErrorPos(ErrNum_Unpredictable, detail, &ArgStr[1].Pos);
             }
             AppendCode(0x9004 | (Reg << 4) | (Adr & 1));
         }
@@ -907,12 +915,17 @@ static void DecodeELPM(Word Index) {
     else if (!DecodeArgReg(1, &Reg, AllRegMask))
         ;
     else if (!DecodeMem(ArgStr[2].str.p_str, &Adr)) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRProgramPointerSyntax), &ArgStr[2].Pos);
     } else if ((Adr != 0x00) && (Adr != 0x11)) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRProgramPointerMode), &ArgStr[2].Pos);
     } else {
         if (((Reg == 30) || (Reg == 31)) && (Adr == 0x11)) {
-            WrError(ErrNum_Unpredictable);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRProgramPointerOverlap),
+                    (unsigned)Reg);
+            WrXErrorPos(ErrNum_Unpredictable, detail, &ArgStr[1].Pos);
         }
         AppendCode(0x9006 | (Reg << 4) | (Adr & 1));
     }

@@ -1923,3 +1923,15 @@ Message ErrMsgFunctionRangeAtLeast
 Message ErrMsgFunctionParserLimit
  "Funktion %s: Parser erlaubt h&ouml;chstens 3 Argumente, mindestens %u erhalten"
  "function %s: parser accepts at most 3 arguments, got at least %u"
+
+Message ErrMsgAVRProgramPointerSyntax
+ "Unbekannte Programmzeiger-Syntax; erwartet wird Z oder Z+"
+ "unrecognized program-pointer syntax; expected Z or Z+"
+
+Message ErrMsgAVRProgramPointerMode
+ "Diese Anweisung erlaubt nur Z oder Z+ als Programmzeiger"
+ "this instruction accepts only Z or Z+ as its program pointer"
+
+Message ErrMsgAVRProgramPointerOverlap
+ "Zielregister R%u &uuml;berlappt Z (R31:R30), das durch Z+ erh&ouml;ht wird"
+ "destination register R%u overlaps Z (R31:R30), which is incremented by Z+"

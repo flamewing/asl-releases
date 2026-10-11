@@ -137,6 +137,25 @@ manual, EXPECT fixtures, translations and source-position tests.
 7. Remaining CPU/operand constraints (D21,D23).
    Minimum-CPU detail with source position; AVR LPM/ELPM accepted forms and
    pointer/register overlap. Check actual helper output before changing it.
+   Implemented: AChkMinCPUExtPos uses the existing localized minimum-CPU
+   message with its operand position, retaining the generic fallback if
+   CPU lookup fails. Previously unused, it is now exercised by DSP 3205x
+   addressing-mode checks instead of the positionless minimum-CPU helper.
+   CPU comparison and accepted modes are unchanged; registration order
+   remains meaningful only within the backend's existing CPU scheme.
+   AVR LPM/ELPM errors distinguish unrecognized pointer syntax from a
+   recognized disallowed X/Y/predecrement form, stating the accepted Z/Z+
+   forms and highlighting the pointer operand. Unpredictable-execution
+   warnings name destination R30/R31 and its overlap with Z (R31:R30)
+   during postincrement, highlighting the destination. Instructions still
+   emit code after this warning; core availability, aliases and severity
+   are unchanged. Keep IDs 1350, 1505 and warning 140, with English/German
+   detail under -x. Numeric documentation updated; EXPECT IDs unchanged.
+   Tests cover all disallowed recognized pointers, malformed syntax, both
+   overlapping registers on both instructions, register aliases, core
+   restrictions, required CPU and operand position, one primary diagnostic,
+   translations and golden valid/warning instruction encodings. All 343
+   tests pass with embedded and external catalogs (GCC 16.2, Windows).
 
 8. Mapping/wrap-sensitive checks and further inventory review (D20,D24).
    eZ80 page assumptions, physical translation context and MSP430X signed
