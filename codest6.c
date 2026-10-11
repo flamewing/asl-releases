@@ -12,6 +12,9 @@
 
 #include "codest6.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -93,7 +96,15 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask) {
             AdrCnt  = 1;
             if (!mFirstPassUnknown(EvalResult.Flags)) {
                 if (WinAssume != (AdrInt >> 6)) {
-                    WrError(ErrNum_InAccPage);
+                    char assumed[24], detail[240];
+                    if (WinAssume == 0x40) {
+                        strmaxcpy(assumed, "NOTHING", sizeof(assumed));
+                    } else {
+                        as_snprintf(assumed, sizeof(assumed), "%llld", (LargeInt)WinAssume);
+                    }
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgST6ROMWindow),
+                                (LargeWord)AdrInt, (LargeInt)(AdrInt >> 6), assumed);
+                    WrXErrorPos(ErrNum_InAccPage, detail, &pArg->Pos);
                 }
             }
         } else {
@@ -101,7 +112,10 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask) {
                 AdrInt = Lo(AdrInt);
             }
             if (AdrInt > 0xff) {
-                WrError(ErrNum_OverRange);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                            "DATA", (LargeInt)AdrInt, (LargeInt)0, (LargeInt)255);
+                WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             } else {
                 AdrType = ModDir;
                 AdrVal  = AdrInt;
@@ -113,7 +127,23 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask) {
 chk:
     if ((AdrType != ModNone) && (!(Mask & (1 << AdrType)))) {
         ResetAdr();
-        WrError(ErrNum_InvAddrMode);
+        {
+            char forms[180] = "", detail[240];
+            if (Mask & (MModAcc | MModDir)) {
+                strmaxcat(forms, "A, ", sizeof(forms));
+            }
+            if (Mask & MModDir) {
+                strmaxcat(forms, "V, W, X, Y, expr (DATA), expr (ROM window), ", sizeof(forms));
+            }
+            if (Mask & MModInd) {
+                strmaxcat(forms, "(X), (Y), ", sizeof(forms));
+            }
+            if (*forms) {
+                forms[strlen(forms) - 2] = '\0';
+            }
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
+        }
     }
 }
 
@@ -221,7 +251,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop) {
     /* other # of arguments not allowed */
 
     else {
-        WrError(ErrNum_WrongArgCnt);
+        (void)ChkArgCnt(1, 2);
         return False;
     }
 }
@@ -379,6 +409,14 @@ static void DecodeLDI(Word Code) {
     }
 }
 
+static void WrBranchRange(Integer distance, LargeInt min, LargeInt max,
+                          LargeWord pc_base, tStrComp const* operand) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)distance, min, max, pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &operand->Pos);
+}
+
 static void DecodeRel(Word Code) {
     if (ChkArgCnt(1, 1)) {
         Boolean      OK;
@@ -388,7 +426,7 @@ static void DecodeRel(Word Code) {
 
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -16) || (AdrInt > 15))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(AdrInt, -16, 15, EProgCounter() + 1, &ArgStr[1]);
             } else {
                 CodeLen     = 1;
                 BAsmCode[0] = Code + (((Word)AdrInt << 3) & 0xf8);
@@ -420,7 +458,17 @@ static void DecodeJP_CALL(Word Code) {
                    page. */
 
                 if (DestPage != ((SrcPage == 1) ? PRPRVal : SrcPage)) {
-                    WrError(ErrNum_InAccPage);
+                    char detail[240];
+                    LargeInt selected_page = (SrcPage == 1) ? PRPRVal : SrcPage;
+                    if (selected_page == 4) {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgST6TargetPageUnknown),
+                                    (LargeWord)AdrInt, (LargeInt)DestPage);
+                    } else {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgST6TargetPages),
+                                    (LargeWord)AdrInt, (LargeInt)DestPage, selected_page,
+                                    (LargeInt)SrcPage);
+                    }
+                    WrXErrorPos(ErrNum_InAccPage, detail, &ArgStr[1].Pos);
                 }
 
                 AdrInt &= 0x7ff;
@@ -552,7 +600,7 @@ static void DecodeJRR_JRS(Word Code) {
                       - (EProgCounter() + 3);
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrError(ErrNum_JmpDistTooBig);
+                WrBranchRange(AdrInt, -128, 127, EProgCounter() + 3, &ArgStr[ArgCnt]);
             } else {
                 CodeLen     = 3;
                 BAsmCode[2] = Lo(AdrInt);

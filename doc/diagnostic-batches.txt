@@ -1166,3 +1166,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     accepted bytes. Tests cover all six callers on 12-/13-bit CPUs, eventual
     valid/excessive expressions and single primary undefined-symbol errors.
     Validation: all 393 CTest cases pass with embedded/external catalogs.
+
+85. Complete ST6 historical page/mode/range/branch/count review.
+    Warning 110 shows actual ROM address/page and ASSUME ROMBASE, including
+    NOTHING; JP/CALL shows actual target/page versus permitted source/PRPR
+    pages, identifying unknown PRPR separately. Preserve warning severity
+    and emitted bytes. DATA 1320 gives value/[0,255], 1350 mask-specific forms
+    with register aliases, 1370 signed 16-bit wrapped distance/range/PC+1 or
+    PC+3, and BIT 1110 expected/actual count. Tests cover both address-width
+    families, warning positions and bytes, assumptions/NOTHING, modes,
+    branch endpoints/wrap/forward expressions and primary failures.
+    Validation: all 393 CTest cases pass with embedded/external catalogs.

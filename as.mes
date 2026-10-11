@@ -1309,6 +1309,18 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgST6ROMWindow
+ "ROM-Adresse 0x%lllx verwendet die 64-Byte-Seite %llld; ASSUME ROMBASE=%s"
+ "ROM address 0x%lllx uses 64-byte page %llld; ASSUME ROMBASE=%s"
+
+Message ErrMsgST6TargetPages
+ "Zieladresse 0x%lllx liegt auf Seite %llld; erlaubte Seiten 1 und %llld (Quellseite %llld)"
+ "target address 0x%lllx uses page %llld; allowed pages 1 and %llld (source page %llld)"
+
+Message ErrMsgST6TargetPageUnknown
+ "Zieladresse 0x%lllx liegt auf Seite %llld; nur Seite 1 ist bekannt (ASSUME PRPR=NOTHING)"
+ "target address 0x%lllx uses page %llld; only page 1 is known (ASSUME PRPR=NOTHING)"
+
 Message ErrMsgAddressDispRangePC
  "Adressverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "address displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"

@@ -1250,8 +1250,15 @@
         "ErrNum_OverRange": 1,
         "ErrNum_WrongArgCnt": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange",
+        "ErrNum_WrongArgCnt"
+      ],
+      "status": "complete",
+      "review_notes": "All seven historical sites reviewed in tranche 85: warning 110 ROM-window page versus ROMBASE (including NOTHING), JP/CALL target page versus allowed source/PRPR pages; byte DATA value/full interval; mask-specific forms preserving register aliases; signed 16-bit wrapped 5-/8-bit branch distance and PC+1/+3; BIT count helper. Preserve warning severity/emitted bytes and page selection. Separate signed address, backward-shift UB and provisional-branch bugs fixed in tranches 82/83/84."
     },
     "codest7.c": {
       "candidate_counts": {
