@@ -1604,6 +1604,11 @@
       "file": "code77230.c",
       "issue": "DecodeLDI inverts Error after both invalid destination and expression evaluation, turning an invalid destination into success and emitting a zero load.",
       "status": "fixed in tranche 73; invert expression success only after expression evaluation; failed destination remains an error and suppresses following components and emission"
+    },
+    {
+      "file": "code77230.c",
+      "issue": "SETSVL/SETSVR values 47..63 set the internal Error flag but issue no diagnostic, silently dropping the instruction while assembly succeeds.",
+      "status": "fixed in tranche 74; issue positioned 1320 with actual value and [0,46], preserve unknown masking and primary evaluation failures"
     }
   ]
 }

@@ -1060,3 +1060,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     invalid loads followed by NOP, proving only the NOP word is emitted.
     Preceding valid load/MOV/ALU words remain byte-for-byte unchanged.
     Validation: all 390 CTest cases pass with embedded/external catalogs.
+
+74. Separate NEC 77230 silent shift-value rejection bug.
+    Reproduced SETSVL 47 / SETSVR 63 succeeding with no diagnostics while
+    emitting only subsequent NOPs. Values above the encodable 46 now issue
+    positioned 1320 with actual value and [0,46]. Preserve the existing
+    first-pass unknown masking, preceding accepted bytes and primary
+    expression/type errors. Tests cover both instructions, 47/63/64,
+    unknown/final forward values, endpoints and absence of rejected words.
+    Validation: all 390 CTest cases pass with embedded/external catalogs.

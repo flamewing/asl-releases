@@ -15,6 +15,9 @@
 
 #include "code77230.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -569,7 +572,14 @@ static void DecodeSHV(Word Index) {
     if (mFirstPassUnknown(Flags)) {
         Value &= 31;
     }
-    Error = (Value > 46) ? True : !Error;
+    Error = !Error;
+    if (!Error && (Value > 46)) {
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                    OpPart.str.p_str, (LargeInt)Value, (LargeInt)0, (LargeInt)46);
+        WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
+        Error = True;
+    }
     if (!Error) {
         AddComp(InstrSHV, (Index << 6) + Value);
     }
