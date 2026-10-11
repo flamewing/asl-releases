@@ -122,6 +122,15 @@ static Boolean ChkValidInst(Word Index) {
 
 /*---------------------------------------------------------------------------*/
 
+static void WrFieldTarget(
+        tErrorNum error, Integer target, LargeInt expected_field,
+        char const* field_source, tStrComp const* operand) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg6100FieldTarget),
+                (LargeWord)target, (LargeInt)(target >> 12), expected_field, field_source);
+    WrXErrorPos(error, detail, &operand->Pos);
+}
+
 static void DecodeMR(Word Index) {
     Boolean      Indirect = False;
     Boolean      CurrPage = True;
@@ -210,20 +219,20 @@ static void DecodeMR(Word Index) {
             if (IBVal == ASSUME6100[0].nothing_value) {
                 if ((Adr & 070000) != (EProgCounter() & 070000)) {
                     /* Address not in current field */
-                    WrError(ErrNum_TargInDiffField);
+                    WrFieldTarget(ErrNum_TargInDiffField, Adr, EProgCounter() >> 12, "PC", &ArgStr[adrPos]);
                     return;
                 }
             } else {
                 if ((Adr & 070000) != (IBVal << 12)) {
                     /* Address not in IB field */
-                    WrError(ErrNum_InAccFieldErr);
+                    WrFieldTarget(ErrNum_InAccFieldErr, Adr, IBVal, "IB", &ArgStr[adrPos]);
                     return;
                 }
             }
         } else {
             if ((Adr & 070000) != (EProgCounter() & 070000)) {
                 /* Address not in current field */
-                WrError(ErrNum_TargInDiffField);
+                WrFieldTarget(ErrNum_TargInDiffField, Adr, EProgCounter() >> 12, "PC", &ArgStr[adrPos]);
                 return;
             }
         }
@@ -242,7 +251,13 @@ static void DecodeMR(Word Index) {
             CurrPage = False;
         } else if ((Adr & 07600) != (EProgCounter() & 07600)) {
             /* Not in current page */
-            WrError(ErrNum_TargOnDiffPage);
+            char detail[220];
+            LargeWord field_base = Adr & 070000;
+            LargeWord page_base = field_base | (EProgCounter() & 07600);
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsg6100PageTarget),
+                        (LargeWord)Adr, field_base, field_base | 00177,
+                        page_base, page_base | 00177);
+            WrXErrorPos(ErrNum_TargOnDiffPage, detail, &ArgStr[adrPos].Pos);
             return;
         }
     }

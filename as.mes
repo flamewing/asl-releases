@@ -1397,6 +1397,14 @@ Message ErrMsg6100LiteralIndirect
  "ISZ/DCA mit L (Literal) erfordert I (indirekt)"
  "ISZ/DCA with L (literal) requires I (indirect)"
 
+Message ErrMsg6100FieldTarget
+ "Ziel 0x%lllx liegt in Feld %llld; erforderlich ist Feld %llld (%s)"
+ "target 0x%lllx is in field %llld; required field is %llld (%s)"
+
+Message ErrMsg6100PageTarget
+ "Ziel 0x%lllx muss in Nullseite [0x%lllx,0x%lllx] oder aktueller Seite [0x%lllx,0x%lllx] liegen"
+ "target 0x%lllx must lie in zero page [0x%lllx,0x%lllx] or current page [0x%lllx,0x%lllx]"
+
 Message ErrMsg6100ZeroPageTarget
  "Nullseitenziel 0x%lllx au&szlig;erhalb [0x%lllx,0x%lllx]"
  "zero-page target 0x%lllx outside [0x%lllx,0x%lllx]"

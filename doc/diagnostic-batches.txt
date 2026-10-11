@@ -847,3 +847,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     CPUs, all CPU-restricted callers, literal restrictions, field zero-page
     ranges, zero/current-page endpoints, forward symbols and preceding bytes.
     Validation: all 382 CTest cases pass with embedded/external catalogs.
+
+55. Follow up adjacent IM6100 field/current-page diagnostics.
+    2280/2281 give actual target and field, required field and its PC/IB
+    source. Current-page 1331 gives both accepted zero/current-page intervals
+    within the selected target field. Locate each error at its target.
+    Preserve existing field selection, indirect bypass of IB, page masks,
+    first-pass flags and IDs. Tests cover every memory-reference caller,
+    explicit IB, IB NOTHING, indirect field checks, page bounds across
+    fields and accepted field/current-page bytes.
+    Validation: all 382 CTest cases pass with embedded/external catalogs.

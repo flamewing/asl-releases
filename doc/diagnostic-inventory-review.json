@@ -320,7 +320,7 @@
         "ErrNum_InvAddrMode"
       ],
       "status": "complete",
-      "review_notes": "All five historical sites reviewed in tranche 54: supported CPU via positioned minimum-CPU helper, invalid I/Z/L option at its letter, Z/L conflict, literal ISZ/DCA requiring I, and forced zero-page target plus field-specific interval. Preserve field/page masks, literal allocation, flags and accepted encodings. Adjacent field/current-page messages will be reviewed separately."
+      "review_notes": "All five historical sites reviewed in tranche 54: supported CPU via positioned minimum-CPU helper, invalid I/Z/L option at its letter, Z/L conflict, literal ISZ/DCA requiring I, and forced zero-page target plus field-specific interval. Preserve field/page masks, literal allocation, flags and accepted encodings. Adjacent field/current-page messages improved in tranche 55: actual and required PC/IB fields, and both permitted zero/current-page intervals."
     },
     "code61860.c": {
       "candidate_counts": {
