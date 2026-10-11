@@ -652,14 +652,14 @@ static void DecodeWORD(Word Index) {
             case TempInt:
                 switch (Index) {
                 case 0x0000: /* WORD */
-                    if (ChkRange(t.Contents.Int.Value, -32768, 65535)) {
+                    if ((OK = ChkRangePos(t.Contents.Int.Value, -32768, 65535, pArg))) {
                         set_w_guessed(t.Flags, CodeLen, 1, 0xffff);
                         WAsmCode[CodeLen++] = t.Contents.Int.Value;
                     }
                     b = 0;
                     break;
                 case 0x0001: /* BYTE */
-                    if (ChkRange(t.Contents.Int.Value, -32768, 65535)) {
+                    if ((OK = ChkRangePos(t.Contents.Int.Value, -32768, 65535, pArg))) {
                         set_w_guessed(t.Flags, CodeLen, 2, 0x00ff);
                         WAsmCode[CodeLen++] = t.Contents.Int.Value & 0x00FF;
                         WAsmCode[CodeLen++] = (t.Contents.Int.Value >> 8) & 0x00FF;
@@ -667,7 +667,7 @@ static void DecodeWORD(Word Index) {
                     b = 0;
                     break;
                 case 0x0002: /* TEXT */
-                    if (ChkRange(t.Contents.Int.Value, 0, 255)) {
+                    if ((OK = ChkRangePos(t.Contents.Int.Value, 0, 255, pArg))) {
                         PutByte(t.Contents.Int.Value & 0xff, &b, t.Flags);
                     }
                     break;
@@ -681,6 +681,7 @@ static void DecodeWORD(Word Index) {
                 break;
             case TempString:
                 if (Index != 0x0002) {
+                    WrStrErrorPos(ErrNum_IntButString, pArg);
                     OK = False;
                     break;
                 }

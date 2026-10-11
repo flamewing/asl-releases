@@ -1494,3 +1494,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all eight shifts, both optional variants, three word fields,
     prefixed immediate and B/BEXT forward targets plus final invalid count.
     Validation: all 403 CTest cases pass with embedded/external catalogs.
+
+120. CP-1600 directives discard partial data and report rejected strings.
+    Failed WORD/BYTE/TEXT integer range checks leave preceding/subsequent
+    values emitted. Propagate positioned ChkRangePos result to existing OK
+    cleanup, stopping evaluation and discarding all directive bytes.
+    WORD/BYTE strings silently clear OK without a diagnostic; issue positioned
+    1141 (integer expected, string given), retaining TEXT string handling.
+    Tests cover both bounds/all directives, primary position, EXPECT/no emission,
+    rejected strings and captured original endpoint/string bytes.
+    Validation: all 403 CTest cases pass with embedded/external catalogs.
