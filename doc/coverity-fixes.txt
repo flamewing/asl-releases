@@ -428,3 +428,18 @@ including the existing 75K0, M16 and ST9 instruction suites. The report
 does not demonstrate an instruction reaching those unsupported-size
 paths; these changes make the local contract explicit. Await a scan of
 the fixed revision before claiming elimination of all three occurrences.
+
+Workflow follow-up: successful HTTP 200 with a version warning
+
+Run 38146603632 submitted 9732bf21 successfully but the exact-line response
+check rejected its HTTP 200 body. The logs show the success sentence plus
+a cov-build version warning; they do not preserve the raw response bytes.
+Accept the complete success sentence with surrounding whitespace, including
+CRLF line endings, while continuing to reject unrelated HTTP 200 bodies.
+Print accepted responses too so that Coverity's version warning remains
+visible. HTTP/transport error handling and HTTP 201 acceptance are unchanged.
+
+Validation: extract the actual acceptance block from the workflow and run
+it under Bash against ten responses: LF, CRLF plus warning, whitespace,
+no final newline, HTTP 201, empty/unrelated/error-prefixed/extended HTTP 200
+bodies, and HTTP 503 containing the success sentence. All checks pass.
