@@ -16,6 +16,9 @@
 #include "code3254x.h"
 
 #include "asmcode.h"
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -98,6 +101,28 @@ static char const ShortConds[4][4] = {"EQ", "LT", "GT", "NEQ"};
 
 static Boolean IsAcc(char* Asc) {
     return ((Asc[1] == '\0') && (as_toupper(*Asc) >= 'A') && (as_toupper(*Asc) <= 'B'));
+}
+
+static void WrDataWindow(tStrComp const* arg, Word address, Word offset, Boolean sp_relative) {
+    char detail[280];
+    if (sp_relative) {
+        if (Reg_SP > 0xffff) {
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
+                        "SP", (LargeWord)address);
+        } else {
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressRegisterOffsetRange),
+                        (LargeWord)address, (LargeInt)offset, (LargeInt)0, (LargeInt)127,
+                        "SP", (LargeWord)Reg_SP);
+        }
+    } else if (Reg_DP > 0x1ff) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
+                    "DP", (LargeWord)address);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgC54DPWindow),
+                    (LargeWord)address, (LargeInt)(address >> 7), (LargeInt)Reg_DP,
+                    (LargeWord)(Reg_DP << 7), (LargeWord)((Reg_DP << 7) | 127));
+    }
+    WrXErrorPos(ErrNum_InAccPage, detail, &arg->Pos);
 }
 
 static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
@@ -236,16 +261,17 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
 
         *AdrVals = EvalStrIntExpressionWithFlags(pArg, UInt16, &OK, &Flags);
         if (OK) {
+            Word address = *AdrVals;
             if (Reg_CPL) /* short address rel. to SP? */
             {
                 *AdrVals -= Reg_SP;
                 if (!mFirstPassUnknown(Flags) && (*AdrVals > 127)) {
-                    WrError(ErrNum_InAccPage);
+                    WrDataWindow(pArg, address, *AdrVals, True);
                 }
             } else /* on DP page ? */
             {
                 if (!mFirstPassUnknown(Flags) && ((*AdrVals >> 7) != (Reg_DP))) {
-                    WrError(ErrNum_InAccPage);
+                    WrDataWindow(pArg, address, *AdrVals, False);
                 }
             }
             AdrVals[0] &= 127;

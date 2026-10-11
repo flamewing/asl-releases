@@ -1445,6 +1445,18 @@ Message ErrMsg8008MemoryToMemory
  "MOV M,M ist nicht kodierbar; mindestens ein Operand muss ein Register sein"
  "MOV M,M cannot be encoded; at least one operand must be a register"
 
+Message ErrMsgAssumedAddressRegisterUnknown
+ "ASSUME %s=NOTHING; f&uuml;r Adresse 0x%lllx ist kein Adressfenster bekannt"
+ "ASSUME %s=NOTHING; no address window is known for address 0x%lllx"
+
+Message ErrMsgAddressRegisterOffsetRange
+ "Adresse 0x%lllx ergibt Offset %llld au&szlig;erhalb [%llld,%llld] relativ zu %s=0x%lllx"
+ "address 0x%lllx gives offset %llld outside [%llld,%llld] relative to %s=0x%lllx"
+
+Message ErrMsgC54DPWindow
+ "Adresse 0x%lllx verwendet DP-Seite %llld; ASSUME DP=%llld w&auml;hlt [0x%lllx,0x%lllx]"
+ "address 0x%lllx uses DP page %llld; ASSUME DP=%llld selects [0x%lllx,0x%lllx]"
+
 Message ErrMsgIntegerArgumentRange
  "%s-Argument %llld au&szlig;erhalb [%llld,%llld]"
  "%s argument %llld outside [%llld,%llld]"

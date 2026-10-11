@@ -1586,3 +1586,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     dual ordinal/address choices, interval check now positions the argument.
     Preserve error IDs, predicates, syntax selection and original accepted bytes.
     Validation: all 407 CTest cases pass with embedded/external catalogs.
+
+130. TMS320C54x DP/SP assumed address windows.
+    Both historical 110 warnings identify actual address and selected DP
+    page/window or unsigned wrapped SP-relative offset [0,127]. NOTHING
+    assumptions identify unknown DP/SP instead of presenting internal sentinel
+    values as register settings. Position warnings at address operand, retain
+    severity, predicates, low-field masking and emitted bytes. Tests cover
+    both bounds, unknown assumptions, accepted endpoints/wrapping and warnings.
+    Validation: all 408 CTest cases pass with embedded/external catalogs.

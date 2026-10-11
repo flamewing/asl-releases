@@ -204,8 +204,11 @@
         "ErrNum_InAccPage": 2,
         "ErrNum_InvAddrMode": 11
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InAccPage"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 130 reviews both historical InAccPage warnings: actual DP page/window or SP wrapped offset/bounds, explicit NOTHING assumptions and operand position. Original predicates/wrapping/warning emission retained. Eleven InvAddrMode sites still require full review."
     },
     "code340xx.c": {
       "candidate_counts": {
