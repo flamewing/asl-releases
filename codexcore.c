@@ -404,10 +404,10 @@ static void Code_branch_core(Word Code, int DistArgIndex) {
         /* correct delta for longer instruction */
 
         Delta = (LongInt)((LongWord)Delta - 2);
-        if ((Delta < -131070) || (Delta >= 131070)) {
+        if ((Delta < -131070) || (Delta > 131070)) {
             char detail[200];
             as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
-                        (LargeInt)Delta, (LargeInt)-131070, (LargeInt)131068,
+                        (LargeInt)Delta, (LargeInt)-131070, (LargeInt)131070,
                         (LargeWord)(EProgCounter() + 4), (LargeInt)2);
             WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[DistArgIndex].Pos);
         } else {

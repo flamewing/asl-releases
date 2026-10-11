@@ -920,3 +920,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     The same manual confirms positive endpoint 65535 halfwords is valid;
     handle its separate automatic branch range off-by-one next.
     Validation: all 384 CTest cases pass with embedded/external catalogs.
+
+61. Separate XCore automatic long-branch positive endpoint bug.
+    Replace positive >=131070 rejection with >131070: the XS1 manual
+    specifies a full unsigned 16-bit halfword displacement, including 65535,
+    in both directions. Negative endpoint was already accepted. Update -x
+    interval to symmetric [-131070,131070], retaining PC+4 and even rule.
+    Source: The XMOS XS1 Architecture, pp. 62-65:
+    https://docs.alexrp.com/xcore/xmos_xs1.pdf
+    Tests compare accepted BRU/BRF/BRT positive endpoint against explicit
+    encoders, retain negative endpoint, reject the next even value for all
+    three callers, and cover a forward-defined maximum target.
+    Validation: all 384 CTest cases pass with embedded/external catalogs.

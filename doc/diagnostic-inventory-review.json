@@ -1359,7 +1359,7 @@
         "ErrNum_OverRange"
       ],
       "status": "complete",
-      "review_notes": "All five historical sites reviewed in tranche 59: actual short-form immediate and [0,11] interval, instruction alignment, and long-branch displacement [-131070,131068], PC+4 and even constraint. Adjacent branch alignment shows PC+2 distance. Preserve first-pass masking, signed-32-bit wrapping, asymmetric upper limit, short/long selection and existing bytes. Separate evaluation/overflow fixes in tranches 57/58."
+      "review_notes": "All five historical sites reviewed in tranche 59: actual short-form immediate and [0,11] interval, instruction alignment, and long-branch displacement [-131070,131068], PC+4 and even constraint. Adjacent branch alignment shows PC+2 distance. Preserve first-pass masking, signed-32-bit wrapping, asymmetric upper limit, short/long selection and existing bytes. Separate evaluation/overflow fixes in tranches 57/58. Tranche 60 corrects prefix encoding; tranche 61 accepts the ISA-confirmed positive endpoint, making the displayed long interval [-131070,131070]."
     },
     "codexgate.c": {
       "candidate_counts": {
@@ -1545,7 +1545,7 @@
     {
       "file": "codexcore.c",
       "issue": "Automatic long branches reject positive byte displacement 131070 even though XS1 permits the full unsigned 16-bit halfword displacement 65535 in either direction.",
-      "status": "confirmed against XS1 architecture manual pp. 62-65; fix separately in tranche 61"
+      "status": "fixed in tranche 61; positive byte displacement 131070 now accepted and agrees with explicit 65535-halfword encoders, next value still rejected"
     }
   ]
 }
