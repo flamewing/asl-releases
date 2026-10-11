@@ -254,3 +254,34 @@ manual, EXPECT fixtures, translations and source-position tests.
     Report the computed displacement, instruction-specific PC base and
     encoding range; preserve CPU variants, forward-symbol handling and
     existing branch selection. Verify endpoints and valid encoded bytes.
+    Implemented all four 1370 rejection paths in code65.c: ordinary/forced
+    short branches, BBR/BBS bit branches, 65C19 BAR/BAS and MELPS740 BBC/BBS.
+    Reuse the existing English/German branch-range message under -x and
+    locate the target operand. Report the already-computed signed 16-bit
+    displacement and [-128,127] bounds; the PC base is the same unwrapped
+    value used in the calculation. MELPS740 includes accumulator versus
+    memory lengths and the extra NOP after CLI/SEI. Target types, flags,
+    CPU gates, forced-size choices and 65CE02 short/long selection remain
+    unchanged. There is no new long-branch range rejection.
+    Tests cover both out-of-range edges and accepted endpoints, each PC
+    base, CLI/SEI adjustment, 16-bit wrap, unknown targets, forward range
+    errors/valid branches, German details, positions and single errors.
+    Golden bytes were captured before the change, including long and
+    automatically selected 65CE02 branches. Numeric references updated.
+    Validation: all 347 CTest cases pass with embedded/external catalogs;
+    existing EXPECT diagnostic numbers remain valid.
+    The MELPS740 golden capture also exposed a separate existing defect:
+    InsNOP moves instruction bytes left rather than right before writing
+    the leading NOP, losing the opcode and copying stale bytes. The capture
+    intentionally retains those old bytes for this diagnostics-only batch;
+    correct that behavior with dedicated expected-opcode tests separately.
+
+12. MELPS740 automatic NOP insertion (separate encoding correction).
+    Fix the InsNOP shift direction identified during batch 11. Test CLI/SEI
+    followed by ordinary and bit-branch instructions, ADC/SBC erratum
+    insertion, correct opcodes/operands and the branch PC-base adjustment.
+    Existing fixtures may contain the buggy encodings; review replacements.
+
+13. Continue manual branch inventory review: HC12.
+    Add displacement/range/PC-base detail to code6812.c branch checks,
+    preserving its branch forms, units and unknown-symbol behavior.

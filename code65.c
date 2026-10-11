@@ -12,6 +12,9 @@
 
 #include "code65.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -535,6 +538,14 @@ static void DecodeSEB_CLB(Word Code) {
     }
 }
 
+/* Use the same signed 16-bit distance the encoding check already computed. */
+static void report_branch_distance(Integer distance, LongWord pc_base, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127, (LargeWord)pc_base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeBBC_BBS(Word Code) {
     Boolean      ValOK;
     tSymbolFlags Flags;
@@ -562,7 +573,8 @@ static void DecodeBBC_BBS(Word Code) {
                 if (ValOK) {
                     if (!RangeCheck(distance, SInt8)
                         && !mFirstPassUnknownOrQuestionable(Flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(distance,
+                                EProgCounter() + 2 + Ord(b) + Ord(Last_CLI_SEI_Flag), &ArgStr[3]);
                     } else {
                         CodeLen               = 2 + Ord(b);
                         BAsmCode[CodeLen - 1] = distance & 0xff;
@@ -603,7 +615,7 @@ static void DecodeBBR_BBS(Word Code) {
                 if (ValOK) {
                     if (!RangeCheck(distance, SInt8)
                         && !mFirstPassUnknownOrQuestionable(Flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(distance, EProgCounter() + 3, &ArgStr[2]);
                     } else {
                         CodeLen     = 3;
                         BAsmCode[2] = distance & 0xff;
@@ -683,7 +695,7 @@ static void DecodeBAR_BAS(Word Code) {
                 if (OK) {
                     if (!RangeCheck(distance, SInt8)
                         && !mFirstPassUnknownOrQuestionable(flags)) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(distance, EProgCounter() + 5, &ArgStr[3]);
                     } else {
                         BAsmCode[0] = Code;
                         BAsmCode[4] = distance & 0xff;
@@ -883,7 +895,7 @@ static void DecodeCond(Word Index) {
             } else if (
                     !RangeCheck(AdrInt, SInt8)
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, EProgCounter() + (4 - ForceSize), &ArgStr[1]);
             } else {
                 BAsmCode[0] = pOrder->CodeShort;
                 BAsmCode[1] = AdrInt & 0xff;
