@@ -359,6 +359,10 @@ static tRegEvalResult DecodeReg(
                 pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
         if (eIsReg == RegEvalResult) {
             *pValue = RegDescr.Reg;
+            /* An unresolved mandatory register uses a provisional value. */
+            if (!EvalResult.OK) {
+                EvalResult.DataSize = ChkRegSize;
+            }
         }
     }
 

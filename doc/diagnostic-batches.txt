@@ -1611,3 +1611,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     index parsing before base address encoding. Tests cover three CPU generations,
     all four scale codes, one primary error, EXPECT/no emission and captured bytes.
     Validation: all 409 CTest cases pass with embedded/external catalogs.
+
+133. NS32000 forward mandatory register aliases.
+    Shared register evaluation supplies an unknown-size placeholder for unresolved
+    aliases; backend size matching then rejects valid forward index/list aliases.
+    Use required size only for unresolved mandatory placeholders; preserve known
+    register type matching and final undefined-register errors. Tests cover three
+    CPU generations, four scales, SAVE, undefined aliases and wrong-size registers.
+    Validation: all 409 CTest cases pass with embedded/external catalogs.

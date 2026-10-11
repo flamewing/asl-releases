@@ -1909,6 +1909,11 @@
       "file": "codens32k.c",
       "issue": "Scaled index parser continues after mandatory register evaluation/type failure, emitting instruction bytes despite the diagnostic.",
       "status": "fixed in tranche 132; abort failed index parsing before base address encoding; three CPU generations/all scale codes/primary errors/no emission/valid bytes checked"
+    },
+    {
+      "file": "codens32k.c",
+      "issue": "Mandatory forward register aliases receive an unknown-size provisional register, then fail NS32000 size matching before resolution.",
+      "status": "fixed in tranche 133; retain requested size for unresolved mandatory register placeholder; three CPU generations/all index scales/SAVE/undefined and wrong-size primary errors checked"
     }
   ]
 }
