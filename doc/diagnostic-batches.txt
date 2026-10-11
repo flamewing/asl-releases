@@ -1079,3 +1079,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     positions and accepted words. Tests cover MOV/LDI domains, all 25 ALU
     instructions, both DW failures/endpoints and preceding valid encodings.
     Validation: all 390 CTest cases pass with embedded/external catalogs.
+
+76. Separate SC/MP redundant pointer-register error bug.
+    Reproduced XPAL E and JS E,... reporting 1130 followed by 1445;
+    out-of-range and undefined pointer expressions likewise gain a second
+    error. Pointer parsing already reports every failure, so pointer orders
+    and JS now encode only on success and retain its primary diagnostic.
+    Tests cover all three pointer orders and JS, size/range/undefined errors,
+    one exact-position error per failure, rejected words and preceding bytes.
+    Validation: all 391 CTest cases pass with embedded/external catalogs.

@@ -1229,7 +1229,8 @@
         "ErrNum_InvReg": 3
       },
       "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "status": "partially reviewed",
+      "review_notes": "Tranche 76 removes redundant InvReg errors from pointer-order and JS callers: pointer evaluation always supplies the primary size/range/undefined error. Two of three historical InvReg sites reviewed; remaining auto-index register constraint and other families pending."
     },
     "codest6.c": {
       "candidate_counts": {
@@ -1613,6 +1614,11 @@
       "file": "code77230.c",
       "issue": "SETSVL/SETSVR values 47..63 set the internal Error flag but issue no diagnostic, silently dropping the instruction while assembly succeeds.",
       "status": "fixed in tranche 74; issue positioned 1320 with actual value and [0,46], preserve unknown masking and primary evaluation failures"
+    },
+    {
+      "file": "codescmp.c",
+      "issue": "Pointer-order and JS callers add InvReg after pointer decoding has already emitted the primary operand-size/range/undefined diagnostic.",
+      "status": "fixed in tranche 76; emit only on successful pointer decoding and retain the primary failure"
     }
   ]
 }

@@ -315,9 +315,7 @@ static void DecodeImm(Word Index) {
 static void DecodeRegOrder(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
-    else if (decode_ptr_reg(&ArgStr[1], BAsmCode + 0) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-    } else {
+    else if (decode_ptr_reg(&ArgStr[1], BAsmCode + 0) == eIsReg) {
         BAsmCode[0] |= Index;
         CodeLen = 1;
     }
@@ -356,9 +354,7 @@ static void decode_js(Word Index) {
 
     if (!ChkArgCnt(2, 2))
         ;
-    else if (decode_ptr_reg(&ArgStr[1], &reg) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
-    } else {
+    else if (decode_ptr_reg(&ArgStr[1], &reg) == eIsReg) {
         Boolean ok;
         Word    address = EvalStrIntExpression(&ArgStr[2], UInt16, &ok);
 
