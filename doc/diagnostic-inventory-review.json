@@ -1568,7 +1568,12 @@
     {
       "file": "codeol50.c",
       "issue": "DecodeRel ignores failed target evaluation, causing secondary 1370 after 1320 for MSM5054 BEQ 1024 and potentially encoding provisional values.",
-      "status": "reproduced; fix separately in tranche 66"
+      "status": "fixed in tranche 66; return after failed target evaluation, all five CPUs retain only their primary type/range error"
+    },
+    {
+      "file": "codeol50.c",
+      "issue": "Forward-only MSM5054/5055/5056 branches reject first-pass unknown target placeholder 0 as negative PC+1 displacement, preventing forward labels from resolving.",
+      "status": "reproduced with BEQ target followed by NOP and target:NOP; fix separately in tranche 67"
     }
   ]
 }

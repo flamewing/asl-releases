@@ -406,6 +406,9 @@ static void DecodeRel(Word Index) {
                 = EvalStrIntExpressionWithFlags(&ArgStr[1], CodeIntType, &OK, &Flags)
                   - (EProgCounter() + 1);
         Integer MinDist = AllowMinus ? -32 : 0, MaxDist = AllowPlus ? 31 : -1;
+        if (!OK) {
+            return;
+        }
 
         if (((Distance < MinDist) || (Distance > MaxDist))
             && !mSymbolQuestionable(Flags)) {

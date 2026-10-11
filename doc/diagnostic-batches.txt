@@ -972,3 +972,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all five CPUs, missing @, absent/excess operands, primary
     undefined indirect addresses and unchanged JMP/JMPIO endpoint bytes.
     Validation: all 387 CTest cases pass with embedded/external catalogs.
+
+66. Separate OLMS-50 branch target evaluation cascade.
+    Return after failed target evaluation before distance validation or
+    provisional encoding. Reproduced MSM5054 BEQ 1024 issuing 1320 followed
+    by 1370. Tests cover eight branch aliases on all five CPUs and exactly
+    one primary type-overflow error; undefined targets checked on 6051/6052.
+    Forward-only CPUs also reject unknown labels' first-pass negative
+    placeholder, a separate existing problem to correct in tranche 67.
+    Validation: all 387 CTest cases pass with embedded/external catalogs.
