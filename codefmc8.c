@@ -243,7 +243,7 @@ static Boolean DecodeBitAdr(tStrComp const* pArg, Byte* Adr, Byte* Bit) {
     tStrComp AddrArg, BitArg;
     Boolean  OK;
 
-    sep = strchr(pArg->str.p_str, ':');
+    sep = QuotPos(pArg->str.p_str, ':');
     if (!sep) {
         WrAddressForms(pArg, "expr (0..255):bit (0..7)");
         return FALSE;

@@ -121,3 +121,8 @@ endforeach()
 check_bytes(upper_edge MB89190 " beq 129" "fd7f")
 check_bytes(lower_edge MB89190 " org 126\n beq 0" "fd80")
 check_bytes(wrap MB89190 " beq 65535" "fdfd")
+
+check_bytes(quoted_address MB89190 " setb ':':0\n clrb ':':7\n bbc ':':2,$+4\n bbs ':':1,$+3" "a83aa73ab23a01b93a00")
+check_bytes(numeric_address MB89190 " setb 58:0\n clrb 58:7\n bbc 58:2,$+4\n bbs 58:1,$+3" "a83aa73ab23a01b93a00")
+check_diagnostic(quoted_without_separator MB89190 " setb ':'" 1350 "allowed addressing forms: expr (0..255):bit (0..7)" 3 7)
+check_diagnostic(quoted_overflow MB89190 " setb ':'+256:0" 1320 "314 > 255" 3 7)

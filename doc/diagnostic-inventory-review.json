@@ -1690,7 +1690,7 @@
     {
       "file": "codefmc8.c",
       "issue": "DecodeBitAdr uses strchr for its separator, so a colon character literal in the address is split inside its quotes and rejected.",
-      "status": "reproduced; quote-aware separator follow-up pending"
+      "status": "fixed in tranche 90; quote-aware separator search accepts character-literal addresses and preserves missing-separator/primary range failures"
     }
   ]
 }

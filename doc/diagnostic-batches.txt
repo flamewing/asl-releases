@@ -1212,3 +1212,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover masks and immediate widths, all branch aliases, primary bit
     errors, endpoints/wrap, exact positions and preceding operand encodings.
     Validation: all 394 CTest cases pass with embedded/external catalogs.
+
+90. Separate F2MC8L quoted-colon bit-address parsing bug.
+    Reproduced SETB ':':0 splitting at the colon inside the character literal
+    and reporting invalid symbol name. Search for an unquoted separator with
+    QuotPos. All four bit/bit-branch callers now encode quoted address 58
+    exactly like numeric 58; missing unquoted separators retain 1350 and
+    quoted address overflows retain their single primary range error.
+    Validation: all 394 CTest cases pass with embedded/external catalogs.
