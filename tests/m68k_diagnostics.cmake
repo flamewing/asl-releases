@@ -193,3 +193,75 @@ foreach(case IN ITEMS "branch-short-high:Sprungverschiebung 128"
     endif()
 endforeach()
 set(ENV{LC_MESSAGES} en)
+
+# Address syntax and capability details retain their established numeric IDs.
+check_diagnostic(index-width 68000 " move.w (a0,d0.b),d1" 1350
+    "invalid index-register width b; expected .W or .L" 3 13)
+check_diagnostic(index-scale 68020 " move.w (a0,d0.w*3),d1" 1350
+    "invalid index scale 3; expected 1, 2, 4 or 8" 3 13)
+check_diagnostic(coldfire-scale MCF5204 " move.w (a0,d0.l*8),d1" 1350
+    "ColdFire does not support index scale 8" 3 13)
+check_diagnostic(unsupported-scale 68000 " move.w (a0,d0.w*2),d1" 1505
+    "index scale 2 is unsupported by the selected CPU" 3 13)
+check_diagnostic(unsupported-pc-scale 68000 " move.w (*+2,pc,d0.w*4),d1" 1505
+    "index scale 4 is unsupported by the selected CPU" 3 17)
+check_diagnostic(full-extension 68000 " move.w (0.w,a0,d0.w),d1" 1505
+    "requires a full extension word" 3 9)
+check_diagnostic(memory-indirect 68000 " move.w ([0,a0],d0.w),d1" 1505
+    "memory-indirect addressing is unsupported" 3 9)
+check_diagnostic(displacement-width 68020 " move.w (0.b,a0),d1" 1350
+    "invalid displacement width b; expected .W or .L" 3 10)
+check_diagnostic(duplicate-displacement 68020 " move.w 1(2,a0),d1" 1350
+    "duplicate displacement in effective address" 3 11)
+check_diagnostic(duplicate-index 68020 " move.w (d0.w,d1.w),d1" 1350
+    "only one index register" 3 15)
+check_diagnostic(too-many-components 68020 " move.w (a0,d0.w,d1.w),d1" 1350
+    "too many register or indirect components" 3 18)
+check_diagnostic(four-components 68020 " move.w (a0,d0.w,d1.w,d2.w),d1" 1350
+    "too many register or indirect components" 3 23)
+check_diagnostic(indirect-duplicate-displacement 68020 " move.w ([1,2,a0],d0.w),d1" 1350
+    "duplicate displacement in effective address" 3 13)
+check_diagnostic(indirect-duplicate-base 68020 " move.w ([0,pc,pc],d0.w),d1" 1350
+    "only one base register" 3 16)
+check_diagnostic(indirect-duplicate-index 68020 " move.w ([a0,d0.w,d1.w]),d1" 1350
+    "only one index register" 3 19)
+check_diagnostic(pair-first-half 68020 " cas2.w a0:d1,d2:d3,(a0):(a1)" 1760
+    "this register-pair half must be a data register D0..D7" 3 9)
+check_diagnostic(pair-second-half 68020 " cas2.w d0:a0,d2:d3,(a0):(a1)" 1760
+    "this register-pair half must be a data register D0..D7" 3 12)
+check_diagnostic(pair-colon 68020 " divsl.l d0,d1" 1760
+    "register pair requires a colon" 3 13)
+check_diagnostic(pair-parentheses 68020 " cas2.w d0:d1,d2:d3,(a0):a1" 1760
+    "each indirect register-pair half must be enclosed in parentheses" 3 26)
+check_diagnostic(pair-indirect-half 68020 " cas2.w d0:d1,d2:d3,(a0):(42)" 1760
+    "this register-pair half must be a data or address register" 3 27)
+check_diagnostic(pair-evaluator-error 68020 " fpu on\nbad reg fp0\n cas2.w d0:bad,d2:d3,(a0):(a1)" 1130 "invalid operand size" 5 12)
+check_diagnostic(index-evaluator-error 68020 " fpu on\nbad reg fp0\n move.w (a0,bad.w),d1" 1130 "invalid operand size" 5 13)
+
+# Golden bytes captured from the previous build: normalization, aliases, scales,
+# full extensions, and data/address registers in indirect CAS2 pairs.
+check_bytes(address-normalization-and-pairs 68020
+    "idx reg d0\nbase reg a0\n move.w (d0.w,a0),d1\n move.w (a0,a1),d1\n move.w (a0,pc),d1\n move.w (base,idx.w*4),d1\n move.w ([0,a0,a1]),d1\n cas2.w d0:d1,d2:d3,(a0):(a1)\n cas2.w d0:d1,d2:d3,(d4):(a1)\n cas2.w idx:d1,d2:d3,(base):(a1)\n muls.l d2,d0:d1\n divsl.l d2,d0:d1"
+    "3230000032309000323b8000323004003230912100000cfc808090c10cfc408090c10cfc808090c14c021c004c421800")
+
+set(ENV{LC_MESSAGES} de)
+foreach(item IN ITEMS "index-width|Indexregisterbreite b" "index-scale|Indexskalierung 3" "pair-second-half|D0..D7" "duplicate-displacement|Doppelte Verschiebung")
+    string(REPLACE "|" ";" fields "${item}")
+    list(GET fields 0 name)
+    list(GET fields 1 detail)
+    file(TO_NATIVE_PATH "${TEST_DIR}/${name}.asm" source)
+    execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+    string(FIND "${output}${error}" "${detail}" detail_pos)
+    if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+        message(FATAL_ERROR "German ${name}: ${result}\n${output}${error}")
+    endif()
+endforeach()
+set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(mul-pair-half 68020 " muls.l d2,d0:a0" 1760
+    "this register-pair half must be a data register D0..D7" 3 15)
+check_diagnostic(div-pair-half 68020 " divsl.l d2,d0:a0" 1760
+    "this register-pair half must be a data register D0..D7" 3 16)
+check_diagnostic(indirect-index-width 68020 " move.w ([a0,d0.b]),d1" 1350
+    "invalid index-register width b; expected .W or .L" 3 14)

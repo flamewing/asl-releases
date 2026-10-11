@@ -518,12 +518,33 @@ static void CopyAdrVals(unsigned dest_index, tAdrResult const* p_adr_result) {
     }
 }
 
+static Boolean report_m68k_detail(
+        tErrorNum error, unsigned message, tStrComp const* arg) {
+    WrXErrorPos(error, getmessage(message), &arg->Pos);
+    return False;
+}
+
+static Boolean report_m68k_char(unsigned message, char value, tStrComp const* arg) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(message), value);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+    return False;
+}
+
+static void report_unsupported_scale(unsigned scale, tStrComp const* arg) {
+    char detail[120];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgUnsupportedScale), scale);
+    WrXErrorPos(ErrNum_AddrModeNotSupported, detail, &arg->Pos);
+}
+
 static Boolean ACheckFamily(
         unsigned FamilyMask, tStrComp const* pAdrComp, tAdrResult* pResult) {
     if (CheckFamilyCore(FamilyMask)) {
         return True;
     }
-    WrStrErrorPos(ErrNum_AddrModeNotSupported, pAdrComp);
+    report_m68k_detail(ErrNum_AddrModeNotSupported,
+            FamilyMask == ExtAddrFamilyMask ? Num_ErrMsgFullExtension
+                                           : Num_ErrMsgMemoryIndirect, pAdrComp);
     ClrAdrVals(pResult);
     return False;
 }
@@ -612,37 +633,48 @@ static tRegEvalResult DecodeRegOrFPReg(
     return RegEvalResult;
 }
 
+static Boolean decode_pair_half(tStrComp const* arg, Word* result, Boolean data) {
+    tRegEvalResult status = DecodeReg(arg, result, False);
+    if (status == eRegAbort) {
+        return False;
+    }
+    if (status != eIsReg || (data && *result > 7)) {
+        return report_m68k_detail(ErrNum_InvRegPair,
+                data ? Num_ErrMsgPairDataReg : Num_ErrMsgPairReg, arg);
+    }
+    return True;
+}
+
 static Boolean DecodeRegPair(tStrComp* pArg, Word* Erg1, Word* Erg2) {
-    char*    pSep = strchr(pArg->str.p_str, ':');
+    char* pSep = strchr(pArg->str.p_str, ':');
     tStrComp Left, Right;
 
     if (!pSep) {
-        return False;
+        return report_m68k_detail(ErrNum_InvRegPair, Num_ErrMsgPairColon, pArg);
     }
     StrCompSplitRef(&Left, &Right, pArg, pSep);
-    return (DecodeReg(&Left, Erg1, False) == eIsReg) && (*Erg1 <= 7)
-           && (DecodeReg(&Right, Erg2, False) == eIsReg) && (*Erg2 <= 7);
+    return decode_pair_half(&Left, Erg1, True)
+           && decode_pair_half(&Right, Erg2, True);
 }
 
 static Boolean CodeIndRegPair(tStrComp* pArg, Word* Erg1, Word* Erg2) {
-    char*    pSep = strchr(pArg->str.p_str, ':');
+    char* pSep = strchr(pArg->str.p_str, ':');
     tStrComp Left, Right;
 
     if (!pSep) {
-        return False;
+        return report_m68k_detail(ErrNum_InvRegPair, Num_ErrMsgPairColon, pArg);
     }
     StrCompSplitRef(&Left, &Right, pArg, pSep);
-
     if (!IsIndirect(Left.str.p_str) || !IsIndirect(Right.str.p_str)) {
-        return False;
+        return report_m68k_detail(ErrNum_InvRegPair, Num_ErrMsgPairParentheses,
+                !IsIndirect(Left.str.p_str) ? &Left : &Right);
     }
     StrCompShorten(&Left, 1);
     StrCompIncRefLeft(&Left, 1);
     StrCompShorten(&Right, 1);
     StrCompIncRefLeft(&Right, 1);
-
-    return (DecodeReg(&Left, Erg1, False) == eIsReg)
-           && (DecodeReg(&Right, Erg2, False) == eIsReg);
+    return decode_pair_half(&Left, Erg1, False)
+           && decode_pair_half(&Right, Erg2, False);
 }
 
 static Boolean CodeCache(char* Asc, Word* Erg) {
@@ -861,6 +893,7 @@ static Boolean ClassComp(AdrComp* C) {
     C->Comp.str.p_str[reg_len] = '\0';
     switch (DecodeReg(&C->Comp, &C->ANummer, False)) {
     case eRegAbort:
+        C->Comp.str.p_str[reg_len] = save;
         return False;
     case eIsReg:
         C->Comp.str.p_str[reg_len] = save;
@@ -887,7 +920,7 @@ static Boolean ClassComp(AdrComp* C) {
             C->Long = False;
             break;
         default:
-            return False;
+            return report_m68k_char(Num_ErrMsgIndexWidth, c_size, &C->Comp);
         }
     } else {
         C->Long = (pCurrCPUProps->Family == eColdfire);
@@ -906,12 +939,13 @@ static Boolean ClassComp(AdrComp* C) {
             break;
         case '8':
             if (pCurrCPUProps->Family == eColdfire) {
-                return False;
+                return report_m68k_detail(
+                        ErrNum_InvAddrMode, Num_ErrMsgColdFireScale, &C->Comp);
             }
             C->Scale = 3;
             break;
         default:
-            return False;
+            return report_m68k_char(Num_ErrMsgIndexScale, c_scale, &C->Comp);
         }
     } else {
         C->Scale = 0;
@@ -931,7 +965,8 @@ is_disp:
             C->Size = eSymbolSize16Bit;
             break;
         default:
-            return False;
+            return report_m68k_char(
+                    Num_ErrMsgDispWidth, C->Comp.str.p_str[comp_len - 1], &C->Comp);
         }
         StrCompShorten(&C->Comp, 2);
     } else {
@@ -1552,6 +1587,10 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
         CompCnt = 0;
         do {
+            if (CompCnt >= sizeof(AdrComps) / sizeof(AdrComps[0])) {
+                report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgTooManyComponents, &IndirComps);
+                return ModNone;
+            }
             pCompSplit = IndirComps.str.p_str;
             locStack   = -1;
             for (; ((locStack != -1) || (*pCompSplit != ',')) && (*pCompSplit != '\0');
@@ -1604,7 +1643,6 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 continue;
             }
             if (!ClassComp(&AdrComps[CompCnt])) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &AdrComps[CompCnt].Comp);
                 return ModNone;
             }
 
@@ -1642,7 +1680,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
             else if (AdrComps[CompCnt].Art == Disp) {
                 if (*OutDisp.str.p_str) {
-                    WrError(ErrNum_InvAddrMode);
+                    report_m68k_detail(
+                            ErrNum_InvAddrMode, Num_ErrMsgDuplicateDisp, &AdrComps[CompCnt].Comp);
                     return ModNone;
                 }
                 OutDisp    = AdrComps[CompCnt].Comp;
@@ -1652,7 +1691,8 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
             /* no second index */
 
             else if ((AdrComps[CompCnt].Art != Index) && (CompCnt != 0)) {
-                WrError(ErrNum_InvAddrMode);
+                report_m68k_detail(
+                        ErrNum_InvAddrMode, Num_ErrMsgUnexpectedComponent, &AdrComps[CompCnt].Comp);
                 return ModNone;
             }
 
@@ -1662,7 +1702,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         } while (pCompSplit);
 
         if ((CompCnt > 2) || ((CompCnt > 1) && (AdrComps[0].Art == Index))) {
-            WrError(ErrNum_InvAddrMode);
+            report_m68k_detail(ErrNum_InvAddrMode,
+                    CompCnt > 2 ? Num_ErrMsgTooManyComponents : Num_ErrMsgDuplicateIndex,
+                    &AdrComps[CompCnt - 1].Comp);
             return ModNone;
         }
 
@@ -1790,7 +1832,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                             pResult, ext_word | (HVal & 0xff), 0x00ff, eval_result.Flags);
                     if ((AdrComps[1].Scale != 0)
                         && (!(pCurrCPUProps->SuppFlags & eFlagIdxScaling))) {
-                        WrStrErrorPos(ErrNum_AddrModeNotSupported, &AdrComps[1].Comp);
+                        report_unsupported_scale(1u << AdrComps[1].Scale, &AdrComps[1].Comp);
                         ClrAdrVals(pResult);
                     }
                     goto chk;
@@ -1910,7 +1952,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     pResult->AdrMode = ModPCIdx;
                     if ((AdrComps[1].Scale != 0)
                         && (!(pCurrCPUProps->SuppFlags & eFlagIdxScaling))) {
-                        WrStrErrorPos(ErrNum_AddrModeNotSupported, &AdrComps[1].Comp);
+                        report_unsupported_scale(1u << AdrComps[1].Scale, &AdrComps[1].Comp);
                         ClrAdrVals(pResult);
                     }
                     goto chk;
@@ -2066,7 +2108,6 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 KillPrefBlanksStrCompRef(&OneComp.Comp);
                 KillPostBlanksStrComp(&OneComp.Comp);
                 if (!ClassComp(&OneComp)) {
-                    WrError(ErrNum_InvAddrMode);
                     return ModNone;
                 }
 
@@ -2093,7 +2134,11 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     i = 3;
                 }
                 if ((i >= 3) || AdrComps[i].Art != None) {
-                    WrError(ErrNum_InvAddrMode);
+                    report_m68k_detail(ErrNum_InvAddrMode,
+                            i >= 3 ? Num_ErrMsgUnexpectedComponent
+                            : i == 0 ? Num_ErrMsgDuplicateDisp
+                            : i == 1 ? Num_ErrMsgDuplicateBase : Num_ErrMsgDuplicateIndex,
+                            &OneComp.Comp);
                     return ModNone;
                 } else {
                     AdrComps[i] = OneComp;
@@ -3868,7 +3913,7 @@ static void DecodeMUL_DIV(Word Code) {
 
         if (dest_reg_pair) {
             if (!DecodeRegPair(&ArgStr[2], &dh, &dl)) {
-                WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+                /* The pair decoder has reported the failing component. */
                 return;
             }
             if ((dh == dl) && is_mul) {
@@ -3919,7 +3964,7 @@ static void DecodeDIVL(Word Index) {
     else if (OpSize != eSymbolSize32Bit) {
         WrError(ErrNum_InvOpSize);
     } else if (!DecodeRegPair(&ArgStr[2], &w1, &w2)) {
-        WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+        /* The pair decoder has reported the failing component. */
     } else {
         tAdrResult AdrResult;
 
@@ -4170,14 +4215,14 @@ static void DecodeCAS2(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
         ;
     else if (!DecodeRegPair(&ArgStr[1], WAsmCode + 1, WAsmCode + 2)) {
-        WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[1]);
+        /* The pair decoder has reported the failing component. */
     } else if (!DecodeRegPair(&ArgStr[2], &w1, &w2)) {
-        WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[2]);
+        /* The pair decoder has reported the failing component. */
     } else {
         WAsmCode[1] += (w1 << 6);
         WAsmCode[2] += (w2 << 6);
         if (!CodeIndRegPair(&ArgStr[3], &w1, &w2)) {
-            WrStrErrorPos(ErrNum_InvRegPair, &ArgStr[3]);
+            /* The pair decoder has reported the failing component. */
         } else {
             WAsmCode[1] += (w1 << 12);
             WAsmCode[2] += (w2 << 12);

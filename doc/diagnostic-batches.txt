@@ -48,6 +48,17 @@ manual, EXPECT fixtures, translations and source-position tests.
    Keep specific reasons from parsing/CPU checks; locate invalid suffix,
    scale, duplicate component or failing register-pair half. Preserve
    normalization rules, aliases and nested-evaluator error handling.
+   Implemented with English/German detail under -x. IDs 1350, 1505 and
+   1760 are retained; nested evaluator failures emit their primary error
+   once. CPU restrictions identify scaling/full extension/memory indirect.
+   Register-pair failures identify the failing half and required syntax/type.
+   A fourth component is rejected before indexing the three-slot parser
+   array, fixing an out-of-bounds access in malformed address expressions.
+   Tests cover exact IDs/reasons/positions, one error per rejection, aliases,
+   normalization swaps, valid CAS2 data/address indirect pairs and golden
+   bytes captured from the previous build. Numeric documentation updated;
+   no existing EXPECT IDs need changing. All 339 tests pass with both
+   embedded and external catalogs (GCC 16.2, Windows).
 
 4. Other numeric/page/placement checks (D12,D13,D14,D15,D19).
    HC12 auto-update domain, PowerPC branch bounds and four-byte alignment,

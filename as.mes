@@ -1807,3 +1807,67 @@ Message InfoMessHelp
 Message InfoMessCPUList
  "implementierte Prozessoren :"
  "implemented processors :"
+
+Message ErrMsgFullExtension
+ "Diese Adressierung erfordert ein volles Erweiterungswort, das die gew&auml;hlte CPU nicht unterst&uuml;tzt"
+ "this addressing form requires a full extension word, unsupported by the selected CPU"
+
+Message ErrMsgMemoryIndirect
+ "Die gew&auml;hlte CPU unterst&uuml;tzt keine speicherindirekte Adressierung"
+ "memory-indirect addressing is unsupported by the selected CPU"
+
+Message ErrMsgPairDataReg
+ "Diese H&auml;lfte des Registerpaars muss ein Datenregister D0..D7 sein"
+ "this register-pair half must be a data register D0..D7"
+
+Message ErrMsgPairReg
+ "Diese H&auml;lfte des Registerpaars muss ein Daten- oder Adressregister sein"
+ "this register-pair half must be a data or address register"
+
+Message ErrMsgPairColon
+ "Registerpaar erfordert einen Doppelpunkt zwischen den Registern"
+ "register pair requires a colon between its registers"
+
+Message ErrMsgPairParentheses
+ "Jede H&auml;lfte des indirekten Registerpaars muss eingeklammert sein"
+ "each indirect register-pair half must be enclosed in parentheses"
+
+Message ErrMsgIndexWidth
+ "Indexregisterbreite %c ung&uuml;ltig; erlaubt sind .W oder .L sein"
+ "invalid index-register width %c; expected .W or .L"
+
+Message ErrMsgIndexScale
+ "Indexskalierung %c ung&uuml;ltig; erlaubt sind 1, 2, 4 oder 8 sein (ColdFire: 1, 2 oder 4)"
+ "invalid index scale %c; expected 1, 2, 4 or 8 (ColdFire: 1, 2 or 4)"
+
+Message ErrMsgColdFireScale
+ "ColdFire unterst&uuml;tzt keine Indexskalierung 8; erlaubt sind 1, 2 oder 4"
+ "ColdFire does not support index scale 8; allowed scales are 1, 2 or 4"
+
+Message ErrMsgDispWidth
+ "Verschiebungsbreite %c ung&uuml;ltig; erlaubt sind .W oder .L sein"
+ "invalid displacement width %c; expected .W or .L"
+
+Message ErrMsgDuplicateDisp
+ "Doppelte Verschiebung in der effektiven Adresse"
+ "duplicate displacement in effective address"
+
+Message ErrMsgDuplicateIndex
+ "Nur ein Indexregister pro effektiver Adresse erlaubt"
+ "only one index register is allowed in an effective address"
+
+Message ErrMsgDuplicateBase
+ "Nur ein Basisregister pro effektiver Adresse erlaubt"
+ "only one base register is allowed in an effective address"
+
+Message ErrMsgUnexpectedComponent
+ "Unerwartete Komponente an dieser Position der effektiven Adresse"
+ "unexpected component at this position in the effective address"
+
+Message ErrMsgTooManyComponents
+ "Zu viele Register- oder indirekte Komponenten in der effektiven Adresse"
+ "too many register or indirect components in effective address"
+
+Message ErrMsgUnsupportedScale
+ "Indexskalierung %u wird von der gew&auml;hlten CPU nicht unterst&uuml;tzt"
+ "index scale %u is unsupported by the selected CPU"
