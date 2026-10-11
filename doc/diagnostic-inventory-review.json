@@ -1855,6 +1855,11 @@
       "file": "codecp1600.c",
       "issue": "WORD/BYTE/TEXT keep partial integer data after range failures; WORD/BYTE silently discard string operands without an error.",
       "status": "fixed in tranche 120; propagate positioned range result to directive cleanup and issue integer/string diagnostic; all directives, both bounds and original endpoint bytes checked"
+    },
+    {
+      "file": "codepdp11.c",
+      "issue": "SOB ignores failed target evaluation and appends displacement errors located at the counter register rather than the target.",
+      "status": "fixed in tranche 122; abort failed evaluation and locate true displacement failures at target; primary errors/no emission/accepted endpoints verified on PDP-11 and WD16"
     }
   ]
 }

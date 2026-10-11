@@ -1513,3 +1513,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Related full immediate/BITS ranges now locate the argument. Preserve IDs,
     masks, backward distance-minus-one encoding and all accepted bytes.
     Validation: all 403 CTest cases pass with embedded/external catalogs.
+
+122. PDP-11/WD16 SOB primary errors and target positions.
+    SOB ignores target evaluation failure, applying displacement checks to
+    failed values and appending alignment/range errors against counter Rn.
+    Stop on failed target evaluation, and locate genuine displacement errors
+    at the second (target) operand. Tests cover lower/upper/syntax primary
+    failures, odd/far target positions, EXPECT/no emission and captured original
+    endpoint/forward encodings on PDP-11 and WD16.
+    Validation: all 404 CTest cases pass with embedded/external catalogs.

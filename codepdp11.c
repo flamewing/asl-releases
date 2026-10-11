@@ -1262,13 +1262,16 @@ static void decode_sob(Word code) {
         LongInt dist = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &eval_result)
                        - (EProgCounter() + 2);
 
+        if (!eval_result.OK) {
+            return;
+        }
         if ((dist & 1) && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-            WrStrErrorPos(ErrNum_DistIsOdd, &ArgStr[1]);
+            WrStrErrorPos(ErrNum_DistIsOdd, &ArgStr[2]);
         } else {
             dist /= 2;
             if (((dist > 0) || (dist < -63))
                 && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
             } else {
                 append_word(
                         (code & 0177000) | ((reg_adr_vals.mode & 7) << 6)
