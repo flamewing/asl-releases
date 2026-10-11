@@ -1313,8 +1313,12 @@
         "ErrNum_InAccPage": 2,
         "ErrNum_InvAddrMode": 7
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode"
+      ],
+      "status": "complete",
+      "review_notes": "All nine historical sites reviewed in tranche 109: two FSR/STATUS page warnings show address, requested/assumed selector and comparison mask; seven mode rejections give current operand/pair syntax. Adjacent CALL bit-8 exclusion gets actual target/constraint. Preserve warning 110 emission and existing masks (0xf0 / transformed 0xe0), encoding and valid bytes. Signed immediate corruption and MOVSZ primary-error cascades fixed in tranches 107/108."
     },
     "codetbil.c": {
       "candidate_counts": {

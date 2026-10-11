@@ -10,6 +10,9 @@
 
 #include "stdinc.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -33,6 +36,20 @@ static LongInt Reg_FSR, Reg_STATUS;
 
 /*---------------------------------------------------------------------------*/
 
+static void WrForms(const tStrComp* arg, const char* forms) {
+    char detail[480];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
+static void WrSelector(const tStrComp* arg, LargeWord address, const char* name,
+                       LargeWord required, LargeWord assumed, LargeWord mask) {
+    char detail[320];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAssumedAddressSelector),
+                address, name, required, name, assumed, assumed & mask, mask);
+    WrXErrorPos(ErrNum_InAccPage, detail, &arg->Pos);
+}
+
 static Boolean DecodeRegLinear(
         tStrComp const* pArg, int Offset, Word* pResult, tEvalResult* pEvalResult) {
     *pResult = EvalStrIntExpressionOffsWithResult(pArg, Offset, UInt8, pEvalResult);
@@ -45,7 +62,7 @@ static Boolean DecodeRegLinear(
 static Word Lin2PagedRegAddr(tStrComp const* pArg, Word LinAddr, tSymbolFlags Flags) {
     if (!mFirstPassUnknown(Flags) && (LinAddr & 0x10)) {
         if ((Reg_FSR & 0xf0) != (LinAddr & 0xf0)) {
-            WrStrErrorPos(ErrNum_InAccPage, pArg);
+            WrSelector(pArg, LinAddr, "FSR", LinAddr & 0xf0, Reg_FSR, 0xf0);
         }
     }
     return LinAddr & 0x1f;
@@ -245,10 +262,10 @@ static void DecodeMOV(Word Code) {
                 WAsmCode[CodeLen++] = 0x050 | (Reg & 0xf);
             }
         } else {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+            WrForms(&ArgStr[2], "#expression (-8..15)");
         }
     } else {
-        WrError(ErrNum_InvAddrMode);
+        WrForms(&ArgStr[1], "W,#expr; W,M; W,reg; W,/reg; W,--reg; W,++reg; W,<<reg; W,>>reg; W,<>reg; W,reg-W; reg,W; !reg,W; !OPTION,W; M,W; M,#expr");
     }
 }
 
@@ -271,10 +288,12 @@ static void DecodeMOVSZ(Word Code) {
                 WAsmCode[CodeLen++] = 0x3c0 | Reg;
             }
         } else {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+            WrForms(&ArgStr[2], "--reg / ++reg");
         }
     } else {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "W");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
     }
 }
 
@@ -297,7 +316,7 @@ static void DecodeLogic(Word Code) {
                     WAsmCode[CodeLen++] = ImmCode | (Arg & 0xff);
                 }
             } else {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+                WrForms(&ArgStr[2], "reg");
             }
         } else if (DecodeReg(&ArgStr[2], 0, &Arg)) {
             WAsmCode[CodeLen++] = (Lo(Code) << 4) | Arg;
@@ -307,7 +326,7 @@ static void DecodeLogic(Word Code) {
             WAsmCode[CodeLen++] = (Lo(Code) << 4) | 0x20 | Arg;
         }
     } else {
-        WrError(ErrNum_InvAddrMode);
+        WrForms(&ArgStr[1], Code & 0x0f00 ? "W,reg; reg,W; W,#expr" : "W,reg; reg,W");
     }
 }
 
@@ -341,7 +360,9 @@ static void DecodeSUB(Word Code) {
             WAsmCode[CodeLen++] = (Lo(Code) << 4) | 0x20 | Arg;
         }
     } else {
-        WrError(ErrNum_InvAddrMode);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "W");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
     }
 }
 
@@ -382,11 +403,13 @@ static void DecodeJMP_CALL(Word Code) {
     }
 
     if (!mFirstPassUnknown(EvalResult.Flags) && IsCall && (Addr & 0x100)) {
-        WrStrErrorPos(ErrNum_NotFromThisAddress, &ArgStr[1]);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPICCallTargetBit), (LargeWord)Addr);
+        WrXErrorPos(ErrNum_NotFromThisAddress, detail, &ArgStr[1].Pos);
     } else {
         if (!mFirstPassUnknown(EvalResult.Flags)
             && ((Reg_STATUS & 0xe0) != ((Addr >> 4) & 0xe0))) {
-            WrStrErrorPos(ErrNum_InAccPage, &ArgStr[1]);
+            WrSelector(&ArgStr[1], Addr, "STATUS", (Addr >> 4) & 0xe0, Reg_STATUS, 0xe0);
         }
         WAsmCode[CodeLen++] = Code | (Addr & 0x1ff);
         ChkSpace(SegCode, EvalResult.AddrSpaceMask);

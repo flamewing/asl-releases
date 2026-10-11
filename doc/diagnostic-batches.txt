@@ -1394,3 +1394,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover both prefixes, source positions, EXPECT/no emission and valid
     increment/decrement byte encodings.
     Validation: all 400 CTest cases pass with embedded/external catalogs.
+
+109. Complete SX20/SX28 historical diagnostic review.
+    Both 110 warnings show actual address, required selector, active ASSUME
+    FSR/STATUS value, assumed selector and exact comparison mask. Preserve
+    existing bit tests/transforms and warning emission. Seven 1350 sites give
+    MOV/MOVSZ/logic pair choices, M nibble immediate form or W requirement at
+    the operand. Adjacent 1905 CALL reports actual target and excluded bit 8.
+    Tests cover both CPUs, every historical site, register/bit/branch warnings,
+    preserved warning bytes, special MOV/JMP forms and CALL acceptance.
+    Validation: all 400 CTest cases pass with embedded/external catalogs.
