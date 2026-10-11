@@ -456,12 +456,12 @@ static void DecodeAcc(Word Code) {
         if (!as_strcasecmp(ArgStr[1].str.p_str, "A")) {
             Start = 2;
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "B")) {
-            Start       = 2;
-            BAsmCode[0] = PrefAccB;
-            CodeLen++;
+            Start = 2;
             if (!ChkExcludeCPUExt(CPU65816, ErrNum_AddrModeNotSupported)) {
                 return;
             }
+            BAsmCode[0] = PrefAccB;
+            CodeLen++;
         } else {
             Start = 1;
         }
@@ -473,6 +473,7 @@ static void DecodeAcc(Word Code) {
         if (AdrType != ModNone) {
             if ((LFlag) && (AdrType != ModInd8) && (AdrType != ModIndY8)) {
                 WrError(ErrNum_InvAddrMode);
+                CodeLen = 0;
             } else {
                 switch (AdrType) {
                 case ModImm:
@@ -518,6 +519,8 @@ static void DecodeAcc(Word Code) {
                 memcpy(BAsmCode + CodeLen + 1, AdrVals, AdrCnt);
                 CodeLen += 1 + AdrCnt;
             }
+        } else {
+            CodeLen = 0;
         }
     }
 }

@@ -1712,3 +1712,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     All 13 relative aliases/four CPUs/PER/both bit branches verify forward
     targets, retained final error IDs and captured accepted encodings.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+145. MELPS7700 rejected accumulator-B prefix cleanup.
+    Failed accumulator-B operand/long-form validation leaves prefix 42 emitted;
+    65816 CPU rejection also occurs after prefix emission. Gate CPU first and
+    discard instruction on addressing failure. Tests cover three MELPS CPUs,
+    mode/range/count/long-form failures and 65816 rejection with EXPECT/no
+    emission, plus original accepted B immediate/direct/long-indirect bytes.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.

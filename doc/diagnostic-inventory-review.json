@@ -1973,6 +1973,11 @@
       "file": "code7700.c",
       "issue": "Relative branch length selection/ranges, BBC/BBS and PER reject first-pass unknown forward expression distances before targets resolve.",
       "status": "fixed in tranche 144; defer five checks for unknown/questionable symbols; all 13 relative aliases/four CPUs/PER/both bit branches/final errors/original bytes checked"
+    },
+    {
+      "file": "code7700.c",
+      "issue": "Accumulator-B decoder emits prefix 0x42 before operand validation and CPU gating, leaving lone prefix on failed mode/range/count/long-form/65816 rejection.",
+      "status": "fixed in tranche 145; gate CPU before prefix and reset CodeLen for failed address or long-form constraint; three MELPS CPUs/65816 gate/all failure classes/no emission/original B forms checked"
     }
   ]
 }

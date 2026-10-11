@@ -70,3 +70,13 @@ foreach(cpu 65816 MELPS7700 MELPS7750 MELPS7751)
         check_bytes(forward_${cpu}_BBS ${cpu} " bbs #1,0,target+100000\ntarget equ -99995" "2400010000")
     endif()
 endforeach()
+
+foreach(cpu MELPS7700 MELPS7750 MELPS7751)
+    check_bytes(reject_b_store_${cpu} ${cpu} " expect 1350\n sta b,#1\n endexpect\n db 18" "12")
+    check_bytes(reject_b_range_${cpu} ${cpu} " expect 1320\n lda b,#65536\n endexpect\n db 18" "12")
+    check_bytes(reject_b_length_${cpu} ${cpu} " expect 1350\n ldal b,#1\n endexpect\n db 18" "12")
+    check_bytes(reject_b_count_${cpu} ${cpu} " expect 1110\n lda b\n endexpect\n db 18" "12")
+    check_bytes(b_original_${cpu} ${cpu} " lda b,#1\n sta b,0\n ldal b,(0)" "42a9010042850042a700")
+endforeach()
+
+check_bytes(reject_b_cpu 65816 " expect 1505\n lda b,#1\n endexpect\n db 18" "12")
