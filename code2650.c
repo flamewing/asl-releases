@@ -96,13 +96,13 @@ static Boolean DecodeCondition(tStrComp const* p_arg, Byte* p_ret) {
 
 static Boolean page_rel_ok(
         Word dest, Word src, tSymbolFlags flags, Word* p_dist, Boolean is_branch) {
-    if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mSymbolQuestionable(flags)) {
+    if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mFirstPassUnknownOrQuestionable(flags)) {
         WrError(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage);
         return False;
     }
 
     *p_dist = (dest - src) & PAGE_MASK;
-    if (((*p_dist < 0x1fc0) && (*p_dist > 0x3f)) && !mSymbolQuestionable(flags)) {
+    if (((*p_dist < 0x1fc0) && (*p_dist > 0x3f)) && !mFirstPassUnknownOrQuestionable(flags)) {
         WrError(is_branch ? ErrNum_JmpDistTooBig : ErrNum_DistTooBig);
         return False;
     }
@@ -123,7 +123,7 @@ static Boolean page_rel_ok(
 
 static Boolean page_abs_ok(
         Word dest, Word src, tSymbolFlags flags, Word* p_dest, Boolean is_branch) {
-    if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mSymbolQuestionable(flags)) {
+    if (((src & ~PAGE_MASK) != (dest & ~PAGE_MASK)) && !mFirstPassUnknownOrQuestionable(flags)) {
         WrError(is_branch ? ErrNum_JmpTargOnDiffPage : ErrNum_TargOnDiffPage);
         return False;
     }

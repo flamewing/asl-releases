@@ -1868,6 +1868,11 @@
       "file": "codepdp11.c",
       "issue": "SOB ignores failed target evaluation and appends displacement errors located at the counter register rather than the target.",
       "status": "fixed in tranche 122; abort failed evaluation and locate true displacement failures at target; primary errors/no emission/accepted endpoints verified on PDP-11 and WD16"
+    },
+    {
+      "file": "code2650.c",
+      "issue": "Relative/absolute page helpers reject first-pass unknown forward expressions before final page/distance resolves.",
+      "status": "fixed in tranche 124; defer all three page/distance checks for unknown/questionable symbols; all 26 callers/aliases and final page errors checked"
     }
   ]
 }

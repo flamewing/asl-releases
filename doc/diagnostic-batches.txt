@@ -1533,3 +1533,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     supported sizes or unknown, which already has a dedicated diagnostic.
     Preserve IDs, predicates, padding behavior and original accepted bytes.
     Validation: all 404 CTest cases pass with embedded/external catalogs; focused tests also pass after C11 case-block cleanup.
+
+124. Signetics 2650 provisional forward page/distance guards.
+    Relative/absolute page helpers check only questionable symbols, rejecting
+    first-pass unknown expressions whose final address lies in the correct page.
+    Defer all three page/distance checks for unknown or questionable symbols.
+    Tests cover four conditional branches, twelve relative data/branch callers,
+    eight absolute data callers, both zero-relative branches and final page errors.
+    Preserve same-page requirement, 8-KiB displacement wrapping and byte encodings.
+    Validation: all 405 CTest cases pass with embedded/external catalogs.
