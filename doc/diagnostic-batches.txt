@@ -1577,3 +1577,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     1350. Tests cover all seven byte destinations/three pairs/two CPUs,
     EXPECT/no emission and captured original register/memory/immediate/pair loads.
     Validation: all 407 CTest cases pass with embedded/external catalogs.
+
+129. Intel 8008 diagnostic details and full historical inventory review.
+    Nine register checks name accumulator, native register/M, LXI pair starts
+    or increment/decrement subset; mode masks describe syntax-specific forms.
+    MOV M,M explains need for a register; native SUB points at allowed source.
+    OUT lower bound shows full [8,31] interval; adjacent RST alignment names
+    dual ordinal/address choices, interval check now positions the argument.
+    Preserve error IDs, predicates, syntax selection and original accepted bytes.
+    Validation: all 407 CTest cases pass with embedded/external catalogs.

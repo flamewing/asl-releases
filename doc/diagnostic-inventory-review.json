@@ -637,8 +637,14 @@
         "ErrNum_InvRegPair": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_InvRegPair",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "All thirteen historical candidates reviewed in tranches 127-129: two mode contracts, nine register subsets, rejected MOV memory pair and OUT lower bound. Adjacent invalid conditions and byte LD pair sources now diagnose silent failure; RST dual ordinal/address choices and register-name errors improved. Preserve IDs, syntax modes, accepted bytes and primary expression errors."
     },
     "code807x.c": {
       "candidate_counts": {

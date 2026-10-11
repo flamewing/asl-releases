@@ -108,6 +108,12 @@ static Boolean DecodeReg16(char* Asc, Byte* pErg) {
 
 static char const Conditions[][4] = {"NC", "NZ", "P", "PO", "C", "Z", "M", "PE"};
 
+static void WrChoices(tStrComp const* arg, tErrorNum number, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(number, detail, &arg->Pos);
+}
+
 static Boolean DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult) {
     for (*pResult = 0; *pResult < sizeof(Conditions) / sizeof(*Conditions);
          (*pResult)++) {
@@ -165,7 +171,25 @@ static tAdrMode DecodeAdr_Z80(tStrComp const* pArg, Word Mask, tAdrVals* pVals) 
 AdrFound:
 
     if ((pVals->Mode != eModNone) && (!(Mask & (1 << pVals->Mode)))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        char forms[180], detail[240];
+        *forms = '\0';
+        if (Mask & MModReg8) {
+            strmaxcat(forms, "A / B / C / D / E / H / L", sizeof(forms));
+        }
+        if (Mask & MModReg16) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "BC / DE / HL", sizeof(forms));
+        }
+        if (Mask & MModIHL) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "(HL)", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            if (*forms) strmaxcat(forms, " / ", sizeof(forms));
+            strmaxcat(forms, "expr (-128..255)", sizeof(forms));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
         ResetAdrVals(pVals);
     }
     return pVals->Mode;
@@ -184,7 +208,7 @@ static Boolean CheckAcc_Z80(tStrComp const* pArg) {
     switch (DecodeAdr_Z80(pArg, MModReg8, &AdrVals)) {
     case eModReg8:
         if (AdrVals.Val != AccReg) {
-            WrStrErrorPos(ErrNum_InvReg, pArg);
+            WrChoices(pArg, ErrNum_InvReg, "A");
             return False;
         }
         break;
@@ -392,13 +416,16 @@ static void DecodeRST(Word Index) {
             AdrWord &= 0x38;
         }
         if (EvalResult.OK) {
-            if (ChkRange(AdrWord, 0, 0x38)) {
+            if (ChkRangePos(AdrWord, 0, 0x38, &ArgStr[1])) {
                 if (AdrWord < 8) {
                     BAsmCode[0] = 0x05 | (AdrWord << 3);
                     CodeLen     = 1;
                     ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                 } else if ((AdrWord & 7) != 0) {
-                    WrError(ErrNum_NotAligned);
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentChoices),
+                                "RST", (LargeInt)AdrWord, "0..7 / 8 / 16 / 24 / 32 / 40 / 48 / 56");
+                    WrXErrorPos(ErrNum_NotAligned, detail, &ArgStr[1].Pos);
                 } else {
                     BAsmCode[0] = AdrWord + 0x05;
                     CodeLen     = 1;
@@ -446,7 +473,10 @@ static void DecodeINP_OUT(Word IsIN) {
             Addr |= 0x08;
         }
         if ((EvalResult.OK) && (Addr < 8)) {
-            WrStrErrorPos(ErrNum_UnderRange, &ArgStr[AddrArgIdx]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        "OUT", (LargeInt)Addr, (LargeInt)8, (LargeInt)31);
+            WrXErrorPos(ErrNum_UnderRange, detail, &ArgStr[AddrArgIdx].Pos);
             EvalResult.OK = False;
         }
     }
@@ -473,11 +503,11 @@ static void DecodeMOV(Word Index) {
     else if (!ChkZ80Syntax(eSyntax808x))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &DReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, "A / B / C / D / E / H / L / M");
     } else if (!DecodeReg(ArgStr[2].str.p_str, eSyntax808x, &SReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        WrChoices(&ArgStr[2], ErrNum_InvReg, "A / B / C / D / E / H / L / M");
     } else if ((DReg == 7) && (SReg == 7)) {
-        WrError(ErrNum_InvRegPair); /* MOV M,M not allowed - asame opcode as HLT */
+        WrXErrorPos(ErrNum_InvRegPair, getmessage(Num_ErrMsg8008MemoryToMemory), &ArgStr[2].Pos);
     } else {
         BAsmCode[0] = 0xc0 | (DReg << 3) | SReg;
         CodeLen     = 1;
@@ -499,7 +529,7 @@ static void DecodeMVI(Word Index) {
     else if (!ChkZ80Syntax(eSyntax808x))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &DReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, "A / B / C / D / E / H / L / M");
     } else {
         Boolean OK;
 
@@ -534,9 +564,9 @@ static void DecodeLXI(Word Index) {
     else if (!ChkZ80Syntax(eSyntax808x))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &DReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, "B / D / H");
     } else if ((DReg != 1) && (DReg != 3) && (DReg != 5)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, "B / D / H");
     } else {
         Boolean OK;
         Word    Val;
@@ -629,7 +659,7 @@ static void DecodeADD(Word Code) {
             Byte Reg;
 
             if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &Reg)) {
-                WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+                WrChoices(&ArgStr[1], ErrNum_InvRegName, "A / B / C / D / E / H / L / M");
             } else {
                 BAsmCode[CodeLen++] = Code | Reg;
             }
@@ -683,7 +713,7 @@ static void DecodeADC(Word Code) {
         Byte Reg;
 
         if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &Reg)) {
-            WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+            WrChoices(&ArgStr[1], ErrNum_InvRegName, "A / B / C / D / E / H / L / M");
         } else {
             BAsmCode[CodeLen++] = Code | Reg;
         }
@@ -771,7 +801,7 @@ static void DecodeSUB(Word Code) {
     /* rest is Z80 style ( (HL) or immediate) */
 
     if (!(CurrZ80Syntax & eSyntaxZ80)) {
-        WrError(ErrNum_InvAddrMode);
+        WrChoices(&ArgStr[ArgCnt], ErrNum_InvAddrMode, "A / B / C / D / E / H / L / M");
         return;
     }
 
@@ -940,7 +970,7 @@ static void DecodeINCDEC(Word Code) {
         switch (DecodeAdr_Z80(&ArgStr[1], MModReg8, &AdrVals)) {
         case eModReg8:
             if (AdrVals.Val == AccReg) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+                WrChoices(&ArgStr[1], ErrNum_InvReg, "B / C / D / E / H / L");
             } else {
                 BAsmCode[CodeLen++] = Code | (AdrVals.Val << 3);
             }
@@ -966,9 +996,9 @@ static void DecodeSingleReg(Word Index) {
     else if (!ChkZ80Syntax(eSyntax808x))
         ;
     else if (!DecodeReg(ArgStr[1].str.p_str, eSyntax808x, &Reg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, NoAM ? "B / C / D / E / H / L" : "A / B / C / D / E / H / L / M");
     } else if (NoAM && ((Reg == 0) || (Reg == 7))) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        WrChoices(&ArgStr[1], ErrNum_InvReg, "B / C / D / E / H / L");
     } else {
         BAsmCode[0] = Opcode | (Reg << Shift);
         CodeLen     = 1;
