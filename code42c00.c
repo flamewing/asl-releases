@@ -12,6 +12,9 @@
 
 #include "code42c00.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmerr.h"
 #include "asmitree.h"
@@ -77,6 +80,9 @@ typedef struct {
     Byte       value;
 } adr_vals_t;
 
+static char const mode_strings[][4]
+        = {"A", "H", "L", "MBR", "D", "P", "CF", "@HL", "@DC"};
+
 static cpu_props_t const* p_curr_cpu_props;
 
 /*!------------------------------------------------------------------------
@@ -93,9 +99,34 @@ static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->value = 0;
 }
 
+static void report_address_forms(Word mask, tStrComp const* operand) {
+    char forms[120] = "", detail[220];
+    size_t z;
+    for (z = 0; z < as_array_size(mode_strings); z++) {
+        if (!(mask & (1 << (z + 1)))
+                || (!(p_curr_cpu_props->flags & e_cpu_flag_cmos) && (z + 1 == e_mod_p))) {
+            continue;
+        }
+        strmaxcat(forms, mode_strings[z], sizeof(forms));
+        strmaxcat(forms, ", ", sizeof(forms));
+    }
+    if (mask & MModImm) {
+        strmaxcat(forms, "#expr, ", sizeof(forms));
+    }
+    if (mask & MModAbs) {
+        strmaxcat(forms, "expr, ", sizeof(forms));
+    }
+    if (mask & MModPort) {
+        strmaxcat(forms, "%expr, ", sizeof(forms));
+    }
+    if (*forms) {
+        forms[strlen(forms) - 2] = '\0';
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
+}
+
 static adr_mode_t decode_adr(adr_vals_t* p_vals, tStrComp const* p_arg, Word mode_mask) {
-    static char const mode_strings[][4]
-            = {"A", "H", "L", "MBR", "D", "P", "CF", "@HL", "@DC"};
     tEvalResult eval_result;
 
     reset_adr_vals(p_vals);
@@ -115,7 +146,11 @@ static adr_mode_t decode_adr(adr_vals_t* p_vals, tStrComp const* p_arg, Word mod
         else if (
                 !mFirstPassUnknownOrQuestionable(eval_result.Flags)
                 && (p_vals->value > SegLimits[SegIO])) {
-            WrStrErrorPos(ErrNum_OverRange, p_arg);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                    OpPart.str.p_str, (LargeInt)p_vals->value,
+                    (LargeInt)0, (LargeInt)SegLimits[SegIO]);
+            WrXErrorPos(ErrNum_OverRange, detail, &p_arg->Pos);
         } else {
             ChkSpace(SegIO, eval_result.AddrSpaceMask);
             p_vals->mode = e_mod_port;
@@ -152,7 +187,7 @@ static adr_mode_t decode_adr(adr_vals_t* p_vals, tStrComp const* p_arg, Word mod
 
 check:
     if (p_vals->mode && !((mode_mask >> p_vals->mode) & 1)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        report_address_forms(mode_mask, p_arg);
         reset_adr_vals(p_vals);
     }
     return p_vals->mode;

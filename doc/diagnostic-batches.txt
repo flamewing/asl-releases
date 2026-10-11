@@ -580,3 +580,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     already gives exact/range/either-or contracts and observed counts, with
     a position when passed. No count-helper change is needed.
     Validation: all 365 CTest cases pass with embedded/external catalogs.
+
+32. Complete TLCS-42 historical operand and port-limit review.
+    Both original candidates retain IDs and positions: 1350 lists accepted
+    operand forms from the decoder mask, excluding CMOS-only P on NMOS;
+    1320 reports the actual IN/OUT value and selected CPU port interval.
+    Preserve ordinary P symbols on NMOS, unknown/questionable flags,
+    address evaluation, rejection order and all instruction encodings.
+    Tests cover all nine CPU variants, both port callers, operand masks,
+    CMOS distinctions, primary undefined-symbol errors, forward ports
+    and preceding instruction bytes.
+    Validation: all 366 CTest cases pass with embedded/external catalogs.

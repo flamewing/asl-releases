@@ -218,8 +218,12 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 32: allowed operand syntax respects CMOS-only P recognition; port overflow gives actual selected CPU interval. Masks, evaluation order and encodings unchanged."
     },
     "code47c00.c": {
       "candidate_counts": {
