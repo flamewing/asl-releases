@@ -1558,7 +1558,7 @@
     {
       "file": "code7720.c",
       "issue": "DecodeOP uppercases a component with operands but not a bare component, rejecting lowercase OP dpinc although OP DPINC works.",
-      "status": "reproduced during tranche 63; fix separately in tranche 64"
+      "status": "fixed in tranche 64; normalize every initial OP component, lowercase/mixed-case bare components now match uppercase encodings"
     }
   ]
 }

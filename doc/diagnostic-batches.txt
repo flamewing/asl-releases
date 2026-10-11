@@ -954,3 +954,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     accepted packed words. Lowercase bare OP components are separately
     rejected because their opcode is not normalized; fix in tranche 64.
     Validation: all 386 CTest cases pass with embedded/external catalogs.
+
+64. Separate NEC 7720/7725 bare OP component case bug.
+    Normalize initial OP component opcode after both parsing paths; bare
+    components previously skipped normalization and failed case-sensitive
+    table lookup, while components with operands already worked.
+    OP dpinc now behaves like OP DPINC. Tests compare lowercase/mixed-case
+    NOP/DPL/DPH/RP/RET fields with uppercase encodings on both CPUs and
+    verify repeated fields and unknown components retain their primary IDs.
+    Validation: all 386 CTest cases pass with embedded/external catalogs.

@@ -348,7 +348,6 @@ static void DecodeOP(Word Index) {
         p = FirstBlank(ArgStr[1].str.p_str);
         if (p) {
             StrCompSplitLeft(&ArgStr[1], &OpPart, p);
-            NLS_UpString(OpPart.str.p_str);
             KillPrefBlanksStrComp(&ArgStr[1]);
         } else {
             StrCompCopy(&OpPart, &ArgStr[1]);
@@ -357,6 +356,7 @@ static void DecodeOP(Word Index) {
             }
             ArgCnt--;
         }
+        NLS_UpString(OpPart.str.p_str);
         if (!LookupInstTable(OpTable, OpPart.str.p_str)) {
             WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
         }
