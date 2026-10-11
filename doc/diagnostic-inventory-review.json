@@ -1706,6 +1706,11 @@
       "file": "codekenbak.c",
       "issue": "ChkMode returns false for disallowed recognized addressing modes without issuing any diagnostic; JPD #1 silently emits nothing while assembly succeeds.",
       "status": "fixed in tranche 92; report positioned 1350 with current mask forms on rejection; all six jump callers and bit-address path verified, accepted modes preserved"
+    },
+    {
+      "file": "code62015.c",
+      "issue": "DecodeJR ignores failed target evaluation and then checks/encodes its provisional result, causing page/range cascades after primary type or symbol failures.",
+      "status": "fixed in tranche 94; return after failed evaluation before page/distance checks and encoding; all five callers verified"
     }
   ]
 }

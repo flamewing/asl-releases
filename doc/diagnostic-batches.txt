@@ -1249,3 +1249,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Tests cover all shift/rotate forms, both register paths, indexed/register
     masks, jump counts, bit counts, endpoints and forward counts.
     Validation: all 395 CTest cases pass with embedded/external catalogs.
+
+94. Separate SC62015 failed-JR-target evaluation bug.
+    Reproduced JR 1048576 reporting 1320 followed by 1331. Return immediately
+    on failed target evaluation, before page/distance checks or encoding.
+    Preserve valid targets, page/interval rules and preceding branch bytes.
+    Tests cover all five JR aliases, single primary overflow/undefined errors,
+    exact positions and EXPECT-wrapped failures proving no emitted words.
+    Validation: all 396 CTest cases pass with embedded/external catalogs.

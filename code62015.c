@@ -1539,6 +1539,9 @@ static void DecodeJR(Word Index) {
 
     if (ChkArgCnt(1, 1)) {
         addr = EvalStrIntExpressionWithFlags(&ArgStr[1], Int20, &ValOK, &flags);
+        if (!ValOK) {
+            return;
+        }
         if (!mFirstPassUnknownOrQuestionable(flags)
             && (addr & 0xf0000) != (EProgCounter() & 0xf0000)) {
             WrStrErrorPos(ErrNum_TargOnDiffPage, &ArgStr[1]);
