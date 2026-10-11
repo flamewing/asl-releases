@@ -5909,7 +5909,7 @@ static void decode_neg(Word is_word) {
         break;
     default:
         (void)ChkArgCnt(0, 1);
-        break;
+        return;
     }
 
     switch (adr_vals.mode) {

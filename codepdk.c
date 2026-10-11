@@ -940,7 +940,10 @@ static void DecodeBIT(Word Code) {
         if (!OK) {
             return;
         }
-        pElement               = CreateStructElem(&LabPart);
+        pElement = CreateStructElem(&LabPart);
+        if (!pElement) {
+            return;
+        }
         pElement->pRefElemName = as_strdup(pAddrComp->str.p_str);
         pElement->OpSize       = eSymbolSize8Bit;
         pElement->BitPos       = BitPos;

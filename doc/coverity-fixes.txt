@@ -1,4 +1,4 @@
-Coverity fixes: first batch, 2026-10-11
+Coverity fixes: reviewable batches, 2026-10-11
 
 Input report: coverity-triage.txt, reviewed revision a31c0b2.
 Scope: major findings and directly related input-validation defects.
@@ -92,9 +92,36 @@ and Windows path separators so its assembler tests reach the intended
 register and macro code. These mappings still require a fresh scan;
 the report's format findings can refer to the same defective call sites.
 
+Third batch: decoder and expression correctness
+
+350632, codem16c.c:DecodeADJNZ_SBJNZ
+  Check immediate decoding before using it. Correct a related wrong-operand
+  bug: the adjustment comes from the source immediate, not the destination
+  displacement. Mask negative adjustments before shifting their nibble.
+350667, codem16c.c:DecodeLDC_STC
+  Stop STC PC processing when its destination fails address decoding.
+914338, codez80.c:decode_neg
+  Return after an argument-count error, before reading uninitialized
+  address-decoder results.
+350675, codepdk.c:DecodeBIT
+  Check CreateStructElem before dereferencing it. It can return NULL for
+  failed symbol expansion as well as allocation failure.
+455963, operator.c:BitMirrorOp
+  Use LargeWord masks/shifts, preserving bits above the mirrored field.
+  This avoids signed overflow and handles width 32 on 32-bit LargeWord.
+
+Validation: all 336 tests passed in both catalog configurations. Added
+expected-error cases for Z80 NEG and M16C invalid operands, exact output
+bytes for four M16C adjustments, and expression assertions for 32-bit,
+negative and partial-width bit mirroring. Existing Padauk structure tests
+exercise successful BIT creation; allocation failure was not injected.
+
 Remaining work
 
 The other findings have not been fixed by these batches. Suggested next
 batches: CPU decoder correctness; remaining resource/read handling;
-format-string findings. The eight
-undecided findings still need their event traces and source-based review.
+format-string findings. The eight undecided findings still need their
+event traces and source-based review. TempResultToFloat's scalar union
+conversion appears valid: the right-hand value is evaluated before the
+assignment. Its reported overlapping-memory trace is needed before
+changing that code or reclassifying the finding.

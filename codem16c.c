@@ -930,7 +930,10 @@ static void DecodeLDC_STC(Word IsSTC) {
             } else {
                 tAdrResult AdrResult;
 
-                DecodeAdr(pMemArg, MModGen | MModReg32 | MModAReg32, &AdrResult);
+                if (DecodeAdr(pMemArg, MModGen | MModReg32 | MModAReg32, &AdrResult)
+                    == ModNone) {
+                    return;
+                }
                 if (AdrResult.Type == ModAReg32) {
                     AdrResult.Mode = 4;
                 }
@@ -2238,9 +2241,10 @@ static void DecodeADJNZ_SBJNZ(Word IsSBJNZ) {
 
                 OpSize2 = OpSize;
                 OpSize  = 0;
-                DecodeAdr(&ArgStr[1], MModImm, &SrcAdrResult);
-                /* TODO: ChkRes */
-                Num1 = ImmVal(&DestAdrResult);
+                if (DecodeAdr(&ArgStr[1], MModImm, &SrcAdrResult) != ModImm) {
+                    return;
+                }
+                Num1 = ImmVal(&SrcAdrResult);
                 if (mFirstPassUnknown(SrcAdrResult.ImmSymFlags)) {
                     Num1 = 0;
                 }
@@ -2261,7 +2265,7 @@ static void DecodeADJNZ_SBJNZ(Word IsSBJNZ) {
                             WrError(ErrNum_JmpDistTooBig);
                         } else {
                             BAsmCode[0] = 0xf8 + OpSize2;
-                            BAsmCode[1] = (Num1 << 4) + DestAdrResult.Mode;
+                            BAsmCode[1] = ((Num1 & 0x0f) << 4) + DestAdrResult.Mode;
                             memcpy(BAsmCode + 2, DestAdrResult.Vals, DestAdrResult.Cnt);
                             BAsmCode[2 + DestAdrResult.Cnt] = AdrLong & 0xff;
                             CodeLen                         = 3 + DestAdrResult.Cnt;

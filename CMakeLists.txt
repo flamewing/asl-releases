@@ -1304,6 +1304,7 @@ add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}
     "-DTEST_PROGRAM=$<TARGET_FILE:test_coverity_inputs>"
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DDAS_PROGRAM=$<TARGET_FILE:dasl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
     "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
     "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CoverityInputs"
     -P "${CMAKE_SOURCE_DIR}/tests/coverity_inputs.cmake"

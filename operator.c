@@ -154,16 +154,17 @@ static Boolean BitMirrorOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVa
     if ((pRVal->Contents.Int.Value < 1) || (pRVal->Contents.Int.Value > 32)) {
         WrError(ErrNum_OverRange);
     } else {
-        LargeInt Result = (pLVal->Contents.Int.Value >> pRVal->Contents.Int.Value)
-                          << pRVal->Contents.Int.Value;
+        LargeWord Value = (LargeWord)pLVal->Contents.Int.Value;
+        LargeWord Result = Value
+                           & ~((~(LargeWord)0) >> (LARGEBITS - pRVal->Contents.Int.Value));
 
         for (z = 0; z < pRVal->Contents.Int.Value; z++) {
-            if ((pLVal->Contents.Int.Value & (1 << (pRVal->Contents.Int.Value - 1 - z)))
+            if ((Value & ((LargeWord)1 << (pRVal->Contents.Int.Value - 1 - z)))
                 != 0) {
-                Result |= (1 << z);
+                Result |= ((LargeWord)1 << z);
             }
         }
-        as_tempres_set_int(pErg, Result);
+        as_tempres_set_int(pErg, (LargeInt)Result);
     }
     PromoteLRValFlags();
     return True;

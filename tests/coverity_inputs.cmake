@@ -63,3 +63,22 @@ file(READ "${TEST_DIR}/title.lst" listing)
 if(NOT listing MATCHES "Coverity long title regression")
     message(FATAL_ERROR "Listing title was truncated")
 endif()
+
+file(WRITE "${TEST_DIR}/bad-neg.asm" " cpu z80\n expect 1110\n neg a,b\n endexpect\n")
+check_asl(0 bad-neg.asm)
+file(WRITE "${TEST_DIR}/bad-m16c.asm" " cpu M30620\n expect 1350\n stc.w pc,#1\n endexpect\n expect 1350\n adjnz.b r0l,r0l,$\n endexpect\n")
+check_asl(0 bad-m16c.asm)
+
+# Check the adjustment nibble and displacement bytes, including negative
+# adjustments. The destination register has no displacement of its own.
+file(WRITE "${TEST_DIR}/adjust-m16c.asm" " cpu M30620\n adjnz.b #1,r0l,$\n adjnz.b #-8,r0l,$\n sbjnz.b #1,r0l,$\n adjnz.w #7,r0,$\n")
+check_asl(0 adjust-m16c.asm)
+file(TO_NATIVE_PATH "${TEST_DIR}/adjust-m16c" binary_base)
+check_exit(0 "${P2BIN_PROGRAM}" -l 0 -r 0x-0x "${binary_base}")
+file(READ "${TEST_DIR}/adjust-m16c.bin" actual HEX)
+if(NOT actual STREQUAL "f810fef880fef8f0fef970fe")
+    message(FATAL_ERROR "M16C adjustment encoding regression: ${actual}")
+endif()
+
+file(WRITE "${TEST_DIR}/bit-mirror.asm" " cpu z80\n if (1 >< 32) <> 80000000h\n error \"32-bit mirror\"\n endif\n if (80000000h >< 32) <> 1\n error \"top-bit mirror\"\n endif\n if ((-1) >< 32) <> -1\n error \"negative mirror\"\n endif\n if (1234h >< 4) <> 1232h\n error \"preserve upper bits\"\n endif\n")
+check_asl(0 bit-mirror.asm)
