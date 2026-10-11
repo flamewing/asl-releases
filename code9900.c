@@ -748,6 +748,7 @@ static void DecodeBYTE(Word Code) {
                 }
                 if (!RangeCheck(t.Contents.Int.Value, Int8)) {
                     WrStrErrorPos(ErrNum_OverRange, pArg);
+                    OK = False;
                 } else if (SetMaxCodeLen(CodeLen + 1)) {
                     WrStrErrorPos(ErrNum_CodeOverflow, pArg);
                     OK = False;

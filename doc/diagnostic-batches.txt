@@ -1442,3 +1442,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     eight CPUs, both operand positions, EXPECT/no emission and original valid
     register/indirect/absolute/indexed byte encodings.
     Validation: all 402 CTest cases pass with embedded/external catalogs.
+
+114. 9900 BYTE directives discard partial data after integer overflow.
+    BYTE 1,256,2 reports 1320 but keeps assembling, emitting 01 02. Mark the
+    directive failed on range rejection so the existing cleanup discards
+    all its bytes, consistent with its other failure paths. Tests cover all
+    eight CPUs, lower/upper overflow after data/string values, no emission
+    and retained integer/character endpoint bytes.
+    Validation: all 402 CTest cases pass with embedded/external catalogs.

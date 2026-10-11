@@ -1805,6 +1805,11 @@
       "file": "code9900.c",
       "issue": "Plain register parsing appends secondary InvAddrMode after primary evaluation failures; empty indirect * / *+ silently uses R0 and unguarded strlen-1 indexing.",
       "status": "fixed in tranche 113; retain primary register diagnostic, require indirect register expression before encoding, guard trailing-character access; all eight CPUs and valid modes verified"
+    },
+    {
+      "file": "code9900.c",
+      "issue": "BYTE does not mark integer range failure unsuccessful, leaving preceding/subsequent valid values emitted after an overflow diagnostic.",
+      "status": "fixed in tranche 114; mark failure and use existing CodeLen cleanup to discard the whole directive; all eight CPUs, lower/upper/string-preceded errors and valid bytes verified"
     }
   ]
 }
