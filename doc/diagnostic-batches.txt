@@ -1421,3 +1421,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     failing paths, forward destinations and known invalid final lengths on
     both CPUs; known-symbol original bytes retained.
     Validation: all 401 CTest cases pass with embedded/external catalogs.
+
+112. Complete 8x30x historical diagnostic review.
+    Six 1131 conflicts give actual IV operand length and selected bit length,
+    converting encoded zero to eight bits, at the compared typed operand.
+    Three 1445 rejections identify CPU-specific allowed registers or required
+    core/I/O class; retain octal R-name interpretation. XEC 1350 identifies
+    required expression(register)/expression(IV),length syntax at operand.
+    Related GetLen range failures retain [1,8] and gain source position.
+    Tests cover all ten sites on both CPUs, automatic/explicit/zero-encoded
+    lengths, forward/final failures and unchanged known/eight-bit encodings.
+    Validation: all 401 CTest cases pass with embedded/external catalogs.

@@ -696,8 +696,13 @@
         "ErrNum_InvAddrMode": 1,
         "ErrNum_InvReg": 3
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_ConfOpSizes",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg"
+      ],
+      "status": "complete",
+      "review_notes": "All ten historical sites reviewed in tranche 112: six conflicts identify actual IV operand width and selected length (encoded zero means eight bits), three register rejections give CPU/class-specific choices, and XEC missing-address-form rejection gives required syntax at operand. Related GetLen numeric range failures gain source position; keep [1,8], IDs, octal R-number syntax, automatic length inference and accepted bytes. Forward IV/length guards fixed in tranche 111."
     },
     "code90c141.c": {
       "candidate_counts": {

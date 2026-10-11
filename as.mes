@@ -1309,6 +1309,10 @@ Message ErrMsgEADispRange
  "Verschiebung der effektiven Adresse %llld au&szlig;erhalb [%llld,%llld]"
  "effective address displacement %llld outside [%llld,%llld]"
 
+Message ErrMsgOperandLengthConflict
+ "Operand %s hat L&auml;nge %u Bits; gew&auml;hlte L&auml;nge %u Bits"
+ "operand %s has length %u bits; selected length %u bits"
+
 Message ErrMsgAssumedAddressSelector
  "Adresse 0x%lllx erfordert %s-Selektor 0x%lllx; ASSUME %s=0x%lllx w&auml;hlt 0x%lllx (Maske 0x%lllx)"
  "address 0x%lllx requires %s selector 0x%lllx; ASSUME %s=0x%lllx selects 0x%lllx (mask 0x%lllx)"

@@ -12,6 +12,9 @@
 
 #include "code8x30x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -32,6 +35,24 @@
 static CPUVar CPU8x300, CPU8x305;
 
 /*-------------------------------------------------------------------------*/
+
+static void WrRegisterChoices(const tStrComp* arg, const char* choices) {
+    char detail[300];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &arg->Pos);
+}
+
+static const char* CoreRegisterChoices(void) {
+    return MomCPU == CPU8x300 ? "R0..R11 / R17 / AUX / OVF / IVL / IVR"
+                              : "R0..R17 / AUX / OVF / IVL / IVR";
+}
+
+static void WrLengthConflict(const tStrComp* arg, unsigned actual, unsigned selected) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandLengthConflict),
+                arg->str.p_str, actual ? actual : 8, selected ? selected : 8);
+    WrXErrorPos(ErrNum_ConfOpSizes, detail, &arg->Pos);
+}
 
 static Boolean DecodeReg(tStrComp const* pArg, Word* Erg, ShortInt* ErgLen) {
     Boolean OK;
@@ -77,7 +98,7 @@ static Boolean DecodeReg(tStrComp const* pArg, Word* Erg, ShortInt* ErgLen) {
         }
         if ((OK) && (Acc < 32)) {
             if ((MomCPU == CPU8x300) && (Acc > 9) && (Acc < 15)) {
-                WrStrErrorPos(ErrNum_InvReg, pArg);
+                WrRegisterChoices(pArg, "R0..R11 / R17..R37 / AUX / OVF / IVL / IVR / LIV0..LIV7 / RIV0..RIV7 / IV expression");
                 return False;
             } else {
                 *Erg = Acc;
@@ -143,7 +164,7 @@ static Boolean GetLen(tStrComp const* pArg, Word* Erg, tSymbolFlags* pFlags) {
     if (mFirstPassUnknownOrQuestionable(*pFlags)) {
         *Erg = 8;
     }
-    if (!ChkRange(*Erg, 1, 8)) {
+    if (!ChkRangePos(*Erg, 1, 8, pArg)) {
         return False;
     }
     *Erg &= 7;
@@ -228,7 +249,7 @@ static void DecodeXMIT(Word Code) {
                 }
                 if ((SrcLen != -1) && (Rot != SrcLen)
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_ConfOpSizes);
+                    WrLengthConflict(&ArgStr[2], SrcLen, Rot);
                 } else {
                     Adr = EvalStrIntExpression(&ArgStr[1], Int5, &OK);
                     if (OK) {
@@ -265,7 +286,7 @@ static void DecodeAri(Word Code) {
                     if (OK) {
                         if (DecodeReg(&RegArg, &SrcReg, &SrcLen)) {
                             if (SrcReg >= 16) {
-                                WrStrErrorPos(ErrNum_InvReg, &RegArg);
+                                WrRegisterChoices(&RegArg, CoreRegisterChoices());
                             } else {
                                 WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5)
                                               | DestReg;
@@ -290,10 +311,10 @@ static void DecodeAri(Word Code) {
                 if (GetLen(&ArgStr[2], &Rot, &Flags)) {
                     if (DecodeReg(&ArgStr[1], &SrcReg, &SrcLen)) {
                         if (SrcReg < 16) {
-                            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+                            WrRegisterChoices(&ArgStr[1], "LIV0..LIV7 / RIV0..RIV7 / R20..R37 / IV expression");
                         } else if ((SrcLen != -1) && (SrcLen != Rot)
                                    && !mFirstPassUnknownOrQuestionable(Flags)) {
-                            WrError(ErrNum_ConfOpSizes);
+                            WrLengthConflict(&ArgStr[1], SrcLen, Rot);
                         } else {
                             WAsmCode[0]
                                     = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
@@ -322,7 +343,7 @@ static void DecodeAri(Word Code) {
                     }
                     OK = Rot == DestLen;
                     if (!OK) {
-                        WrError(ErrNum_ConfOpSizes);
+                        WrLengthConflict(&ArgStr[ArgCnt], DestLen, Rot);
                     }
                 }
             }
@@ -332,7 +353,7 @@ static void DecodeAri(Word Code) {
                         Rot = ((SrcLen == -1)) ? 0 : SrcLen;
                     }
                     if ((DestReg >= 16) && (SrcLen != -1) && (SrcLen != Rot)) {
-                        WrError(ErrNum_ConfOpSizes);
+                        WrLengthConflict(&ArgStr[1], SrcLen, Rot);
                     } else {
                         WAsmCode[0] = (Code << 13) | (SrcReg << 8) | (Rot << 5) | DestReg;
                         CodeLen     = 1;
@@ -357,7 +378,10 @@ static void DecodeXEC(Word Code) {
             return;
         }
         if (!p) {
-            WrError(ErrNum_InvAddrMode);
+            char detail[240];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms),
+                        "expression(register); expression(IV),length");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
         } else {
             tStrComp DispArg, RegArg;
 
@@ -388,7 +412,7 @@ static void DecodeXEC(Word Code) {
                         }
                         if ((SrcLen != -1) && (Rot != SrcLen)
                             && !mFirstPassUnknownOrQuestionable(Flags)) {
-                            WrError(ErrNum_ConfOpSizes);
+                            WrLengthConflict(&RegArg, SrcLen, Rot);
                         } else {
                             WAsmCode[0] = EvalStrIntExpression(&DispArg, UInt5, &OK);
                             if (OK) {
@@ -449,7 +473,7 @@ static void DecodeNZT(Word Code) {
                 }
                 if ((SrcLen != -1) && (Rot != SrcLen)
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_ConfOpSizes);
+                    WrLengthConflict(&ArgStr[1], SrcLen, Rot);
                 } else {
                     Adr = EvalStrIntExpressionWithFlags(
                             &ArgStr[ArgCnt], UInt13, &OK, &Flags);
