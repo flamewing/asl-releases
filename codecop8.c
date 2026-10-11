@@ -13,6 +13,9 @@
 
 #include "codecop8.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -101,7 +104,25 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
 chk:
     if ((pResult->Mode != ModNone) && !(Mask & (1 << pResult->Mode))) {
         pResult->Mode = ModNone;
-        WrError(ErrNum_InvAddrMode);
+        char forms[160] = "", detail[240];
+        for (z = ModAcc; z <= ModXDec; z++) {
+            if (!(Mask & (1 << z))) {
+                continue;
+            }
+            strmaxcat(forms, ModStrings[z], sizeof(forms));
+            strmaxcat(forms, ", ", sizeof(forms));
+        }
+        if (Mask & MModDir) {
+            strmaxcat(forms, "expr, ", sizeof(forms));
+        }
+        if (Mask & MModImm) {
+            strmaxcat(forms, "#expr, ", sizeof(forms));
+        }
+        if (*forms) {
+            forms[strlen(forms) - 2] = '\0';
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
     }
     return pResult->Mode;
 }
@@ -425,7 +446,7 @@ static void DecodeIFBNE(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*ArgStr[1].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgImmediateRequired), &ArgStr[1].Pos);
     } else {
         Boolean OK;
 
@@ -506,7 +527,11 @@ static void DecodeJP(Word Code) {
                 CodeLen     = 1;
                 WrError(ErrNum_DistNull);
             } else if (((AdrInt > 31) || (AdrInt < -32)) && !mSymbolQuestionable(Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)AdrInt, (LargeInt)-32, (LargeInt)31,
+                        (LargeWord)(EProgCounter() + 1));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = AdrInt & 0xff;
                 CodeLen     = 1;
@@ -527,7 +552,10 @@ static void DecodeDRSZ(Word Code) {
                 DestResult.Val |= 0xf0;
             }
             if (DestResult.Val < 0xf0) {
-                WrError(ErrNum_UnderRange);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIntegerArgumentRange),
+                        OpPart.str.p_str, (LargeInt)DestResult.Val, (LargeInt)240, (LargeInt)255);
+                WrXErrorPos(ErrNum_UnderRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = DestResult.Val - 0x30;
                 CodeLen     = 1;

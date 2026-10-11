@@ -776,3 +776,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     warning severity/position, primary undefined targets, forward symbols,
     zero displacement, valid transfers/addressing and preceding bytes.
     Validation: all 377 CTest cases pass with embedded/external catalogs.
+
+49. Complete COP8 historical operand/register/branch inventory review.
+    Shared 1350 lists accepted accumulator, bracketed indirect, immediate
+    and direct forms; IFBNE 1350 identifies its required #expression syntax.
+    DRSZ 1315 reports byte-normalized value and [240,255] register interval.
+    JP 1370 shows signed-16-bit wrapped displacement, [-32,31] and PC+1.
+    Preserve IDs, Byte normalization (including DRSZ -1), UInt16 targets,
+    symbol flags and the existing zero-distance NOP conversion/warning.
+    Tests cover all accumulator/ALU callers and representative LD masks,
+    operand positions, both displacement endpoints, wrapping, zero, forward
+    targets, undefined symbols and preceding accepted bytes.
+    Validation: all 378 CTest cases pass with embedded/external catalogs.

@@ -802,8 +802,13 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_UnderRange"
+      ],
+      "status": "complete",
+      "review_notes": "Tranche 49: four historical candidates identify mask forms, required IFBNE immediate prefix, byte-normalized DRSZ interval or JP signed displacement/range/PC+1. Original signed-16-bit wrapping, zero-to-NOP warning and evaluation flags preserved."
     },
     "codecp1600.c": {
       "candidate_counts": {

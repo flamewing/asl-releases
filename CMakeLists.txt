@@ -1493,6 +1493,18 @@ set_tests_properties(xgate_diagnostics PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
 )
 
+add_test(NAME cop8_diagnostics COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/COP8Diagnostics"
+    -P "${CMAKE_SOURCE_DIR}/tests/cop8_diagnostics.cmake"
+)
+set_tests_properties(cop8_diagnostics PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+)
+
 add_test(NAME tlcs42_diagnostics COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
