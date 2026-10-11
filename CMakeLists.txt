@@ -1361,6 +1361,18 @@ set_tests_properties(branchhc16_diagnostics PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
 )
 
+add_test(NAME tbil_diagnostics COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TBILDiagnostics"
+    -P "${CMAKE_SOURCE_DIR}/tests/tbil_diagnostics.cmake"
+)
+set_tests_properties(tbil_diagnostics PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+)
+
 add_test(NAME branch61860_diagnostics COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
     "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"

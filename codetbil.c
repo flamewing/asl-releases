@@ -12,6 +12,9 @@
 
 #include "codetbil.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -138,7 +141,10 @@ static Boolean append_str(
     for (i = 0; i < p_str->len; i++) {
         int trans = as_chartrans_xlate(CurrTransTable->p_table, p_str->p_str[i]);
         if (trans >= 0x80) {
-            WrStrErrorPos(ErrNum_OverRange, p_arg);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgStringByteRange),
+                    (LargeInt)(i + 1), (LargeInt)trans);
+            WrXErrorPos(ErrNum_OverRange, detail, &p_arg->Pos);
             return False;
         }
         set_b_guessed(flags, PrefCnt, 1, 0xff);
@@ -181,10 +187,19 @@ static Boolean decode_rel_core(Word code, IntType dist_type) {
     }
 
     dist = adr - (EProgCounter() + 1);
-    if ((!dist || !RangeCheck(dist, dist_type))
-        && !mFirstPassUnknownOrQuestionable(flags)) {
-        WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
-        return False;
+    if (!mFirstPassUnknownOrQuestionable(flags)) {
+        if (!dist) {
+            WrXErrorPos(ErrNum_JmpDistIsZero, getmessage(Num_ErrMsgBranchZeroField), &ArgStr[1].Pos);
+            return False;
+        }
+        if (!RangeCheck(dist, dist_type)) {
+            char detail[200];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeNonzero),
+                    (LargeInt)dist, IntTypeDefs[dist_type].Min, IntTypeDefs[dist_type].Max,
+                    (LargeWord)(EProgCounter() + 1));
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
+            return False;
+        }
     }
 
     set_b_guessed(flags, PrefCnt, 1, IntTypeDefs[dist_type].Mask);

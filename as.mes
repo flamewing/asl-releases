@@ -1313,6 +1313,18 @@ Message ErrMsgBranchDispRange
  "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx)"
  "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx)"
 
+Message ErrMsgBranchDispRangeNonzero
+ "Sprungverschiebung %llld au&szlig;erhalb [%llld,%llld] (PC-Basis 0x%lllx); null ist reserviert"
+ "branch displacement %llld outside [%llld,%llld] (PC base 0x%lllx); zero is reserved"
+
+Message ErrMsgBranchZeroField
+ "Sprungverschiebung 0 ist reserviert; * w&auml;hlt die explizite Form mit Nullfeld"
+ "branch displacement 0 is reserved; * selects the explicit zero-field form"
+
+Message ErrMsgStringByteRange
+ "&Uuml;bersetztes Stringbyte %llld hat Wert %llld au&szlig;erhalb [0,127]"
+ "translated string byte %llld has value %llld outside [0,127]"
+
 Message ErrMsgOperandChoices
  "Operand muss %s sein"
  "operand must be %s"

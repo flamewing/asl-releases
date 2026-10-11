@@ -533,3 +533,21 @@ manual, EXPECT fixtures, translations and source-position tests.
     source positions, one primary error, translations, endpoints, zero,
     forward symbols, no-wrap behavior and preceding instruction bytes.
     Validation: all 363 CTest cases pass with embedded/external catalogs.
+
+29. Complete TBIL historical branch and literal range review.
+    Nonzero branch range failures retain 1370 and report displacement,
+    actual 5-/6-bit interval, PC+1 and reserved-zero constraint under -x.
+    Explicit numeric zero now uses existing 1371, distinguishing a reserved
+    displacement from overflow and documenting the unchanged literal *
+    zero-field form. Preserve UInt16 targets, signed 16-bit displacement
+    wrap, questionable/unknown flags, masks and the existing BR opcode.
+    Translated literal bytes >=128 retain 1320 and report processed-string
+    byte index, translated value and [0,127], locating the string expression.
+    Tests cover every branch family and literal caller, signed/unsigned
+    endpoints, zero and *, forward targets, caret notation, primary errors,
+    exact IDs/positions, German detail and preceding accepted bytes.
+    No existing TBIL EXPECT fixture references the changed zero rejection.
+    A separate raw-high-bit literal bug was reproduced: a signed char is
+    converted to the translator's unsigned argument, producing -1, which
+    then bypasses the >=128 check and is emitted as 0xff. Follow up next.
+    Validation: all 364 CTest cases pass with embedded/external catalogs.

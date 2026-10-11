@@ -1179,8 +1179,12 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "Both historical candidates improved in tranche 29, preserving branch encoding and zero-field syntax. Raw high-bit literal translation bug is tracked separately."
     },
     "codetms7.c": {
       "candidate_counts": {
@@ -1394,6 +1398,11 @@
       "file": "code68rs08.c",
       "reason": "decode_brset_brclr_core tests ArgStr[2] for X/D[X], ignoring arg_index for suffix bit syntax. Verify and fix separately from branch-message-only tranche.",
       "status": "fixed in tranche 22"
+    },
+    {
+      "file": "codetbil.c",
+      "reason": "Signed high-bit input to as_chartrans_xlate yields -1, which bypasses the 7-bit range check and encodes 0xff. Reproduced pc \"\\128\" => 24ff with success. Cast source byte to unsigned char and reject unmapped results.",
+      "status": "pending"
     }
   ]
 }
