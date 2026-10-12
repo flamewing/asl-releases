@@ -2762,3 +2762,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     and encodings; stop failed base/zero-only evaluation before secondary errors.
     All 19 historical sites reviewed; adjacent forward/failure/255 cases tracked.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+259. ST9 indirect expression failure and forward-reference handling.
+    Confirm failed working/general pair displacements emit bytes despite 1310;
+    honor OK before choosing either mode. Carry evaluation flags for every outer
+    displacement and clamp provisional values; wait for unresolved register
+    address space/class before direct/indirect classification. Original bytes,
+    forward byte/pair aliases, zero offset, missing/wrong classes, branch-length
+    convergence and rejected emission checked. Byte-255 cutoff remains separate.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.

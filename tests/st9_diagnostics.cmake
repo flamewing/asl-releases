@@ -187,3 +187,21 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German ST9 register base: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_bytes(failed-displacements-noemit ST9040
+ " expect 1310,1310,1310\n ld r1,1/0(rr4)\n pea 1/0(RR4)\n push 1/0(R10)\n endexpect\n nop" "ff")
+check_diagnostic(pair-displacement-primary ST9040 " ld r1,1/0(rr4)" 1310 "division by 0" 3 "")
+check_diagnostic(general-pair-displacement-primary ST9040 " pea 1/0(RR4)" 1310 "division by 0" 3 "")
+check_diagnostic(byte-displacement-primary ST9040 " push 1/0(R10)" 1310 "division by 0" 3 "")
+check_bytes(forward-register ST9040
+ " push (alias)\n ld r1,alias\nalias reg R10" "f70a180a")
+check_bytes(forward-register-direct ST9040 " push alias\nalias reg R10" "660a")
+check_bytes(forward-pair-register ST9040 " pea 5(alias)\nalias reg RR4" "8f010405")
+check_bytes(forward-displacements ST9040
+ " push delta+1000(R10)\n ld r1,delta+1000(rr4)\n pea delta+1005(RR4)\ndelta equ -1000" "f70ab5148f010405")
+check_bytes(forward-register-convergence ST9040
+ " jrt done\n push (alias)\ndone: nop\nalias reg R10" "8b02f70aff")
+check_diagnostic(forward-wrong-base ST9040 " push (alias)\nalias equ 10" 1350
+    "indirect base must be a register in register address space" 3 8)
+check_diagnostic(missing-base ST9040 " push (missing)" 1010 "symbol undefined" 3 8)
+check_diagnostic(missing-direct ST9040 " push missing" 1010 "symbol undefined" 3 7)

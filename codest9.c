@@ -163,7 +163,10 @@ static void report_register_descriptor(Word descriptor, tStrComp const* arg) {
 
 static LargeInt eval_outer_disp(tStrComp const* p_arg, IntType type, Boolean* p_ok) {
     if (p_arg->str.p_str[0]) {
-        return EvalStrIntExpression(p_arg, type, p_ok);
+        tEvalResult result;
+        LargeInt value = EvalStrIntExpressionWithResult(p_arg, type, &result);
+        *p_ok = result.OK;
+        return mFirstPassUnknownOrQuestionable(result.Flags) ? 0 : value;
     } else {
         *p_ok = True;
         return 0;
@@ -360,6 +363,8 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
                     }
                 } else { /* d(rr) */
                     AdrWord = eval_outer_disp(pArg, Int16, &OK);
+                    if (!OK)
+                        goto func_exit;
                     if ((AdrWord == 0) && (Mask & (MModIRReg | MModIWRReg))) {
                         if (Mask & MModIWRReg) {
                             AdrMode = ModIWRReg;
@@ -400,6 +405,10 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             AdrWord = EvalStrIntExpressionWithResult(&RegComp, UInt9, &EvalResult);
             if (!EvalResult.OK)
                 goto func_exit;
+            if (mFirstPassUnknown(EvalResult.Flags)) {
+                Repass = True;
+                goto func_exit;
+            }
             if (!(EvalResult.AddrSpaceMask & (1 << SegReg))) {
                 WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgST9RegisterBase),
                         &RegComp.Pos);
@@ -422,6 +431,8 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             } else {
                 AdrVals[0] = Lo(AdrWord);
                 AdrWord    = eval_outer_disp(pArg, Int16, &OK);
+                if (!OK)
+                    goto func_exit;
                 if ((AdrWord == 0) && (Mask & MModIRReg)) {
                     AdrCnt  = 1;
                     AdrMode = ModIRReg;
@@ -444,6 +455,10 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
 
     AdrWord = EvalStrIntExpressionWithResult(pArg, UInt16, &EvalResult);
     if (EvalResult.OK) {
+        if (mFirstPassUnknown(EvalResult.Flags)) {
+            Repass = True;
+            goto func_exit;
+        }
         if (!(EvalResult.AddrSpaceMask & (1 << SegReg))) {
             AdrMode    = ModAbs;
             AdrVals[0] = Hi(AdrWord);
