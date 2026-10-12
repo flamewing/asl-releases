@@ -12,6 +12,8 @@
 
 #include "code90c141.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -1030,6 +1032,14 @@ static void DecodeMUL_DIV(Word Code) {
     }
 }
 
+static void report_branch_distance(Integer distance, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127,
+            (LargeWord)(EProgCounter() + 2));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeJR(Word Code) {
     UNUSED(Code);
 
@@ -1049,8 +1059,8 @@ static void DecodeJR(Word Code) {
         AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags)
                  - (EProgCounter() + 2);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
-                WrError(ErrNum_JmpDistTooBig);
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt > 127) || (AdrInt < -128))) {
+                report_branch_distance(AdrInt, &ArgStr[ArgCnt]);
             } else {
                 CodeLen     = 2;
                 BAsmCode[0] = 0xc0 | cond_code;
@@ -1138,7 +1148,9 @@ static void DecodeDJNZ(Word Code) {
         }
         if (AdrType != ModNone) {
             if (AdrMode != 0) {
-                WrError(ErrNum_InvAddrMode);
+                char detail[120];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "B or BC");
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
             } else {
                 Boolean      OK;
                 tSymbolFlags Flags;
@@ -1147,9 +1159,9 @@ static void DecodeDJNZ(Word Code) {
                                       - (EProgCounter() + 2);
 
                 if (OK) {
-                    if (!mSymbolQuestionable(Flags)
+                    if (!mFirstPassUnknownOrQuestionable(Flags)
                         && ((AdrInt > 127) || (AdrInt < -128))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrInt, &ArgStr[ArgCnt]);
                     } else {
                         CodeLen     = 2;
                         BAsmCode[0] = 0x18 | OpSize;

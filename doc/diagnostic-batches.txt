@@ -2646,3 +2646,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Distinct call/jump encodings, forward call and literal endpoints checked.
     Reference: https://gnu.googlesource.com/binutils-gdb/+/d01e823438c7dc264d6885fbbfeace4d8955dcb7/sim/mcore/interp.c
     Validation: all 421 CTest cases pass with embedded/external catalogs.
+
+246. TLCS-90 short branches and DJNZ register choices.
+    Three historical sites: actual signed byte displacement [-128,127]/PC+2
+    at branch target, and DJNZ requires B or BC at first operand. Confirm/fix
+    premature forward arithmetic rejection in JR/DJNZ; preserve existing signed
+    16-bit address-wrap calculation. Original conditional/default/B/BC bytes,
+    endpoints, wrap, primary errors, rejected emission and German checked.
+    Fifteen historical TLCS-90 sites remain.
+    Validation: all 422 CTest cases pass with embedded/external catalogs.

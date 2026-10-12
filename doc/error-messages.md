@@ -395,3 +395,6 @@ parenthesized address syntax and bracketed literal syntax under `-x`. Error 1130
 lists .B/.H/.W sizes. Errors 1315/1320 give instruction-specific immediate bounds
 or aggregate effective-address displacement bounds; 1325 gives the displacement
 and its required byte/halfword/word scaling multiple.
+
+TLCS-90 error 1370 identifies the signed byte displacement [-128,127] and
+PC+2 base under `-x`; DJNZ error 1350 identifies the required B or BC operand.

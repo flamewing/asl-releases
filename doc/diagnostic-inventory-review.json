@@ -795,8 +795,11 @@
         "ErrNum_JmpDistTooBig": 2,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partial",
+      "review_notes": "Tranche 246 reviews two branch range sites and one DJNZ fixed-register mode site: actual signed byte displacement/PC+2 and B/BC alternatives at operand. Confirm/fix premature unknown arithmetic checks; preserve signed-16-bit address-wrap calculation. Fifteen historical sites remain."
     },
     "code9331.c": {
       "candidate_counts": {
@@ -2277,6 +2280,11 @@
       "file": "codemcore.c",
       "issue": "DecodeAdr sums Int32 terms in LongInt; large terms can overflow aggregate before final range check.",
       "status": "fixed in tranche 244; reproduce positive aggregate 4294967296 silently emitted as zero; sum validated terms in LargeInt expression width before scaling/range checks. Positive/negative overflow, unsigned wrap, large-term cancellation, original bytes and no rejected emission checked."
+    },
+    {
+      "file": "code90c141.c",
+      "issue": "JR and DJNZ check only questionable flag, rejecting unresolved target arithmetic with a valid final result.",
+      "status": "fixed in tranche 246; unknown-or-questionable guard, original JR/conditional/DJNZ variants, forward expressions, signed-byte endpoints and 16-bit address wrap checked"
     }
   ]
 }
