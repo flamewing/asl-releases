@@ -2598,3 +2598,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     forward aliases resolve to their declared registers instead of being overridden.
     Original valid register coverage and known out-of-range no emission pass.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+241. MCore relative branches and literal-table constraints.
+    Seven historical sites plus two adjacent literal alignment errors: byte
+    displacement/range/alignment/PC base at target; table byte range [0,1020]
+    and actual aligned base, four-byte target alignment, odd instruction warning.
+    Confirm and fix premature forward arithmetic checks in all four decoders.
+    Preserve original encodings and branch/table endpoint predicates. Primary
+    errors, rejected emission, forward targets and German detail checked.
+    Record identical JMPI/JSRI registration for separate primary ISA verification.
+    Validation: all 421 CTest cases pass with embedded/external catalogs.

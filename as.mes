@@ -1597,6 +1597,10 @@ Message ErrMsgOperandAlignment
  "Operandenadresse 0x%lllx muss auf 2 Bytes ausgerichtet sein"
  "operand address 0x%lllx must be aligned to 2 bytes"
 
+Message ErrMsgOperandAlignmentN
+ "Operandenadresse 0x%lllx muss auf %llld Bytes ausgerichtet sein"
+ "operand address 0x%lllx must be aligned to %llld bytes"
+
 Message ErrMsgInstructionAlignment
  "Befehlsadresse 0x%lllx muss auf 2 Bytes ausgerichtet sein"
  "instruction address 0x%lllx must be aligned to 2 bytes"

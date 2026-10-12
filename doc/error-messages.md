@@ -378,3 +378,9 @@ Error 1521 reports an invalid LISTING value; use ON, OFF, NOSKIPPED or PURECODE.
 Error 1011 reports a backward temporary-label reference with too few preceding label definitions.
 
 Warning 141 reports the same destination register written by multiple parallel instructions. Error 1356 rejects an invalid parallel construct; error 1364 rejects conditional execution for an instruction that does not support it.
+
+MCore errors 1370 and 1375 identify the byte displacement, permitted range,
+required two-byte alignment and PC+2 base under `-x`. Literal-table error 1370
+identifies the byte displacement [0,1020] and the actual four-byte-aligned PC
+base; error 1325 identifies the target address and four-byte alignment. Warning
+180 identifies the odd instruction address and required two-byte alignment.

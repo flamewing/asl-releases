@@ -1213,8 +1213,13 @@
         "ErrNum_JmpDistTooBig": 4,
         "ErrNum_UnderRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_DistIsOdd",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partial",
+      "review_notes": "Seven historical control-transfer/alignment sites completed in tranche 241; byte displacement/bounds/alignment/PC base, literal-table byte displacement and actual aligned base, operand location, unknown-or-questionable deferral. Also contextualize both adjacent literal-address alignment sites. Register/address/size/immediate families remain."
     },
     "codemic8.c": {
       "candidate_counts": {
@@ -2247,6 +2252,11 @@
       "file": "codez8.c",
       "issue": "Native Rn/RRn parser narrows strtoul result to Byte before checking <=15, accepting R256/RR256 as register zero and overriding same-named aliases.",
       "status": "fixed in tranche 240; validate full unsigned long before assigning Byte; overflow/missing names fail normally, known/forward register-looking aliases resolve correctly; original valid register fixtures and range-error no emission checked"
+    },
+    {
+      "file": "codemcore.c",
+      "issue": "JMPI and JSRI both registered with index zero, producing the same opcode; need primary ISA verification before changing encoding.",
+      "status": "pending ISA encoding verification"
     }
   ]
 }

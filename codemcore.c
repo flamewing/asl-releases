@@ -12,6 +12,8 @@
 
 #include "codemcore.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -372,6 +374,35 @@ static void DecodeUImm5(Word Index) {
     }
 }
 
+static void report_branch_constraint(LongInt distance, LongInt minimum,
+        LongInt maximum, tErrorNum error, tStrComp const* target) {
+    char detail[200];
+    if (error == ErrNum_DistIsOdd) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispAlignment),
+                (LargeInt)distance, (LargeInt)2, (LargeWord)(EProgCounter() + 2));
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                (LargeInt)distance, (LargeInt)minimum, (LargeInt)maximum,
+                (LargeWord)(EProgCounter() + 2), (LargeInt)2);
+    }
+    WrXErrorPos(error, detail, &target->Pos);
+}
+
+static void report_literal_alignment(LongInt address, tStrComp const* target) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandAlignmentN),
+            (LargeWord)address, (LargeInt)4);
+    WrXErrorPos(ErrNum_NotAligned, detail, &target->Pos);
+}
+
+static void report_literal_range(LongInt address, LongInt index, tStrComp const* target) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+            (LargeInt)index * 4, (LargeInt)0, (LargeInt)1020,
+            (LargeWord)(address - index * 4));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &target->Pos);
+}
+
 static void DecodeLJmp(Word Index) {
     FixedOrder*  Instr = LJmpOrders + Index;
     LongInt      Dest;
@@ -384,10 +415,10 @@ static void DecodeLJmp(Word Index) {
         Dest = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt32, &OK, &Flags)
                - (EProgCounter() + 2);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && (Dest & 1)) {
-                WrError(ErrNum_DistIsOdd);
-            } else if (!mSymbolQuestionable(Flags) && ((Dest > 2046) || (Dest < -2048))) {
-                WrError(ErrNum_JmpDistTooBig);
+            if (!mFirstPassUnknownOrQuestionable(Flags) && (Dest & 1)) {
+                report_branch_constraint(Dest, -2048, 2046, ErrNum_DistIsOdd, &ArgStr[1]);
+            } else if (!mFirstPassUnknownOrQuestionable(Flags) && ((Dest > 2046) || (Dest < -2048))) {
+                report_branch_constraint(Dest, -2048, 2046, ErrNum_JmpDistTooBig, &ArgStr[1]);
             } else {
                 if ((Instr->Priv) && (!SupAllowed)) {
                     WrError(ErrNum_PrivOrder);
@@ -400,7 +431,7 @@ static void DecodeLJmp(Word Index) {
 }
 
 static void DecodeSJmp(Word Index) {
-    LongInt      Dest;
+    LongInt      Dest, Address;
     Boolean      OK;
     tSymbolFlags Flags;
     int          l = 0;
@@ -417,15 +448,16 @@ static void DecodeSJmp(Word Index) {
         ArgStr[1].str.p_str[l] = '\0';
         Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt32, &OK, &Flags);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && (Dest & 3)) {
-                WrError(ErrNum_NotAligned);
+            Address = Dest;
+            if (!mFirstPassUnknownOrQuestionable(Flags) && (Dest & 3)) {
+                report_literal_alignment(Address, &ArgStr[1]);
             } else {
                 Dest = (Dest - (EProgCounter() + 2)) >> 2;
                 if ((EProgCounter() & 3) < 2) {
                     Dest++;
                 }
-                if (!mSymbolQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                if (!mFirstPassUnknownOrQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) {
+                    report_literal_range(Address, Dest, &ArgStr[1]);
                 } else {
                     WAsmCode[0] = 0x7000 + (Index << 8) + (Dest & 0xff);
                     CodeLen     = 2;
@@ -543,10 +575,10 @@ static void DecodeLoopt(Word Index) {
         Dest = EvalStrIntExpressionWithFlags(&ArgStr[2], UInt32, &OK, &Flags)
                - (EProgCounter() + 2);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && (Dest & 1)) {
-                WrError(ErrNum_DistIsOdd);
-            } else if (!mSymbolQuestionable(Flags) && ((Dest > -2) || (Dest < -32))) {
-                WrError(ErrNum_JmpDistTooBig);
+            if (!mFirstPassUnknownOrQuestionable(Flags) && (Dest & 1)) {
+                report_branch_constraint(Dest, -32, -2, ErrNum_DistIsOdd, &ArgStr[2]);
+            } else if (!mFirstPassUnknownOrQuestionable(Flags) && ((Dest > -2) || (Dest < -32))) {
+                report_branch_constraint(Dest, -32, -2, ErrNum_JmpDistTooBig, &ArgStr[2]);
             } else {
                 WAsmCode[0] = 0x0400 + (RegY << 4) + ((Dest >> 1) & 15);
                 CodeLen     = 2;
@@ -556,7 +588,7 @@ static void DecodeLoopt(Word Index) {
 }
 
 static void DecodeLrm(Word Index) {
-    LongInt      Dest;
+    LongInt      Dest, Address;
     Word         RegZ;
     Boolean      OK;
     tSymbolFlags Flags;
@@ -577,15 +609,16 @@ static void DecodeLrm(Word Index) {
         ArgStr[2].str.p_str[l] = '\0';
         Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], 1, UInt32, &OK, &Flags);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && (Dest & 3)) {
-                WrError(ErrNum_NotAligned);
+            Address = Dest;
+            if (!mFirstPassUnknownOrQuestionable(Flags) && (Dest & 3)) {
+                report_literal_alignment(Address, &ArgStr[2]);
             } else {
                 Dest = (Dest - (EProgCounter() + 2)) >> 2;
                 if ((EProgCounter() & 3) < 2) {
                     Dest++;
                 }
-                if (!mSymbolQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                if (!mFirstPassUnknownOrQuestionable(Flags) && ((Dest < 0) || (Dest > 255))) {
+                    report_literal_range(Address, Dest, &ArgStr[2]);
                 } else {
                     WAsmCode[0] = 0x7000 + (RegZ << 8) + (Dest & 0xff);
                     CodeLen     = 2;
@@ -655,7 +688,10 @@ static void DecodeTrap(Word Index) {
 static void check_pc_even(Word index) {
     UNUSED(index);
     if (Odd(EProgCounter())) {
-        WrError(ErrNum_AddrNotAligned);
+        char detail[160];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                (LargeWord)EProgCounter());
+        WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
     }
 }
 
