@@ -240,3 +240,12 @@ foreach(cpu IN ITEMS 68HC12 68HC12X)
     check_bytes(trap-errors-noemit-${cpu} ${cpu}
         " expect 1320,1320\n trap #47\n trap #58\n endexpect\n db $12" "12")
 endforeach()
+
+# BTAS uses BSET memory modes, never an immediate address operand.
+check_diagnostic(btas-immediate-address 68HC12X " btas #1,#$40" 1350 "word offset,X/Y/SP/PC" 3 7)
+check_diagnostic(btas-indirect-address 68HC12X " btas [d,x],#$40" 1350 "extended address" 3 7)
+check_bytes(btas-word-offset 68HC12X
+    " btas 1000,x,#$40\n btas -1000,y,#$40\n btas >1,sp,#$40"
+    "1837e203e8401837eafc18401837f2000140")
+check_bytes(btas-mask-errors-noemit 68HC12X
+    " expect 1350,1350\n btas #1,#$40\n btas [d,x],#$40\n endexpect\n db $12" "12")

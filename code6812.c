@@ -1373,10 +1373,7 @@ static void DecodeBTAS(Word Index) {
 
         switch (DecodeAdr(
                 &adr_vals, 1, ArgCnt - 1, eSymbolSize8Bit, 2,
-                MModDir | MModExt | MModIdx | MModIdx1 | ModIdx2 | ModDIdx)) {
-        case ModImm:
-            BAsmCode[CodeLen++] = 0x18;
-            goto append;
+                MModDir | MModExt | MModIdx | MModIdx1 | MModIdx2)) {
         case ModDir:
             BAsmCode[CodeLen++] = 0x18;
             BAsmCode[CodeLen++] = 0x35;
@@ -1384,7 +1381,6 @@ static void DecodeBTAS(Word Index) {
         case ModIdx:
         case ModIdx1:
         case ModIdx2:
-        case ModDIdx:
             BAsmCode[CodeLen++] = 0x18;
             BAsmCode[CodeLen++] = 0x37;
             goto append;

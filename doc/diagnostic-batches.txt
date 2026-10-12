@@ -2074,3 +2074,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     forward values, primary errors and absence of rejected instruction bytes.
     All three historical overflow/underflow candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+186. HC12X BTAS memory-address mask.
+    Raw ModIdx2/ModDIdx enum values were ORed into the mode bitmask, accepting
+    an immediate memory operand and rejecting word-displacement indexing.
+    Match BSET's memory mask with MModIdx2; remove unreachable immediate and
+    indirect switch cases. Preserve prior indirect rejection and existing
+    accepted forms. Word displacements on X/Y/SP and no-emission immediate/
+    indirect failures are covered. NXP AN3510 specifies identical BTAS/BSET
+    addressing modes: https://www.nxp.com/docs/en/application-note/AN3510.pdf
+    Separate BTAS PC-relative base discrepancy remains for tranche 187.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
