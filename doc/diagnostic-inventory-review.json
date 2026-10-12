@@ -2047,6 +2047,11 @@
       "file": "code96.c",
       "issue": "Conditional byte branches, DJNZ/DJNZW and JBC/JBS reject first-pass unresolved target-expression distances before resolution.",
       "status": "fixed in tranche 159; defer three checks for unknown/questionable flags; four CPUs/all 16 condition opcodes/both bit branches/DJNZ/DJNZW/provisional upper-lower targets/final failures/original bytes checked"
+    },
+    {
+      "file": "code96.c",
+      "issue": "Forced short indexed displacement and short absolute address constraints reject unresolved operand expressions before resolution.",
+      "status": "fixed in tranche 160; defer indexed upper/lower checks and forced-short address interval check for unknown/questionable symbols; four CPUs/forward endpoints/final upper-lower failures/original bytes checked"
     }
   ]
 }

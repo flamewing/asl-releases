@@ -298,11 +298,11 @@ static tAdrType DecodeAdr(
                                     ForceSize = IsShort ? eForceShort : eForceLong;
                                 }
                                 if (ForceSize == eForceShort) {
-                                    if ((AdrInt > 127) && !mSymbolQuestionable(Flags)) {
+                                    if ((AdrInt > 127) && !mFirstPassUnknownOrQuestionable(Flags)) {
                                         WrStrErrorPos(ErrNum_OverRange, &Left);
                                     } else if (
                                             (AdrInt < -128)
-                                            && !mSymbolQuestionable(Flags)) {
+                                            && !mFirstPassUnknownOrQuestionable(Flags)) {
                                         WrStrErrorPos(ErrNum_UnderRange, &Left);
                                     } else {
                                         adr_type        = ModIdx;
@@ -358,7 +358,7 @@ static tAdrType DecodeAdr(
                         ForceSize = IsShort ? eForceShort : eForceLong;
                     }
                     if (ForceSize == eForceShort) {
-                        if (!IsShort) {
+                        if (!IsShort && !mFirstPassUnknownOrQuestionable(p_vals->value_flags)) {
                             WrStrErrorPos(ErrNum_UnderRange, pArg);
                         } else {
                             adr_type        = ModIdx;
