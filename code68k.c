@@ -524,6 +524,13 @@ static Boolean report_m68k_detail(
     return False;
 }
 
+static Boolean report_m68k_choices(tErrorNum error, tStrComp const* arg, char const* choices) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+    return False;
+}
+
 static Boolean report_m68k_char(unsigned message, char value, tStrComp const* arg) {
     char detail[160];
     as_snprintf(detail, sizeof(detail), getmessage(message), value);
@@ -570,7 +577,7 @@ static tRegEvalResult DecodeReg(tStrComp const* pArg, Word* pResult, Boolean Mus
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
-    *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
+    if (RegEvalResult == eIsReg) *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
     return RegEvalResult;
 }
 
@@ -596,7 +603,7 @@ static tRegEvalResult DecodeFPReg(
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, NativeFloatSize, MustBeReg);
-    *pResult = RegDescr.Reg;
+    if (RegEvalResult == eIsReg) *pResult = RegDescr.Reg;
     return RegEvalResult;
 }
 
@@ -628,8 +635,10 @@ static tRegEvalResult DecodeRegOrFPReg(
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
-    *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
-    *pSize   = EvalResult.DataSize;
+    if (RegEvalResult == eIsReg) {
+        *pResult = RegDescr.Reg & ~REGSYM_FLAG_ALIAS;
+        *pSize = EvalResult.DataSize;
+    }
     return RegEvalResult;
 }
 
@@ -2367,6 +2376,11 @@ static Boolean DecodeMACACC(char const* pArg, Word* pResult) {
     return True;
 }
 
+static void report_mac_accumulator(tStrComp const* arg) {
+    report_m68k_choices(ErrNum_InvReg, arg, (pCurrCPUProps->SuppFlags & eFlagEMAC)
+            ? "ACC, ACC0, ACC1, ACC2 or ACC3" : "ACC or ACC0");
+}
+
 static Boolean DecodeMACReg(char const* pArg, Word* pResult) {
     if (!as_strcasecmp(pArg, "MACSR")) {
         *pResult = 4;
@@ -2502,8 +2516,7 @@ static Boolean SplitMACUpperLower(Word* pResult, tStrComp* pArg) {
     *pResult = 0;
     pSplit   = strrchr(pArg->str.p_str, '.');
     if (!pSplit) {
-        WrStrErrorPos(ErrNum_InvReg, pArg);
-        return False;
+        return report_m68k_detail(ErrNum_InvReg, Num_ErrMsgMACWordHalf, pArg);
     }
 
     StrCompSplitRef(pArg, &HalfComp, pArg, pSplit);
@@ -2513,7 +2526,9 @@ static Boolean SplitMACUpperLower(Word* pResult, tStrComp* pArg) {
     } else if (!as_strcasecmp(HalfComp.str.p_str, "U")) {
         *pResult = 1;
     } else {
-        WrStrErrorPos(ErrNum_InvReg, &HalfComp);
+        char detail[140];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMACHalfSuffix), HalfComp.str.p_str);
+        WrXErrorPos(ErrNum_InvReg, detail, &HalfComp.Pos);
         return False;
     }
     return True;
@@ -3932,8 +3947,12 @@ static void DecodeMUL_DIV(Word Code) {
                 WrStrErrorPos(ErrNum_Unpredictable, &ArgStr[2]);
             }
         } else {
-            if (!DecodeReg(&ArgStr[2], &dl, True) || (dl >= 8)) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+            if (DecodeReg(&ArgStr[2], &dl, True) != eIsReg) {
+                /* The mandatory-register evaluator has reported its primary error. */
+                return;
+            }
+            if (dl >= 8) {
+                report_m68k_choices(ErrNum_InvReg, &ArgStr[2], "D0..D7");
                 return;
             }
             dh = dl;
@@ -6406,7 +6425,7 @@ static void DecodeMAC_MSAC(Word Code) {
 
     if (Odd(RemArgCnt)) {
         if (!DecodeMACACC(ArgStr[ArgCnt].str.p_str, &AccNum)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
+            report_mac_accumulator(&ArgStr[ArgCnt]);
             return;
         }
     }
@@ -6472,7 +6491,7 @@ static void DecodeMOVCLR(Word Code) {
     } else if (!(pCurrCPUProps->SuppFlags & eFlagEMAC)) {
         WrError(ErrNum_InstructionNotSupported);
     } else if (!DecodeMACACC(ArgStr[1].str.p_str, &ACCReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_mac_accumulator(&ArgStr[1]);
     } else {
         tAdrResult AdrResult;
 
@@ -6502,11 +6521,11 @@ static void DecodeMxxAC(Word Code) {
     }
 
     if (!DecodeMACACC(ArgStr[ArgCnt - 1].str.p_str, &ACCx)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt - 1]);
+        report_mac_accumulator(&ArgStr[ArgCnt - 1]);
         return;
     }
     if (!DecodeMACACC(ArgStr[ArgCnt].str.p_str, &ACCw)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgCnt]);
+        report_mac_accumulator(&ArgStr[ArgCnt]);
         return;
     }
 

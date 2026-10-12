@@ -2217,3 +2217,16 @@ manual, EXPECT fixtures, translations and source-position tests.
     bytes. All 22 historical 6809 candidates and identified adjacent diagnostic
     followups reviewed; file complete.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+200. M68K/ColdFire register halves, accumulators and long multiply destinations.
+    All seven historical register candidates now identify the required .L/.U
+    half, invalid suffix versus L/U, CPU-specific accumulator set or D0..D7
+    destination. Long multiply/divide retain only mandatory-register evaluator
+    errors; register helpers copy output only on success, avoiding uninitialized
+    descriptor reads on failed lookup. Preserve forward register aliases.
+    All five historical pair wrappers were already improved in tranche 3:
+    their helpers identify missing colons/parentheses or the failing register
+    half, and preserve evaluator primary errors. Existing focused pair cases
+    validate them; mark that family reviewed. Cover MAC/EMAC, German suffix
+    details, unchanged accepted bytes and no failure emission. Other families pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

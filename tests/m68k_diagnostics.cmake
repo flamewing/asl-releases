@@ -265,3 +265,54 @@ check_diagnostic(div-pair-half 68020 " divsl.l d2,d0:a0" 1760
     "this register-pair half must be a data register D0..D7" 3 16)
 check_diagnostic(indirect-index-width 68020 " move.w ([a0,d0.b]),d1" 1350
     "invalid index-register width b; expected .W or .L" 3 14)
+
+# Remaining register candidates: MAC word halves/CPU-specific accumulators and
+# the data-register destination of long multiply/divide. Keep evaluator errors.
+foreach(cpu IN ITEMS MCF5407 MCF5470)
+    check_diagnostic(mac-missing-half-${cpu} ${cpu} " mac.w d0,d1.l" 1445
+        "word multiply-accumulate requires a register half register.L or register.U" 3 8)
+    check_diagnostic(mac-invalid-suffix-${cpu} ${cpu} " mac.w d0.q,d1.l" 1445
+        "register half suffix 'q' is invalid; expected L or U" 3 11)
+    set(accumulators "ACC or ACC0")
+    if(cpu STREQUAL "MCF5470")
+        set(accumulators "ACC, ACC0, ACC1, ACC2 or ACC3")
+    endif()
+    check_diagnostic(mac-invalid-acc-${cpu} ${cpu} " mac.l d0,d1,acc4" 1445
+        "operand must be ${accumulators}" 3 14)
+    if(cpu STREQUAL "MCF5407")
+        check_bytes(mac-register-original-${cpu} ${cpu}
+            " mac.w d0.l,d1.u\n msac.w a0.u,a1.l\n mac.l d0,d1,acc\n mac.l d0,d1,acc0"
+            "a2000080a2480140a2000800a2000800")
+    endif()
+    if(cpu STREQUAL "MCF5470")
+        check_bytes(mac-register-original-${cpu} ${cpu}
+            " mac.w d0.l,d1.u\n msac.w a0.u,a1.l\n mac.l d0,d1,acc\n mac.l d0,d1,acc0\n mac.l d0,d1,acc3\n movclr acc2,d0\n maaac.l d0,d1,acc0,acc3\n mssac.w d0.l,d1.u,acc1,acc2"
+            "a2000080a2480140a2000800a2000800a2800810a5c0a200080da280018b")
+    endif()
+endforeach()
+check_diagnostic(mac-base-acc-unavailable MCF5407 " mac.l d0,d1,acc1" 1445 "operand must be ACC or ACC0" 3 14)
+check_diagnostic(movclr-acc MCF5470 " movclr acc4,d0" 1445 "operand must be ACC, ACC0, ACC1, ACC2 or ACC3" 3 9)
+check_diagnostic(mxxac-first-acc MCF5470 " maaac.l d0,d1,acc4,acc0" 1445 "operand must be ACC, ACC0, ACC1, ACC2 or ACC3" 3 16)
+check_diagnostic(mxxac-last-acc MCF5470 " maaac.l d0,d1,acc0,acc4" 1445 "operand must be ACC, ACC0, ACC1, ACC2 or ACC3" 3 21)
+check_diagnostic(mul-data-destination 68020 " muls.l d0,a0" 1445 "operand must be D0..D7" 3 12)
+check_diagnostic(div-data-destination 68020 " divu.l d0,a0" 1445 "operand must be D0..D7" 3 12)
+check_diagnostic(mul-register-size-primary 68020 " fpu on\nbad reg fp0\n muls.l d0,bad" 1130 "invalid operand size" 5 12)
+check_diagnostic(mul-register-kind-primary 68020 "bad equ 42\n muls.l d0,bad" 1147 "expected register" 4 12)
+check_diagnostic(mul-register-undefined-primary 68020 " muls.l d0,missing" 1445 "invalid register" 3 12)
+check_bytes(mul-register-errors-noemit 68020
+    " fpu on\nbad reg fp0\nvalue equ 42\n expect 1130,1147,1445\n muls.l d0,bad\n muls.l d0,value\n divu.l d0,a0\n endexpect\n dc.b $12" "12")
+check_bytes(mac-register-errors-noemit MCF5470
+    " expect 1445,1445,1445,1445\n mac.w d0,d1.l\n mac.w d0.q,d1.l\n movclr acc4,d0\n maaac.l d0,d1,acc0,acc4\n endexpect\n dc.b $12" "12")
+check_bytes(mul-single-register-original 68020
+    " muls.l d1,d0\n mulu.l d1,d7\n divs.l d1,d0\n divu.l d1,d7\ndest reg d3\n muls.l d1,dest"
+    "4c0108004c0170004c4108004c4170074c013800")
+check_bytes(mul-forward-register-alias 68020 " muls.l d1,dest\ndest reg d7" "4c017800")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/mac-invalid-suffix-MCF5470.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Suffix 'q'" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German MAC suffix: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

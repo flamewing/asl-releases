@@ -2403,3 +2403,11 @@ Message ErrMsgHCFOpcode
 Message ErrMsgStackWAlone
  "W muss der einzige Stack-Operand sein; %u Operanden angegeben"
  "W must be the only stack operand; %u operands supplied"
+
+Message ErrMsgMACWordHalf
+ "Wort-Multiply-Accumulate erfordert eine Registerh&auml;lfte register.L oder register.U"
+ "word multiply-accumulate requires a register half register.L or register.U"
+
+Message ErrMsgMACHalfSuffix
+ "Registerh&auml;lften-Suffix '%s' ist ung&uuml;ltig; L oder U erwartet"
+ "register half suffix '%s' is invalid; expected L or U"
