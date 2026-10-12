@@ -2823,3 +2823,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     failed expressions, no-emission and original vectors checked on both CPUs.
     All 21 historical diagnostic candidates remain; two adjacent defects tracked.
     Validation: all 426 CTest cases pass with embedded/external catalogs.
+
+266. ST7/STM8 branch displacement diagnostics.
+    Both historical distance candidates: actual signed displacement, [-128,127],
+    prefix/address-dependent PC base at target. Defer first-pass unknown targets
+    as well as questionable values. Packed/explicit bit branches, prefix variants,
+    endpoints, originals, forward expressions, primary-only/no-emission and German
+    checked. Preserve ST7 wrap; STM8 full-width defect separate. Nineteen remain.
+    Validation: all 426 CTest cases pass with embedded/external catalogs.

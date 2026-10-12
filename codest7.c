@@ -12,6 +12,9 @@
 
 #include "codest7.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -2059,6 +2062,14 @@ static void DecodeBitOp(Word Code) {
  * \param  Code instruction code
  * ------------------------------------------------------------------------ */
 
+static void report_branch_distance(Integer distance, unsigned target, unsigned length) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127,
+            (LargeWord)(EProgCounter() + length));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[target].Pos);
+}
+
 static void DecodeBTJF_BTJT(Word Code) {
     Byte     BitPos;
     tAdrVals AdrVals;
@@ -2082,8 +2093,8 @@ static void DecodeBTJF_BTJT(Word Code) {
                          &ArgStr[ArgCnt], pCurrCPUProps->AddrIntType, &OK, &Flags)
                  - (EProgCounter() + PrefixCnt + 1 + AdrVals.Cnt + 1);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
+                report_branch_distance(AdrInt, ArgCnt, PrefixCnt + 2 + AdrVals.Cnt);
             } else {
                 BAsmCode[PrefixCnt + 1 + AdrVals.Cnt] = AdrInt & 0xff;
                 CodeLen                               = PrefixCnt + 1 + AdrVals.Cnt + 1;
@@ -2176,8 +2187,8 @@ static void DecodeRel(Word Code) {
                          &ArgStr[1], pCurrCPUProps->AddrIntType, &OK, &Flags)
                  - (EProgCounter() + 2 + PrefixCnt);
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
+                report_branch_distance(AdrInt, 1, PrefixCnt + 2);
             } else {
                 BAsmCode[PrefixCnt]     = Lo(Code);
                 BAsmCode[PrefixCnt + 1] = AdrInt & 0xff;
