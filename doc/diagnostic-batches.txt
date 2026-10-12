@@ -2161,3 +2161,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     emit no instruction bytes. Existing W, indirect, update and forward vectors
     retain their encodings.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+195. 6809/6309 register widths and transfer update forms.
+    Both conflicting-width candidates name source/destination widths at the
+    destination. Three transfer-mode candidates explain forbidden auto-update
+    or actual/allowed source-destination update pairs. Preserve 1131/1350 and
+    all decoding rules, including Z compatibility. Cover all three CPUs, both
+    width directions, invalid updates, German details and no failure emission.
+    Shared Konami 052001 decoder is checked with prior reversed encodings and
+    forbidden-update diagnostics. Remaining address/count/capability sites pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

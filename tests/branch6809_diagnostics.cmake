@@ -145,3 +145,61 @@ check_diagnostic(w-division-primary 6309 " lda 1/0,w" 1310 "division by 0" 3 "")
 check_bytes(w-original-encodings 6309
     " lda ,w\n lda 1,w\n lda -1,w\n lda [1,w]\n lda [,w]\n lda ,--w\n lda [,w++]\n lda value+1000,w\nvalue equ -999"
     "a68fa6af0001a6afffffa6b00001a690a6efa6d0a6af0001")
+
+# Width errors locate the destination and name both registers. Update errors
+# identify the instruction restriction or allowed source/destination patterns.
+foreach(cpu IN ITEMS 6809 6809UNDOC 6309)
+    check_diagnostic(tfr-width-${cpu} ${cpu} " tfr x,a" 1131
+        "register a has width 8 bits; x requires 16 bits" 3 8)
+    check_diagnostic(exg-width-${cpu} ${cpu} " exg a,x" 1131
+        "register x has width 16 bits; a requires 8 bits" 3 8)
+    check_diagnostic(exg-source-update-${cpu} ${cpu} " exg x+,y" 1350
+        "register auto-update is not allowed with EXG; use registers without + or -" 3 6)
+    check_diagnostic(exg-destination-update-${cpu} ${cpu} " exg x,y+" 1350
+        "register auto-update is not allowed with EXG; use registers without + or -" 3 8)
+    if(NOT cpu STREQUAL "6309")
+        check_diagnostic(tfr-source-update-${cpu} ${cpu} " tfr x+,y+" 1350
+            "register auto-update is not allowed with TFR" 3 6)
+    endif()
+    check_bytes(register-width-errors-noemit-${cpu} ${cpu}
+        " expect 1131,1131,1350\n tfr x,a\n exg a,x\n exg x+,y\n endexpect\n db $12" "12")
+    if(cpu STREQUAL "6809")
+        check_bytes(register-transfer-original-${cpu} ${cpu}
+            " tfr x,y\n exg a,b\n tfr z,a\n tfr x,z"
+            "1f121e891fd81f1d")
+    endif()
+    if(cpu STREQUAL "6809UNDOC")
+        check_bytes(register-transfer-original-${cpu} ${cpu}
+            " tfr x,y\n exg a,b\n tfr z,a\n tfr x,z"
+            "1f121e891fd81f1d")
+    endif()
+    if(cpu STREQUAL "6309")
+        check_bytes(register-transfer-original-${cpu} ${cpu}
+            " tfr x,y\n exg a,b\n tfr z,a\n tfr x,z\n addr d,x\n subr a,b\n addr z,x\n tfr x+,y+\n tfm x-,y-\n tfm x+,y\n tfm x,y+"
+            "1f121e891fd81f1d1030011032891030d1113812113912113a12113b12")
+    endif()
+endforeach()
+check_diagnostic(alu-register-width 6309 " addr x,a" 1131
+    "register a has width 8 bits; x requires 16 bits" 3 9)
+check_diagnostic(alu-register-width-reverse 6309 " subr a,x" 1131
+    "register x has width 16 bits; a requires 8 bits" 3 9)
+check_diagnostic(tfm-no-update 6309 " tfm x,y" 1350
+    "source register update 0 and destination register update 0 not permitted; allowed pairs (+1,+1), (-1,-1), (+1,0), (0,+1)" 3 8)
+check_diagnostic(tfm-mixed-update 6309 " tfm x+,y-" 1350
+    "source register update 1 and destination register update -1 not permitted" 3 9)
+check_diagnostic(tfm-single-decrement 6309 " tfm x-,y" 1350
+    "source register update -1 and destination register update 0 not permitted" 3 9)
+check_bytes(tfm-errors-noemit 6309
+    " expect 1350,1350,1350,1131\n tfm x,y\n tfm x+,y-\n tfm x-,y\n addr x,a\n endexpect\n db $12" "12")
+check_diagnostic(konami-register-update 052001 " tfr x+,y" 1350
+    "register auto-update is not allowed with TFR" 3 6)
+check_bytes(konami-register-transfer-original 052001 " tfr x,y\n exg a,b" "3f323e10")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/tfm-mixed-update.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Quellregister-Update 1 und Zielregister-Update -1" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German transfer updates: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

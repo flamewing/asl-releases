@@ -2379,3 +2379,11 @@ Message ErrMsgPairNoDestination
 Message ErrMsgDirectPageUnavailable
  "Adresse 0x%lllx kann keine direkte Adressierung verwenden; ASSUME %s=NOTHING"
  "address 0x%lllx cannot use direct addressing; ASSUME %s=NOTHING"
+
+Message ErrMsgRegisterUpdatesForbidden
+ "Register-Auto-Update ist bei %s nicht erlaubt; Register ohne + oder - verwenden"
+ "register auto-update is not allowed with %s; use registers without + or -"
+
+Message ErrMsgTransferUpdates
+ "Quellregister-Update %d und Zielregister-Update %d sind nicht erlaubt; erlaubte Paare (+1,+1), (-1,-1), (+1,0), (0,+1)"
+ "source register update %d and destination register update %d not permitted; allowed pairs (+1,+1), (-1,-1), (+1,0), (0,+1)"

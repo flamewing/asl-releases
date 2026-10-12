@@ -1032,6 +1032,21 @@ static void DecodeBit(Word Code) {
     }
 }
 
+static void report_register_sizes(Byte source, Byte destination) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterWidthMismatch),
+            ArgStr[2].str.p_str, (destination & 8) ? 8 : 16,
+            ArgStr[1].str.p_str, (source & 8) ? 8 : 16);
+    WrXErrorPos(ErrNum_ConfOpSizes, detail, &ArgStr[2].Pos);
+}
+
+static void report_transfer_updates(int source_update, int dest_update) {
+    char detail[210];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgTransferUpdates),
+            source_update, dest_update);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
+}
+
 /* Register-Register-Operationen */
 
 void DecodeTFR_TFM_EXG_6809(
@@ -1044,7 +1059,10 @@ void DecodeTFR_TFM_EXG_6809(
         SplitIncDec(ArgStr[2].str.p_str, &Inc2);
         if ((Inc1 != 0) || (Inc2 != 0)) {
             if (!allow_inc_dec) {
-                WrError(ErrNum_InvAddrMode);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterUpdatesForbidden),
+                        OpPart.str.p_str);
+                WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[Inc1 ? 1 : 2].Pos);
             } else if (
                     !reg_decoder(ArgStr[1].str.p_str, BAsmCode + 3)
                     || (BAsmCode[3] > 4)) {
@@ -1071,13 +1089,13 @@ void DecodeTFR_TFM_EXG_6809(
                     BAsmCode[1] = 0x3b;
                 }
                 if (BAsmCode[1] == 0) {
-                    WrError(ErrNum_InvAddrMode);
+                    report_transfer_updates(Inc1, Inc2);
                 } else {
                     CodeLen = 3;
                 }
             }
         } else if (Memo("TFM")) {
-            WrError(ErrNum_InvAddrMode);
+            report_transfer_updates(Inc1, Inc2);
         } else if (!reg_decoder(ArgStr[1].str.p_str, BAsmCode + 2)) {
             WrError(ErrNum_InvRegName);
         } else if (!reg_decoder(ArgStr[2].str.p_str, BAsmCode + 1)) {
@@ -1086,7 +1104,7 @@ void DecodeTFR_TFM_EXG_6809(
                 (BAsmCode[1] != 13)
                 && (BAsmCode[2] != 13) /* Z Register compatible to all other registers */
                 && (((BAsmCode[1] ^ BAsmCode[2]) & 0x08) != 0)) {
-            WrError(ErrNum_ConfOpSizes);
+            report_register_sizes(BAsmCode[2], BAsmCode[1]);
         } else {
             CodeLen     = 2;
             BAsmCode[0] = code;
@@ -1118,7 +1136,7 @@ static void DecodeALU2(Word Code) {
             (BAsmCode[2] != 13)
             && (BAsmCode[3] != 13) /* Z Register compatible to all other registers */
             && (((BAsmCode[2] ^ BAsmCode[3]) & 0x08) != 0)) {
-        WrError(ErrNum_ConfOpSizes);
+        report_register_sizes(BAsmCode[3], BAsmCode[2]);
     } else {
         CodeLen     = 3;
         BAsmCode[0] = 0x10;
