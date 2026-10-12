@@ -3609,9 +3609,9 @@ static void DecodeMOVEM(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if ((OpSize < eSymbolSize16Bit) || (OpSize > eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else if ((pCurrCPUProps->Family == eColdfire) && (OpSize == 1)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else {
         tAdrResult AdrResult;
 
@@ -4017,7 +4017,7 @@ static void DecodeMUL_DIV(Word Code) {
                     | (dest_reg_pair ? 0 : (1 << eColdfire)));
         }
     } else {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     }
 }
 
@@ -4032,7 +4032,7 @@ static void DecodeDIVL(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)))
         ;
     else if (OpSize != eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (!DecodeRegPair(&ArgStr[2], &w1, &w2)) {
         /* The pair decoder has reported the failing component. */
     } else {
@@ -4054,7 +4054,7 @@ static void DecodeDIVL(Word Index) {
 
 static void DecodeASBCD(Word Index) {
     if ((OpSize != eSymbolSize8Bit) && *AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
@@ -4074,7 +4074,7 @@ static void DecodeCHK(Word Index) {
     UNUSED(Index);
 
     if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
@@ -4102,7 +4102,7 @@ static void DecodeLINK(Word Index) {
         OpSize = eSymbolSize16Bit;
     }
     if ((OpSize < 1) || (OpSize > 2)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else if (
             (OpSize == eSymbolSize32Bit)
             && !CheckFamily((1 << eCPU32) | (1 << e68KGen2) | (1 << e68KGen3)))
@@ -4125,7 +4125,7 @@ static void DecodeMOVEP(Word Index) {
     UNUSED(Index);
 
     if ((OpSize == eSymbolSize8Bit) || (OpSize > eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
@@ -4151,7 +4151,7 @@ static void DecodeMOVEC(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (ChkArgCnt(2, 2)) {
         tAdrResult AdrResult;
 
@@ -4181,7 +4181,7 @@ static void DecodeMOVES(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (CheckNoFamily((1 << e68KGen1a) | (1 << eColdfire))) {
         tAdrResult AdrResult;
 
@@ -4251,7 +4251,7 @@ static void DecodeCAS(Word Index) {
     UNUSED(Index);
 
     if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (ChkArgCnt(3, 3) && CheckFamily((1 << e68KGen3) | (1 << e68KGen2))) {
         tAdrResult AdrResult;
 
@@ -4279,7 +4279,7 @@ static void DecodeCAS2(Word Index) {
     UNUSED(Index);
 
     if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else if (!ChkArgCnt(3, 3))
         ;
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
@@ -4304,7 +4304,7 @@ static void DecodeCAS2(Word Index) {
 
 static void DecodeCMPCHK2(Word Index) {
     if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)))
         ;
     else if (ChkArgCnt(2, 2)) {
@@ -4329,7 +4329,7 @@ static void DecodeEXTB(Word Index) {
     UNUSED(Index);
 
     if ((OpSize != eSymbolSize32Bit) && *AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2) | (1 << eCPU32)))
         ;
     else if (ChkArgCnt(1, 1)) {
@@ -4392,7 +4392,7 @@ static void DecodeTBL(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (CheckFamily(1 << eCPU32)) {
         tAdrResult AdrResult;
 

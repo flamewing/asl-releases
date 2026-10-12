@@ -2314,3 +2314,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     All sites have focused rejection coverage and original accepted byte vectors.
     Thirty-two of 98 historical size candidates reviewed; remainder pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+210. M68K extended integer width requirements.
+    Fifteen candidates identify exact existing permitted sizes at the suffix:
+    MOVEM (including ColdFire .L-only), multiply/divide, DIVL, ASBCD, CHK, LINK,
+    MOVEP, MOVEC, MOVES, CAS/CAS2, CMPCHK2, EXTB and TBL. Acceptance and CPU
+    checks unchanged. Every site has focused rejection coverage; original extended
+    integer, CPU32 table and ColdFire MOVEM byte vectors pass.
+    Forty-seven of 98 historical size candidates reviewed; remainder pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

@@ -575,3 +575,32 @@ check_bytes(simple-integer-original-sizes 68020
     "43d05248b308027c00010a3c00010a7c000142004a4148004ad04840488048c17001c141")
 check_bytes(wddata-original-sizes MCF5407
     " supmode on\n wddata.b (a0)\n wddata.w (a0)\n wddata.l (a0)" "f410f450f490")
+
+# Extended integer operations retain their word/long/byte requirements.
+foreach(item IN ITEMS "movem|b|d0-d1,(a0)|.W, .L" "mulu|b|d0,d1|.W, .L"
+        "divsl|w|d0,d1:d2|.L" "abcd|w|d0,d1|.B" "sbcd|w|d0,d1|.B"
+        "chk|b|d0,d1|.W, .L" "link|b|a0,#-4|.W, .L"
+        "movep|b|d0,1(a0)|.W, .L" "movec|w|vbr,d0|.L"
+        "moves|s|d0,(a0)|.B, .W, .L" "cas|s|d0,d1,(a0)|.B, .W, .L"
+        "cas2|b|d0:d1,d2:d3,(a0):(a1)|.W, .L"
+        "cmp2|s|(a0),d0|.B, .W, .L" "chk2|s|(a0),d0|.B, .W, .L"
+        "extb|w|d0|.L")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 size)
+    list(GET parts 2 args)
+    list(GET parts 3 sizes)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(extended-size-${ins} 68020 " ${ins}.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 3 ${column})
+endforeach()
+check_diagnostic(movem-cold-size MCF5407 " movem.w d0-d1,(a0)" 1130
+    "supported operand sizes: .L" 3 8)
+check_diagnostic(table-size 68332 " tblu.s (a0),d0" 1130
+    "supported operand sizes: .B, .W, .L" 3 7)
+check_bytes(extended-integer-original-sizes 68020
+    " supmode on\n movem.w d0-d1,(a0)\n movem.l (a0),d0-d1\n mulu.w d0,d1\n mulu.l d0,d1\n divsl.l d0,d1:d2\n abcd.b d0,d1\n chk.w d0,d1\n link.w a0,#-4\n link.l a0,#-4\n movep.w d0,1(a0)\n movec.l vbr,d0\n moves.b d0,(a0)\n cas.b d0,d1,(a0)\n cas2.w d0:d1,d2:d3,(a0):(a1)\n cmp2.w (a0),d0\n extb.l d0"
+    "489000034cd00003c2c04c0010004c402801c30043804e50fffc4808fffffffc018800014e7a08010e1008000ad000400cfc808090c102d0000049c0")
+check_bytes(table-original-size 68332 " tblu.b (a0),d0" "f8100100")
+check_bytes(movem-cold-original-size MCF5407 " movem.l d0-d1,(a0)" "48d00003")
