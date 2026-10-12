@@ -117,6 +117,50 @@ static as_assume_rec_t ASSUME7700s[] = {
 /*---------------------------------------------------------------------------*/
 /* Address Parsing */
 
+static char const* const AddressForms[] = {
+    "#value", "<address", ">address", ">>address",
+    "<address,X", ">address,X", ">>address,X",
+    "<address,Y", ">address,Y", ">>address,Y",
+    "(<address)", "(>address)", "(>>address)",
+    "(<address,X)", "(>address,X)", "(>>address,X)",
+    "(<address),Y", "(>address),Y", "(>>address),Y",
+    "displacement,S", "(displacement,S),Y"
+};
+
+static void GetAddressForms(char* pDest, size_t DestSize, LongWord Mask) {
+    unsigned z;
+    *pDest = '\0';
+    for (z = 0; z < as_array_size(AddressForms); z++) {
+        if (Mask & (1l << z)) {
+            if (*pDest) {
+                strmaxcat(pDest, ", ", DestSize);
+            }
+            strmaxcat(pDest, AddressForms[z], DestSize);
+        }
+    }
+}
+
+static void WrModeMask(tStrComp const* pArg, LongWord Mask) {
+    char Forms[500], Detail[600];
+    GetAddressForms(Forms, sizeof(Forms), Mask);
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressForms), Forms);
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
+static void WrSelectedForm(tStrComp const* pArg, LongInt Address, unsigned Mode, LongWord Mask) {
+    char Forms[500], Detail[650];
+    GetAddressForms(Forms, sizeof(Forms), Mask);
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgSelectedAddressForm),
+                (LargeWord)Address, AddressForms[Mode], Forms);
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
+static void WrOperandChoices(tStrComp const* pArg, char const* Choices) {
+    char Detail[180];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgOperandChoices), Choices);
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
 static void WrBranchRange(tErrorNum ErrorNum, tStrComp const* pArg, LongInt Disp,
                           LongInt Min, LongInt Max, LargeWord Base) {
     char Detail[200];
@@ -125,7 +169,7 @@ static void WrBranchRange(tErrorNum ErrorNum, tStrComp const* pArg, LongInt Disp
     WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
 }
 
-static void WrDirectPageRange(tStrComp const* pArg, LongInt Address) {
+static void WrDirectPageRange(tStrComp const* pArg, LongInt Address, tErrorNum ErrorNum) {
     char Detail[200];
     if (Reg_DPR == 0x10000) {
         as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
@@ -135,10 +179,13 @@ static void WrDirectPageRange(tStrComp const* pArg, LongInt Address) {
                     (LargeWord)Address, (LargeInt)(Address - Reg_DPR), (LargeInt)0, (LargeInt)255,
                     "DPR", (LargeWord)Reg_DPR);
     }
-    WrXErrorPos((Address < Reg_DPR) ? ErrNum_UnderRange : ErrNum_OverRange, Detail, &pArg->Pos);
+    if (ErrorNum == ErrNum_None) {
+        ErrorNum = (Address < Reg_DPR) ? ErrNum_UnderRange : ErrNum_OverRange;
+    }
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
 }
 
-static void WrBankRange(tStrComp const* pArg, LongInt Address) {
+static void WrBankRange(tStrComp const* pArg, LongInt Address, tErrorNum ErrorNum) {
     char Detail[240];
     if (BankReg == 0x100) {
         as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
@@ -148,11 +195,11 @@ static void WrBankRange(tStrComp const* pArg, LongInt Address) {
                     (LargeWord)Address, (LargeInt)(Address >> 16), BankRegName, (LargeInt)BankReg,
                     (LargeWord)(BankReg << 16), (LargeWord)((BankReg << 16) | 0xffff));
     }
-    WrXErrorPos(ErrNum_OverRange, Detail, &pArg->Pos);
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
 }
 
 static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
-    Boolean      OK;
+    Boolean      OK, Forced;
     tSymbolFlags Flags;
     LongInt      Adr;
     ShortInt     DType;
@@ -174,6 +221,7 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
         DType = -1;
     }
 
+    Forced = (DType != -1);
     Adr = EvalStrIntExpressionOffsWithFlags(pArg, Offset, UInt24, &OK, &Flags);
 
     if (!OK) {
@@ -198,7 +246,13 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
     }
 
     if (!(Mask & (1l << (Start + DType)))) {
-        WrError(ErrNum_InvAddrMode);
+        if (!Forced && (Mask & (2l << Start))) {
+            WrBankRange(pArg, Adr, ErrNum_InvAddrMode);
+        } else if (!Forced && (Mask & (1l << Start))) {
+            WrDirectPageRange(pArg, Adr, ErrNum_InvAddrMode);
+        } else {
+            WrSelectedForm(pArg, Adr, Start + DType, Mask);
+        }
     } else {
         switch (DType) {
         case 0:
@@ -207,12 +261,12 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
                 AdrType    = Start;
                 AdrVals[0] = Lo(Adr - Reg_DPR);
             } else {
-                WrDirectPageRange(pArg, Adr);
+                WrDirectPageRange(pArg, Adr, ErrNum_None);
             }
             break;
         case 1:
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((Adr >> 16) != BankReg)) {
-                WrBankRange(pArg, Adr);
+                WrBankRange(pArg, Adr, ErrNum_OverRange);
             } else {
                 AdrCnt     = 2;
                 AdrType    = Start + 1;
@@ -299,7 +353,7 @@ static void DecodeAdr(Integer Start, LongWord Mask) {
             }
 
             else {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(&HArg[1], "X");
                 goto chk;
             }
         }
@@ -319,7 +373,7 @@ static void DecodeAdr(Integer Start, LongWord Mask) {
 
         if (IsIndirect(ArgStr[Start].str.p_str)) {
             if (as_strcasecmp(ArgStr[Start + 1].str.p_str, "Y")) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(&ArgStr[Start + 1], "Y");
             } else {
                 HCnt = SplitArg(&ArgStr[Start], HArg);
 
@@ -342,7 +396,7 @@ static void DecodeAdr(Integer Start, LongWord Mask) {
                 }
 
                 else {
-                    WrError(ErrNum_InvAddrMode);
+                    WrOperandChoices(&HArg[1], "S");
                 }
             }
             goto chk;
@@ -377,7 +431,7 @@ static void DecodeAdr(Integer Start, LongWord Mask) {
             }
 
             else {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(&ArgStr[Start + 1], "X, Y or S");
             }
         }
     }
@@ -390,7 +444,7 @@ chk:
     if ((AdrType != ModNone) && (!(Mask & (1l << ((LongWord)AdrType))))) {
         AdrType = ModNone;
         AdrCnt  = 0;
-        WrError(ErrNum_InvAddrMode);
+        WrModeMask(&ArgStr[Start], Mask);
     }
 }
 
@@ -520,7 +574,7 @@ static void DecodeAcc(Word Code) {
                                | ((Code == 0x80) ? 0 : MModImm)); /* STA */
         if (AdrType != ModNone) {
             if ((LFlag) && (AdrType != ModInd8) && (AdrType != ModIndY8)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(&ArgStr[Start], "(<address) or (<address),Y");
                 CodeLen = 0;
             } else {
                 switch (AdrType) {
@@ -589,7 +643,7 @@ static void DecodeEXTS_EXTZ(Word Code) {
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "B")) {
             BAsmCode[0] = 0x42;
         } else {
-            WrError(ErrNum_InvAddrMode);
+            WrOperandChoices(&ArgStr[1], "A or B");
         }
         if (BAsmCode[0] != 0) {
             CodeLen = 2;
@@ -866,7 +920,7 @@ static void DecodeMulDiv(Word Code) {
                            | MModIdxS8 | MModIndS8);
         if (AdrType != ModNone) {
             if ((LFlag) && (AdrType != ModInd8) && (AdrType != ModIndY8)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(&ArgStr[1], "(<address) or (<address),Y");
             } else {
                 BAsmCode[0] = 0x89;
                 switch (AdrType) {

@@ -550,11 +550,12 @@
       },
       "reviewed_diagnostic_families": [
         "ErrNum_DistTooBig",
+        "ErrNum_InvAddrMode",
         "ErrNum_JmpDistTooBig",
         "ErrNum_OverRange"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 147 reviews five historical range sites: relative byte/word branch, BBC/BBS, PER show displacement/bounds/PC base; forced word address identifies DT/PG bank/window or unknown assumption. Adjacent forced direct page under/overflow reports DPR-relative offset/window or unknown assumption with original IDs/predicates. Nine addressing sites remain. Follow-ups 144-146 fix premature forward checks and accumulator-B partial emission."
+      "status": "complete",
+      "review_notes": "All 14 historical candidates reviewed in 147/149. Five range sites name byte/word displacement and exact PC base or DT/PG bank/window; adjacent direct-page errors name DPR offsets and unknown assumptions. Nine addressing sites identify selected forced form/allowed mask forms, automatic DPR/bank window failures, inner X/stack S/outer Y/plain X-Y-S index requirements, A/B extension operands and long indirect accumulator/multiply forms. Preserve error IDs, predicates and encodings. Follow-ups 144-146/148 fix forward constraints, B emission and provisional address widths."
     },
     "code7720.c": {
       "candidate_counts": {

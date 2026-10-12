@@ -2315,3 +2315,7 @@ Message ErrMsgModifiedIndexRegister
 Message ErrMsgAddressBankWindow
  "Adresse 0x%lllx verwendet Bank %llld; ASSUME %s=%llld erlaubt [0x%lllx,0x%lllx]"
  "address 0x%lllx uses bank %llld; ASSUME %s=%llld permits [0x%lllx,0x%lllx]"
+
+Message ErrMsgSelectedAddressForm
+ "Adresse 0x%lllx erlaubt die gew&auml;hlte Form %s nicht; erlaubte Formen: %s"
+ "address 0x%lllx cannot use selected form %s; allowed forms: %s"

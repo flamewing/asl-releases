@@ -1746,3 +1746,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     forced page/word forms verify valid forward operands; retained final bounds
     and captured accepted bytes remain covered by existing focused fixtures.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+149. MELPS7700/65816 addressing contracts and historical inventory completion.
+    Nine historical mode sites identify forced selected/allowed forms, actual
+    failed automatic DPR/bank windows, mask alternatives, required inner X/S,
+    outer Y or plain X/Y/S indexes, EXTS/EXTZ A/B, long-indirect accumulator/
+    multiply forms. Position errors at failed component or source operand;
+    retain 1350, predicates and encodings. Four CPUs cover all contracts,
+    automatic/forced failures and captured accepted indexed/long forms.
+    All 14 historical candidates now reviewed.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.
