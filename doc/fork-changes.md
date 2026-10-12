@@ -204,6 +204,8 @@ Fix ST7/STM8 packed BTJF/BTJT target selection, preventing an access violation. 
 
 Reject previously ignored unknown options in preset/key files and disassembler invocations. Repair incomplete disassembler help and add resource-compiler help.
 
+Preserve M68K index-register classification in optimized MSVC builds by completing register lookup before restoring the size/scale suffix. This avoids an MSVC Release optimization that restores the suffix before lookup and incorrectly treats registers such as D2.W as displacements. Windows MSVC CI now tests both Debug and Release configurations.
+
 ## Updating this document
 
 Keep the snapshot tag boundaries and comparison links. Summarize changes to assembler or utility behavior, compatibility, performance and bug fixes, distinguishing upstream additions from fork changes. Group related fixes rather than listing individual commits. Keep paragraphs and list items on one physical line and rely on editor or previewer word wrapping.

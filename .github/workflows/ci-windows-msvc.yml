@@ -58,10 +58,20 @@ jobs:
           - name: vs2022
             runs_on: windows-2022
             cmake_generator: Visual Studio 17 2022
+            configuration: Debug
+          - name: vs2022
+            runs_on: windows-2022
+            cmake_generator: Visual Studio 17 2022
+            configuration: Release
           - name: latest
             runs_on: windows-latest
             cmake_generator: ''
-    name: ci-windows-msvc (${{ matrix.name }})
+            configuration: Debug
+          - name: latest
+            runs_on: windows-latest
+            cmake_generator: ''
+            configuration: Release
+    name: ci-windows-msvc (${{ matrix.name }}, ${{ matrix.configuration }})
     runs-on: ${{ matrix.runs_on }}
     steps:
       - name: Install Pandoc
@@ -98,10 +108,10 @@ jobs:
           cmake -S . -B build -A x64 -G "$env:CMAKE_GENERATOR"
       - name: Build
         run: |
-          cmake --build build --config Debug --parallel
+          cmake --build build --config ${{ matrix.configuration }} --parallel
       - name: Test
         run: |
-          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120 -C Debug
+          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120 -C ${{ matrix.configuration }}
       - name: Upload failure logs
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

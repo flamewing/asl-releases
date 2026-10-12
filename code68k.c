@@ -922,6 +922,7 @@ static LongInt NextNonBlankBefore(char const* pSrc, LongInt tPos) {
 static Boolean ClassComp(AdrComp* C) {
     int  comp_len = strlen(C->Comp.str.p_str), reg_len;
     char save, c_scale, c_size;
+    tRegEvalResult reg_result;
 
     C->Art     = None;
     C->ANummer = C->INummer = 0;
@@ -955,15 +956,16 @@ static Boolean ClassComp(AdrComp* C) {
     }
     save                       = C->Comp.str.p_str[reg_len];
     C->Comp.str.p_str[reg_len] = '\0';
-    switch (DecodeReg(&C->Comp, &C->ANummer, False)) {
+    /* Complete the lookup before restoring the size/scale suffix. MSVC 19.44 /O2
+       hoists restoration from identical switch arms ahead of the lookup. */
+    reg_result = DecodeReg(&C->Comp, &C->ANummer, False);
+    C->Comp.str.p_str[reg_len] = save;
+    switch (reg_result) {
     case eRegAbort:
-        C->Comp.str.p_str[reg_len] = save;
         return False;
     case eIsReg:
-        C->Comp.str.p_str[reg_len] = save;
         break;
     default: /* eIsNoReg */
-        C->Comp.str.p_str[reg_len] = save;
         goto is_disp;
     }
 
