@@ -974,6 +974,13 @@ function(define_executable NAME)
         if(DEFINED EMSCRIPTEN)
             if(${EMSCRIPTEN})
                 target_link_libraries(${NAME} PUBLIC nodefs.js noderawfs.js)
+                # Preserve native command-line environment and locale overrides.
+                target_link_options(${NAME} PRIVATE
+                    "SHELL:--pre-js \"${CMAKE_SOURCE_DIR}/cmake/emscripten-node-env.js\""
+                )
+                set_property(TARGET ${NAME} APPEND PROPERTY LINK_DEPENDS
+                    "${CMAKE_SOURCE_DIR}/cmake/emscripten-node-env.js"
+                )
             endif(${EMSCRIPTEN})
         endif(DEFINED EMSCRIPTEN)
     endif(CMAKE_CROSSCOMPILING)

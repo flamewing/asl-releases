@@ -96,7 +96,8 @@ static void pseudo_qxx(Integer num) {
             wr_scaled_range(pArg, res, "-32768.49", "32767.49");
             break;
         }
-        WAsmCode[CodeLen++] = res;
+        /* Convert through a signed type before reducing to the unsigned word. */
+        WAsmCode[CodeLen++] = (LongInt)res;
     }
 
     if (!ok) {
@@ -234,7 +235,7 @@ static void wr_code_word(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags
 
 static void wr_code_long(Boolean* ok, int* adr, LargeInt val, tSymbolFlags Flags, const tStrComp* arg) {
     if (!mFirstPassUnknownOrQuestionable(Flags) && !RangeCheck(val, Int32)) {
-        wr_integer_range(arg, val, (LargeInt)-2147483648, (LargeInt)4294967295LL);
+        wr_integer_range(arg, val, IntTypeDefs[Int32].Min, IntTypeDefs[Int32].Max);
         *ok = False;
         return;
     }
@@ -390,7 +391,7 @@ static void DecodeEFLOAT(Word Code) {
         }
         dbl                 = EvalStrFloatExpression(pArg, &ok);
         mant                = as_frexp(dbl, &exp);
-        WAsmCode[CodeLen++] = as_ldexp(mant, 15);
+        WAsmCode[CodeLen++] = (LongInt)as_ldexp(mant, 15);
         WAsmCode[CodeLen++] = exp - 1;
     }
     if (!ok) {
@@ -466,13 +467,13 @@ static void DecodeTFLOAT(Word Code) {
         dbl                   = EvalStrFloatExpression(pArg, &ok);
         mant                  = as_frexp(dbl, &exp);
         mant                  = as_modf(as_ldexp(mant, 15), &dbl);
-        WAsmCode[CodeLen + 3] = dbl;
+        WAsmCode[CodeLen + 3] = (LongInt)dbl;
         mant                  = as_modf(as_ldexp(mant, 16), &dbl);
-        WAsmCode[CodeLen + 2] = dbl;
+        WAsmCode[CodeLen + 2] = (LongInt)dbl;
         mant                  = as_modf(as_ldexp(mant, 16), &dbl);
-        WAsmCode[CodeLen + 1] = dbl;
+        WAsmCode[CodeLen + 1] = (LongInt)dbl;
         mant                  = as_modf(as_ldexp(mant, 16), &dbl);
-        WAsmCode[CodeLen]     = dbl;
+        WAsmCode[CodeLen]     = (LongInt)dbl;
         CodeLen += 4;
         WAsmCode[CodeLen++] = ((exp - 1) & 0xffff);
         WAsmCode[CodeLen++] = ((exp - 1) >> 16);
@@ -739,7 +740,7 @@ static void DecodeDATA_TI34x(Word Code) {
                 if (!mFirstPassUnknownOrQuestionable(t.Flags)
                     && !RangeCheck(t.Contents.Int.Value, Int32)) {
                     OK = False;
-                    wr_integer_range(pArg, t.Contents.Int.Value, (LargeInt)-2147483648LL, (LargeInt)4294967295LL);
+                    wr_integer_range(pArg, t.Contents.Int.Value, IntTypeDefs[Int32].Min, IntTypeDefs[Int32].Max);
                 } else {
                     DAsmCode[CodeLen++] = t.Contents.Int.Value;
                 }

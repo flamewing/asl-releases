@@ -75,6 +75,12 @@ check_diagnostic(lq_scaled 320C25 " lq31 1" 1320 "scaled LQ31 value 2147483648 o
 check_bytes(directives_original 320C25 " byte -128,255\n word -32768,65535\n long -2147483648,4294967295\n string -128,255\n rstring -128,255\n q00 -32768,32767\n q15 -1,0.5\n lq00 -2147483647,2147483647\n lq31 -0.5,0.5" "8000ff000080ffff00000080ffffffffff8080ff0080ff7f0080004001000080ffffff7f000000c000000040")
 check_bytes(data_original 320C30 " data -2147483648,4294967295" "00000080ffffffff")
 
+# Negative floating-point values must convert through a signed integer before
+# storage in an unsigned word, including fractional truncation and mantissas.
+check_bytes(signed_float_words 320C25
+    " q00 -32768.25,32767.25,-1.9,1.9\n q15 -1,0.5\n efloat -1,1\n tfloat -1,1"
+    "0080ff7fffff01000080004000c000000040000000000000000000c000000000000000000000004000000000")
+
 check_bytes(q_forward 320C25 " q15 target+1\ntarget equ -1" "0000")
 check_bytes(lq_forward 320C25 " lq31 target+1\ntarget equ -1" "00000000")
 check_bytes(data_forward 320C30 " data target+4294967296\ntarget equ -4294967295" "01000000")
