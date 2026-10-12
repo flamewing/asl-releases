@@ -12,6 +12,9 @@
 
 #include "codecr16.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -33,6 +36,23 @@
 static CPUVar  cpu_cr16a, cpu_cr16b;
 static IntType addr_int_type, code_int_type;
 static LongInt memory_model;
+
+static void wr_operand_choices(tErrorNum error_num, tStrComp const* p_arg, char const* choices) {
+    char detail[500];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error_num, detail, &p_arg->Pos);
+}
+
+static Boolean check_displacement(tStrComp const* p_arg, LongInt value, LongInt min, LongInt max) {
+    char detail[200];
+    if ((value >= min) && (value <= max)) {
+        return True;
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                (LargeInt)value, (LargeInt)min, (LargeInt)max);
+    WrXErrorPos(value < min ? ErrNum_UnderRange : ErrNum_OverRange, detail, &p_arg->Pos);
+    return False;
+}
 
 /* ------------------------------------------------------------------------ */
 /* Register Symbol Handling */
@@ -331,7 +351,7 @@ static adr_mode_t decode_adr(
                 KillPrefBlanksStrCompRef(&base_arg_remainder);
             }
             if (reg_cnt >= as_array_size(regs)) {
-                WrStrErrorPos(ErrNum_InvAddrMode, &base_arg);
+                wr_operand_choices(ErrNum_InvAddrMode, &base_arg, "one base register or two consecutive registers (Rn+1,Rn)");
                 return reset_adr_vals(p_vals);
             }
             if (eIsReg != decode_reg_with_flags(&base_arg, &regs[reg_cnt++], True, &reg_flags)) {
@@ -366,7 +386,7 @@ static adr_mode_t decode_adr(
             break;
         default:
         bad:
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            wr_operand_choices(ErrNum_InvAddrMode, p_arg, "consecutive registers (Rn+1,Rn)");
             return reset_adr_vals(p_vals);
         }
         goto check;
@@ -453,7 +473,7 @@ static Boolean decode_ireg_pair(tStrComp const* p_arg, Word* p_reg) {
         return False;
     default:
     wrong:
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        wr_operand_choices(ErrNum_InvAddrMode, p_arg, "(Rn+1,Rn) with zero displacement");
         return False;
     }
 }
@@ -533,7 +553,18 @@ Boolean decode_cr16_vector(tStrComp const* p_arg, Word* p_dest, cr16_gen_t gen) 
             return True;
         }
     }
-    WrStrErrorPos(ErrNum_UnknownVector, p_arg);
+    {
+        char choices[200] = "";
+        for (z = 0; z < as_array_size(vectors); z++) {
+            if (vectors[z].num & mask) {
+                if (*choices) {
+                    strmaxcat(choices, ", ", sizeof(choices));
+                }
+                strmaxcat(choices, vectors[z].name, sizeof(choices));
+            }
+        }
+        wr_operand_choices(ErrNum_UnknownVector, p_arg, choices);
+    }
     return False;
 }
 
@@ -576,7 +607,18 @@ static Boolean decode_cpu_reg(tStrComp const* p_arg, Word* p_dest, cr16_gen_t ge
             return True;
         }
     }
-    WrStrErrorPos(ErrNum_InvProcReg, p_arg);
+    {
+        char choices[200] = "";
+        for (z = 0; z < as_array_size(cpu_regs); z++) {
+            if (cpu_regs[z].num & mask) {
+                if (*choices) {
+                    strmaxcat(choices, ", ", sizeof(choices));
+                }
+                strmaxcat(choices, cpu_regs[z].name, sizeof(choices));
+            }
+        }
+        wr_operand_choices(ErrNum_InvProcReg, p_arg, choices);
+    }
     return False;
 }
 
@@ -662,7 +704,7 @@ static void decode_regimm_reg(Word code) {
         case e_mode_none:
             break;
         default:
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            wr_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "register or $value");
         }
     }
 }
@@ -679,7 +721,7 @@ static void decode_reg_regpair_b(Word code) {
     if (ChkArgCnt(2, 2) && ChkMinCPU(cpu_cr16b) && decode_reg(&ArgStr[1], &Rsrc, True)
         && decode_ireg_pair(&ArgStr[2], &Rdest)) {
         if ((code & 0x1000) && !isreg_0189(Rsrc)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            wr_operand_choices(ErrNum_InvReg, &ArgStr[1], "R0, R1, R8 or R9");
         } else {
             append_word(code | (Rdest << 5) | (Rsrc << 1));
         }
@@ -838,7 +880,8 @@ static void decode_load_store(Word code) {
         return;
     default:
     wrong:
-        WrStrErrorPos(ErrNum_InvAddrMode, p_reg_arg);
+        wr_operand_choices(ErrNum_InvAddrMode, p_reg_arg,
+                           (is_stor && (MomCPU == cpu_cr16b)) ? "register or $value" : "register");
         return;
     }
 
@@ -865,7 +908,7 @@ static void decode_load_store(Word code) {
         break;
     case e_mode_disp_pair_medium:
         if (reg_adr_vals.mode == e_mode_imm) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[is_stor + 1]);
+            wr_operand_choices(ErrNum_InvAddrMode, p_mem_arg, "address or displacement(R0/R1/R8/R9) for immediate stores");
         } else {
             set_w_guessed(mem_adr_vals.disp_flags, CodeLen >> 1, 1, 0x0600);
             append_word(
@@ -895,10 +938,10 @@ static void decode_load_store(Word code) {
         LongInt disp = get_displacement(&mem_adr_vals);
 
         if (!isreg_0189(mem_adr_vals.part)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_mem_arg);
+            wr_operand_choices(ErrNum_InvAddrMode, p_mem_arg, "displacement(R0/R1/R8/R9) for immediate stores");
         } else if (
                 mFirstPassUnknownOrQuestionable(mem_adr_vals.disp_flags)
-                || ChkRangePos(disp, -32768, 32767, p_mem_arg)) {
+                || check_displacement(p_mem_arg, disp, -32768, 32767)) {
             set_w_guessed(reg_adr_vals.disp_flags, CodeLen >> 1, 1, 0x001e);
             append_word(
                     (disp ? 0x04c1 : 0x44c1) | (code & 0x2000) | (mem_adr_vals.part << 5)
@@ -911,7 +954,7 @@ static void decode_load_store(Word code) {
         break;
     }
     default:
-        WrStrErrorPos(ErrNum_InvAddrMode, p_mem_arg);
+        wr_operand_choices(ErrNum_InvAddrMode, p_mem_arg, "address, displacement(Rn) or displacement(Rn+1,Rn)");
     }
 }
 
@@ -980,10 +1023,14 @@ static void decode_cmp_br(Word code) {
         LongInt dist = dest - EProgCounter();
 
         if (!isreg_0189(Rdest)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            wr_operand_choices(ErrNum_InvReg, &ArgStr[1], "R0, R1, R8 or R9");
         } else if (
                 !mFirstPassUnknownOrQuestionable(flags) && ((dist < 0) || (dist > 31))) {
-            WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
+            char detail[200];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRangeAligned),
+                        (LargeInt)dist, (LargeInt)0, (LargeInt)31,
+                        (LargeWord)EProgCounter(), (LargeInt)2);
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[2].Pos);
         } else {
             set_w_guessed(flags, CodeLen >> 1, 1, 0x001e);
             append_word(code | (Rdest << 5) | (dist & 0x1e));
@@ -1014,7 +1061,7 @@ static void decode_mem_bit(Word code) {
             case e_mode_disp_base_medium: {
                 LongInt disp = get_displacement(&adr_vals);
                 if (!mFirstPassUnknownOrQuestionable(adr_vals.disp_flags)) {
-                    if (!ChkRangePos(disp, -32768, 32767, &ArgStr[2])) {
+                    if (!check_displacement(&ArgStr[2], disp, -32768, 32767)) {
                         return;
                     }
                 }
@@ -1047,7 +1094,7 @@ static void decode_mem_bit(Word code) {
                 break;
             default:
             wrong:
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+                wr_operand_choices(ErrNum_InvAddrMode, &ArgStr[2], "address or displacement(R0/R1/R8/R9)");
             }
         }
     }
@@ -1079,7 +1126,10 @@ static void decode_loadm_storm(Word code) {
 static void check_pc_even(Word code) {
     UNUSED(code);
     if (EProgCounter() & 1) {
-        WrError(ErrNum_AddrNotAligned);
+        char detail[200];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignmentN),
+                    (LargeWord)EProgCounter(), (LargeInt)2);
+        WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
     }
 }
 

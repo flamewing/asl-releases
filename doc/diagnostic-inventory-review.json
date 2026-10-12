@@ -934,8 +934,15 @@
         "ErrNum_InvReg": 2,
         "ErrNum_JmpDistTooBig": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_AddrNotAligned",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All 14 historical candidates reviewed in tranches 155-157: stop invalid LOAD/STOR encoding; enforce register width through evaluator and defer forward pair adjacency; identify register-pair/base-count constraints, register/immediate/memory choices, R0/R1/R8/R9 restrictions, compare-branch displacement/range/alignment/PC base and instruction alignment. Adjacent signed memory displacement ranges and per-generation vector/processor register tables gain detail. Accepted bytes/predicates/IDs preserved."
     },
     "codef8.c": {
       "candidate_counts": {
@@ -2030,6 +2037,11 @@
       "file": "codecr16.c",
       "issue": "Mandatory unresolved register aliases are provisionally width-unknown and fail the parser width check; unresolved pairs also fail adjacency before resolution, and failed decoding reads the register descriptor.",
       "status": "fixed in tranche 156; request 16-bit register size from evaluator, propagate provisional unknown flags to pair validation, and read descriptor only on eIsReg; two CPUs/destination-base-pair-jump aliases/final undefined/nonadjacent errors checked"
+    },
+    {
+      "file": "codecr16.c",
+      "issue": "Optional register-versus-address lookup rejects forward aliases in register-only positions: MOVW alias,R1 is decoded as an absolute address and rejected before alias REG R2 resolves.",
+      "status": "reproduced during 156; pending focused contextual operand parsing, preserving existing numeric/address diagnostics"
     }
   ]
 }

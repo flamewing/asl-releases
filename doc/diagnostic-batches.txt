@@ -1814,3 +1814,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     pair/jump aliases, final undefined/nonadjacent errors and no emission.
     Optional register-versus-address classification retains existing behavior.
     Validation: all 414 CTest cases pass with embedded/external catalogs.
+
+157. CR16A/B operand, displacement and alignment diagnostics; historical completion.
+    Fourteen historical candidates now reviewed: base count/pair adjacency,
+    zero-displacement jump pairs, register/immediate/memory forms, restricted
+    R0/R1/R8/R9 subsets, compare-branch displacement [0,31]/PC/alignment,
+    and instruction alignment. Width validation moved to evaluator in 156.
+    Adjacent memory displacement limits and generation-specific vector/CPU
+    register tables show choices. Preserve IDs/predicates/warning emission
+    and captured bytes; tests identify the failed operand and no error bytes.
+    Validation: all 414 CTest cases pass with embedded/external catalogs.
