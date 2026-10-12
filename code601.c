@@ -1147,13 +1147,13 @@ static void DecodeB_BL_BA_BLA(Word Code) {
             if (!(Code & 2)) {
                 Dist -= EProgCounter();
             }
-            if (!mSymbolQuestionable(Flags) && (Dist > 0x1ffffff)) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && (Dist > 0x1ffffff)) {
                 report_branch_constraint(Dist, -0x2000000l, 0x1fffffcl, Code,
                         ErrNum_OverRange, &ArgStr[1]);
-            } else if (!mSymbolQuestionable(Flags) && (Dist < -0x2000000l)) {
+            } else if (!mFirstPassUnknownOrQuestionable(Flags) && (Dist < -0x2000000l)) {
                 report_branch_constraint(Dist, -0x2000000l, 0x1fffffcl, Code,
                         ErrNum_UnderRange, &ArgStr[1]);
-            } else if ((Dist & 3) != 0) {
+            } else if (((Dist & 3) != 0) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 report_branch_constraint(Dist, 0, 0, Code, ErrNum_DistIsOdd, &ArgStr[1]);
             } else {
                 or_d_guessed(Flags, 0, 1, 0x03fffffc);
@@ -1184,13 +1184,13 @@ static void DecodeBC_BCL_BCA_BCLA(Word Code) {
                     if (!(Code & 2)) {
                         Dist -= EProgCounter();
                     }
-                    if (!mSymbolQuestionable(Flags) && (Dist > 0x7fff)) {
+                    if (!mFirstPassUnknownOrQuestionable(Flags) && (Dist > 0x7fff)) {
                         report_branch_constraint(Dist, -0x8000l, 0x7ffcl, Code,
                                 ErrNum_OverRange, &ArgStr[3]);
-                    } else if (!mSymbolQuestionable(Flags) && (Dist < -0x8000l)) {
+                    } else if (!mFirstPassUnknownOrQuestionable(Flags) && (Dist < -0x8000l)) {
                         report_branch_constraint(Dist, -0x8000l, 0x7ffcl, Code,
                                 ErrNum_UnderRange, &ArgStr[3]);
-                    } else if ((Dist & 3) != 0) {
+                    } else if (((Dist & 3) != 0) && !mFirstPassUnknownOrQuestionable(Flags)) {
                         report_branch_constraint(Dist, 0, 0, Code, ErrNum_DistIsOdd, &ArgStr[3]);
                     } else {
                         or_d_guessed(src1_flags, 0, 1, 0x1f << 21);

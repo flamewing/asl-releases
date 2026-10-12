@@ -1916,3 +1916,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     no bytes on condition-field failure. Native WSL UBSan reproduces the
     negative shift before the patch and passes focused tests after it.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+169. PowerPC forward branch ranges and alignment.
+    Unconditional/conditional, relative/absolute branches validate unknown
+    target-expression ranges/alignment too early. Defer all six constraints
+    for unknown/questionable flags. Six CPUs/all eight branch forms cover
+    provisional misaligned/upper/lower out-of-range values and retained final
+    errors. Existing useful numeric diagnostics/predicates/encodings retained.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
