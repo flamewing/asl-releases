@@ -702,8 +702,13 @@
         "ErrNum_InvRegPair": 1,
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvRegPair",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "complete",
+      "review_notes": "All 14 historical candidates reviewed in tranche 154: distinguish repeated/non-additive address registers, allowed memory/register forms, instruction-specific operands, MUL partner and signed/wrapped branch displacement/bounds/PC base. Adjacent memory/SP ranges retain predicates and IDs with actual value/interval. Forward branch and SP emission bugs fixed separately in 152/153; accepted encodings checked."
     },
     "code87c800.c": {
       "candidate_counts": {

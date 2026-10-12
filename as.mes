@@ -2323,3 +2323,11 @@ Message ErrMsgSelectedAddressForm
 Message ErrMsgINS8070DirectWindows
  "Adresse 0x%lllx muss in [0x0000,0x00ff] oder [0xff00,0xffff] liegen"
  "address 0x%lllx must be in [0x0000,0x00ff] or [0xff00,0xffff]"
+
+Message ErrMsgRepeatedAddressRegister
+ "Adressregister %s kommt mehrfach in der Adresse vor"
+ "address register %s occurs more than once in the address"
+
+Message ErrMsgAdditiveAddressRegister
+ "Adressregister %s muss als positiver Additionsterm vorkommen"
+ "address register %s must occur as a positive additive term"

@@ -1790,3 +1790,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     success and emit only after validation. Both overflow directions verify
     no bytes; preserve positive/negative endpoints and forward displacement.
     Validation: full suites pass all other cases; corrected forward-reference fixture passes focused embedded/external tests (413 cases total).
+
+154. TLCS-870/C operand, address and branch diagnostics; historical completion.
+    Fourteen historical candidates distinguish repeated/non-additive address
+    registers, allowed memory/register forms, LDW/XOR/DIV/NEG/ROLD/RORD/TEST
+    contracts, MUL partner and signed 16-bit wrapped branch displacement,
+    bounds and PC base. Adjacent indexed/SP ranges show actual values/ranges.
+    Preserve IDs, acceptance predicates and captured accepted encodings;
+    position failed component and check no emission. All sites now reviewed.
+    Validation: all 413 CTest cases pass with embedded/external catalogs.
