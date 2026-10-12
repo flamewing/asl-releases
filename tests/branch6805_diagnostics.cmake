@@ -122,3 +122,20 @@ check_bytes(bit-suffix-valid 68HC05 " org $1000\n brset0 $12,*+130\n brclr7 $12,
 check_bytes(bit-explicit-valid 68HC08 " org $1000\n brset 0,$20,*+130\n brclr 7,$20,*-125" "00207f0f2080")
 check_bytes(forward-valid 68HC08 " org $1000\n cbeq $40,sp,target\ntarget equ $1008" "9e614004")
 
+
+# Remaining generic register/address diagnostics identify the actual contract.
+foreach(cpu IN ITEMS 6805 68HC05 68HC08 68HCS08)
+    if(cpu STREQUAL "6805" OR cpu STREQUAL "68HC05")
+        set(choices "X")
+        check_diagnostic(sp-unavailable-${cpu} ${cpu} " lda 1,sp" 1445 "X" 3 8)
+    else()
+        set(choices "X or SP")
+        check_diagnostic(cbeq-register-${cpu} ${cpu} " cbeq 1,y,*" 1445 "X+ or SP" 3 9)
+        check_diagnostic(ais-immediate-${cpu} ${cpu} " ais 1" 1350 "#value" 3 6)
+        check_diagnostic(aix-immediate-${cpu} ${cpu} " aix 1" 1350 "#value" 3 6)
+    endif()
+    check_diagnostic(index-register-${cpu} ${cpu} " lda 1,y" 1445 "${choices}" 3 8)
+    check_diagnostic(store-immediate-${cpu} ${cpu} " sta #1" 1350 "direct address in [0,255]" 3 6)
+    check_bytes(no-error-bytes-${cpu} ${cpu}
+        " expect 1445,1350\n lda 1,y\n sta #1\n endexpect\n db $12" "12")
+endforeach()

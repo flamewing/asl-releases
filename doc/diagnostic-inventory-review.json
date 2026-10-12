@@ -424,9 +424,12 @@
         "ErrNum_JmpDistTooBig": 7
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "complete",
+      "review_notes": "All twelve historical candidates reviewed: seven branch sites retain contextual distance detail and unknown/questionable deferral from earlier tranches; tranche 171 identifies CPU-specific X/SP index registers, CBEQ X+/SP choices, mask-specific memory forms and AIS/AIX immediate syntax. Existing CPU gating and error IDs preserved."
     },
     "code6809.c": {
       "candidate_counts": {

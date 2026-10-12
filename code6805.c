@@ -103,6 +103,30 @@ static unsigned ChkZero(char* s, Byte* pErg) {
     }
 }
 
+static void report_operand_choices(tErrorNum error, tStrComp const* arg, char const* choices) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_address_forms(tStrComp const* arg, Word mask) {
+    char forms[400] = "", detail[500];
+    if (mask & MModImm) strmaxcat(forms, "#value; ", sizeof(forms));
+    if (mask & MModDir) strmaxcat(forms, "direct address in [0,255]; ", sizeof(forms));
+    if (mask & MModExt) strmaxcat(forms, "extended address; ", sizeof(forms));
+    if (mask & MModIx) strmaxcat(forms, ",X; ", sizeof(forms));
+    if (mask & MModIx1) strmaxcat(forms, "byte offset,X; ", sizeof(forms));
+    if (mask & MModIx2) strmaxcat(forms, "word offset,X; ", sizeof(forms));
+    if (MomCPU >= CPU68HC08) {
+        if (mask & MModSP1) strmaxcat(forms, "byte offset,SP; ", sizeof(forms));
+        if (mask & MModSP2) strmaxcat(forms, "word offset,SP; ", sizeof(forms));
+        if (mask & MModIxP) strmaxcat(forms, "X+; ", sizeof(forms));
+    }
+    if (*forms) forms[strlen(forms) - 2] = '\0';
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static void DecodeAdr(Byte Start, Byte Stop, tSymbolSize op_size, Word Mask) {
     Boolean  OK;
     Word     AdrWord, Mask08;
@@ -126,11 +150,13 @@ static void DecodeAdr(Byte Start, Byte Stop, tSymbolSize op_size, Word Mask) {
             tmode1 = ModSP1;
             tmode2 = ModSP2;
             if (MomCPU < CPU68HC08) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+                report_operand_choices(ErrNum_InvReg, &ArgStr[Stop],
+                    MomCPU >= CPU68HC08 ? "X or SP" : "X");
                 goto chk;
             }
         } else {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+            report_operand_choices(ErrNum_InvReg, &ArgStr[Stop],
+                    MomCPU >= CPU68HC08 ? "X or SP" : "X");
             goto chk;
         }
 
@@ -261,7 +287,7 @@ chk:
         if ((1 << AdrMode) & Mask08) {
             (void)ChkMinCPUExt(CPU68HC08, ErrNum_AddrModeNotSupported);
         } else {
-            WrError(ErrNum_InvAddrMode);
+            report_address_forms(&ArgStr[Start], Mask);
         }
         AdrMode = ModNone;
         AdrCnt  = 0;
@@ -433,7 +459,7 @@ static void DecodeCBEQ(Word Index) {
             BAsmCode[0] = 0x9e;
             Disp        = 4;
         } else {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+            report_operand_choices(ErrNum_InvReg, &ArgStr[2], "X+ or SP");
             OK = False;
         }
         if (OK) {
@@ -706,7 +732,7 @@ static void DecodeAIx(Word Index) {
     else if (!ChkMinCPU(CPU68HC08))
         ;
     else if (*ArgStr[1].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        report_address_forms(&ArgStr[1], MModImm);
     } else {
         tSymbolFlags Flags;
 

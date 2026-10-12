@@ -1933,3 +1933,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     load/store and quoted-parenthesis displacement encodings. All eight
     historical PowerPC candidates are reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+171. 6805-family register/address diagnostics; historical completion.
+    Remaining five generic candidates identify CPU-specific index registers,
+    CBEQ X+/SP alternatives, mask-specific address forms and AIS/AIX #value
+    syntax. Preserve IDs, CPU gating and instruction encoding. Four CPUs
+    verify detail/position/no error bytes; existing branch golden vectors
+    continue to cover accepted forms. All twelve historical sites reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
