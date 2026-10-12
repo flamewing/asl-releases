@@ -1372,7 +1372,7 @@ static void DecodeBTAS(Word Index) {
         adr_vals_t adr_vals;
 
         switch (DecodeAdr(
-                &adr_vals, 1, ArgCnt - 1, eSymbolSize8Bit, 2,
+                &adr_vals, 1, ArgCnt - 1, eSymbolSize8Bit, 3,
                 MModDir | MModExt | MModIdx | MModIdx1 | MModIdx2)) {
         case ModDir:
             BAsmCode[CodeLen++] = 0x18;

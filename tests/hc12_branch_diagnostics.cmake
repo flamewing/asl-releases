@@ -249,3 +249,12 @@ check_bytes(btas-word-offset 68HC12X
     "1837e203e8401837eafc18401837f2000140")
 check_bytes(btas-mask-errors-noemit 68HC12X
     " expect 1350,1350\n btas #1,#$40\n btas [d,x],#$40\n endexpect\n db $12" "12")
+
+# BTAS PC-relative addressing includes both opcode bytes and the mask.
+check_bytes(btas-pc-widths 68HC12X
+    " org $1000\n btas *,pc,#$40\n btas *+19,pc,#$40\n btas *-12,pc,#$40\n btas *+20,pc,#$40\n btas *-13,pc,#$40\n btas *+260,pc,#$40\n btas *-251,pc,#$40\n btas *+261,pc,#$40\n btas *-252,pc,#$40\n btas <*,pc,#$40\n btas >*,pc,#$40"
+    "1837dc401837cf401837d0401837f80f401837f9ee401837f8ff401837f900401837fa00ff401837fafefe401837f9fb401837fafffa40")
+check_bytes(btas-pc-forward 68HC12X
+    " org $1000\n btas target+1000,pc,#$40\ntarget equ $1004-1000" "1837c040")
+check_bytes(btas-pc-after-label 68HC12X
+    " org $1000\n btas after,pc,#$40\nafter: db $12" "1837c04012")

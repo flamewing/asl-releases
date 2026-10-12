@@ -2085,3 +2085,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     addressing modes: https://www.nxp.com/docs/en/application-note/AN3510.pdf
     Separate BTAS PC-relative base discrepancy remains for tranche 187.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+187. HC12X BTAS PC-relative base.
+    BTAS has two opcode bytes plus its mask byte, but its address decoder was
+    given a two-byte base offset instead of three. Correct the base for every
+    PC-relative displacement width. Vectors cover 5/9/16-bit endpoints and
+    width transitions, forced widths, forward expressions and following-label
+    references. Correct only the two affected PC-indexed bytes in the legacy
+    HC12 golden vector; length and all other bytes remain unchanged.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
