@@ -349,7 +349,10 @@ static LongInt GetWordCodeAddress(tStrComp* pArg, tEvalResult* pEvalResult) {
                 Result &= ~1ul;
             }
             if (Result & 1) {
-                WrStrErrorPos(ErrNum_NotAligned, pArg);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandAlignment),
+                        (LargeWord)Result);
+                WrXErrorPos(ErrNum_NotAligned, detail, &pArg->Pos);
                 pEvalResult->OK = False;
             } else {
                 Result >>= 1;
@@ -801,6 +804,15 @@ static void DecodePBit(Word Code) {
 
 /* branches */
 
+static void report_branch_range(LongInt displacement, LongInt minimum,
+        LongInt maximum, tStrComp const* p_arg) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRBranchRange),
+            (LargeInt)displacement, (LargeInt)minimum, (LargeInt)maximum,
+            (LargeWord)GetNextCodeAddress());
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &p_arg->Pos);
+}
+
 static void DecodeRel(Word Code) {
     LongInt     AdrInt;
     tEvalResult EvalResult;
@@ -813,7 +825,7 @@ static void DecodeRel(Word Code) {
             }
             if (!mSymbolQuestionable(EvalResult.Flags)
                 && ((AdrInt < -64) || (AdrInt > 63))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_range(AdrInt, -64, 63, &ArgStr[1]);
             } else {
                 append_code_with_guess_flags(
                         Code | ((AdrInt & 0x7f) << 3), EvalResult.Flags, 0x03f8);
@@ -837,7 +849,7 @@ static void DecodeBRBSBC(Word Index) {
                 }
                 if (!mSymbolQuestionable(EvalResult.Flags)
                     && ((AdrInt < -64) || (AdrInt > 63))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_range(AdrInt, -64, 63, &ArgStr[2]);
                 } else {
                     append_code_with_guess_flags(
                             0xf000 | Index | ((AdrInt & 0x7f) << 3) | Bit,
@@ -876,7 +888,7 @@ static void DecodeRJMPCALL(Word Index) {
             }
             if (!mSymbolQuestionable(EvalResult.Flags)
                 && ((AdrInt < -2048) || (AdrInt > 2047))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_range(AdrInt, -2048, 2047, &ArgStr[1]);
             } else {
                 append_code_with_guess_flags(
                         0xc000 | Index | (AdrInt & 0xfff), EvalResult.Flags, 0xfff);
@@ -1016,7 +1028,10 @@ static void make_pc_even(Word index) {
         if (DoPadding) {
             InsertPadding(1, False);
         } else {
-            WrError(ErrNum_AddrNotAligned);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgInstructionAlignment),
+                    (LargeWord)EProgCounter());
+            WrXErrorPos(ErrNum_AddrNotAligned, detail, &OpPart.Pos);
         }
     }
 }

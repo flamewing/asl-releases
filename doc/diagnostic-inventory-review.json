@@ -918,10 +918,12 @@
         "ErrNum_InvAddrMode",
         "ErrNum_Unpredictable",
         "ErrNum_InstructionNotSupported",
-        "ErrNum_WrongArgCnt"
+        "ErrNum_WrongArgCnt",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_AddrNotAligned"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 224 reviews the shared register-subset candidate: derive compact allowed ranges/list from actual mask, show resolved R number at offending operand. Register helper copies descriptor only on successful lookup. Detect provisional mandatory-register result, choose first permitted register (respect minimal-core register bank) until alias resolves, rather than prematurely rejecting subset. Forward upper-half/multiply/even/upper-even aliases match original bytes; resolved invalid/missing/wrong-target errors remain, no rejected emission and German detail checked. Remaining families pending. Tranche 225 reviews all six mode and three unpredictable candidates: remaining LD/ST syntax and AT90S1200-only Z restriction now located with actual choices (former alignment category corrected to mode); LDD/STD describes displacement syntax/domain. Data auto-update overlaps identify actual register/pointer pair at data operand, retaining warnings and emitted bytes. Four LPM/ELPM mode and two program overlap sites already detailed in tranche 17, re-reviewed against current syntax/availability and focused cpu_operand coverage. All nine LD/ST forms, twelve overlap vectors, primary expression errors, no failed emission and German detail checked. Capability, branch, alignment and count families remain. Tranche 226 reviews both capability candidates through shared core-mask reporter: derive localized core classes from actual mask, name selected CPU at mnemonic, retain min-core and disjoint-mask predicates and error precedence. Direct bit count reports expected one/two and actual count at mnemonic. Supported classes/disjoint minimal core, original supported bytes, no failed emission, German and existing program-pointer capability regressions checked. Branch and instruction alignment remain."
+      "status": "complete",
+      "review_notes": "Tranche 224 reviews the shared register-subset candidate: derive compact allowed ranges/list from actual mask, show resolved R number at offending operand. Register helper copies descriptor only on successful lookup. Detect provisional mandatory-register result, choose first permitted register (respect minimal-core register bank) until alias resolves, rather than prematurely rejecting subset. Forward upper-half/multiply/even/upper-even aliases match original bytes; resolved invalid/missing/wrong-target errors remain, no rejected emission and German detail checked. Remaining families pending. Tranche 225 reviews all six mode and three unpredictable candidates: remaining LD/ST syntax and AT90S1200-only Z restriction now located with actual choices (former alignment category corrected to mode); LDD/STD describes displacement syntax/domain. Data auto-update overlaps identify actual register/pointer pair at data operand, retaining warnings and emitted bytes. Four LPM/ELPM mode and two program overlap sites already detailed in tranche 17, re-reviewed against current syntax/availability and focused cpu_operand coverage. All nine LD/ST forms, twelve overlap vectors, primary expression errors, no failed emission and German detail checked. Capability, branch, alignment and count families remain. Tranche 226 reviews both capability candidates through shared core-mask reporter: derive localized core classes from actual mask, name selected CPU at mnemonic, retain min-core and disjoint-mask predicates and error precedence. Direct bit count reports expected one/two and actual count at mnemonic. Supported classes/disjoint minimal core, original supported bytes, no failed emission, German and existing program-pointer capability regressions checked. Branch and instruction alignment remain. Tranche 227 completes remaining three branch and one alignment candidates: report actual word displacement, full signed interval and next-instruction word address at target, independent of source address units; show actual instruction byte address and alignment at mnemonic. Adjacent byte-target alignment now identifies actual value. Existing range/unknown/wrap predicates, warning severity/emission and padding behavior preserved; boundary/forward/primary/no-error-emission byte vectors and German detail checked. All 17 historical sites reviewed. Wrap-mode byte-unit discrepancy separately tracked."
     },
     "codec16c.c": {
       "candidate_counts": {
@@ -2172,6 +2174,11 @@
       "file": "codeavr.c",
       "issue": "Register-subset filtering rejects provisional forward aliases (LDI alias,1 / alias REG R16), and register helper reads descriptor after failed lookup.",
       "status": "fixed in tranche 224; choose permitted provisional register for unknown aliases, check resolved subset and copy descriptor only on success; forward mask classes and primary failures verified"
+    },
+    {
+      "file": "codeavr.c",
+      "issue": "WRAPMODE uses byte-mode segment limit to wrap word displacements: branch from byte 8190 to 0 rejected on ATmega8, same branch word 4095 to 0 accepted.",
+      "status": "confirmed while reviewing tranche 227; correct word-unit wrap calculation in separate batch"
     }
   ]
 }

@@ -2468,3 +2468,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Supported byte vectors match preceding build; no rejected emission and German
     detail checked. Update existing program-pointer tests for mnemonic location.
     Validation: all 417 CTest cases pass with embedded/external catalogs.
+
+227. AVR branch displacement units and alignment details.
+    Three branch candidates report word displacement, signed interval and next
+    instruction word address at target. Instruction byte alignment warning names
+    actual address and requirement at mnemonic; adjacent byte-target error names
+    actual operand address. Keep warning emission/padding and branch predicates.
+    Original/boundary/forward byte vectors, primary failures and German checked.
+    All 17 historical AVR sites reviewed; byte-unit wrap bug tracked separately.
+    Validation: all 417 CTest cases pass with embedded/external catalogs.

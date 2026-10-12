@@ -181,3 +181,39 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR core_pos EQUAL -1)
     message(FATAL_ERROR "German AVR core: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(branch-short-upper ATMEGA8 " breq 65" 1370
+ "branch word displacement 64 outside [-64,63] (next-instruction word address 0x1)" 3 7)
+check_diagnostic(branch-bit-upper ATMEGA8 " brbs 0,65" 1370
+ "branch word displacement 64 outside [-64,63]" 3 9)
+check_diagnostic(branch-long-upper ATMEGA8 " rjmp 2049" 1370
+ "branch word displacement 2048 outside [-2048,2047]" 3 7)
+check_diagnostic(branch-call-lower ATMEGA8 " org 2048\n rcall 0" 1370
+ "branch word displacement -2049 outside [-2048,2047] (next-instruction word address 0x801)" 4 8)
+check_diagnostic(branch-short-lower ATMEGA8 " org 64\n brne 0" 1370
+ "branch word displacement -65 outside [-64,63]" 4 7)
+check_diagnostic(branch-byte-upper ATMEGA8:codesegsize=0 " breq 130" 1370
+ "branch word displacement 64 outside [-64,63] (next-instruction word address 0x1)" 3 7)
+check_diagnostic(branch-byte-unaligned ATMEGA8:codesegsize=0 " rjmp 3" 1325
+ "operand address 0x3 must be aligned to 2 bytes" 3 7)
+check_diagnostic(instruction-byte-unaligned ATMEGA8:codesegsize=0 " org 1\n nop" 180
+ "instruction address 0x1 must be aligned to 2 bytes" 4 2 0)
+check_diagnostic(branch-primary ATMEGA8 " breq 1/0" 1310 "division by 0" 3 "")
+check_bytes(branch-original ATMEGA8
+ " breq 64\n brbs 0,65\n rjmp 2050\n rcall 0" "f9f1f8f1ffc7fcdf")
+check_bytes(branch-byte-original ATMEGA8:codesegsize=0
+ " breq 128\n brbs 0,130\n rjmp 4100\n rcall 0" "f9f1f8f1ffc7fcdf")
+check_bytes(branch-forward ATMEGA8 " breq target\n brbs 0,target\n rjmp target\n rcall target\ntarget: nop"
+ "19f010f001c000d00000")
+check_bytes(branch-noemit ATMEGA8
+ " expect 1370,1370,1370\n breq 65\n brbs 0,65\n rjmp 2049\n endexpect\n dw 0x1234" "3412")
+check_bytes(instruction-padding ATMEGA8:codesegsize=0 " padding on\n org 1\n nop" "000000")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/branch-short-upper.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Sprungverschiebung in Worten 64" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German AVR branch: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
