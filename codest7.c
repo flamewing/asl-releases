@@ -137,6 +137,12 @@ static void ResetAdrVals(tAdrVals* pAdrVals) {
     pAdrVals->Cnt  = 0;
 }
 
+static void report_stm8_required(void) {
+    char detail[100];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedCPUChoices), "STM8");
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
+}
+
 static void FillAdrVals(tAdrVals* pAdrVals, LongWord Value, tSymbolSize Size) {
     pAdrVals->Cnt = 0;
     switch (Size) {
@@ -1049,7 +1055,7 @@ static void DecodeFixed(Word Code) {
     else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (Hi(Code) && (pCurrCPUProps->Core != eCoreSTM8)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else {
         if (Hi(Code) >= 2) {
             AddPrefix(Hi(Code));
@@ -1351,7 +1357,7 @@ static void DecodeLDW(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else {
@@ -1475,7 +1481,7 @@ static void DecodeLDF(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (
@@ -1546,7 +1552,7 @@ static void DecodeMOV(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (
@@ -1570,7 +1576,7 @@ static void DecodePUSH_POP(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (Hi(Code) && (pCurrCPUProps->Core != eCoreSTM8)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else {
@@ -1622,7 +1628,7 @@ static void DecodeCP(Word IsCPW) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (IsCPW && (pCurrCPUProps->Core != eCoreSTM8)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else {
@@ -1709,7 +1715,7 @@ static void DecodeAri16(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (DecodeAdr(&ArgStr[1], MModX | MModY | MModS, False, &DestAdrVals)) {
@@ -1841,7 +1847,7 @@ static void DecodeRMW(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (IsW && (pCurrCPUProps->Core != eCoreSTM8)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else {
@@ -1939,7 +1945,7 @@ static void DecodeDIV(Word IsW) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (
@@ -1962,7 +1968,7 @@ static void DecodeEXG(Word IsW) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (
@@ -2041,7 +2047,7 @@ static void DecodeBitOp(Word Code) {
     if (!ChkArgCnt(1, 2))
         ;
     else if ((Hi(Code == 0x90)) && (pCurrCPUProps->Core != eCoreSTM8)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (DecodeBitAdrWithIndir(1, ArgCnt, &BitPos, &AdrVals)) {
@@ -2154,7 +2160,7 @@ static void DecodeJPF_CALLF(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (DecodeAdr(&ArgStr[1], MModAbs24 | MModI16Abs24, True, &AdrVals)) {
@@ -2173,7 +2179,7 @@ static void DecodeRel(Word Code) {
     if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (!Code) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (!ChkArgCnt(1, 1))
         ;
     else if (*ArgStr[1].str.p_str == '[') {
@@ -2223,7 +2229,7 @@ static void DecodeRxWA(Word Code) {
     } else if (!ChkArgCnt(1, 2))
         ;
     else if (pCurrCPUProps->Core != eCoreSTM8) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        report_stm8_required();
     } else if (
             ((ArgCnt == 1) || DecodeReg(&ArgStr[2], &SrcMode, MModA))
             && DecodeAdr(&ArgStr[1], MModX | MModY, False, &DestAdrVals)) {

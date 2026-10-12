@@ -2840,3 +2840,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     all valid short branch bytes. Positive/negative distant prefixed/unprefixed,
     explicit/packed bit branches and rejected emission checked.
     Validation: all 426 CTest cases pass with embedded/external catalogs.
+
+268. ST7/STM8 instruction capability diagnostics.
+    Fourteen historical sites identify supported STM8 family at mnemonic;
+    preserve all CPU/count/attribute precedence and valid bytes. Thirteen live
+    paths, ST7 model alias, original STM8 instruction vector, rejected emission
+    and German checked. Dead bit-operation guard remains separate pending fix.
+    Five shared address/register/count candidates remain.
+    Validation: all 426 CTest cases pass with embedded/external catalogs.

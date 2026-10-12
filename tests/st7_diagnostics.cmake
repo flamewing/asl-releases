@@ -158,3 +158,26 @@ check_bytes(STM8-top-wrap STM8 " org $fffffe\n jra 0" "2000")
 check_bytes(STM8-bank-crossing STM8 " org $ffff\n jrh $10002" "902900")
 check_bytes(STM8-high-pc STM8
  " org $20000\n jra PC+2-128\n jrh PC+3+127\n btjf $1234,#5,PC+5-128\n btjt $1234,#2,PC+5+127" "208090297f720b123480720412347f")
+
+set(cap_index 0)
+foreach(body IN ITEMS "break" "ldw X,#1" "ldf A,$123456" "mov $10,#1" "pushw X" "cpw X,#1" "addw X,#1" "clrw X" "exg A,XL" "div X,A" "jpf $123456" "jrnv PC+2" "rlwa X,A")
+    math(EXPR cap_index "${cap_index} + 1")
+    check_diagnostic(capability-${cap_index} ST7 " ${body}" 1500 "supported CPUs: STM8" 3 2)
+endforeach()
+check_diagnostic(capability-model ST7232AK1 " break" 1500 "supported CPUs: STM8" 3 2)
+check_bytes(capabilities-original STM8
+ " break\n ldw X,#1\n ldf A,$123456\n mov $10,#1\n pushw X\n cpw X,#1\n addw X,#1\n clrw X\n mul X,A\n div X,A\n bcpl $12,#5\n jpf $123456\n jrnv PC+2\n rlwa X,A"
+ "8bae0001bc1234563501001089a300011c00015f4262901a0012ac123456280002")
+check_bytes(capabilities-noemit ST7
+ " expect 1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500,1500\n break\n ldw X,#1\n ldf A,$123456\n mov $10,#1\n pushw X\n cpw X,#1\n addw X,#1\n clrw X\n exg A,XL\n div X,A\n jpf $123456\n jrnv PC+2\n rlwa X,A\n endexpect\n nop" "9d")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/capability-1.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Erlaubte CPUs: STM8" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German STM8 requirement: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
+
+check_bytes(exchange-original STM8 " exg A,XL" "41")
