@@ -2805,3 +2805,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     no-emission rejects, CSBR successes and German checked. All 20 historical
     candidates reviewed; adjacent generic helper alternatives tracked separately.
     Validation: all 425 CTest cases pass with embedded/external catalogs.
+
+264. MN1610/MN1613 shared name-parser alternatives.
+    Adjacent helpers now locate general register, skip, base, special, hardware
+    and carry failures. Named tables drive both lookup and alternatives; retain
+    numeric codes, SOR/SIR aliases and optional parsing precedence. Ambiguous
+    shift/carry operands list both applicable categories; instruction-specific
+    IC/STR exclusions list permitted registers. Respect silent DecReg probes.
+    Original option/alias vector, single failures, no-emission and German tested.
+    Validation: all 425 CTest cases pass with embedded/external catalogs; all six name/value tables unchanged.

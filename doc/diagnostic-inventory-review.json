@@ -1263,7 +1263,7 @@
         "ErrNum_OverRange"
       ],
       "status": "complete",
-      "review_notes": "Tranche 261 reviews four shared address range candidates: actual unsigned-byte pointer/X0/X1 offset, signed IC offset and PC-relative distance with base, all at component. Adjacent indexed pointer-register constraints identify R3/X0 or R4/X1. Stop emitting after out-of-range PC target and defer unknown/questionable range checks; preserve valid mode/word selection. Sixteen candidates remain (including one immediate range site). Tranche 262 reviews five shared helper/immediate sites: RE/SE/CE shift options, indirect register names/syntax/update permissions and DR0 at actual operand/component. Four-bit immediate reports full pre-narrowing value [0,15], preserving all accepted values and deferring provisional ones. Eleven fixed-register sites remain. Tranche 263 reviews eleven fixed-register sites: R0 at each restricted operand, ordered BLK (R2),(R1),R0, and permitted base registers excluding CSBR for LB/SETB. Preserve unrestricted STB/CPYB variants. All 20 historical candidates reviewed. Adjacent general register/skip/control helper alternatives merit separate follow-up."
+      "review_notes": "Tranche 261 reviews four shared address range candidates: actual unsigned-byte pointer/X0/X1 offset, signed IC offset and PC-relative distance with base, all at component. Adjacent indexed pointer-register constraints identify R3/X0 or R4/X1. Stop emitting after out-of-range PC target and defer unknown/questionable range checks; preserve valid mode/word selection. Sixteen candidates remain (including one immediate range site). Tranche 262 reviews five shared helper/immediate sites: RE/SE/CE shift options, indirect register names/syntax/update permissions and DR0 at actual operand/component. Four-bit immediate reports full pre-narrowing value [0,15], preserving all accepted values and deferring provisional ones. Eleven fixed-register sites remain. Tranche 263 reviews eleven fixed-register sites: R0 at each restricted operand, ordered BLK (R2),(R1),R0, and permitted base registers excluding CSBR for LB/SETB. Preserve unrestricted STB/CPYB variants. All 20 historical candidates reviewed. Adjacent general register/skip/control helper alternatives merit separate follow-up. Tranche 264 completes adjacent shared name helpers: table-derived shift/skip/base/special/hardware choices, general register names and per-instruction IC/STR exclusions, explicit or ambiguous carry/skip alternatives. Retain all numeric table values, SOR/SIR aliases and optional parsing precedence. DecReg respects silent probe contract for all failures."
     },
     "codemn2610.c": {
       "candidate_counts": {
@@ -2355,7 +2355,7 @@
     {
       "file": "codemn1610.c",
       "issue": "Several adjacent general-register/skip/segment/special/control helpers still emit unlocated generic name errors despite local name tables; DecReg ignores errMsg for its length guard.",
-      "status": "pending; review helper alternatives, optional operand ambiguity, and silent probe contract separately from the 20 historical candidates."
+      "status": "fixed in tranche 264; named tables drive both lookup and located choices, optional shift/carry unions preserved, general/excluded register alternatives located. Original alias/options vector and primary-only/no-emission/German tests checked."
     }
   ]
 }

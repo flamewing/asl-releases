@@ -50,48 +50,12 @@ static void report_operand_choices(tStrComp const* arg, unsigned error, char con
     WrXErrorPos(error, detail, &arg->Pos);
 }
 
-static Boolean DecReg(char const* pAsc, Word* pErg, Boolean errMsg) {
-    if (!as_strcasecmp(pAsc, "SP")) {
-        *pErg = 5;
-        return True;
-    }
+typedef struct {
+    char const* str;
+    Word code;
+} tNamedOperand;
 
-    if (!as_strcasecmp(pAsc, "STR")) {
-        *pErg = 6;
-        return True;
-    }
-
-    if (!as_strcasecmp(pAsc, "IC")) {
-        *pErg = 7;
-        return True;
-    }
-
-    if (strlen(pAsc) != 2) {
-        WrError(ErrNum_InvRegName);
-        return False;
-    }
-
-    if (toupper(pAsc[0]) == 'R' && pAsc[1] >= '0' && pAsc[1] <= '4') {
-        *pErg = pAsc[1] - '0';
-        return True;
-    }
-
-    if (toupper(pAsc[0]) == 'X' && pAsc[1] >= '0' && pAsc[1] <= '1') {
-        *pErg = pAsc[1] - '0' + 3;
-        return True;
-    }
-
-    if (errMsg) {
-        WrError(ErrNum_InvRegName);
-    }
-    return False;
-}
-
-static Boolean DecSkip(char const* pAsc, Word* pErg, Boolean errMsg) {
-    static struct {
-        char const* str;
-        Word        skip;
-    } SkipTable[] = {
+static tNamedOperand const SkipTable[] = {
             {"SKP", 0x1},
             {  "M", 0x2},
             { "PZ", 0x3},
@@ -112,53 +76,14 @@ static Boolean DecSkip(char const* pAsc, Word* pErg, Boolean errMsg) {
             { NULL, 0x0}
     };
 
-    int i;
-
-    for (i = 0; SkipTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, SkipTable[i].str)) {
-            *pErg = SkipTable[i].skip;
-            return True;
-        }
-    }
-
-    if (errMsg) {
-        WrError(ErrNum_UndefCond);
-    }
-    return False;
-}
-
-static Boolean DecEM(tStrComp const* arg, Word* pErg, Boolean errMsg) {
-    char const* pAsc = arg->str.p_str;
-    static struct {
-        char const* str;
-        Word        em;
-    } EMTable[] = {
+static tNamedOperand const EMTable[] = {
             {"RE", 0x1},
             {"SE", 0x2},
             {"CE", 0x3},
             {NULL, 0x0}
     };
 
-    int i;
-
-    for (i = 0; EMTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, EMTable[i].str)) {
-            *pErg = EMTable[i].em;
-            return True;
-        }
-    }
-
-    if (errMsg) {
-        report_operand_choices(arg, ErrNum_InvShiftArg, "RE, SE, CE");
-    }
-    return False;
-}
-
-static Boolean DecBB(char const* pAsc, Word* pErg) {
-    static struct {
-        char const* str;
-        Word        bb;
-    } BBTable[] = {
+static tNamedOperand const BBTable[] = {
             {"CSBR", 0x0},
             {"SSBR", 0x1},
             {"TSR0", 0x2},
@@ -166,17 +91,115 @@ static Boolean DecBB(char const* pAsc, Word* pErg) {
             {  NULL, 0x0}
     };
 
-    int i;
+static tNamedOperand const BRTable[] = {
+            {"CSBR", 0x0},
+            {"SSBR", 0x1},
+            {"TSR0", 0x2},
+            {"TSR1", 0x3},
+            {"OSR0", 0x4},
+            {"OSR1", 0x5},
+            {"OSR2", 0x6},
+            {"OSR3", 0x7},
+            {  NULL, 0x0}
+    };
 
-    for (i = 0; BBTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, BBTable[i].str)) {
-            *pErg = BBTable[i].bb;
+static tNamedOperand const SRTable[] = {
+            {"SBRB", 0x0},
+            { "ICB", 0x1},
+            { "NPP", 0x2},
+            {  NULL, 0x0}
+    };
+
+static tNamedOperand const HRTable[] = {
+            { "TCR", 0x0},
+            { "TIR", 0x1},
+            { "TSR", 0x2},
+            { "SCR", 0x3},
+            { "SSR", 0x4},
+            { "SOR", 0x5},
+            { "SIR", 0x5},
+            {"IISR", 0x6},
+            {  NULL, 0x0}
+    };
+
+static void report_named_options(tNamedOperand const* table, char const* extra,
+        tStrComp const* arg, unsigned error) {
+    char choices[300];
+    unsigned i;
+    *choices = '\0';
+    if (extra)
+        strmaxcat(choices, extra, sizeof(choices));
+    for (i = 0; table[i].str; i++) {
+        if (*choices)
+            strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, table[i].str, sizeof(choices));
+    }
+    report_operand_choices(arg, error, choices);
+}
+
+static Boolean decode_named_operand(tStrComp const* arg, tNamedOperand const* table,
+        Word* value, unsigned error, char const* extra) {
+    unsigned i;
+    for (i = 0; table[i].str; i++) {
+        if (!as_strcasecmp(arg->str.p_str, table[i].str)) {
+            *value = table[i].code;
             return True;
         }
     }
-
-    WrError(ErrNum_UnknownSegReg);
+    if (error)
+        report_named_options(table, extra, arg, error);
     return False;
+}
+
+static Boolean DecReg(tStrComp const* arg, Word* pErg, Boolean errMsg) {
+    char const* pAsc = arg->str.p_str;
+    if (!as_strcasecmp(pAsc, "SP")) {
+        *pErg = 5;
+        return True;
+    }
+
+    if (!as_strcasecmp(pAsc, "STR")) {
+        *pErg = 6;
+        return True;
+    }
+
+    if (!as_strcasecmp(pAsc, "IC")) {
+        *pErg = 7;
+        return True;
+    }
+
+    if (strlen(pAsc) != 2) {
+        if (errMsg)
+            report_operand_choices(arg, ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR, IC");
+        return False;
+    }
+
+    if (toupper(pAsc[0]) == 'R' && pAsc[1] >= '0' && pAsc[1] <= '4') {
+        *pErg = pAsc[1] - '0';
+        return True;
+    }
+
+    if (toupper(pAsc[0]) == 'X' && pAsc[1] >= '0' && pAsc[1] <= '1') {
+        *pErg = pAsc[1] - '0' + 3;
+        return True;
+    }
+
+    if (errMsg) {
+        report_operand_choices(arg, ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR, IC");
+    }
+    return False;
+}
+
+static Boolean DecSkip(tStrComp const* arg, Word* pErg, Boolean errMsg) {
+    return decode_named_operand(arg, SkipTable, pErg, errMsg ? ErrNum_UndefCond : 0, NULL);
+}
+
+static Boolean DecEM(tStrComp const* arg, Word* pErg, Boolean errMsg) {
+    return decode_named_operand(arg, EMTable, pErg, errMsg ? ErrNum_InvShiftArg : 0, NULL);
+}
+
+static Boolean DecBB(tStrComp const* arg, Word* pErg) {
+    return decode_named_operand(arg, BBTable, pErg, ErrNum_UnknownSegReg, NULL);
 }
 
 static Boolean DecRIndirect(tStrComp const* arg, Word* mm, Word* ii, Boolean bAuto) {
@@ -237,7 +260,8 @@ static Boolean DecRIndirect(tStrComp const* arg, Word* mm, Word* ii, Boolean bAu
     return True;
 }
 
-static Boolean DecC(char const* pAsc, Word* pErg, Boolean errMsg) {
+static Boolean DecC(tStrComp const* arg, Word* pErg, Boolean errMsg) {
+    char const* pAsc = arg->str.p_str;
     if (strlen(pAsc) == 1) {
         if (pAsc[0] == '0') {
             *pErg = 0;
@@ -250,7 +274,7 @@ static Boolean DecC(char const* pAsc, Word* pErg, Boolean errMsg) {
     }
 
     if (errMsg) {
-        WrError(ErrNum_InvArg);
+        report_operand_choices(arg, ErrNum_InvArg, "0, 1, C");
     }
     return False;
 }
@@ -267,86 +291,16 @@ static Boolean DecDReg(tStrComp const* arg, Boolean errMsg) {
     return False;
 }
 
-static Boolean DecBR(char const* pAsc, Word* pErg) {
-    static struct {
-        char const* str;
-        Word        bbb;
-    } BRTable[] = {
-            {"CSBR", 0x0},
-            {"SSBR", 0x1},
-            {"TSR0", 0x2},
-            {"TSR1", 0x3},
-            {"OSR0", 0x4},
-            {"OSR1", 0x5},
-            {"OSR2", 0x6},
-            {"OSR3", 0x7},
-            {  NULL, 0x0}
-    };
-
-    int i;
-
-    for (i = 0; BRTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, BRTable[i].str)) {
-            *pErg = BRTable[i].bbb;
-            return True;
-        }
-    }
-
-    WrError(ErrNum_UnknownSegReg);
-    return False;
+static Boolean DecBR(tStrComp const* arg, Word* pErg) {
+    return decode_named_operand(arg, BRTable, pErg, ErrNum_UnknownSegReg, NULL);
 }
 
-static Boolean DecSR(char const* pAsc, Word* pErg) {
-    static struct {
-        char const* str;
-        Word        ppp;
-    } SRTable[] = {
-            {"SBRB", 0x0},
-            { "ICB", 0x1},
-            { "NPP", 0x2},
-            {  NULL, 0x0}
-    };
-
-    int i;
-
-    for (i = 0; SRTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, SRTable[i].str)) {
-            *pErg = SRTable[i].ppp;
-            return True;
-        }
-    }
-
-    WrError(ErrNum_InvRegName);
-    return False;
+static Boolean DecSR(tStrComp const* arg, Word* pErg) {
+    return decode_named_operand(arg, SRTable, pErg, ErrNum_InvRegName, NULL);
 }
 
-static Boolean DecHR(char const* pAsc, Word* pErg) {
-    static struct {
-        char const* str;
-        Word        hhh;
-    } HRTable[] = {
-            { "TCR", 0x0},
-            { "TIR", 0x1},
-            { "TSR", 0x2},
-            { "SCR", 0x3},
-            { "SSR", 0x4},
-            { "SOR", 0x5},
-            { "SIR", 0x5},
-            {"IISR", 0x6},
-            {  NULL, 0x0}
-    };
-
-    int i;
-
-    for (i = 0; HRTable[i].str; i++) {
-        if (!as_strcasecmp(pAsc, HRTable[i].str)) {
-            *pErg = HRTable[i].hhh;
-            return True;
-        }
-    }
-
-    WrError(ErrNum_InvRegName);
-    return False;
+static Boolean DecHR(tStrComp const* arg, Word* pErg) {
+    return decode_named_operand(arg, HRTable, pErg, ErrNum_InvRegName, NULL);
 }
 
 /* MN1610 */
@@ -391,11 +345,11 @@ static void DecodeAdr(Word Index) {
         if (!ChkArgCnt(2, 2)) {
             return;
         }
-        if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+        if (!DecReg(&ArgStr[1], &reg, True)) {
             return;
         }
         if (reg == 6 || reg == 7) {
-            WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+            report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP");
             return;
         }
         idx = 2;
@@ -415,7 +369,7 @@ static void DecodeAdr(Word Index) {
         StrCompSplitRef(&Left, &Right, sc, sc->str.p_str + l - 4);
         StrCompShorten(&Right, 1);
 
-        if (DecReg(Right.str.p_str, &preg, False)) {
+        if (DecReg(&Right, &preg, False)) {
             switch (preg) {
             case 3:
                 index = True;
@@ -550,11 +504,11 @@ static void DecodeRegImm8(Word Index) {
     Byte imm8;
 
     if (ChkArgCnt(2, 2)) {
-        if (DecReg(ArgStr[1].str.p_str, &reg, True)) {
+        if (DecReg(&ArgStr[1], &reg, True)) {
             tEvalResult EvalResult;
 
             if (reg == 7) {
-                WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+                report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
                 return;
             }
 
@@ -579,11 +533,11 @@ static void DecodeReg(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -601,23 +555,23 @@ static void DecodeRegRegSkip(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg1, True)) {
+    if (!DecReg(&ArgStr[1], &reg1, True)) {
         return;
     }
     if (reg1 == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
-    if (!DecReg(ArgStr[2].str.p_str, &reg2, True)) {
+    if (!DecReg(&ArgStr[2], &reg2, True)) {
         return;
     }
     if (reg2 == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
+        report_operand_choices(&ArgStr[2], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -635,11 +589,11 @@ static void DecodeShift(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -651,10 +605,10 @@ static void DecodeShift(Word Index) {
     case 2:
         if (DecEM(&ArgStr[2], &em, False)) {
             skip = 0;
-        } else if (DecSkip(ArgStr[2].str.p_str, &skip, False)) {
+        } else if (DecSkip(&ArgStr[2], &skip, False)) {
             em = 0;
         } else {
-            WrStrErrorPos(ErrNum_InvFormat, &ArgStr[2]);
+            report_named_options(SkipTable, "RE, SE, CE", &ArgStr[2], ErrNum_InvFormat);
             return;
         }
         break;
@@ -662,7 +616,7 @@ static void DecodeShift(Word Index) {
         if (!DecEM(&ArgStr[2], &em, True)) {
             return;
         }
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
         break;
@@ -685,11 +639,11 @@ static void DecodeBit(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -708,7 +662,7 @@ static void DecodeBit(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -750,16 +704,16 @@ static void DecodeLD(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 6 || reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP");
         return;
     }
 
     if (ArgCnt == 3) {
-        if (!DecBB(ArgStr[2].str.p_str, &br)) {
+        if (!DecBB(&ArgStr[2], &br)) {
             return;
         }
     }
@@ -790,16 +744,16 @@ static void DecodeLR(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 6 || reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP");
         return;
     }
 
     if (ArgCnt == 3) {
-        if (!DecBB(ArgStr[2].str.p_str, &br)) {
+        if (!DecBB(&ArgStr[2], &br)) {
             return;
         }
     }
@@ -827,7 +781,7 @@ static void DecodeMVWR(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg != 0) {
@@ -840,7 +794,7 @@ static void DecodeMVWR(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -864,11 +818,11 @@ static void DecodeMVWI(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -878,7 +832,7 @@ static void DecodeMVWI(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -914,28 +868,28 @@ static void DecodeNEG(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
     if (ArgCnt == 2) {
-        if (!DecC(ArgStr[2].str.p_str, &c, False)) {
-            if (!DecSkip(ArgStr[2].str.p_str, &skip, True)) {
+        if (!DecC(&ArgStr[2], &c, False)) {
+            if (!decode_named_operand(&ArgStr[2], SkipTable, &skip, ErrNum_UndefCond, "0, 1, C")) {
                 return;
             }
         }
     }
 
     if (ArgCnt == 3) {
-        if (!DecC(ArgStr[2].str.p_str, &c, True)) {
+        if (!DecC(&ArgStr[2], &c, True)) {
             return;
         }
 
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -968,19 +922,19 @@ static void DecodeAD(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecC(ArgStr[3].str.p_str, &c, False)) {
-            if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecC(&ArgStr[3], &c, False)) {
+            if (!decode_named_operand(&ArgStr[3], SkipTable, &skip, ErrNum_UndefCond, "0, 1, C")) {
                 return;
             }
         }
     }
 
     if (ArgCnt == 4) {
-        if (!DecC(ArgStr[3].str.p_str, &c, True)) {
+        if (!DecC(&ArgStr[3], &c, True)) {
             return;
         }
 
-        if (!DecSkip(ArgStr[4].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[4], &skip, True)) {
             return;
         }
     }
@@ -1012,7 +966,7 @@ static void DecodeM(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -1037,7 +991,7 @@ static void DecodeDAA(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg != 0) {
@@ -1050,19 +1004,19 @@ static void DecodeDAA(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecC(ArgStr[3].str.p_str, &c, False)) {
-            if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecC(&ArgStr[3], &c, False)) {
+            if (!decode_named_operand(&ArgStr[3], SkipTable, &skip, ErrNum_UndefCond, "0, 1, C")) {
                 return;
             }
         }
     }
 
     if (ArgCnt == 4) {
-        if (!DecC(ArgStr[3].str.p_str, &c, True)) {
+        if (!DecC(&ArgStr[3], &c, True)) {
             return;
         }
 
-        if (!DecSkip(ArgStr[4].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[4], &skip, True)) {
             return;
         }
     }
@@ -1084,7 +1038,7 @@ static void DecodeFIX(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg != 0) {
@@ -1097,7 +1051,7 @@ static void DecodeFIX(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -1123,7 +1077,7 @@ static void DecodeFLT(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[2].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[2], &reg, True)) {
         return;
     }
     if (reg != 0) {
@@ -1132,7 +1086,7 @@ static void DecodeFLT(Word Index) {
     }
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -1234,11 +1188,11 @@ static void DecodeTSET(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -1249,7 +1203,7 @@ static void DecodeTSET(Word Index) {
     ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
     if (ArgCnt == 3) {
-        if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
+        if (!DecSkip(&ArgStr[3], &skip, True)) {
             return;
         }
     }
@@ -1272,19 +1226,19 @@ static void DecodeSRBT(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg1, True)) {
+    if (!DecReg(&ArgStr[1], &reg1, True)) {
         return;
     }
     if (reg1 == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
-    if (!DecReg(ArgStr[2].str.p_str, &reg2, True)) {
+    if (!DecReg(&ArgStr[2], &reg2, True)) {
         return;
     }
     if (reg2 == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
+        report_operand_choices(&ArgStr[2], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -1341,7 +1295,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[3].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[3], &reg, True)) {
         return;
     }
     if (reg != 0) {
@@ -1367,11 +1321,11 @@ static void DecodeRDR(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 6 || reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP");
         return;
     }
 
@@ -1398,11 +1352,11 @@ static void DecodeLB(Word Index) {
     }
 
     if (Index & 0x0008) { /* SR */
-        if (!DecSR(ArgStr[1].str.p_str, &reg)) {
+        if (!DecSR(&ArgStr[1], &reg)) {
             return;
         }
     } else { /* BR */
-        if (!DecBR(ArgStr[1].str.p_str, &reg)) {
+        if (!DecBR(&ArgStr[1], &reg)) {
             return;
         }
         if (reg == 0 && !(Index & 0x0080)) {
@@ -1435,17 +1389,17 @@ static void DecodeCPYB(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg1, True)) {
+    if (!DecReg(&ArgStr[1], &reg1, True)) {
         return;
     }
     if (reg1 == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
     switch (Index & 0x3008) {
     case 0x0000: /* BR */
-        if (!DecBR(ArgStr[2].str.p_str, &reg2)) {
+        if (!DecBR(&ArgStr[2], &reg2)) {
             return;
         }
         if (reg2 == 0 && !(Index & 0x0080)) {
@@ -1454,12 +1408,12 @@ static void DecodeCPYB(Word Index) {
         }
         break;
     case 0x0008: /* SR */
-        if (!DecSR(ArgStr[2].str.p_str, &reg2)) {
+        if (!DecSR(&ArgStr[2], &reg2)) {
             return;
         }
         break;
     case 0x3000: /* HR */
-        if (!DecHR(ArgStr[2].str.p_str, &reg2)) {
+        if (!DecHR(&ArgStr[2], &reg2)) {
             return;
         }
         break;
@@ -1481,11 +1435,11 @@ static void DecodeCLR(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
@@ -1501,15 +1455,15 @@ static void DecodeSKIP(Word Index) {
         return;
     }
 
-    if (!DecReg(ArgStr[1].str.p_str, &reg, True)) {
+    if (!DecReg(&ArgStr[1], &reg, True)) {
         return;
     }
     if (reg == 7) {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvRegName, "R0..R4, X0, X1, SP, STR");
         return;
     }
 
-    if (!DecSkip(ArgStr[2].str.p_str, &skip, True)) {
+    if (!DecSkip(&ArgStr[2], &skip, True)) {
         return;
     }
 
