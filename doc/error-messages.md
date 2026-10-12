@@ -3,8 +3,7 @@
 <!-- markdownlint-disable MD025 -->
 <!-- markdownlint-disable MD030 -->
 
-Here is a list of all error messages emitted by AS. Each error message
-is described by:
+Here is a list of all error messages emitted by AS. Each error message is described by:
 
 - the internal error number (it is displayed only if AS is started with the `-n` option)
 - the text of the error message
@@ -344,20 +343,15 @@ Error 1491, **duplicate function argument name**: two parameters of one function
 
 ### 500: code generation outside of CODE segment
 
-Warning: an instruction needs the word width of the `CODE` segment and cannot
-be generated in the selected address space.
+Warning: an instruction needs the word width of the `CODE` segment and cannot be generated in the selected address space.
 
 ### 2271: current program counter in inaccessible page
 
-Error: the physical PC required by the instruction is not mapped into the CPU's
-logical address space. PC-relative addressing needs a logical address to compute
-the displacement. With `-x`, Z180/Z280 reports the physical PC (including any
-instruction-specific offset), CODE space and active MMU mode.
+Error: the physical PC required by the instruction is not mapped into the CPU's logical address space. PC-relative addressing needs a logical address to compute the displacement. With `-x`, Z180/Z280 reports the physical PC (including any instruction-specific offset), CODE space and active MMU mode.
 
 ### 1482: FORWARD statement must reference current section
 
-Error: a section-qualified `FORWARD` declaration refers to a different,
-higher section. Use the current section for the declaration.
+Error: a section-qualified `FORWARD` declaration refers to a different, higher section. Use the current section for the declaration.
 
 ### 1442: register is not accessible in current execution mode
 
@@ -379,48 +373,24 @@ Error 1011 reports a backward temporary-label reference with too few preceding l
 
 Warning 141 reports the same destination register written by multiple parallel instructions. Error 1356 rejects an invalid parallel construct; error 1364 rejects conditional execution for an instruction that does not support it.
 
-MCore errors 1370 and 1375 identify the byte displacement, permitted range,
-required two-byte alignment and PC+2 base under `-x`. Literal-table error 1370
-identifies the byte displacement [0,1020] and the actual four-byte-aligned PC
-base; error 1325 identifies the target address and four-byte alignment. Warning
-180 identifies the odd instruction address and required two-byte alignment.
+MCore errors 1370 and 1375 identify the byte displacement, permitted range, required two-byte alignment and PC+2 base under `-x`. Literal-table error 1370 identifies the byte displacement [0,1020] and the actual four-byte-aligned PC base; error 1325 identifies the target address and four-byte alignment. Warning 180 identifies the odd instruction address and required two-byte alignment.
 
-MCore error 1445 identifies the actual register and allowed mask-derived R set
-under `-x`. Error 1350 identifies required parenthesized register or first-last
-range syntax with instruction-specific register sets. Error 1440 lists CR0..31
-and the named control registers.
+MCore error 1445 identifies the actual register and allowed mask-derived R set under `-x`. Error 1350 identifies required parenthesized register or first-last range syntax with instruction-specific register sets. Error 1440 lists CR0..31 and the named control registers.
 
-MCore error 1350 distinguishes missing/multiple base registers, required
-parenthesized address syntax and bracketed literal syntax under `-x`. Error 1130
-lists .B/.H/.W sizes. Errors 1315/1320 give instruction-specific immediate bounds
-or aggregate effective-address displacement bounds; 1325 gives the displacement
-and its required byte/halfword/word scaling multiple.
+MCore error 1350 distinguishes missing/multiple base registers, required parenthesized address syntax and bracketed literal syntax under `-x`. Error 1130 lists .B/.H/.W sizes. Errors 1315/1320 give instruction-specific immediate bounds or aggregate effective-address displacement bounds; 1325 gives the displacement and its required byte/halfword/word scaling multiple.
 
-TLCS-90 error 1370 identifies the signed byte displacement [-128,127] and
-PC+2 base under `-x`; DJNZ error 1350 identifies the required B or BC operand.
+TLCS-90 error 1370 identifies the signed byte displacement [-128,127] and PC+2 base under `-x`; DJNZ error 1350 identifies the required B or BC operand.
 
-TLCS-90 fixed-operand error 1350 names the required A/HL, word ALU destination
-set, PUSH/POP register set or LDA source forms at the failing operand under `-x`.
+TLCS-90 fixed-operand error 1350 names the required A/HL, word ALU destination set, PUSH/POP register set or LDA source forms at the failing operand under `-x`.
 
-TLCS-90 error 1131 identifies the register's actual width and required width.
-Error 1130 identifies unknown immediate width and accepted addressing forms.
-Shared error 1350 distinguishes repeated/multiple/non-additive address registers,
-required HL+A indexing, zero-only displacement with its actual value and
-mask-derived alternatives. Error 1320 identifies the actual indexed displacement
-and signed-byte bounds under `-x`.
+TLCS-90 error 1131 identifies the register's actual width and required width. Error 1130 identifies unknown immediate width and accepted addressing forms. Shared error 1350 distinguishes repeated/multiple/non-additive address registers, required HL+A indexing, zero-only displacement with its actual value and mask-derived alternatives. Error 1320 identifies the actual indexed displacement and signed-byte bounds under `-x`.
 
-TLCS-90 error 2050 rejects an empty direct or parenthesized address operand at
-its source location, including the missing source or destination of LD/LDW.
+TLCS-90 error 2050 rejects an empty direct or parenthesized address operand at its source location, including the missing source or destination of LD/LDW.
 
-TLCS-90 error 1925 reports the actual absolute address and permitted ordinary
-16-bit numeric domain [-32768,65535] under `-x`; validation precedes narrowing.
+TLCS-90 error 1925 reports the actual absolute address and permitted ordinary 16-bit numeric domain [-32768,65535] under `-x`; validation precedes narrowing.
 
-TC9331 error 1380 reports the actual shift-field value and accepted 0, 1, 4
-counts at operand 2 under `-x`. Failed evaluation retains its primary error.
+TC9331 error 1380 reports the actual shift-field value and accepted 0, 1, 4 counts at operand 2 under `-x`. Failed evaluation retains its primary error.
 
-TC9331 error 1445 lists the field's table- and instruction-specific choices at
-the operand under `-x`, including empty defaults where permitted. Error 1360
-lists accepted flag names for conditional jumps.
+TC9331 error 1445 lists the field's table- and instruction-specific choices at the operand under `-x`, including empty defaults where permitted. Error 1360 lists accepted flag names for conditional jumps.
 
-TC9331 error 1350 identifies the reserved first instruction field, which must
-be empty, and reminds the user to retain the leading comma under `-x`.
+TC9331 error 1350 identifies the reserved first instruction field, which must be empty, and reminds the user to retain the leading comma under `-x`.

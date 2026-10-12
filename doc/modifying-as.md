@@ -198,8 +198,7 @@ As already mentioned, the C source tree of AS uses a dynamic load principle for 
 
 ### Format of the Source Files
 
-A source file for the message compiler _rescomp_ usually has the suffix
-`.res`. The message compiler generates one or two files from a source:
+A source file for the message compiler _rescomp_ usually has the suffix `.res`. The message compiler generates one or two files from a source:
 
 - a binary file which is read at runtime by AS resp. its tools
 - optionally one further C header file assigning an index number to all messages. These index numbers in combination with an index table in the binary file allow a fast access to to individual messages at runtime.

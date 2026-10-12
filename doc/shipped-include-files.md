@@ -28,9 +28,7 @@ This file defines a couple of bit-oriented functions that might be hardwired for
 
 ## CTYPE.INC
 
-This include file is similar to the C include file `ctype.h` which
-offers functions to classify characters. All functions deliver either
-TRUE or FALSE:
+This include file is similar to the C include file `ctype.h` which offers functions to classify characters. All functions deliver either TRUE or FALSE:
 
 - _isdigit(ch)_ becomes TRUE if _ch_ is a valid decimal digit (0..9);
 - _isxdigit(ch)_ becomes TRUE if _ch_ is a valid hexadecimal digit (0..9, A..F, a..f);

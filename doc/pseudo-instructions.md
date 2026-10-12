@@ -255,8 +255,7 @@ PIO_ctrl   port PIO_port_A+3
 
 ### REG and NAMEREG
 
-_valid for: 680x0, AVR, M\*Core, ST9, 80C16x, Z80 family, Z8000, KCPSM (`NAMEREG` valid only for KCPSM(3)), LatticeMico8, MSP430(X)_
-Though it always has the same syntax, this instruction has a slightly different meaning from processor to processor: If the processor uses a separate addressing space for registers, `REG` has the same effect as a simple `EQU` for this address space (e.g. for the ST9). `REG` defines register symbols for all other processors whose function is described in [Register Symbols](assembler-usage.md#register-symbols).
+_valid for: 680x0, AVR, M\*Core, ST9, 80C16x, Z80 family, Z8000, KCPSM (`NAMEREG` valid only for KCPSM(3)), LatticeMico8, MSP430(X)_ Though it always has the same syntax, this instruction has a slightly different meaning from processor to processor: If the processor uses a separate addressing space for registers, `REG` has the same effect as a simple `EQU` for this address space (e.g. for the ST9). `REG` defines register symbols for all other processors whose function is described in [Register Symbols](assembler-usage.md#register-symbols).
 
 For the Z80 family, a register symbol may be defined for any register known to the Z80, undocumented Z80, Z180, Rabbit 2000, or Z380 backends.  Availability and operand-context restrictions are checked when the symbol is used, allowing common include files to define aliases before selecting a particular family member. Shadow register `AF'` is not currently supported as a `REG` value.
 
@@ -605,14 +604,11 @@ The processors can roughly be distinguished in families, inside the families dif
 
 8.  68HC12 → 68HC12X
 
-    The 12X core offers a couple of new instructions, and existing
-    instructions were were enriched with new addressing modes.
+    The 12X core offers a couple of new instructions, and existing instructions were were enriched with new addressing modes.
 
 9.  S912ZVC19F0MKH, S912ZVC19F0MLF, S912ZVCA19F0MKH, S912ZVCA19F0MLF, S912ZVCA19F0WKH, S912ZVH128F2CLQ, S912ZVH128F2CLL, S912ZVH64F2CLQ, S912ZVHY64F1CLQ, S912ZVHY32F1CLQ, S912ZVHY64F1CLL, S912ZVHY32F1CLL, S912ZVHL64F1CLQ, S912ZVHL32F1CLQ, S912ZVHL64F1CLL, S912ZVHL32F1CLL, S912ZVFP64F1CLQ, S912ZVFP64F1CLL, S912ZVH128F2VLQ, S912ZVH128F2VLL, S912ZVH64F2VLQ, S912ZVHY64F1VLQ, S912ZVHY32F1VLQ, S912ZVHY64F1VL, S912ZVHY32F1VLL, S912ZVHL64F1VLQ
 
-    All variants contain the same processor core and the same instruction
-    set, only the on-chip peripherals and the amount of built-in memory
-    (RAM, Flash-ROM, EEPROM) vary from device to device.
+    All variants contain the same processor core and the same instruction set, only the on-chip peripherals and the amount of built-in memory (RAM, Flash-ROM, EEPROM) vary from device to device.
 
 10. 68HC16
 
@@ -719,8 +715,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     The Game Boy's LR35902 combines features of the 8080 and Z80. It has no IX/IY registers, I/O address space, or second register bank, and omits several Z80 instructions. Select `LR35902` or `GBZ80`; its code address space is 64 Kbytes.
 
-35. Z8601, Z8603, z86C03, z86E03, Z86C06, Z86E06, Z86C08, Z86C21, Z86E21, Z86C30, Z86C31, Z86C32
-    Z86C40 → Z88C00, Z88C01 → eZ8, Z8F0113, Z8F011A, Z8F0123, Z8F012A, Z8F0130, Z8F0131, Z8F0213, Z8F021A, Z8F0223, Z8F022A, Z8F0230, Z8F0231, Z8F0411, Z8F0412, Z8F0413, Z8F041A, Z8F0421, Z8F0422, Z8F0423, Z8F042A, Z8F0430, Z8F0431, Z8F0811, Z8F0812, Z8F0813, Z8F081A, Z8F0821, Z8F0822, Z8F0823, Z8F082A, Z8F0830, Z8F0831, Z8F0880, Z8F1232, Z8F1233, Z8F1621, Z8F1622, Z8F1680, Z8F1681, Z8F1682, Z8F2421, Z8F2422, Z8F2480, Z8F3221, Z8F3222, Z8F3281, Z8F3282, Z8F4821, Z8F4822, Z8F4823, Z8F6081, Z8F6082, Z8F6421, Z8F6422, Z8F6423, Z8F6481, Z8F6482
+35. Z8601, Z8603, z86C03, z86E03, Z86C06, Z86E06, Z86C08, Z86C21, Z86E21, Z86C30, Z86C31, Z86C32 Z86C40 → Z88C00, Z88C01 → eZ8, Z8F0113, Z8F011A, Z8F0123, Z8F012A, Z8F0130, Z8F0131, Z8F0213, Z8F021A, Z8F0223, Z8F022A, Z8F0230, Z8F0231, Z8F0411, Z8F0412, Z8F0413, Z8F041A, Z8F0421, Z8F0422, Z8F0423, Z8F042A, Z8F0430, Z8F0431, Z8F0811, Z8F0812, Z8F0813, Z8F081A, Z8F0821, Z8F0822, Z8F0823, Z8F082A, Z8F0830, Z8F0831, Z8F0880, Z8F1232, Z8F1233, Z8F1621, Z8F1622, Z8F1680, Z8F1681, Z8F1682, Z8F2421, Z8F2422, Z8F2480, Z8F3221, Z8F3222, Z8F3281, Z8F3282, Z8F4821, Z8F4822, Z8F4823, Z8F6081, Z8F6082, Z8F6421, Z8F6422, Z8F6423, Z8F6481, Z8F6482
 
     The variants with Z8 core only differ in internal memory size and on-chip peripherals, i.e. the choice does not have an effect on the supported instruction set. Super8 and eZ8 are substantially different, each with an instruction set that was vastly extended (into different directions), and they are not fully upward-compatible on source code level as well.
 
@@ -776,10 +771,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     The various ST6 derivates differ in the amount of on-chip peripherals and built-in memory.
 
-51. ST7
-    ST72251G1, ST72251G2, ST72311J2, ST72311J4, ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, ST72325S6, ST72325J7, ST72325R9, ST72324J6, ST72324K6, ST72324J4, ST72324K4, ST72324J2, ST72324JK21, ST72325S4, ST72325J7, ST72325R9, ST72521BR6, ST72521BM9, ST7232AK1, ST7232AK2, ST7232AJ1, ST7232AJ2, ST72361AR4, ST72361AR6, ST72361AR7, ST72361AR9, ST7FOXK1, ST7FOXK2, ST7LITES2Y0, ST7LITES5Y0, ST7LITE02Y0, ST7LITE05Y0, ST7LITE09Y0
-    ST7LITE10F1, ST7LITE15F1, ST7LITE19F1, ST7LITE10F0, ST7LITE15F0, ST7LITE15F1, ST7LITE19F0, ST7LITE19F1, ST7LITE20F2, ST7LITE25F2, ST7LITE29F2, ST7LITE30F2, ST7LITE35F2, ST7LITE39F2, ST7LITE49K2, ST7MC1K2, ST7MC1K4, ST7MC2N6, ST7MC2S4, ST7MC2S6, ST7MC2S7, ST7MC2S9, ST7MC2R6, ST7MC2R7, ST7MC2R9, ST7MC2M9, STM8
-    STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6, STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3, STM8S103K3, STM8S105C4, STM8S105C6, STM8S105K4, STM8S105K6, STM8S105S4, STM8S105S6, STM8S207MB, STM8S207M8, STM8S207RB, STM8S207R8, STM8S207R6, STM8S207CB, STM8S207C8, STM8S207C6, STM8S207SB, STM8S207S8, STM8S207S6, STM8S207K8, STM8S207K6, STM8S208MB, STM8S208RB, STM8S208R8, STM8S208R6, STM8S208CB, STM8S208C8, STM8S208C6, STM8S208SB, STM8S208S8, STM8S208S6, STM8S903K3, STM8S903F3, STM8L050J3, STM8L051F3, STM8L052C6, STM8L052R8, STM8L001J3, STM8L101F1, STM8L101F2, STM8L101G2, STM8L101F3, STM8L101G3, STM8L101K3, STM8L151C2, STM8L151K2, STM8L151G2, STM8L151F2, STM8L151C3, STM8L151K3, STM8L151G3, STM8L151F3, STM8L151C4, STM8L151C6, STM8L151K4, STM8L151K6, STM8L151G4, STM8L151G6, STM8L152C4, STM8L152C6, STM8L152K4, STM8L152K6, STM8L151R6, STM8L151C8, STM8L151M8, STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8, STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8, STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223, STM8AF6226, STM8AF6246, STM8AF6248, STM8AF6266, STM8AF6268, STM8AF6269, STM8AF6286, STM8AF6288, STM8AF6289, STM8AF628A, STM8AF62A6, STM8AF62A8, STM8AF62A9, STM8AF62AA, STM8AF5268, STM8AF5269, STM8AF5286, STM8AF5288, STM8AF5289, STM8AF528A, STM8AF52A6, STM8AF52A8, STM8AF52A9, STM8AF52AA, STM8AL3136, STM8AL3138, STM8AL3146, STM8AL3148, STM8AL3166, STM8AL3168, STM8AL3L46, STM8AL3L48, STM8AL3L66, STM8AL3L68, STM8AL3188, STM8AL3189, STM8AL318A, STM8AL3L88, STM8AL3L89, STM8AL3L8A, STM8TL52F4, STM8TL52G4, STM8TL53C4, STM8TL53F4, STM8TL53G4
+51. ST7 ST72251G1, ST72251G2, ST72311J2, ST72311J4, ST72321BR6, ST72321BR7, ST72321BR9, ST72325S4, ST72325S6, ST72325J7, ST72325R9, ST72324J6, ST72324K6, ST72324J4, ST72324K4, ST72324J2, ST72324JK21, ST72325S4, ST72325J7, ST72325R9, ST72521BR6, ST72521BM9, ST7232AK1, ST7232AK2, ST7232AJ1, ST7232AJ2, ST72361AR4, ST72361AR6, ST72361AR7, ST72361AR9, ST7FOXK1, ST7FOXK2, ST7LITES2Y0, ST7LITES5Y0, ST7LITE02Y0, ST7LITE05Y0, ST7LITE09Y0 ST7LITE10F1, ST7LITE15F1, ST7LITE19F1, ST7LITE10F0, ST7LITE15F0, ST7LITE15F1, ST7LITE19F0, ST7LITE19F1, ST7LITE20F2, ST7LITE25F2, ST7LITE29F2, ST7LITE30F2, ST7LITE35F2, ST7LITE39F2, ST7LITE49K2, ST7MC1K2, ST7MC1K4, ST7MC2N6, ST7MC2S4, ST7MC2S6, ST7MC2S7, ST7MC2S9, ST7MC2R6, ST7MC2R7, ST7MC2R9, ST7MC2M9, STM8 STM8S001J3, STM8S003F3, STM8S003K3, STM8S005C6, STM8S005K6, STM8S007C8, STM8S103F2, STM8S103F3, STM8S103K3, STM8S105C4, STM8S105C6, STM8S105K4, STM8S105K6, STM8S105S4, STM8S105S6, STM8S207MB, STM8S207M8, STM8S207RB, STM8S207R8, STM8S207R6, STM8S207CB, STM8S207C8, STM8S207C6, STM8S207SB, STM8S207S8, STM8S207S6, STM8S207K8, STM8S207K6, STM8S208MB, STM8S208RB, STM8S208R8, STM8S208R6, STM8S208CB, STM8S208C8, STM8S208C6, STM8S208SB, STM8S208S8, STM8S208S6, STM8S903K3, STM8S903F3, STM8L050J3, STM8L051F3, STM8L052C6, STM8L052R8, STM8L001J3, STM8L101F1, STM8L101F2, STM8L101G2, STM8L101F3, STM8L101G3, STM8L101K3, STM8L151C2, STM8L151K2, STM8L151G2, STM8L151F2, STM8L151C3, STM8L151K3, STM8L151G3, STM8L151F3, STM8L151C4, STM8L151C6, STM8L151K4, STM8L151K6, STM8L151G4, STM8L151G6, STM8L152C4, STM8L152C6, STM8L152K4, STM8L152K6, STM8L151R6, STM8L151C8, STM8L151M8, STM8L151R8, STM8L152R6, STM8L152C8, STM8L152K8, STM8L152M8, STM8L152R8, STM8L162M8, STM8L162R8, STM8AF6366, STM8AF6388, STM8AF6213, STM8AF6223, STM8AF6226, STM8AF6246, STM8AF6248, STM8AF6266, STM8AF6268, STM8AF6269, STM8AF6286, STM8AF6288, STM8AF6289, STM8AF628A, STM8AF62A6, STM8AF62A8, STM8AF62A9, STM8AF62AA, STM8AF5268, STM8AF5269, STM8AF5286, STM8AF5288, STM8AF5289, STM8AF528A, STM8AF52A6, STM8AF52A8, STM8AF52A9, STM8AF52AA, STM8AL3136, STM8AL3138, STM8AL3146, STM8AL3148, STM8AL3166, STM8AL3168, STM8AL3L46, STM8AL3L48, STM8AL3L66, STM8AL3L68, STM8AL3188, STM8AL3189, STM8AL318A, STM8AL3L88, STM8AL3L89, STM8AL3L8A, STM8TL52F4, STM8TL52G4, STM8TL53C4, STM8TL53F4, STM8TL53G4
 
     The STM8 core extends the address space to 16 Mbytes and introduces a couple of new instructions. Though many instructions have the same machine code as for ST7, it is not binary upward compatible.
 
@@ -809,8 +801,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     This one at the moment represents the TMS320C54x family...
 
-59. TI990/4, TI990/10, TI990/12
-    TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
+59. TI990/4, TI990/10, TI990/12 TMS9900, TMS9940, TMS9995, TMS99105, TMS99110
 
     The TMS99xx/99xxx processors are basically single chip implementations of the TI990 minicomputers. Some TI990 models are even based on such a processor instead of a discrete CPU. The individual models differ in their instruction set (the TI990/12 has the largest one) and the presence of a privileged mode.
 
@@ -858,10 +849,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     This huge amount of variants partially results from the fact that Mostek renamed some variants in the early 80s. The new naming scheme allows to deduce the amount of internal ROM (0 to 4 for 0 to 4 Kbytes) and executable RAM (0 or 2 for 0 or 64 bytes) from the suffix. 3850 and MK975xx support a 64K address space, which is only 4 Kbytes for all other variants. P variants have an EEPROM piggyback socket for prototyping, C variants are fabricated in CMOS technology and feature two new machine instructions (HET and HAL). The MK3873's feature is a built-in serial port, while the MK3875 offers a second supply voltage pin to buffer the internal memory in standby mode.
 
-72. 7800, 7801, 7802
-    78C05, 78C06
-    7807, 7808, 7809
-    7810 → 78C10, 78C11, 78C12, 78C14, 78C17, 78C18
+72. 7800, 7801, 7802 78C05, 78C06 7807, 7808, 7809 7810 → 78C10, 78C11, 78C12, 78C14, 78C17, 78C18
 
     μPD7800 to μPD7802 represent the first generation of the NEC uCOM87 family. μPD78C05 and μPD78C06 implement a reduced instruction set. The 7807 to 7809 greatly extend the instruction set. The μPD781x variants belong to the uCOM87AD series, which adds an A/D converter but removes the bit-processing instructions.
 
@@ -927,10 +915,7 @@ The processors can roughly be distinguished in families, inside the families dif
 
     In addition to its predecessor's features, the MN1613 offers a larger address space, a floating point unit and a couple of new machine instructions.
 
-87. PMC150, PMS150, PFS154, PMC131, PMS130, PMS131
-    PMS132, PMS132B, PMS152, PMS154B, PMS154C, PFS173
-    PMS133, PMS134, DF69, MCS11, PMC232, PMC234, PMC251
-    PMC271,PMC884, PMS232, PMS234, PMS271
+87. PMC150, PMS150, PFS154, PMC131, PMS130, PMS131 PMS132, PMS132B, PMS152, PMS154B, PMS154C, PFS173 PMS133, PMS134, DF69, MCS11, PMC232, PMC234, PMC251 PMC271,PMC884, PMS232, PMS234, PMS271
 
     The Padauk controllers differ in the size of the internal (ROM/RAM) memory, the type of internal ROM (erasable or OTP), the built-in peripherals, and their instruction set (both extent and binary coding).
 
@@ -1015,10 +1000,7 @@ Select the access mode assumed for subsequent instructions: `KERNEL` (0), `EXECU
 
 ### SUPMODE, FPU, PMMU, CUSTOM
 
-_SUPMODE valid for: 680x0, i960, TLCS-900, SH7000, i960, 29K, XA, PowerPC, M\*Core, and TMS9900_
-_FPU valid for: 680x0, NS32xxx, 80x86_
-_PMMU valid for: 680x0, NS32xxx_
-_CUSTOM valid for: NS32xxx_
+_SUPMODE valid for: 680x0, i960, TLCS-900, SH7000, i960, 29K, XA, PowerPC, M\*Core, and TMS9900_ _FPU valid for: 680x0, NS32xxx, 80x86_ _PMMU valid for: 680x0, NS32xxx_ _CUSTOM valid for: NS32xxx_
 
 These three switches allow to define which parts of the instruction set shall be disabled because the necessary preconditions are not valid for the following piece of code. The parameter for these instructions may be either `ON` or `OFF`, the current status can be read out of a variable which is either TRUE or FALSE.
 
@@ -1321,10 +1303,7 @@ Valid arguments behind the colon are `CODE`, `DATA` and `NOTHING`. The latter va
 
 #### Z280
 
-`ASSUME I:1` tells AS that I/O is forbidden in user mode; I/O instructions
-then issue a warning unless `SUPMODE` is enabled. Z280's MMU maps its 64 KB
-logical address space into 16 MB of physical memory. Use `ASSUME` to set
-`MMUMCR`, `UPD0`–`UPD15`, and `SPD0`–`SPD15`.
+`ASSUME I:1` tells AS that I/O is forbidden in user mode; I/O instructions then issue a warning unless `SUPMODE` is enabled. Z280's MMU maps its 64 KB logical address space into 16 MB of physical memory. Use `ASSUME` to set `MMUMCR`, `UPD0`–`UPD15`, and `SPD0`–`SPD15`.
 
 | Register bits | Meaning |
 | --- | --- |
@@ -1335,8 +1314,7 @@ logical address space into 16 MB of physical memory. Use `ASSUME` to set
 | UPDn/SPDn 3 (V) | Page descriptor valid |
 | UPDn/SPDn 15–4 or 15–5 | Physical page frame address, bits 23–12 or 23–13 |
 
-`SUPMODE` selects which mapping applies. `PRWINS` displays the mapped windows.
-The full physical address space can also be used through `PHASE`.
+`SUPMODE` selects which mapping applies. `PRWINS` displays the mapped windows. The full physical address space can also be used through `PHASE`.
 
 #### eZ80
 
@@ -1404,8 +1382,7 @@ The ST9 family uses exactly the same instructions to address code and data area.
 
 #### 78K3
 
-Processors with a 78K3 core have register banks that consist of 16 registers. These registers may be used via their numbers (`R0` to `R15`) or their symbolic names
-(`X=R0`, `A=R1`, `C=R2`, `B=R3`, `VPL=R8`, `VPH=R9`, `UPL=R10`, `UPH=R11`, `E=R12`, `D=R13`, `L=R14`, `H=R15`). The processor core has a register select bit ( `RSS`) to switch the mapping of A/X and B/C from R0...R3 to R4...R7. This is mainly important for instructions that implicitly use one of these registers (i.e. instruction that do not encode the register number in the machine code). However, it is also possible to inform the assembler about the changed mapping via a
+Processors with a 78K3 core have register banks that consist of 16 registers. These registers may be used via their numbers (`R0` to `R15`) or their symbolic names (`X=R0`, `A=R1`, `C=R2`, `B=R3`, `VPL=R8`, `VPH=R9`, `UPL=R10`, `UPH=R11`, `E=R12`, `D=R13`, `L=R14`, `H=R15`). The processor core has a register select bit ( `RSS`) to switch the mapping of A/X and B/C from R0...R3 to R4...R7. This is mainly important for instructions that implicitly use one of these registers (i.e. instruction that do not encode the register number in the machine code). However, it is also possible to inform the assembler about the changed mapping via a
 
 ```asm
       assume rss:1
@@ -1608,9 +1585,7 @@ These commands are - one could say - the Intel counterpart to `DS` and `DC`, and
 
 Stored floats cannot exceed the host’s precision or range, given by `FLOATMAX`. On a double-precision host, the lowest two bytes of `DT` and eight bytes of `DO` are zero-filled.
 
-Second, the distinction between constant definition and memory
-reservation is done by the operand. A reservation of memory is marked by
-a `?` :
+Second, the distinction between constant definition and memory reservation is done by the operand. A reservation of memory is marked by a `?` :
 
 ```asm
         db      ?       ; reserves a byte
@@ -1618,15 +1593,13 @@ a `?` :
         dd      -1      ; places the constant -1 (FFFFFFFFH) !
 ```
 
-Reserved memory and constant definitions **must not** be mixed within
-one instruction:
+Reserved memory and constant definitions **must not** be mixed within one instruction:
 
 ```asm
         db      "hello",?       ; --> error message
 ```
 
-Additionally, the `DUP` Operator permits the repeated placing of
-constant sequences or the reservation of whole memory blocks:
+Additionally, the `DUP` Operator permits the repeated placing of constant sequences or the reservation of whole memory blocks:
 
 ```asm
         db      3 dup (1,2)     ; --> 1 2 1 2 1 2
@@ -2599,9 +2572,7 @@ For the Epson printer already mentioned above, a title line shall be written in 
 
 ### RADIX
 
-The argument is a plain numeric literal (decimal by default), parsed independently
-of the current expression radix. Expressions are not accepted. This also applies
-to `OUTRADIX`.
+The argument is a plain numeric literal (decimal by default), parsed independently of the current expression radix. Expressions are not accepted. This also applies to `OUTRADIX`.
 
 `RADIX` with a numerical argument between 2 and 36 sets the default numbering system for integer constants, i.e. the numbering system used if nothing else has been stated explicitly. The default is 10, and there are some possible pitfalls to keep in mind which are described in [Integer Constants](assembler-usage.md#integer-constants).
 
@@ -3124,17 +3095,11 @@ A `RADIX` statement overrides the `-radix` command-line setting; absent either, 
 
 ### Forward declarations outside sections
 
-`FORWARD symbol` also works outside a section. It creates a placeholder that
-allows early references to record the symbol's use for `SYMUSED` or `IFUSED`.
-The placeholder has no value; evaluating it still counts as an undefined
-reference until the symbol is defined. A section-qualified `FORWARD` declaration
-must name the current section, rather than a higher section.
+`FORWARD symbol` also works outside a section. It creates a placeholder that allows early references to record the symbol's use for `SYMUSED` or `IFUSED`. The placeholder has no value; evaluating it still counts as an undefined reference until the symbol is defined. A section-qualified `FORWARD` declaration must name the current section, rather than a higher section.
 
 ### WE32xxx execution modes
 
-For WE32xxx, `EXECMODE` has the same role as VAX `ACCMODE`: arguments are
-`KERNEL`, `EXECUTIVE`, `SUPERVISOR`, `USER`, or the corresponding numbers 0–3.
-AS checks instructions and register accesses against the selected mode.
+For WE32xxx, `EXECMODE` has the same role as VAX `ACCMODE`: arguments are `KERNEL`, `EXECUTIVE`, `SUPERVISOR`, `USER`, or the corresponding numbers 0–3. AS checks instructions and register accesses against the selected mode.
 
 WE32xxx uses C integer syntax, `.` as its program-counter symbol, and the `BYTE`, `HALF`, `WORD`, `DS` and `EXECMODE` directives. Its code address space is 4 GiB.
 

@@ -3,8 +3,7 @@
 <!-- markdownlint-disable MD025 -->
 <!-- markdownlint-disable MD030 -->
 
-To simplify the work with the assembler's code format a bit, I added some tools to aid processing of code files. These programs are released under the same license terms as stated in section
-[License Agreement](introduction.md#license-agreement)!
+To simplify the work with the assembler's code format a bit, I added some tools to aid processing of code files. These programs are released under the same license terms as stated in section [License Agreement](introduction.md#license-agreement)!
 
 Common to all programs are the possible return codes they may deliver upon completion:
 
@@ -190,8 +189,7 @@ In case the source file(s) not only contain data for the code segment, the switc
     -segment <name>
 ```
 
-allows to select the segment data is extracted from and converted to HEX format. The segment names are the same as for the `SEGMENT` pseudo instruction ([SEGMENT](pseudo-instructions.md#segment)). The TI DSK is a special case since it has the ability to distinguish between data and code in one file. If TI DSK is the output format, P2HEX will automatically extract data from both segments if no segment was specified explicitly.
-Similar to the `-r` option, the argument
+allows to select the segment data is extracted from and converted to HEX format. The segment names are the same as for the `SEGMENT` pseudo instruction ([SEGMENT](pseudo-instructions.md#segment)). The TI DSK is a special case since it has the ability to distinguish between data and code in one file. If TI DSK is the output format, P2HEX will automatically extract data from both segments if no segment was specified explicitly. Similar to the `-r` option, the argument
 
 ```dosbat
     -d <start>-<end>
@@ -294,10 +292,6 @@ When P2BIN inserts a checksum, it warns if the final output byte contains source
 
 ### Explicit output filenames
 
-`PBIND`, `P2HEX`, and `P2BIN` accept `-o filename` to select the output file.
-Without `-o`, the last non-option filename is the output and earlier filenames
-are inputs. With `-o`, every non-option filename is an input, including wildcard
-matches. PBIND defaults missing extensions to `.p`; P2HEX and P2BIN keep their
-usual output extension rules. PBIND options may be stored in `PBINDCMD`.
+`PBIND`, `P2HEX`, and `P2BIN` accept `-o filename` to select the output file. Without `-o`, the last non-option filename is the output and earlier filenames are inputs. With `-o`, every non-option filename is an input, including wildcard matches. PBIND defaults missing extensions to `.p`; P2HEX and P2BIN keep their usual output extension rules. PBIND options may be stored in `PBINDCMD`.
 
 P2BIN `-byte-swap 2` reverses each pair of output bytes, and `-byte-swap 4` reverses each group of four. Use `1` for unchanged byte order.

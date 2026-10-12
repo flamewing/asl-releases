@@ -4,20 +4,11 @@
 
 [![CodeFactor Grade][codefactor-badge]][codefactor-url]
 
-[![CI Android][android-badge]][android-url]
-[![CI Emscripten][emscripten-badge]][emscripten-url]
-[![CI FreeBSD][freebsd-badge]][freebsd-url]
-[![CI Linux][linux-badge]][linux-url]
-[![CI macOS][macos-badge]][macos-url]
-[![CI OmniOS][omnios-badge]][omnios-url]
-[![CI Windows MinGW][windows-mingw-badge]][windows-mingw-url]
-[![CI Windows MSVC][windows-msvc-badge]][windows-msvc-url]
+[![CI Android][android-badge]][android-url] [![CI Emscripten][emscripten-badge]][emscripten-url] [![CI FreeBSD][freebsd-badge]][freebsd-url] [![CI Linux][linux-badge]][linux-url] [![CI macOS][macos-badge]][macos-url] [![CI OmniOS][omnios-badge]][omnios-url] [![CI Windows MinGW][windows-mingw-badge]][windows-mingw-url] [![CI Windows MSVC][windows-msvc-badge]][windows-msvc-url]
 
-[![Coverity Scan Analysis][scan-analysis-badge]][scan-analysis-url]
-[![Coverity Scan][scan-badge]][scan-url]
+[![Coverity Scan Analysis][scan-analysis-badge]][scan-analysis-url] [![Coverity Scan][scan-badge]][scan-url]
 
-[![Snapshot build][snapshot-build-badge]][snapshot-build-url]
-[![Latest snapshot][snapshot-link-badge]][snapshot-link-url]
+[![Snapshot build][snapshot-build-badge]][snapshot-build-url] [![Latest snapshot][snapshot-link-badge]][snapshot-link-url]
 
 ## asl-releases
 
@@ -64,8 +55,7 @@ I would like to know if it works on other circumstances, particularly when cross
 
 ## Profiling
 
-For repeatable Windows and Linux performance measurements and opt-in profiling
-builds, see [the benchmark guide](benchmarks/README.md).
+For repeatable Windows and Linux performance measurements and opt-in profiling builds, see [the benchmark guide](benchmarks/README.md).
 
 ## Cross-compiling
 

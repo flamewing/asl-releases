@@ -65,5 +65,4 @@ The names listed here should be avoided for own symbols; either one can define b
 
 On hosts that parse infinity, `INF` is reserved as a floating-point infinity and cannot be a user-defined symbol.
 
-`INTWIDTH` gives the bit width of internal integer arithmetic. `HAS64` is true
-when that arithmetic has at least 64 bits; supported hosts may use 128 bits.
+`INTWIDTH` gives the bit width of internal integer arithmetic. `HAS64` is true when that arithmetic has at least 64 bits; supported hosts may use 128 bits.

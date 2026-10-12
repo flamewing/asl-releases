@@ -8,12 +8,7 @@ The [listing and string-processing experiments](OUTPUT_STRING_EXPERIMENTS.md) ev
 
 The [fresh aggregate timings and compiler profiles](HEAD_COMPILER_PROFILES.md) compare pre-optimization `0730cdf` with frozen HEAD `2369d51` across all eleven registered variants, adding MSVC to Windows GCC and native Linux GCC. Median time ratios give geometric-mean reductions of 42.02%, 41.30% and 48.06%, respectively. Windows CPU sampling finds repeatable compiler/runtime differences around formatting and synchronization, particularly with listings. The report includes anonymized `local-e` timings and profile findings; identifying information and raw profiling artifacts remain outside the checkout.
 
-The [Madness 4 baseline and lazy-hashing trials](MADNESS4_LAZY_HASH.md) add a
-pinned public workload with release/debug listings. Against the revision before
-optimization, accepted assembly times fall about 30% on Windows and 42–43% on
-native WSL2 Linux. Both independent lazy cache trials were discarded after
-mixed screening/confirmation results. The report records instrumented call
-counts and the limits introduced by I/O variation.
+The [Madness 4 baseline and lazy-hashing trials](MADNESS4_LAZY_HASH.md) add a pinned public workload with release/debug listings. Against the revision before optimization, accepted assembly times fall about 30% on Windows and 42–43% on native WSL2 Linux. Both independent lazy cache trials were discarded after mixed screening/confirmation results. The report records instrumented call counts and the limits introduced by I/O variation.
 
 The [expression and line-processing experiments](EXPRESSION_LINE_EXPERIMENTS.md) are complete: lazy operand initialization and combined copying/trimming were discarded; known-length argument trimming in line splitting was accepted after repeated scaler gains on both OSes.
 

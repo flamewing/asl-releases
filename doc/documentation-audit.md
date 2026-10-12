@@ -1,0 +1,30 @@
+# Documentation audit
+
+Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Review documentation against the current fork implementation and its regression tests; distinguish retained upstream history and benchmark reports from descriptions of current behavior. Keep the original diagnostic numbers, target-specific semantics and accepted encodings accurate. This record tracks review and validation rather than claiming that pending tranches are complete.
+
+## Tranches
+
+| Tranche | Scope | Status |
+| --- | --- | --- |
+| 1 | Single-line paragraphs in tracked Markdown files | Complete |
+| 2 | Build, installation, package layout and source-maintenance guidance | Pending |
+| 3 | Assembler invocation, options, environment, manpage and built-in help | Pending |
+| 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Pending |
+| 5 | Source syntax, macros, conditionals and fork language extensions | Pending |
+| 6 | Data directives, expressions, predefined symbols, includes and file formats | Pending |
+| 7 | Processor-specific hints and programming examples, including corrected behavior | Pending |
+| 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Pending |
+
+## Scope and evidence
+
+The baseline contains 35 tracked Markdown files, six manpages and the help text for the assembler, five binary-file tools, the disassembler and the resource compiler. Review the user manual and README against `CMakeLists.txt`, command records/callbacks, parser/directive implementations, processor backends and existing tests. Review historical benchmark documents against their stated revisions and recorded experiments. The untracked printf audit documents are outside this committed-documentation audit.
+
+## Completed work
+
+### 1. Single-line Markdown paragraphs
+
+Join 335 soft-wrapped lines across 15 Markdown files, including list-continuation paragraphs and benchmark prose. Keep fenced/indented code, shell commands, tables, headings, reference definitions and HTML comments intact. Validate all 35 existing Markdown files with Pandoc's GitHub-flavored Markdown parser: the syntax trees are identical after treating soft breaks as spaces. No soft or hard breaks remain inside parsed prose paragraphs or list prose. The new audit record also uses single-line paragraphs.
+
+## Validation policy
+
+For wording changes, verify claims against the implementation and run the documented invocation or relevant existing regression when useful. For built-in help changes, build embedded and external message catalogs and check actual output and exit status. Render the manual and manpages where tooling is available, check local links and cross-references, and keep each completed tranche in a separate local commit. Record any unresolved claim with the source evidence needed to settle it.

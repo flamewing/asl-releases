@@ -896,17 +896,11 @@ Select `GBZ80` or `LR35902` for the Sharp CPU used in the original Game Boy. The
 
 As this processor was designed as a grandchild of the still most popular 8-bit microprocessor, it was a sine-qua-non design target to execute existing Z80 programs without modification (of course, they execute a bit faster, roughly by a factor of 10...). Therefore, all extended features can be enabled after a reset by setting two bits which are named XM (eXtended Mode, i.e. a 32-bit instead of a 16-bit address space) respectively LW (long word mode, i.e. 32-bit instead of 16-bit operands). One has to inform AS about their current setting with the instructions `EXTMODE` resp. `LWORDMODE`, to enable AS to check addresses and constants against the correct upper limits. The toggle between 32- and 16-bit instruction of course only influences instructions that are available in a 32-bit variant. Unfortunately, the Z380 currently offers such variants only for load and store instructions; arithmetic can only be done in 16 bits. Zilog really should do something about this, otherwise the most positive description for the Z380 would be "16-bit processor with 32-bit extensions"...
 
-`DDIR W/LW` overrides operand word size for the next instruction. `DDIR IN/IB/IW`
-can explicitly select the length of immediate and absolute operands. AS remembers
-these prefixes when assembling the following instruction.
+`DDIR W/LW` overrides operand word size for the next instruction. `DDIR IN/IB/IW` can explicitly select the length of immediate and absolute operands. AS remembers these prefixes when assembling the following instruction.
 
-If no operand length is specified, AS chooses it automatically. For example,
-`LD BC,12345678h` receives an `IW` prefix. A preceding `DDIR LW` is expanded
-into `DDIR LW,IW`; its earlier output is withdrawn, marked `R` in the listing.
+If no operand length is specified, AS chooses it automatically. For example, `LD BC,12345678h` receives an `IW` prefix. A preceding `DDIR LW` is expanded into `DDIR LW,IW`; its earlier output is withdrawn, marked `R` in the listing.
 
-An explicit length is enforced: `DDIR IB` followed by `LD BC,12345678h` is an
-error because the value needs more than 24 bits. Shorter operands are zero-extended,
-so `DDIR LW,IW` followed by `LD BC,345678h` stores an extra byte.
+An explicit length is enforced: `DDIR IB` followed by `LD BC,12345678h` is an error because the value needs more than 24 bits. Shorter operands are zero-extended, so `DDIR LW,IW` followed by `LD BC,345678h` stores an extra byte.
 
 ## Z8, Super8, and eZ8
 
@@ -962,8 +956,7 @@ In addition to the conditions defined by Zilog, the following alternative names 
 
 ### Flags
 
-`SETFLG`, `COMFLG` und `RESFLG` accept the following alternate names as
-arguments:
+`SETFLG`, `COMFLG` und `RESFLG` accept the following alternate names as arguments:
 
 | Alternate | Zilog | Meaning    |
 | :-------- | :---- | :--------- |
@@ -1089,11 +1082,7 @@ Toshiba defined an "extended instruction set" for this processor family to facil
 
 ## TLCS-42
 
-Supported models are `4240P`, `4250N`, `4260P`, `4270N`, `42C00Y`,
-`42C40P`, `42C50N`, `42C60P`, and `42C70N`. CMOS models add two
-instructions; the models otherwise differ in I/O ports and program memory.
-The default integer syntax is Intel. `ASSUME`, `PORT`, and the Intel
-`DB`, `DW`, `DD`, `DQ`, `DT`, `DO`, `DN`, and `DS` directives are available.
+Supported models are `4240P`, `4250N`, `4260P`, `4270N`, `42C00Y`, `42C40P`, `42C50N`, `42C60P`, and `42C70N`. CMOS models add two instructions; the models otherwise differ in I/O ports and program memory. The default integer syntax is Intel. `ASSUME`, `PORT`, and the Intel `DB`, `DW`, `DD`, `DQ`, `DT`, `DO`, `DN`, and `DS` directives are available.
 
 ## TLCS-9000
 
@@ -1998,14 +1987,9 @@ Define an address with `dest LABEL 4` and use `CZP dest`. If a vector is intende
 
 ## AT&T WE32xxx (Bellmac32)
 
-`WE32100` and `WE32200` are supported. WE32200 adds sixteen CPU registers,
-indexed and auto-increment/decrement addressing, and additional instructions.
-`EXECMODE` selects Kernel, Executive, Supervisor, or User mode (0–3), allowing
-AS to check privileged instructions and register accesses.
+`WE32100` and `WE32200` are supported. WE32200 adds sixteen CPU registers, indexed and auto-increment/decrement addressing, and additional instructions. `EXECMODE` selects Kernel, Executive, Supervisor, or User mode (0–3), allowing AS to check privileged instructions and register accesses.
 
-`BYTE`, `HALF`, and `WORD` correspond to integer `DB`, `DW`, and `DD`;
-`DS` reserves storage. Register access diagnostics 1442 and 1443 identify
-kernel-only registers and registers writable only in kernel mode.
+`BYTE`, `HALF`, and `WORD` correspond to integer `DB`, `DW`, and `DD`; `DS` reserves storage. Register access diagnostics 1442 and 1443 identify kernel-only registers and registers writable only in kernel mode.
 
 ### TMS340xx
 

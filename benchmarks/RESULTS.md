@@ -28,9 +28,7 @@ Machine: Intel Core i9-11900, Windows build 26100, WSL2 Ubuntu, kernel `6.18.40.
 
 ## Optimization candidates
 
-The independent Windows and Linux gprof reports identify the same main areas.
-Percentages below are **instrumented self-time**, not shares of baseline wall
-time. Windows reports aggregate five runs; Linux reports aggregate seven.
+The independent Windows and Linux gprof reports identify the same main areas. Percentages below are **instrumented self-time**, not shares of baseline wall time. Windows reports aggregate five runs; Linux reports aggregate seven.
 
 | Function | Windows self-time, S1 / S2 / SK | Linux self-time, S1 / S2 / SK | Calls per assembly, S1 / S2 / SK |
 | --- | --- | --- | --- |
@@ -38,24 +36,19 @@ time. Windows reports aggregate five runs; Linux reports aggregate seven.
 | `ReplaceLineUnchecked` | 3.41 / 3.00 / 1.06% | 8.18 / 7.73 / 4.10% | 1,479,714 / 2,535,532 / 869,844 |
 | `QuotSMultPosQualify` | 3.41 / 3.80 / 5.29% | 4.55 / 7.96 / 4.64% | 432,496 / 720,970 / 748,380 |
 
-1. **Reduce expression-parser allocation and conversion work.**
-   [EvalStrExpression](../asmpars.c) allocates two 1024-byte scratch strings on every call, including recursive calls, then copies/trims strings and attempts integer, float, and string conversion before general expression evaluation. [as_dynstr_ini](../dynstr.c) allocates and zeroes the entire buffer. Investigate scratch storage reused by recursion depth, lazy allocation, and cheap lexical checks before float conversion. Preserve long-expression handling, recursion, temporary/local symbols, numeric syntax, and relocation behavior. These are hypotheses; no speedup has been established yet.
+1. **Reduce expression-parser allocation and conversion work.** [EvalStrExpression](../asmpars.c) allocates two 1024-byte scratch strings on every call, including recursive calls, then copies/trims strings and attempts integer, float, and string conversion before general expression evaluation. [as_dynstr_ini](../dynstr.c) allocates and zeroes the entire buffer. Investigate scratch storage reused by recursion depth, lazy allocation, and cheap lexical checks before float conversion. Preserve long-expression handling, recursion, temporary/local symbols, numeric syntax, and relocation behavior. These are hypotheses; no speedup has been established yet.
 
-2. **Reduce repeated full-line macro-token scans.**
-   [ReplaceLineUnchecked and ExpandLine](../asmsub.c) scan a string for each token, performing a comparison at each position and shifting replacement text. Consider a first-byte search fast path, then a single-pass decoder for the two-byte encoded macro tokens. Preserve the current replacement order and behavior when replacement text contains other tokens. This is especially relevant to Sonic 1 and Sonic 2.
+2. **Reduce repeated full-line macro-token scans.** [ReplaceLineUnchecked and ExpandLine](../asmsub.c) scan a string for each token, performing a comparison at each position and shifting replacement text. Consider a first-byte search fast path, then a single-pass decoder for the two-byte encoded macro tokens. Preserve the current replacement order and behavior when replacement text contains other tokens. This is especially relevant to Sonic 1 and Sonic 2.
 
-3. **Reduce quote-aware delimiter scanning.**
-   [QuotPosCore and SearchMultString](../asmsub.c) repeatedly check strings while tracking quotes and brackets. A fast filter for possible delimiter-leading bytes could skip expensive checks. Preserve escaped quotes, nesting, and architecture-specific comment rules.
+3. **Reduce quote-aware delimiter scanning.** [QuotPosCore and SearchMultString](../asmsub.c) repeatedly check strings while tracking quotes and brackets. A fast filter for possible delimiter-leading bytes could skip expensive checks. Preserve escaped quotes, nesting, and architecture-specific comment rules.
 
-4. **Measure lookup and normalization separately.**
-   `SearchTree`, `FindNode_FNode`, `as_strcasecmp`, string copies, and trimming also appear frequently. Symbol lookup in [asmpars.c](../asmpars.c) already uses an open-addressed hash table; `SearchTree` covers other structures such as macros. Investigate comparison/probe and repeated normalization costs before choosing a data-structure change.
+4. **Measure lookup and normalization separately.** `SearchTree`, `FindNode_FNode`, `as_strcasecmp`, string copies, and trimming also appear frequently. Symbol lookup in [asmpars.c](../asmpars.c) already uses an open-addressed hash table; `SearchTree` covers other structures such as macros. Investigate comparison/probe and repeated normalization costs before choosing a data-structure change.
 
 Treat gprof as a guide to experiments. Windows spends about 41–45% of collected self-time in `_mcount_private` and `__fentry__`; Linux reports a substantial `_init` bucket whose attribution should not be interpreted as application startup work. Inlining and uninstrumented library code also limit attribution. The [GNU gprof manual](https://sourceware.org/binutils/docs/gprof.html) describes the profiling model and limitations. Ubuntu did not have perf or Valgrind installed; no packages were installed. `ASL_PROFILE=SAMPLE` prepares symbolized builds for later independent sampling. MSVC sampling flags were added but not exercised in this run.
 
 ## Validation and saved artifacts
 
-All **202 existing CTest tests passed on Windows and Linux**. All three disassemblies assemble successfully; output hashes are stable across repetitions and identical between baseline and gprof builds on each platform. Parsing the `.p` files confirms that Windows/Linux code records are byte-identical; only the creator footer differs (`AMD64-Windows` versus `x86_64-Linux`). This is not
-a comparison of fully compressed ROMs to retail ROM hashes.
+All **202 existing CTest tests passed on Windows and Linux**. All three disassemblies assemble successfully; output hashes are stable across repetitions and identical between baseline and gprof builds on each platform. Parsing the `.p` files confirms that Windows/Linux code records are byte-identical; only the creator footer differs (`AMD64-Windows` versus `x86_64-Linux`). This is not a comparison of fully compressed ROMs to retail ROM hashes.
 
 Artifacts are under the ignored `build-benchmark-results/` directory:
 

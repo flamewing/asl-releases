@@ -185,29 +185,11 @@ The change is retained: ScalerMacros-v2 improves by 11.73% on Windows and 14.26%
 
 ### SHIFT argument accounting — fixed 5 October 2026
 
-The negative count was reachable through ordinary variadic calls. `ParCnt`
-started at the formal parameter count, whereas the initial `ARGCOUNT` string
-used the supplied count. After the first `SHIFT`, the string was rebuilt from
-`ParCnt`, so a one-formal/six-argument call reported zero instead of five.
-Subsequent shifts could make the count negative and stop expanding a formal
-name even while excess arguments remained.
+The negative count was reachable through ordinary variadic calls. `ParCnt` started at the formal parameter count, whereas the initial `ARGCOUNT` string used the supplied count. After the first `SHIFT`, the string was rebuilt from `ParCnt`, so a one-formal/six-argument call reported zero instead of five. Subsequent shifts could make the count negative and stop expanding a formal name even while excess arguments remained.
 
-The input tag now stores the supplied argument count separately. The
-replacement-list count includes excess positional arguments and decreases
-with each removal; the supplied count decreases independently and saturates
-at zero. Cached ordinary replacements are limited to declared formal slots,
-so excess arguments do not enlarge the table unnecessarily. `ALLARGS` now
-preserves leading empty arguments when rebuilding the remaining list.
-Initial `ARGCOUNT` behavior for defaults and named calls is retained.
-The manual now reflects that behavior instead of claiming defaults increase
-the initial count. `t_shiftargs` covers excess and zero-formal calls, default
-and named arguments, empty-list shifts, nested-loop shifts, and recursive
-forwarding, including empty argument positions. The old executable fails the ordinary excess-argument cases;
-the formerly negative-count case in `t_singlepass` now expects 2, 1, 0.
+The input tag now stores the supplied argument count separately. The replacement-list count includes excess positional arguments and decreases with each removal; the supplied count decreases independently and saturates at zero. Cached ordinary replacements are limited to declared formal slots, so excess arguments do not enlarge the table unnecessarily. `ALLARGS` now preserves leading empty arguments when rebuilding the remaining list. Initial `ARGCOUNT` behavior for defaults and named calls is retained. The manual now reflects that behavior instead of claiming defaults increase the initial count. `t_shiftargs` covers excess and zero-formal calls, default and named arguments, empty-list shifts, nested-loop shifts, and recursive forwarding, including empty argument positions. The old executable fails the ordinary excess-argument cases; the formerly negative-count case in `t_singlepass` now expects 2, 1, 0.
 
-All 206 tests pass on Windows and WSL2 Ubuntu. The three public disassemblies
-and four additional local workloads retain their previous full object hashes
-on each OS, and their code records still match across platforms.
+All 206 tests pass on Windows and WSL2 Ubuntu. The three public disassemblies and four additional local workloads retain their previous full object hashes on each OS, and their code records still match across platforms.
 
 ### Single-pass macro and IRP/IRPN substitution — implemented 5 October 2026
 
@@ -284,55 +266,19 @@ Use separate pristine Windows/native build directories outside the source tree. 
 
 ### Madness 4 and lazy-cache results — 6 October 2026
 
-The [pinned new workload and complete lazy-cache report](MADNESS4_LAZY_HASH.md)
-compares pre-optimization `0730cdf` against accepted `a93a2f4`. Madness 4
-release/debug assembly, including listings, improves 29.77%/29.10% on Windows
-and 43.20%/41.91% on native WSL2 Linux. Five alternating measured pairs per
-variant follow a warmup; all original/accepted objects match on each OS and
-both variants' code records match across OSes. ROM compression and
-post-processing are excluded. Fresh explicit-`-pg` profiles verify the large
-reductions in scratch allocations and repeated macro replacement calls.
+The [pinned new workload and complete lazy-cache report](MADNESS4_LAZY_HASH.md) compares pre-optimization `0730cdf` against accepted `a93a2f4`. Madness 4 release/debug assembly, including listings, improves 29.77%/29.10% on Windows and 43.20%/41.91% on native WSL2 Linux. Five alternating measured pairs per variant follow a warmup; all original/accepted objects match on each OS and both variants' code records match across OSes. ROM compression and post-processing are excluded. Fresh explicit-`-pg` profiles verify the large reductions in scratch allocations and repeated macro replacement calls.
 
-Both independent lazy hashing implementations pass all 210 tests on each OS,
-independent-byte scope/prefix fixtures, exact hash differential checks at both
-widths, and generic prehashed lookup collision/deletion/resize checks with
-native sanitizers. Neither implementation is retained. Prefix-cache screening
-and focused nine-pair repeats remain mixed, with debug slower. Scope-name
-reuse gets a full fresh nine-pair confirmation: the Sonic & Knuckles screening
-gain reverses, Windows v2 slows with 1/9 faster pairs, and native v2 is slower
-in both batches. Small possible workload-specific Linux gains do not establish
-a useful overall tradeoff. The earlier eager scope trial's unexplained
-macro-depth failure remains unresolved; no new scope cache is committed.
+Both independent lazy hashing implementations pass all 210 tests on each OS, independent-byte scope/prefix fixtures, exact hash differential checks at both widths, and generic prehashed lookup collision/deletion/resize checks with native sanitizers. Neither implementation is retained. Prefix-cache screening and focused nine-pair repeats remain mixed, with debug slower. Scope-name reuse gets a full fresh nine-pair confirmation: the Sonic & Knuckles screening gain reverses, Windows v2 slows with 1/9 faster pairs, and native v2 is slower in both batches. Small possible workload-specific Linux gains do not establish a useful overall tradeoff. The earlier eager scope trial's unexplained macro-depth failure remains unresolved; no new scope cache is committed.
 
-Native I/O pressure distorts some wall measurements without swap traffic or
-memory exhaustion. Later batches reuse prepared workdirs and record child CPU
-time: an apparent 6.04% native Madness 4 release wall gain for scope reuse has
--0.27% CPU reduction and overlapping ranges. Keep these limits with the results,
-rather than attributing the wall difference to cached hashing. Accepted source
-and binaries are restored; experimental artifacts and private inputs remain
-outside the checkout. The new public manifest records both listing variants.
+Native I/O pressure distorts some wall measurements without swap traffic or memory exhaustion. Later batches reuse prepared workdirs and record child CPU time: an apparent 6.04% native Madness 4 release wall gain for scope reuse has -0.27% CPU reduction and overlapping ranges. Keep these limits with the results, rather than attributing the wall difference to cached hashing. Accepted source and binaries are restored; experimental artifacts and private inputs remain outside the checkout. The new public manifest records both listing variants.
 
 ### Fresh aggregate and compiler profiles — 6 October 2026
 
-See [the aggregate report](HEAD_COMPILER_PROFILES.md). Freeze pre-optimization
-`0730cdf` and current HEAD `2369d51`; use pristine Windows GCC/MSVC and native
-Linux GCC builds, all eleven workload variants and nine interleaved measured
-rounds after warmups. The geometric-mean time reductions are 42.02%, 41.30%
-and 48.06%, respectively. Original/current suites pass 202/210 tests for all
-three toolchains, and all variants preserve assembled code across revisions,
-compilers and OSes. Anonymous-case details remain external.
+See [the aggregate report](HEAD_COMPILER_PROFILES.md). Freeze pre-optimization `0730cdf` and current HEAD `2369d51`; use pristine Windows GCC/MSVC and native Linux GCC builds, all eleven workload variants and nine interleaved measured rounds after warmups. The geometric-mean time reductions are 42.02%, 41.30% and 48.06%, respectively. Original/current suites pass 202/210 tests for all three toolchains, and all variants preserve assembled code across revisions, compilers and OSes. Anonymous-case details remain external.
 
-Use identical Windows CPU sampling for GCC and MSVC, supplementing separate
-fresh GCC instrumented collections on both OSes. Macro substitution, delimiter
-matching and scratch allocation have much lower costs after the accepted changes.
-Compiler/runtime differences concentrate around formatting and synchronization;
-MSVC wins the public listing-heavy cases while GCC wins the seven established
-cases. Do not choose a compiler from the roughly 1% all-case aggregate difference.
+Use identical Windows CPU sampling for GCC and MSVC, supplementing separate fresh GCC instrumented collections on both OSes. Macro substitution, delimiter matching and scratch allocation have much lower costs after the accepted changes. Compiler/runtime differences concentrate around formatting and synchronization; MSVC wins the public listing-heavy cases while GCC wins the seven established cases. Do not choose a compiler from the roughly 1% all-case aggregate difference.
 
-Next experiments should inspect listing/output buffering and runtime locking,
-whitespace classification in macro-heavy input, then expression-evaluation and
-symbol/string work. Preserve character/codepage semantics and output ordering.
-These are profile-guided suggestions, not implemented or accepted changes.
+Next experiments should inspect listing/output buffering and runtime locking, whitespace classification in macro-heavy input, then expression-evaluation and symbol/string work. Preserve character/codepage semantics and output ordering. These are profile-guided suggestions, not implemented or accepted changes.
 
 ### Listing and string-processing trials — 6 October 2026
 

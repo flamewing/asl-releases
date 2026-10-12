@@ -454,13 +454,7 @@ The cross reference list lists for every symbol in which files and lines it has 
 
 ### Unknown values in listings
 
-Listing code is shown in units appropriate to the target and segment: bytes,
-16-bit or 32-bit words, or shorter instruction words such as the PDP-8's
-12-bit words. DSP56K listings use 24-bit words. On supported targets, fields whose values are unknown in the
-first pass are shown as question marks. `-no-list-unknown-values` disables
-this marking; `-list-unknown-values` enables it. Support initially covers
-65xx, 8080/8085, Z80/eZ80/Z180/Z280/Z380, MCS-48/51/251,
-8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/6809/68HC11/68HC12, 68xxx/ColdFire, PowerPC, and DSP56000/56300.
+Listing code is shown in units appropriate to the target and segment: bytes, 16-bit or 32-bit words, or shorter instruction words such as the PDP-8's 12-bit words. DSP56K listings use 24-bit words. On supported targets, fields whose values are unknown in the first pass are shown as question marks. `-no-list-unknown-values` disables this marking; `-list-unknown-values` enables it. Support initially covers 65xx, 8080/8085, Z80/eZ80/Z180/Z280/Z380, MCS-48/51/251, 8086/V20–V55, AVR, TMS370, MCS-96, and 6800/6805/68HC08/6809/68HC11/68HC12, 68xxx/ColdFire, PowerPC, and DSP56000/56300.
 
 ## Symbol Conventions
 
@@ -520,12 +514,7 @@ The individual segment types have the assigned numbers listed in the following t
 
 ### Symbol existence across passes
 
-`SYMEXIST(symbol)` and `IFSYMEXIST symbol` query whether a symbol is in the
-symbol table. A forward declaration is absent in the first pass and present
-in subsequent passes. `IFNSYMEXIST` reverses this condition. In contrast,
-`DEFINED(expression)` and `IFDEF expression` check definitions encountered
-up to the current point in the source, including every symbol in an expression.
-The fork also recognizes macro and function names in `IFDEF` and `IFNDEF`.
+`SYMEXIST(symbol)` and `IFSYMEXIST symbol` query whether a symbol is in the symbol table. A forward declaration is absent in the first pass and present in subsequent passes. `IFNSYMEXIST` reverses this condition. In contrast, `DEFINED(expression)` and `IFDEF expression` check definitions encountered up to the current point in the source, including every symbol in an expression. The fork also recognizes macro and function names in `IFDEF` and `IFNDEF`.
 
 ##### **Table:** return values of the `SYMTYPE` function
 
@@ -986,8 +975,7 @@ Common microcontroller families are like rabbits: They become more at a higher s
 
 The result are processor aliases: the alias command line option allows to define a new processor type, whose instruction set is equal to another processor built into AS. After switching to this processor via the `CPU` instruction, AS behaves exactly as if the original processor had been used, with a single difference: the variables `MOMCPU` resp. `MOMCPUNAME` are set to the alias name, which allows to use the new name for differentiation, e.g. in include files.
 
-There were two reasons to realize the definition of aliases by the command line and not by pseudo instructions: first, it would anyway be difficult to put the alias definitions together with register
-definitions into a single include file, because a program that wants to use such a file would have to include it before and after the CPU instruction - an imagination that lies somewhere between inelegant and impossible. Second, the definition in the command line allows to put the definitions in a key file that is executed automatically at startup via the `ASCMD` variable, without a need for the program to take any further care about this.
+There were two reasons to realize the definition of aliases by the command line and not by pseudo instructions: first, it would anyway be difficult to put the alias definitions together with register definitions into a single include file, because a program that wants to use such a file would have to include it before and after the CPU instruction - an imagination that lies somewhere between inelegant and impossible. Second, the definition in the command line allows to put the definitions in a key file that is executed automatically at startup via the `ASCMD` variable, without a need for the program to take any further care about this.
 
 <!-- markdownlint-enable MD036 -->
 <!-- markdownlint-enable MD030 -->
@@ -1043,26 +1031,17 @@ Binary operand evaluation order is unspecified, except for logical AND and OR: t
 
 ### File size queries
 
-`FSIZE("filename")` returns a file's size in bytes. It searches the current
-working directory and the directory containing the source being assembled.
-The include search path is not used.
+`FSIZE("filename")` returns a file's size in bytes. It searches the current working directory and the directory containing the source being assembled. The include search path is not used.
 
 ### Symbol use queries
 
-`SYMUSED(symbol)` reports whether a symbol has been referenced up to this point.
-`IFUSED` and `IFNUSED` query the same information. Forward references count when
-both reference and definition are global, when they are in the same macro
-expansion, or when a reference in a section and a definition in that section,
-a parent section, or global scope are both outside macro expansions.
+`SYMUSED(symbol)` reports whether a symbol has been referenced up to this point. `IFUSED` and `IFNUSED` query the same information. Forward references count when both reference and definition are global, when they are in the same macro expansion, or when a reference in a section and a definition in that section, a parent section, or global scope are both outside macro expansions.
 
-For uses outside these cases, a `FORWARD` declaration creates a placeholder
-that can store the usage flag before the symbol's value is defined.
+For uses outside these cases, a `FORWARD` declaration creates a placeholder that can store the usage flag before the symbol's value is defined.
 
 ### Chained forward references
 
-`-maxsympass n` sets the last pass in which unresolved forward references are
-allowed; the default is 1. A larger value may be needed for chained references.
-`-maxinclevel n` sets the include nesting limit, whose default is 200.
+`-maxsympass n` sets the last pass in which unresolved forward references are allowed; the default is 1. A larger value may be needed for chained references. `-maxinclevel n` sets the include nesting limit, whose default is 200.
 
 The CMake option `AS_USE_INT128` enables 128-bit expressions when the compiler supports them. It defaults to `OFF` to preserve existing 64-bit expression semantics, including comparisons between signed phase addresses and unsigned hexadecimal constants. Sources can query `INTWIDTH` to adapt to either mode. Listing addresses retain their 64-bit representation.
 

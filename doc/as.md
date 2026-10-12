@@ -15,15 +15,7 @@ Alfred Arnold, Stefan Hilse, Stephan Kanthak, Oliver Sellke, Vittorio De Tomasi,
 
 Edition September 2026 Note: This is a modified version by flamewing.
 
-_IBM, PPC403Gx, OS/2, and PowerPC_ are registered trademarks of IBM Corporation.
-_Intel, MCS-48, MCS-51, MCS-251, MCS-96, MCS-196 and MCS-296_ are registered trademarks of Intel Corp.
-_Motorola and ColdFire_ are registered trademarks of Motorola Inc.
-_MagniV_ is a registered trademark of Freescale Semiconductor.
-_PicoBlaze_ is a registered trademark of Xilinx Inc.
-_UNIX_ is a registered trademark of the The Open Group.
-_Linux_ is a registered trademark of Linus Torvalds.
-_Microsoft, Windows, and MS-DOS_ are registered trademarks of Microsoft Corporation.
-All other trademarks not explicitly mentioned in this section and used in this manual are properties of their respective owners.
+_IBM, PPC403Gx, OS/2, and PowerPC_ are registered trademarks of IBM Corporation. _Intel, MCS-48, MCS-51, MCS-251, MCS-96, MCS-196 and MCS-296_ are registered trademarks of Intel Corp. _Motorola and ColdFire_ are registered trademarks of Motorola Inc. _MagniV_ is a registered trademark of Freescale Semiconductor. _PicoBlaze_ is a registered trademark of Xilinx Inc. _UNIX_ is a registered trademark of the The Open Group. _Linux_ is a registered trademark of Linus Torvalds. _Microsoft, Windows, and MS-DOS_ are registered trademarks of Microsoft Corporation. All other trademarks not explicitly mentioned in this section and used in this manual are properties of their respective owners.
 
 Intended reading order is as follows:
 
