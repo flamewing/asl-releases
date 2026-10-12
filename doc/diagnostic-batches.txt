@@ -1985,3 +1985,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     unknown/questionable checks and retain primary expression errors. Cover
     known mapped/unmapped, rejected NOTHING, short, forward-mapped and base-page cases.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+177. 65xx address brackets and short stack-suffix read.
+    Validate quote-aware delimiters before address decoding, locating actual/
+    expected closing characters or unmatched openers. Malformed brackets now
+    use 1300 rather than generic mode/expression errors. Guard the stack-relative
+    suffix check: (1),Y previously computes a pointer before the operand start.
+    Nine CPUs cover delimiter detail/no emission/quoted literals; accepted
+    short indirect and CE02 stack-relative forms retain captured bytes, while
+    65C19 retains its primary unsupported-mode error. Two historical malformed
+    mode sites reviewed; other mode sites remain pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

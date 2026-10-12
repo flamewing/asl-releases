@@ -143,3 +143,22 @@ check_diagnostic(huc-primary-error HUC6280 " lda missing" 1010 "symbol undefined
 check_bytes(huc-forced-mapped HUC6280 " assume mpr0:8\n lda <$10080" "a580")
 check_bytes(ce-forward-base 65CE02
     " assume b:$12\n lda <target+1000\ntarget equ $1212-1000" "a512")
+
+# Bracket diagnostics locate the current/expected character before decoding.
+foreach(cpu IN ITEMS 6502 65SC02 65C02 65CE02 W65C02S 65C19 MELPS740 HUC6280 6502UNDOC)
+    check_diagnostic(unclosed-${cpu} ${cpu} " lda (12,x" 1300
+        "unclosed bracket '('; expected ')' before end of input" 3 6)
+    check_diagnostic(mismatch-${cpu} ${cpu} " lda (12,x]" 1300
+        "mismatched closing bracket ']'; expected ')'" 3 11)
+    check_diagnostic(unexpected-${cpu} ${cpu} " lda 12,x)" 1300
+        "unexpected closing bracket ')'; no closing bracket expected" 3 10)
+    if(NOT cpu STREQUAL "65C19")
+        check_bytes(short-indirect-${cpu} ${cpu} " lda (1),y" "b101")
+    endif()
+    check_bytes(quoted-brackets-${cpu} ${cpu} " lda #'('\n lda #']'" "a928a95d")
+    check_bytes(bracket-noemit-${cpu} ${cpu}
+        " expect 1300,1300\n lda (12,x\n lda (12,x]\n endexpect\n db $12" "12")
+endforeach()
+check_bytes(stack-indirect-valid 65CE02 " lda (1,sp),y" "e201")
+
+check_diagnostic(short-indirect-unsupported 65C19 " lda (1),y" 1500 "instruction not supported on 65C19" 3 "")

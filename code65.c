@@ -17,6 +17,7 @@
 
 #include "asmcode.h"
 #include "asmdef.h"
+#include "asmerr.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -243,6 +244,12 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
     pResult->ErgMode      = -1;
     pResult->symbol_flags = eSymbolFlag_None;
 
+    for (int index = 1; index <= ArgCnt; index++) {
+        if (!CheckBrackets(&ArgStr[index], "()[]{}", True)) {
+            return;
+        }
+    }
+
     if (ArgCnt == 0) {
         pResult->AdrCnt  = 0;
         pResult->ErgMode = ModNone;
@@ -394,6 +401,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
         /* 7. stack-relative (65CE02-specific) ? */
 
         if (Indir1 && !as_strcasecmp(ArgStr[2].str.p_str, "Y")
+            && (strlen(ArgStr[1].str.p_str) >= 5)
             && (!as_strcasecmp(
                     ArgStr[1].str.p_str + strlen(ArgStr[1].str.p_str) - 4, ",SP)"))) {
             if (*ArgStr[1].str.p_str != '(') {
