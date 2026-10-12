@@ -2275,7 +2275,7 @@
     {
       "file": "codemcore.c",
       "issue": "DecodeAdr sums Int32 terms in LongInt; large terms can overflow aggregate before final range check.",
-      "status": "pending aggregate overflow reproducer and fix"
+      "status": "fixed in tranche 244; reproduce positive aggregate 4294967296 silently emitted as zero; sum validated terms in LargeInt expression width before scaling/range checks. Positive/negative overflow, unsigned wrap, large-term cancellation, original bytes and no rejected emission checked."
     }
   ]
 }

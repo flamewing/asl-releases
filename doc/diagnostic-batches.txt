@@ -2630,3 +2630,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     encoding bounds; original/forward encodings, byte/halfword/word endpoints,
     primary errors and rejected emission checked. All 18 MCore sites reviewed.
     Validation: German mode/alignment/immediate details checked; all 421 CTest cases pass with embedded/external catalogs.
+
+244. MCore aggregate displacement overflow.
+    Confirm separately valid Int32 terms sum to 4294967296 but wrap to zero in
+    LongInt and silently encode zero displacement. Accumulate in LargeInt so the
+    full sum reaches existing scaling/range checks. Positive/negative overflow,
+    unsigned wrap, large-term cancellation and rejected emission checked; final
+    bounds and original valid encoding remain unchanged.
+    Validation: all 421 CTest cases pass with embedded/external catalogs.

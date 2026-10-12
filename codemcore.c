@@ -289,7 +289,9 @@ static void report_address_mode(tStrComp const* arg, int message) {
 
 static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     Word         Base    = 0xff, Tmp;
-    LongInt      DispAcc = 0, DMask, DMax;
+    /* Keep the expression width when adding separately validated Int32 terms. */
+    LargeInt     DispAcc = 0;
+    LongInt      DMask, DMax;
     Boolean      OK, FirstFlag = False;
     tSymbolFlags Flags;
     char*        Pos;

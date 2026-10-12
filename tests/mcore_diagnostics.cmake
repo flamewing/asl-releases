@@ -157,3 +157,16 @@ check_bytes(immediate-endpoints mcore
  " asri r1,1\n asri r1,31\n addi r1,1\n addi r1,32" "3a113bf1200121f1")
 check_bytes(remaining-errors-noemit mcore
  " expect 1350,1350,1130,1315,1320,1325\n ldw r4,(r3,r2)\n ldw r4,(12)\n ld.q r4,(r3)\n asri r1,0\n addi r1,33\n ldw r4,(r3,6)\n endexpect\n dc.b 18" "12")
+
+check_diagnostic(aggregate-positive-overflow mcore
+ " ldw r4,(r3,2147483647,2147483647,2)" 1320
+ "effective address displacement 4294967296 outside [0,60]" 3 9)
+check_diagnostic(aggregate-negative-overflow mcore
+ " ldw r4,(r3,-2147483648,-2147483648)" 1315
+ "effective address displacement -4294967296 outside [0,60]" 3 9)
+check_diagnostic(aggregate-unsigned-wrap mcore " ldw r4,(r3,4294967295,1)" 1320
+ "effective address displacement 4294967296 outside [0,60]" 3 9)
+check_bytes(aggregate-cancellation mcore
+ " ldw r4,(r3,2147483647,2147483647,-2147483647,-2147483647,12)" "8433")
+check_bytes(aggregate-overflow-noemit mcore
+ " expect 1320,1315\n ldw r4,(r3,2147483647,2147483647,2)\n ldw r4,(r3,-2147483648,-2147483648)\n endexpect\n dc.b 18" "12")
