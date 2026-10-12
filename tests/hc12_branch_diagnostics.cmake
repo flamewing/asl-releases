@@ -196,3 +196,28 @@ foreach(cpu IN ITEMS 68HC12 68HC12X)
         endforeach()
     endforeach()
 endforeach()
+
+# Address forms, base registers and bracket failures identify the exact case.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    check_diagnostic(base-register-${cpu} ${cpu} " ldaa 1,a" 1445 "X, Y, SP or PC" 3 9)
+    check_diagnostic(empty-base-${cpu} ${cpu} " ldaa 1," 1445 "X, Y, SP or PC" 3 9)
+    check_diagnostic(auto-register-${cpu} ${cpu} " ldaa 1,+a" 1445 "X, Y or SP (auto-update excludes PC)" 3 9)
+    check_diagnostic(auto-pc-${cpu} ${cpu} " ldaa 1,pc+" 1445 "auto-update excludes PC" 3 9)
+    check_diagnostic(indirect-base-${cpu} ${cpu} " ldaa [12,a]" 1445 "X, Y, SP or PC" 3 11)
+    check_diagnostic(indirect-expression-${cpu} ${cpu} " ldaa [missing,x]" 1010 "symbol undefined" 3 8)
+    check_diagnostic(indirect-form-${cpu} ${cpu} " ldaa [12]" 1350
+        "[D,X/Y/SP/PC] or [displacement,X/Y/SP/PC]" 3 7)
+    check_diagnostic(store-immediate-${cpu} ${cpu} " staa #1" 1350 "extended address" 3 7)
+    check_diagnostic(unclosed-address-${cpu} ${cpu} " ldaa [12,x" 1300
+        "unclosed bracket '['; expected ']' before end of input" 3 7)
+    check_diagnostic(mismatch-address-${cpu} ${cpu} " ldaa [12,x)" 1300
+        "mismatched closing bracket ')'; expected ']'" 3 12)
+    check_bytes(original-address-${cpu} ${cpu}
+        " ldaa [d,x]\n ldaa [12,y]\n ldaa 1,+x\n ldaa #1\n ldaa 1,pc" "a6e7a6eb000ca6208601a6d5")
+    check_bytes(address-noemit-${cpu} ${cpu}
+        " expect 1445,1445,1350,1300\n ldaa 1,\n ldaa [12,a]\n staa #1\n ldaa [12,x)\n endexpect\n db $12" "12")
+endforeach()
+
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    check_bytes(quoted-brackets-${cpu} ${cpu} " ldaa ['[',x]\n ldaa [']',x]" "a6e3005ba6e3005d")
+endforeach()

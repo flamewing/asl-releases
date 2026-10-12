@@ -15,6 +15,7 @@
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
+#include "asmerr.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -350,6 +351,33 @@ static void reset_adr_vals(adr_vals_t* p_adr_vals) {
     p_adr_vals->symflags = eSymbolFlag_None;
 }
 
+static void report_operand_choices(tErrorNum error, tStrComp const* arg, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_address_forms(tStrComp const* arg, Word mask) {
+    char forms[750] = "", detail[850];
+    if (mask & MModImm) strmaxcat(forms, "#value; ", sizeof(forms));
+    if (mask & MModDir) {
+        strmaxcat(forms, MomCPU >= CPU6812X ? "address in ASSUME DIRECT page; "
+                : "direct address in [0,255]; ", sizeof(forms));
+    }
+    if (mask & MModExt) strmaxcat(forms, "extended address; ", sizeof(forms));
+    if (mask & MModIdx) {
+        strmaxcat(forms, "5-bit offset,X/Y/SP/PC; A/B/D,X/Y/SP/PC; count,+X/-X/X+/X- (or Y/SP); ", sizeof(forms));
+    }
+    if (mask & MModIdx1) strmaxcat(forms, "9-bit offset,X/Y/SP/PC; ", sizeof(forms));
+    if (mask & MModIdx2) strmaxcat(forms, "word offset,X/Y/SP/PC; ", sizeof(forms));
+    if (mask & MModDIdx) strmaxcat(forms, "[D,X/Y/SP/PC]; ", sizeof(forms));
+    if (mask & MModIIdx2) strmaxcat(forms, "[offset,X/Y/SP/PC]; ", sizeof(forms));
+    if (mask & MModExtPg) strmaxcat(forms, "extended paged address; ", sizeof(forms));
+    if (*forms) forms[strlen(forms) - 2] = '\0';
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static adr_mode_t DecodeAdr(
         adr_vals_t* p_adr_vals, int Start, int Stop, tSymbolSize op_size, ShortInt ex_pos,
         Word Mask) {
@@ -362,6 +390,11 @@ static adr_mode_t DecodeAdr(
     adr_mode_t adr_mode = ModNone;
 
     reset_adr_vals(p_adr_vals);
+    for (int index = Start; index <= Stop; index++) {
+        if (!CheckBrackets(&ArgStr[index], "()[]{}", True)) {
+            return ModNone;
+        }
+    }
 
     /* one argument? */
 
@@ -401,32 +434,34 @@ static adr_mode_t DecodeAdr(
 
         if ((*ArgStr[Start].str.p_str == '[')
             && (ArgStr[Start].str.p_str[strlen(ArgStr[Start].str.p_str) - 1] == ']')) {
-            strmov(ArgStr[Start].str.p_str, ArgStr[Start].str.p_str + 1);
-            ArgStr[Start].str.p_str[strlen(ArgStr[Start].str.p_str) - 1] = '\0';
-            p = QuotPos(ArgStr[Start].str.p_str, ',');
-            if (p) {
-                *p = '\0';
-            }
+            tStrComp inner, displacement, base;
+            StrCompRefRight(&inner, &ArgStr[Start], 1);
+            StrCompShorten(&inner, 1);
+            p = QuotPos(inner.str.p_str, ',');
             if (!p) {
-                WrError(ErrNum_InvAddrMode);
-            } else if (!DecodeBaseReg(p + 1, p_adr_vals->values)) {
-                WrXError(ErrNum_InvReg, p + 1);
-            } else if (!as_strcasecmp(ArgStr[Start].str.p_str, "D")) {
-                p_adr_vals->values[0] = (p_adr_vals->values[0] << 3) | 0xe7;
-                p_adr_vals->count     = 1;
-                adr_mode              = ModDIdx;
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[Start],
+                        "[D,X/Y/SP/PC] or [displacement,X/Y/SP/PC]");
             } else {
-                AdrWord = EvalStrIntExpressionWithFlags(
-                        &ArgStr[Start], Int16, &OK, &p_adr_vals->symflags);
-                if (OK) {
-                    if (p_adr_vals->values[0] == eBaseRegPC) {
-                        AdrWord -= EProgCounter() + ex_pos + 3;
+                StrCompSplitRef(&displacement, &base, &inner, p);
+                if (!DecodeBaseReg(base.str.p_str, p_adr_vals->values)) {
+                    report_operand_choices(ErrNum_InvReg, &base, "X, Y, SP or PC");
+                } else if (!as_strcasecmp(displacement.str.p_str, "D")) {
+                    p_adr_vals->values[0] = (p_adr_vals->values[0] << 3) | 0xe7;
+                    p_adr_vals->count = 1;
+                    adr_mode = ModDIdx;
+                } else {
+                    AdrWord = EvalStrIntExpressionWithFlags(
+                            &displacement, Int16, &OK, &p_adr_vals->symflags);
+                    if (OK) {
+                        if (p_adr_vals->values[0] == eBaseRegPC) {
+                            AdrWord -= EProgCounter() + ex_pos + 3;
+                        }
+                        p_adr_vals->values[0] = (p_adr_vals->values[0] << 3) | 0xe3;
+                        p_adr_vals->values[1] = AdrWord >> 8;
+                        p_adr_vals->values[2] = AdrWord & 0xff;
+                        p_adr_vals->count = 3;
+                        adr_mode = ModIIdx2;
                     }
-                    p_adr_vals->values[0] = (p_adr_vals->values[0] << 3) | 0xe3;
-                    p_adr_vals->values[1] = AdrWord >> 8;
-                    p_adr_vals->values[2] = AdrWord & 0xff;
-                    p_adr_vals->count     = 3;
-                    adr_mode              = ModIIdx2;
                 }
             }
             goto chk;
@@ -479,9 +514,9 @@ static adr_mode_t DecodeAdr(
             AutoFlag = True;
             PostFlag = False;
             strmov(ArgStr[Stop].str.p_str, ArgStr[Stop].str.p_str + 1);
-        } else if (
-                (ArgStr[Stop].str.p_str[l - 1] == '-')
-                || (ArgStr[Stop].str.p_str[l - 1] == '+')) {
+        } else if ((l > 0) &&
+                ((ArgStr[Stop].str.p_str[l - 1] == '-')
+                || (ArgStr[Stop].str.p_str[l - 1] == '+'))) {
             DecFlag                       = (ArgStr[Stop].str.p_str[l - 1] == '-');
             AutoFlag                      = True;
             PostFlag                      = True;
@@ -492,9 +527,9 @@ static adr_mode_t DecodeAdr(
 
         if (AutoFlag) {
             if (!DecodeBaseReg(ArgStr[Stop].str.p_str, p_adr_vals->values)) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+                report_operand_choices(ErrNum_InvReg, &ArgStr[Stop], "X, Y or SP (auto-update excludes PC)");
             } else if (p_adr_vals->values[0] == eBaseRegPC) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+                report_operand_choices(ErrNum_InvReg, &ArgStr[Stop], "X, Y or SP (auto-update excludes PC)");
             } else {
                 AdrWord = EvalStrIntExpressionWithFlags(
                         &ArgStr[Start], SInt8, &OK, &p_adr_vals->symflags);
@@ -536,7 +571,7 @@ static adr_mode_t DecodeAdr(
 
         else {
             if (!DecodeBaseReg(ArgStr[Stop].str.p_str, p_adr_vals->values)) {
-                WrStrErrorPos(ErrNum_InvReg, &ArgStr[Stop]);
+                report_operand_choices(ErrNum_InvReg, &ArgStr[Stop], "X, Y, SP or PC");
             } else if (DecodeIdxReg(ArgStr[Start].str.p_str, p_adr_vals->values + 1)) {
                 p_adr_vals->values[0]
                         = (p_adr_vals->values[0] << 3) | p_adr_vals->values[1] | 0xe4;
@@ -600,14 +635,16 @@ static adr_mode_t DecodeAdr(
     }
 
     else {
-        WrError(ErrNum_InvAddrMode);
+        char detail[150];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddrArgCnt), 1, 2, Stop - Start + 1);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, Start <= ArgCnt ? &ArgStr[Start].Pos : &OpPart.Pos);
     }
 
 chk:
     if ((adr_mode != ModNone) && (((1 << adr_mode) & Mask) == 0)) {
         adr_mode = ModNone;
         reset_adr_vals(p_adr_vals);
-        WrError(ErrNum_InvAddrMode);
+        report_address_forms(&ArgStr[Start], Mask);
     }
     return adr_mode;
 }

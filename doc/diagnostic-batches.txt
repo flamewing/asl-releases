@@ -2053,3 +2053,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     and PC-relative address forms, with a following data byte proving no
     rejected instruction bytes remain. Accepted and forward vectors retained.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+184. HC12 memory forms, base registers and bracket diagnostics.
+    Identify instruction-mask forms, indirect displacement/base syntax and
+    address component counts. Base operands name X/Y/SP/PC; auto-update excludes
+    PC. Indirect parsing preserves component positions for register/expression
+    errors. Validate quote-aware bracket balance first and guard trailing
+    character access for empty index operands. Both CPUs verify accepted and
+    quoted-delimiter vectors, precise positions, primary errors and no emission.
+    All three historical mode sites and four register sites reviewed; remaining
+    loop/transfer/sign-extension registers and pairs remain pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
