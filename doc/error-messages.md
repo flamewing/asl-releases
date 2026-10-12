@@ -411,3 +411,6 @@ and signed-byte bounds under `-x`.
 
 TLCS-90 error 2050 rejects an empty direct or parenthesized address operand at
 its source location, including the missing source or destination of LD/LDW.
+
+TLCS-90 error 1925 reports the actual absolute address and permitted ordinary
+16-bit numeric domain [-32768,65535] under `-x`; validation precedes narrowing.

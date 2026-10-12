@@ -2308,7 +2308,7 @@
     {
       "file": "code90c141.c",
       "issue": "Absolute address path sums/evaluates Int32 into LongInt, wrapping 4294967295 into -1 and accepting -65536 as address zero, outside the ordinary Int16 domain.",
-      "status": "pending full-width absolute address validation against existing Int16 limits"
+      "status": "fixed in tranche 250; retain LargeInt evaluation value before 16-bit address validation using existing IntTypeDefs[Int16] domain [-32768,65535]. Located 1925 reports actual value/bounds. Negative bit-pattern endpoints and original bytes preserved; zero-only index helper also retains full width."
     }
   ]
 }

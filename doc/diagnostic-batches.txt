@@ -2685,3 +2685,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     source would otherwise become numeric zero. Handle () as empty indirect too,
     alongside parenthesized blanks. Located error 2050; no rejected emission.
     Validation: all 422 CTest cases pass with embedded/external catalogs.
+
+250. TLCS-90 absolute address validation before narrowing.
+    Confirm 4294967295 narrows to -1 and emits direct address 0xFFFF, while
+    -65536 emits absolute address zero. Keep evaluator LargeInt result through
+    address classification; validate against ordinary Int16 bounds [-32768,65535]
+    before byte extraction. Preserve accepted negative bit patterns and original
+    valid address bytes. Error 1925 reports full value/bounds at address; zero-only
+    displacement detail also retains full width. Endpoints/no emission checked.
+    Validation: all 422 CTest cases pass with embedded/external catalogs.

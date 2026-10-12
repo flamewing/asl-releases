@@ -143,3 +143,19 @@ check_diagnostic(empty-indirect 90c141 " ld a,()" 2050 "empty argument" 3 8)
 check_diagnostic(blank-indirect 90c141 " ld a,(   )" 2050 "empty argument" 3 11)
 check_bytes(empty-errors-noemit 90c141
  " expect 2050,2050,2050,2050\n ld ,hl\n ld hl,\n ldw ,1\n ld a,()\n endexpect\n db 18" "12")
+
+check_diagnostic(absolute-positive-overflow 90c141 " ld a,(4294967295)" 1925
+ "address 4294967295 outside [-32768,65535]" 3 7)
+check_diagnostic(absolute-negative-overflow 90c141 " ld a,(-65536)" 1925
+ "address -65536 outside [-32768,65535]" 3 7)
+check_diagnostic(absolute-underflow 90c141 " ld a,(-32769)" 1925
+ "address -32769 outside [-32768,65535]" 3 7)
+check_diagnostic(absolute-overflow 90c141 " ld a,(65536)" 1925
+ "address 65536 outside [-32768,65535]" 3 7)
+check_bytes(absolute-endpoints 90c141 " ld a,(-32768)\n ld a,(-1)\n ld a,(0)\n ld a,(65535)"
+ "e300802e27ffe300002e27ff")
+check_bytes(absolute-errors-noemit 90c141
+ " expect 1925,1925\n ld a,(4294967295)\n ld a,(-65536)\n endexpect\n db 18" "12")
+
+check_diagnostic(index-full-width 90c141 " ld a,(hl+a+4294967295)" 1350
+ "address form HL+A requires displacement 0; got 4294967295" 3 7)

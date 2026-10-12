@@ -159,7 +159,7 @@ static void report_address_forms(tStrComp const* arg, Word mask, tErrorNum error
     WrXErrorPos(error, detail, &arg->Pos);
 }
 
-static void report_zero_displacement(tStrComp const* arg, char const* form, LongInt displacement) {
+static void report_zero_displacement(tStrComp const* arg, char const* form, LargeInt displacement) {
     char detail[180];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgTLCS90ZeroDisplacement),
             form, (LargeInt)displacement);
@@ -231,7 +231,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
     is_indirect = IsIndirect(pArg->str.p_str) || !strcmp(pArg->str.p_str, "()");
     if (is_indirect || (Erl & MAssumeInd)) {
         tlcs90_eval_cb_data_t tlcs90_eval_cb_data;
-        LongInt               DispAcc;
+        LargeInt              DispAcc;
         tStrComp              Arg;
         tEvalResult           eval_result;
 
@@ -296,8 +296,11 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
             }
             break;
         case 0:
-            if (DispAcc > 0xffff) {
-                WrError(ErrNum_AdrOverflow);
+            if ((DispAcc < IntTypeDefs[Int16].Min) || (DispAcc > IntTypeDefs[Int16].Max)) {
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressRange),
+                        DispAcc, IntTypeDefs[Int16].Min, IntTypeDefs[Int16].Max);
+                WrXErrorPos(ErrNum_AdrOverflow, detail, &pArg->Pos);
             } else if ((Hi(DispAcc) == 0xff) && (Erl & MModDir)) {
                 AdrType    = ModDir;
                 AdrCnt     = 1;
