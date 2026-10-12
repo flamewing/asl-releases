@@ -2375,3 +2375,7 @@ Message ErrMsgPairDestinations
 Message ErrMsgPairNoDestination
  "Registerpaar %s,%s ist nicht erlaubt; %s hat kein g&uuml;ltiges Zielregister f&uuml;r diesen Befehl"
  "register pair %s,%s not permitted; %s has no valid destination register for this instruction"
+
+Message ErrMsgDirectPageUnavailable
+ "Adresse 0x%lllx kann keine direkte Adressierung verwenden; ASSUME %s=NOTHING"
+ "address 0x%lllx cannot use direct addressing; ASSUME %s=NOTHING"

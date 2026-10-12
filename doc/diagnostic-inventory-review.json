@@ -450,9 +450,11 @@
         "ErrNum_WrongArgCnt": 4
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
       ],
-      "status": "partially reviewed"
+      "status": "partially reviewed",
+      "review_notes": "Tranche 193 reviews the forced-byte PC-indexed overflow candidate: evaluated displacement, [-128,127] and PC base at the operand, preserving 1320. Adjacent forced-five/byte and direct-page errors now identify displacement/ranges or ASSUME DPR window/NOTHING. Defer provisional forced-index/page failures; confirmed forward PC/byte expressions previously rejected now accepted. Remaining address, capability, size and count sites pending; W-index evaluation failure emission under review."
     },
     "code6812.c": {
       "candidate_counts": {

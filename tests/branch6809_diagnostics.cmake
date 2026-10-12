@@ -90,3 +90,48 @@ check_bytes(wrap-long 6809 " org $fffc\n lbne 0" "10260000")
 check_bytes(forward-short 6809 " org $1000\n bne target\ntarget equ $1004" "2602")
 check_bytes(forward-long 6809 " org $1000\n lbne target\ntarget equ $1200" "102601fc")
 
+
+# Forced indexed ranges identify values and PC bases without rejecting provisional
+# forward expressions. Direct-page failures identify the selected DPR window.
+foreach(cpu IN ITEMS 6809 6809UNDOC 6309)
+    check_diagnostic(forced-pc-high-${cpu} ${cpu} " org $1000\n lda <*+131,pc" 1320
+        "address displacement 128 outside [-128,127] (PC base 0x1003)" 4 6)
+    check_diagnostic(forced-pc-low-${cpu} ${cpu} " org $1000\n lda <*-126,pcr" 1320
+        "address displacement -129 outside [-128,127] (PC base 0x1003)" 4 6)
+    check_diagnostic(forced-pc-prefix-${cpu} ${cpu} " org $1000\n ldy <*+132,pc" 1320
+        "address displacement 128 outside [-128,127] (PC base 0x1004)" 4 6)
+    check_diagnostic(forced-five-high-${cpu} ${cpu} " lda <<16,x" 1340
+        "effective address displacement 16 outside [-16,15]" 3 6)
+    check_diagnostic(forced-five-low-${cpu} ${cpu} " lda <<-17,y" 1340
+        "effective address displacement -17 outside [-16,15]" 3 6)
+    check_diagnostic(forced-byte-high-${cpu} ${cpu} " lda <128,u" 1340
+        "effective address displacement 128 outside [-128,127]" 3 6)
+    check_diagnostic(direct-page-high-${cpu} ${cpu} " assume dpr:$12\n lda <$1312" 1340
+        "address 0x1312 uses bank 19; ASSUME DPR=18 permits [0x1200,0x12FF]" 4 6)
+    check_diagnostic(direct-page-low-${cpu} ${cpu} " assume dpr:$12\n lda <$1112" 1340
+        "address 0x1112 uses bank 17; ASSUME DPR=18 permits [0x1200,0x12FF]" 4 6)
+    check_diagnostic(direct-page-nothing-${cpu} ${cpu} " assume dpr:nothing\n lda <$1212" 1340
+        "address 0x1212 cannot use direct addressing; ASSUME DPR=NOTHING" 4 6)
+    check_diagnostic(final-forward-five-${cpu} ${cpu} " lda <<target+1000,x\ntarget equ -984" 1340
+        "effective address displacement 16 outside [-16,15]" 3 6)
+    check_diagnostic(final-forward-pc-${cpu} ${cpu} " org $1000\n lda <target+1000,pc\ntarget equ $1083-1000" 1320
+        "address displacement 128 outside [-128,127] (PC base 0x1003)" 4 6)
+    check_diagnostic(forced-pc-undefined-${cpu} ${cpu} " lda <missing,pc" 1010 "symbol undefined" 3 7)
+    check_bytes(forced-forward-${cpu} ${cpu}
+        " org $1000\n lda <target+1000,pc\ntarget equ $1003-1000\n lda <offset+1000,x\noffset equ -1000\n lda <<five+1000,y\nfive equ -1000\n assume dpr:$12\n lda <address+1000\naddress equ $1212-1000"
+        "a68c00a68800a6209612")
+    check_bytes(forced-range-errors-noemit-${cpu} ${cpu}
+        " expect 1340,1340,1320\n lda <<16,x\n lda <128,y\n lda <*+131,pc\n endexpect\n db $12" "12")
+    check_bytes(forced-original-${cpu} ${cpu}
+        " org $1000\n lda <<-16,x\n lda <<15,y\n lda <-128,u\n lda <127,s\n lda >128,x\n lda <*+130,pc\n lda <*-125,pcr\n lda >*+131,pc\n assume dpr:$12\n lda <$1212"
+        "a610a62fa6c880a6e87fa6890080a68c7fa68c80a68d007f9612")
+endforeach()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/direct-page-nothing-6309.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "keine direkte Adressierung verwenden; ASSUME DPR=NOTHING" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German direct page: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

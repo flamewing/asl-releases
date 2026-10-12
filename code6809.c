@@ -168,6 +168,32 @@ static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->guess_offset = 0;
 }
 
+static void report_index_range(tErrorNum error, tStrComp const* arg, LongInt value,
+        LongInt minimum, LongInt maximum, Boolean pc_relative, LargeWord pc_base) {
+    char detail[180];
+    if (pc_relative) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                (LargeInt)value, (LargeInt)minimum, (LargeInt)maximum, pc_base);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                (LargeInt)value, (LargeInt)minimum, (LargeInt)maximum);
+    }
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_direct_page(tStrComp const* arg, Word address) {
+    char detail[210];
+    if (DPRValue == 0x100) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgDirectPageUnavailable),
+                (LargeWord)address, "DPR");
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
+                (LargeWord)address, (LargeInt)Hi(address), "DPR", (LargeInt)DPRValue,
+                (LargeWord)(DPRValue << 8), (LargeWord)((DPRValue << 8) | 0xff));
+    }
+    WrXErrorPos(ErrNum_NoShortAddr, detail, &arg->Pos);
+}
+
 static Boolean check_plain_base_arg(int adr_arg_cnt, tStrComp const* p_start_arg) {
     switch (adr_arg_cnt) {
     case 1:
@@ -455,8 +481,9 @@ static adr_mode_t DecodeAdr(
         else if (
                 (ZeroMode == 3)
                 || ((ZeroMode == 0) && (!IndFlag) && (AdrInt >= -16) && (AdrInt <= 15))) {
-            if ((AdrInt < -16) || (AdrInt > 15)) {
-                WrError(ErrNum_NoShortAddr);
+            if (((AdrInt < -16) || (AdrInt > 15))
+                && !mFirstPassUnknownOrQuestionable(p_vals->symbol_flags)) {
+                report_index_range(ErrNum_NoShortAddr, pStartArg, AdrInt, -16, 15, False, 0);
             } else if (IndFlag) {
                 WrError(ErrNum_InvAddrMode);
             } else {
@@ -471,8 +498,8 @@ static adr_mode_t DecodeAdr(
         /* 8-Bit-Displacement */
 
         else if ((ZeroMode == 2) || ((ZeroMode == 0) && (MayShort(AdrInt)))) {
-            if (!MayShort(AdrInt)) {
-                WrError(ErrNum_NoShortAddr);
+            if (!MayShort(AdrInt) && !mFirstPassUnknownOrQuestionable(p_vals->symbol_flags)) {
+                report_index_range(ErrNum_NoShortAddr, pStartArg, AdrInt, -128, 127, False, 0);
             } else {
                 p_vals->mode = e_adr_mode_ind;
                 p_vals->cnt  = 2;
@@ -561,8 +588,9 @@ static adr_mode_t DecodeAdr(
             }
 
             else if ((ZeroMode == 2) || ((ZeroMode == 0) && MayShort(AdrInt))) {
-                if (!MayShort(AdrInt)) {
-                    WrError(ErrNum_OverRange);
+                if (!MayShort(AdrInt) && !mFirstPassUnknownOrQuestionable(p_vals->symbol_flags)) {
+                    report_index_range(ErrNum_OverRange, pStartArg, AdrInt, -128, 127, True,
+                            EProgCounter() + 2 + OpcodeLen);
                 } else {
                     p_vals->cnt = 2;
                     p_vals->vals[0] += 0x8c;
@@ -589,7 +617,7 @@ static adr_mode_t DecodeAdr(
         Offset = ChkZero(pStartArg->str.p_str, &ZeroMode);
         AdrInt = EvalStrIntExpressionOffsWithFlags(
                 pStartArg, Offset, Int16, &OK, &p_vals->symbol_flags);
-        if (mFirstPassUnknown(p_vals->symbol_flags) && (ZeroMode == 2)) {
+        if (mFirstPassUnknownOrQuestionable(p_vals->symbol_flags) && (ZeroMode == 2)) {
             AdrInt = (AdrInt & 0xff) | (DPRValue << 8);
         }
 
@@ -603,8 +631,9 @@ static adr_mode_t DecodeAdr(
                     || ((ZeroMode == 0) && (Hi(AdrInt) == DPRValue) && (!IndFlag))) {
                 if (IndFlag) {
                     WrError(ErrNum_NoIndir);
-                } else if (Hi(AdrInt) != DPRValue) {
-                    WrError(ErrNum_NoShortAddr);
+                } else if ((Hi(AdrInt) != DPRValue)
+                        && !mFirstPassUnknownOrQuestionable(p_vals->symbol_flags)) {
+                    report_direct_page(pStartArg, (Word)AdrInt);
                 } else {
                     p_vals->cnt     = 1;
                     p_vals->mode    = e_adr_mode_dir;

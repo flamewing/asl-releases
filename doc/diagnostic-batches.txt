@@ -2141,3 +2141,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     string terminator with the intended C escape '\0'. Runtime behavior is
     unchanged; the source is text again. No other root C source contains NULs.
     Validation: CPU16 diagnostic regression passes with embedded/external catalogs; both builds succeed.
+
+193. 6809/6309 forced indexed ranges and direct-page selection.
+    Forced PC-byte overflow identifies actual displacement [-128,127] and PC
+    base at the operand, preserving 1320 in both directions. Forced five/byte
+    offsets retain 1340 with their value/range; direct-page failures identify
+    ASSUME DPR window or NOTHING. Defer unknown/questionable provisional
+    checks, fixing confirmed early rejection of forward PC/byte expressions.
+    All three CPUs cover endpoints, opcode-prefix PC offsets, forward values,
+    primary errors, German details, unchanged bytes and no failure emission.
+    All historical numeric candidates reviewed; remaining families pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
