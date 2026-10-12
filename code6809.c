@@ -895,8 +895,9 @@ static void DecodeLDQ(Word Index) {
     if (ChkArgCnt(1, 2) && ChkMinCPU(CPU6309)) {
         adr_vals_t vals;
 
-        if (DecodeAdr(1, ArgCnt, 2, eSymbolSize32Bit, adr_mode_mask_all, &vals)
-            == e_adr_mode_imm) {
+        adr_mode_t mode = DecodeAdr(1, ArgCnt, 2, eSymbolSize32Bit, adr_mode_mask_all, &vals);
+        if (mode == e_adr_mode_none) return;
+        if (mode == e_adr_mode_imm) {
             BAsmCode[CodeLen++] = 0xcd;
             append_adr_vals(&vals);
         } else {
@@ -1299,11 +1300,15 @@ static void DecodeHCF(Word Code) {
         tSymbolFlags flags;
 
         BAsmCode[0] = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt8, &ok, &flags);
-        if (ok && mSymbolQuestionable(flags)) {
+        if (!ok) return;
+        if (mFirstPassUnknownOrQuestionable(flags)) {
             BAsmCode[0] = 0x14;
         }
         if ((BAsmCode[0] != 0x14) && (BAsmCode[0] != 0x15) && (BAsmCode[0] != 0xcd)) {
-            WrStrErrorPos(ErrNum_InvArg, &ArgStr[1]);
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgHCFOpcode),
+                    (LargeWord)BAsmCode[0]);
+            WrXErrorPos(ErrNum_InvArg, detail, &ArgStr[1].Pos);
             return;
         }
         set_b_guessed(flags, 0, 1, 0xff);

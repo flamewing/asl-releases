@@ -2395,3 +2395,7 @@ Message ErrMsgPlainBaseComponent
 Message ErrMsgAutoUpdateZeroDisplacement
  "Auto-Update erfordert eine Verschiebung von null; angegebene Verschiebung %llld"
  "auto-update requires zero displacement; specified displacement %llld"
+
+Message ErrMsgHCFOpcode
+ "HCF-Opcode 0x%lllx ist nicht einer von 0x14, 0x15 oder 0xCD"
+ "HCF opcode 0x%lllx is not one of 0x14, 0x15 or 0xCD"

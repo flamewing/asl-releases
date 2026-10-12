@@ -2185,3 +2185,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     All 22 historical candidates reviewed. Identified adjacent LDQ/HCF failure
     handling and register-decoder secondary diagnostics remain for later batches.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+197. 6809-family LDQ/HCF failure handling and opcode-domain diagnostics.
+    LDQ used the invalid-mode sentinel to calculate an opcode (negative left
+    shift) and emitted 10 AC after rejecting its address. Return before opcode
+    calculation on failure. HCF now stops after evaluator failure, preserving
+    the primary diagnostic, and defers provisional unknown/questionable opcodes
+    instead of prematurely rejecting valid forward values. Settled domain
+    failures retain 1985 and identify the opcode versus 14/15/CD. Verify primary
+    errors, no failure emission, all original addresses/opcodes, forward domains
+    and German detail. Register/stack diagnostic followups remain pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

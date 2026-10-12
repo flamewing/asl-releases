@@ -270,3 +270,34 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German auto displacement: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# LDQ must not calculate an opcode from the invalid-mode sentinel or emit it.
+check_bytes(ldq-address-errors-noemit 6309
+    " expect 1350,1320,1310,1300\n ldq #1,2\n ldq 65536\n ldq 1/0\n ldq [1,x)\n endexpect\n db $12" "12")
+check_diagnostic(ldq-primary-undefined 6309 " ldq missing" 1010 "symbol undefined" 3 6)
+check_bytes(ldq-original-addresses 6309
+    " ldq #$12345678\n ldq $12\n ldq $1234\n ldq 1,x\n ldq [1,x]"
+    "cd1234567810dc1210fc123410ec0110ec9801")
+# HCF preserves evaluator failures and defers its three-opcode domain until
+# forward expressions settle; rejected values identify the evaluated opcode.
+check_diagnostic(hcf-range-primary 6809UNDOC " hcf 256" 1320 "256 > 255" 3 6)
+check_diagnostic(hcf-division-primary 6809UNDOC " hcf 1/0" 1310 "division by 0" 3 "")
+check_diagnostic(hcf-domain 6809UNDOC " hcf $99" 1985 "HCF opcode 0x99 is not one of 0x14, 0x15 or 0xCD" 3 6)
+check_diagnostic(hcf-final-forward-domain 6809UNDOC " hcf opcode+1000\nopcode equ $99-1000" 1985
+    "HCF opcode 0x99 is not one of 0x14, 0x15 or 0xCD" 3 6)
+check_diagnostic(hcf-undefined-primary 6809UNDOC " hcf missing" 1010 "symbol undefined" 3 6)
+check_bytes(hcf-errors-noemit 6809UNDOC
+    " expect 1320,1315,1310,1985\n hcf 256\n hcf -1\n hcf 1/0\n hcf $99\n endexpect\n db $12" "12")
+check_bytes(hcf-original-opcodes 6809UNDOC " hcf\n hcf $14\n hcf $15\n hcf $cd" "141415cd")
+check_bytes(hcf-forward-opcodes 6809UNDOC
+    " hcf opcode14+1000\nopcode14 equ $14-1000\n hcf opcode15+1000\nopcode15 equ $15-1000\n hcf opcodecd+1000\nopcodecd equ $cd-1000"
+    "1415cd")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/hcf-domain.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "HCF-Opcode 0x99 ist nicht einer von 0x14, 0x15 oder 0xCD" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German HCF: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
