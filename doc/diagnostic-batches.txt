@@ -2485,3 +2485,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     directions for short/bit/RJMP/RCALL, smaller flash and forward target, preserving
     disabled-wrap range behavior. Word-mode instruction bytes unchanged.
     Validation: all 417 CTest cases pass with embedded/external catalogs.
+
+229. IMP-16/PACE accumulator choices and primary register failures.
+    Review eight register/one width candidate; shared allowed-set reporter includes
+    numeric equivalents and locates actual restricted accumulator. Adjacent indexed
+    AC0/1 rejection no longer silently succeeds without code. Check enum success
+    explicitly, copy descriptor only on success and preserve primary failures.
+    Set missing target callback so native register aliases resolve; choose permitted
+    provisional register for unknown aliases, then validate resolved subset.
+    Defensive width guard stays located and aborts; no reachable non-16-bit native
+    register exists. Original direct/numeric/alias bytes and German detail checked.
+    Validation: all 418 CTest cases pass with embedded/external catalogs.

@@ -2515,3 +2515,7 @@ Message ErrMsgAVRCoreMega
 Message ErrMsgAVRBranchRange
  "Sprungverschiebung in Worten %llld au&szlig;erhalb [%llld,%llld] (Wortadresse der n&auml;chsten Anweisung 0x%lllx)"
  "branch word displacement %llld outside [%llld,%llld] (next-instruction word address 0x%lllx)"
+
+Message ErrMsgIMPRegisterChoices
+ "Akkumulator AC%u ist hier nicht erlaubt; erwartet wird %s"
+ "accumulator AC%u is not allowed here; expected %s"

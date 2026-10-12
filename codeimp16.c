@@ -12,6 +12,9 @@
 
 #include "codeimp16.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -125,10 +128,12 @@ static void dissect_reg_imp16(
  * \param  must_be_reg argument is expected to be a register
  * ------------------------------------------------------------------------ */
 
-static tRegEvalResult decode_reg(tStrComp const* p_arg, Word* p_result) {
+static tRegEvalResult decode_reg(tStrComp const* p_arg, Word* p_result, Boolean* p_unknown) {
     tRegDescr      reg_descr;
     tEvalResult    eval_result;
     tRegEvalResult reg_eval_result;
+
+    *p_unknown = False;
 
     /* built-in register */
 
@@ -144,14 +149,16 @@ static tRegEvalResult decode_reg(tStrComp const* p_arg, Word* p_result) {
         reg_eval_result = EvalStrRegExpressionAsOperand(
                 p_arg, &reg_descr, &eval_result, eSymbolSizeUnknown, False);
 
+        if (reg_eval_result == eIsReg)
+            *p_unknown = mFirstPassUnknownOrQuestionable(eval_result.Flags);
+
         /* always try numeric value for register */
 
         if (eIsNoReg == reg_eval_result) {
-            Boolean ok;
-
-            reg_descr.Reg   = EvalStrIntExpression(p_arg, UInt2, &ok);
-            reg_eval_result = ok ? eIsReg : eRegAbort;
-            if (ok) {
+            reg_descr.Reg = EvalStrIntExpressionWithResult(p_arg, UInt2, &eval_result);
+            reg_eval_result = eval_result.OK ? eIsReg : eRegAbort;
+            if (eval_result.OK) {
+                *p_unknown = mFirstPassUnknownOrQuestionable(eval_result.Flags);
                 eval_result.DataSize = eSymbolSize16Bit;
             }
         }
@@ -160,12 +167,43 @@ static tRegEvalResult decode_reg(tStrComp const* p_arg, Word* p_result) {
     if (reg_eval_result == eIsReg) {
         if (eval_result.DataSize != eSymbolSize16Bit) {
             WrStrErrorPos(ErrNum_InvOpSize, p_arg);
-            reg_eval_result = eIsNoReg;
+            reg_eval_result = eRegAbort;
         }
     }
 
-    *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
+    if (reg_eval_result == eIsReg)
+        *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
     return reg_eval_result;
+}
+
+static Boolean decode_arg_reg(tStrComp const* p_arg, Word* p_result,
+        Word minimum, Word maximum) {
+    Boolean unknown;
+    tRegEvalResult result = decode_reg(p_arg, p_result, &unknown);
+    char choices[80], detail[160];
+
+    if (result == eRegAbort)
+        return False;
+    if (result == eIsReg && unknown) {
+        *p_result = minimum;
+        return True;
+    }
+    if (result == eIsReg && *p_result >= minimum && *p_result <= maximum)
+        return True;
+    if (minimum == maximum)
+        as_snprintf(choices, sizeof(choices), "AC%u (%u)",
+                (unsigned)minimum, (unsigned)minimum);
+    else
+        as_snprintf(choices, sizeof(choices), "AC%u..AC%u (%u..%u)",
+                (unsigned)minimum, (unsigned)maximum,
+                (unsigned)minimum, (unsigned)maximum);
+    if (result == eIsReg) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIMPRegisterChoices),
+                (unsigned)*p_result, choices);
+        WrXErrorPos(ErrNum_InvReg, detail, &p_arg->Pos);
+    } else
+        WrXErrorPos(ErrNum_InvReg, choices, &p_arg->Pos);
+    return False;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -242,7 +280,7 @@ static Boolean decode_mem_arg(
             force_pcrel = True;
             goto parse_abs;
         }
-        if (!decode_reg(&reg_arg, &xreg) || (xreg < 2)) {
+        if (!decode_arg_reg(&reg_arg, &xreg, 2, 3)) {
             return False;
         }
         if (!*arg.str.p_str) {
@@ -377,7 +415,7 @@ static Boolean decode_long_mem_arg(
             force_pcrel = True;
             goto parse_abs;
         }
-        if (!decode_reg(&reg_arg, &xreg) || (xreg < 2)) {
+        if (!decode_arg_reg(&reg_arg, &xreg, 2, 3)) {
             return False;
         }
         if (!*arg.str.p_str) {
@@ -500,8 +538,7 @@ static void decode_ld_st(Word code) {
         reg_max = 3;
     }
 
-    if ((decode_reg(&ArgStr[1], &reg) != eIsReg) || (reg > reg_max)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0, reg_max)) {
         return;
     }
 
@@ -521,10 +558,8 @@ static void decode_mem_reg(Word code) {
         return;
     }
 
-    if ((decode_reg(&ArgStr[1], &reg) != eIsReg)
-        || ((code & e_inst_flag_r01) && (reg >= 2))
-        || ((code & e_inst_flag_r0) && (reg != 0))) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0,
+            (code & e_inst_flag_r0) ? 0 : (code & e_inst_flag_r01) ? 1 : 3)) {
         return;
     }
 
@@ -606,8 +641,7 @@ static void decode_one_reg(Word code) {
         return;
     }
 
-    if (decode_reg(&ArgStr[1], &reg) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0, 3)) {
         return;
     }
 
@@ -628,8 +662,7 @@ static void decode_reg_imm(Word code) {
         return;
     }
 
-    if (decode_reg(&ArgStr[1], &reg) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0, 3)) {
         return;
     }
 
@@ -653,12 +686,10 @@ static void decode_reg_reg(Word code) {
         return;
     }
 
-    if (decode_reg(&ArgStr[1], &reg1) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg1, 0, 3)) {
         return;
     }
-    if (decode_reg(&ArgStr[2], &reg2) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+    if (!decode_arg_reg(&ArgStr[2], &reg2, 0, 3)) {
         return;
     }
 
@@ -865,8 +896,7 @@ static void decode_shift_imp16(Word code) {
         return;
     }
 
-    if (decode_reg(&ArgStr[1], &reg) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0, 3)) {
         return;
     }
 
@@ -893,8 +923,7 @@ static void decode_shift_pace(Word code) {
         return;
     }
 
-    if (decode_reg(&ArgStr[1], &reg) != eIsReg) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+    if (!decode_arg_reg(&ArgStr[1], &reg, 0, 3)) {
         return;
     }
 
@@ -1335,6 +1364,7 @@ static void switch_to_imp16(void* p_user) {
     MakeCode     = make_code_imp16;
     IsDef        = is_def_imp16;
     InternSymbol = intern_symbol_imp16;
+    DissectReg   = dissect_reg_imp16;
     SwitchFrom   = deinit_fields;
     init_fields(is_pace);
 }
