@@ -99,3 +99,13 @@ check_diagnostic(processor_register_cr16b CR16B " lpr r0,invalid" 1437 "operand 
 check_bytes(original_forms_cr16a CR16A " movw $1,r1\n loadw 0(r2),r1\n storw r1,0(r2)\n loadw 0(r3,r2),r1\n excp svc\n lpr r0,intbase" "213824a024e025b80000ea7b6070")
 check_bytes(original_forms_cr16b CR16B " movw $1,r1\n loadw 0(r2),r1\n storw r1,0(r2)\n loadw 0(r3,r2),r1\n muluw r0,(r3,r2)\n storw $1,0(r0)\n sbitb $1,0(r0)\n beq0b r0,*\n excp dbg\n lpr r0,cfg" "213824a024e025b80000407ec36443440114fc7ba070")
 check_bytes(rejected_forms_noemit CR16B " expect 1350,1350,1350,1445,1350,1350,1445,1370,1350\n loadw 0(r4,r2),r1\n jump 2(r3,r2)\n movw 0(r1),r2\n muluw r2,(r3,r2)\n storw $1,0(r3,r2)\n storw $1,0(r2)\n beq0b r2,0\n beq0b r0,32\n sbitb $1,0(r2)\n endexpect\n .word 0x1234" "3412")
+
+foreach(cpu CR16A CR16B)
+    check_bytes(forward_regimm_source_${cpu} ${cpu} " movw alias,r1\nalias reg r2" "2578")
+    check_bytes(forward_load_register_${cpu} ${cpu} " loadw 0(r1),alias\nalias reg r2" "42a0")
+    check_bytes(forward_store_register_${cpu} ${cpu} " storw alias,0(r1)\nalias reg r2" "42e0")
+    check_diagnostic(final_numeric_source_${cpu} ${cpu} " movw value,r1\nvalue equ 2" 1350 "register or $value" 3 7)
+    check_diagnostic(final_numeric_load_${cpu} ${cpu} " loadw 0(r1),value\nvalue equ 2" 1350 "operand must be register" 3 14)
+    check_diagnostic(final_numeric_store_${cpu} ${cpu} " storw value,0(r1)\nvalue equ 2" 1350 "operand must be register" 3 8)
+    check_diagnostic(final_undefined_source_${cpu} ${cpu} " movw missing,r1" 1010 "missing" 3 7)
+endforeach()

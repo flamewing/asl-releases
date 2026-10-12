@@ -1824,3 +1824,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     register tables show choices. Preserve IDs/predicates/warning emission
     and captured bytes; tests identify the failed operand and no error bytes.
     Validation: all 414 CTest cases pass with embedded/external catalogs.
+
+158. CR16A/B forward aliases in register/immediate positions.
+    Optional register lookup classifies unresolved aliases as absolute
+    addresses, rejecting valid MOVW/LOADW/STORW register operands early.
+    In positions that cannot use absolute addresses, give unknown bare
+    expressions a provisional register until resolution. Real memory
+    positions retain ordinary address parsing. Both CPUs verify accepted
+    alias encodings, final numeric/undefined diagnostics and existing forms.
+    Validation: all 414 CTest cases pass with embedded/external catalogs.

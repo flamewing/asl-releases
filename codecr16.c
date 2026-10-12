@@ -415,6 +415,19 @@ check:
     return p_vals->mode;
 }
 
+/* Register/immediate positions cannot use an absolute address.  An unknown
+   bare expression may still resolve to a register alias on a later pass. */
+static adr_mode_t decode_regimm_adr(
+        tStrComp const* p_arg, adr_vals_t* p_vals, IntType imm_int_type) {
+    if ((decode_adr(p_arg, p_vals, imm_int_type) == e_mode_abs)
+        && mFirstPassUnknown(p_vals->disp_flags)) {
+        p_vals->mode = e_mode_reg;
+        p_vals->part = 0;
+        p_vals->val_cnt = 0;
+    }
+    return p_vals->mode;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     isreg_0189(Word reg)
  * \brief  is register # 0, 1, 8, or 9 (needed for some CR16B insns)?
@@ -692,7 +705,7 @@ static void decode_regimm_reg(Word code) {
         IntType    imm_int_type = (IntType)(code & 0x1ff);
 
         code ^= imm_int_type;
-        switch (decode_adr(&ArgStr[1], &adr_vals, imm_int_type)) {
+        switch (decode_regimm_adr(&ArgStr[1], &adr_vals, imm_int_type)) {
         case e_mode_reg:
             append_word(code | (Rdest << 5) | (adr_vals.part << 1) | 0x4001);
             break;
@@ -867,7 +880,7 @@ static void decode_load_store(Word code) {
         return;
     }
 
-    switch (decode_adr(p_reg_arg, &reg_adr_vals, Int4)) {
+    switch (decode_regimm_adr(p_reg_arg, &reg_adr_vals, Int4)) {
     case e_mode_reg:
         code |= reg_adr_vals.part << 5;
         break;

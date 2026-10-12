@@ -2041,7 +2041,7 @@
     {
       "file": "codecr16.c",
       "issue": "Optional register-versus-address lookup rejects forward aliases in register-only positions: MOVW alias,R1 is decoded as an absolute address and rejected before alias REG R2 resolves.",
-      "status": "reproduced during 156; pending focused contextual operand parsing, preserving existing numeric/address diagnostics"
+      "status": "fixed in tranche 158; provisional register for unknown bare operands only in register/immediate positions; MOVW/LOADW/STORW aliases now resolve on both CPUs, final numeric/undefined errors retain primary diagnostics; actual memory operands retain normal classification"
     }
   ]
 }
