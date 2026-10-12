@@ -17,3 +17,10 @@
   - Match mit neuem (nicht none) Eintrag: Sektion liegt 
     in Stack der FwdRef
   - FwdRef nur einmal auflösen
+
+- Operators:
+  - #23: choose comparison/bitwise/logical precedence policy after unary parsing fix.
+    https://github.com/flamewing/asl-releases/issues/23
+  - #22: consider standard spellings: ^ for bitwise XOR, ** for power.
+    https://github.com/flamewing/asl-releases/issues/22
+  - Consider ^^ for logical XOR alongside #22; decide compatibility/mode first.

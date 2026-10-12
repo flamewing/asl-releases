@@ -1686,7 +1686,7 @@ static int operator_search_cb(
                     p_next++;
                 }
                 if (p_end - p_pos <= LOCSYMSIGHT
-                    && (!*p_next || strchr("+-*/&|^=<>!#%~", *p_next))) {
+                    && (!*p_next || strchr("+-*/&|^=<>!#%", *p_next))) {
                     return p_end - p_pos - 1;
                 }
             }
@@ -1719,7 +1719,7 @@ static int operator_search_cb(
                 }
 
                 /* (c) non-blank content left to binary op,
-                       blank content right to unary op */
+                       blank content left to unary op */
 
                 this_op_argcnt_match
                         = (p_this_op->op_type != e_op_monadic)
@@ -1744,8 +1744,14 @@ static int operator_search_cb(
                    same prio.  For instance, A/B*C must be treated as (A/B)*C and not
                    A/(B*C): */
 
-                if (!p_data->p_best_op
-                    || (p_pos_best_op->Priority >= p_data->p_best_op->Priority)) {
+                /* A prefix inside an operand cannot split the enclosing
+                   expression. Recursive evaluation will consume it after the
+                   binary split. For a prefix chain, keep the outermost prefix
+                   regardless of the individual prefixes' priorities. */
+                if ((p_pos_best_op->op_type != e_op_monadic
+                     || !is_non_space_upto(p_cb_data->p_str, p_pos))
+                    && (!p_data->p_best_op
+                        || (p_pos_best_op->Priority >= p_data->p_best_op->Priority))) {
                     p_data->p_best_op = p_pos_best_op;
                     p_data->op_pos    = p_pos - p_cb_data->p_str;
                 }

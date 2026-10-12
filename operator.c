@@ -741,7 +741,7 @@ as_operator_t const operators[] = {
          AddOp                                                                                                     },
         /* minus may have one or two operands */
         { "-", 1,       e_op_dyadic, 13,                               {Int2Int, Float2Float, 0, 0, 0},       SubOp},
-        { "-", 1,      e_op_monadic, 13,                       {TempInt << 4, TempFloat << 4, 0, 0, 0},    SubSglOp},
+        { "-", 1,      e_op_monadic,  1,                       {TempInt << 4, TempFloat << 4, 0, 0, 0},    SubSglOp},
         {"~~", 2,      e_op_monadic,  2,                                    {TempInt << 4, 0, 0, 0, 0},    LogNotOp},
         {"&&", 2, e_op_dyadic_short, 15,                                         {Int2Int, 0, 0, 0, 0},    LogAndOp},
         {"||", 2, e_op_dyadic_short, 16,                                         {Int2Int, 0, 0, 0, 0},     LogOrOp},

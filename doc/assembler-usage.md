@@ -616,12 +616,15 @@ The assembler provides the operands listed in the following table for combinatio
 |  `>>`   | log. shift right |     2     |    yes    |    no     |    no     |     3     |
 |  `<<`   | log. shift left  |     2     |    yes    |    no     |    no     |     3     |
 |   `~`   | binary NOT       |     1     |    yes    |    no     |    no     |     1     |
+|   `-`   | unary negation   |     1     |    yes    |    yes    |    no     |     1     |
 
 \*) remainder will be discarded
 
 <!-- markdownlint-enable MD038 -->
 
 "Rank" is the priority of an operator at the separation of expressions into subexpressions. The operator with the highest rank will be evaluated at the very end. The order of evaluation can be defined by new bracketing.
+
+Unary negation binds more tightly than binary operators: `2*-value` means `2*(-value)`, and `-value^2` means `(-value)^2`. Chained prefix operators apply from right to left, so `-~value` means `-(~value)`. Short runs of `+` or `-` used as temporary symbols retain their existing meaning.
 
 The compare operators deliver TRUE in case the condition fits, and FALSE in case it doesn't. For the logical operators an expression is TRUE in case it is not 0, otherwise it is FALSE.
 

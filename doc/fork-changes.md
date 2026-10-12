@@ -206,6 +206,8 @@ Reject previously ignored unknown options in preset/key files and disassembler i
 
 Preserve M68K index-register classification in optimized MSVC builds by completing register lookup before restoring the size/scale suffix. This avoids an MSVC Release optimization that restores the suffix before lookup and incorrectly treats registers such as D2.W as displacements. Windows MSVC CI now tests both Debug and Release configurations.
 
+Fix unary expression parsing within binary operands and chained prefixes. Give unary minus independent precedence above binary operators, preserving existing binary precedence, spellings and temporary-symbol syntax.
+
 ## Updating this document
 
 Keep the snapshot tag boundaries and comparison links. Summarize changes to assembler or utility behavior, compatibility, performance and bug fixes, distinguishing upstream additions from fork changes. Group related fixes rather than listing individual commits. Keep paragraphs and list items on one physical line and rely on editor or previewer word wrapping.

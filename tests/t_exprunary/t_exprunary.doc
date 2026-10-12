@@ -1,0 +1,5 @@
+Checks prefixes within binary operands, tight unary negation, right-to-left
+prefix chains with equal and different priorities, parenthesized and function
+operands, floating-point negation, forward symbols and short circuit behavior.
+Expected bytes are specified independently. Legacy binary precedence and power
+associativity remain unchanged; temporary-label coverage is in t_tempsymexpr.
