@@ -2,7 +2,7 @@
 
 This document records the modifications made by the flamewing/asl-releases fork, grouped by the existing snapshot tags. The fork starts after original AS 1.42 build 204 at [`9f6b3bdb`](https://github.com/flamewing/asl-releases/commit/9f6b3bdb9311527a29b9013ded1f9db29536da2f). The latest original AS source import is build 313 at [`fb75b92d`](https://github.com/flamewing/asl-releases/commit/fb75b92ddad1d87e6003868b622971b11b9f87c4). The upstream [changelog](../changelog) describes original AS additions; those imports are listed separately here so they are not attributed to the fork.
 
-Coverage ends at [`1275d803`](https://github.com/flamewing/asl-releases/commit/1275d803cf8f6d1c4395c9a3a3fce47183f4345b). Each tag section covers commits after the preceding tag through the named tag, in main-branch ancestry order. Tag names are preserved exactly, including the historical snapshot-snapshot prefix. A tag date can differ from its target commit date; boundaries use commit ancestry, not dates. Tags pointing to the same commit have an explicit empty batch. Changes after the last tag appear in Pending changes.
+Coverage ends at [`02ed1452`](https://github.com/flamewing/asl-releases/commit/02ed14524fc14d44db324905b662ed67bb29e237). Each tag section covers commits after the preceding tag through the named tag, in main-branch ancestry order. Tag names are preserved exactly, including the historical snapshot-snapshot prefix. A tag date can differ from its target commit date; boundaries use commit ancestry, not dates. Tags pointing to the same commit have an explicit empty batch. Changes after the last tag appear in Pending changes.
 
 The summaries describe the changes in each batch; the linked commit lists provide the complete record, including tests, documentation, build/CI maintenance, experiments and reversions. Historical entries can describe changes later superseded or reverted, so they are not a promise that every historical experiment remains enabled. Upstream merges are represented by their integration commit; their upstream-only side-branch commits are not fork modifications. Untracked files and local experimental artifacts are outside this committed-history inventory.
 
@@ -702,7 +702,7 @@ Fork changes (22 commits):
 
 ## Pending changes
 
-Boundary: [`snapshot-v1.4.2.20261012-run38215198548`](https://github.com/flamewing/asl-releases/releases/tag/snapshot-v1.4.2.20261012-run38215198548) to [`1275d803`](https://github.com/flamewing/asl-releases/commit/1275d803cf8f6d1c4395c9a3a3fce47183f4345b). These changes are committed on the local main branch but are not included in the last recorded snapshot tag. [Compare this batch](https://github.com/flamewing/asl-releases/compare/4730f6299d743703b7b677c6a9d09eddae5e92b7...1275d803cf8f6d1c4395c9a3a3fce47183f4345b).
+Boundary: [`snapshot-v1.4.2.20261012-run38215198548`](https://github.com/flamewing/asl-releases/releases/tag/snapshot-v1.4.2.20261012-run38215198548) to [`02ed1452`](https://github.com/flamewing/asl-releases/commit/02ed14524fc14d44db324905b662ed67bb29e237). These changes are committed on the local main branch but are not included in the last recorded snapshot tag. [Compare this batch](https://github.com/flamewing/asl-releases/compare/4730f6299d743703b7b677c6a9d09eddae5e92b7...02ed14524fc14d44db324905b662ed67bb29e237).
 
 The issue #13 diagnostic audit adds operand positions and contextual details under -x: actual values and bounds, branch displacement and PC base, allowed sizes/addressing forms/registers/conditions/CPUs, page/bank assumptions, function and operand counts, and the offending versus expected bracket. English/German catalogs, the numeric error documentation and regression fixtures are updated together. Existing error numbers and severities are generally retained, with explicit corrections where a prior category was wrong.
 
@@ -712,7 +712,9 @@ The audit also fixes defects discovered while exercising failures: stop code emi
 
 Additional fixes cover register aliases, reserved/native register indices, empty TLCS-90 operands, ST9 update/address expressions and R255 byte descriptors, TC9331 final-field comments, MN1610 failed PC-relative emission, and complete external message-catalog reads beyond 64 KiB. ST7/STM8 packed BTJF/BTJT now evaluate the actual final target operand instead of an absent or stale third operand, preventing the Windows access violation. STM8 branch distances retain the full 24-bit address width until signed-byte validation; valid short branches and address-space wrapping remain supported.
 
-Fork changes (271 commits):
+CI portability follow-up: set the HC12 diagnostic script policy baseline explicitly so CMake 3.x does not dereference the quoted PC register name while generating tests. Obtain TI LONG/DATA diagnostic bounds from the integer type table, avoiding MSVC literal signedness differences. Convert negative Qxx, EFLOAT and TFLOAT values through a signed integer before storing unsigned words, preserving their bytes on ARM and WebAssembly. Forward Node host environment variables into Emscripten before C startup so locale overrides and command-line settings reach getenv(), while preserving explicitly configured virtual variables. Regression validation passes all 426 MSVC tests, all 426 MinGW tests with external catalogs, all 427 Linux tests and all 426 WebAssembly tests; the HC12 script also passes with CMake 3.31.
+
+Fork changes (273 commits):
 
 - [`9a836646`](https://github.com/flamewing/asl-releases/commit/9a836646ee814e478b15d5f6151e564b5dfb776a) Record diagnostic specificity audit for issue #13
 - [`7e62a4c7`](https://github.com/flamewing/asl-releases/commit/7e62a4c7880ebd3b055539a5c9abfbd45613e906) Explain M68K effective-address displacement range errors
@@ -985,6 +987,8 @@ Fork changes (271 commits):
 - [`58e670d9`](https://github.com/flamewing/asl-releases/commit/58e670d9467e368e00d43cb559720a0bd754890b) Explain ST7 and STM8 branch displacement limits
 - [`7535ff75`](https://github.com/flamewing/asl-releases/commit/7535ff75da49702f89559664b80fbdeb7afe1220) Validate STM8 branch distances at full address width
 - [`1275d803`](https://github.com/flamewing/asl-releases/commit/1275d803cf8f6d1c4395c9a3a3fce47183f4345b) Clarify ST7 diagnostics for STM8-only instructions
+- [`dc3658ea`](https://github.com/flamewing/asl-releases/commit/dc3658ea25105c3d19d2323015e02d11be6ec1bf) Adding document with differences from base AS
+- [`02ed1452`](https://github.com/flamewing/asl-releases/commit/02ed14524fc14d44db324905b662ed67bb29e237) Fix CI diagnostic portability and signed TI word conversions
 
 ## Updating this document
 
