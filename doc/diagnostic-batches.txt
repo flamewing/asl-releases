@@ -2514,3 +2514,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     instructions. Original bytes, selected-model choices, count/target precedence,
     no rejected emission and German detail checked.
     Validation: all 418 CTest cases pass with embedded/external catalogs.
+
+232. Konami 052001 fixed registers and branch field diagnostics.
+    Eight register sites name required X/B/Y/U/B-or-X at operand. Both branch
+    sites report actual displacement/range and PC base, including DEC JNZ target.
+    Fix premature range rejection of forward arithmetic with unknown-or-questionable
+    guard; short/long/DEC resolved bytes checked. Original instruction vector,
+    boundaries, primary errors, no failed emission and German detail pass.
+    New Konami fixture registers test 419; seven address-mode sites remain.
+    Validation: all 419 CTest cases pass with embedded/external catalogs.

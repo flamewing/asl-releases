@@ -1168,8 +1168,12 @@
         "ErrNum_InvReg": 8,
         "ErrNum_JmpDistTooBig": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg",
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 232 reviews all eight fixed-register and both branch candidates: DIV/MOVE/BMOVE/BSET/DEC identify required X/B/Y/U/B-or-X at operand, preserving original comparison/count precedence. Short/long branches and DEC JNZ report actual signed displacement/range and PC+2/PC+3 base at target. Replace questionable-only range guard with unknown-or-questionable: forward arithmetic provisional value can lie outside field even when final target fits; reproduce BRA target+1000 / target EQU -1000 premature failure and fix short/long/DEC paths. Original bytes, range boundaries, forward arithmetic, primary evaluator failure, no rejected emission and German checked. Seven mode sites pending."
     },
     "codem16.c": {
       "candidate_counts": {
@@ -2198,6 +2202,11 @@
       "file": "codeimp16.c",
       "issue": "Required BOC condition and PACE SFLG/PFLG status flag names return false with no diagnostic; optional named/numeric status lookup must retain numeric fallback.",
       "status": "fixed in tranche 231; mandatory lookup reports located 1360 condition/1366 flag with table-derived current-CPU names; optional named/numeric flag fallback remains unchanged; original bytes, count/target precedence, no failed emission and German checked"
+    },
+    {
+      "file": "codeko09.c",
+      "issue": "Branch range checks test only questionable flag, prematurely rejecting unresolved forward arithmetic even when final target fits.",
+      "status": "fixed in tranche 232; unknown-or-questionable guard, short/long/DEC arithmetic regression and original bytes checked"
     }
   ]
 }

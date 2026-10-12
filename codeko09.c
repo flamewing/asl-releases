@@ -12,6 +12,9 @@
 
 #include "codeko09.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -514,8 +517,12 @@ static void decode_branch_8_core(unsigned arg_index, Word code) {
             = EvalStrIntExpressionWithResult(&ArgStr[arg_index], UInt16, &eval_result)
               - (EProgCounter() + 2);
     if (eval_result.OK) {
-        if (!RangeCheck(dist, SInt8) && !mSymbolQuestionable(eval_result.Flags)) {
-            WrError(ErrNum_JmpDistTooBig);
+        if (!RangeCheck(dist, SInt8) && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                    (LargeInt)dist, (LargeInt)-128, (LargeInt)127,
+                    (LargeWord)(EProgCounter() + 2));
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[arg_index].Pos);
         } else {
             BAsmCode[CodeLen++] = code;
             BAsmCode[CodeLen++] = dist & 0xff;
@@ -545,8 +552,12 @@ static void decode_branch_16(Word code) {
         LongInt dist = EvalStrIntExpressionWithResult(&ArgStr[1], UInt16, &eval_result)
                        - (EProgCounter() + 3);
         if (eval_result.OK) {
-            if (!RangeCheck(dist, SInt16) && !mSymbolQuestionable(eval_result.Flags)) {
-                WrError(ErrNum_JmpDistTooBig);
+            if (!RangeCheck(dist, SInt16) && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                        (LargeInt)dist, (LargeInt)-32768, (LargeInt)32767,
+                        (LargeWord)(EProgCounter() + 3));
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[CodeLen++] = code;
                 BAsmCode[CodeLen++] = (dist >> 8) & 0xff;
@@ -554,6 +565,12 @@ static void decode_branch_16(Word code) {
             }
         }
     }
+}
+
+static void report_register_choices(tStrComp const* p_arg, char const* choices) {
+    char detail[100];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvReg, detail, &p_arg->Pos);
 }
 
 /*!------------------------------------------------------------------------
@@ -566,9 +583,9 @@ static void decode_div(Word code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "X")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], "X");
     } else if (as_strcasecmp(ArgStr[2].str.p_str, "B")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], "B");
     } else {
         BAsmCode[CodeLen++] = code;
     }
@@ -584,11 +601,11 @@ static void decode_move(Word code) {
     if (!ChkArgCnt(3, 3))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "Y")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], "Y");
     } else if (as_strcasecmp(ArgStr[2].str.p_str, "X")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], "X");
     } else if (as_strcasecmp(ArgStr[3].str.p_str, "U")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[3]);
+        report_register_choices(&ArgStr[3], "U");
     } else {
         BAsmCode[CodeLen++] = code;
     }
@@ -604,9 +621,9 @@ static void decode_bset(Word code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "X")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], "X");
     } else if (as_strcasecmp(ArgStr[2].str.p_str, "U")) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], "U");
     } else {
         BAsmCode[CodeLen++] = code;
     }
@@ -638,7 +655,7 @@ static void decode_dec(Word code) {
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "X")) {
             decode_branch_8_core(3, code + 1);
         } else {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            report_register_choices(&ArgStr[1], "B or X");
         }
         break;
     case 2:
