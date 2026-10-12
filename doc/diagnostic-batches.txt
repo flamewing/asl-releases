@@ -2259,3 +2259,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     CCR logical bytes and German details pass. One of 98 historical size sites
     and a fourth of 14 capability sites reviewed; remaining sites pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+204. Remaining M68K/ColdFire direct instruction-capability diagnostics.
+    Ten remaining candidates now list supported models from their actual
+    feature/ISA predicates: TAS/NBCD, CALLM/RTM, FPU descriptor requirements,
+    MAC/EMAC, combined EMAC+ISA B/C, and ColdFire coprocessor pseudo-instructions.
+    Classic TAS remains accepted independently of the ColdFire ISA restriction.
+    Preserve all conditions, 1500, successful bytes and failure precedence;
+    locate rejection at the mnemonic. Focused required/excluded feature/ISA
+    cases and original classic/module/FPU/ColdFire/EMAC vectors pass, with no
+    rejected instruction bytes. All 14 instruction-capability candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

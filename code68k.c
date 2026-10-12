@@ -200,7 +200,7 @@ static Byte const FSizeCodes[10] = {6, 4, 0, 7, 0, 1, 5, 2, 0, 3};
 /* Unterroutinen */
 
 static void report_cpu_family_choices(unsigned mask);
-static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa);
+static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa, Boolean classic_isa_exempt);
 
 static Boolean CheckFamilyCore(unsigned FamilyMask) {
     return !!((FamilyMask >> pCurrCPUProps->Family) & 1);
@@ -3208,7 +3208,7 @@ static void DecodeANDOR(Word Index) {
             if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
                 report_operand_sizes(".B");
             } else if (!(pCurrCPUProps->SuppFlags & eFlagLogCCR)) {
-                report_cpu_capability_choices(eFlagLogCCR, eCfISA_None);
+                report_cpu_capability_choices(eFlagLogCCR, eCfISA_None, False);
             } else {
                 WAsmCode[0] = 0x003c | (Op << 9);
                 OpSize      = eSymbolSize8Bit;
@@ -3447,7 +3447,8 @@ static void DecodeNBCDTAS(Word Index) {
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
         WrError(ErrNum_InvOpSize);
     } else if (!Allowed) {
-        WrError(ErrNum_InstructionNotSupported);
+        if (Index) report_cpu_family_choices(~(1u << eColdfire));
+        else report_cpu_capability_choices(eFlagNone, eCfISA_B, True);
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -4212,7 +4213,7 @@ static void DecodeCALLM(Word Index) {
     if (*AttrPart.str.p_str) {
         WrError(ErrNum_InvOpSize);
     } else if (!(pCurrCPUProps->SuppFlags & eFlagCALLM_RTM)) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagCALLM_RTM, eCfISA_None, False);
     } else if (ChkArgCnt(2, 2)) {
         tAdrResult AdrResult;
 
@@ -4359,7 +4360,7 @@ static void DecodeRTM(Word Index) {
     if (*AttrPart.str.p_str) {
         WrError(ErrNum_InvOpSize);
     } else if (!(pCurrCPUProps->SuppFlags & eFlagCALLM_RTM)) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagCALLM_RTM, eCfISA_None, False);
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -4950,7 +4951,7 @@ static void DecodeFPUOp(Word Index) {
     else if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
     } else if ((pCurrCPUProps->SuppFlags & Op->NeedsSuppFlags) != Op->NeedsSuppFlags) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(Op->NeedsSuppFlags, eCfISA_None, False);
     } else if (ChkArgCnt(2, 2)) {
         tAdrResult AdrResult;
 
@@ -6390,7 +6391,7 @@ static void DecodeMAC_MSAC(Word Code) {
     Code &= 0x7fff;
 
     if (!(pCurrCPUProps->SuppFlags & eFlagMAC)) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagMAC, eCfISA_None, False);
         return;
     }
 
@@ -6513,7 +6514,7 @@ static void DecodeMOVCLR(Word Code) {
     else if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
         WrError(ErrNum_InvOpSize);
     } else if (!(pCurrCPUProps->SuppFlags & eFlagEMAC)) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagEMAC, eCfISA_None, False);
     } else if (!DecodeMACACC(ArgStr[1].str.p_str, &ACCReg)) {
         report_mac_accumulator(&ArgStr[1]);
     } else {
@@ -6531,7 +6532,7 @@ static void DecodeMxxAC(Word Code) {
     tAdrResult AdrResult;
 
     if (!(pCurrCPUProps->SuppFlags & eFlagEMAC) || (pCurrCPUProps->CfISA < eCfISA_B)) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagEMAC, eCfISA_B, False);
         return;
     }
 
@@ -6587,7 +6588,7 @@ static void DecodeMxxAC(Word Code) {
 
 static void DecodeCPBCBUSY(Word Code) {
     if (pCurrCPUProps->CfISA == eCfISA_None) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagNone, eCfISA_A, False);
     } else if (*AttrPart.str.p_str && (OpSize != eSymbolSize16Bit)) {
         WrError(ErrNum_InvOpSize);
     } else if (ChkArgCnt(1, 1)) {
@@ -6612,7 +6613,7 @@ static void DecodeCPBCBUSY(Word Code) {
 
 static void DecodeCPLDST(Word Code) {
     if (pCurrCPUProps->CfISA == eCfISA_None) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagNone, eCfISA_A, False);
     } else if (ChkArgCnt(1, 4)) {
         Boolean         OK;
         Word            Reg;
@@ -6685,7 +6686,7 @@ static void DecodeCPLDST(Word Code) {
 
 static void DecodeCPNOP(Word Code) {
     if (pCurrCPUProps->CfISA == eCfISA_None) {
-        WrError(ErrNum_InstructionNotSupported);
+        report_cpu_capability_choices(eFlagNone, eCfISA_A, False);
     } else if (ChkArgCnt(0, 1)) {
         WAsmCode[0] = Code | (OpSize << 6);
 
@@ -7551,11 +7552,13 @@ static void report_cpu_family_choices(unsigned mask) {
     WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
 }
 
-static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa) {
+static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa, Boolean classic_isa_exempt) {
     char choices[512] = "", detail[600];
     tCPUProps const* cpu;
     for (cpu = CPUProps; cpu->pName; cpu++) {
-        if ((cpu->SuppFlags & flags) != flags || cpu->CfISA < minimum_isa) continue;
+        if ((cpu->SuppFlags & flags) != flags) continue;
+        if (cpu->CfISA < minimum_isa
+            && (!classic_isa_exempt || cpu->Family == eColdfire)) continue;
         if (*choices) strmaxcat(choices, ", ", sizeof(choices));
         strmaxcat(choices, cpu->pName, sizeof(choices));
     }

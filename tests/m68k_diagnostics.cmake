@@ -401,3 +401,47 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German CCR size choices: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Direct capability checks use the actual feature/ISA predicates to list models.
+check_diagnostic(nbcd-models MCF5407 " nbcd (a0)" 1500
+    "supported CPUs: 68008, 68000, 68010, 68012, 68332, 68340, 68360, 68020, 68030, 68040" 3 2)
+check_diagnostic(tas-isa-models MCF5208 " tas (a0)" 1500 "MCF5407, MCF5470" 3 2)
+check_diagnostic(module-call-models 68030 " callm #1,(a0)" 1500 "supported CPUs: 68020" 3 2)
+check_diagnostic(module-return-models 68040 " rtm d0" 1500 "supported CPUs: 68020" 3 2)
+check_diagnostic(fpu-external-models MCF5407 " fpu on\n fsin fp0" 1500
+    "supported CPUs: 68008, 68000, 68010, 68012, 68020, 68030, 68040" 4 2)
+check_diagnostic(fpu-internal-models 68020 " fpu on\n fssqrt fp0" 1500
+    "supported CPUs: MCF5202, MCF5204, MCF5206, MCF5208" 4 2)
+check_diagnostic(mac-models MCF5202 " mac.l d0,d1" 1500 "supported CPUs: MCF5208, MCF52274, MCF52277" 3 2)
+check_diagnostic(emac-models MCF5407 " movclr acc0,d0" 1500 "supported CPUs: MCF5208, MCF52274, MCF52277" 3 2)
+check_diagnostic(emac-isa-models MCF5208 " maaac.l d0,d1,acc0,acc1" 1500
+    "supported CPUs: MCF5470, MCF5471, MCF5472, MCF5473, MCF5474, MCF5475, MCF51QM" 3 2)
+foreach(ins IN ITEMS cp0bcbusy cp1bcbusy cp0ld cp1ld cp0st cp1st cp0nop cp1nop)
+    check_diagnostic(coprocessor-models-${ins} 68020 " ${ins} #0" 1500
+        "supported CPUs: MCF5202, MCF5204, MCF5206, MCF5208" 3 2)
+endforeach()
+check_bytes(direct-capability-errors-noemit 68030
+    " fpu on\n expect 1500,1500,1500,1500\n callm #1,(a0)\n rtm d0\n fssqrt fp0\n cp0nop\n endexpect\n dc.b $12" "12")
+check_bytes(cold-capability-errors-noemit MCF5202
+    " expect 1500,1500,1500\n tas (a0)\n nbcd (a0)\n mac.l d0,d1\n endexpect\n dc.b $12" "12")
+check_bytes(capability-original-classic 68000
+    " nbcd d0\n tas (a0)"
+    "48004ad0")
+check_bytes(capability-original-module 68020
+    " callm #1,(a0)\n rtm d0"
+    "06d0000106c0")
+check_bytes(capability-original-external-fpu 68020
+    " fpu on\n fsin fp0"
+    "f200000e")
+check_bytes(capability-original-internal-fpu 68040
+    " fpu on\n fssqrt fp0"
+    "f2000041")
+check_bytes(capability-original-cold MCF5407
+    " tas (a0)\n cp0bcbusy *+2\n cp0ld #0\n cp0st #0\n cp0nop"
+    "4ad0fcc00000fc800000fd800000fc800000")
+check_bytes(capability-original-emac MCF5470
+    " movclr acc0,d0\n maaac.l d0,d1,acc0,acc1"
+    "a1c0a2000805")
+check_bytes(capability-original-emac-c MCF51QM
+    " maaac.l d0,d1,acc0,acc1"
+    "a2000805")
