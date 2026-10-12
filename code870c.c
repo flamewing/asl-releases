@@ -278,13 +278,14 @@ static Byte MakeDestMode(Byte AdrMode) {
     }
 }
 
-static Boolean DecodeSPDisp(tStrComp const* pArg, Byte* pDisp, Boolean* pDispNeg) {
+static Boolean DecodeSPDisp(tStrComp const* pArg, Byte* pDisp, Boolean* pDispNeg, Boolean* pOK) {
     Boolean      OK;
     LongInt      DispAcc;
     tSymbolFlags Flags;
 
     *pDisp    = 0;
     *pDispNeg = False;
+    *pOK      = False;
 
     /* avoid ambiguities - LD SP,SP should be coded as LD rr,rr */
 
@@ -307,6 +308,7 @@ static Boolean DecodeSPDisp(tStrComp const* pArg, Byte* pDisp, Boolean* pDispNeg
         DispAcc &= 0xff;
     }
     if (ChkRange(DispAcc, -255, 255)) {
+        *pOK = True;
         *pDispNeg = DispAcc < 0;
         *pDisp    = *pDispNeg ? -DispAcc : DispAcc;
     }
@@ -410,9 +412,11 @@ static void DecodeLD(Word Code) {
         }
     } else if (
             (!as_strcasecmp(ArgStr[1].str.p_str, "SP"))
-            && (DecodeSPDisp(&ArgStr[2], BAsmCode + 1, &NegFlag))) {
-        BAsmCode[0] = NegFlag ? 0x3f : 0x37;
-        CodeLen     = 2;
+            && (DecodeSPDisp(&ArgStr[2], BAsmCode + 1, &NegFlag, &OK))) {
+        if (OK) {
+            BAsmCode[0] = NegFlag ? 0x3f : 0x37;
+            CodeLen     = 2;
+        }
     } else if (!as_strcasecmp(ArgStr[1].str.p_str, "CF")) {
         if (!SplitBit(&ArgStr[2], &Bit)) {
             WrError(ErrNum_InvBitPos);

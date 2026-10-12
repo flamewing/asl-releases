@@ -2010,6 +2010,11 @@
       "file": "code870c.c",
       "issue": "JRS and JR (including extended conditions) reject provisional forward target distances before symbols resolve.",
       "status": "fixed in tranche 152; defer both checks for unknown/questionable symbols; all 20 JR conditions/two JRS conditions/unconditional JR/upper-lower provisional targets/final errors/original bytes checked"
+    },
+    {
+      "file": "code870c.c",
+      "issue": "LD SP,SP+displacement reports range failure but still emits a truncated displacement byte.",
+      "status": "fixed in tranche 153; keep recognized addressing form separate from validation success; both overflow directions/no emission and accepted endpoints/forward displacement checked"
     }
   ]
 }

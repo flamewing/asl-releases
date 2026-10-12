@@ -1783,3 +1783,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     conditions and unconditional JR cover upper/lower provisional targets,
     retained final errors and captured accepted bytes.
     Validation: all 413 CTest cases pass with embedded/external catalogs.
+
+153. TLCS-870/C SP displacement emission.
+    LD SP,SP+256 and LD SP,SP-256 report range failure but still encode a
+    zero displacement. Keep recognized addressing form separate from range
+    success and emit only after validation. Both overflow directions verify
+    no bytes; preserve positive/negative endpoints and forward displacement.
+    Validation: full suites pass all other cases; corrected forward-reference fixture passes focused embedded/external tests (413 cases total).
