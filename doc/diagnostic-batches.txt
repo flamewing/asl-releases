@@ -2135,3 +2135,9 @@ manual, EXPECT fixtures, translations and source-position tests.
     and existing empty-expression semantics. All 27 HC12 historical candidates
     and identified adjacent followups now reviewed; file complete.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+192. CPU16 source escape correction.
+    Replace the literal NUL accidentally saved in tranche 174's address-form
+    string terminator with the intended C escape '\0'. Runtime behavior is
+    unchanged; the source is text again. No other root C source contains NULs.
+    Validation: CPU16 diagnostic regression passes with embedded/external catalogs; both builds succeed.
