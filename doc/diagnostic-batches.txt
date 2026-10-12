@@ -2045,3 +2045,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     offsets. Aggregate vectors verify finally valid original instruction bytes;
     existing final range/undefined tests remain in place.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+183. HC12 partial bit-branch emission on range failure.
+    A rejected BRSET $20,#$40,*+132 still emits 4E 20 40. Reset instruction
+    length/guess metadata after the final range error. Both CPUs and BRSET/
+    BRCLR cover upper/lower failures across direct, extended, 5/9/16-bit indexed
+    and PC-relative address forms, with a following data byte proving no
+    rejected instruction bytes remain. Accepted and forward vectors retained.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

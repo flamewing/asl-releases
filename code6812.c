@@ -1280,6 +1280,7 @@ static void DecodeBrBit(Word Index) {
                         & !mFirstPassUnknownOrQuestionable(address_flags)) {
                         report_branch_distance(Address, -128, 127,
                                 EProgCounter() + 3 + adr_vals.count, &ArgStr[ArgCnt]);
+                        code_len_reset();
                     } else {
                         set_b_guessed(address_flags, CodeLen, 1, 0xff);
                         BAsmCode[CodeLen++] = Lo(Address);

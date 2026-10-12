@@ -467,7 +467,7 @@
         "ErrNum_JmpDistTooBig"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 182 fixes provisional forward range validation in all three previously detailed branch sites. Remaining register, pair, addressing and numeric candidates still pending."
+      "review_notes": "Tranche 182 fixes provisional forward range validation in all three previously detailed branch sites. Remaining register, pair, addressing and numeric candidates still pending. Tranche 183 resets partial bit-branch emission after final range failure; all address widths and PC-relative forms covered on both CPUs/opcodes."
     },
     "code6816.c": {
       "candidate_counts": {

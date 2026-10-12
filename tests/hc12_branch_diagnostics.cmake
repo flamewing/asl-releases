@@ -179,3 +179,20 @@ foreach(cpu IN ITEMS 68HC12 68HC12X)
     endforeach()
     check_bytes(forward-all-${cpu} ${cpu} "${body}${definitions}" "${bytes}")
 endforeach()
+
+# Final range failure must not leave a partial bit-branch instruction behind.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    foreach(item IN ITEMS "$20,#$40|4" "$2000,#$40|5" "0,x,#$40|4"
+            "16,x,#$40|5" "1000,x,#$40|6" "*,pc,#$40|4")
+        string(REPLACE "|" ";" fields "${item}")
+        list(GET fields 0 operands)
+        list(GET fields 1 length)
+        string(MAKE_C_IDENTIFIER "${operands}" tag)
+        math(EXPR high "${length}+128")
+        math(EXPR low "129-${length}")
+        foreach(mnemonic IN ITEMS brset brclr)
+            check_bytes(noemit-${cpu}-${mnemonic}-${tag} ${cpu}
+                " org $1000\n expect 1370,1370\n ${mnemonic} ${operands},*+${high}\n ${mnemonic} ${operands},*-${low}\n endexpect\n db $12" "12")
+        endforeach()
+    endforeach()
+endforeach()
