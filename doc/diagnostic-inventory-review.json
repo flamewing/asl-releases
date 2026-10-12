@@ -1994,6 +1994,11 @@
       "file": "code7700.c",
       "issue": "Automatic address width selection uses unresolved provisional values and chooses unsupported long forms for PEI/PEA/RMW/XY/LDM/BBC, rejecting valid forward operands before resolution.",
       "status": "fixed in tranche 148; choose available provisional width and defer direct-page/bank checks for unknown/questionable addresses; four CPUs/13 scalar aliases/PEI/LDM/BBC/forced forms and final range behavior checked"
+    },
+    {
+      "file": "code807x.c",
+      "issue": "LD/ADD/SUB/logical scalar register/immediate source accepts a third operand and silently ignores it; initial arity also admits a missing source.",
+      "status": "fixed in tranche 150; scalar terminal source must consume one argument, indexed memory may consume two; require two/three total operands; six source mnemonics/builtin scalar classes/both immediate markers/primary count/no emission/original indexed bytes checked"
     }
   ]
 }

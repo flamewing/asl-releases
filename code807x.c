@@ -229,6 +229,12 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
     }
 
 AdrFound:
+    /* A scalar source consumes one argument; only indexed memory consumes two. */
+    if ((Index > 1) && (Cnt > 1) && (AdrMode != ModNone) && (AdrMode != ModMem)) {
+        (void)ChkArgCnt(Index, Index);
+        AdrMode = ModNone;
+        return;
+    }
     if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0)) {
         WrError(ErrNum_InvAddrMode);
         AdrMode = ModNone;
@@ -247,7 +253,7 @@ static void DecodeFixed(Word Code) {
 static void DecodeLD(Word Index) {
     UNUSED(Index);
 
-    if (ChkArgCnt(1, 3)) {
+    if (ChkArgCnt(2, 3)) {
         DecodeAdr(1, MModAcc | MModReg | MModT | MModE | MModS, 0);
         switch (AdrMode) {
         case ModAcc:
@@ -344,7 +350,7 @@ static void DecodeLD(Word Index) {
 static void DecodeST(Word Index) {
     UNUSED(Index);
 
-    if (ChkArgCnt(1, 3)) {
+    if (ChkArgCnt(2, 3)) {
         DecodeAdr(1, MModAcc, 0);
         switch (AdrMode) {
         case ModAcc:
@@ -437,7 +443,7 @@ static void DecodeSSM(Word Code) {
 }
 
 static void DecodeADDSUB(Word Index) {
-    if (ChkArgCnt(1, 3)) {
+    if (ChkArgCnt(2, 3)) {
         DecodeAdr(1, MModAcc, 0);
         switch (AdrMode) {
         case ModAcc:
@@ -476,7 +482,7 @@ static void DecodeMulDiv(Word Index) {
 }
 
 static void DecodeLogic(Word Index) {
-    if (ChkArgCnt(1, 3)) {
+    if (ChkArgCnt(2, 3)) {
         OpSize = 0;
         DecodeAdr(1, MModAcc | MModS, 0);
         switch (AdrMode) {

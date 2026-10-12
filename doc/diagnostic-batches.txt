@@ -1756,3 +1756,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     automatic/forced failures and captured accepted indexed/long forms.
     All 14 historical candidates now reviewed.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+150. INS8070 ignored trailing scalar source operands.
+    LD/ADD/SUB/AND/OR/XOR ignore third operand for register/immediate sources;
+    confirmed LD A,E,PC and LD A,#1,PC succeed with normal two-operand bytes.
+    Require scalar terminal source to consume one argument, retain two for
+    indexed memory; initial LD/ST/arithmetic/logical arity is two/three.
+    All six source mnemonics/scalar classes/both immediate markers verify
+    explicit-count text/no emission; preserve captured supported sources.
+    Validation: all 412 CTest cases pass with embedded/external catalogs.
