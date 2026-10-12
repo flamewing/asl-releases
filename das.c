@@ -691,7 +691,7 @@ int main(int argc, char** argv) {
     write_version_exit = write_help_exit = write_cpu_list_exit = False;
 
     as_cmd_register(DASParams, as_array_size(DASParams));
-    if (e_cmd_err == as_cmd_process(argc, argv, pEnvName, &cmd_results)) {
+    if (e_cmd_ok != as_cmd_process(argc, argv, pEnvName, &cmd_results)) {
         fprintf(stderr, "%s%s\n",
                 getmessage(
                         cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam

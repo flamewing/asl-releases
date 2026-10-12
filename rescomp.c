@@ -347,6 +347,18 @@ static void write_dual_4_le(LongInt* p_lword) {
 
 /*---------------------------------------------------------------------------*/
 
+static void print_usage(FILE* stream, const char* program) {
+    fprintf(stream,
+            "usage: %s INPUT.mes [-m OUTPUT.msg] [-h OUTPUT.rsc] [-i OUTPUT.msh]\n"
+            "       %s INPUT.mes OUTPUT.msg [OUTPUT.rsc [OUTPUT.msh]]\n"
+            "       %s -help\n\n"
+            "-m  write binary message catalog\n"
+            "-h  write message-index C header\n"
+            "-i  write embedded-catalog C header\n"
+            "Outputs may be combined; use explicit flags to select their types.\n",
+            program, program, program);
+}
+
 int main(int argc, char** argv) {
     char        Line[1024], Cmd[1024], *p, Save;
     PMsgCat     z;
@@ -360,6 +372,11 @@ int main(int argc, char** argv) {
     char *      p_rsc_file_incl_guard_sym = NULL, *p_msh_file_incl_guard_sym = NULL;
 
     strutil_init();
+
+    if ((argc == 2) && !strcmp(argv[1], "-help")) {
+        print_usage(stdout, argv[0]);
+        return 0;
+    }
 
     curridx = 0;
     nextidx = -1;
@@ -397,10 +414,7 @@ int main(int argc, char** argv) {
     }
 
     if (!pSrcName) {
-        fprintf(stderr,
-                "usage: %s <input resource file> <[-m] output msg file> <[-i] output "
-                "include file> [[-h ]header file]\n",
-                *argv);
+        print_usage(stderr, argv[0]);
         exit(1);
     }
 

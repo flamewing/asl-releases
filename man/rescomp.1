@@ -1,0 +1,42 @@
+.TH RESCOMP 1 "2026-10-12" "ASL 1.42.313" "Development Tools"
+.SH NAME
+rescomp \- compile AS message resources
+.SH SYNOPSIS
+.B rescomp
+INPUT.mes [\-m OUTPUT.msg] [\-h OUTPUT.rsc] [\-i OUTPUT.msh]
+.br
+.B rescomp
+INPUT.mes OUTPUT.msg [OUTPUT.rsc [OUTPUT.msh]]
+.br
+.B rescomp \-help
+.SH DESCRIPTION
+A host build tool generated in the build directory, not an installed
+runtime executable. CMake invokes it automatically to generate localized
+catalogs and headers. Explicit output flags avoid ambiguity in the legacy
+positional order. Multiple output types can be generated together.
+.SH OPTIONS
+.TP
+.B \-m file
+Write an external binary message catalog.
+.TP
+.B \-h file
+Write a C header assigning indices to messages.
+.TP
+.B \-i file
+Write a C header containing embedded catalog bytes.
+.TP
+.B \-help
+Print syntax and exit successfully. With no arguments, syntax is printed
+to stderr and the program exits with status 1. This tool does not implement
+the runtime programs' \-version or preset-environment options.
+.SH EXAMPLES
+.nf
+build/rescomp as.mes \-m output.msg \-h output.rsc \-i output.msh
+.fi
+.PP
+Use the matching configuration directory and .exe suffix for a Windows
+multi-configuration build.
+.SH SEE ALSO
+.BR asl (1)
+.PP
+The source-maintenance chapter of the AS manual describes .mes syntax.

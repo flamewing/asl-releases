@@ -72,8 +72,8 @@ Message InfoMessHelp
  "\n" \
  "options:\n" \
  "  -o <name>         : set target file name\n" \
- "  -f <header list>  : records to filter out\n" \
- "  -r <start>-<stop> : address range to filter out\n" \
+ "  -f <header list>  : include only listed CPU header IDs\n" \
+ "  -r <start>-<stop> : extract this address range\n" \
  "                      ($ or 0x = first resp. last occuring address)\n" \
  "  -segment <name>   : select source segment\n" \
  "  -l <8-bit-number> : set filler value for unused cells\n" \

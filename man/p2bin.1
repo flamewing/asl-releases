@@ -3,9 +3,31 @@
 .SH NAME
 .B p2bin \- convert code files into hex files
 
-.SH SYNTAX
+.SH SYNOPSIS
 .B p2bin
-[ option(s) ] <name(s)> [ further options/names ]
+[options] source [source ...] target
+.br
+.B p2bin
+[options] \-o target source [source ...]
+.br
+.B p2bin
+[options] source
+.br
+.B p2bin \-help
+.br
+.B p2bin \-version
+
+.SH INVOCATION
+Use \-help to display current options and \-version for version information;
+both exit successfully without source files. Input is read from named AS
+code files, not from standard input. Quote shell wildcard patterns and paths
+containing spaces. Options apply to the entire invocation; word options are
+case-insensitive and single-letter options distinguish case. Use + to negate
+an option. Windows builds also recognize slash-prefixed options; Unix builds
+accept absolute filenames beginning with /. Use the single-hyphen \-help
+spelling, not \-\-help. Source names without an extension receive .p.
+.PP
+Use \-o target to avoid ambiguity between source and positional output names.
 
 .SH DESCRIPTION
 
@@ -231,9 +253,8 @@ p2bin supports national languages in the same way as AS.  See the manual
 page for asl(1) for more information about this.
 
 .SH TIPS
-
-Calling P2BIN without any arguments will print a short help
-listing all command line parameters.
+Run p2bin \-help for the option reference. A request without input
+files is a startup error and does not prompt interactively.
 
 .SH SEE ALSO
 
@@ -251,9 +272,7 @@ characters for their own use, so it might be necessary to give
 command line parameters with certain tricks (e.g., with the help
 of escape characters).
 
-P2BIN does not have so far an opportunity to filter records by
-target segment.  Instead, records that contain data for any other
-segment than CODE are completely ignored.
+Use \-segment to select an address space; CODE is the default.
 
 .SH AUTHOR(S)
 

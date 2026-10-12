@@ -2478,6 +2478,22 @@ set_tests_properties(assembler_cli PROPERTIES
     ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
 )
 
+add_test(NAME utility_cli COMMAND ${CMAKE_COMMAND}
+    "-DPLIST_PROGRAM=$<TARGET_FILE:plist>"
+    "-DPBIND_PROGRAM=$<TARGET_FILE:pbind>"
+    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+    "-DP2HEX_PROGRAM=$<TARGET_FILE:p2hex>"
+    "-DALINK_PROGRAM=$<TARGET_FILE:alink>"
+    "-DDASL_PROGRAM=$<TARGET_FILE:dasl>"
+    "-DRESCOMP_PROGRAM=$<TARGET_FILE:rescomp>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/UtilityCLI"
+    -P "${CMAKE_SOURCE_DIR}/tests/utility_cli.cmake"
+)
+set_tests_properties(utility_cli PROPERTIES
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
+)
+
 define_executable(test_nonzstring
     tests/nonzstring.c
     nonzstring.c strutil.c dynstr.c

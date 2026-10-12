@@ -14,22 +14,54 @@ Common to all programs are the possible return codes they may deliver upon compl
 |      2      | I/O error                        |
 |      3      | file format error                |
 
-Just like AS, all programs take their input from STDIN and write messages to STDOUT (resp. error messages to STDERR). Therefore, input and output redirections should not be a problem.
+Just like AS, these tools read named input files and write informational messages to STDOUT (and errors to STDERR). Therefore, input and output redirections should not be a problem.
 
 In case that numeric or address specifications have to be given in the command line, they may also be written in hexadecimal notation, either by all ending in `h`, or by prepending a dollar character or a `0x` like in C. (e.g. `10h`, `$10`, or `0x10` instead of 16).
 
 Unix shells however assign a special meaning to the dollar sign, which makes it necessary to escape a dollar sign with a backslash. The `0x` variant is definitely more comfortable in this case.
 
-Otherwise, calling conventions and variations are equivalent to those of AS (except for PLIST and AS2MSG); i.e. it is possible to store frequently used parameters in an environment variable (whose name is constructed by appending CMD to the program's name, i.e. `BINDCMD` for BIND), to negate options, and to use all upper- resp. lower-case writing (for details on this, see [Start-Up Command, Parameters](assembler-usage.md#start-up-command-parameters)).
+Otherwise, calling conventions and variations are equivalent to those of AS (apart from the separately described historical AS2MSG script); i.e. it is possible to store frequently used parameters in an environment variable (whose name is constructed by appending CMD to the program's name, i.e. `BINDCMD` for `pbind`), to negate options, and to use all upper- resp. lower-case writing (for details on this, see [Start-Up Command, Parameters](assembler-usage.md#start-up-command-parameters)).
 
 Address specifications always relate to the granularity of the processor currently in question; for example, on a PIC, an address difference of 1 means a word and not a byte.
 
+## Current Invocations
+
+The installed utilities are `plist`, `pbind`, `p2bin`, `p2hex`, `alink` and `dasl`. Windows adds `.exe`. Run each program with `-help` for its current options or `-version` for version information; those requests succeed without input files. Other invocations read named files, so redirecting stdin is not a substitute for a source filename. Quote paths containing spaces. Quote wildcard patterns for pbind and the converters when the tool should expand them; plist and alink take individual source filenames.
+
+```sh
+plist input.p
+pbind -o combined.p first.p second.p
+p2bin -o image.bin input.p
+p2hex -F Intel -o image.hex input.p
+alink first.p second.p linked.p
+dasl -cpu list
+dasl -help
+```
+
+`pbind`, `p2bin` and `p2hex` accept explicit `-o` output names; `alink` takes its output as the final positional name and does not implement `-o`. The converters also accept one source name and derive their output extension, or take a final positional target. Input filenames without an extension receive `.p`. Converter/linker options operate on code-file address units, which can differ from bytes according to the target's granularity. `-k` on converters deletes processed source files; omit it when retaining the originals.
+
+Preset variables are `PLISTCMD`, `BINDCMD`, `P2BINCMD`, `P2HEXCMD`, `ALINKCMD` and `DASCMD`. These use the shared option/key-file parser described in [Assembler Usage](assembler-usage.md#preset-options-and-key-files). Embedded catalogs are the default; external-catalog builds use AS_MSGPATH and the same language selection as the assembler.
+
+### Disassembler
+
+`dasl` handles the CPUs shown by `dasl -cpu list`, which is a smaller set than the assembler's target list. Load input explicitly with `-binfile file[@start[,length[,granularity]]]` or `-hexfile file`; a bare positional filename does not load a disassembly image. Define a direct entry with `-entryaddress address,name`, an indirect entry with `-entryaddress (address[,length[,MSB|LSB]]),name`, or a label with `-symbol address=name`. Quote arguments containing shell metacharacters. Output is assembly text on stdout; redirect it to a file when required. See `dasl(1)` and `dasl -help` for invocations.
+
+### Resource Compiler
+
+`rescomp` is a host build tool, normally invoked from the build directory. It is not in the installed executable set. Use `rescomp -help` for syntax, or compile a `.mes` source with explicit outputs:
+
+```sh
+build/rescomp as.mes -m output.msg -h output.rsc -i output.msh
+```
+
+The legacy positional output order is INPUT, MSG, RSC, MSH; explicit flags avoid confusing the index header (`-h`) with embedded catalog bytes (`-i`). On Windows use the corresponding build/configuration path and `.exe` suffix. CMake generates these resources automatically during normal builds.
+
 ## PLIST
 
-PLIST is the simplest one of the five programs supplied: its purpose is simply to list all records that are stored in a code file. As the program does not do very much, calling is quite simple:
+PLIST lists the records in AS code files. Use it to inspect file contents before conversion or linking:
 
 ```dosbat
-    PLIST <file name>
+    plist input.p
 ```
 
 The file name will automatically be extended with the extension `P` if it doesn't already have one.
@@ -53,7 +85,7 @@ Finally, PLIST will print a copyright remark (if there is one in the file), toge
 
 Simply said, PLIST is a sort of DIR for code files. One can use it to examine a file's contents before one continues to process it.
 
-## BIND
+## PBIND
 
 BIND is a program that allows to concatenate the records of several code files into a single file. A filter function is available that can be used to copy only records of certain types. Used in this way, BIND can also be used to split a code file into several files.
 

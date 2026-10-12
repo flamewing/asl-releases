@@ -68,6 +68,7 @@ Message InfoMessHelp
  "  -d <Start>-<Stop> : Datenbereich festlegen (veraltet, siehe Handbuch)\n" \
  "  -e <Adresse>      : Startadresse festlegen\n" \
  "  -k                : Quelldateien autom. l&ouml;schen\n" \
+ "  -cformat <S|D|L|E> : C-Array-Struktur festlegen (Buchstaben kombinieren)\n" \
  "  -avrlen <2|3>     : Adre&szlig;feldl&auml;nge Atmel-Format setzen\n" \
  "  -q, -quiet        : stiller Betrieb\n" \
  "  -v                : ausf&uuml;hrliche Ausgaben\n" \
@@ -76,8 +77,8 @@ Message InfoMessHelp
  "\n" \
  "options:\n" \
  "  -o <name>         : set target file name\n" \
- "  -f <header list>  : records to filter out\n" \
- "  -r <start>-<stop> : address range to filter out\n" \
+ "  -f <header list>  : include only listed CPU header IDs\n" \
+ "  -r <start>-<stop> : extract this address range\n" \
  "  -R <offset>       : relocate addresses by offset\n" \
  "                      ($ or 0x = first resp. last occuring address)\n" \
  "  -segment <name>   : select source segment\n" \
@@ -94,6 +95,7 @@ Message InfoMessHelp
  "  -d <start>-<stop> : set data range (obsolete, see manual)\n" \
  "  -e <address>      : set entry address\n" \
  "  -k                : automatically erase source files\n" \
+ "  -cformat <SDLE>   : C-array fields (combine S, D, L, E once each)\n" \
  "  -avrlen <2|3>     : set address field length of Atmel format\n" \
  "  -q, -quiet        : quiet operation\n" \
  "  -v                : verbose operation\n" \

@@ -1,0 +1,59 @@
+.TH DASL 1 "2026-10-12" "ASL 1.42.313" "User Commands"
+.SH NAME
+dasl \- disassemble binary or Intel HEX images
+.SH SYNOPSIS
+.B dasl
+\-cpu name \-binfile file [options]
+.br
+.B dasl
+\-cpu name \-hexfile file [options]
+.br
+.B dasl \-help
+.br
+.B dasl \-version
+.br
+.B dasl \-cpu list
+.SH DESCRIPTION
+Load input with an explicit \-binfile or \-hexfile option. Bare positional
+filenames do not load an image. Available decoder CPUs are listed by
+\-cpu list; they are a subset of the assembler's targets. Assembly text
+is written to stdout. Quote paths and arguments containing shell metacharacters.
+.SH OPTIONS
+.TP
+.B \-cpu name
+Select the decoder, or use list (or ?) to list decoders and exit.
+.TP
+.B \-binfile file[@start[,length[,granularity]]]
+Load a binary image with optional address, length and address granularity.
+.TP
+.B \-hexfile file
+Load an Intel HEX image.
+.TP
+.B \-entryaddress address,name
+Define a direct entry point and label.
+.TP
+.B \-entryaddress (address[,length[,MSB|LSB]]),name
+Read an indirect entry point from the image using the specified byte order.
+.TP
+.B \-symbol address=name
+Define a label at an address.
+.TP
+.B \-h
+Use lowercase hexadecimal output.
+.TP
+.B \-screenheight lines
+Enable help/CPU-list paging; zero disables paging.
+.TP
+.B \-help, \-version
+Print help or version information and exit successfully.
+.SH ENVIRONMENT
+DASCMD presets options before the command line. Key files use @filename
+and shared command-line parsing; options and arguments stay on the same line.
+.SH ENVIRONMENT
+Message catalogs are embedded by default. External-catalog builds use
+AS_MSGPATH for one catalog directory. LC_MESSAGES, LC_ALL and LANG select
+catalog language, in that order.
+.SH SEE ALSO
+.BR asl (1)
+.PP
+https://github.com/flamewing/asl-releases

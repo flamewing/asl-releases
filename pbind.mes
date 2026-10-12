@@ -52,7 +52,7 @@ Message InfoMessHelp
  "\n" \
  "options:\n" \
  "  -o <name>        : set target file name\n" \
- "  -f <header list> : records to filter out\n" \
+ "  -f <header list> : include only listed CPU header IDs\n" \
  "  -help            : print help and exit\n" \
  "  -q, -quiet       : silent operation\n" \
  "  -v               : verbose operation\n" \
