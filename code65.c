@@ -865,6 +865,7 @@ static void DecodeNorm(Word Index) {
 
 static void DecodeTST(Word Index) {
     Byte ImmVal = 0;
+    tSymbolFlags imm_flags = eSymbolFlag_None;
 
     /* split off immediate argument for HUC6280 TST? */
 
@@ -876,8 +877,8 @@ static void DecodeTST(Word Index) {
             return;
         }
 
-        ImmVal = EvalStrIntExpressionOffs(
-                &ArgStr[1], ImmStart(ArgStr[1].str.p_str), Int8, &OK);
+        ImmVal = EvalStrIntExpressionOffsWithFlags(
+                &ArgStr[1], ImmStart(ArgStr[1].str.p_str), Int8, &OK, &imm_flags);
         if (!OK) {
             return;
         }
@@ -895,7 +896,10 @@ static void DecodeTST(Word Index) {
 
     if ((CodeLen > 0) && (MomCPU == CPUHUC6280)) {
         memmove(BAsmCode + 2, BAsmCode + 1, CodeLen - 1);
+        copy_basmcode_guessed(2, 1, CodeLen - 1);
         BAsmCode[1] = ImmVal;
+        set_b_guessed(imm_flags, 1, 1, 0xff);
+        CodeLen++;
     }
 }
 
@@ -1882,7 +1886,7 @@ static void InitFields(void) {
             /* (n8)  */ -1,
             /*(n,SP),y*/ -1,
             /* spec  */ -1);
-    AddNorm("TST", /* TODO: 6280 */
+    AddNorm("TST",
             /* ZA    */ MkMask(M_MELPS740 | M_HUC6280, Is740 ? 0x64 : 0x83),
             /* A     */ MkMask(M_HUC6280, 0x93),
             /* ZIX   */ MkMask(M_HUC6280, 0xa3),

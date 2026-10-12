@@ -181,3 +181,14 @@ foreach(cpu IN ITEMS 6502 65SC02 65CE02 W65C02S 65C19 MELPS740 HUC6280 6502UNDOC
         " expect 1900\n jmp ($12ff)\n endexpect\n db $12" "12")
 endforeach()
 check_bytes(pointer-c02-exception 65C02 " jmp ($12ff)" "6cff12")
+
+# HuC6280 TST inserts its mask without dropping the final address byte.
+check_bytes(huc-tst-all-forms HUC6280
+    " tst #$12,$34\n tst #$56,$78,x\n tst #$9a,$12bc\n tst #$de,$1234,x\n db $78"
+    "831234a35678939abc12b3de341278")
+check_bytes(huc-tst-forward-mask HUC6280
+    " tst #mask,$34\n tst #$56,target,x\nmask equ $12\ntarget equ $1234" "831234b3563412")
+check_bytes(huc-tst-label-offset HUC6280
+    " tst #1,$1234\n lda #after\nafter: db $12" "93013412a90612")
+check_bytes(melps-tst-unchanged MELPS740 " tst $12" "6412")
+check_diagnostic(huc-tst-primary HUC6280 " tst #missing,$34" 1010 "symbol undefined" 3 7)

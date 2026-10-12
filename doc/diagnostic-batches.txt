@@ -2005,3 +2005,15 @@ manual, EXPECT fixtures, translations and source-position tests.
     pointer/page checks. Special-page lower/upper/valid/forward cases and
     eight pointer-restricted CPUs cover detail, boundaries and no error bytes.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+179. HuC6280 TST immediate insertion encoding.
+    TST #$12,$34 emits 83 12, dropping the address byte; absolute forms lose
+    their high byte. Increment CodeLen after inserting the immediate mask,
+    shift address guess metadata with its bytes, and track forward mask flags.
+    All four opcode forms, following-label positions, forward mask/address,
+    primary expression errors and unchanged MELPS740 TST are covered. Correct
+    only the four TST encodings in the existing HuC6280 golden fixture (+4
+    bytes), with unchanged prefix/suffix. Opcodes/address forms cross-checked
+    against official ca65 CPU documentation, section 3.7:
+    https://cc65.github.io/doc/cpus.html#ss3.7
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
