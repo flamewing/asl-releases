@@ -2531,3 +2531,7 @@ Message ErrMsgIMPMemoryChoicesAbsolute
 Message ErrMsgIMPJSRAddress
  "Adresse 0x%x au&szlig;erhalb erlaubter Bereiche: %s"
  "address 0x%x outside allowed ranges: %s"
+
+Message ErrMsgIMPRequiredName
+ "Unbekannter Name '%s'; erwartet wird einer von: %s"
+ "unrecognized name '%s'; expected one of: %s"

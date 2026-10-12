@@ -141,3 +141,32 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR range_pos EQUAL -1)
     message(FATAL_ERROR "German IMP range: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(condition-invalid IMP-16L " boc bogus,1" 1360
+ "unrecognized name 'bogus'; expected one of: REQ0, PSIGN, BIT0, BIT1, NREQ0, NSIGN, INT" 3 6)
+check_diagnostic(condition-selected-cpu IPC-16 " boc int,1" 1360
+ "NSIGN, STFL, BIT2, CONTIN, LINK, IEN, CARRY, OVF, JC13, JC14, JC15" 3 6)
+check_diagnostic(condition-small IMP-16C/200 " boc poa,1" 1360
+ "INT, CPINT, START, STFL, INEN, CY/OV" 3 6)
+check_diagnostic(condition-before-target IMP-16L " boc bogus,1/0" 1360
+ "unrecognized name 'bogus'" 3 6)
+check_diagnostic(flag-invalid IPC-16 " sflg bogus" 1366
+ "unrecognized name 'bogus'; expected one of: IE1, IE2, IE3, IE4, IE5, OV, CY, LINK, IEN, BYTE, F11, F12, F13, F14" 3 7)
+check_diagnostic(flag-numeric-invalid IPC-16 " pflg 1" 1366
+ "unrecognized name '1'" 3 7)
+check_diagnostic(flag-count-first IPC-16 " sflg bogus,1" 1110 "got 2" 3 "")
+check_diagnostic(optional-flag-primary IMP-16L " skstf missing" 1010
+ "symbol undefined" 3 8)
+check_bytes(named-flags-original IPC-16 " sflg ie1\n pflg ov\n boc stfl,3" "803100360040")
+check_bytes(optional-flags-original IMP-16L " skstf 3\n skstf cy\n setbit 3\n sflg 8,0" "43074d0723070008")
+check_bytes(required-name-noemit IPC-16
+ " expect 1360,1366\n boc bogus,1\n sflg bogus\n endexpect\n dw 4660" "3412")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/condition-invalid.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Unbekannter Name 'bogus'" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German IMP name: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

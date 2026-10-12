@@ -2197,7 +2197,7 @@
     {
       "file": "codeimp16.c",
       "issue": "Required BOC condition and PACE SFLG/PFLG status flag names return false with no diagnostic; optional named/numeric status lookup must retain numeric fallback.",
-      "status": "identified while tranche 230 reviews branch; resolve with required/optional lookup distinction in separate batch"
+      "status": "fixed in tranche 231; mandatory lookup reports located 1360 condition/1366 flag with table-derived current-CPU names; optional named/numeric flag fallback remains unchanged; original bytes, count/target precedence, no failed emission and German checked"
     }
   ]
 }

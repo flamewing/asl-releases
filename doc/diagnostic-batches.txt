@@ -2506,3 +2506,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     detail checked. All 17 historical candidates reviewed; adjacent silent required
     condition/status-name lookup tracked separately.
     Validation: all 418 CTest cases pass with embedded/external catalogs.
+
+231. IMP-16/PACE required condition and status names.
+    Reproduce silent successful no-emission for BOC bogus and PACE SFLG bogus.
+    Required lookup now reports located 1360/1366 and actual table-derived names
+    for selected CPU. Preserve optional status lookup and numeric fallback in bit
+    instructions. Original bytes, selected-model choices, count/target precedence,
+    no rejected emission and German detail checked.
+    Validation: all 418 CTest cases pass with embedded/external catalogs.

@@ -489,7 +489,25 @@ static Boolean decode_symbol(
     return False;
 }
 
-#define decode_condition(p_arg, p_code)   decode_symbol(p_arg, p_code, conditions)
+static Boolean decode_required_symbol(tStrComp const* p_arg, Word* p_code,
+        symbol_t const* p_symbols, tErrorNum error) {
+    char choices[240] = "", detail[400];
+    symbol_t const* p_symbol;
+    if (decode_symbol(p_arg, p_code, p_symbols))
+        return True;
+    for (p_symbol = p_symbols; p_symbol->p_name; p_symbol++) {
+        if (*choices)
+            strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, p_symbol->p_name, sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIMPRequiredName),
+            p_arg->str.p_str, choices);
+    WrXErrorPos(error, detail, &p_arg->Pos);
+    return False;
+}
+
+#define decode_condition(p_arg, p_code) \
+    decode_required_symbol(p_arg, p_code, conditions, ErrNum_UndefCond)
 #define decode_status_flag(p_arg, p_code) decode_symbol(p_arg, p_code, status_flags)
 
 /*---------------------------------------------------------------------------*/
@@ -835,7 +853,8 @@ static void decode_sflg_pflg_imp16(Word code) {
 static void decode_sflg_pflg_pace(Word code) {
     Word bit_num;
 
-    if (ChkArgCnt(1, 1) && decode_status_flag(&ArgStr[1], &bit_num)) {
+    if (ChkArgCnt(1, 1) && decode_required_symbol(
+            &ArgStr[1], &bit_num, status_flags, ErrNum_UnknownFlag)) {
         put_code(code | ((bit_num & 15) << 8));
     }
 }
