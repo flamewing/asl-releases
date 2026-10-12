@@ -629,11 +629,31 @@ static adr_mode_t DecodeAdr(
                     AdrWord -= EProgCounter() + ex_pos;
                 }
                 if (OK) {
+                    /* TBL/ETBL have no wider indexed displacement. Provisional
+                     * expressions may choose this form until their value is stable. */
+                    Boolean only_short = (Mask == MModIdx)
+                            && (ShortMode != eShortModeNo) && (ShortMode != eShortModeYes);
+                    if (only_short && !mFirstPassUnknownOrQuestionable(p_adr_vals->symflags)
+                        && !DistFits(p_adr_vals->values[0], AdrWord, 1, -16, 15,
+                                p_adr_vals->symflags)) {
+                        char detail[180];
+                        if (p_adr_vals->values[0] == eBaseRegPC) {
+                            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                                    (LargeInt)(AdrWord - 1), (LargeInt)-16, (LargeInt)15,
+                                    (LargeWord)(EProgCounter() + ex_pos + 1));
+                        } else {
+                            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                                    (LargeInt)AdrWord, (LargeInt)-16, (LargeInt)15);
+                        }
+                        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[Start].Pos);
+                        return ModNone;
+                    }
                     if ((ShortMode != eShortModeNo) && (ShortMode != eShortModeYes)
                         && ((Mask & MModIdx) != 0)
                         && (DistFits(
                                 p_adr_vals->values[0], AdrWord, 1, -16, 15,
-                                p_adr_vals->symflags))) {
+                                p_adr_vals->symflags)
+                            || (only_short && mFirstPassUnknownOrQuestionable(p_adr_vals->symflags)))) {
                         if (p_adr_vals->values[0] == eBaseRegPC) {
                             AdrWord--;
                         }

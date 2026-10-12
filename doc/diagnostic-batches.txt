@@ -2115,3 +2115,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     provisional restricted-index selection and split-loop safety remain under
     review before closing this file.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+190. HC12 restricted indexed displacement diagnostics and forward expressions.
+    TBL/ETBL prematurely reject provisional indexed offsets which finally fit
+    their only five-bit displacement form. Defer that restricted-form decision
+    until unknown/questionable values settle. Final auto/forced-five-bit failures
+    retain 1350 and report displacement [-16,15], plus PC base where relevant.
+    Wider forced modes remain invalid; other instruction mode selection unchanged.
+    Both CPUs cover forward expressions on X/Y/SP/PC, endpoints, final failures,
+    primary undefined-symbol errors, prior bytes and no rejected instruction bytes.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

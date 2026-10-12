@@ -344,3 +344,57 @@ if(NOT "${result}" STREQUAL "2" OR pair_pos EQUAL -1)
     message(FATAL_ERROR "German HC12 pair: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# TBL/ETBL defer provisional five-bit values; settled failures give the value
+# and range, including the PC base when relevant. Forced wider modes stay invalid.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    set(forward_body " org $1000")
+    set(forward_expected "")
+    foreach(ins IN ITEMS tbl etbl)
+        if(ins STREQUAL "tbl")
+            set(opcode "183d")
+        else()
+            set(opcode "183f")
+        endif()
+        foreach(base IN ITEMS x y sp pc)
+            set(label "target_${ins}_${base}")
+            if(base STREQUAL "pc")
+                string(APPEND forward_body "\n ${ins} ${label}+1000,${base}\n${label} equ *-1000")
+                string(APPEND forward_expected "${opcode}c0")
+            else()
+                string(APPEND forward_body "\n ${ins} ${label}+1000,${base}\n${label} equ -1000")
+                if(base STREQUAL "x")
+                    set(postbyte "00")
+                elseif(base STREQUAL "y")
+                    set(postbyte "40")
+                else()
+                    set(postbyte "80")
+                endif()
+                string(APPEND forward_expected "${opcode}${postbyte}")
+            endif()
+        endforeach()
+        if(ins STREQUAL "tbl")
+            set(column 6)
+        else()
+            set(column 7)
+        endif()
+        check_diagnostic(${ins}-displacement-high-${cpu} ${cpu} " ${ins} 16,x" 1350
+            "effective address displacement 16 outside [-16,15]" 3 ${column})
+        check_diagnostic(${ins}-displacement-low-${cpu} ${cpu} " ${ins} -17,y" 1350
+            "effective address displacement -17 outside [-16,15]" 3 ${column})
+        check_diagnostic(${ins}-pc-high-${cpu} ${cpu} " org $1000\n ${ins} *+19,pc" 1350
+            "address displacement 16 outside [-16,15] (PC base 0x1003)" 4 ${column})
+        check_diagnostic(${ins}-pc-low-${cpu} ${cpu} " org $1000\n ${ins} *-14,pc" 1350
+            "address displacement -17 outside [-16,15] (PC base 0x1003)" 4 ${column})
+        check_diagnostic(${ins}-final-forward-high-${cpu} ${cpu} " ${ins} target+1000,x\ntarget equ -984" 1350
+            "effective address displacement 16 outside [-16,15]" 3 ${column})
+    endforeach()
+    check_bytes(restricted-forward-${cpu} ${cpu} "${forward_body}" "${forward_expected}")
+    check_diagnostic(restricted-undefined-${cpu} ${cpu} " etbl missing,x" 1010 "symbol undefined" 3 7)
+    check_diagnostic(restricted-forced-wide-${cpu} ${cpu} " etbl >1,x" 1350 "5-bit offset,X/Y/SP/PC" 3 7)
+    check_bytes(restricted-errors-noemit-${cpu} ${cpu}
+        " expect 1350,1350\n tbl 16,x\n etbl -17,y\n endexpect\n db $12" "12")
+    check_bytes(restricted-original-${cpu} ${cpu}
+        " org $1000\n tbl -16,x\n tbl 15,x\n tbl -16,y\n tbl 15,y\n tbl -16,sp\n tbl 15,sp\n tbl *-13,pc\n tbl *+18,pc\n tbl a,x\n tbl b,y\n tbl d,sp\n tbl 1,x+\n etbl -16,x\n etbl 15,x\n etbl -16,y\n etbl 15,y\n etbl -16,sp\n etbl 15,sp\n etbl *-13,pc\n etbl *+18,pc\n etbl a,x\n etbl b,y\n etbl d,sp\n etbl 1,x+"
+        "183d10183d0f183d50183d4f183d90183d8f183dd0183dcf183de4183ded183df6183d30183f10183f0f183f50183f4f183f90183f8f183fd0183fcf183fe4183fed183ff6183f30")
+endforeach()
