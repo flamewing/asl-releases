@@ -604,3 +604,24 @@ check_bytes(extended-integer-original-sizes 68020
     "489000034cd00003c2c04c0010004c402801c30043804e50fffc4808fffffffc018800014e7a08010e1008000ad000400cfc808090c102d0000049c0")
 check_bytes(table-original-size 68332 " tblu.b (a0),d0" "f8100100")
 check_bytes(movem-cold-original-size MCF5407 " movem.l d0-d1,(a0)" "48d00003")
+
+# Conditional instructions distinguish size constraints from operand counts.
+check_diagnostic(branch-size-choices 68020 " bne.q *+4" 1130
+    "supported operand sizes: .B, .W, .L, .S, .X" 3 6)
+check_diagnostic(set-size-choices 68020 " sne.w d0" 1130
+    "supported operand sizes: .B" 3 6)
+check_diagnostic(db-size-choices 68020 " dbne.b d0,*+4" 1130
+    "supported operand sizes: .W" 3 7)
+check_diagnostic(trap-size-choices 68020 " trapne.s #1" 1130
+    "supported operand sizes: .B, .W, .L" 3 9)
+check_diagnostic(set-missing-operand 68020 " sne" 1110
+    "expected one argument but got 0" 3 2)
+check_diagnostic(set-extra-operand 68020 " sne d0,d1" 1110
+    "expected one argument but got 2" 3 2)
+check_diagnostic(set-size-primary 68020 " sne.w" 1130
+    "supported operand sizes: .B" 3 6)
+check_bytes(conditional-original-sizes 68020
+    " bne.b *+4\n bne.s *+4\n bne.w *+4\n bne.l *+4\n bne.x *+4\n sne.b d0\n dbne.w d0,*+4\n trapne.b\n trapne.w #1\n trapne.l #1"
+    "66026602660000026600000266ff0000000256c056c8000256fc56fa000156fb00000001")
+check_bytes(set-count-errors-noemit 68020
+    " expect 1110,1110\n sne\n sne d0,d1\n endexpect\n dc.b $12" "12")

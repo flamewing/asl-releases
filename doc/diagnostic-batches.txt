@@ -2323,3 +2323,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     integer, CPU32 table and ColdFire MOVEM byte vectors pass.
     Forty-seven of 98 historical size candidates reviewed; remainder pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+211. M68K conditional size choices and Scc operand-count classification.
+    Five historical size sites list branch .B/.W/.L/.S/.X, Scc .B, DBcc .W
+    and TRAPcc .B/.W/.L, and correct missing/extra Scc operands from misleading
+    1130 to located 1110 with actual/expected count. Size-first precedence remains.
+    Focused suffix/count/no-emission checks and original size/alias vectors pass.
+    Fifty-two of 98 historical size candidates reviewed; remainder pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

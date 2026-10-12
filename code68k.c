@@ -4607,7 +4607,7 @@ static void DecodeBcc(Word CondCode) {
 
     if ((OpSize > eSymbolSize32Bit) && (OpSize != eSymbolSizeFloat32Bit)
         && (OpSize != eSymbolSizeFloat96Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L, .S, .X");
     }
 
     /* nur ein Operand erlaubt */
@@ -4733,9 +4733,9 @@ static void DecodeBcc(Word CondCode) {
 
 static void DecodeScc(Word CondCode) {
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
-        WrError(ErrNum_InvOpSize);
-    } else if (ArgCnt != 1) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B");
+    } else if (!ChkArgCntExtPos(ArgCnt, 1, 1, &OpPart.Pos)) {
+        /* The count helper reports the expected and actual operand counts. */
     } else {
         tAdrResult AdrResult;
 
@@ -4757,7 +4757,7 @@ static void DecodeScc(Word CondCode) {
 
 static void DecodeDBcc(Word CondCode) {
     if (OpSize != eSymbolSize16Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         Boolean      ValOK;
         tSymbolFlags Flags;
@@ -4794,7 +4794,7 @@ static void DecodeTRAPcc(Word CondCode) {
     }
     ExpectArgCnt = (OpSize == eSymbolSize8Bit) ? 0 : 1;
     if (OpSize > 2) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (!ChkArgCnt(ExpectArgCnt, ExpectArgCnt))
         ;
     else if ((CondCode != 1) && !CheckNoFamily(1 << eColdfire))
