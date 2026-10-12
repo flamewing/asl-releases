@@ -6274,7 +6274,7 @@ static void DecodeSTLDSR(Word Code) {
         OpSize = eSymbolSize16Bit;
     }
     if (OpSize != eSymbolSize16Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W");
     } else if (
             ChkArgCnt(1, 1) && CheckFamily(1 << eColdfire)
             && CheckISA((1 << eCfISA_APlus) | (1 << eCfISA_C))) {
@@ -6366,7 +6366,7 @@ static void DecodeMVS_MVZ(Word Code) {
         OpSize = eSymbolSize16Bit;
     }
     if (OpSize > eSymbolSize16Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W");
         return;
     }
 
@@ -6416,7 +6416,7 @@ static void DecodeMAC_MSAC(Word Code) {
     }
 
     if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
         return;
     }
 
@@ -6532,7 +6532,7 @@ static void DecodeMOVCLR(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (!(pCurrCPUProps->SuppFlags & eFlagEMAC)) {
         report_cpu_capability_choices(eFlagEMAC, eCfISA_None, False);
     } else if (!DecodeMACACC(ArgStr[1].str.p_str, &ACCReg)) {
@@ -6557,7 +6557,7 @@ static void DecodeMxxAC(Word Code) {
     }
 
     if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
         return;
     }
 
@@ -6610,7 +6610,7 @@ static void DecodeCPBCBUSY(Word Code) {
     if (pCurrCPUProps->CfISA == eCfISA_None) {
         report_cpu_capability_choices(eFlagNone, eCfISA_A, False);
     } else if (*AttrPart.str.p_str && (OpSize != eSymbolSize16Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W");
     } else if (ChkArgCnt(1, 1)) {
         Boolean      OK;
         tSymbolFlags Flags;

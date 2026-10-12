@@ -2358,3 +2358,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     size/symbol errors and any emission. Original enabled vectors pass.
     Ninety-two of 98 historical size candidates reviewed; six ColdFire sites remain.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+215. Remaining ColdFire operand-size diagnostics.
+    Six candidates list STLDSR .W, MVS/MVZ .B/.W, MAC/MSAC/MxxAC .W/.L,
+    MOVCLR .L and CPBCBUSY .W at the suffix. Preserve predicates and precedence.
+    Every site has focused rejections and captured original successful byte vectors.
+    All 98 historical M68K size candidates now reviewed; addressing-mode,
+    register-list and direct-count families remain pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

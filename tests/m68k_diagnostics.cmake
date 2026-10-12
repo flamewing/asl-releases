@@ -759,3 +759,25 @@ check_bytes(pflushr-disabled-noemit 68020
 check_bytes(pmmu-specific-original-sizes 68020
     " supmode on\n pmmu on\n fullpmmu on\n pflushr.q (a0)\n pmove.b cal,(a0)\n pmove.w psr,(a0)\n pmove.l tc,(a0)\n pmove.q crp,(a0)\n pmove.b (a0),cal\n pmove.w (a0),psr\n pmove.l (a0),tc\n pmove.q (a0),crp\n pvalid.l val,(a0)\n pbbs.w *+4\n pdbbs.w d0,*+6\n psbs.b d0\n ptrapbs.b\n ptrapbs.w #1"
     "f010a000f0105200f0106200f0104200f0104e00f0105000f0106000f0104000f0104c00f0102800f0800002f04800000002f0400000f07c0000f07a00000001")
+
+# Remaining ColdFire width checks list their exact accepted sizes.
+check_diagnostic(stldsr-size MCF5208 " stldsr.l #1" 1130
+    "supported operand sizes: .W" 3 9)
+foreach(item IN ITEMS "mvs|l|d0,d1|.B, .W" "mvz|l|d0,d1|.B, .W"
+        "mac|b|d0,d1|.W, .L" "msac|b|d0,d1|.W, .L"
+        "movclr|w|acc0,d0|.L" "maaac|b|d0,d1,acc0,acc1|.W, .L"
+        "cp0bcbusy|l|*+2|.W")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 size)
+    list(GET parts 2 args)
+    list(GET parts 3 sizes)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(cold-specific-size-${ins} MCF5470 " ${ins}.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 3 ${column})
+endforeach()
+check_bytes(stldsr-original-size MCF5208 " stldsr.w #1" "40e746fc0001")
+check_bytes(cold-specific-original-sizes MCF5470
+    " mvs.b d0,d1\n mvz.w d0,d1\n mac.w d0.l,d1.u\n mac.l d0,d1\n movclr.l acc0,d0\n maaac.w d0.l,d1.u,acc0,acc1\n maaac.l d0,d1,acc0,acc1\n cp0bcbusy.w *+2"
+    "730073c0a2000080a2000800a1c0a2000085a2000805fcc00000")
