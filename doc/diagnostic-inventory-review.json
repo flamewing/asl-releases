@@ -548,8 +548,13 @@
         "ErrNum_JmpDistTooBig": 3,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_DistTooBig",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 147 reviews five historical range sites: relative byte/word branch, BBC/BBS, PER show displacement/bounds/PC base; forced word address identifies DT/PG bank/window or unknown assumption. Adjacent forced direct page under/overflow reports DPR-relative offset/window or unknown assumption with original IDs/predicates. Nine addressing sites remain. Follow-ups 144-146 fix premature forward checks and accumulator-B partial emission."
     },
     "code7720.c": {
       "candidate_counts": {

@@ -2311,3 +2311,7 @@ Message ErrMsgLengthPrefixForm
 Message ErrMsgModifiedIndexRegister
  "Indexregister R%u wird von der Basisadressierung %s ver&auml;ndert"
  "index register R%u is modified by base addressing %s"
+
+Message ErrMsgAddressBankWindow
+ "Adresse 0x%lllx verwendet Bank %llld; ASSUME %s=%llld erlaubt [0x%lllx,0x%lllx]"
+ "address 0x%lllx uses bank %llld; ASSUME %s=%llld permits [0x%lllx,0x%lllx]"

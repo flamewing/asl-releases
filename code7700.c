@@ -12,6 +12,8 @@
 
 #include "code7700.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -91,6 +93,7 @@ static Byte const PushRegCodes[PushRegCnt] = {0, 1, 2, 3, 4, 5, 5, 6, 6, 7};
 #define PrefAccB 0x42
 
 static LongInt Reg_PG, Reg_DT, Reg_X, Reg_M, Reg_DPR, BankReg;
+static char const* BankRegName;
 
 static Boolean  WordSize;
 static Byte     AdrVals[3];
@@ -113,6 +116,40 @@ static as_assume_rec_t ASSUME7700s[] = {
 
 /*---------------------------------------------------------------------------*/
 /* Address Parsing */
+
+static void WrBranchRange(tErrorNum ErrorNum, tStrComp const* pArg, LongInt Disp,
+                          LongInt Min, LongInt Max, LargeWord Base) {
+    char Detail[200];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)Disp, (LargeInt)Min, (LargeInt)Max, Base);
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
+
+static void WrDirectPageRange(tStrComp const* pArg, LongInt Address) {
+    char Detail[200];
+    if (Reg_DPR == 0x10000) {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
+                    "DPR", (LargeWord)Address);
+    } else {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressRegisterOffsetRange),
+                    (LargeWord)Address, (LargeInt)(Address - Reg_DPR), (LargeInt)0, (LargeInt)255,
+                    "DPR", (LargeWord)Reg_DPR);
+    }
+    WrXErrorPos((Address < Reg_DPR) ? ErrNum_UnderRange : ErrNum_OverRange, Detail, &pArg->Pos);
+}
+
+static void WrBankRange(tStrComp const* pArg, LongInt Address) {
+    char Detail[240];
+    if (BankReg == 0x100) {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
+                    BankRegName, (LargeWord)Address);
+    } else {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressBankWindow),
+                    (LargeWord)Address, (LargeInt)(Address >> 16), BankRegName, (LargeInt)BankReg,
+                    (LargeWord)(BankReg << 16), (LargeWord)((BankReg << 16) | 0xffff));
+    }
+    WrXErrorPos(ErrNum_OverRange, Detail, &pArg->Pos);
+}
 
 static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
     Boolean      OK;
@@ -158,15 +195,17 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
     } else {
         switch (DType) {
         case 0:
-            if (mFirstPassUnknown(Flags) || (ChkRange(Adr, Reg_DPR, Reg_DPR + 0xff))) {
+            if (mFirstPassUnknown(Flags) || ((Adr >= Reg_DPR) && (Adr <= Reg_DPR + 0xff))) {
                 AdrCnt     = 1;
                 AdrType    = Start;
                 AdrVals[0] = Lo(Adr - Reg_DPR);
+            } else {
+                WrDirectPageRange(pArg, Adr);
             }
             break;
         case 1:
             if (!mFirstPassUnknown(Flags) && ((Adr >> 16) != BankReg)) {
-                WrError(ErrNum_OverRange);
+                WrBankRange(pArg, Adr);
             } else {
                 AdrCnt     = 2;
                 AdrType    = Start + 1;
@@ -424,7 +463,8 @@ static void DecodeRel(Word Index) {
             {
                 if (((AdrLong < -32768) || (AdrLong > 32767))
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_DistTooBig);
+                    WrBranchRange(ErrNum_DistTooBig, &ArgStr[1], AdrLong, -32768, 32767,
+                                  EProgCounter() + pOrder->Disp16);
                 } else {
                     CodeLen     = 3;
                     BAsmCode[0] = Hi(pOrder->Code);
@@ -435,7 +475,8 @@ static void DecodeRel(Word Index) {
             {
                 if (((AdrLong < -128) || (AdrLong > 127))
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    WrBranchRange(ErrNum_JmpDistTooBig, &ArgStr[1], AdrLong, -128, 127,
+                                  EProgCounter() + pOrder->Disp8);
                 } else {
                     CodeLen     = 2;
                     BAsmCode[0] = Lo(pOrder->Code);
@@ -651,7 +692,8 @@ static void DecodeBBC_BBS(Word Code) {
                 } else if (
                         !mFirstPassUnknownOrQuestionable(Flags)
                         && ((AdrLong < -128) || (AdrLong > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    WrBranchRange(ErrNum_JmpDistTooBig, &ArgStr[3], AdrLong, -128, 127,
+                                  EProgCounter() + CodeLen + 1);
                     CodeLen = 0;
                 } else {
                     BAsmCode[CodeLen] = Lo(AdrLong);
@@ -890,6 +932,7 @@ static void DecodeJMP_JSR(Word IsJSR) {
 
     if (ChkArgCnt(1, 1)) {
         BankReg = Reg_PG;
+        BankRegName = "PG";
         DecodeAdr(
                 1, MModAbs24 | MModIndX16 | (LFlag ? 0 : MModAbs16)
                            | (IsJSR ? 0 : MModInd16));
@@ -1071,7 +1114,8 @@ static void DecodePER(Word Code) {
             if (OK) {
                 if (((AdrLong < -32768) || (AdrLong > 32767))
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    WrBranchRange(ErrNum_JmpDistTooBig, &ArgStr[1], AdrLong, -32768, 32767,
+                                  EProgCounter() + 3);
                 } else {
                     CodeLen     = 3;
                     BAsmCode[1] = AdrLong & 0xff;
@@ -1313,6 +1357,7 @@ static void DeinitFields(void) {
 
 static void MakeCode_7700(void) {
     BankReg = Reg_DT;
+    BankRegName = "DT";
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

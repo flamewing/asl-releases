@@ -1727,3 +1727,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     All six mnemonics verify no emission on 65816 and preserve captured bytes
     on three MELPS CPUs; retain CPU rules and diagnostic ID.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+147. MELPS7700/65816 displacement and assumed-address windows.
+    Five historical range sites identify actual byte/word branch displacement,
+    interval and exact PC base, or actual bank and ASSUME DT/PG window. Adjacent
+    forced direct-page errors identify DPR-relative offset [0,255]. NOTHING
+    assumptions name unknown DPR/DT/PG instead of internal sentinel values.
+    Position failures at their address/target operands; preserve IDs/predicates,
+    raw PER immediate behavior and accepted bytes. Four CPUs cover both bounds,
+    both bank contexts, unknown assumptions and captured endpoint encodings.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.
