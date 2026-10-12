@@ -87,3 +87,43 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
 endif()
 set(ENV{LC_MESSAGES} en)
 
+
+foreach(cpu IN ITEMS MN1610 MN1613)
+    check_diagnostic(${cpu}-shift-options ${cpu} " sl R0,bad,Z" 1380
+        "operand must be RE, SE, CE" 3 8)
+    foreach(op IN ITEMS sbit rbit tbit ai si)
+        string(LENGTH "${op}" column)
+        math(EXPR column "${column} + 6")
+        foreach(value IN ITEMS -1 16)
+            check_diagnostic(${cpu}-${op}-${value} ${cpu} " ${op} R0,${value}" 1320
+                "immediate value ${value} outside [0,15]" 3 ${column})
+        endforeach()
+        check_diagnostic(${cpu}-${op}-primary ${cpu} " ${op} R0,1/0" 1310 "division by 0" 3 "")
+    endforeach()
+    check_bytes(${cpu}-forward-immediate ${cpu} " sbit R0,value+1000\nvalue equ -985" "380f")
+endforeach()
+foreach(reg IN ITEMS R0 R5 Y0 X2)
+    check_diagnostic(indirect-${reg} MN1613 " lr R1,(${reg})" 1445
+        "operand must be R1..R4, X0, X1" 3 9)
+endforeach()
+check_diagnostic(indirect-shape MN1613 " lr R1,R2" 1985
+    "operand must be (Rn), -(Rn), (Rn)+; n=1..4, X0=R3, X1=R4" 3 8)
+check_diagnostic(indirect-update MN1613 " mvwr R0,(R2)+" 1985
+    "operand must be (R1), (R2), (R3/X0), (R4/X1)" 3 10)
+check_diagnostic(double-register MN1613 " ad DR1,(R1)" 1445 "operand must be DR0" 3 5)
+check_diagnostic(double-register-second MN1613 " fix R0,DR1" 1445 "operand must be DR0" 3 9)
+check_bytes(shared-original MN1613
+ " sl R0,RE\n sr R1,SE\n sl R2,CE,Z\n lr R1,(R2)\n lr R1,-(R2)\n lr R1,(R2)+\n mvwr R0,(X0)\n ad DR0,(R1)\n fix R0,DR0\n sbit R0,0\n sbit R0,15\n ai R0,15"
+ "200d210a224f2141218121c17f0a4f041f0f3800380f480f")
+check_bytes(shared-noemit MN1613
+ " expect 1380,1445,1445,1320,1320\n sl R0,bad,Z\n lr R1,(R0)\n ad DR1,(R1)\n sbit R0,-1\n ai R0,16\n endexpect\n nop" "7808")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/MN1610-sbit--1.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Unmittelbarer Wert -1" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German MN1610 immediate: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
+

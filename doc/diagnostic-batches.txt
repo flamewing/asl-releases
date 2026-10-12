@@ -2788,3 +2788,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     checks. Both CPUs, original mode vector, endpoints, forwards, primary-only,
     rejected emission and German checked. Sixteen candidates remain.
     Validation: all 425 CTest cases pass with embedded/external catalogs.
+
+262. MN1610/MN1613 shared operand and immediate diagnostics.
+    Five historical sites: shift RE/SE/CE, indirect R1..R4/X0/X1, DR0 and
+    immediate [0,15] with full value before byte conversion. Adjacent malformed
+    indirect/update cases list permitted syntax. Locate actual operands/register
+    components; preserve optional shift disambiguation and accepted encodings.
+    Defer unresolved immediate constraints. Both CPUs, primary-only, original,
+    forward/no-emission and German checks. Eleven fixed-register sites remain.
+    Validation: all 425 CTest cases pass with embedded/external catalogs.

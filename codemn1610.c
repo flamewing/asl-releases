@@ -44,6 +44,12 @@ static tStrComp InnerZ;
 
 /*---------------------------------------------------------------------------*/
 
+static void report_operand_choices(tStrComp const* arg, unsigned error, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
 static Boolean DecReg(char const* pAsc, Word* pErg, Boolean errMsg) {
     if (!as_strcasecmp(pAsc, "SP")) {
         *pErg = 5;
@@ -121,7 +127,8 @@ static Boolean DecSkip(char const* pAsc, Word* pErg, Boolean errMsg) {
     return False;
 }
 
-static Boolean DecEM(char const* pAsc, Word* pErg, Boolean errMsg) {
+static Boolean DecEM(tStrComp const* arg, Word* pErg, Boolean errMsg) {
+    char const* pAsc = arg->str.p_str;
     static struct {
         char const* str;
         Word        em;
@@ -142,7 +149,7 @@ static Boolean DecEM(char const* pAsc, Word* pErg, Boolean errMsg) {
     }
 
     if (errMsg) {
-        WrError(ErrNum_InvShiftArg);
+        report_operand_choices(arg, ErrNum_InvShiftArg, "RE, SE, CE");
     }
     return False;
 }
@@ -172,11 +179,13 @@ static Boolean DecBB(char const* pAsc, Word* pErg) {
     return False;
 }
 
-static Boolean DecRIndirect(char const* pAsc, Word* mm, Word* ii, Boolean bAuto) {
+static Boolean DecRIndirect(tStrComp const* arg, Word* mm, Word* ii, Boolean bAuto) {
+    char const* pAsc = arg->str.p_str;
     int  l = strlen(pAsc);
     int  rp;
     char MinReg, MaxReg;
     Word RegOffs;
+    tStrComp reg_arg;
 
     if (l == 4 && pAsc[0] == '(' && pAsc[3] == ')') {
         *mm = 0x1;
@@ -188,14 +197,19 @@ static Boolean DecRIndirect(char const* pAsc, Word* mm, Word* ii, Boolean bAuto)
         *mm = 0x3;
         rp  = 1;
     } else {
-        WrError(ErrNum_InvArg);
+        report_operand_choices(arg, ErrNum_InvArg, bAuto
+                ? "(Rn), -(Rn), (Rn)+; n=1..4, X0=R3, X1=R4"
+                : "(R1), (R2), (R3/X0), (R4/X1)");
         return False;
     }
 
     if (!bAuto && *mm != 0x1) {
-        WrError(ErrNum_InvArg);
+        report_operand_choices(arg, ErrNum_InvArg, "(R1), (R2), (R3/X0), (R4/X1)");
         return False;
     }
+
+    StrCompRefRight(&reg_arg, arg, rp);
+    reg_arg.Pos.Len = 2;
 
     switch (toupper(pAsc[rp])) {
     case 'R':
@@ -209,12 +223,12 @@ static Boolean DecRIndirect(char const* pAsc, Word* mm, Word* ii, Boolean bAuto)
         RegOffs = 2;
         break;
     default:
-        WrError(ErrNum_InvReg);
+        report_operand_choices(&reg_arg, ErrNum_InvReg, "R1..R4, X0, X1");
         return False;
     }
 
     if (pAsc[rp + 1] < MinReg || pAsc[rp + 1] > MaxReg) {
-        WrError(ErrNum_InvReg);
+        report_operand_choices(&reg_arg, ErrNum_InvReg, "R1..R4, X0, X1");
         return False;
     }
 
@@ -241,13 +255,14 @@ static Boolean DecC(char const* pAsc, Word* pErg, Boolean errMsg) {
     return False;
 }
 
-static Boolean DecDReg(char const* pAsc, Boolean errMsg) {
+static Boolean DecDReg(tStrComp const* arg, Boolean errMsg) {
+    char const* pAsc = arg->str.p_str;
     if (as_strcasecmp(pAsc, "DR0") == 0) {
         return True;
     }
 
     if (errMsg) {
-        WrError(ErrNum_InvReg);
+        report_operand_choices(arg, ErrNum_InvReg, "DR0");
     }
     return False;
 }
@@ -335,12 +350,6 @@ static Boolean DecHR(char const* pAsc, Word* pErg) {
 }
 
 /* MN1610 */
-
-static void report_operand_choices(tStrComp const* arg, unsigned error, char const* choices) {
-    char detail[240];
-    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
-    WrXErrorPos(error, detail, &arg->Pos);
-}
 
 static void report_displacement(LargeInt value, LargeInt minimum, LargeInt maximum,
         tStrComp const* arg) {
@@ -640,7 +649,7 @@ static void DecodeShift(Word Index) {
         skip = 0;
         break;
     case 2:
-        if (DecEM(ArgStr[2].str.p_str, &em, False)) {
+        if (DecEM(&ArgStr[2], &em, False)) {
             skip = 0;
         } else if (DecSkip(ArgStr[2].str.p_str, &skip, False)) {
             em = 0;
@@ -650,7 +659,7 @@ static void DecodeShift(Word Index) {
         }
         break;
     case 3:
-        if (!DecEM(ArgStr[2].str.p_str, &em, True)) {
+        if (!DecEM(&ArgStr[2], &em, True)) {
             return;
         }
         if (!DecSkip(ArgStr[3].str.p_str, &skip, True)) {
@@ -668,7 +677,8 @@ static void DecodeShift(Word Index) {
 static void DecodeBit(Word Index) {
     Word    reg;
     Word    skip = 0;
-    Byte    imm4;
+    LargeInt imm4;
+    tSymbolFlags flags;
     Boolean OK;
 
     if (!ChkArgCnt(2, 3)) {
@@ -683,12 +693,17 @@ static void DecodeBit(Word Index) {
         return;
     }
 
-    imm4 = EvalStrIntExpression(&ArgStr[2], Int8, &OK);
+    imm4 = EvalStrIntExpressionWithFlags(&ArgStr[2], Int8, &OK, &flags);
     if (!OK) {
         return;
     }
-    if (/*imm4 < 0 ||*/ imm4 > 0x0f) {
-        WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+    if (mFirstPassUnknownOrQuestionable(flags))
+        imm4 = 0;
+    if (imm4 < 0 || imm4 > 0x0f) {
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgImmediateValueRange),
+                imm4, (LargeInt)0, (LargeInt)15);
+        WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[2].Pos);
         return;
     }
 
@@ -789,7 +804,7 @@ static void DecodeLR(Word Index) {
         }
     }
 
-    if (!DecRIndirect(ArgStr[ArgCnt].str.p_str, &mm, &ii, True)) {
+    if (!DecRIndirect(&ArgStr[ArgCnt], &mm, &ii, True)) {
         return;
     }
 
@@ -820,7 +835,7 @@ static void DecodeMVWR(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii, False)) {
         return;
     }
 
@@ -944,11 +959,11 @@ static void DecodeAD(Word Index) {
         return;
     }
 
-    if (!DecDReg(ArgStr[1].str.p_str, True)) {
+    if (!DecDReg(&ArgStr[1], True)) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii, False)) {
         return;
     }
 
@@ -988,11 +1003,11 @@ static void DecodeM(Word Index) {
         return;
     }
 
-    if (!DecDReg(ArgStr[1].str.p_str, True)) {
+    if (!DecDReg(&ArgStr[1], True)) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii, False)) {
         return;
     }
 
@@ -1030,7 +1045,7 @@ static void DecodeDAA(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii, False)) {
         return;
     }
 
@@ -1077,7 +1092,7 @@ static void DecodeFIX(Word Index) {
         return;
     }
 
-    if (!DecDReg(ArgStr[2].str.p_str, True)) {
+    if (!DecDReg(&ArgStr[2], True)) {
         return;
     }
 
@@ -1104,7 +1119,7 @@ static void DecodeFLT(Word Index) {
         return;
     }
 
-    if (!DecDReg(ArgStr[1].str.p_str, True)) {
+    if (!DecDReg(&ArgStr[1], True)) {
         return;
     }
 
@@ -1196,7 +1211,7 @@ static void DecodeBR(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[1].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[1], &mm, &ii, False)) {
         return;
     }
 
@@ -1310,7 +1325,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[1].str.p_str, &mm, &ii1, False)) {
+    if (!DecRIndirect(&ArgStr[1], &mm, &ii1, False)) {
         return;
     }
     if (ii1 != 1) {
@@ -1318,7 +1333,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii2, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii2, False)) {
         return;
     }
     if (ii2 != 0) {
@@ -1360,7 +1375,7 @@ static void DecodeRDR(Word Index) {
         return;
     }
 
-    if (!DecRIndirect(ArgStr[2].str.p_str, &mm, &ii, False)) {
+    if (!DecRIndirect(&ArgStr[2], &mm, &ii, False)) {
         return;
     }
 

@@ -1257,10 +1257,12 @@
         "ErrNum_OverRange": 4
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InvShiftArg",
+        "ErrNum_OverRange"
       ],
       "status": "partial",
-      "review_notes": "Tranche 261 reviews four shared address range candidates: actual unsigned-byte pointer/X0/X1 offset, signed IC offset and PC-relative distance with base, all at component. Adjacent indexed pointer-register constraints identify R3/X0 or R4/X1. Stop emitting after out-of-range PC target and defer unknown/questionable range checks; preserve valid mode/word selection. Sixteen candidates remain (including one immediate range site)."
+      "review_notes": "Tranche 261 reviews four shared address range candidates: actual unsigned-byte pointer/X0/X1 offset, signed IC offset and PC-relative distance with base, all at component. Adjacent indexed pointer-register constraints identify R3/X0 or R4/X1. Stop emitting after out-of-range PC target and defer unknown/questionable range checks; preserve valid mode/word selection. Sixteen candidates remain (including one immediate range site). Tranche 262 reviews five shared helper/immediate sites: RE/SE/CE shift options, indirect register names/syntax/update permissions and DR0 at actual operand/component. Four-bit immediate reports full pre-narrowing value [0,15], preserving all accepted values and deferring provisional ones. Eleven fixed-register sites remain."
     },
     "codemn2610.c": {
       "candidate_counts": {
