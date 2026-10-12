@@ -2563,3 +2563,67 @@ Message ErrMsgSupportedCoreChoices
 Message ErrMsgZ8WorkWindows
  "Adresse 0x%lllx au&szlig;erhalb der Arbeitsregisterfenster: %s"
  "address 0x%lllx outside working-register windows: %s"
+
+Message ErrMsgZ8WorkingRegister
+ "R0..R15 oder Adresse im aktuellen Arbeitsregisterfenster"
+ "R0..R15 or address in the current working-register window"
+
+Message ErrMsgZ8GeneralRegister
+ "R0..R15 oder 8-Bit-Registeradresse"
+ "R0..R15 or 8-bit register address"
+
+Message ErrMsgZ8GeneralPair
+ "gerade 8-Bit-Registerpaaradresse"
+ "even 8-bit register-pair address"
+
+Message ErrMsgZ8IndirectWorking
+ "@R0..@R15"
+ "@R0..@R15"
+
+Message ErrMsgZ8IndirectGeneral
+ "@R0..@R15 oder @8-Bit-Registeradresse"
+ "@R0..@R15 or @8-bit register address"
+
+Message ErrMsgZ8Immediate
+ "#Ausdruck"
+ "#expression"
+
+Message ErrMsgZ8WorkingPair
+ "RR0/RR2..RR14"
+ "RR0/RR2..RR14"
+
+Message ErrMsgZ8IndirectWorkingPair
+ "@RR0/@RR2..@RR14"
+ "@RR0/@RR2..@RR14"
+
+Message ErrMsgZ8IndirectGeneralPair
+ "@gerade 8-Bit-Registerpaaradresse"
+ "@even 8-bit register-pair address"
+
+Message ErrMsgZ8IndexedByte
+ "Verschiebung(R0..R15)"
+ "displacement(R0..R15)"
+
+Message ErrMsgZ8ExtendedRegister
+ "R0..R15 oder 12-Bit-Registeradresse (>>Adresse)"
+ "R0..R15 or 12-bit register address (>>address)"
+
+Message ErrMsgZ8IndexedPair
+ "vorzeichenbehaftete 8-Bit-Verschiebung(RR0/RR2..RR14)"
+ "signed 8-bit displacement(RR0/RR2..RR14)"
+
+Message ErrMsgZ8IndexedPairLong
+ "Verschiebung(RR0/RR2..RR14); RR0 erfordert eine vorzeichenbehaftete 8-Bit-Verschiebung"
+ "displacement(RR0/RR2..RR14); RR0 requires a signed 8-bit displacement"
+
+Message ErrMsgZ8WeirdIndirect
+ "@.RR(Ausdruck)"
+ "@.RR(expression)"
+
+Message ErrMsgZ8CodeAddress
+ "absolute Codeadresse"
+ "absolute code address"
+
+Message ErrMsgZ8ConditionalIndirect
+ "Bedingung '%s' erlaubt keinen indirekten Sprung; erwartet wird eine absolute Codeadresse oder JP ohne Bedingung"
+ "condition '%s' does not allow an indirect jump; expected absolute code address or unconditional JP"

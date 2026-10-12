@@ -334,13 +334,37 @@ static Boolean CorrMode12(Word Mask, ShortInt Old, ShortInt New) {
  * \return true if OK
  * ------------------------------------------------------------------------ */
 
+static void report_address_choices(Word mask, tStrComp const* p_arg) {
+    static int const messages[] = {
+        Num_ErrMsgZ8WorkingRegister, Num_ErrMsgZ8GeneralRegister,
+        Num_ErrMsgZ8GeneralPair, Num_ErrMsgZ8IndirectWorking,
+        Num_ErrMsgZ8IndirectGeneral, Num_ErrMsgZ8Immediate,
+        Num_ErrMsgZ8WorkingPair, Num_ErrMsgZ8IndirectWorkingPair,
+        Num_ErrMsgZ8IndirectGeneralPair, Num_ErrMsgZ8IndexedByte,
+        Num_ErrMsgZ8ExtendedRegister, Num_ErrMsgZ8IndexedPair,
+        Num_ErrMsgZ8IndexedPairLong, Num_ErrMsgZ8WeirdIndirect,
+        Num_ErrMsgZ8CodeAddress
+    };
+    char choices[600] = "", detail[660];
+    unsigned mode;
+    for (mode = ModWReg; mode <= ModDA; mode++) {
+        if (!(mask & (1 << mode)))
+            continue;
+        if (*choices)
+            strmaxcat(choices, "; ", sizeof(choices));
+        strmaxcat(choices, getmessage(messages[mode]), sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+}
+
 static Boolean ChkAdr(Word Mask, tStrComp const* pArg) {
     CorrMode8(Mask, ModWReg, ModReg);
     CorrMode12(Mask, ModWReg, ModXReg);
     CorrMode8(Mask, ModIWReg, ModIReg);
 
     if ((AdrType != ModNone) && !(Mask & (1 << AdrType))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        report_address_choices(Mask, pArg);
         AdrType = ModNone;
         return False;
     }
@@ -1639,7 +1663,10 @@ static void DecodeJP(Word Index) {
             switch (AdrType) {
             case ModIWRReg:
                 if (z != TrueCond) {
-                    WrError(ErrNum_InvAddrMode);
+                    char detail[200];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8ConditionalIndirect),
+                            ArgStr[1].str.p_str);
+                    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[ArgCnt].Pos);
                 } else {
                     BAsmCode[0]
                             = (pCurrCPUProps->CoreFlags & eCoreZ8Encore) ? 0xc4 : 0x30;
@@ -1649,7 +1676,10 @@ static void DecodeJP(Word Index) {
                 break;
             case ModIRReg:
                 if (z != TrueCond) {
-                    WrError(ErrNum_InvAddrMode);
+                    char detail[200];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8ConditionalIndirect),
+                            ArgStr[1].str.p_str);
+                    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[ArgCnt].Pos);
                 } else {
                     BAsmCode[0]
                             = (pCurrCPUProps->CoreFlags & eCoreZ8Encore) ? 0xc4 : 0x30;

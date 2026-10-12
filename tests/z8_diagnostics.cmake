@@ -159,3 +159,28 @@ check_diagnostic(index-working-forward-invalid Z8601 " assume rp:32\n ld r0,1(in
  "address 0x0 outside working-register windows" 4 10)
 check_bytes(index-window-noemit Z8601
  " assume rp:32\n expect 1445\n ld r0,1(00h)\n endexpect\n db 18" "12")
+
+check_diagnostic(working-register-mask Z8601 " djnz rr2,0" 1350
+ "operand must be R0..R15 or address in the current working-register window" 3 7)
+check_diagnostic(indirect-pair-mask Z8601 " ldc r0,r1" 1350
+ "operand must be @RR0/@RR2..@RR14" 3 9)
+check_diagnostic(immediate-mask Z8601 " srp r1" 1350 "operand must be #expression" 3 6)
+check_diagnostic(jp-conditional-working Z8601 " jp nz,@rr2" 1350
+ "condition 'NZ' does not allow an indirect jump; expected absolute code address or unconditional JP" 3 8)
+check_diagnostic(jp-conditional-general Z8601 " jp nz,@32" 1350
+ "condition 'NZ' does not allow an indirect jump" 3 8)
+check_diagnostic(jp-primary Z8601 " jp nz,1/0" 1310 "division by 0" 3 "")
+check_bytes(mask-original Z8601
+ " ld r0,#1\n ld >32,#1\n ld r0,@r1\n ldc r0,@rr2\n jp @rr2\n jp nz,0"
+ "0c01e62001e301c20230e2ed0000")
+check_bytes(mode-mask-noemit Z8601
+ " expect 1350,1350,1350\n djnz rr2,0\n ldc r0,r1\n jp nz,@rr2\n endexpect\n db 18" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/working-register-mask.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "aktuellen Arbeitsregisterfenster" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German Z8 addressing: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

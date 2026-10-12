@@ -2571,3 +2571,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     RP-index rejection. Original/forward bytes, actual warning bytes, final invalid,
     no rejected emission, primary target errors and German detail checked.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+238. Z8 addressing-mask alternatives and conditional indirect JP.
+    Three of six mode sites reviewed: localized choices derive from actual
+    CPU-adjusted mask and existing working/general conversions; conditional JP
+    identifies condition and required absolute target/unconditional JP at target.
+    Preserve all mask/condition predicates and original byte vector. Primary errors,
+    no failed emission and German detail checked. Three bit-mode candidates remain.
+    Validation: all 420 CTest cases pass with embedded/external catalogs.
