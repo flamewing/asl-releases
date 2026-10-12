@@ -2415,3 +2415,11 @@ Message ErrMsgMACHalfSuffix
 Message ErrMsgMultiplyDestinationsOverlap
  "Beide Lang-Multiplikationsziele verwenden D%u; die Zielregister m&uuml;ssen verschieden sein"
  "both long multiply destinations select D%u; destination registers must be distinct"
+
+Message ErrMsgSupportedCPUChoices
+ "Erlaubte CPUs: %s"
+ "supported CPUs: %s"
+
+Message ErrMsgColdFireISAChoices
+ "Gew&auml;hlte ColdFire-ISA %s; erlaubte ISAs: %s"
+ "selected ColdFire ISA %s; supported ISAs: %s"

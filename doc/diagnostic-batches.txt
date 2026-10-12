@@ -2238,3 +2238,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Low/high registers, aliases, valid distinct pairs, non-warning divide overlap
     and German detail are covered. Remaining M68K families pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+202. M68K family masks and ColdFire ISA capability diagnostics.
+    Three shared historical instruction-capability candidates now derive the
+    supported model list from CPU registration, or identify the selected versus
+    permitted ColdFire ISA set. Preserve all masks, error 1500, mnemonic position
+    and CodeLen reset. Required/excluded families and ISA A rejection, plus
+    accepted CPU32/later-generation/ColdFire A+/B/C bytes, no failure emission
+    and German details are covered. Eleven direct capability sites remain pending.
+    Confirmed adjacent AND/OR-to-CCR emission after size/CPU rejection remains
+    for a separate batch.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

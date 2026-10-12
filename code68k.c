@@ -199,6 +199,8 @@ static Byte const FSizeCodes[10] = {6, 4, 0, 7, 0, 1, 5, 2, 0, 3};
 /*-------------------------------------------------------------------------*/
 /* Unterroutinen */
 
+static void report_cpu_family_choices(unsigned mask);
+
 static Boolean CheckFamilyCore(unsigned FamilyMask) {
     return !!((FamilyMask >> pCurrCPUProps->Family) & 1);
 }
@@ -207,7 +209,7 @@ static Boolean CheckFamily(unsigned FamilyMask) {
     if (CheckFamilyCore(FamilyMask)) {
         return True;
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+    report_cpu_family_choices(FamilyMask);
     CodeLen = 0;
     return False;
 }
@@ -216,7 +218,19 @@ static Boolean CheckISA(unsigned ISAMask) {
     if ((ISAMask >> pCurrCPUProps->CfISA) & 1) {
         return True;
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+    {
+        static char const* const isa_names[] = {"-", "A", "A+", "B", "C"};
+        char choices[40] = "", detail[160];
+        unsigned index;
+        for (index = 0; index < as_array_size(isa_names); index++) {
+            if (!((ISAMask >> index) & 1)) continue;
+            if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, isa_names[index], sizeof(choices));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgColdFireISAChoices),
+                isa_names[pCurrCPUProps->CfISA], choices);
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
+    }
     CodeLen = 0;
     return False;
 }
@@ -225,7 +239,7 @@ static Boolean CheckNoFamily(unsigned FamilyMask) {
     if (!CheckFamilyCore(FamilyMask)) {
         return True;
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+    report_cpu_family_choices(~FamilyMask);
     CodeLen = 0;
     return False;
 }
@@ -7515,6 +7529,20 @@ static tCPUProps const CPUProps[] = {
          {CtRegs_1040, CtRegs_2040, CtRegs_40}                                                                                      },
         {      NULL, 0, e68KGen1a, eCfISA_None,                                                                    eFlagNone, {NULL}},
 };
+
+/* Use the actual model table so family-mask diagnostics stay in sync with CPU
+ * registration, including ColdFire and CPU32 variants. */
+static void report_cpu_family_choices(unsigned mask) {
+    char choices[512] = "", detail[600];
+    tCPUProps const* cpu;
+    for (cpu = CPUProps; cpu->pName; cpu++) {
+        if (!((mask >> cpu->Family) & 1)) continue;
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, cpu->pName, sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedCPUChoices), choices);
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
+}
 
 void code68k_init(void) {
     tCPUProps const* pProp;

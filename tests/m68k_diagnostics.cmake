@@ -340,3 +340,35 @@ if(NOT "${result}" STREQUAL "0" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German multiply overlap: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Family masks identify supported models from the registration table. ColdFire
+# ISA failures identify the selected ISA versus the exact permitted set.
+check_diagnostic(cpu32-requirement 68020 " lpstop #0" 1500
+    "supported CPUs: 68332, 68340, 68360" 3 2)
+check_diagnostic(coldfire-requirement 68020 " wddata.w (a0)" 1500
+    "supported CPUs: MCF5202, MCF5204, MCF5206, MCF5208" 3 2)
+check_diagnostic(excluded-generation 68000 " move.w ccr,d0" 1500
+    "supported CPUs: 68010, 68012, MCF5202" 3 2)
+check_diagnostic(coldfire-isa-requirement MCF5202 " supmode on\n move.l usp,a0" 1500
+    "selected ColdFire ISA A; supported ISAs: A+, B, C" 4 2)
+check_bytes(family-errors-noemit 68020
+    " expect 1500,1500\n lpstop #0\n wddata.w (a0)\n endexpect\n dc.b $12" "12")
+check_bytes(excluded-family-noemit 68000
+    " expect 1500\n move.w ccr,d0\n endexpect\n dc.b $12" "12")
+check_bytes(isa-error-noemit MCF5202
+    " supmode on\n expect 1500\n move.l usp,a0\n endexpect\n dc.b $12" "12")
+check_bytes(cpu32-original 68332 " supmode on\n lpstop #0" "f80001c00000")
+check_bytes(later-generation-original 68010 " move.w ccr,d0" "42c0")
+check_bytes(coldfire-original MCF5202 " supmode on\n wddata.w (a0)" "f450")
+foreach(cpu IN ITEMS MCF5208 MCF5407 MCF51QM)
+    check_bytes(coldfire-isa-original-${cpu} ${cpu} " supmode on\n move.l usp,a0" "4e68")
+endforeach()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/cpu32-requirement.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Erlaubte CPUs: 68332, 68340, 68360" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German family choices: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
