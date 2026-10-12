@@ -1874,3 +1874,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     1350 for bracket failures). All 16 historical sites now reviewed.
     Four CPUs/WSR/WSR1/mapped bytes/quoted brackets/no emission tested.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+164. 6800-family forward ordinary branches.
+    Ordinary byte branches reject unresolved target expressions on first
+    pass. Defer the check for unknown/questionable symbols; preserve existing
+    signed 16-bit displacement wrapping. All 19 registered branch names and
+    five CPUs (BRN remains CPU-gated) cover provisional upper/lower targets
+    and retained final failures. Existing bit-branch checks already defer both.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.

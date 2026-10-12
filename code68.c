@@ -426,7 +426,7 @@ static void DecodeRel(Word Index) {
         AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[1], Int16, &OK, &Flags);
         if (OK) {
             AdrInt -= EProgCounter() + 2;
-            if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
+            if (((AdrInt < -128) || (AdrInt > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 report_branch_distance(AdrInt, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 CodeLen     = 2;

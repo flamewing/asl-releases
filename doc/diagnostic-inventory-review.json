@@ -2063,6 +2063,11 @@
       "file": "code96.c",
       "issue": "Shift and MVAC/MSAC count constraints reject provisional immediate counts or register addresses before forward expressions resolve.",
       "status": "fixed in tranche 161; defer four upper/lower checks for unknown/questionable symbols; shifts on four CPUs and both 80296 MVAC/MSAC variants cover immediate/register forward values and final failures"
+    },
+    {
+      "file": "code68.c",
+      "issue": "Ordinary 6800-family byte branches reject first-pass unresolved target-expression distances before resolution; bit branches already defer unknown/questionable values.",
+      "status": "fixed in tranche 164; defer ordinary branch check for unknown/questionable flags; all 19 branch mnemonics/five CPUs (BRN gated)/upper-lower provisional expressions/final failures checked"
     }
   ]
 }

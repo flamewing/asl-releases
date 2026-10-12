@@ -104,3 +104,18 @@ check_bytes(bit-other-endpoints 6811
     "132040801e00407f181f004080")
 check_bytes(bit-wrap 6811 " org $fffb\n brset 0,y,#$40,0" "181e004000")
 
+
+foreach(cpu 6800 6801 6301 6811 68HC11K4)
+    foreach(pair BCC:24 BCS:25 BEQ:27 BGE:2c BGT:2e BHI:22 BHS:24 BLE:2f BLO:25 BLS:23 BLT:2d BMI:2b BNE:26 BPL:2a BRA:20 BRN:21 BSR:8d BVC:28 BVS:29)
+        string(REPLACE ":" ";" parts "${pair}")
+        list(GET parts 0 op)
+        list(GET parts 1 code)
+        if(op STREQUAL "BRN" AND cpu STREQUAL "6800")
+            continue()
+        endif()
+        check_bytes(forward-expression-${cpu}-${op} ${cpu} " ${op} target+1000\ntarget equ -998" "${code}00")
+        check_bytes(forward-lower-expression-${cpu}-${op} ${cpu} " org 2000\n ${op} target-1000\ntarget equ 3002" "${code}00")
+    endforeach()
+    check_diagnostic(forward-final-range-${cpu} ${cpu} " bra target\ntarget equ 1000" 1370
+        "branch displacement 998 outside [-128,127] (PC base 0x2)" 3 6)
+endforeach()
