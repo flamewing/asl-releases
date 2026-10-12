@@ -2260,7 +2260,8 @@
     {
       "file": "codemcore.c",
       "issue": "JMPI and JSRI both registered with index zero, producing the same opcode; need primary ISA verification before changing encoding.",
-      "status": "pending ISA encoding verification"
+      "status": "fixed in tranche 245; GNU MCore simulator confirms 0x7F saves PC in R15 before table jump, 0x70 does not. Register JSRI with index 15; change only the corresponding golden byte at offset 0xB6. Distinct call/jump, forward call and literal endpoints checked.",
+      "reference": "https://gnu.googlesource.com/binutils-gdb/+/d01e823438c7dc264d6885fbbfeace4d8955dcb7/sim/mcore/interp.c"
     },
     {
       "file": "codemcore.c",

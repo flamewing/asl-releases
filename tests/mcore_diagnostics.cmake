@@ -77,7 +77,7 @@ check_diagnostic(branch-primary mcore " br 1/0" 1310 "division by 0" 3 "")
 check_diagnostic(literal-primary mcore " lrm r4,[1/0]" 1310 "division by 0" 3 "")
 check_bytes(original mcore
  " br *+2\n bf *+2\n bt *+2\n bsr *+2\n loopt r4,*\n align 4\n jmpi [*+4]\n jsri [*+2]\n align 4\n lrm r4,[*+4]\n lrm r4,[*+2]"
- "f000e800e000f800044fffff7001700074017400")
+ "f000e800e000f800044fffff70017f0074017400")
 check_bytes(forward mcore
  " br target+10000\n loopt r4,target+10000\n jmpi [target+10004]\n lrm r4,[target+10008]\ntarget equ -10000"
  "f7ff044e70007400")
@@ -85,7 +85,7 @@ check_bytes(noemit mcore
  " expect 1370,1375,1370,1325\n br 2050\n loopt r4,*+1\n jmpi [*+1024]\n lrm r4,[2]\n endexpect\n dc.b 18" "12")
 check_bytes(branch-endpoints mcore " org 2046\n br 0\n br 4096" "f400f3ff")
 check_bytes(loop-endpoints mcore " org 30\n loopt r4,0\n loopt r4,*" "0440044f")
-check_bytes(literal-endpoints mcore " org 2\n jmpi [4]\n jsri [1024]" "700070ff")
+check_bytes(literal-endpoints mcore " org 2\n jmpi [4]\n jsri [1024]" "70007fff")
 check_bytes(lrm-endpoints mcore " lrm r4,[0]\n lrm r4,[1024]" "740074ff")
 set(ENV{LC_MESSAGES} de)
 file(TO_NATIVE_PATH "${TEST_DIR}/br-upper.asm" source)
@@ -170,3 +170,7 @@ check_bytes(aggregate-cancellation mcore
  " ldw r4,(r3,2147483647,2147483647,-2147483647,-2147483647,12)" "8433")
 check_bytes(aggregate-overflow-noemit mcore
  " expect 1320,1315\n ldw r4,(r3,2147483647,2147483647,2)\n ldw r4,(r3,-2147483648,-2147483648)\n endexpect\n dc.b 18" "12")
+
+# JMPI and JSRI must differ; JSRI saves the return address in R15.
+check_bytes(literal-jump-versus-call mcore " jmpi [4]\n jsri [4]" "70017f00")
+check_bytes(literal-call-forward mcore " jsri [target+10004]\ntarget equ -10000" "7f01")

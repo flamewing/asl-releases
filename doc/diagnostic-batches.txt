@@ -2638,3 +2638,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     unsigned wrap, large-term cancellation and rejected emission checked; final
     bounds and original valid encoding remain unchanged.
     Validation: all 421 CTest cases pass with embedded/external catalogs.
+
+245. MCore indirect call opcode.
+    Confirm JSRI and JMPI both encode 0x70xx due to identical table indices.
+    GNU MCore simulator decodes 0x7Fxx as JSRI (saves PC in R15), 0x70xx as JMPI.
+    Register JSRI with index 15 and update only its golden opcode byte at 0xB6.
+    Distinct call/jump encodings, forward call and literal endpoints checked.
+    Reference: https://gnu.googlesource.com/binutils-gdb/+/d01e823438c7dc264d6885fbbfeace4d8955dcb7/sim/mcore/interp.c
+    Validation: all 421 CTest cases pass with embedded/external catalogs.

@@ -949,7 +949,7 @@ static void InitFields(void) {
     AddInstTable(InstTable, "BGENI", 0, DecodeBGENI);
     AddInstTable(InstTable, "BMASKI", 0, DecodeBMASKI);
     AddInstTable(InstTable, "JMPI", 0, DecodeSJmp);
-    AddInstTable(InstTable, "JSRI", 0, DecodeSJmp);
+    AddInstTable(InstTable, "JSRI", 15, DecodeSJmp);
     AddInstTable(InstTable, "LD", 0x0ff, DecodeLdSt);
     AddInstTable(InstTable, "LDB", 0x000, DecodeLdSt);
     AddInstTable(InstTable, "LDH", 0x001, DecodeLdSt);
