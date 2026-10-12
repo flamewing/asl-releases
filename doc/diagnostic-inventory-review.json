@@ -763,11 +763,13 @@
         "ErrNum_UnderRange": 4
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_InvAddrMode",
         "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange",
         "ErrNum_UnderRange"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 162 improves 12 of 16 historical candidates: five byte/short branch constraints, two forced-short displacement limits, short absolute address predicate and four count byte/register constraints. Existing IDs/predicates/calculations preserved. Remaining: register-file window OverRange and three address-form errors. Forward validation fixed in 159-161."
+      "status": "complete",
+      "review_notes": "All 16 historical candidates reviewed in 159-163: defer forward branch/displacement/count constraints; numeric ranges in 162; remaining register-file window and three address-form sites in 163 identify shadowing/active windows, allowed operand forms and pointer suffix rules. Shared bracket validation distinguishes missing/mismatched/unexpected delimiters at the character (1300 replaces former generic 1350 for bracket failures). Preserve window mapping and supported encodings; quoted brackets/no emission tested."
     },
     "code960.c": {
       "candidate_counts": {

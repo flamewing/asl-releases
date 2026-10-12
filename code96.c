@@ -18,6 +18,7 @@
 
 #include "asmcode.h"
 #include "asmdef.h"
+#include "asmerr.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -100,6 +101,65 @@ static void WrCountRange(tErrorNum ErrorNum, tStrComp const* pArg, Byte Value,
                     (LargeWord)Value, (LargeWord)Limit);
     }
     WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
+
+static void WrAddressForms(tStrComp const* pArg, Byte Mask) {
+    char Forms[400] = "", Detail[500];
+    if (Mask & (MModDir | MModInd)) {
+        strmaxcat(Forms, "register-file address; ", sizeof(Forms));
+    }
+    if (Mask & MModInd) {
+        strmaxcat(Forms, "[pointer]; ", sizeof(Forms));
+    }
+    if (Mask & MModPost) {
+        strmaxcat(Forms, "[pointer]+; ", sizeof(Forms));
+    }
+    if (Mask & MModIdx) {
+        strmaxcat(Forms, "displacement[pointer], <address or >address; ", sizeof(Forms));
+    }
+    if (Mask & MModImm) {
+        strmaxcat(Forms, "#value; ", sizeof(Forms));
+    }
+    if (*Forms) {
+        Forms[strlen(Forms) - 2] = '\0';
+    }
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressForms), Forms);
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
+static void WrPointerForm(tStrComp const* pArg) {
+    char Detail[300];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgOperandChoices),
+                "[pointer], [pointer]+ or displacement[pointer] (no trailing text; postincrement has no displacement)");
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
+static void WrRegisterWindow(tStrComp const* pArg, Word Address) {
+    char Detail[500];
+    if (((Address >= WinBegin) && (Address <= WinEnd))
+        || ((Address >= Win1Begin) && (Address <= Win1End))) {
+        Boolean First = (Address >= WinBegin) && (Address <= WinEnd);
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgShadowedRegisterWindow),
+                    (LargeWord)Address, First ? "WSR" : "WSR1",
+                    (LargeWord)(First ? WSRVal : WSR1Val),
+                    (LargeWord)(First ? WinBegin : Win1Begin), (LargeWord)(First ? WinEnd : Win1End),
+                    (LargeWord)(First ? WinStart : Win1Start), (LargeWord)(First ? WinStop : Win1Stop));
+    } else {
+        char Windows[200] = "[0x0000,0x00ff]", Window[80];
+        if (WinStart <= WinStop) {
+            as_snprintf(Window, sizeof(Window), "; [0x%lllx,0x%lllx] (WSR)",
+                        (LargeWord)WinStart, (LargeWord)WinStop);
+            strmaxcat(Windows, Window, sizeof(Windows));
+        }
+        if (Win1Start <= Win1Stop) {
+            as_snprintf(Window, sizeof(Window), "; [0x%lllx,0x%lllx] (WSR1)",
+                        (LargeWord)Win1Start, (LargeWord)Win1Stop);
+            strmaxcat(Windows, Window, sizeof(Windows));
+        }
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgRegisterFileWindows),
+                    (LargeWord)Address, Windows);
+    }
+    WrXErrorPos(ErrNum_OverRange, Detail, &pArg->Pos);
 }
 
 static void ChkSFR(Word Adr, tStrComp const* pArg) {
@@ -187,7 +247,7 @@ static tAdrType ChkAdr(
     }
 
     if ((adr_type != ModNone) && (!(Mask & (1 << adr_type)))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        WrAddressForms(pArg, Mask);
         reset_adr_vals(p_vals);
         adr_type = ModNone;
     }
@@ -222,6 +282,9 @@ static tAdrType DecodeAdr(
 
     adr_type = ModNone;
     reset_adr_vals(p_vals);
+    if (!CheckBrackets(pArg, "()[]{}", True)) {
+        return ModNone;
+    }
     OMask = (1 << OpSize) - 1;
 
     if (*pArg->str.p_str == '#') {
@@ -262,7 +325,7 @@ static tAdrType DecodeAdr(
         ArgLen = strlen(Mid.str.p_str);
         if (!p2 || (p2 > Mid.str.p_str + ArgLen - 1)
             || (p2 < Mid.str.p_str + ArgLen - 2)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+            WrPointerForm(pArg);
         } else {
             StrCompSplitRef(&Mid, &Right, &Mid, p2);
             BReg = EvalStrIntExpressionWithFlags(&Mid, Int16, &OK, &Flags);
@@ -272,7 +335,7 @@ static tAdrType DecodeAdr(
             if (OK) {
                 p_vals->value_flags |= Flags;
                 if (!ChkWork(&BReg)) {
-                    WrStrErrorPos(ErrNum_OverRange, &Mid);
+                    WrRegisterWindow(&Mid, BReg);
                 } else {
                     Reg = Lo(BReg);
                     ChkSFR(Reg, &Mid);
@@ -286,7 +349,7 @@ static tAdrType DecodeAdr(
                         p_vals->val_cnt = 1;
                         p_vals->vals[0] = Reg + 1;
                     } else if (strlen(Right.str.p_str) != 0) {
-                        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+                        WrPointerForm(pArg);
                     } else if (strlen(Left.str.p_str) == 0) {
                         p_vals->vals[0] = Reg;
                         p_vals->val_cnt = 1;

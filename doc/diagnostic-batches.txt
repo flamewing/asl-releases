@@ -1865,3 +1865,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     upper bound follows existing MemInt domain, including 24-bit CPUs.
     Window/address-form sites remain for the next tranche.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+163. MCS-96 register windows/address forms/brackets; historical completion.
+    Remaining four candidates identify inaccessible/shadowed register-file
+    windows with exact ASSUME mapping, instruction-allowed forms and pointer
+    suffix/postincrement rules. Shared bracket validation reports missing,
+    mismatched/unexpected delimiter at its character (1300 replaces generic
+    1350 for bracket failures). All 16 historical sites now reviewed.
+    Four CPUs/WSR/WSR1/mapped bytes/quoted brackets/no emission tested.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.

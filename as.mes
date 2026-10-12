@@ -2339,3 +2339,11 @@ Message ErrMsgImmediateCountByteRange
 Message ErrMsgCountRegisterRange
  "Anzahlregisteradresse 0x%lllx au&szlig;erhalb [0x%lllx,0xff]"
  "count register address 0x%lllx outside [0x%lllx,0xff]"
+
+Message ErrMsgShadowedRegisterWindow
+ "Registerdateiadresse 0x%lllx wird durch ASSUME %s=0x%lllx verdeckt; [0x%lllx,0x%lllx] bildet [0x%lllx,0x%lllx] ab"
+ "register-file address 0x%lllx is shadowed by ASSUME %s=0x%lllx; [0x%lllx,0x%lllx] maps [0x%lllx,0x%lllx]"
+
+Message ErrMsgRegisterFileWindows
+ "Adresse 0x%lllx au&szlig;erhalb zug&auml;nglicher Registerdateifenster: %s"
+ "address 0x%lllx outside accessible register-file windows: %s"
