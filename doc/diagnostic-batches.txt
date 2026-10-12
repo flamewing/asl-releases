@@ -2590,3 +2590,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Super8/eZ8 bytes, no rejected emission and German detail checked.
     All 17 historical Z8 sites reviewed.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+240. Z8 native register index validation before narrowing.
+    Reproduce R256/RR256 silently encoded as register zero. Compare full strtoul
+    result against 15 before assigning byte register index, including values beyond
+    32/64-bit range. Invalid undeclared names fail normally; same-named known and
+    forward aliases resolve to their declared registers instead of being overridden.
+    Original valid register coverage and known out-of-range no emission pass.
+    Validation: all 420 CTest cases pass with embedded/external catalogs.

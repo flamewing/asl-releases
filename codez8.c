@@ -151,8 +151,11 @@ static Boolean IsWRegCore(char const* pArg, Byte* pResult) {
     } else {
         char* p_end;
 
-        *pResult = strtoul(pArg + 1, &p_end, 10);
-        return !*p_end && (*pResult <= 15);
+        unsigned long value = strtoul(pArg + 1, &p_end, 10);
+        if (*p_end || value > 15)
+            return False;
+        *pResult = value;
+        return True;
     }
 }
 
@@ -195,8 +198,11 @@ static Boolean IsWRRegCore(char const* pArg, Byte* pResult) {
     } else {
         char* p_end;
 
-        *pResult = strtoul(pArg + 2, &p_end, 10);
-        return !*p_end && (*pResult <= 15);
+        unsigned long value = strtoul(pArg + 2, &p_end, 10);
+        if (*p_end || value > 15)
+            return False;
+        *pResult = value;
+        return True;
     }
 }
 

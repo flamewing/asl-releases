@@ -2242,6 +2242,11 @@
       "file": "codez8.c",
       "issue": "Packed bit symbols fail working-window validation before definition; two-operand bit parser emits secondary mode after expression failure and rejects forward register/bit classes.",
       "status": "fixed in tranche 239; carry packed flags, defer plain unknown operand classes within MaxSymPass, skip native register names, preserve primary failures and report actual descriptor window at bit operand; original/forward/no-emission/German checked"
+    },
+    {
+      "file": "codez8.c",
+      "issue": "Native Rn/RRn parser narrows strtoul result to Byte before checking <=15, accepting R256/RR256 as register zero and overriding same-named aliases.",
+      "status": "fixed in tranche 240; validate full unsigned long before assigning Byte; overflow/missing names fail normally, known/forward register-looking aliases resolve correctly; original valid register fixtures and range-error no emission checked"
     }
   ]
 }

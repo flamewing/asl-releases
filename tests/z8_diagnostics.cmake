@@ -216,3 +216,16 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German Z8 bit: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(index IN ITEMS 16 256 4294967296 18446744073709551616)
+    check_diagnostic("scalar-index-${index}" Z8601 " ld r0,r${index}" 1010
+        "symbol undefined" 3 8)
+    check_diagnostic("pair-index-${index}" Z8601 " jp @rr${index}" 1010
+        "symbol undefined" 3 6)
+endforeach()
+check_bytes(register-looking-aliases Z8601
+    "r256 reg r1\nrr256 reg rr2\n ld r0,r256\n jp @rr256" "08e130e2")
+check_bytes(register-looking-forward-aliases Z8601
+    " ld r0,r256\n jp @rr256\nr256 reg r1\nrr256 reg rr2" "08e130e2")
+check_bytes(register-index-noemit Z8601
+    "r256 equ 256\nrr256 equ 256\n expect 1320,1320\n ld r0,r256\n jp @rr256\n endexpect\n db 18" "12")
