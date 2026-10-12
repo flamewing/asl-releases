@@ -456,3 +456,42 @@ check_bytes(absolute-original-sizes 68000
 check_bytes(displacement-original-sizes 68020
     " move.w 1.b(a0,d0.w),d0\n move.w 1.w(a0),d0\n move.w 1.l(a0),d0"
     "30300001302800013030017000000001")
+
+# Shared integer/FPU size checks retain their CPU-specific predicates.
+foreach(ins IN ITEMS lsl addq addx)
+    if(ins STREQUAL "lsl")
+        set(args "#1,d0")
+    elseif(ins STREQUAL "addq")
+        set(args "#1,d0")
+    else()
+        set(args "d0,d1")
+    endif()
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(integer-size-${ins} 68000 " ${ins}.s ${args}" 1130
+        "supported operand sizes: .B, .W, .L" 3 ${column})
+    check_diagnostic(cold-size-${ins} MCF5407 " ${ins}.w ${args}" 1130
+        "supported operand sizes: .L" 3 ${column})
+endforeach()
+foreach(ins IN ITEMS fmove fadd ftst)
+    if(ins STREQUAL "ftst")
+        set(args "(a0)")
+    else()
+        set(args "(a0),fp0")
+    endif()
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(float-size-${ins} 68020 " fpu on\n ${ins}.q ${args}" 1130
+        "supported operand sizes: .B, .W, .L, .S, .D, .X, .P" 4 ${column})
+    foreach(size IN ITEMS x p)
+        check_diagnostic(cold-float-size-${ins}-${size} MCF5407 " fpu on\n ${ins}.${size} ${args}" 1130
+            "supported operand sizes: .B, .W, .L, .S, .D" 4 ${column})
+    endforeach()
+endforeach()
+check_bytes(integer-original-sizes 68000
+    " lsl.b #1,d0\n addq.w #1,d0\n addx.l d0,d1" "e3085240d380")
+check_bytes(cold-original-sizes MCF5407
+    " lsl.l #1,d0\n addq.l #1,d0\n addx.l d0,d1" "e3885280d380")
+check_bytes(float-original-sizes 68020
+    " fpu on\n fmove.b (a0),fp0\n fmove.w (a0),fp0\n fmove.l (a0),fp0\n fmove.s (a0),fp0\n fmove.d (a0),fp0\n fmove.x (a0),fp0\n fmove.p (a0),fp0"
+    "f2105800f2105000f2104000f2104400f2105400f2104800f2104c00")

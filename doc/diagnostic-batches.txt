@@ -2280,3 +2280,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     fallback and conflicting SplitSize-width guard with caller-path reasons.
     Existing memory-shift .W detail re-reviewed: three of 98 size sites complete.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+206. Shared M68K/ColdFire integer and floating-point size diagnostics.
+    Two historical size candidates list the actual accepted sizes at the suffix:
+    classic integer .B/.W/.L versus ColdFire .L, and classic float
+    .B/.W/.L/.S/.D/.X/.P versus ColdFire .B/.W/.L/.S/.D. All predicates remain
+    unchanged. LSL/ADDQ/ADDX and FMOVE/FADD/FTST rejection cases and original
+    classic/ColdFire integer and all seven classic float encodings pass.
+    Five of 98 historical size candidates reviewed; remaining sites pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

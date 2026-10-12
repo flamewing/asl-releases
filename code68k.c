@@ -264,7 +264,7 @@ static void report_operand_sizes(char const* sizes) {
 static Boolean CheckColdSize(void) {
     if ((OpSize > eSymbolSize32Bit)
         || ((pCurrCPUProps->Family == eColdfire) && (OpSize < eSymbolSize32Bit))) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(pCurrCPUProps->Family == eColdfire ? ".L" : ".B, .W, .L");
         return False;
     } else {
         return True;
@@ -290,7 +290,8 @@ static Boolean CheckFloatSize(void) {
         }
         /* else fall-through */
     default:
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(pCurrCPUProps->Family == eColdfire
+                ? ".B, .W, .L, .S, .D" : ".B, .W, .L, .S, .D, .X, .P");
         return False;
     }
 }
