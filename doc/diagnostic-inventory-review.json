@@ -1487,7 +1487,8 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "status": "partial",
+      "review_notes": "Tranche 265 prerequisite: valid packed two-operand BTJF/BTJT reads ArgStr[3] rather than final target; reproduce Windows access violation 0xc0000005 with bit definition and first btjf instruction. Use ArgCnt for target evaluation/location, avoiding absent/stale operand. Explicit three-operand forms unchanged. All 21 historical diagnostic candidates remain for semantic review."
     },
     "codest9.c": {
       "candidate_counts": {
@@ -2356,6 +2357,16 @@
       "file": "codemn1610.c",
       "issue": "Several adjacent general-register/skip/segment/special/control helpers still emit unlocated generic name errors despite local name tables; DecReg ignores errMsg for its length guard.",
       "status": "fixed in tranche 264; named tables drive both lookup and located choices, optional shift/carry unions preserved, general/excluded register alternatives located. Original alias/options vector and primary-only/no-emission/German tests checked."
+    },
+    {
+      "file": "codest7.c",
+      "issue": "BTJF/BTJT valid packed two-operand form evaluates ArgStr[3], causing access violation when unset or using stale previous instruction target.",
+      "status": "fixed in tranche 265; evaluate/locate ArgStr[ArgCnt], first packed instruction and stale-slot tests on both ST7/STM8, constant/PC targets, failed/missing expressions and original explicit byte vectors checked."
+    },
+    {
+      "file": "codest7.c",
+      "issue": "STM8 relative branch distance stored in 16-bit Integer despite 24-bit address space; jra PC+2+$10000 accepted as zero displacement. Bit opcode capability guard Hi(Code==0x90) always zero.",
+      "status": "pending; separate full-width STM8 displacement and bit-op capability validation from packed target crash fix."
     }
   ]
 }

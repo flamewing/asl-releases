@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: GPL-2.0-only
+file(MAKE_DIRECTORY "${TEST_DIR}")
+
+function(check_diagnostic name cpu body id detail line column)
+    set(expected_result 2)
+    set(kind error)
+    if(ARGC GREATER 7)
+        set(expected_result "${ARGV7}")
+        set(kind warning)
+    endif()
+    file(WRITE "${TEST_DIR}/${name}.asm" " cpu ${cpu}\n org 0\n${body}\n")
+    file(TO_NATIVE_PATH "${TEST_DIR}/${name}.asm" source)
+    execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+    set(diagnostic "${output}${error}")
+    string(FIND "${diagnostic}" "${detail}" detail_pos)
+    set(expected_location "(${line}):")
+    if(NOT "${column}" STREQUAL "")
+        string(APPEND expected_location "${column}:")
+    endif()
+    string(FIND "${diagnostic}" "${expected_location} ${kind} #${id}:" location_pos)
+    string(REGEX MATCHALL "${kind} #[0-9]+:" errors "${diagnostic}")
+    list(LENGTH errors error_count)
+    if(NOT "${result}" STREQUAL "${expected_result}" OR detail_pos EQUAL -1
+            OR location_pos EQUAL -1 OR NOT error_count EQUAL 1)
+        message(FATAL_ERROR "${name}: expected one #${id} at ${line}:${column}, ${detail}; got ${result}\n${diagnostic}")
+    endif()
+endfunction()
+
+function(check_bytes name cpu body expected)
+    file(WRITE "${TEST_DIR}/${name}.asm" " cpu ${cpu}\n org 0\n${body}\n")
+    file(TO_NATIVE_PATH "${TEST_DIR}/${name}.asm" source)
+    execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -q ${ARGN}
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+    if(NOT "${result}" STREQUAL "0")
+        message(FATAL_ERROR "${name}: assembly ${result}\n${output}${error}")
+    endif()
+    set(assembly_diagnostic "${output}${error}" PARENT_SCOPE)
+    file(TO_NATIVE_PATH "${TEST_DIR}/${name}.p" object)
+    execute_process(COMMAND ${TEST_EMULATOR} "${P2BIN_PROGRAM}" "${object}"
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+    if(NOT "${result}" STREQUAL "0")
+        message(FATAL_ERROR "${name}: conversion ${result}\n${output}${error}")
+    endif()
+    file(READ "${TEST_DIR}/${name}.bin" actual HEX)
+    if(NOT actual STREQUAL expected)
+        message(FATAL_ERROR "${name}: expected ${expected}, got ${actual}")
+    endif()
+endfunction()
+
+
+foreach(cpu IN ITEMS ST7 STM8)
+    if(cpu STREQUAL ST7)
+        set(length 3)
+        set(false_code "0b1200")
+        set(true_code "0a1200")
+        set(stale_codes "0a12010b1200")
+    else()
+        set(length 5)
+        set(false_code "720b001200")
+        set(true_code "720a001200")
+        set(stale_codes "720a001201720b001200")
+    endif()
+    check_bytes(${cpu}-packed-first ${cpu} "mybit bit $12,#5\n btjf mybit,PC+${length}" "${false_code}")
+    check_bytes(${cpu}-packed-true ${cpu} "mybit bit $12,#5\n btjt mybit,PC+${length}" "${true_code}")
+    check_bytes(${cpu}-packed-stale ${cpu}
+        "mybit bit $12,#5\n btjt $12,#5,PC+${length}+1\n btjf mybit,PC+${length}" "${stale_codes}")
+    check_bytes(${cpu}-packed-constant ${cpu}
+        "mybit bit $12,#5\n btjf mybit,${length}" "${false_code}")
+    check_diagnostic(${cpu}-packed-primary ${cpu} "mybit bit $12,#5\n btjf mybit,1/0" 1310 "division by 0" 4 "")
+    check_diagnostic(${cpu}-packed-missing ${cpu} "mybit bit $12,#5\n btjf mybit,missing" 1010 "symbol undefined" 4 13)
+    check_bytes(${cpu}-packed-primary-noemit ${cpu}
+        "mybit bit $12,#5\n expect 1310\n btjf mybit,1/0\n endexpect\n nop" "9d")
+endforeach()
+check_bytes(ST7-original ST7
+ " btjf $12,#5,PC+3\n btjt [$12],#2,PC+4\n jra PC+2\n jrh PC+2" "0b12009204120020002900")
+check_bytes(STM8-original STM8
+ " btjf $1234,#5,PC+5\n btjt $1234,#2,PC+5\n jra PC+2\n jrh PC+3" "720b12340072041234002000902900")

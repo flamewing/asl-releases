@@ -2079,11 +2079,11 @@ static void DecodeBTJF_BTJT(Word Code) {
         BAsmCode[PrefixCnt] = Code + (BitPos << 1);
         memcpy(BAsmCode + 1 + PrefixCnt, AdrVals.Vals, AdrVals.Cnt);
         AdrInt = EvalStrIntExpressionWithFlags(
-                         &ArgStr[3], pCurrCPUProps->AddrIntType, &OK, &Flags)
+                         &ArgStr[ArgCnt], pCurrCPUProps->AddrIntType, &OK, &Flags)
                  - (EProgCounter() + PrefixCnt + 1 + AdrVals.Cnt + 1);
         if (OK) {
             if (!mSymbolQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
+                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[ArgCnt]);
             } else {
                 BAsmCode[PrefixCnt + 1 + AdrVals.Cnt] = AdrInt & 0xff;
                 CodeLen                               = PrefixCnt + 1 + AdrVals.Cnt + 1;

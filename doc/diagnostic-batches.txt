@@ -2814,3 +2814,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     IC/STR exclusions list permitted registers. Respect silent DecReg probes.
     Original option/alias vector, single failures, no-emission and German tested.
     Validation: all 425 CTest cases pass with embedded/external catalogs; all six name/value tables unchanged.
+
+265. ST7/STM8 packed bit-branch target crash.
+    Valid two-operand BTJF/BTJT reads absent or stale ArgStr[3] instead of final
+    target; reproduce Windows access violation 0xc0000005 on first packed branch.
+    Evaluate and locate ArgStr[ArgCnt]. Preserve explicit three-operand forms.
+    First packed branch, stale previous target, constant/PC targets, missing and
+    failed expressions, no-emission and original vectors checked on both CPUs.
+    All 21 historical diagnostic candidates remain; two adjacent defects tracked.
+    Validation: all 426 CTest cases pass with embedded/external catalogs.
