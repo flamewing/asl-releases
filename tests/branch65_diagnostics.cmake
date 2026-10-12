@@ -121,3 +121,25 @@ check_bytes(promote-indirect 65C19 " jpi (<$12)" "0c1200")
 check_bytes(promote-index-only 65CE02 " ldz <$12,x" "bb1200")
 
 check_bytes(promote-index-y 6502 " lda <$12,y" "b91200")
+
+# Address mapping failures expose the physical/CPU address and assumptions.
+check_diagnostic(huc-unmapped HUC6280 " lda $10000" 110
+    "physical address 0x10000 (8-KiB page 8) is not selected by ASSUME MPR0=0, MPR1=1" 3 6 0)
+check_diagnostic(huc-short HUC6280 " lda <$2000" 1320
+    "physical address 0x2000 maps to CPU address 0x2000 outside [0,255]" 3 7)
+check_diagnostic(ce-base-page 65CE02 " assume b:$12\n lda <$1312" 1320
+    "address 0x1312 uses bank 19; ASSUME B=18 permits [0x1200,0x12FF]" 4 7)
+check_bytes(huc-mapped HUC6280 " assume mpr0:8\n lda $10012" "a512")
+check_bytes(huc-unmapped-bytes HUC6280 " lda $10000" "a500")
+check_bytes(huc-forward HUC6280 " lda target+$10000\ntarget equ -$ff80" "a580")
+if(assembly_diagnostic MATCHES "warning #110:")
+    message(FATAL_ERROR "finally mapped HUC address warned: ${assembly_diagnostic}")
+endif()
+check_bytes(ce-base-valid 65CE02 " assume b:$12\n lda <$1212" "a512")
+
+check_diagnostic(huc-nothing HUC6280 " assume mpr0:nothing\n lda 0" 1350
+    "ASSUME MPR0 does not support NOTHING" 3 14)
+check_diagnostic(huc-primary-error HUC6280 " lda missing" 1010 "symbol undefined" 3 6)
+check_bytes(huc-forced-mapped HUC6280 " assume mpr0:8\n lda <$10080" "a580")
+check_bytes(ce-forward-base 65CE02
+    " assume b:$12\n lda <target+1000\ntarget equ $1212-1000" "a512")

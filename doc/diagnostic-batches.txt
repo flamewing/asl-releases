@@ -1976,3 +1976,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     cover JMP/JSR sequences; direct/index-X/index-Y/indirect widening and
     rejected immediate forms verify correct bytes and no error emission.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+176. HuC6280 page-map and 65CE02 base-page diagnostics.
+    HuC6280 unmapped physical addresses identify the 8-KiB page and all active
+    MPR assumptions, short-address failures show physical
+    and mapped CPU address versus [0,255]. 65CE02 gives the required page and
+    ASSUME B window. Preserve IDs/warning severity/fallback bytes, defer
+    unknown/questionable checks and retain primary expression errors. Cover
+    known mapped/unmapped, rejected NOTHING, short, forward-mapped and base-page cases.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

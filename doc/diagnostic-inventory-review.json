@@ -383,10 +383,12 @@
         "ErrNum_UnderRange": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InAccPage",
+        "ErrNum_OverRange"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 175 fixes the operand-count mixup found at the normal-instruction address fallback while reviewing invalid modes. Remaining nonbranch diagnostic families still pending."
+      "review_notes": "Tranche 175 fixes the operand-count mixup found at the normal-instruction address fallback while reviewing invalid modes. Remaining nonbranch diagnostic families still pending. Tranche 176 reviews the HuC6280 MPR page-map warning and both short-address overflow candidates with physical/CPU address or ASSUME B/window details. Unresolved/questionable addresses defer warning/range validation; severity and fallback bytes preserved."
     },
     "code68.c": {
       "candidate_counts": {

@@ -142,7 +142,7 @@ static Word EvalAddress(
 
     if (MomCPU == CPUHUC6280) {
         Word     Page;
-        LongWord AbsAddress;
+        LongWord AbsAddress, physical_address;
 
         /* get the absolute address */
 
@@ -150,6 +150,8 @@ static Word EvalAddress(
         if (!*pOK) {
             return 0;
         }
+
+        physical_address = AbsAddress;
 
         /* within one of the 8K pages? */
 
@@ -159,7 +161,18 @@ static Word EvalAddress(
             }
         }
         if (Page >= 8) {
-            WrError(ErrNum_InAccPage);
+            if (!mFirstPassUnknownOrQuestionable(*p_flags)) {
+                char assumptions[200] = "", detail[350], entry[30];
+                unsigned index;
+                for (index = 0; index < 8; index++) {
+                    if (index) strmaxcat(assumptions, ", ", sizeof(assumptions));
+                    as_snprintf(entry, sizeof(entry), "MPR%u=%llld", index, (LargeInt)MPR[index]);
+                    strmaxcat(assumptions, entry, sizeof(assumptions));
+                }
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgHUC6280PageMap),
+                        (LargeWord)physical_address, (LargeInt)(physical_address >> 13), assumptions);
+                WrXErrorPos(ErrNum_InAccPage, detail, &pArg->Pos);
+            }
             AbsAddress &= 0x1fff;
         } else {
             AbsAddress = (AbsAddress & 0x1fff) | (Page << 13);
@@ -168,11 +181,14 @@ static Word EvalAddress(
         /* short address requested? */
 
         if ((Type != UInt16) && (Type != Int16) && Hi(AbsAddress)) {
-            if (mFirstPassUnknown(*p_flags)) {
+            if (mFirstPassUnknownOrQuestionable(*p_flags)) {
                 AbsAddress &= 0xff;
             } else {
+                char detail[200];
                 *pOK = False;
-                WrError(ErrNum_OverRange);
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMappedAddressRange),
+                        (LargeWord)physical_address, (LargeWord)AbsAddress, (LargeInt)0, (LargeInt)255);
+                WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             }
         }
         return AbsAddress;
@@ -193,9 +209,13 @@ static Word EvalAddress(
         /* short address requested? */
 
         if ((Type != UInt16) && (Type != Int16)) {
-            if ((Hi(Address) != RegB) && !mFirstPassUnknown(*p_flags)) {
+            if ((Hi(Address) != RegB) && !mFirstPassUnknownOrQuestionable(*p_flags)) {
+                char detail[240];
                 *pOK = False;
-                WrError(ErrNum_OverRange);
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
+                        (LargeWord)Address, (LargeInt)Hi(Address), "B", (LargeInt)RegB,
+                        (LargeWord)(RegB << 8), (LargeWord)((RegB << 8) + 255));
+                WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             }
             if (*pOK) {
                 Address &= 0xff;

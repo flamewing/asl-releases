@@ -2347,3 +2347,11 @@ Message ErrMsgShadowedRegisterWindow
 Message ErrMsgRegisterFileWindows
  "Adresse 0x%lllx au&szlig;erhalb zug&auml;nglicher Registerdateifenster: %s"
  "address 0x%lllx outside accessible register-file windows: %s"
+
+Message ErrMsgHUC6280PageMap
+ "Physische Adresse 0x%lllx (8-KiB-Seite %llld) wird nicht durch ASSUME %s ausgew&auml;hlt"
+ "physical address 0x%lllx (8-KiB page %llld) is not selected by ASSUME %s"
+
+Message ErrMsgMappedAddressRange
+ "Physische Adresse 0x%lllx ergibt CPU-Adresse 0x%lllx au&szlig;erhalb [%llld,%llld]"
+ "physical address 0x%lllx maps to CPU address 0x%lllx outside [%llld,%llld]"
