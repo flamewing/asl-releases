@@ -2083,6 +2083,11 @@
       "file": "code68.c",
       "issue": "HC11K4 physical address translation warns on a provisional forward expression even when its final address is mapped.",
       "status": "fixed in tranche 166; defer warning for unknown/questionable symbols, retain known-unmapped warning/fallback bytes and give physical address/segment/MMU detail; mapped/forward-mapped paths checked"
+    },
+    {
+      "file": "code601.c",
+      "issue": "Condition-register decoding shifts evaluator failure sentinel -1 before success check (undefined C behavior); integer/float register helpers also read descriptors on failed lookup.",
+      "status": "fixed in tranche 168; guard condition-field encoding and descriptor reads on success; primary range/type/nonregister errors and unchanged valid bytes checked; native WSL UBSan reproduces left shift of negative sentinel before patch and passes focused tests after fix"
     }
   ]
 }

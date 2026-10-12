@@ -1907,3 +1907,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     All seven historical sites reviewed; five CPUs verify positions/no error
     bytes and captured accepted encodings.
     Validation: all 415 CTest cases pass with embedded/external catalogs. IsAcc accepts NUL via strchr terminator, but all registered ALU mnemonic paths have at least three characters and other callers supply nonempty characters; unreachable helper case left unchanged.
+
+168. PowerPC primary register/condition-field failures.
+    Condition-field decoding shifts evaluator failure sentinel -1 before
+    checking success. Encode only successful unsigned field values. Integer/
+    float register helpers now read descriptors only after successful lookup.
+    Preserve primary range/type/nonregister errors and accepted encodings;
+    no bytes on condition-field failure. Native WSL UBSan reproduces the
+    negative shift before the patch and passes focused tests after it.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

@@ -148,7 +148,9 @@ static Boolean DecodeGenReg(tStrComp const* pArg, LongWord* pValue) {
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, True);
-    *pValue = RegDescr.Reg;
+    if (RegEvalResult == eIsReg) {
+        *pValue = RegDescr.Reg;
+    }
     return (RegEvalResult == eIsReg);
 }
 
@@ -194,7 +196,9 @@ static Boolean DecodeFPReg(tStrComp const* pArg, LongWord* pValue) {
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSizeFloat64Bit, True);
-    *pValue = RegDescr.Reg;
+    if (RegEvalResult == eIsReg) {
+        *pValue = RegDescr.Reg;
+    }
     return (RegEvalResult == eIsReg);
 }
 
@@ -212,8 +216,11 @@ static Boolean DecodeCondReg(
     Boolean      OK;
     tSymbolFlags flags;
 
-    *p_ret        = EvalStrIntExpressionWithFlags(p_comp, UInt3, &OK, &flags) << 2;
-    *p_guess_mask = (mFirstPassUnknownOrQuestionable(flags) ? 7 : 0) << 2;
+    LongInt value = EvalStrIntExpressionWithFlags(p_comp, UInt3, &OK, &flags);
+    if (OK) {
+        *p_ret = (LongWord)value << 2;
+        *p_guess_mask = (mFirstPassUnknownOrQuestionable(flags) ? 7 : 0) << 2;
+    }
     return OK;
 }
 
