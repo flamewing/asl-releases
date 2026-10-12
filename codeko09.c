@@ -131,15 +131,34 @@ static Boolean MayShort(Integer Arg) {
     return ((Arg >= -128) && (Arg < 127));
 }
 
-static Boolean IsZeroOrEmpty(tStrComp const* pArg) {
-    Boolean OK;
-    LongInt Value;
-
-    if (!*pArg->str.p_str) {
+static Boolean CheckZeroOrEmpty(tStrComp const* p_arg) {
+    tEvalResult eval_result;
+    LongInt value;
+    char detail[180];
+    if (!*p_arg->str.p_str)
         return True;
+    value = EvalStrIntExpressionWithResult(p_arg, Int32, &eval_result);
+    if (!eval_result.OK)
+        return False;
+    if (!value || mFirstPassUnknownOrQuestionable(eval_result.Flags))
+        return True;
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgKonamiUpdateOffset),
+            (LargeInt)value);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+    return False;
+}
+
+static void report_address_choices(unsigned mask, tStrComp const* p_arg) {
+    char choices[480] = "", detail[540];
+    if (mask & adr_mode_mask_imm)
+        strmaxcat(choices, getmessage(Num_ErrMsgKonamiImmediateForm), sizeof(choices));
+    if (mask & adr_mode_mask_ind) {
+        if (*choices)
+            strmaxcat(choices, "; ", sizeof(choices));
+        strmaxcat(choices, getmessage(Num_ErrMsgKonamiMemoryForms), sizeof(choices));
     }
-    Value = EvalStrIntExpression(pArg, Int32, &OK);
-    return OK && !Value;
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
 }
 
 static adr_mode_t DecodeAdr(
@@ -163,6 +182,10 @@ static adr_mode_t DecodeAdr(
     /* immediate */
 
     if ((*pStartArg->str.p_str == '#') && (AdrArgCnt == 1)) {
+        if (!(mode_mask & adr_mode_mask_imm)) {
+            report_address_choices(mode_mask, pStartArg);
+            return p_vals->mode;
+        }
         switch (op_size) {
         case eSymbolSize16Bit:
             AdrWord = EvalStrIntExpressionOffs(pStartArg, 1, Int16, &OK);
@@ -194,6 +217,11 @@ static adr_mode_t DecodeAdr(
         && (pStartArg->str.p_str[strlen(pStartArg->str.p_str) - 1] == ']')) {
         tStrComp Arg, Remainder;
 
+        if (AdrArgCnt != 1) {
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgKonamiEnclosedOperand), &pStartArg->Pos);
+            return p_vals->mode;
+        }
         IndFlag = True;
         StrCompRefRight(&Arg, pStartArg, 1);
         StrCompShorten(&Arg, 1);
@@ -212,6 +240,11 @@ static adr_mode_t DecodeAdr(
                 Arg = Remainder;
             }
         } while (p && (AdrArgCnt < 2));
+        if (p) {
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgKonamiIndirectComponents), &pStartArg->Pos);
+            return p_vals->mode;
+        }
         pStartArg = &IndirComps[0];
         pEndArg   = &IndirComps[AdrArgCnt - 1];
     } else {
@@ -223,9 +256,7 @@ static adr_mode_t DecodeAdr(
     end_arg_len = strlen(pEndArg->str.p_str);
     if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (end_arg_len >= 2)
         && (*pEndArg->str.p_str == '-') && (code_reg(pEndArg->str.p_str + 1, &EReg))) {
-        if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) {
-            WrError(ErrNum_InvAddrMode);
-        } else {
+        if ((AdrArgCnt != 2) || CheckZeroOrEmpty(pStartArg)) {
             p_vals->cnt     = 1;
             p_vals->vals[0] = 0x02 + (EReg << 4) + (Ord(IndFlag) << 3);
             p_vals->mode    = e_adr_mode_ind;
@@ -236,9 +267,7 @@ static adr_mode_t DecodeAdr(
     if ((AdrArgCnt >= 1) && (AdrArgCnt <= 2) && (end_arg_len >= 3)
         && (!strncmp(pEndArg->str.p_str, "--", 2))
         && (code_reg(pEndArg->str.p_str + 2, &EReg))) {
-        if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) {
-            WrError(ErrNum_InvAddrMode);
-        } else {
+        if ((AdrArgCnt != 2) || CheckZeroOrEmpty(pStartArg)) {
             p_vals->cnt     = 1;
             p_vals->vals[0] = 0x03 + (EReg << 4) + (Ord(IndFlag) << 3);
             p_vals->mode    = e_adr_mode_ind;
@@ -253,9 +282,7 @@ static adr_mode_t DecodeAdr(
         memcpy(temp, pEndArg->str.p_str, end_arg_len - 1);
         temp[end_arg_len - 1] = '\0';
         if (code_reg(temp, &EReg)) {
-            if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) {
-                WrError(ErrNum_InvAddrMode);
-            } else {
+            if ((AdrArgCnt != 2) || CheckZeroOrEmpty(pStartArg)) {
                 p_vals->cnt     = 1;
                 p_vals->vals[0] = 0x00 + (EReg << 4) + (Ord(IndFlag) << 3);
                 p_vals->mode    = e_adr_mode_ind;
@@ -269,9 +296,7 @@ static adr_mode_t DecodeAdr(
         memcpy(temp, pEndArg->str.p_str, end_arg_len - 2);
         temp[end_arg_len - 2] = '\0';
         if (code_reg(temp, &EReg)) {
-            if ((AdrArgCnt == 2) && !IsZeroOrEmpty(pStartArg)) {
-                WrError(ErrNum_InvAddrMode);
-            } else {
+            if ((AdrArgCnt != 2) || CheckZeroOrEmpty(pStartArg)) {
                 p_vals->cnt     = 1;
                 p_vals->vals[0] = 0x01 + (EReg << 4) + (Ord(IndFlag) << 3);
                 p_vals->mode    = e_adr_mode_ind;
@@ -404,12 +429,12 @@ static adr_mode_t DecodeAdr(
     }
 
     if (p_vals->mode == e_adr_mode_none) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_choices(mode_mask, pStartArg);
     }
 
 chk_mode:
     if ((p_vals->mode != e_adr_mode_none) && !((mode_mask >> p_vals->mode) & 1)) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_choices(mode_mask, pStartArg);
         reset_adr_vals(p_vals);
     }
     return p_vals->mode;
@@ -647,9 +672,11 @@ static void decode_exg_tfr(Word code) {
 
 static void decode_dec(Word code) {
     switch (ArgCnt) {
-    case 3:
+    case 3: {
         if (as_strcasecmp(ArgStr[2].str.p_str, "JNZ")) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+            char detail[80];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "JNZ");
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "B")) {
             decode_branch_8_core(3, code);
         } else if (!as_strcasecmp(ArgStr[1].str.p_str, "X")) {
@@ -658,6 +685,7 @@ static void decode_dec(Word code) {
             report_register_choices(&ArgStr[1], "B or X");
         }
         break;
+    }
     case 2:
         decode_idx(0x8e);
         break;

@@ -83,3 +83,40 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German Konami register: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(mode IN ITEMS -x --x x+ x++)
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${mode}")
+    check_diagnostic("update-offset-${name}" 052001 " lda 5,${mode}" 1350
+        "displacement 5 is not allowed with pointer auto-update; expected zero or an empty displacement" 3 6)
+    check_diagnostic("update-primary-${name}" 052001 " lda 1/0,${mode}" 1310
+        "division by 0" 3 "")
+endforeach()
+check_diagnostic(address-mask 052001 " sta #1" 1350
+ "operand must be address, base, displacement/A/B/D,base" 3 6)
+check_diagnostic(address-components 052001 " lda 1,wrong" 1350
+ "operand must be #expression; address, base" 3 6)
+check_diagnostic(dec-keyword 052001 " dec x,wrong,0" 1350 "operand must be JNZ" 3 8)
+check_diagnostic(indirect-extra 052001 " lda [1,x,2]" 1350
+ "at least 3 indirect-address components; expected 1 or 2 inside []" 3 6)
+check_diagnostic(indirect-excess 052001 " lda [1,x,2,3]" 1350
+ "at least 3 indirect-address components" 3 6)
+check_diagnostic(indirect-outside 052001 " lda [1,x],y" 1350
+ "an address enclosed in [] must be a single operand" 3 6)
+check_bytes(addresses-original 052001
+ " lda #1\n lda 1\n lda [1]\n lda x\n lda 1,x\n lda a,y\n lda b,u\n lda d,s\n lda -x\n lda --y\n lda u+\n lda s++\n lda [1,x]\n lda [0,-x]\n sta 1"
+ "100112c40112cc01122612240112b012d112e71222123312501261122c01122a3ac401")
+check_bytes(update-forward-arithmetic 052001
+ " lda offset+1000,x+\noffset equ -1000" "1220")
+check_bytes(address-errors-noemit 052001
+ " expect 1350,1350,1350,1350,1310\n lda 5,x+\n sta #1\n lda [1,x,2]\n lda [1,x],y\n lda 1/0,-x\n endexpect\n fcb $12" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/update-offset-x_.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Verschiebung 5" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German Konami update: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(immediate-mask 052001 " andcc 1" 1350 "operand must be #expression" 3 8)

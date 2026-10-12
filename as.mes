@@ -2535,3 +2535,23 @@ Message ErrMsgIMPJSRAddress
 Message ErrMsgIMPRequiredName
  "Unbekannter Name '%s'; erwartet wird einer von: %s"
  "unrecognized name '%s'; expected one of: %s"
+
+Message ErrMsgKonamiUpdateOffset
+ "Verschiebung %llld ist bei automatischer Zeigeraktualisierung nicht erlaubt; erwartet wird null oder eine leere Verschiebung"
+ "displacement %llld is not allowed with pointer auto-update; expected zero or an empty displacement"
+
+Message ErrMsgKonamiImmediateForm
+ "#Ausdruck"
+ "#expression"
+
+Message ErrMsgKonamiMemoryForms
+ "Adresse, Basis, Verschiebung/A/B/D,Basis oder -Basis/--Basis/Basis+/Basis++; Speicherformen optional in []; Basis: X/Y/U/S/PC/PCR"
+ "address, base, displacement/A/B/D,base or -base/--base/base+/base++; memory forms optionally in []; base: X/Y/U/S/PC/PCR"
+
+Message ErrMsgKonamiIndirectComponents
+ "Mindestens 3 indirekte Adresskomponenten; erwartet werden 1 oder 2 innerhalb []: Adresse oder Verschiebung,Basis"
+ "at least 3 indirect-address components; expected 1 or 2 inside []: address or displacement,base"
+
+Message ErrMsgKonamiEnclosedOperand
+ "Eine in [] eingeschlossene Adresse muss ein einzelner Operand sein; zus&auml;tzliche Komponenten au&szlig;erhalb [] sind nicht erlaubt"
+ "an address enclosed in [] must be a single operand; extra components outside [] are not allowed"

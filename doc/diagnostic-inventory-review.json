@@ -1170,10 +1170,11 @@
       },
       "reviewed_diagnostic_families": [
         "ErrNum_InvReg",
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InvAddrMode"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 232 reviews all eight fixed-register and both branch candidates: DIV/MOVE/BMOVE/BSET/DEC identify required X/B/Y/U/B-or-X at operand, preserving original comparison/count precedence. Short/long branches and DEC JNZ report actual signed displacement/range and PC+2/PC+3 base at target. Replace questionable-only range guard with unknown-or-questionable: forward arithmetic provisional value can lie outside field even when final target fits; reproduce BRA target+1000 / target EQU -1000 premature failure and fix short/long/DEC paths. Original bytes, range boundaries, forward arithmetic, primary evaluator failure, no rejected emission and German checked. Seven mode sites pending."
+      "status": "complete",
+      "review_notes": "Tranche 232 reviews all eight fixed-register and both branch candidates: DIV/MOVE/BMOVE/BSET/DEC identify required X/B/Y/U/B-or-X at operand, preserving original comparison/count precedence. Short/long branches and DEC JNZ report actual signed displacement/range and PC+2/PC+3 base at target. Replace questionable-only range guard with unknown-or-questionable: forward arithmetic provisional value can lie outside field even when final target fits; reproduce BRA target+1000 / target EQU -1000 premature failure and fix short/long/DEC paths. Original bytes, range boundaries, forward arithmetic, primary evaluator failure, no rejected emission and German checked. Seven mode sites pending. Tranche 233 completes seven mode candidates: four auto-update offset failures report actual value and zero/empty requirement at displacement, preserving primary evaluation failure and deferring unknown values; parser/mask failures derive immediate/memory syntax choices from mask; DEC names required JNZ keyword. Adjacent ignored inside/outside bracket components now rejected with concrete syntax/count detail. Memory-only #expression no longer silently returns no code through unknown operand size; report permitted forms before evaluation. Original address vector, unknown arithmetic resolving zero, no failed emission and German checked. All 17 historical sites reviewed. Two existing NoShortAddr cases remain separately tracked for contextual detail."
     },
     "codem16.c": {
       "candidate_counts": {
@@ -2207,6 +2208,16 @@
       "file": "codeko09.c",
       "issue": "Branch range checks test only questionable flag, prematurely rejecting unresolved forward arithmetic even when final target fits.",
       "status": "fixed in tranche 232; unknown-or-questionable guard, short/long/DEC arithmetic regression and original bytes checked"
+    },
+    {
+      "file": "codeko09.c",
+      "issue": "Address parser ignores third [] component and components outside [], produces generic secondary mode after offset evaluation failure, and silently accepts no-emission #expression on memory-only instruction.",
+      "status": "fixed in tranche 233; contextual bracket and mask failures, primary-only zero-offset evaluation and no rejected emission checked"
+    },
+    {
+      "file": "codeko09.c",
+      "issue": "Two NoShortAddr sites lack actual forced displacement/domain or DPR address/page detail; forced-short predicate MayShort excludes 127.",
+      "status": "review contextual details after tranche 233, preserving current selection/range policy unless separately justified"
     }
   ]
 }

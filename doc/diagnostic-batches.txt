@@ -2523,3 +2523,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     boundaries, primary errors, no failed emission and German detail pass.
     New Konami fixture registers test 419; seven address-mode sites remain.
     Validation: all 419 CTest cases pass with embedded/external catalogs.
+
+233. Konami 052001 addressing forms and auto-update displacement checks.
+    Complete seven mode candidates: actual nonzero offset/zero-or-empty constraint,
+    mask-derived immediate/memory syntax and DEC JNZ keyword. Preserve primary
+    expression errors and defer unknown offset. Reject previously ignored extra
+    components inside/outside []; diagnose memory-only immediate silent no-emission.
+    Original address bytes, forward zero arithmetic, no rejected emission and
+    German detail checked. All 17 historical sites reviewed; NoShortAddr detail
+    followup remains separately tracked.
+    Validation: all 419 CTest cases pass with embedded/external catalogs.
