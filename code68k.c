@@ -3918,7 +3918,8 @@ static void DecodeMOVE16(Word Index) {
                     } else if ((w1 == ModAbs) && (w2 == ModAdrI)) {
                         WAsmCode[0] = 0xf618 + z2;
                     } else {
-                        WrError(ErrNum_InvAddrMode);
+                        report_address_choices(w1 == ModAbs ? MModAdrI | MModPost
+                                : w1 == ModPost ? MModPost | MModAbs : MModAbs, &ArgStr[2]);
                         CodeLen = 0;
                     }
                 }
@@ -5253,7 +5254,7 @@ static void DecodeFMOVE(Word Code) {
             }
             if ((SrcAdrResult.AdrPart != REG_FPIAR)
                 && (DestAdrResult.AdrMode == ModAdr)) {
-                WrError(ErrNum_InvAddrMode);
+                report_m68k_choices(ErrNum_InvAddrMode, &ArgStr[1], "FPIAR");
                 CodeLen = 0;
                 return;
             }
@@ -5491,7 +5492,7 @@ static void DecodeFMOVEM(Word Code) {
                 || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
             report_operand_sizes(Typ < eFMovemTypCtrl ? (NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D") : ".L");
         } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            report_m68k_choices(ErrNum_InvAddrMode, &ArgStr[1], "FP0..FP7, FPm/FPn or FPm-FPn");
         } else {
             Mask = MModAdrI | MModDAdrI;
             if (pCurrCPUProps->Family != eColdfire) {
@@ -5521,7 +5522,7 @@ static void DecodeFMOVEM(Word Code) {
                 || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
             report_operand_sizes(Typ < eFMovemTypCtrl ? (NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D") : ".L");
         } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+            report_m68k_choices(ErrNum_InvAddrMode, &ArgStr[2], "FP0..FP7, FPm/FPn or FPm-FPn");
         } else {
             RelPos = 4;
             Mask   = MModAdrI | MModDAdrI | MModPC;

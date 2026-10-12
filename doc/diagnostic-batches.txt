@@ -2394,3 +2394,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     vectors and EXPECT no-emission cases retain their bytes.
     Ten of fifteen historical mode candidates reviewed; five remain.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+219. Remaining M68K operand-pair and ColdFire FP-list restrictions.
+    Five candidates reviewed: MOVE16 allowed destination depends on source,
+    address-register FMOVE source must be FPIAR, and both ColdFire FMOVEM directions
+    require static FP lists. Locate rejected counterpart and give permitted forms.
+    Defensive FPn-to-An branch is unreachable behind source control-register mask;
+    retain guard, with existing shared-mask rejection coverage. All fifteen mode
+    candidates reviewed. Original MOVE16 pairs/FPIAR bytes and no-emission cases pass.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

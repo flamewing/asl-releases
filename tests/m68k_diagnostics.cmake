@@ -861,3 +861,32 @@ check_diagnostic(cold-move-pc-pair MCF5202 " move.w *+3(pc),$1000" 1350
     "operand must be D0..D7, A0..A7, (An), (An)+, -(An), d(An)" 3 17)
 check_diagnostic(cold-move-pc-index-pair MCF5202 " move.l *+3(pc,d0.l),1(a1)" 1350
     "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 22)
+
+# Operand-pair restrictions identify the permitted counterpart.
+check_diagnostic(move16-indirect-pair 68040 " move16 (a0),(a1)" 1350
+    "operand must be addr.W/addr.L" 3 14)
+check_diagnostic(move16-post-pair 68040 " move16 (a0)+,(a1)" 1350
+    "operand must be (An)+, addr.W/addr.L" 3 15)
+check_diagnostic(move16-absolute-pair 68040 " move16 $1000,$2000" 1350
+    "operand must be (An), (An)+" 3 15)
+check_diagnostic(fmove-control-to-address 68020 " fpu on\n fmove.l fpcr,a0" 1350
+    "operand must be FPIAR" 4 10)
+check_diagnostic(fmove-fpsr-to-address 68020 " fpu on\n fmove.l fpsr,a0" 1350
+    "operand must be FPIAR" 4 10)
+foreach(item IN ITEMS "fmovem d0,(a0)|9" "fmovem (a0),d0|14"
+        "fmovem.l fpcr,(a0)|11" "fmovem.l (a0),fpcr|16")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 body)
+    list(GET parts 1 column)
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${body}")
+    check_diagnostic(cold-fmovem-list-${name} MCF5407 " fpu on\n ${body}" 1350
+        "operand must be FP0..FP7, FPm/FPn or FPm-FPn" 4 ${column})
+endforeach()
+check_bytes(move16-original-pairs 68040
+    " move16 (a0)+,(a1)+\n move16 (a0)+,$1000\n move16 $1000,(a0)+\n move16 (a0),$1000\n move16 $1000,(a0)"
+    "f6209000f60000001000f60800001000f61000001000f61800001000")
+check_bytes(fmove-original-fpiar-address 68020 " fpu on\n fmove.l fpiar,a0" "f208a400")
+check_bytes(move16-pair-errors-noemit 68040
+    " expect 1350,1350,1350\n move16 (a0),(a1)\n move16 (a0)+,(a1)\n move16 $1000,$2000\n endexpect\n dc.b $12" "12")
+check_bytes(cold-fmovem-list-errors-noemit MCF5407
+    " fpu on\n expect 1350,1350\n fmovem d0,(a0)\n fmovem (a0),d0\n endexpect\n dc.b $12" "12")
