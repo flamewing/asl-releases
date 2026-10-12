@@ -663,8 +663,14 @@
         "ErrNum_InvReg": 3,
         "ErrNum_OverRange": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_ConfOpSizes",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_OverRange"
+      ],
+      "status": "complete",
+      "review_notes": "All 14 historical candidates reviewed in tranche 151: size conflict locates actual/selected 8/16-bit lengths; short direct range shows existing accepted 0x0000..0x00ff or 0xff00..0xffff windows; indexed displacement shows signed bounds and PC base where applicable. Three register checks identify PC/SP/P2/P3 or auto-index/SSM P2/P3. Eight mode checks identify mask alternatives, PLI non-SP pointers, XOR/shift/ILD A, stack choices, branch non-SP/non-auto-index forms and BND PC requirement. IDs/predicates/accepted aliases/encodings preserved. Follow-up 150 fixes ignored scalar operands."
     },
     "code85.c": {
       "candidate_counts": {

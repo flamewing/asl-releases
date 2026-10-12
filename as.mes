@@ -2319,3 +2319,7 @@ Message ErrMsgAddressBankWindow
 Message ErrMsgSelectedAddressForm
  "Adresse 0x%lllx erlaubt die gew&auml;hlte Form %s nicht; erlaubte Formen: %s"
  "address 0x%lllx cannot use selected form %s; allowed forms: %s"
+
+Message ErrMsgINS8070DirectWindows
+ "Adresse 0x%lllx muss in [0x0000,0x00ff] oder [0xff00,0xffff] liegen"
+ "address 0x%lllx must be in [0x0000,0x00ff] or [0xff00,0xffff]"

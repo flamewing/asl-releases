@@ -12,6 +12,8 @@
 
 #include "code807x.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -60,13 +62,16 @@ static CPUVar CPU8070;
 
 /*---------------------------------------------------------------------------*/
 
-static Boolean SetOpSize(int NewSize) {
+static Boolean SetOpSize(int NewSize, tStrComp const* pArg) {
     Boolean Result = True;
 
     if (OpSize == -1) {
         OpSize = NewSize;
     } else if (OpSize != NewSize) {
-        WrError(ErrNum_ConfOpSizes);
+        char Detail[180];
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgOperandLengthConflict),
+                    pArg->str.p_str, 8u << NewSize, 8u << OpSize);
+        WrXErrorPos(ErrNum_ConfOpSizes, Detail, &pArg->Pos);
         Result = False;
     }
 
@@ -86,6 +91,42 @@ static Boolean GetReg16(char* Asc, Byte* AdrPart) {
     return False;
 }
 
+static void WrOperandChoices(tErrorNum ErrorNum, tStrComp const* pArg, char const* Choices) {
+    char Detail[400];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgOperandChoices), Choices);
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
+
+static void WrModeMask(tStrComp const* pArg, Byte Mask) {
+    char Forms[500] = "", Detail[600];
+    if (Mask & MModAcc) {
+        strmaxcat(Forms, (OpSize == 0) ? "A; " : (OpSize == 1) ? "EA; " : "A or EA; ", sizeof(Forms));
+    }
+    if (Mask & MModReg) {
+        strmaxcat(Forms, "PC, SP, P2 or P3; ", sizeof(Forms));
+    }
+    if (Mask & MModE) {
+        strmaxcat(Forms, "E; ", sizeof(Forms));
+    }
+    if (Mask & MModS) {
+        strmaxcat(Forms, "S; ", sizeof(Forms));
+    }
+    if (Mask & MModT) {
+        strmaxcat(Forms, "T; ", sizeof(Forms));
+    }
+    if (Mask & MModImm) {
+        strmaxcat(Forms, "#value or =value; ", sizeof(Forms));
+    }
+    if (Mask & MModMem) {
+        strmaxcat(Forms, "address, target,PC, displacement,SP/P2/P3 or @displacement,P2/P3; ", sizeof(Forms));
+    }
+    if (*Forms) {
+        Forms[strlen(Forms) - 2] = '\0';
+    }
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressForms), Forms);
+    WrXErrorPos(ErrNum_InvAddrMode, Detail, &pArg->Pos);
+}
+
 static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
     int     Cnt;
     Word    TmpVal;
@@ -103,35 +144,35 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
     /* accumulator ? */
 
     if (!as_strcasecmp(ArgStr[Index].str.p_str, "A")) {
-        if (SetOpSize(0)) {
+        if (SetOpSize(0, &ArgStr[Index])) {
             AdrMode = ModAcc;
         }
         goto AdrFound;
     }
 
     if (!as_strcasecmp(ArgStr[Index].str.p_str, "EA")) {
-        if (SetOpSize(1)) {
+        if (SetOpSize(1, &ArgStr[Index])) {
             AdrMode = ModAcc;
         }
         goto AdrFound;
     }
 
     if (!as_strcasecmp(ArgStr[Index].str.p_str, "E")) {
-        if (SetOpSize(0)) {
+        if (SetOpSize(0, &ArgStr[Index])) {
             AdrMode = ModE;
         }
         goto AdrFound;
     }
 
     if (!as_strcasecmp(ArgStr[Index].str.p_str, "S")) {
-        if (SetOpSize(0)) {
+        if (SetOpSize(0, &ArgStr[Index])) {
             AdrMode = ModS;
         }
         goto AdrFound;
     }
 
     if (!as_strcasecmp(ArgStr[Index].str.p_str, "T")) {
-        if (SetOpSize(1)) {
+        if (SetOpSize(1, &ArgStr[Index])) {
             AdrMode = ModT;
         }
         goto AdrFound;
@@ -140,7 +181,7 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
     /* register ? */
 
     if (GetReg16(ArgStr[Index].str.p_str, &AdrPart)) {
-        if (SetOpSize(1)) {
+        if (SetOpSize(1, &ArgStr[Index])) {
             AdrMode = ModReg;
         }
         goto AdrFound;
@@ -181,7 +222,10 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
         }
         if (OK) {
             if ((Hi(Addr) != 0x00) && (Hi(Addr) != 0xff)) {
-                WrError(ErrNum_OverRange);
+                char Detail[180];
+                as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgINS8070DirectWindows),
+                            (LargeWord)Addr);
+                WrXErrorPos(ErrNum_OverRange, Detail, &ArgStr[Index].Pos);
             } else {
                 AdrVals[0] = Lo(Addr);
                 AdrMode    = ModMem;
@@ -201,9 +245,9 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
 
         OK = GetReg16(ArgStr[Index + 1].str.p_str, &AdrPart);
         if (!OK) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index + 1]);
+            WrOperandChoices(ErrNum_InvReg, &ArgStr[Index + 1], "PC, SP, P2 or P3");
         } else if ((Incr) && (AdrPart < 2)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[Index + 1]);
+            WrOperandChoices(ErrNum_InvReg, &ArgStr[Index + 1], "P2 or P3");
         } else {
             tSymbolFlags Flags;
 
@@ -218,7 +262,16 @@ static void DecodeAdr(int Index, Byte Mask, LongInt PCDelta) {
                 }
                 if (!mFirstPassUnknownOrQuestionable(Flags)
                     && ((Addr < -128) || (Addr > 127))) {
-                    WrError(ErrNum_OverRange);
+                    char Detail[200];
+                    if (!AdrPart) {
+                        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                                    (LargeInt)Addr, (LargeInt)-128, (LargeInt)127,
+                                    (LargeWord)(EProgCounter() + PCDelta));
+                    } else {
+                        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgEADispRange),
+                                    (LargeInt)Addr, (LargeInt)-128, (LargeInt)127);
+                    }
+                    WrXErrorPos(ErrNum_OverRange, Detail, &ArgStr[Index].Pos);
                 } else {
                     AdrMode    = ModMem;
                     AdrVals[0] = Addr & 0xff;
@@ -236,7 +289,7 @@ AdrFound:
         return;
     }
     if ((AdrMode != ModNone) && ((Mask & (1 << AdrMode)) == 0)) {
-        WrError(ErrNum_InvAddrMode);
+        WrModeMask(&ArgStr[Index], Mask);
         AdrMode = ModNone;
     }
 }
@@ -408,7 +461,7 @@ static void DecodePLI(Word Index) {
         DecodeAdr(1, MModReg, 0);
         if (AdrMode == ModReg) {
             if (AdrPart == 1) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[1], "PC, P2 or P3");
             } else {
                 BAsmCode[0] = 0x20 | AdrPart;
                 DecodeAdr(2, MModImm, 0);
@@ -431,7 +484,7 @@ static void DecodeSSM(Word Code) {
         break;
     case 1:
         if ((!GetReg16(ArgStr[1].str.p_str, BAsmCode + 0)) || (BAsmCode[0] < 2)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            WrOperandChoices(ErrNum_InvReg, &ArgStr[1], "P2 or P3");
         } else {
             BAsmCode[0] |= 0x2c;
             CodeLen = 1;
@@ -503,7 +556,7 @@ static void DecodeLogic(Word Index) {
             break;
         case ModS:
             if (Index == 0xe0) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[1], "A");
             } else {
                 DecodeAdr(2, MModImm, 0);
                 if (AdrMode == ModImm) {
@@ -524,7 +577,7 @@ static void DecodeShift(Word Index) {
         DecodeAdr(1, MModAcc, 0);
         if (AdrMode == ModAcc) {
             if ((OpSize == 1) && (!POrder->Code16)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[1], "A");
             } else {
                 BAsmCode[CodeLen++] = OpSize ? POrder->Code16 : POrder->Code;
             }
@@ -545,7 +598,7 @@ static void DecodeStack(Word Index) {
             break;
         case ModReg:
             if (AdrPart == 1) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[1], "A, EA, PC, P2 or P3");
             } else {
                 BAsmCode[CodeLen++] = 0x54 | Index | AdrPart;
             }
@@ -559,7 +612,7 @@ static void DecodeIDLD(Word Index) {
         DecodeAdr(1, MModAcc, 0);
         if (AdrMode == ModAcc) {
             if (OpSize == 1) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[1], "A");
             } else {
                 DecodeAdr(2, MModMem, 1);
                 if (AdrMode == ModMem) {
@@ -613,9 +666,9 @@ static void DecodeBranch(Word Code) {
         DecodeAdr(1, MModMem, 2); /* !! regard pre-increment after branch */
         if (AdrMode == ModMem) {
             if ((AdrPart == 1) || (AdrPart > 3)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[(AdrPart > 3) ? 1 : 2], "target,PC or displacement,P2/P3");
             } else if ((Code < 0x60) && (AdrPart != 0)) {
-                WrError(ErrNum_InvAddrMode);
+                WrOperandChoices(ErrNum_InvAddrMode, &ArgStr[2], "PC");
             } else {
                 BAsmCode[0] = Code | AdrPart;
                 memcpy(BAsmCode + 1, AdrVals, AdrCnt);

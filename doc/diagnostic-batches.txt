@@ -1765,3 +1765,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     All six source mnemonics/scalar classes/both immediate markers verify
     explicit-count text/no emission; preserve captured supported sources.
     Validation: all 412 CTest cases pass with embedded/external catalogs.
+
+151. INS8070 size/range/register/address diagnostics and historical completion.
+    Fourteen historical candidates identify conflicting 8/16-bit lengths,
+    existing short direct windows, actual indexed displacement [-128,127]
+    (PC base where applicable), pointer/auto-index/SSM register choices and
+    mask/PLI/XOR/shift/stack/ILD/branch contracts. Position failed component;
+    retain all IDs/predicates/direct-address aliases and captured endpoint
+    bytes. All historical sites now reviewed; trailing operand bug fixed in 150.
+    Validation: all 412 CTest cases pass with embedded/external catalogs.
