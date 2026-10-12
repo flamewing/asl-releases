@@ -2367,3 +2367,11 @@ Message ErrMsgNoCPUAddressForms
 Message ErrMsgHC12TrapRange
  "TRAP-Code %llld au&szlig;erhalb [48,57] oder [64,255]"
  "TRAP code %llld outside [48,57] or [64,255]"
+
+Message ErrMsgPairDestinations
+ "Registerpaar %s,%s ist nicht erlaubt; erlaubte Zielregister f&uuml;r %s: %s"
+ "register pair %s,%s not permitted; allowed destinations for %s: %s"
+
+Message ErrMsgPairNoDestination
+ "Registerpaar %s,%s ist nicht erlaubt; %s hat kein g&uuml;ltiges Zielregister f&uuml;r diesen Befehl"
+ "register pair %s,%s not permitted; %s has no valid destination register for this instruction"

@@ -2104,3 +2104,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     registers, exact positions, unchanged accepted encodings and no emission.
     The two register-pair sites remain pending for a separate batch.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+189. HC12 source-specific register-pair diagnostics.
+    TFR/EXG/SEX identify the rejected pair at the destination and derive allowed
+    destinations from ChkRegPair, CPU availability and SEX's word-width filter.
+    Sources with no valid destination are explicit. Preserve error 1760 and all
+    pairing/encoding rules. Cover both CPUs, extended pairs, German details,
+    no-emission failures and all 168/208 previously accepted instruction/pair
+    combinations. All historical HC12 candidates are now reviewed; adjacent
+    provisional restricted-index selection and split-loop safety remain under
+    review before closing this file.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

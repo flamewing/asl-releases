@@ -373,6 +373,28 @@ static void report_register_choices(tStrComp const* arg, int size) {
     report_operand_choices(ErrNum_InvReg, arg, choices);
 }
 
+static void report_register_pair(Byte source, int dest_size) {
+    char choices[160] = "", detail[320];
+    unsigned index;
+    Byte ext_mask;
+    for (index = 0; index < RegCount; index++) {
+        Reg const* reg = &Regs[index];
+        if ((MomCPU < reg->MinCPU)
+            || ((dest_size >= 0) && (reg->OpSize != dest_size))
+            || !ChkRegPair(source, reg->Code, &ext_mask)) continue;
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, reg->Name, sizeof(choices));
+    }
+    if (*choices) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPairDestinations),
+                ArgStr[1].str.p_str, ArgStr[2].str.p_str, ArgStr[1].str.p_str, choices);
+    } else {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPairNoDestination),
+                ArgStr[1].str.p_str, ArgStr[2].str.p_str, ArgStr[1].str.p_str);
+    }
+    WrXErrorPos(ErrNum_InvRegPair, detail, &ArgStr[2].Pos);
+}
+
 static void report_address_forms(tStrComp const* arg, Word mask) {
     char forms[750] = "", detail[850];
     if (mask & MModImm) strmaxcat(forms, "#value; ", sizeof(forms));
@@ -975,7 +997,7 @@ static void DecodeTransfer(Word Index) {
     } else if (eRegPC == Reg1) {
         report_register_choices(&ArgStr[1], -1);
     } else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) {
-        WrError(ErrNum_InvRegPair);
+        report_register_pair(Reg1, -1);
     } else {
         BAsmCode[0] = 0xb7;
         Reg1 &= 7;
@@ -1006,7 +1028,7 @@ static void DecodeSEX(Word Index) {
     } else if (eRegPC == Reg1) {
         report_register_choices(&ArgStr[1], 0);
     } else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) {
-        WrError(ErrNum_InvRegPair);
+        report_register_pair(Reg1, 1);
     } else {
         BAsmCode[0] = 0xb7;
         BAsmCode[1] = Index | (Reg1 << 4) | Reg2 | ExtMask;

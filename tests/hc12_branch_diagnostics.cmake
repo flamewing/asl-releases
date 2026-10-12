@@ -305,3 +305,42 @@ foreach(cpu IN ITEMS 68HC12 68HC12X)
 endforeach()
 check_diagnostic(unavailable-register 68HC12 " tfr xh,a" 1445
     "operand must be A, B, CCR, CCRL, D, X, Y, SP, XL, YL, SPL" 3 6)
+
+# Rejected register pairs identify both operands and source-specific partners.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    check_diagnostic(pair-no-partner-${cpu} ${cpu} " tfr ccr,xl" 1760
+        "register pair ccr,xl not permitted; allowed destinations for ccr: A, B, CCR, CCRL, D, X, Y, SP" 3 10)
+    check_diagnostic(exchange-pair-${cpu} ${cpu} " exg xl,d" 1760
+        "register pair xl,d not permitted; allowed destinations for xl: A, B, CCR, CCRL" 3 9)
+    check_diagnostic(sex-pair-${cpu} ${cpu} " sex xl,d" 1760
+        "register pair xl,d not permitted; xl has no valid destination register for this instruction" 3 9)
+    check_bytes(pair-errors-noemit-${cpu} ${cpu}
+        " expect 1760,1760,1760\n tfr ccr,xl\n exg xl,d\n sex xl,d\n endexpect\n db $12" "12")
+    if(cpu STREQUAL "68HC12")
+        check_bytes(all-accepted-pairs-${cpu} ${cpu}
+            " tfr A,A\n tfr A,B\n tfr A,CCR\n tfr A,CCRL\n tfr A,D\n tfr A,X\n tfr A,Y\n tfr A,SP\n tfr B,A\n tfr B,B\n tfr B,CCR\n tfr B,CCRL\n tfr B,D\n tfr B,X\n tfr B,Y\n tfr B,SP\n tfr CCR,A\n tfr CCR,B\n tfr CCR,CCR\n tfr CCR,CCRL\n tfr CCR,D\n tfr CCR,X\n tfr CCR,Y\n tfr CCR,SP\n tfr CCRL,A\n tfr CCRL,B\n tfr CCRL,CCR\n tfr CCRL,CCRL\n tfr CCRL,D\n tfr CCRL,X\n tfr CCRL,Y\n tfr CCRL,SP\n tfr D,A\n tfr D,B\n tfr D,CCR\n tfr D,CCRL\n tfr D,D\n tfr D,X\n tfr D,Y\n tfr D,SP\n tfr X,A\n tfr X,B\n tfr X,CCR\n tfr X,CCRL\n tfr X,D\n tfr X,X\n tfr X,Y\n tfr X,SP\n tfr Y,A\n tfr Y,B\n tfr Y,CCR\n tfr Y,CCRL\n tfr Y,D\n tfr Y,X\n tfr Y,Y\n tfr Y,SP\n tfr SP,A\n tfr SP,B\n tfr SP,CCR\n tfr SP,CCRL\n tfr SP,D\n tfr SP,X\n tfr SP,Y\n tfr SP,SP\n tfr XL,A\n tfr XL,B\n tfr XL,CCR\n tfr XL,CCRL\n tfr YL,A\n tfr YL,B\n tfr YL,CCR\n tfr YL,CCRL\n tfr SPL,A\n tfr SPL,B\n tfr SPL,CCR\n tfr SPL,CCRL\n exg A,A\n exg A,B\n exg A,CCR\n exg A,CCRL\n exg A,D\n exg A,X\n exg A,Y\n exg A,SP\n exg B,A\n exg B,B\n exg B,CCR\n exg B,CCRL\n exg B,D\n exg B,X\n exg B,Y\n exg B,SP\n exg CCR,A\n exg CCR,B\n exg CCR,CCR\n exg CCR,CCRL\n exg CCR,D\n exg CCR,X\n exg CCR,Y\n exg CCR,SP\n exg CCRL,A\n exg CCRL,B\n exg CCRL,CCR\n exg CCRL,CCRL\n exg CCRL,D\n exg CCRL,X\n exg CCRL,Y\n exg CCRL,SP\n exg D,A\n exg D,B\n exg D,CCR\n exg D,CCRL\n exg D,D\n exg D,X\n exg D,Y\n exg D,SP\n exg X,A\n exg X,B\n exg X,CCR\n exg X,CCRL\n exg X,D\n exg X,X\n exg X,Y\n exg X,SP\n exg Y,A\n exg Y,B\n exg Y,CCR\n exg Y,CCRL\n exg Y,D\n exg Y,X\n exg Y,Y\n exg Y,SP\n exg SP,A\n exg SP,B\n exg SP,CCR\n exg SP,CCRL\n exg SP,D\n exg SP,X\n exg SP,Y\n exg SP,SP\n exg XL,A\n exg XL,B\n exg XL,CCR\n exg XL,CCRL\n exg YL,A\n exg YL,B\n exg YL,CCR\n exg YL,CCRL\n exg SPL,A\n exg SPL,B\n exg SPL,CCR\n exg SPL,CCRL\n sex A,D\n sex A,X\n sex A,Y\n sex A,SP\n sex B,D\n sex B,X\n sex B,Y\n sex B,SP\n sex CCR,D\n sex CCR,X\n sex CCR,Y\n sex CCR,SP\n sex CCRL,D\n sex CCRL,X\n sex CCRL,Y\n sex CCRL,SP"
+            "b700b701b702b702b704b705b706b707b710b711b712b712b714b715b716b717b720b721b722b722b724b725b726b727b720b721b722b722b724b725b726b727b740b741b742b742b744b745b746b747b750b751b752b752b754b755b756b757b760b761b762b762b764b765b766b767b770b771b772b772b774b775b776b777b750b751b752b752b760b761b762b762b770b771b772b772b780b781b782b782b784b785b786b787b790b791b792b792b794b795b796b797b7a0b7a1b7a2b7a2b7a4b7a5b7a6b7a7b7a0b7a1b7a2b7a2b7a4b7a5b7a6b7a7b7c0b7c1b7c2b7c2b7c4b7c5b7c6b7c7b7d0b7d1b7d2b7d2b7d4b7d5b7d6b7d7b7e0b7e1b7e2b7e2b7e4b7e5b7e6b7e7b7f0b7f1b7f2b7f2b7f4b7f5b7f6b7f7b7d0b7d1b7d2b7d2b7e0b7e1b7e2b7e2b7f0b7f1b7f2b7f2b704b705b706b707b714b715b716b717b724b725b726b727b724b725b726b727")
+    endif()
+    if(cpu STREQUAL "68HC12X")
+        check_bytes(all-accepted-pairs-${cpu} ${cpu}
+            " tfr A,A\n tfr A,B\n tfr A,CCR\n tfr A,CCRL\n tfr A,D\n tfr A,X\n tfr A,Y\n tfr A,SP\n tfr A,XH\n tfr A,YH\n tfr A,SPH\n tfr A,CCRH\n tfr B,A\n tfr B,B\n tfr B,CCR\n tfr B,CCRL\n tfr B,D\n tfr B,X\n tfr B,Y\n tfr B,SP\n tfr B,XL\n tfr B,YL\n tfr B,SPL\n tfr CCR,A\n tfr CCR,B\n tfr CCR,CCR\n tfr CCR,CCRL\n tfr CCR,D\n tfr CCR,X\n tfr CCR,Y\n tfr CCR,SP\n tfr CCRL,A\n tfr CCRL,B\n tfr CCRL,CCR\n tfr CCRL,CCRL\n tfr CCRL,D\n tfr CCRL,X\n tfr CCRL,Y\n tfr CCRL,SP\n tfr D,A\n tfr D,B\n tfr D,CCR\n tfr D,CCRL\n tfr D,D\n tfr D,X\n tfr D,Y\n tfr D,SP\n tfr D,CCRW\n tfr X,A\n tfr X,B\n tfr X,CCR\n tfr X,CCRL\n tfr X,D\n tfr X,X\n tfr X,Y\n tfr X,SP\n tfr X,CCRW\n tfr Y,A\n tfr Y,B\n tfr Y,CCR\n tfr Y,CCRL\n tfr Y,D\n tfr Y,X\n tfr Y,Y\n tfr Y,SP\n tfr Y,CCRW\n tfr SP,A\n tfr SP,B\n tfr SP,CCR\n tfr SP,CCRL\n tfr SP,D\n tfr SP,X\n tfr SP,Y\n tfr SP,SP\n tfr SP,CCRW\n tfr XL,A\n tfr XL,B\n tfr XL,CCR\n tfr XL,CCRL\n tfr XH,A\n tfr YL,A\n tfr YL,B\n tfr YL,CCR\n tfr YL,CCRL\n tfr YH,A\n tfr SPL,A\n tfr SPL,B\n tfr SPL,CCR\n tfr SPL,CCRL\n tfr SPH,A\n tfr CCRH,A\n tfr CCRW,D\n tfr CCRW,X\n tfr CCRW,Y\n tfr CCRW,SP\n tfr CCRW,CCRW\n exg A,A\n exg A,B\n exg A,CCR\n exg A,CCRL\n exg A,D\n exg A,X\n exg A,Y\n exg A,SP\n exg A,XH\n exg A,YH\n exg A,SPH\n exg A,CCRH\n exg B,A\n exg B,B\n exg B,CCR\n exg B,CCRL\n exg B,D\n exg B,X\n exg B,Y\n exg B,SP\n exg B,XL\n exg B,YL\n exg B,SPL\n exg CCR,A\n exg CCR,B\n exg CCR,CCR\n exg CCR,CCRL\n exg CCR,D\n exg CCR,X\n exg CCR,Y\n exg CCR,SP\n exg CCRL,A\n exg CCRL,B\n exg CCRL,CCR\n exg CCRL,CCRL\n exg CCRL,D\n exg CCRL,X\n exg CCRL,Y\n exg CCRL,SP\n exg D,A\n exg D,B\n exg D,CCR\n exg D,CCRL\n exg D,D\n exg D,X\n exg D,Y\n exg D,SP\n exg D,CCRW\n exg X,A\n exg X,B\n exg X,CCR\n exg X,CCRL\n exg X,D\n exg X,X\n exg X,Y\n exg X,SP\n exg X,CCRW\n exg Y,A\n exg Y,B\n exg Y,CCR\n exg Y,CCRL\n exg Y,D\n exg Y,X\n exg Y,Y\n exg Y,SP\n exg Y,CCRW\n exg SP,A\n exg SP,B\n exg SP,CCR\n exg SP,CCRL\n exg SP,D\n exg SP,X\n exg SP,Y\n exg SP,SP\n exg SP,CCRW\n exg XL,A\n exg XL,B\n exg XL,CCR\n exg XL,CCRL\n exg XH,A\n exg YL,A\n exg YL,B\n exg YL,CCR\n exg YL,CCRL\n exg YH,A\n exg SPL,A\n exg SPL,B\n exg SPL,CCR\n exg SPL,CCRL\n exg SPH,A\n exg CCRH,A\n exg CCRW,D\n exg CCRW,X\n exg CCRW,Y\n exg CCRW,SP\n exg CCRW,CCRW\n sex A,D\n sex A,X\n sex A,Y\n sex A,SP\n sex B,D\n sex B,X\n sex B,Y\n sex B,SP\n sex CCR,D\n sex CCR,X\n sex CCR,Y\n sex CCR,SP\n sex CCRL,D\n sex CCRL,X\n sex CCRL,Y\n sex CCRL,SP"
+            "b700b701b702b702b704b705b706b707b70db70eb70fb70ab710b711b712b712b714b715b716b717b71db71eb71fb720b721b722b722b724b725b726b727b720b721b722b722b724b725b726b727b740b741b742b742b744b745b746b747b74ab750b751b752b752b754b755b756b757b75ab760b761b762b762b764b765b766b767b76ab770b771b772b772b774b775b776b777b77ab750b751b752b752b758b760b761b762b762b768b770b771b772b772b778b728b72cb72db72eb72fb72ab780b781b782b782b784b785b786b787b78db78eb78fb78ab790b791b792b792b794b795b796b797b79db79eb79fb7a0b7a1b7a2b7a2b7a4b7a5b7a6b7a7b7a0b7a1b7a2b7a2b7a4b7a5b7a6b7a7b7c0b7c1b7c2b7c2b7c4b7c5b7c6b7c7b7cab7d0b7d1b7d2b7d2b7d4b7d5b7d6b7d7b7dab7e0b7e1b7e2b7e2b7e4b7e5b7e6b7e7b7eab7f0b7f1b7f2b7f2b7f4b7f5b7f6b7f7b7fab7d0b7d1b7d2b7d2b7d8b7e0b7e1b7e2b7e2b7e8b7f0b7f1b7f2b7f2b7f8b7a8b7acb7adb7aeb7afb7aab704b705b706b707b714b715b716b717b724b725b726b727b724b725b726b727")
+    endif()
+endforeach()
+check_diagnostic(base-no-extension-pair 68HC12 " tfr a,xl" 1760
+    "allowed destinations for a: A, B, CCR, CCRL, D, X, Y, SP" 3 8)
+check_diagnostic(extended-other-half-pair 68HC12X " tfr a,xl" 1760
+    "allowed destinations for a: A, B, CCR, CCRL, D, X, Y, SP, XH, YH, SPH, CCRH" 3 8)
+check_diagnostic(extended-word-pair 68HC12X " tfr ccrw,a" 1760
+    "allowed destinations for ccrw: D, X, Y, SP, CCRW" 3 11)
+check_diagnostic(extended-sex-pair 68HC12X " sex xh,d" 1760
+    "xh has no valid destination register for this instruction" 3 9)
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/pair-no-partner-68HC12.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Registerpaar ccr,xl ist nicht erlaubt; erlaubte Zielregister" pair_pos)
+if(NOT "${result}" STREQUAL "2" OR pair_pos EQUAL -1)
+    message(FATAL_ERROR "German HC12 pair: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
