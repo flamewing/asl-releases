@@ -2094,3 +2094,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     references. Correct only the two affected PC-indexed bytes in the legacy
     HC12 golden vector; length and all other bytes remain unchanged.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+188. HC12 loop, transfer and sign-extension register choices.
+    Loop operands identify A/B/D/X/Y/SP. TFR/EXG choices come from the same
+    CPU-specific register table used for decoding; SEX filters byte sources
+    and word destinations. All twelve remaining historical register sites
+    reviewed; source-PC SEX branch is unreachable after its word-width test.
+    Both CPUs cover invalid names, forbidden PC/CCR/halves, unavailable X
+    registers, exact positions, unchanged accepted encodings and no emission.
+    The two register-pair sites remain pending for a separate batch.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

@@ -258,3 +258,50 @@ check_bytes(btas-pc-forward 68HC12X
     " org $1000\n btas target+1000,pc,#$40\ntarget equ $1004-1000" "1837c040")
 check_bytes(btas-pc-after-label 68HC12X
     " org $1000\n btas after,pc,#$40\nafter: db $12" "1837c04012")
+
+# Loop registers exclude CCR, PC and register halves. Transfers and SEX use
+# CPU-specific names, with SEX's byte source and word destination constraints.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    foreach(reg IN ITEMS missing ccr pc xl)
+        check_diagnostic(loop-register-${reg}-${cpu} ${cpu} " dbne ${reg},*" 1445
+            "operand must be A, B, D, X, Y or SP" 3 7)
+    endforeach()
+    set(all_registers "A, B, CCR, CCRL, D, X, Y, SP, XL, YL, SPL")
+    set(byte_registers "A, B, CCR, CCRL, XL, YL, SPL")
+    set(word_registers "D, X, Y, SP")
+    if(cpu STREQUAL "68HC12X")
+        set(all_registers "A, B, CCR, CCRL, D, X, Y, SP, XL, XH, YL, YH, SPL, SPH, CCRH, CCRW")
+        set(byte_registers "A, B, CCR, CCRL, XL, XH, YL, YH, SPL, SPH, CCRH")
+        set(word_registers "D, X, Y, SP, CCRW")
+    endif()
+    foreach(ins IN ITEMS tfr exg)
+        foreach(reg IN ITEMS missing pc)
+            check_diagnostic(${ins}-source-${reg}-${cpu} ${cpu} " ${ins} ${reg},d" 1445
+                "operand must be ${all_registers}" 3 6)
+            check_diagnostic(${ins}-destination-${reg}-${cpu} ${cpu} " ${ins} a,${reg}" 1445
+                "operand must be ${all_registers}" 3 8)
+        endforeach()
+    endforeach()
+    foreach(reg IN ITEMS missing a pc)
+        check_diagnostic(sex-destination-${reg}-${cpu} ${cpu} " sex a,${reg}" 1445
+            "operand must be ${word_registers}" 3 8)
+    endforeach()
+    foreach(reg IN ITEMS missing d pc)
+        check_diagnostic(sex-source-${reg}-${cpu} ${cpu} " sex ${reg},d" 1445
+            "operand must be ${byte_registers}" 3 6)
+    endforeach()
+    check_bytes(register-errors-noemit-${cpu} ${cpu}
+        " expect 1445,1445,1445,1445\n dbne pc,*\n tfr pc,d\n exg a,pc\n sex d,x\n endexpect\n db $12" "12")
+    if(cpu STREQUAL "68HC12")
+        check_bytes(accepted-registers-${cpu} ${cpu}
+            " dbeq a,*\n dbeq b,*\n dbeq d,*\n dbeq x,*\n dbeq y,*\n dbeq sp,*\n dbne a,*\n dbne b,*\n dbne d,*\n dbne x,*\n dbne y,*\n dbne sp,*\n ibeq a,*\n ibeq b,*\n ibeq d,*\n ibeq x,*\n ibeq y,*\n ibeq sp,*\n ibne a,*\n ibne b,*\n ibne d,*\n ibne x,*\n ibne y,*\n ibne sp,*\n tbeq a,*\n tbeq b,*\n tbeq d,*\n tbeq x,*\n tbeq y,*\n tbeq sp,*\n tbne a,*\n tbne b,*\n tbne d,*\n tbne x,*\n tbne y,*\n tbne sp,*\n tfr a,b\n tfr d,x\n tfr xl,a\n tfr b,sp\n exg a,b\n exg d,x\n exg xl,a\n exg b,sp\n sex a,d\n sex b,x\n sex ccr,y"
+            "0410fd0411fd0414fd0415fd0416fd0417fd0430fd0431fd0434fd0435fd0436fd0437fd0490fd0491fd0494fd0495fd0496fd0497fd04b0fd04b1fd04b4fd04b5fd04b6fd04b7fd0450fd0451fd0454fd0455fd0456fd0457fd0470fd0471fd0474fd0475fd0476fd0477fdb701b745b750b717b781b7c5b7d0b797b704b715b726")
+    endif()
+    if(cpu STREQUAL "68HC12X")
+        check_bytes(accepted-registers-${cpu} ${cpu}
+            " dbeq a,*\n dbeq b,*\n dbeq d,*\n dbeq x,*\n dbeq y,*\n dbeq sp,*\n dbne a,*\n dbne b,*\n dbne d,*\n dbne x,*\n dbne y,*\n dbne sp,*\n ibeq a,*\n ibeq b,*\n ibeq d,*\n ibeq x,*\n ibeq y,*\n ibeq sp,*\n ibne a,*\n ibne b,*\n ibne d,*\n ibne x,*\n ibne y,*\n ibne sp,*\n tbeq a,*\n tbeq b,*\n tbeq d,*\n tbeq x,*\n tbeq y,*\n tbeq sp,*\n tbne a,*\n tbne b,*\n tbne d,*\n tbne x,*\n tbne y,*\n tbne sp,*\n tfr a,b\n tfr d,x\n tfr xl,a\n tfr b,sp\n exg a,b\n exg d,x\n exg xl,a\n exg b,sp\n sex a,d\n sex b,x\n sex ccr,y\n tfr a,xh\n exg b,xl\n tfr ccrw,sp\n sex a,sp"
+            "0410fd0411fd0414fd0415fd0416fd0417fd0430fd0431fd0434fd0435fd0436fd0437fd0490fd0491fd0494fd0495fd0496fd0497fd04b0fd04b1fd04b4fd04b5fd04b6fd04b7fd0450fd0451fd0454fd0455fd0456fd0457fd0470fd0471fd0474fd0475fd0476fd0477fdb701b745b750b717b781b7c5b7d0b797b704b715b726b70db79db72fb707")
+    endif()
+endforeach()
+check_diagnostic(unavailable-register 68HC12 " tfr xh,a" 1445
+    "operand must be A, B, CCR, CCRL, D, X, Y, SP, XL, YL, SPL" 3 6)

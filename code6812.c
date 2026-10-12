@@ -51,6 +51,7 @@ typedef struct {
 } JmpOrder;
 
 typedef struct {
+    char const* Name;
     Word   Code;
     Byte   OpSize;
     CPUVar MinCPU;
@@ -107,6 +108,7 @@ static FixedOrder* LoopOrders;
 static FixedOrder* LEAOrders;
 static JmpOrder*   JmpOrders;
 static Reg*        Regs;
+static unsigned    RegCount;
 
 static PInstTable RegTable;
 
@@ -355,6 +357,20 @@ static void report_operand_choices(tErrorNum error, tStrComp const* arg, char co
     char detail[240];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
     WrXErrorPos(error, detail, &arg->Pos);
+}
+
+/* Derive choices from the same CPU/width table used by DecodeReg. */
+static void report_register_choices(tStrComp const* arg, int size) {
+    char choices[160] = "";
+    unsigned index;
+    for (index = 0; index < RegCount; index++) {
+        Reg const* reg = &Regs[index];
+        if ((MomCPU < reg->MinCPU) || (reg->Code == eRegPC)
+            || ((size >= 0) && (reg->OpSize != size))) continue;
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, reg->Name, sizeof(choices));
+    }
+    report_operand_choices(ErrNum_InvReg, arg, choices);
 }
 
 static void report_address_forms(tStrComp const* arg, Word mask) {
@@ -875,11 +891,11 @@ static void DecodeLoop(Word Index) {
     else if (*AttrPart.str.p_str) {
         WrError(ErrNum_UseLessAttr);
     } else if (!DecodeReg(ArgStr[1].str.p_str, &HReg)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_operand_choices(ErrNum_InvReg, &ArgStr[1], "A, B, D, X, Y or SP");
     } else {
         OK = (HReg <= eRegB) || ((HReg >= eRegD) && (HReg <= eRegSP));
         if (!OK) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            report_operand_choices(ErrNum_InvReg, &ArgStr[1], "A, B, D, X, Y or SP");
         } else {
             Address = EvalStrIntExpressionWithFlags(&ArgStr[2], AddrInt, &OK, &Flags)
                       - (EProgCounter() + 3);
@@ -951,13 +967,13 @@ static void DecodeTransfer(Word Index) {
     else if (*AttrPart.str.p_str) {
         WrError(ErrNum_UseLessAttr);
     } else if (!DecodeReg(ArgStr[2].str.p_str, &Reg2)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], -1);
     } else if (eRegPC == Reg2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], -1);
     } else if (!DecodeReg(ArgStr[1].str.p_str, &Reg1)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], -1);
     } else if (eRegPC == Reg1) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], -1);
     } else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) {
         WrError(ErrNum_InvRegPair);
     } else {
@@ -978,17 +994,17 @@ static void DecodeSEX(Word Index) {
     else if (*AttrPart.str.p_str) {
         WrError(ErrNum_UseLessAttr);
     } else if (!DecodeReg(ArgStr[2].str.p_str, &Reg2)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], 1);
     } else if (ActRegSize != 1) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], 1);
     } else if (eRegPC == Reg2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_register_choices(&ArgStr[2], 1);
     } else if (!DecodeReg(ArgStr[1].str.p_str, &Reg1)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], 0);
     } else if (ActRegSize != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], 0);
     } else if (eRegPC == Reg1) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_register_choices(&ArgStr[1], 0);
     } else if (!ChkRegPair(Reg1, Reg2, &ExtMask)) {
         WrError(ErrNum_InvRegPair);
     } else {
@@ -1462,6 +1478,7 @@ static void AddJmp(char const* NName, Word NCode, Boolean NDir) {
 
 static void AddReg(char const* NName, Word NCode, Word NSize, CPUVar NMin) {
     order_array_rsv_end(Regs, Reg);
+    Regs[InstrZ].Name   = NName;
     Regs[InstrZ].Code   = NCode;
     Regs[InstrZ].OpSize = NSize;
     Regs[InstrZ].MinCPU = NMin;
@@ -1768,6 +1785,7 @@ static void InitFields(void) {
     AddReg("SPH", eRegSPH, 0, CPU6812X);
     AddReg("CCRH", eRegCCRH, 0, CPU6812X);
     AddReg("CCRW", eRegCCRW, 1, CPU6812X);
+    RegCount = InstrZ;
 
     add_moto8_pseudo(InstTable, e_moto_pseudo_flags_be);
     add_moto8_comment_onoff();
