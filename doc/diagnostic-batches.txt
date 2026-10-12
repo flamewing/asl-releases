@@ -2403,3 +2403,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     retain guard, with existing shared-mask rejection coverage. All fifteen mode
     candidates reviewed. Original MOVE16 pairs/FPIAR bytes and no-emission cases pass.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+220. M68K MOVEM list requirements and primary register lookup errors.
+    One list candidate now describes D0..D7/A0..A7 lists with slash names/hyphen
+    ranges at mnemonic when neither operand is a valid list. Tri-state parsing
+    stops after primary register-type/target failure in either direction/endpoints.
+    Original successful lists/ranges/predecrement/postincrement and EXPECT
+    no-emission cases pass. One of three list sites reviewed; two FPU sites remain.
+    Forward MOVEM REG-alias failure confirmed and recorded as separate followup.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

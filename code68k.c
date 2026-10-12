@@ -2461,8 +2461,18 @@ static Boolean DecodeMACReg(char const* pArg, Word* pResult) {
     return DecodeMACACC(pArg, pResult);
 }
 
-static Boolean DecodeRegList(tStrComp const* pArg, Word* Erg) {
+typedef enum {
+    eNotRegList, eRegList, eRegListAbort
+} tRegListResult;
+
+static tRegListResult decode_list_register(tStrComp const* arg, Word* reg) {
+    tRegEvalResult status = DecodeReg(arg, reg, False);
+    return status == eIsReg ? eRegList : status == eRegAbort ? eRegListAbort : eNotRegList;
+}
+
+static tRegListResult DecodeRegList(tStrComp const* pArg, Word* Erg) {
     Word     h, h2;
+    tRegListResult status;
     Byte     z;
     char *   p, *p2;
     String   ArgStr;
@@ -2479,19 +2489,18 @@ static Boolean DecodeRegList(tStrComp const* pArg, Word* Erg) {
         }
         p2 = strchr(Arg.str.p_str, '-');
         if (!p2) {
-            if (DecodeReg(&Arg, &h, False) != eIsReg) {
-                return False;
-            }
+            status = decode_list_register(&Arg, &h);
+            if (status != eRegList) return status;
             *Erg |= 1 << h;
         } else {
             StrCompSplitRef(&From, &To, &Arg, p2);
             if (!*From.str.p_str || !*To.str.p_str) {
-                return False;
+                return eNotRegList;
             }
-            if ((DecodeReg(&From, &h, False) != eIsReg)
-                || (DecodeReg(&To, &h2, False) != eIsReg)) {
-                return False;
-            }
+            status = decode_list_register(&From, &h);
+            if (status != eRegList) return status;
+            status = decode_list_register(&To, &h2);
+            if (status != eRegList) return status;
             if (h <= h2) {
                 for (z = h; z <= h2; z++) {
                     *Erg |= 1 << z;
@@ -2509,7 +2518,7 @@ static Boolean DecodeRegList(tStrComp const* pArg, Word* Erg) {
             Arg = Remainder;
         }
     } while (p);
-    return True;
+    return eRegList;
 }
 
 typedef enum {
@@ -3635,9 +3644,11 @@ static void DecodeMOVEM(Word Index) {
         report_operand_sizes(".L");
     } else {
         tAdrResult AdrResult;
+        tRegListResult list_result = DecodeRegList(&ArgStr[2], WAsmCode + 1);
 
+        if (list_result == eRegListAbort) return;
         RelPos = 4;
-        if (DecodeRegList(&ArgStr[2], WAsmCode + 1)) {
+        if (list_result == eRegList) {
             if (DecodeAdr(
                         &ArgStr[1],
                         MModAdrI | MModDAdrI
@@ -3650,7 +3661,7 @@ static void DecodeMOVEM(Word Index) {
                 CodeLen     = 4 + AdrResult.Cnt;
                 CopyAdrVals(2, &AdrResult);
             }
-        } else if (DecodeRegList(&ArgStr[1], WAsmCode + 1)) {
+        } else if ((list_result = DecodeRegList(&ArgStr[1], WAsmCode + 1)) == eRegList) {
             if (DecodeAdr(
                         &ArgStr[2],
                         MModAdrI | MModDAdrI
@@ -3671,8 +3682,8 @@ static void DecodeMOVEM(Word Index) {
                     }
                 }
             }
-        } else {
-            WrError(ErrNum_InvRegList);
+        } else if (list_result != eRegListAbort) {
+            report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgMOVEMListChoices, &OpPart);
         }
     }
 }

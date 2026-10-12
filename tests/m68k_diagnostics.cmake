@@ -890,3 +890,20 @@ check_bytes(move16-pair-errors-noemit 68040
     " expect 1350,1350,1350\n move16 (a0),(a1)\n move16 (a0)+,(a1)\n move16 $1000,$2000\n endexpect\n dc.b $12" "12")
 check_bytes(cold-fmovem-list-errors-noemit MCF5407
     " fpu on\n expect 1350,1350\n fmovem d0,(a0)\n fmovem (a0),d0\n endexpect\n dc.b $12" "12")
+
+# MOVEM list lookup stops at a primary register-type failure.
+check_diagnostic(movem-primary-source 68020 " fpu on\nbad reg fp0\n movem.l bad,(a0)" 1130
+    "invalid operand size" 5 10)
+check_diagnostic(movem-primary-destination 68020 " fpu on\nbad reg fp0\n movem.l (a0),bad" 1130
+    "invalid operand size" 5 15)
+check_diagnostic(movem-primary-range 68020 " fpu on\nbad reg fp0\n movem.l d0-bad,(a0)" 1130
+    "invalid operand size" 5 13)
+check_diagnostic(movem-list-choices 68020 " movem.l #1,(a0)" 1410
+    "one operand must be a D0..D7/A0..A7 register list" 3 2)
+check_diagnostic(movem-incomplete-range 68020 " movem.l d0-,(a0)" 1410
+    "'/' separated names or '-' ranges" 3 2)
+check_bytes(movem-original-list-forms 68020
+    " movem.w d0/d2/a0,(a1)\n movem.l d0-d2/a0-a1,-(a7)\n movem.l (a7)+,d0-d2/a0-a1"
+    "4891010548e7e0c04cdf0307")
+check_bytes(movem-primary-errors-noemit 68020
+    " fpu on\nbad reg fp0\n expect 1130,1130\n movem.l bad,(a0)\n movem.l (a0),bad\n endexpect\n dc.b $12" "12")

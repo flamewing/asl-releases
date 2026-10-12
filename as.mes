@@ -2435,3 +2435,7 @@ Message ErrMsgNoOperandSizeSuffix
 Message ErrMsgMACScaleChoices
  "MAC-Skalierung muss <<0, <<1, >>0 oder >>1 sein (auch <<, >> oder ein leeres Argument)"
  "MAC scale must be <<0, <<1, >>0 or >>1 (also <<, >> or an empty argument)"
+
+Message ErrMsgMOVEMListChoices
+ "ein Operand muss eine Registerliste aus D0..D7/A0..A7 sein (Namen mit '/' oder Bereiche mit '-')"
+ "one operand must be a D0..D7/A0..A7 register list ('/' separated names or '-' ranges)"
