@@ -781,3 +781,20 @@ check_bytes(stldsr-original-size MCF5208 " stldsr.w #1" "40e746fc0001")
 check_bytes(cold-specific-original-sizes MCF5470
     " mvs.b d0,d1\n mvz.w d0,d1\n mac.w d0.l,d1.u\n mac.l d0,d1\n movclr.l acc0,d0\n maaac.w d0.l,d1.u,acc0,acc1\n maaac.l d0,d1,acc0,acc1\n cp0bcbusy.w *+2"
     "730073c0a2000080a2000800a1c0a2000085a2000805fcc00000")
+
+# The shared mode rejection lists forms from the caller's actual allowed mask.
+check_diagnostic(lea-address-choices 68020 " lea.l d0,a0" 1350
+    "operand must be (An), d(An), d(An,Xn), d(PC), d(PC,Xn), addr.W/addr.L" 3 8)
+check_diagnostic(jsr-address-choices 68020 " jsr #1" 1350
+    "operand must be (An), d(An), d(An,Xn), d(PC), d(PC,Xn), addr.W/addr.L" 3 6)
+check_diagnostic(move-destination-choices 68020 " move.w d0,#1" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An), d(An), d(An,Xn), addr.W/addr.L" 3 12)
+check_diagnostic(fpu-control-source-choices 68020 " fpu on\n fmove.l fp0,a0" 1350
+    "operand must be FPCR/FPSR/FPIAR" 4 10)
+check_diagnostic(cold-memory-shift-choices MCF5407 " lsl.l (a0)" 1350
+    "operand must be D0..D7" 3 8)
+check_diagnostic(mode-undefined-primary 68020 " lea.l missing,a0" 1010
+    "symbol undefined" 3 8)
+check_bytes(address-original-choices 68020
+    " lea.l (a0),a1\n lea.l 1(a0),a1\n lea.l 1(a0,d0.w),a1\n lea.l *+2(pc),a1\n lea.l 1(pc,d0.w),a1\n lea.l $1234,a1"
+    "43d043e8000143f0000143fa000043fb0120eff143f81234")

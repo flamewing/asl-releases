@@ -561,6 +561,24 @@ static Boolean report_m68k_choices(tErrorNum error, tStrComp const* arg, char co
     return False;
 }
 
+static void report_address_choices(Word mask, tStrComp const* arg) {
+    static char const* const forms[] = {
+        "D0..D7", "A0..A7", "(An)", "(An)+", "-(An)", "d(An)",
+        "d(An,Xn)", "d(PC)", "d(PC,Xn)", "addr.W/addr.L", "#value",
+        "FP0..FP7", "FPCR/FPSR/FPIAR"
+    };
+    char choices[300] = "", detail[360];
+    unsigned i;
+    for (i = 0; i < sizeof(forms) / sizeof(forms[0]); i++) {
+        if (mask & (1u << i)) {
+            if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, forms[i], sizeof(choices));
+        }
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static Boolean report_m68k_char(unsigned message, char value, tStrComp const* arg) {
     char detail[160];
     as_snprintf(detail, sizeof(detail), getmessage(message), value);
@@ -2386,7 +2404,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
 chk:
     if ((pResult->AdrMode > 0) && (!(Erl & (1 << (pResult->AdrMode - 1))))) {
-        WrStrErrorPos(ErrNum_InvAddrMode, pArg);
+        report_address_choices(Erl, pArg);
         ClrAdrVals(pResult);
     }
     return pResult->AdrMode;
@@ -2937,7 +2955,7 @@ static void DecodeShift(Word Index) {
             }
         } else if (AdrResult.AdrMode != ModNone) {
             if (pCurrCPUProps->Family == eColdfire) {
-                WrError(ErrNum_InvAddrMode);
+                report_address_choices(MModData, &ArgStr[ArgCnt]);
             } else {
                 if (OpSize != eSymbolSize16Bit) {
                     WrXErrorPos(

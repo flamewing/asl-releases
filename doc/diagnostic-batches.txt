@@ -2366,3 +2366,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     All 98 historical M68K size candidates now reviewed; addressing-mode,
     register-list and direct-count families remain pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+216. M68K allowed addressing forms from the caller's mask.
+    Two candidates list permitted forms from the actual allowed-mode mask or
+    D0..D7 for ColdFire memory-shift rejection, at the offending operand.
+    Masks and emission rules unchanged. Shared integer/control/FPU failures,
+    undefined primary preservation and original addressing vectors pass.
+    Re-review six parser candidates already improved in tranche 3. Eight of
+    fifteen mode candidates reviewed; seven remain.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
