@@ -5904,11 +5904,13 @@ static void DecodePFLUSHR(Word Code) {
 
     if (!*AttrPart.str.p_str) {
         OpSize = eSymbolSize64Bit;
-    } else if (!PMMUAvail) {
-        WrError(ErrNum_PMMUNotEnabled);
+    }
+    if (!PMMUAvail) {
+        WrStrErrorPos(ErrNum_PMMUNotEnabled, &OpPart);
+        return;
     }
     if (OpSize != eSymbolSize64Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".Q");
     } else if (!ChkArgCnt(1, 1))
         ;
     else if (!FullPMMU) {
@@ -5972,7 +5974,7 @@ static void DecodePMOVE_PMOVEFD(Word Code) {
                 OpSize = RegSize;
             }
             if (OpSize != RegSize) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(RegSize == eSymbolSize8Bit ? ".B" : RegSize == eSymbolSize16Bit ? ".W" : RegSize == eSymbolSize32Bit ? ".L" : ".Q");
             } else {
                 Mask = MModAdrI | MModDAdrI | MModAIX | MModAbs;
                 if (FullPMMU) {
@@ -5993,7 +5995,7 @@ static void DecodePMOVE_PMOVEFD(Word Code) {
                 OpSize = RegSize;
             }
             if (OpSize != RegSize) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(RegSize == eSymbolSize8Bit ? ".B" : RegSize == eSymbolSize16Bit ? ".W" : RegSize == eSymbolSize32Bit ? ".L" : ".Q");
             } else {
                 RelPos = 4;
                 Mask   = MModAdrI | MModDAdrI | MModAIX | MModAbs;
@@ -6079,7 +6081,7 @@ static void DecodePVALID(Word Code) {
     } else if (!FullPMMU) {
         WrError(ErrNum_FullPMMUNotEnabled);
     } else if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else {
         tAdrResult AdrResult;
 
@@ -6107,7 +6109,7 @@ static void DecodePBcc(Word CondCode) {
     } else {
         if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)
             && (OpSize != eSymbolSizeFloat96Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W, .L, .X");
         } else if (!ChkArgCnt(1, 1))
             ;
         else if (!FullPMMU) {
@@ -6153,7 +6155,7 @@ static void DecodePDBcc(Word CondCode) {
         WrError(ErrNum_PMMUNotEnabled);
     } else {
         if ((OpSize != eSymbolSize16Bit) && *AttrPart.str.p_str) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W");
         } else if (!ChkArgCnt(2, 2))
             ;
         else if (!FullPMMU) {
@@ -6192,7 +6194,7 @@ static void DecodePScc(Word CondCode) {
         WrError(ErrNum_PMMUNotEnabled);
     } else {
         if ((OpSize != eSymbolSize8Bit) && *AttrPart.str.p_str) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B");
         } else if (!ChkArgCnt(1, 1))
             ;
         else if (!FullPMMU) {
@@ -6224,7 +6226,7 @@ static void DecodePTRAPcc(Word CondCode) {
             OpSize = eSymbolSize8Bit;
         }
         if (OpSize > 2) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B, .W, .L");
         } else if (!ChkArgCnt(OpSize ? 1 : 0, OpSize ? 1 : 0))
             ;
         else if (!FullPMMU) {

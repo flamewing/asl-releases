@@ -723,3 +723,39 @@ check_bytes(cold-native-original-sizes MCF5407
     " fpu on\n fadd.d fp0,fp1\n fmove.d fp0,fp1\n fmovem.d fp0,(a0)" "f20000a2f2000080f210f080")
 check_bytes(bit-original-sizes 68020
     " btst.l #1,d0\n btst.b #1,(a0)" "0800000108100001")
+
+# PMMU register widths and conditional sizes come from the selected form.
+foreach(item IN ITEMS "pflushr|w|(a0)|.Q" "pvalid|w|val,(a0)|.L"
+        "pbbs|b|*+4|.W, .L, .X" "pdbbs|b|d0,*+6|.W"
+        "psbs|w|d0|.B" "ptrapbs|s|#1|.B, .W, .L")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 size)
+    list(GET parts 2 args)
+    list(GET parts 3 sizes)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(pmmu-size-${ins} 68020 " pmmu on\n fullpmmu on\n ${ins}.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 5 ${column})
+endforeach()
+foreach(item IN ITEMS "cal|.B" "psr|.W" "tc|.L" "crp|.Q")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 reg)
+    list(GET parts 1 size)
+    check_diagnostic(pmove-source-size-${reg} 68020 " pmmu on\n fullpmmu on\n pmove.s ${reg},(a0)" 1130
+        "supported operand sizes: ${size}" 5 8)
+    check_diagnostic(pmove-destination-size-${reg} 68020 " pmmu on\n fullpmmu on\n pmove.s (a0),${reg}" 1130
+        "supported operand sizes: ${size}" 5 8)
+endforeach()
+foreach(suffix IN ITEMS "" ".q" ".w")
+    string(REPLACE "." "_" name "${suffix}")
+    check_diagnostic(pflushr-disabled${name} 68020 " pmmu off\n pflushr${suffix} (a0)" 1502
+        "PMMU instructions are not enabled" 4 2)
+endforeach()
+check_diagnostic(pflushr-disabled-primary 68020 " pmmu off\n pflushr.w missing" 1502
+    "PMMU instructions are not enabled" 4 2)
+check_bytes(pflushr-disabled-noemit 68020
+    " pmmu off\n expect 1502,1502,1502\n pflushr (a0)\n pflushr.q (a0)\n pflushr.w (a0)\n endexpect\n dc.b $12" "12")
+check_bytes(pmmu-specific-original-sizes 68020
+    " supmode on\n pmmu on\n fullpmmu on\n pflushr.q (a0)\n pmove.b cal,(a0)\n pmove.w psr,(a0)\n pmove.l tc,(a0)\n pmove.q crp,(a0)\n pmove.b (a0),cal\n pmove.w (a0),psr\n pmove.l (a0),tc\n pmove.q (a0),crp\n pvalid.l val,(a0)\n pbbs.w *+4\n pdbbs.w d0,*+6\n psbs.b d0\n ptrapbs.b\n ptrapbs.w #1"
+    "f010a000f0105200f0106200f0104200f0104e00f0105000f0106000f0104000f0104c00f0102800f0800002f04800000002f0400000f07c0000f07a00000001")

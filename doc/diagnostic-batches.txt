@@ -2349,3 +2349,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     original classic/ColdFire FP and bit-operation vectors pass. Sanitize test
     names for Windows paths. Eighty-four of 98 size candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+214. M68K PMMU widths and PFLUSHR disabled-unit gating.
+    Eight size candidates list PFLUSHR .Q, selected PMOVE control-register width
+    in either direction, PVALID .L and conditional PMMU widths at suffix.
+    PFLUSHR formerly skipped PMMU OFF when unsuffixed and could emit after explicit
+    disabled-unit error. Always stop at located primary 1502; avoid secondary
+    size/symbol errors and any emission. Original enabled vectors pass.
+    Ninety-two of 98 historical size candidates reviewed; six ColdFire sites remain.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
