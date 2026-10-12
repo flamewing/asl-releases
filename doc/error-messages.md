@@ -401,3 +401,10 @@ PC+2 base under `-x`; DJNZ error 1350 identifies the required B or BC operand.
 
 TLCS-90 fixed-operand error 1350 names the required A/HL, word ALU destination
 set, PUSH/POP register set or LDA source forms at the failing operand under `-x`.
+
+TLCS-90 error 1131 identifies the register's actual width and required width.
+Error 1130 identifies unknown immediate width and accepted addressing forms.
+Shared error 1350 distinguishes repeated/multiple/non-additive address registers,
+required HL+A indexing, zero-only displacement with its actual value and
+mask-derived alternatives. Error 1320 identifies the actual indexed displacement
+and signed-byte bounds under `-x`.

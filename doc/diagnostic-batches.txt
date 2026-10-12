@@ -2663,3 +2663,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     fixed-operand byte vector, no rejected emission and German detail checked.
     Nine historical shared address/size/range sites remain.
     Validation: all 422 CTest cases pass with embedded/external catalogs.
+
+248. TLCS-90 shared address and size diagnostics.
+    Nine remaining historical sites: actual register width/required width at
+    operand, repeated/multiple/non-additive address registers, required HL+A,
+    zero-only displacement with actual value, signed byte displacement bounds,
+    mask-derived alternatives and unknown immediate width with allowed forms.
+    Confirm/fix leaked byte-default flag causing order-dependent error class and
+    premature zero-offset errors with valid forward final HL+A/BC expressions.
+    Original byte vector from previous build, direct/forward modes, primary-only
+    errors, rejected emission and German detail checked. All 18 sites reviewed.
+    Validation uncovered external catalog reader silently truncating at 65535
+    bytes; new 65770-byte catalog failed German loading. Separate prerequisite
+    commit removes obsolete cap and adds 70000-byte file regression beyond cap.
+    Validation: all 422 CTest cases pass with embedded/external catalogs.

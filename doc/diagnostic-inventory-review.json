@@ -796,10 +796,14 @@
         "ErrNum_OverRange": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_ConfOpSizes",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvOpSize",
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_OverRange"
       ],
-      "status": "partial",
-      "review_notes": "Tranche 246 reviews two branch range sites and one DJNZ fixed-register mode site: actual signed byte displacement/PC+2 and B/BC alternatives at operand. Confirm/fix premature unknown arithmetic checks; preserve signed-16-bit address-wrap calculation. Fifteen historical sites remain. Tranche 247 reviews six fixed-operand sites (accumulator, word ALU destination, PUSH/POP, LDA indirect base, LDAR and MUL/DIV). Allowed sets derive directly from existing predicates; location now identifies offending operand, original vector and German checked. Nine shared address/size/range sites remain."
+      "status": "complete",
+      "review_notes": "Tranche 246 reviews two branch range sites and one DJNZ fixed-register mode site: actual signed byte displacement/PC+2 and B/BC alternatives at operand. Confirm/fix premature unknown arithmetic checks; preserve signed-16-bit address-wrap calculation. Fifteen historical sites remain. Tranche 247 reviews six fixed-operand sites (accumulator, word ALU destination, PUSH/POP, LDA indirect base, LDAR and MUL/DIV). Allowed sets derive directly from existing predicates; location now identifies offending operand, original vector and German checked. Nine shared address/size/range sites remain. Tranche 248 completes nine shared address/size/range sites: width mismatch at register; repeated/non-additive register terms; accumulator index needs (HL+A); actual zero-only displacement; actual signed byte displacement bounds; mask-derived allowed forms; unknown immediate width with choices. Reset per-instruction byte-default flag for stable error classification, defer unresolved zero-only offsets. Original address vector/word LD, primary errors, no rejected emission and German checked. All 18 historical sites reviewed."
     },
     "code9331.c": {
       "candidate_counts": {
@@ -2285,6 +2289,26 @@
       "file": "code90c141.c",
       "issue": "JR and DJNZ check only questionable flag, rejecting unresolved target arithmetic with a valid final result.",
       "status": "fixed in tranche 246; unknown-or-questionable guard, original JR/conditional/DJNZ variants, forward expressions, signed-byte endpoints and 16-bit address wrap checked"
+    },
+    {
+      "file": "code90c141.c",
+      "issue": "MinOneIs0 persists between instructions, changing PUSH 1 error classification after memory LD; unresolved displacement erroneously rejects valid final (HL+A) or zero-only BC/DE/HL form.",
+      "status": "fixed in tranche 248; reset flag in MakeCode, set only for current memory LD; defer unresolved zero-only checks; original/forward and ordering tests checked"
+    },
+    {
+      "file": "code90c141.c",
+      "issue": "Reg16Names contains an empty reserved table entry; explicit empty operand matches it and LD HL, silently emits opcode 0x43.",
+      "status": "pending empty-register table entry fix"
+    },
+    {
+      "file": "nlmessages.c",
+      "issue": "Expanded 65770-byte catalog triggered German external-catalog failures; file reader silently truncates all catalogs at 65535 bytes.",
+      "status": "fixed as tranche 248 validation prerequisite; remove obsolete cap, retain file-size/allocation/read and malformed-catalog validation. Synthetic 70000-byte file with second string beyond cap and both full 422-test suites pass."
+    },
+    {
+      "file": "code90c141.c",
+      "issue": "Absolute address path sums/evaluates Int32 into LongInt, wrapping 4294967295 into -1 and accepting -65536 as address zero, outside the ordinary Int16 domain.",
+      "status": "pending full-width absolute address validation against existing Int16 limits"
     }
   ]
 }

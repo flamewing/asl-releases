@@ -2667,3 +2667,31 @@ Message ErrMsgMCoreMissingBase
 Message ErrMsgMCoreDisplacementAlignment
  "Adressverschiebung %llld muss ein Vielfaches von %llld sein"
  "address displacement %llld must be a multiple of %llld"
+
+Message ErrMsgTLCS90MultipleBases
+ "Adresse enth&auml;lt bereits ein Basisregister; %s kann nicht hinzugef&uuml;gt werden"
+ "address already contains a base register; cannot add %s"
+
+Message ErrMsgTLCS90DirectPage
+ "(Adresse in [0xFF00,0xFFFF])"
+ "(address in [0xFF00,0xFFFF])"
+
+Message ErrMsgTLCS90ImmediateForm
+ "unmittelbarer Ausdruck"
+ "immediate expression"
+
+Message ErrMsgTLCS90UnknownWidth
+ "Breite des unmittelbaren Operanden kann nicht bestimmt werden; erlaubte Adressierungsformen: %s"
+ "cannot determine immediate operand width; allowed addressing forms: %s"
+
+Message ErrMsgTLCS90ZeroDisplacement
+ "Adressierungsform %s erfordert Verschiebung 0; erhielt %llld"
+ "address form %s requires displacement 0; got %llld"
+
+Message ErrMsgTLCS90BareBases
+ "BC/DE/HL/IX/IY/SP (auch in Klammern)"
+ "BC/DE/HL/IX/IY/SP (also parenthesized)"
+
+Message ErrMsgTLCS90BareIndices
+ "IX+d/IY+d/SP+d/HL+A (auch in Klammern)"
+ "IX+d/IY+d/SP+d/HL+A (also parenthesized)"

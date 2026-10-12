@@ -99,3 +99,39 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German TLCS90 fixed operand: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(width-conflict 90c141 " ld bc,a" 1131 "register a has width 8 bits; LD requires 16 bits" 3 8)
+check_diagnostic(prefix-width-conflict 90c141 " ldw a,1" 1131 "register a has width 8 bits; LDW requires 16 bits" 3 6)
+check_diagnostic(address-extra-base 90c141 " ld a,(ix+iy)" 1350 "address already contains a base register; cannot add ix" 3 8)
+check_diagnostic(address-repeat-a 90c141 " ld a,(hl+a+a)" 1350 "address register a occurs more than once" 3 11)
+check_diagnostic(address-negative-base 90c141 " ld a,(0-ix)" 1350 "address register ix must occur as a positive additive term" 3 10)
+check_diagnostic(address-multiplied-a 90c141 " ld a,(hl+a*2)" 1350 "address register a must occur as a positive additive term" 3 11)
+check_diagnostic(address-a-alone 90c141 " ld a,(a)" 1350 "indexed addressing requires (HL+A)" 3 7)
+check_diagnostic(address-wrong-a-base 90c141 " ld a,(ix+a)" 1350 "indexed addressing requires (HL+A)" 3 7)
+check_diagnostic(address-a-displacement 90c141 " ld a,(hl+a+1)" 1350 "address form HL+A requires displacement 0; got 1" 3 7)
+check_diagnostic(address-bc-displacement 90c141 " ld a,(bc+1)" 1350 "address form BC requires displacement 0; got 1" 3 7)
+check_diagnostic(address-upper 90c141 " ld a,(ix+128)" 1320 "effective address displacement 128 outside [-128,127]" 3 7)
+check_diagnostic(address-lower 90c141 " ld a,(ix-129)" 1320 "effective address displacement -129 outside [-128,127]" 3 7)
+check_diagnostic(address-mask 90c141 " add b,a" 1350 "allowed addressing forms: immediate expression" 3 8)
+check_diagnostic(address-unknown-width 90c141 " push 1" 1130
+ "cannot determine immediate operand width; allowed addressing forms: BC/DE/HL/IX/IY/SP" 3 7)
+check_diagnostic(address-width-stable 90c141 " ld (hl),1\n push 1" 1130
+ "cannot determine immediate operand width; allowed addressing forms: BC/DE/HL/IX/IY/SP" 4 7)
+check_diagnostic(address-primary 90c141 " ld a,(ix+1/0)" 1310 "division by 0" 3 "")
+check_bytes(address-forward-hl-a 90c141 " ld a,(hl+a+amount-1000)\namount equ 1000" "f32e")
+check_bytes(address-forward-bc 90c141 " ld a,(bc+amount-1000)\namount equ 1000" "e02e")
+
+check_bytes(address-original 90c141
+ " ld a,(hl+a)\n ld a,(bc)\n ld a,(de)\n ld a,(hl)\n ld a,(ix)\n ld a,(iy)\n ld a,(sp)\n ld a,(ix-128)\n ld a,(ix+127)\n ld a,(iy+16)\n ld a,(sp+16)\n ld a,(0ff00h)\n ld a,(0ffffh)\n ld a,(1234h)\n ldw (hl),1234h"
+ "f32ee02ee12ee22ee42ee52ee62ef0802ef07f2ef1102ef2102e270027ffe334122eea3f3412")
+check_bytes(shared-errors-noemit 90c141
+ " expect 1131,1350,1350,1350,1320,1350\n ld bc,a\n ld a,(ix+iy)\n ld a,(hl+a+1)\n ld a,(bc+1)\n ld a,(ix+128)\n add b,a\n endexpect\n db 18" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/address-bc-displacement.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Adressierungsform BC erfordert Verschiebung 0; erhielt 1" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German TLCS90 displacement: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

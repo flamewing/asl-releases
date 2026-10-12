@@ -74,11 +74,14 @@ static CPUVar CPU90C141;
 
 /*---------------------------------------------------------------------------*/
 
-static void SetOpSize(ShortInt New) {
+static void SetOpSize(ShortInt New, tStrComp const* operand) {
     if (OpSize == -1) {
         OpSize = New;
     } else if (OpSize != New) {
-        WrError(ErrNum_ConfOpSizes);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgRegisterWidthMismatch),
+                operand->str.p_str, New ? 16 : 8, OpPart.str.p_str, OpSize ? 16 : 8);
+        WrXErrorPos(ErrNum_ConfOpSizes, detail, &operand->Pos);
         AdrType = ModNone;
         AdrCnt  = 0;
     }
@@ -91,6 +94,15 @@ typedef struct {
     Byte              occ_flag, base_reg;
 } tlcs90_eval_cb_data_t;
 
+static void report_address_register(tStrComp const* arg, Boolean repeated, Boolean base) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail),
+            getmessage(repeated ? (base ? Num_ErrMsgTLCS90MultipleBases
+                                        : Num_ErrMsgRepeatedAddressRegister)
+                                : Num_ErrMsgAdditiveAddressRegister), arg->str.p_str);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
     tlcs90_eval_cb_data_t* p_tlcs90_eval_cb_data = (tlcs90_eval_cb_data_t*)p_data;
     size_t                 z;
@@ -98,7 +110,7 @@ DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
     if (!as_strcasecmp(p_arg->str.p_str, "A")) {
         if ((p_tlcs90_eval_cb_data->occ_flag & 1)
             || !as_eval_cb_data_stack_plain_add(p_data->p_stack)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            report_address_register(p_arg, !!(p_tlcs90_eval_cb_data->occ_flag & 1), False);
             return e_eval_fail;
         }
         p_tlcs90_eval_cb_data->occ_flag |= 1;
@@ -110,7 +122,7 @@ DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
         if (!as_strcasecmp(p_arg->str.p_str, Reg16Names[z])) {
             if ((p_tlcs90_eval_cb_data->occ_flag & 2)
                 || !as_eval_cb_data_stack_plain_add(p_data->p_stack)) {
-                WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+                report_address_register(p_arg, !!(p_tlcs90_eval_cb_data->occ_flag & 2), True);
                 return e_eval_fail;
             }
             p_tlcs90_eval_cb_data->occ_flag |= 2;
@@ -120,6 +132,44 @@ DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
         }
     }
     return e_eval_none;
+}
+
+static void report_address_forms(tStrComp const* arg, Word mask, tErrorNum error) {
+    char choices[700] = "", detail[850];
+    char const* forms[] = {
+        "B/C/D/E/H/L/A", "BC/DE/HL/IX/IY/SP", "IX/IY/SP",
+        mask & MAssumeInd ? getmessage(Num_ErrMsgTLCS90BareBases)
+                          : "(BC)/(DE)/(HL)/(IX)/(IY)/(SP)",
+        mask & MAssumeInd ? getmessage(Num_ErrMsgTLCS90BareIndices)
+                          : "(IX+d)/(IY+d)/(SP+d)/(HL+A)",
+        getmessage(Num_ErrMsgTLCS90DirectPage),
+        mask & MAssumeInd ? "address/(address)" : "(address)",
+        getmessage(Num_ErrMsgTLCS90ImmediateForm)
+    };
+    unsigned mode;
+    for (mode = 0; mode < as_array_size(forms); mode++) {
+        if ((mask >> mode) & 1) {
+            if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, forms[mode], sizeof(choices));
+        }
+    }
+    as_snprintf(detail, sizeof(detail),
+            getmessage(error == ErrNum_InvOpSize ? Num_ErrMsgTLCS90UnknownWidth
+                                                : Num_ErrMsgAddressForms), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_zero_displacement(tStrComp const* arg, char const* form, LongInt displacement) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgTLCS90ZeroDisplacement),
+            form, (LargeInt)displacement);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
+static void report_hl_a_form(tStrComp const* arg) {
+    char detail[120];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIndexFormRequired), "(HL+A)");
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
 }
 
 static void DecodeAdr(tStrComp const* pArg, Word Erl) {
@@ -141,7 +191,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
         if (!as_strcasecmp(pArg->str.p_str, Reg8Names[z])) {
             AdrType = ModReg8;
             AdrMode = z;
-            SetOpSize(0);
+            SetOpSize(0, pArg);
             goto chk;
         }
     }
@@ -153,7 +203,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
             if (!as_strcasecmp(pArg->str.p_str, IReg16Names[z])) {
                 AdrType = ModIReg16;
                 AdrMode = z;
-                SetOpSize(1);
+                SetOpSize(1, pArg);
                 goto chk;
             }
         }
@@ -166,7 +216,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
             if (!as_strcasecmp(pArg->str.p_str, Reg16Names[z])) {
                 AdrType = ModReg16;
                 AdrMode = z;
-                SetOpSize(1);
+                SetOpSize(1, pArg);
                 goto chk;
             }
         }
@@ -196,17 +246,19 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
         if (!eval_result.OK) {
             return;
         }
-        if (mFirstPassUnknown(eval_result.Flags)) {
+        if (mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
             DispAcc &= 0x7f;
         }
 
         switch (tlcs90_eval_cb_data.occ_flag) {
         case 1:
-            WrError(ErrNum_InvAddrMode);
+            report_hl_a_form(pArg);
             break;
         case 3:
-            if ((tlcs90_eval_cb_data.base_reg != 2) || DispAcc) {
-                WrError(ErrNum_InvAddrMode);
+            if (tlcs90_eval_cb_data.base_reg != 2) {
+                report_hl_a_form(pArg);
+            } else if (DispAcc && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+                report_zero_displacement(pArg, "HL+A", DispAcc);
             } else {
                 AdrType = ModIdxReg;
                 AdrMode = 3;
@@ -214,12 +266,20 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
             break;
         case 2:
             if ((DispAcc > 127) || (DispAcc < -128)) {
-                WrError(ErrNum_OverRange);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                        (LargeInt)DispAcc, (LargeInt)-128, (LargeInt)127);
+                WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             } else if (DispAcc == 0) {
                 AdrType = ModIndReg;
                 AdrMode = tlcs90_eval_cb_data.base_reg;
             } else if (tlcs90_eval_cb_data.base_reg < 4) {
-                WrError(ErrNum_InvAddrMode);
+                if (mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+                    AdrType = ModIndReg;
+                    AdrMode = tlcs90_eval_cb_data.base_reg;
+                } else {
+                    report_zero_displacement(pArg, Reg16Names[tlcs90_eval_cb_data.base_reg], DispAcc);
+                }
             } else {
                 AdrType    = ModIdxReg;
                 AdrMode    = tlcs90_eval_cb_data.base_reg - 4;
@@ -252,7 +312,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
         }
         switch (OpSize) {
         case -1:
-            WrError(ErrNum_InvOpSize);
+            report_address_forms(pArg, Erl, ErrNum_InvOpSize);
             break;
         case 0:
             AdrVals[0] = EvalStrIntExpression(pArg, Int8, &ok);
@@ -278,7 +338,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
 
 chk:
     if ((AdrType != ModNone) && (!((1 << AdrType) & Erl))) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_forms(pArg, Erl, ErrNum_InvAddrMode);
         AdrType = ModNone;
         AdrCnt  = 0;
     }
@@ -591,7 +651,7 @@ static void DecodeLD(Word Code) {
     Byte HReg;
 
     if (Hi(Code)) {
-        SetOpSize(1);
+        SetOpSize(1, &OpPart);
     }
 
     if (ChkArgCnt(2, 2)) {
@@ -933,7 +993,7 @@ static void DecodeEX(Word Code) {
 
 static void DecodeINC_DEC(Word Code) {
     if (Hi(Code)) {
-        SetOpSize(1);
+        SetOpSize(1, &OpPart);
     }
 
     if (ChkArgCnt(1, 1)) {
@@ -1354,6 +1414,7 @@ static void DeinitFields(void) {
 
 static void MakeCode_90C141(void) {
     OpSize = eSymbolSizeUnknown;
+    MinOneIs0 = False;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
