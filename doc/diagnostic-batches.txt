@@ -2125,3 +2125,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Both CPUs cover forward expressions on X/Y/SP/PC, endpoints, final failures,
     primary undefined-symbol errors, prior bytes and no rejected instruction bytes.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+191. HC12 optional operand separator safety and misleading symbol errors.
+    Try2Split walked before the operand start and split quoted spaces, so valid
+    MOVB ' ',$2000 reported an invalid symbol. Use existing quote-aware last-
+    separator search for whitespace, preserving bracketed/quoted expressions
+    and never forming a before-start pointer. Both CPUs cover quoted and
+    parenthesized expressions, spaces/tabs, primary count errors, prior bytes
+    and existing empty-expression semantics. All 27 HC12 historical candidates
+    and identified adjacent followups now reviewed; file complete.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

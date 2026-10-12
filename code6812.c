@@ -708,19 +708,21 @@ chk:
 }
 
 static void Try2Split(int Src) {
-    char*  p;
-    int    z;
-    size_t SrcLen;
+    char* p = NULL;
+    int z;
+    char const* separator;
 
     KillPrefBlanksStrComp(&ArgStr[Src]);
     KillPostBlanksStrComp(&ArgStr[Src]);
-    SrcLen = strlen(ArgStr[Src].str.p_str);
-    p      = ArgStr[Src].str.p_str + SrcLen - 1;
-    while ((p >= ArgStr[Src].str.p_str) && !as_isspace(*p)) {
-        p--;
+    /* Find the last separator outside quoted/bracketed expressions. The
+     * forward quote-aware search also avoids forming a pointer before the
+     * operand when it is empty or contains no separator. */
+    for (separator = " \t\r\n\v\f"; *separator; separator++) {
+        char* candidate = RQuotPos(ArgStr[Src].str.p_str, *separator);
+        if (candidate && (!p || candidate > p)) p = candidate;
     }
-    if (p >= ArgStr[Src].str.p_str) {
-        InsertArg(Src + 1, SrcLen);
+    if (p) {
+        InsertArg(Src + 1, strlen(ArgStr[Src].str.p_str));
         for (z = ArgCnt - 1; z >= Src + 1; z--) {
             StrCompCopy(&ArgStr[z + 1], &ArgStr[z]);
         }

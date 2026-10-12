@@ -398,3 +398,24 @@ foreach(cpu IN ITEMS 68HC12 68HC12X)
         " org $1000\n tbl -16,x\n tbl 15,x\n tbl -16,y\n tbl 15,y\n tbl -16,sp\n tbl 15,sp\n tbl *-13,pc\n tbl *+18,pc\n tbl a,x\n tbl b,y\n tbl d,sp\n tbl 1,x+\n etbl -16,x\n etbl 15,x\n etbl -16,y\n etbl 15,y\n etbl -16,sp\n etbl 15,sp\n etbl *-13,pc\n etbl *+18,pc\n etbl a,x\n etbl b,y\n etbl d,sp\n etbl 1,x+"
         "183d10183d0f183d50183d4f183d90183d8f183dd0183dcf183de4183ded183df6183d30183f10183f0f183f50183f4f183f90183f8f183fd0183fcf183fe4183fed183ff6183f30")
 endforeach()
+
+# Optional whitespace-separated operands must not split quoted characters or
+# parenthesized expressions. Empty/unseparated operands never scan before start.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    check_bytes(space-separated-original-${cpu} ${cpu}
+        " movb #1 $2000\n movw #$1234 $2002\n movb 0,x $2004\n movb $2006 0,y\n bset $20 #$40\n bclr 0,x #$40\n brset $20 #$40 *+4\n brclr 0,x #$40 *+4\n movb 32,$2000\n movb #32,$2000\n bset $20,#32\n brset $20,#32,*+4"
+        "180b012000180312342002180d00200418094020064c20400d00404e2040000f004000180c00202000180b2020004c20204e202000")
+    check_bytes(quoted-space-operands-${cpu} ${cpu}
+        " movb ' ',$2000\n movb #' ' $2000\n bset $20,#' '\n brset $20,#' ' *+4"
+        "180c00202000180b2020004c20204e202000")
+    check_bytes(parenthesized-space-operands-${cpu} ${cpu}
+        " movb (16 + 16),$2000\n movb #(16 + 16) $2000\n bset $20,#(16 + 16)\n brset $20,#(16 + 16) *+4"
+        "180c00202000180b2020004c20204e202000")
+    check_bytes(tab-separated-operands-${cpu} ${cpu}
+        " movb #1\t$2000\n bset $20\t#$40\n brset $20\t#$40\t*+4"
+        "180b0120004c20404e204000")
+    check_bytes(empty-split-operands-${cpu} ${cpu}
+        " movb ,$2000\n movb #1,\n bset $20," "180c00002000180b0100004c2000")
+    check_diagnostic(empty-split-count-${cpu} ${cpu} " brset ," 1110
+        "expected between 3 and 4 arguments but got 2" 3 "")
+endforeach()
