@@ -251,11 +251,14 @@ static void CheckSup(void) {
     }
 }
 
-static void report_operand_sizes(char const* sizes) {
+static void report_size_choices_at(char const* sizes, tStrComp const* arg) {
     char detail[150];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedOperandSizes), sizes);
-    WrXErrorPos(ErrNum_InvOpSize, detail,
-            *AttrPart.str.p_str ? &AttrPart.Pos : &OpPart.Pos);
+    WrXErrorPos(ErrNum_InvOpSize, detail, &arg->Pos);
+}
+
+static void report_operand_sizes(char const* sizes) {
+    report_size_choices_at(sizes, *AttrPart.str.p_str ? &AttrPart : &OpPart);
 }
 
 static Boolean CheckColdSize(void) {
@@ -844,16 +847,23 @@ static Boolean SplitSize(tStrComp* pArg, tSymbolSize* DispLen, unsigned OpSizeMa
             }
             break;
         case 'L':
-            if (OpSizeMask & 2) {
+            if (OpSizeMask & 4) {
                 NewLen = eSymbolSize32Bit;
             } else {
                 goto wrong;
             }
             break;
         default:
-        wrong:
-            WrError(ErrNum_InvOpSize);
+        wrong: {
+            tStrComp suffix;
+            char sizes[20] = "";
+            if (OpSizeMask & 1) strmaxcat(sizes, ".B", sizeof(sizes));
+            if (OpSizeMask & 2) strmaxcat(sizes, *sizes ? ", .W" : ".W", sizeof(sizes));
+            if (OpSizeMask & 4) strmaxcat(sizes, *sizes ? ", .L" : ".L", sizeof(sizes));
+            StrCompRefRight(&suffix, pArg, ArgLen - 1);
+            report_size_choices_at(sizes, &suffix);
             return False;
+        }
         }
         if ((*DispLen != eSymbolSizeUnknown) && (*DispLen != NewLen)) {
             WrError(ErrNum_ConfOpSizes);

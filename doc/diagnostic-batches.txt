@@ -2270,3 +2270,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     cases and original classic/module/FPU/ColdFire/EMAC vectors pass, with no
     rejected instruction bytes. All 14 instruction-capability candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+205. M68K displacement/absolute suffix sizes and prior address checks.
+    Invalid suffix 1130 identifies its location and allowed widths (.B/.W/.L
+    for displacement; .W/.L for absolute). Correct .L mask bit from 2 to 4;
+    current callers use masks 6/7 so acceptance is unchanged. Golden bytes pass.
+    Re-review all three scaling/extension capability, two alignment and five
+    displacement range candidates already improved. Retain unreachable shift
+    fallback and conflicting SplitSize-width guard with caller-path reasons.
+    Existing memory-shift .W detail re-reviewed: three of 98 size sites complete.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

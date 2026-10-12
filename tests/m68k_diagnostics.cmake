@@ -445,3 +445,14 @@ check_bytes(capability-original-emac MCF5470
 check_bytes(capability-original-emac-c MCF51QM
     " maaac.l d0,d1,acc0,acc1"
     "a2000805")
+
+# Displacement and absolute suffixes have different permitted widths.
+check_diagnostic(absolute-size-choices 68000 " move.w $1234.b,d0" 1130
+    "supported operand sizes: .W, .L" 3 15)
+check_diagnostic(displacement-size-choices 68020 " move.w 1.q(a0),d0" 1130
+    "supported operand sizes: .B, .W, .L" 3 11)
+check_bytes(absolute-original-sizes 68000
+    " move.w $1234.w,d0\n move.w $1234.l,d0" "30381234303900001234")
+check_bytes(displacement-original-sizes 68020
+    " move.w 1.b(a0,d0.w),d0\n move.w 1.w(a0),d0\n move.w 1.l(a0),d0"
+    "30300001302800013030017000000001")
