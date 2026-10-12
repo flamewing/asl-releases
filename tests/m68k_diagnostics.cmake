@@ -265,6 +265,17 @@ check_diagnostic(duplicate-displacement 68020 " move.w 1(2,a0),d1" 1350
     "duplicate displacement in effective address" 3 11)
 check_diagnostic(duplicate-index 68020 " move.w (d0.w,d1.w),d1" 1350
     "only one index register" 3 15)
+foreach(cpu IN ITEMS 68000 68010 68020 68030 68040 68332 MCF5204)
+    check_diagnostic(duplicate-pc-${cpu} ${cpu}
+        " move.w (pc,pc),d1" 1350 "only one base register" 3 13)
+    check_diagnostic(duplicate-pc-displacement-${cpu} ${cpu}
+        " move.w (*+2,PC,pc),d1" 1350 "only one base register" 3 17)
+endforeach()
+check_diagnostic(duplicate-pc-outer-displacement 68020
+    " move.w 0(pc,pc),d1" 1350 "only one base register" 3 14)
+check_bytes(pc-index-normalization 68020
+    " move.w (a0,pc),d1\n move.w (pc,a0),d1\n move.w (d0.w,pc),d1\n move.w (pc,d0.w),d1"
+    "323b8000323b8000323b0000323b0000")
 check_diagnostic(too-many-components 68020 " move.w (a0,d0.w,d1.w),d1" 1350
     "too many register or indirect components" 3 18)
 check_diagnostic(four-components 68020 " move.w (a0,d0.w,d1.w,d2.w),d1" 1350
@@ -295,7 +306,7 @@ check_bytes(address-normalization-and-pairs 68020
     "3230000032309000323b8000323004003230912100000cfc808090c10cfc408090c10cfc808090c14c021c004c421800")
 
 set(ENV{LC_MESSAGES} de)
-foreach(item IN ITEMS "index-width|Indexregisterbreite b" "index-scale|Indexskalierung 3" "pair-second-half|D0..D7" "duplicate-displacement|Doppelte Verschiebung" "quoted-address-single|vermutlich fehlt #")
+foreach(item IN ITEMS "index-width|Indexregisterbreite b" "index-scale|Indexskalierung 3" "pair-second-half|D0..D7" "duplicate-displacement|Doppelte Verschiebung" "quoted-address-single|vermutlich fehlt #" "duplicate-pc-68020|Nur ein Basisregister")
     string(REPLACE "|" ";" fields "${item}")
     list(GET fields 0 name)
     list(GET fields 1 detail)

@@ -1740,6 +1740,13 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
             if ((CompCnt == 1)
                 && ((AdrComps[CompCnt].Art == AReg) || (AdrComps[CompCnt].Art == PC))) {
+                /* PC can only be a base, never an index register. */
+                if ((AdrComps[0].Art == PC) && (AdrComps[CompCnt].Art == PC)) {
+                    report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgDuplicateBase,
+                            &AdrComps[CompCnt].Comp);
+                    return ModNone;
+                }
+
                 /* Index register at "base position": just swap comp 0 & 1, so we get
                  * (An,Xi) or (PC,Xi): */
 
