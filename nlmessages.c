@@ -168,9 +168,6 @@ static as_raw_msg_struct_t* create_raw_file(char const* p_file_name) {
         goto func_exit;
     }
     p_result->data_length = (size_t)file_length;
-    if (p_result->data_length >= 65535u) {
-        p_result->data_length = 65535u;
-    }
     if (fseek(p_file, 0, SEEK_SET) != 0) {
         goto func_exit;
     }

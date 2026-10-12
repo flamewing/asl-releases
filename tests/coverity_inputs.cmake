@@ -24,6 +24,8 @@ check_exit(3 "${TEST_PROGRAM}" io-contract format-error)
 check_exit(2 "${TEST_PROGRAM}" io-contract pointer-capacity)
 check_exit(255 "${TEST_PROGRAM}" io-contract invalid-format)
 check_exit(0 "${TEST_PROGRAM}" catalog valid)
+file(TO_NATIVE_PATH "${TEST_DIR}/large-catalog.msg" catalog_file)
+check_exit(0 "${TEST_PROGRAM}" catalog-file "${catalog_file}")
 foreach(case negative-length huge-length negative-position countries
         negative-countries empty-table huge-table misaligned-table
         negative-index huge-index index-at-end unterminated long-language truncated)

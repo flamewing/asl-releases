@@ -20,6 +20,52 @@ static void put32(Byte* dest, LongWord value) {
     }
 }
 
+/* The second string lies beyond the former 65535-byte file-read cap. */
+static int large_catalog_file(char const* filename) {
+    char const ident[] = "AS Message Catalog - not readable\n\032\004";
+    size_t const size = 70000;
+    Byte* data = (Byte*)calloc(size, 1);
+    size_t pos = sizeof(ident) - 1, length_pos, table_pos, string_pos;
+    TMsgCat cat = {NULL, NULL, 0};
+    FILE* file;
+    int result;
+
+    if (!data) return 1;
+    memcpy(data, ident, pos);
+    put32(data + pos, 1234);
+    put32(data + pos + 4, 5678);
+    pos += 8;
+    memcpy(data + pos, "en", 3);
+    pos += 3;
+    length_pos = pos;
+    pos += 4;
+    put32(data + pos, 0); /* No country codes. */
+    pos += 4;
+    table_pos = pos + 5;
+    put32(data + pos, table_pos);
+    pos += 4;
+    data[pos++] = 0;
+    string_pos = pos + 8;
+    put32(data + pos, string_pos);
+    put32(data + pos + 4, size - 6);
+    put32(data + length_pos, size - string_pos);
+    memcpy(data + string_pos, "hello", 6);
+    memcpy(data + size - 6, "world", 6);
+    file = fopen(filename, OPENWRMODE);
+    if (!file) { free(data); return 1; }
+    result = fwrite(data, 1, size, file) != size;
+    if (fclose(file) != 0) result = 1;
+    free(data);
+    if (result) return result;
+
+    msg_catalog_open_file(&cat, filename, "", 1234, 5678);
+    result = cat.MsgCount != 2 || strcmp(catgetmessage(&cat, 0), "hello")
+             || strcmp(catgetmessage(&cat, 1), "world");
+    free(cat.MsgBlock);
+    free(cat.StrPosis);
+    return result;
+}
+
 static int catalog(char const* mode) {
     char const ident[]    = "AS Message Catalog - not readable\n\032\004";
     Byte       data[4096] = {0};
@@ -269,6 +315,9 @@ int main(int argc, char** argv) {
     }
     if (!strcmp(argv[1], "object") && argc == 4) {
         return object_file(argv[2], argv[3]);
+    }
+    if (!strcmp(argv[1], "catalog-file")) {
+        return large_catalog_file(argv[2]);
     }
     if (!strcmp(argv[1], "catalog")) {
         return catalog(argv[2]);
