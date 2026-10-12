@@ -254,7 +254,7 @@ static void DecodeMAIN(Word Code) {
     if (!ChkArgCnt(15, 15))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeXS(&ArgStr[3], &Xs))
         ;
     else if (!DecodeYS(&ArgStr[4], &Ys))
@@ -306,7 +306,7 @@ static void DecodeLDA(Word Code) {
     if (!ChkArgCnt(7, 7))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeDSTA(&ArgStr[2], &DstA, &IntSize))
         ;
     else if (!DecodeWRF(&ArgStr[4], &Wrf))
@@ -339,7 +339,7 @@ static void DecodeLDB(Word Code) {
     if (!ChkArgCnt(4, 4))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeDSTB(&ArgStr[2], &DstB))
         ;
     else if (!DecodeFORM(&ArgStr[4], &Form))
@@ -362,7 +362,7 @@ static void DecodeBR(Word Code) {
     if (!ChkArgCnt(9, 9))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeCP(&ArgStr[3], &Cp))
         ;
     else if (!DecodeDPS(&ArgStr[4], &Dps))
@@ -401,7 +401,7 @@ static void DecodeJC(Word Code) {
     if (!ChkArgCnt(10, 10))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeRegList(pFNames, &ArgStr[3], &F))
         ;
     else if (!DecodeCP(&ArgStr[4], &Cp))
@@ -445,7 +445,7 @@ static void DecodeRET(Word Code) {
     if (!ChkArgCnt(13, 13))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeXS(&ArgStr[3], &Xs))
         ;
     else if (!DecodeYS(&ArgStr[4], &Ys))
@@ -493,7 +493,7 @@ static void DecodeGMAx(Word Code) {
     if (!ChkArgCnt(12, 12))
         ;
     else if (*ArgStr[1].str.p_str) {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgTC9331ReservedField), &ArgStr[1].Pos);
     } else if (!DecodeGFX(&ArgStr[2], &Gfx))
         ;
     else if (!DecodeGF(&ArgStr[3], &Gf))

@@ -812,11 +812,12 @@
         "ErrNum_InvShiftArg": 2
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_InvShiftArg",
-        "ErrNum_InvReg"
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
+        "ErrNum_InvShiftArg"
       ],
-      "status": "partial",
-      "review_notes": "Tranche 251 reviews two shift sites in main and return instruction builders: shared optional shift decoder, actual count/accepted 0,1,4 at field 2; stop on failed UInt3 evaluation before shift classification or emission. Defer unknown/questionable shift. Original/forward byte vectors, primary-only errors, no rejected emission and German checked. Nine register and seven reserved-field mode sites remain. Tranche 252 reviews all nine register sites and adjacent common field/flag lookup: choices derived from actual table and instruction mask, required DSTA/GFX blanks excluded, optional empty defaults localized, actual field positions. Preserve A/XA aliases and WRX in branches, exclude forbidden alias/WRX names elsewhere before encoding. LDA Sour>14 guard is unreachable because restricted DecodeSOUR excludes B/A and all admitted codes are <=14; located defensive guard retained. Original fixture, field matrix, no rejected emission and German pass. Seven reserved-field mode sites remain."
+      "status": "complete",
+      "review_notes": "Tranche 251 reviews two shift sites in main and return instruction builders: shared optional shift decoder, actual count/accepted 0,1,4 at field 2; stop on failed UInt3 evaluation before shift classification or emission. Defer unknown/questionable shift. Original/forward byte vectors, primary-only errors, no rejected emission and German checked. Nine register and seven reserved-field mode sites remain. Tranche 252 reviews all nine register sites and adjacent common field/flag lookup: choices derived from actual table and instruction mask, required DSTA/GFX blanks excluded, optional empty defaults localized, actual field positions. Preserve A/XA aliases and WRX in branches, exclude forbidden alias/WRX names elsewhere before encoding. LDA Sour>14 guard is unreachable because restricted DecodeSOUR excludes B/A and all admitted codes are <=14; located defensive guard retained. Original fixture, field matrix, no rejected emission and German pass. Seven reserved-field mode sites remain. Tranche 253 completes seven mode sites: first field reserved/must empty, leading-comma guidance at field 1 for every builder. Original blank/default-mnemonic vectors, no rejected emission and German checked. All 18 historical TC9331 sites reviewed."
     },
     "code96.c": {
       "candidate_counts": {

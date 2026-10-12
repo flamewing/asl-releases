@@ -2713,3 +2713,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     remains located; no speculative policy change. Field matrix, original fixture,
     no rejected emission and German checked. Seven reserved-field sites remain.
     Validation: all 423 CTest cases pass with embedded/external catalogs.
+
+253. TC9331 reserved first instruction field.
+    Seven historical mode sites: identify reserved first field, require empty
+    content and retain leading comma, at offending field. Same rule for main,
+    LDA, LDB, branches, conditional jumps, RET and GMA variants.
+    Preserve all blank/default-mnemonic encodings; all seven rejected builders
+    emit no bytes and German detail passes. All 18 historical sites reviewed.
+    Validation: all 423 CTest cases pass with embedded/external catalogs.

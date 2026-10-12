@@ -421,3 +421,6 @@ counts at operand 2 under `-x`. Failed evaluation retains its primary error.
 TC9331 error 1445 lists the field's table- and instruction-specific choices at
 the operand under `-x`, including empty defaults where permitted. Error 1360
 lists accepted flag names for conditional jumps.
+
+TC9331 error 1350 identifies the reserved first instruction field, which must
+be empty, and reminds the user to retain the leading comma under `-x`.

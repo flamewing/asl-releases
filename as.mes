@@ -2699,3 +2699,7 @@ Message ErrMsgTLCS90BareIndices
 Message ErrMsgTC9331EmptyDefault
  "leer (Vorgabe)"
  "empty (default)"
+
+Message ErrMsgTC9331ReservedField
+ "Das erste Befehlsfeld ist reserviert und muss leer sein; f&uuml;hrendes Komma beibehalten"
+ "the first instruction field is reserved and must be empty; keep the leading comma"

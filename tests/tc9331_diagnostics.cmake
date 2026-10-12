@@ -138,3 +138,27 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German TC9331 field choices: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(pair IN ITEMS "nop|15" "lda|7" "ldb|4" "jmp0|9" "jc|10" "ret|13" "gma|12")
+    string(REPLACE "|" ";" parts "${pair}")
+    list(GET parts 0 op)
+    list(GET parts 1 count)
+    check_field(reserved-${op} ${op} ${count} 1 bad 1350
+        "the first instruction field is reserved and must be empty; keep the leading comma")
+endforeach()
+
+check_bytes(reserved-original TC9331
+ " nop ,,,,,,,,,,,,,,\n lda ,lc0,0,,,,\n ldb ,,,\n jmp0 ,,,,,,,,\n jc ,,,,,,,,,\n ret ,,,,,,,,,,,,\n gma ,gfs,,,,,,,,,,"
+ "00000000000000040000000800000080000000d0000000c40000000c")
+check_bytes(defaults-original TC9331 " ,,,,,,,,,,,,,,\n ,gfs,,,,,,,,,," "000000000000000c")
+check_bytes(reserved-errors-noemit TC9331
+ " expect 1350,1350,1350,1350,1350,1350,1350\n nop bad,,,,,,,,,,,,,,\n lda bad,lc0,0,,,,\n ldb bad,,,\n jmp0 bad,,,,,,,,\n jc bad,,,,,,,,,\n ret bad,,,,,,,,,,,,\n gma bad,gfs,,,,,,,,,,\n endexpect\n nop ,1,,,,,,,,,,,,," "00000400")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/reserved-nop.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Das erste Befehlsfeld ist reserviert und muss leer sein" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German TC9331 reserved field: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
