@@ -157,3 +157,33 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German ST9 complemented bit: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(pair-offset ST9040 " ld r1,r2(rr4)" 1350
+    "operand must be rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14" 3 8)
+check_diagnostic(numeric-base ST9040 " ld r1,(100)" 1350
+    "indirect base must be a register in register address space" 3 9)
+check_diagnostic(base-primary ST9040 " ld r1,(1/0)" 1310 "division by 0" 3 "")
+foreach(disp IN ITEMS 1 -1 255)
+    check_diagnostic(zero-offset-${disp} ST9040 " ld r1,${disp}(R10)" 1320
+        "address form (Rn) requires displacement 0; got ${disp}" 3 8)
+endforeach()
+check_diagnostic(indirect-descriptor ST9040 "odd reg 511\n ld r1,(odd)" 1350
+    "register descriptor 0x1FF is neither a byte in [0,254] nor an even pair in [0x100,0x1ff]" 4 9)
+check_diagnostic(direct-descriptor ST9040 "odd reg 511\n ld r1,odd" 1350
+    "register descriptor 0x1FF is neither a byte in [0,254] nor an even pair in [0x100,0x1ff]" 4 8)
+check_diagnostic(mode-choices ST9040 " adc r1,rr2" 1350
+    "operand must be Rn, rn, (rn), (rrn), (rrn)+, -(rrn), d8(rrn), d16(rrn), rrm(rrn), [0..65535], #..." 3 9)
+check_bytes(address-original ST9040
+ " ld r1,r2\n ld r1,R10\n ld r1,(r2)\n ld r1,(rr2)\n ld r1,5(rr2)\n ld r1,300(rr2)\n ld r1,rr4(rr2)\n ld r1,#10"
+ "18d2180ae412b5127ff305d17ff2012cd16052f11c0a")
+check_bytes(address-noemit ST9040
+ "odd reg 511\n expect 1350,1350,1320,1350,1350,1350\n ld r1,r2(rr4)\n ld r1,(100)\n ld r1,1(R10)\n ld r1,(odd)\n ld r1,odd\n adc r1,rr2\n endexpect\n nop" "ff")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/numeric-base.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Indirekte Basis muss ein Register" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German ST9 register base: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

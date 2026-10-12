@@ -2707,3 +2707,11 @@ Message ErrMsgTC9331ReservedField
 Message ErrMsgST9UncomplementedBit
  "%s erfordert einen nicht komplementierten Bitoperanden; '!' entfernen"
  "%s requires an uncomplemented bit operand; remove '!'"
+
+Message ErrMsgST9RegisterBase
+ "Indirekte Basis muss ein Register im Registeradressraum sein (R/rr oder mit REG definierter Alias)"
+ "indirect base must be a register in register address space (R/rr or an alias defined with REG)"
+
+Message ErrMsgST9RegisterDescriptor
+ "Registerdeskriptor 0x%lllx ist weder Byte in [0,254] noch gerades Paar in [0x100,0x1ff]"
+ "register descriptor 0x%lllx is neither a byte in [0,254] nor an even pair in [0x100,0x1ff]"

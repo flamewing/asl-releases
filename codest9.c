@@ -135,6 +135,32 @@ static void report_address_choices(tStrComp const* arg, unsigned error, char con
     WrXErrorPos(error, detail, &arg->Pos);
 }
 
+static void report_address_mask(tStrComp const* arg, LongWord mask) {
+    static char const* const forms[] = {
+        "Rn", "rn", "RRn", "rrn", "(Rn)", "(rn)", "(RRn)", "(rrn)",
+        "(rn)+", "(rrn)+", "-(rrn)", "d8(rn)", "d8(rrn)", "d16(rrn)",
+        "rrm(rrn)", "[0..65535]", "#...", "d8(RRn)", "d16(RRn)"
+    };
+    char choices[300];
+    unsigned mode;
+    *choices = '\0';
+    for (mode = 0; mode < sizeof(forms) / sizeof(*forms); mode++) {
+        if (!(mask & (1l << mode)))
+            continue;
+        if (*choices)
+            strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, forms[mode], sizeof(choices));
+    }
+    report_address_choices(arg, ErrNum_InvAddrMode, choices);
+}
+
+static void report_register_descriptor(Word descriptor, tStrComp const* arg) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgST9RegisterDescriptor),
+            (LargeWord)descriptor);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static LargeInt eval_outer_disp(tStrComp const* p_arg, IntType type, Boolean* p_ok) {
     if (p_arg->str.p_str[0]) {
         return EvalStrIntExpression(p_arg, type, p_ok);
@@ -146,6 +172,7 @@ static LargeInt eval_outer_disp(tStrComp const* p_arg, IntType type, Boolean* p_
 
 static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
     Word        AdrWord;
+    tStrComp    original = *pArg;
     int         level;
     Byte        flg, Size;
     Boolean     OK, IsIndirect;
@@ -325,7 +352,8 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             {
                 if (DecodeReg(pArg->str.p_str, AdrVals, &Size)) { /* rr(rr) */
                     if (Size != 1) {
-                        WrError(ErrNum_InvAddrMode);
+                        report_address_choices(pArg, ErrNum_InvAddrMode,
+                                "rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14");
                     } else {
                         AdrMode = ModDispRWRReg;
                         AdrCnt  = 1;
@@ -370,19 +398,27 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
         } else /* ...(RR) */
         {
             AdrWord = EvalStrIntExpressionWithResult(&RegComp, UInt9, &EvalResult);
+            if (!EvalResult.OK)
+                goto func_exit;
             if (!(EvalResult.AddrSpaceMask & (1 << SegReg))) {
-                WrError(ErrNum_InvAddrMode);
+                WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgST9RegisterBase),
+                        &RegComp.Pos);
             } else if (AdrWord < 0xff) {
                 AdrVals[0] = Lo(AdrWord);
-                AdrWord    = eval_outer_disp(pArg, Int8, &OK);
-                if (AdrWord != 0) {
-                    WrError(ErrNum_OverRange);
+                LargeInt displacement = eval_outer_disp(pArg, Int8, &OK);
+                if (!OK)
+                    goto func_exit;
+                if (displacement != 0) {
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgTLCS90ZeroDisplacement),
+                            "(Rn)", displacement);
+                    WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
                 } else {
                     AdrCnt  = 1;
                     AdrMode = ModIReg;
                 }
             } else if ((AdrWord > 0x1ff) || (Odd(AdrWord))) {
-                WrError(ErrNum_InvAddrMode);
+                report_register_descriptor(AdrWord, &RegComp);
             } else {
                 AdrVals[0] = Lo(AdrWord);
                 AdrWord    = eval_outer_disp(pArg, Int16, &OK);
@@ -419,7 +455,7 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             AdrVals[0] = Lo(AdrWord);
             AdrCnt     = 1;
         } else if ((AdrWord > 0x1ff) || (Odd(AdrWord))) {
-            WrError(ErrNum_InvAddrMode);
+            report_register_descriptor(AdrWord, pArg);
         } else {
             AdrMode    = ModRReg;
             AdrVals[0] = Lo(AdrWord);
@@ -429,7 +465,7 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
 
 func_exit:
     if ((AdrMode != ModNone) && (((1l << AdrMode) & Mask) == 0)) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_mask(&original, Mask);
         AdrMode = ModNone;
         AdrCnt  = 0;
     }

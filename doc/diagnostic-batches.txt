@@ -2754,3 +2754,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Original bit/control encodings, rejected emission, division primary-only and
     German detail checked. Six shared ST9 address candidates remain.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+258. ST9 shared address diagnostics.
+    Final six historical candidates: pair offset register choices, register-space
+    base, actual zero-only byte-base displacement, byte/even-pair descriptor
+    domain and mask-derived address forms at source operand. Preserve cutoff
+    and encodings; stop failed base/zero-only evaluation before secondary errors.
+    All 19 historical sites reviewed; adjacent forward/failure/255 cases tracked.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.
