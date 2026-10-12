@@ -1833,3 +1833,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     positions retain ordinary address parsing. Both CPUs verify accepted
     alias encodings, final numeric/undefined diagnostics and existing forms.
     Validation: all 414 CTest cases pass with embedded/external catalogs.
+
+159. MCS-96 forward byte branches.
+    Conditional, decrement and bit-test branches reject unresolved target
+    expressions on first pass. Defer their three byte-distance checks for
+    unknown/questionable symbols. Four CPUs/all 16 conditions/DJNZ/DJNZW/
+    both bit branches cover provisional upper/lower targets, retained final
+    failures and captured accepted bytes. Existing distance wrapping retained.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.

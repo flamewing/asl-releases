@@ -853,7 +853,7 @@ static void DecodeRel(Word Code) {
                          - (EProgCounter() + 2);
 
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && !IsByteBranch(AdrInt)) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
                 WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
             } else {
                 CodeLen     = 2;
@@ -984,7 +984,7 @@ static void DecodeDJNZ_DJNZW(Word Size) {
             AdrInt      = EvalStrIntExpressionWithFlags(&ArgStr[2], MemInt, &OK, &Flags)
                           - (EProgCounter() + 3);
             if (OK) {
-                if (!mSymbolQuestionable(Flags) && !IsByteBranch(AdrInt)) {
+                if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
                     WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
                 } else {
                     set_b_guessed(Flags, Start, 1, 0xff);
@@ -1017,7 +1017,7 @@ static void DecodeJBC_JBS(Word Code) {
                 AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], MemInt, &OK, &Flags)
                          - (EProgCounter() + 3);
                 if (OK) {
-                    if (!mSymbolQuestionable(Flags) && !IsByteBranch(AdrInt)) {
+                    if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
                         WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
                     } else {
                         set_b_guessed(Flags, Start, 1, 0xff);
