@@ -289,7 +289,7 @@ Listing code is shown in units appropriate to the target and segment: bytes, 16-
 
 ## Symbol Conventions
 
-Symbols are allowed to be up to 255 characters long (as hinted already in the introduction) and are being distinguished on the whole length, but the symbol names have to meet some conventions:
+Symbol names are compared in full, rather than only by a prefix, and must meet the following naming conventions:
 
 Symbol names are allowed to consist of a random combination of letters, digits, underlines and dots, whereby the first character must not be a digit. The dot is only allowed to meet the MCS-51 notation of register bits and should - as far as possible - not be used in own symbol names. To separate symbol names in any case the underline ( `_` ) and not the dot ( `.` ) should be used .
 

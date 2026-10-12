@@ -1,6 +1,6 @@
 # Documentation audit
 
-Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Review documentation against the current fork implementation and its regression tests; distinguish retained upstream history and benchmark reports from descriptions of current behavior. Keep the original diagnostic numbers, target-specific semantics and accepted encodings accurate. This record tracks review and validation rather than claiming that pending tranches are complete.
+Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Review documentation against the current fork implementation and its regression tests; distinguish retained upstream history and benchmark reports from descriptions of current behavior. Keep the original diagnostic numbers, target-specific semantics and accepted encodings accurate. All eight tranches are complete. This record states the source evidence and validation for each tranche; it does not certify every supported instruction set.
 
 ## Tranches
 
@@ -13,7 +13,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | 5 | Source syntax, macros, conditionals and fork language extensions | Complete |
 | 6 | Data directives, expressions, predefined symbols, includes and file formats | Complete |
 | 7 | Processor-specific hints and programming examples, including corrected behavior | Complete |
-| 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Pending |
+| 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Complete |
 
 ## Scope and evidence
 
@@ -58,6 +58,14 @@ Check ordinary code records against fileformat.h, headids.c and toolutils.c: sep
 Review fork-corrected M68K, STM8/ST7, AVR and MCore addressing/branch behavior against their decoders and fixtures. Document the STM8 signed-byte displacement independently of its wider address space, packed bit-branch target selection, AVR word-unit offsets/wrapping, M68K branch attributes and zero-distance BSR selection, and MCore aligned literal-table calls. Replace a historically obsolete claim that no AVR implements MUL/JMP/CALL. Repair missing common-directive entries and the MACEXP_DFT spelling in the quick reference.
 
 Make the programming examples reproducible with CPU 6800 and bitfuncs.inc, and explicitly state their A-low/B-high virtual register convention rather than implying the later hardware D-register convention. Correct the lo function bit range and installed include filename case. Assemble both example macros and all demonstrated addressing forms in ordinary and case-sensitive modes; all ten selected processor/example regressions pass. This review checks documented syntax and fork-specific behavior; it is not an independent certification of every supported instruction set.
+
+### 8. Diagnostics, links and final consistency
+
+Complete the main diagnostic reference with all 307 nonzero identifiers in errmsg.h, each appearing once; distinguish reserved/legacy identifiers from current emission sites, remove the undefined duplicate 1509 entry and label the DOS/Pascal I/O-number table as historical rather than portable errno documentation. Reconcile introductory precision/nesting claims, embedded catalog descriptions, directive aliases and README manual output formats with the audited chapters.
+
+Repair the combined-manual Lua link filter: map included chapters and their local headings to actual combined-document IDs, including renamed chapter headings, and preserve usable repository links for the README, benchmark guide, fork history and audit outside the manual. Build both HTML and ODT through the real CMake document targets in WSL; every HTML internal anchor and ODT bookmark link resolves. Pandoc reports only the existing --self-contained deprecation notice. All eight manpages render without groff warnings. All 36 tracked Markdown files have valid local file/heading links and no soft/hard line breaks within prose paragraphs. Refresh the fork ledger through tranche 7 (55d642a5), validating 686 first-parent entries exactly once across 29 boundaries; this final audit commit will be recorded by the next history refresh.
+
+The complete 428-test embedded-catalog suite passes after the final review. Both embedded and external 428-test suites passed after the invocation/help changes in tranche 4; later tranches change documentation and its rendering filter. Keep historical benchmark measurements tied to their original revisions. One adjacent runtime observation remains outside this documentation task: implicit suffix handling in binary utilities can misinterpret a period in a POSIX directory name; explicit -o filenames avoid that path.
 
 ## Validation policy
 

@@ -109,11 +109,11 @@ The conversion from error numbers to clear text messages is located here. I hope
 
 #### nlmessages.c
 
-The C version of AS reads all messages from files at runtime after the language to be used is clear. The format of message files is not a simple one, but instead a special compact and pre-indexed format that is generated at runtime by a program called 'rescomp' (we will talk about it later). This module is the counterpart to rescomp that reads the correct language part into a character field and offers functions to access the messages.
+This module selects a language and reads compact, indexed message catalogs produced by the host rescomp during the build. Catalogs are embedded by default; ASL_EMBED_MESSAGES=OFF instead loads external .msg files at runtime. Both paths validate the catalog structure before exposing message strings.
 
 #### nls.c
 
-This module checks which country-dependent settings (date and time format, country code) are present at runtime. Unfortunately, this is a highly operating system-dependent task, and currently, there are only three methods defines: The MS-DOS method, the OS/2 method and the typical Unix method via _locale_ functions. For all other systems, there is unfortunately currently only `NO_NLS` available...
+This module provides country-dependent date/time, numeric formatting and character handling. CMake selects the available locale implementation and fallback configuration for the host. Message-language selection is handled by nlmessages.c; it is separate from the numeric parsing/formatting contracts used by the assembler.
 
 #### stdhandl.c
 

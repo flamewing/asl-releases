@@ -1002,7 +1002,7 @@ Toshiba delivers an own assembler for the TLCS-900 series (TAS900), which is dif
 
 #### Symbol Conventions
 
-- TAS900 differentiates symbol names only on the first 32 characters. In contrast, AS always stores symbol names with the full length (up to 255 characters) and uses them all for differentiation.
+- TAS900 differentiates symbol names only on the first 32 characters. In contrast, AS compares the full stored name rather than just its first 32 characters.
 - TAS900 allows to write integer constants either in Intel or C notation (with a 0 prefix for octal or a 0x prefix for hexadecimal constants). By default, AS only supports the Intel notation. With the help of the `RELAXED` instruction, one also gets the C notation among others.
 - AS does not distinguish between upper and lower case. In contrast, TAS900 differentiates between upper- and lowercase letters in symbol names. One needs to engage the `-u` command line option to force AS to do this.
 

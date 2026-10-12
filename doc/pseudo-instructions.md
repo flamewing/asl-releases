@@ -2417,7 +2417,7 @@ In addition to `IF`, the following further conditional statements are defined:
 - `IFB <arg-list>`: true if all arguments of the parameter list are empty strings.
 - `IFNB <arg-list>`: counterpart to `IFB`.
 
-It is valid to write `ELSE` instead of `ELSEIF` since everybody seems to be used to it...
+The aliases `ELSE` and `ELSEC` select the same directive as `ELSEIF`; `ENDC` aliases `ENDIF`. Leading-dot forms such as `.IF`, `.ELSEC` and `.ENDC` are accepted.
 
 For every IF... statement, there has to be a corresponding `ENDIF`. 'Open' constructs will lead to an error message at the end of an assembly path. The way AS has 'paired' `ENDIF` statements with `IF`s may be deduced from the assembly listing: for `ENDIF`, the line number of the corresponding `IF...` will be shown.
 

@@ -162,9 +162,9 @@ This flexibility implies a somewhat exotic code format, therefore I added some t
 
 AS is a macro assembler, which means that the programmer has the possibility to define new "commands" by means of macros. Additionally it masters conditional assembling. Labels inside macros are automatically processed as being local.
 
-For the assembler, symbols may have either integer, string or floating point values. These will be stored - like interim values in formulas - with a width of 32 bits for integer values, 80 or 64 bits for floating point values, and 255 characters for strings. For a couple of micro controllers, there is the possibility to classify symbols by segmentation. So the assembler has a (limited) possibility to recognize accesses to wrong address spaces.
+Symbols and expression results may have integer, string, floating-point or register values. Integer precision is reported by INTWIDTH (64 bits, or 128 where supported); floating-point precision depends on the host configuration, and strings carry an explicit length. For a couple of micro controllers, there is the possibility to classify symbols by segmentation. So the assembler has a (limited) possibility to recognize accesses to wrong address spaces.
 
-The assembler does not know explicit limits in the nesting depth of include files or macros; a limit is only given by the program stack restricting the recursion depth. Nor is there a limit for the symbol length, which is only restricted by the maximum line length.
+Include nesting is limited by -maxinclevel (default 200), and macro recursion by MAXNEST (default 256; the current value is NESTMAX). Source input uses a dynamically growing line buffer; individual parser fields and directives still impose their own limits.
 
 From version 1.38 on, AS is a multipass-assembler. This pompous term means no more than the fact that the number of passes through the source code need not be exactly two. If the source code does not contain any forward references, AS needs only one pass. In case AS recognizes in the second pass that it must use a shorter or longer instruction coding, it needs a third (fourth, fifth...) pass to process all symbol references correctly. There is nothing more behind the term "multipass", so it will not be used further more in this documentation.
 

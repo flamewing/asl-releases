@@ -111,7 +111,7 @@ cmake -E chdir build-wasm ctest --output-on-failure --parallel
 
 The documentation is built by default if you have [Pandoc][pandoc-url] installed and available through the `PATH` environment variable; otherwise, it is skipped.
 
-"Building", in this case, means turning a loose bunch of Markdown files into a self-contained html file, which is installed to the configured documentation directory when running `cmake --install build`.
+"Building", in this case, means turning the manual chapters into self-contained HTML and ODT files, which is installed to the configured documentation directory when running `cmake --install build`.
 
 Pandoc can be installed in a few OSes as follows (adapted from [this][pandoc-install]):
 
