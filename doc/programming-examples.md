@@ -2,9 +2,9 @@
 
 ## 16-bit instructions via macros
 
-An 8-bit processor can combine two registers into a virtual 16-bit accumulator. Macros operating on it should support the same addressing modes as the hardware: immediate, direct (the first 256 bytes), extended and indexed. On Motorola 6800, accumulators A and B can form this pair.
+An 8-bit processor can combine two registers into a virtual 16-bit accumulator. Macros operating on it should support the same addressing modes as the hardware: immediate, direct (the first 256 bytes), extended and indexed. These Motorola 6800 examples deliberately use A as the low byte and B as the high byte, with memory stored high byte first. Thus subtraction updates A first and propagates its borrow into B. This is a virtual register convention, different from the later 6801 D register (A high, B low); to use that convention, exchange the A/B operations in these macros.
 
-Indexed addressing has two arguments. An immediate argument starts with `#`; convert it to a string to inspect and remove that prefix, then evaluate its value. The assembler can choose direct or extended addressing from the address. This subtraction macro handles all four forms:
+Indexed addressing has two arguments. An immediate argument starts with `#`; convert it to a string to inspect and remove that prefix, then evaluate its value. The assembler can choose direct or extended addressing from the address. Start each standalone example with `CPU 6800` and `INCLUDE "bitfuncs.inc"` (add the installed include directory with `-i` if necessary). The include supplies `lo` and `hi`; `VAL` is built in. This subtraction macro handles all four forms:
 
 ```asm
 subd    macro   ARG1,ARG2

@@ -823,7 +823,7 @@ In contrast to the AVR assembler, AS by default uses the Intel format to write h
 
 Optionally, AS can generate so-called "object files" for the AVRs (it also works for other CPUs, but it does not make any sense for them...). These are files containing code and source line info what e.g. allows a step-by-step execution on source level with the WAVRSIM simulator delivered by Atmel. Unfortunately, the simulator seems to have trouble with source file names longer than approx. 20 characters: Names are truncated and/or extended by strange special characters when the maximum length is exceeded. AS therefore stores file name specifications in object files without a path specification. Therefore, problems may arise when files like includes are not in the current directory.
 
-A small specialty are machine instructions that have already been defined by Atmel as part of the architecture, but up to now haven't been implemented in any of the family's members. The instructions in question are `MUL`, `JMP,` and `CALL`. Considering the latter ones, one may ask himself how to reach the 4 Kwords large address space of the AT90S8515 when the 'next best' instructions `RJMP` and `RCALL` can only branch up to 2 Kwords forward or backward. The trick is named 'discarding the upper address bits' and described in detail with the `WRAPMODE` statement.
+Availability of `MUL`, `JMP` and `CALL` depends on the selected AVR device; they are supported on devices that implement them. Considering the latter ones, one may ask himself how to reach the 4 Kwords large address space of the AT90S8515 when the 'next best' instructions `RJMP` and `RCALL` can only branch up to 2 Kwords forward or backward. The trick is named 'discarding the upper address bits' and described in detail with the `WRAPMODE` statement.
 
 All AVR targets support the optional CPU argument `CODESEGSIZE`. Like in this example,
 
@@ -831,7 +831,7 @@ All AVR targets support the optional CPU argument `CODESEGSIZE`. Like in this ex
        cpu atmega8:codesegsize=0
 ```
 
-it may be used to instruct the assembler to treat the code segment (i.e. the internal flash ROM) as being organized in bytes instead of 16 bit words. This is the view when the `LPM` instruction is used, and which some other (non Atmel) assemblers use in general. It has the advantage that addresses in the `CODE` segment need not be multiplied by two if used for data accesses. On the other hand, care has to be taken that instructions do not start on an odd address - this would be the equivalent of an instruction occupying fractions of flash words. The `PADDING` option is therefore enabled by default, while it remains possible to define arrays of bytes via multiple uses of `DB` or `DATA` without the risk of padding bytes inserted in between. Target addresses for relative and absolute branches automatically get divided by two in this "byte mode". The default is the organization in 16 bit word as used by the original Atmel assembler. This may explicitly be selected by using the argument `codesegsize=1`.
+it may be used to instruct the assembler to treat the code segment (i.e. the internal flash ROM) as being organized in bytes instead of 16 bit words. This is the view when the `LPM` instruction is used, and which some other (non Atmel) assemblers use in general. It has the advantage that addresses in the `CODE` segment need not be multiplied by two if used for data accesses. On the other hand, care has to be taken that instructions do not start on an odd address - this would be the equivalent of an instruction occupying fractions of flash words. The `PADDING` option is therefore enabled by default, while it remains possible to define arrays of bytes via multiple uses of `DB` or `DATA` without the risk of padding bytes inserted in between. Target addresses for relative and absolute branches automatically get divided by two in this "byte mode". Relative offsets are encoded in instruction words: conditional branches accept -64 through +63 words and RJMP/RCALL accept -2048 through +2047 words from the following instruction. Targets must be even byte addresses. `WRAPMODE` uses the selected device code-space size, converted to word units in byte mode. The default is the organization in 16 bit word as used by the original Atmel assembler. This may explicitly be selected by using the argument `codesegsize=1`.
 
 ## Z80UNDOC
 
@@ -1245,9 +1245,11 @@ Table [Equivalent Instructions AST6 ↔ AS](#table-equivalent-instructions-ast6-
 | `.VERS`    | `VERSION` (symbol)    | query version                |
 | `.SET`     | `EVAL`                | redefine variables           |
 
-## ST7
+## ST7 and STM8
 
 In [^ST7Man], the `.w` postfix to signify 16-bit addresses is only defined for memory indirect operands. It is used to mark that a 16-bit address is stored at a zero page address. AS additionally allows this postfix for absolute addresses or displacements of indirect address expressions to force 16-bit displacements in spite of an 8-bit value (0...255).
+
+Relative branches, including BTJF/BTJT, encode a signed 8-bit displacement (-128 through +127) from the address immediately after the complete instruction. A 16-bit or 24-bit address space does not enlarge that displacement field. The assembler computes the distance using the selected CPU address width, including wrapping at its address-space boundary, before validating it. Packed bit operands and separate address/bit operands both use the final operand as the branch target. On STM8, use the appropriate absolute jump form (JP or JPF) for a destination outside relative range; JPF/CALLF are STM8-specific.
 
 ## ST9
 
@@ -2028,3 +2030,11 @@ CP-1600 accepts PC and SP as aliases for R7 and R6, and register symbols defined
 | SH7205 | SH2A with 64-bit FPU |
 
 `FPU` and `DSP` control the corresponding optional instruction sets; `SUPMODE` controls privileged instructions. SH2A adds 12-bit displacement register-indirect addressing and bit operations. Existing `REG`, `DC`, `DS`, `PADDING`, `COMPLITERALS` and `LTORG` directives remain available.
+
+## Motorola 680x0 and ColdFire branch sizes
+
+For BRA, BSR and Bcc, `.B`/`.S` select an 8-bit displacement, `.W`/`.L` select a 16-bit displacement, and `.X` selects a 32-bit displacement where the selected CPU supports it. These branch attributes differ from data-size attributes: `.L` does not request a 32-bit branch. The PC base is the instruction address plus two. Without an explicit size, the assembler selects an appropriate supported form; unresolved forward references may require additional passes. A short BSR cannot encode displacement zero, so automatic selection uses a word displacement for that case. With `-x`, range diagnostics include the computed displacement, allowed range and PC base. Indexed effective-address displacements have their own CPU/addressing-form limits and do not use the branch-size rules.
+
+## MCore literal-table calls
+
+`JMPI [address]` and `JSRI [address]` load a destination from a literal-table entry, rather than jumping directly to the entry address. The entry must be four-byte aligned and its unsigned word index must be 0 through 255 from `(PC + 2) & ~3`. JSRI uses the indirect-call encoding and is distinct from register-indirect `JSR` and relative `BSR`. `-x` reports the literal address, alignment or index range when these constraints fail.

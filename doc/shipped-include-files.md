@@ -9,13 +9,15 @@ The distribution of AS contains a couple of include files. Apart from include fi
 
 ## BITFUNCS.INC
 
+The installed filename is `bitfuncs.inc`; use this spelling on case-sensitive filesystems.
+
 This file defines a couple of bit-oriented functions that might be hardwired for other assemblers. In the case of AS however, they are implemented with the help of user-defined functions:
 
 - _mask(start,bits)_ returns an integer with _bits_ bits set starting at position _start_;
 - _invmask(start,bits)_ returns one's complement to _mask()_;
 - _cutout(x,start,bits)_ returns _bits_ bits masked out from _x_ starting at position _start_ without shifting them to position 0;
-- _hi(x)_ returns the second lowest byte (bits 8..15) of _x_;
-- _lo(x)_ returns the lowest byte (bits 8..15) of _x_;
+- _hi(x)_ returns the second lowest byte (bits 0..7) of _x_;
+- _lo(x)_ returns the lowest byte (bits 0..7) of _x_;
 - _hiword(x)_ returns the second lowest word (bits 16..31) of _x_;
 - _loword(x)_ returns the lowest word (bits 0..15) of _x_;
 - _odd(x)_ returns TRUE if _x_ is odd;
@@ -27,6 +29,8 @@ This file defines a couple of bit-oriented functions that might be hardwired for
 - _rotrn(x,size,n)_ rotates the lowest _size_ bits of an integer _x_ to the right by _n_ places;
 
 ## CTYPE.INC
+
+The installed filename is `ctype.inc`; use this spelling on case-sensitive filesystems.
 
 This include file is similar to the C include file `ctype.h` which offers functions to classify characters. All functions deliver either TRUE or FALSE:
 

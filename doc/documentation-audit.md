@@ -12,7 +12,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Complete |
 | 5 | Source syntax, macros, conditionals and fork language extensions | Complete |
 | 6 | Data directives, expressions, predefined symbols, includes and file formats | Complete |
-| 7 | Processor-specific hints and programming examples, including corrected behavior | Pending |
+| 7 | Processor-specific hints and programming examples, including corrected behavior | Complete |
 | 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Pending |
 
 ## Scope and evidence
@@ -52,6 +52,12 @@ Review dynamic source-line reading and continuation handling, the 476-operand pa
 Check expression strings and host arithmetic against TempResult, parser wrappers and startup symbol initialization. Document length-bearing strings with embedded NUL, configured 64/128-bit arithmetic, actual ARCHITECTURE and VERSION values, CPU identifiers and target/preset-dependent mode defaults. Replace obsolete binary-tree/parser API descriptions in maintenance guidance. Correct DS.D alignment and remove an inaccurate claim about whole zero-filled bytes in wider float formats. Review include suffix/search behavior and data directives against the implementation and regression fixtures.
 
 Check ordinary code records against fileformat.h, headids.c and toolutils.c: separate little-endian metadata from target payload, fix Z8000 ID $34, DSP56000 storage granularity, payload/header lengths, supported sub-byte granularities and MAP ordering/escaping; identify relocation extensions outside the ordinary-record sketch. Existing expression, charset, codepage, predefined-symbol and integer-to-float tests pass. A direct assembly/conversion probe verifies embedded NUL bytes, INTWIDTH/HAS64, DS.D alignment and host/CPU/version symbols.
+
+### 7. Processor hints and runnable examples
+
+Review fork-corrected M68K, STM8/ST7, AVR and MCore addressing/branch behavior against their decoders and fixtures. Document the STM8 signed-byte displacement independently of its wider address space, packed bit-branch target selection, AVR word-unit offsets/wrapping, M68K branch attributes and zero-distance BSR selection, and MCore aligned literal-table calls. Replace a historically obsolete claim that no AVR implements MUL/JMP/CALL. Repair missing common-directive entries and the MACEXP_DFT spelling in the quick reference.
+
+Make the programming examples reproducible with CPU 6800 and bitfuncs.inc, and explicitly state their A-low/B-high virtual register convention rather than implying the later hardware D-register convention. Correct the lo function bit range and installed include filename case. Assemble both example macros and all demonstrated addressing forms in ordinary and case-sensitive modes; all ten selected processor/example regressions pass. This review checks documented syntax and fork-specific behavior; it is not an independent certification of every supported instruction set.
 
 ## Validation policy
 
