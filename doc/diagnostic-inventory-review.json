@@ -1256,8 +1256,11 @@
         "ErrNum_JmpDistTooBig": 1,
         "ErrNum_OverRange": 4
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partial",
+      "review_notes": "Tranche 261 reviews four shared address range candidates: actual unsigned-byte pointer/X0/X1 offset, signed IC offset and PC-relative distance with base, all at component. Adjacent indexed pointer-register constraints identify R3/X0 or R4/X1. Stop emitting after out-of-range PC target and defer unknown/questionable range checks; preserve valid mode/word selection. Sixteen candidates remain (including one immediate range site)."
     },
     "codemn2610.c": {
       "candidate_counts": {
@@ -2340,6 +2343,11 @@
       "file": "codest9.c",
       "issue": "Shared indirect parser ignores some failed displacement evaluations, rejects unresolved register aliases as outside register space and treats native valid R255 byte descriptor as invalid odd pair.",
       "status": "fixed in tranches 258-260: stop failed base/outer displacement evaluation, wait for unresolved class, clamp provisional displacements and classify all 256 byte descriptors separately from 0x100-tagged pairs. Original/boundary/forward/no-emission tests checked."
+    },
+    {
+      "file": "codemn1610.c",
+      "issue": "Out-of-range PC-relative address reports 1370 but falls through and emits word; forward target arithmetic prematurely rejected.",
+      "status": "fixed in tranche 261; return on invalid target, defer provisional shared displacement/address checks. Both CPU variants, endpoints, forward references and no rejected emission checked."
     }
   ]
 }

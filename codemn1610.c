@@ -12,6 +12,9 @@
 
 #include "codemn1610.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -333,6 +336,20 @@ static Boolean DecHR(char const* pAsc, Word* pErg) {
 
 /* MN1610 */
 
+static void report_operand_choices(tStrComp const* arg, unsigned error, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_displacement(LargeInt value, LargeInt minimum, LargeInt maximum,
+        tStrComp const* arg) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+            value, minimum, maximum);
+    WrXErrorPos(ErrNum_OverRange, detail, &arg->Pos);
+}
+
 /* XXXX Rn, Adr  or  XXXX Adr */
 static void DecodeAdr(Word Index) {
     int       idx;
@@ -345,6 +362,7 @@ static void DecodeAdr(Word Index) {
     Word      mode = 0;
     LongInt   adr;
     Boolean   OK;
+    tSymbolFlags flags;
     int       disp = 0;
     int       l;
 
@@ -422,8 +440,10 @@ static void DecodeAdr(Word Index) {
                 return;
             }
             ChkSpace(SegCode, EvalResult.AddrSpaceMask);
+            if (mFirstPassUnknownOrQuestionable(EvalResult.Flags))
+                disp = 0;
             if (disp < 0 || disp > 0xff) {
-                WrError(ErrNum_OverRange);
+                report_displacement(disp, 0, 255, &InnerZ);
                 return;
             }
 
@@ -435,25 +455,28 @@ static void DecodeAdr(Word Index) {
                 mode = 7;
                 break;
             default:
-                WrError(ErrNum_InvRegisterPointer);
+                report_operand_choices(&Right, ErrNum_InvRegisterPointer, "R3/X0 or R4/X1");
                 return;
             }
         } else {
-            disp = EvalStrIntExpression(&Left, Int8, &OK);
+            disp = EvalStrIntExpressionWithFlags(&Left, Int8, &OK, &flags);
             if (!OK) {
                 return;
             }
 
+            if (mFirstPassUnknownOrQuestionable(flags))
+                disp = 0;
+
             if (preg == 7) { /* disp(IC) , (disp(IC)) */
                 if (disp > 0x7f || disp < -0x80) {
-                    WrError(ErrNum_OverRange);
+                    report_displacement(disp, -128, 127, &Left);
                     return;
                 }
 
                 mode = indirect ? 0x3 : 0x1;
             } else { /* disp(X0) , disp(X1) */
                 if (disp > 0xff || disp < -0x00) {
-                    WrError(ErrNum_OverRange);
+                    report_displacement(disp, 0, 255, &Left);
                     return;
                 }
                 switch (preg) {
@@ -464,7 +487,7 @@ static void DecodeAdr(Word Index) {
                     mode = 5;
                     break;
                 default:
-                    WrError(ErrNum_InvRegisterPointer);
+                    report_operand_choices(&Right, ErrNum_InvRegisterPointer, "R3/X0 or R4/X1");
                     return;
                 }
             }
@@ -478,6 +501,9 @@ static void DecodeAdr(Word Index) {
         }
         ChkSpace(SegCode, EvalResult.AddrSpaceMask);
 
+        if (mFirstPassUnknownOrQuestionable(EvalResult.Flags))
+            adr = 0;
+
         if (adr < 0x100) {
             mode = indirect ? 0x2 : 0x0;
             disp = adr;
@@ -487,7 +513,12 @@ static void DecodeAdr(Word Index) {
                 mode = indirect ? 0x3 : 0x1;
                 disp = adr & 0xff;
             } else {
-                WrError(ErrNum_JmpDistTooBig);
+                char detail[180];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                        (LargeInt)adr, (LargeInt)-128, (LargeInt)127,
+                        (LargeWord)EProgCounter());
+                WrXErrorPos(ErrNum_JmpDistTooBig, detail, &sc->Pos);
+                return;
             }
         }
     }

@@ -2779,3 +2779,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     reserved-window rules and pair parity. Original byte/pair 254 vectors, byte
     255 direct/indirect/REG/forward aliases and wrong-size rejection checked.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+261. MN1610/MN1613 effective-address range diagnostics.
+    Four historical candidates: actual byte pointer/index displacement, signed IC
+    displacement and PC-relative distance/base at component. Adjacent indirect
+    pointer constraint identifies R3/X0 or R4/X1. Confirm invalid PC-relative
+    load emitted c000 after 1370; return before emission and defer provisional
+    checks. Both CPUs, original mode vector, endpoints, forwards, primary-only,
+    rejected emission and German checked. Sixteen candidates remain.
+    Validation: all 425 CTest cases pass with embedded/external catalogs.
