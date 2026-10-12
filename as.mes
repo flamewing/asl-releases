@@ -2423,3 +2423,7 @@ Message ErrMsgSupportedCPUChoices
 Message ErrMsgColdFireISAChoices
  "Gew&auml;hlte ColdFire-ISA %s; erlaubte ISAs: %s"
  "selected ColdFire ISA %s; supported ISAs: %s"
+
+Message ErrMsgSupportedOperandSizes
+ "Erlaubte Operandengr&ouml;&szlig;en: %s"
+ "supported operand sizes: %s"

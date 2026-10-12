@@ -372,3 +372,32 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German family choices: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# CCR AND/OR generation is reached only after size and capability checks pass.
+# The old independent block emitted bytes despite EXPECT'ed size/CPU errors.
+foreach(ins IN ITEMS and or andi ori)
+    string(LENGTH "${ins}" mnemonic_length)
+    math(EXPR column "${mnemonic_length} + 3")
+    check_diagnostic(ccr-size-${ins} 68000 " ${ins}.w #1,ccr" 1130
+        "supported operand sizes: .B" 3 ${column})
+    check_diagnostic(ccr-size-primary-${ins} 68000 " ${ins}.w #1/0,ccr" 1130
+        "supported operand sizes: .B" 3 ${column})
+    check_diagnostic(ccr-cpu-${ins} MCF5202 " ${ins} #1,ccr" 1500
+        "supported CPUs: 68008, 68000, 68010, 68012, 68332, 68340, 68360, 68020, 68030, 68040" 3 2)
+endforeach()
+check_bytes(ccr-size-errors-noemit 68000
+    " expect 1130,1130,1130,1130\n and.w #1,ccr\n or.w #1,ccr\n andi.w #1,ccr\n ori.w #1,ccr\n endexpect\n dc.b $12" "12")
+check_bytes(ccr-cpu-errors-noemit MCF5202
+    " expect 1500,1500,1500,1500\n and #1,ccr\n or #1,ccr\n andi #1,ccr\n ori #1,ccr\n endexpect\n dc.b $12" "12")
+check_bytes(ccr-original-logical 68000
+    " and.b #1,ccr\n or.b #2,ccr\n andi.b #3,ccr\n ori.b #4,ccr\n eor.b #5,ccr"
+    "023c0001003c0002023c0003003c00040a3c0005")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/ccr-size-and.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Erlaubte Operandengr" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German CCR size choices: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

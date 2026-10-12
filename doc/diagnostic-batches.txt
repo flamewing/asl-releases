@@ -2249,3 +2249,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Confirmed adjacent AND/OR-to-CCR emission after size/CPU rejection remains
     for a separate batch.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+203. M68K CCR logical failure emission and size/capability detail.
+    An independent block generated CCR AND/OR bytes even after rejecting the
+    size or CPU. Make generation the successful else branch. Preserve 1130/1500;
+    size errors identify .B at the suffix, capability errors derive supported
+    models from eFlagLogCCR. AND/OR/ANDI/ORI failures emit no instruction bytes
+    and do not evaluate operands after primary size failure. Original accepted
+    CCR logical bytes and German details pass. One of 98 historical size sites
+    and a fourth of 14 capability sites reviewed; remaining sites pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

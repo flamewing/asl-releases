@@ -200,6 +200,7 @@ static Byte const FSizeCodes[10] = {6, 4, 0, 7, 0, 1, 5, 2, 0, 3};
 /* Unterroutinen */
 
 static void report_cpu_family_choices(unsigned mask);
+static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa);
 
 static Boolean CheckFamilyCore(unsigned FamilyMask) {
     return !!((FamilyMask >> pCurrCPUProps->Family) & 1);
@@ -248,6 +249,13 @@ static void CheckSup(void) {
     if (!SupAllowed) {
         WrStrErrorPos(ErrNum_PrivOrder, &OpPart);
     }
+}
+
+static void report_operand_sizes(char const* sizes) {
+    char detail[150];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedOperandSizes), sizes);
+    WrXErrorPos(ErrNum_InvOpSize, detail,
+            *AttrPart.str.p_str ? &AttrPart.Pos : &OpPart.Pos);
 }
 
 static Boolean CheckColdSize(void) {
@@ -3198,11 +3206,10 @@ static void DecodeANDOR(Word Index) {
         if (!as_strcasecmp(ArgStr[2].str.p_str, "CCR")) /* AND #...,CCR */
         {
             if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(".B");
             } else if (!(pCurrCPUProps->SuppFlags & eFlagLogCCR)) {
-                WrError(ErrNum_InstructionNotSupported);
-            }
-            {
+                report_cpu_capability_choices(eFlagLogCCR, eCfISA_None);
+            } else {
                 WAsmCode[0] = 0x003c | (Op << 9);
                 OpSize      = eSymbolSize8Bit;
                 if (DecodeAdr(&ArgStr[1], MModImm, &AdrResult)) {
@@ -7537,6 +7544,18 @@ static void report_cpu_family_choices(unsigned mask) {
     tCPUProps const* cpu;
     for (cpu = CPUProps; cpu->pName; cpu++) {
         if (!((mask >> cpu->Family) & 1)) continue;
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, cpu->pName, sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedCPUChoices), choices);
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
+}
+
+static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa) {
+    char choices[512] = "", detail[600];
+    tCPUProps const* cpu;
+    for (cpu = CPUProps; cpu->pName; cpu++) {
+        if ((cpu->SuppFlags & flags) != flags || cpu->CfISA < minimum_isa) continue;
         if (*choices) strmaxcat(choices, ", ", sizeof(choices));
         strmaxcat(choices, cpu->pName, sizeof(choices));
     }
