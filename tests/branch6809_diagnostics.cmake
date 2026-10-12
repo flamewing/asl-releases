@@ -135,3 +135,13 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German direct page: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# W indexing must stop when displacement evaluation fails. EXPECT exposes any
+# instruction bytes that would otherwise survive a rejected expression.
+check_bytes(w-evaluation-errors-noemit 6309
+    " expect 1320,1315,1310,1320\n lda 65536,w\n lda -32769,w\n lda 1/0,w\n lda [65536,w]\n endexpect\n db $12" "12")
+check_diagnostic(w-range-primary 6309 " lda 65536,w" 1320 "65536 > 65535" 3 6)
+check_diagnostic(w-division-primary 6309 " lda 1/0,w" 1310 "division by 0" 3 "")
+check_bytes(w-original-encodings 6309
+    " lda ,w\n lda 1,w\n lda -1,w\n lda [1,w]\n lda [,w]\n lda ,--w\n lda [,w++]\n lda value+1000,w\nvalue equ -999"
+    "a68fa6af0001a6afffffa6b00001a690a6efa6d0a6af0001")

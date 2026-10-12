@@ -550,6 +550,8 @@ static adr_mode_t DecodeAdr(
             OK     = True;
         }
 
+        if (!OK) goto chk_mode;
+
         /* Displacement 0 ? */
 
         if ((ZeroMode == 0) && (AdrInt == 0)) {

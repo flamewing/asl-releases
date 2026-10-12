@@ -2152,3 +2152,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     primary errors, German details, unchanged bytes and no failure emission.
     All historical numeric candidates reviewed; remaining families pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+194. 6309 W-indexed evaluation failure emission.
+    Unlike the other indexed paths, W indexing continued after failed expression
+    evaluation and emitted an instruction. EXPECT 1320 around LDA 65536,W left
+    A6 AF FF FF in the object. Check OK before selecting/emitting any W form.
+    Range, division and indirect failures retain their primary diagnostics and
+    emit no instruction bytes. Existing W, indirect, update and forward vectors
+    retain their encodings.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
