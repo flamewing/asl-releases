@@ -1563,7 +1563,7 @@ the program counter will be rounded up to the next even address, with a
         DS.D    0
 ```
 
-in contrast to the next double word boundary. Memory cells possibly staying unused thereby are neither zeroed nor filled with NOPs, they simply stay undefined.
+in contrast to the next 8-byte boundary (`D` denotes a 64-bit double-precision value; `L` denotes a 4-byte long word). Memory cells possibly staying unused thereby are neither zeroed nor filled with NOPs, they simply stay undefined.
 
 The default for the operand length is - as usual - `W`, i.e. 16 bits.
 
@@ -1583,7 +1583,7 @@ These commands are - one could say - the Intel counterpart to `DS` and `DC`, and
 - `DT`: packed BCD integer or extended precision float (80 bits)
 - `DO`: quad precision float (128 bits)
 
-Stored floats cannot exceed the host’s precision or range, given by `FLOATMAX`. On a double-precision host, the lowest two bytes of `DT` and eight bytes of `DO` are zero-filled.
+Stored floats cannot exceed the host’s precision or range, given by `FLOATMAX`. Writing a wider format does not add significant bits that were absent from the evaluated host value.
 
 Second, the distinction between constant definition and memory reservation is done by the operand. A reservation of memory is marked by a `?` :
 

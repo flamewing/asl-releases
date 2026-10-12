@@ -65,7 +65,7 @@ Routines to store and execute macro constructs are located in this module. The r
 
 #### asmpars.c
 
-Here we really go into the innards: This module stores the symbol tables (global and local) in two binary trees. Further more, there is a quite large procedure `EvalExpression` which analyzes and evaluates a (formula) expression. The procedure returns the result (integer, floating point, or string) in a variant record. However, to evaluate expressions during code generation, one should better use the functions `EvalIntExpression`, `EvalFloatExpression`, and `EvalStringExpression`. Modifications for the sake of adding new target processors are unnecessary in this modules and should be done with extreme care, since you are touching something like 'AS's roots'.
+This module stores global and local symbols in hash tables and evaluates expressions. `EvalStrExpression` accepts a `tStrComp`, which retains source-position information, and returns a `TempResult` containing an integer, float, length-bearing string or register. Code generators normally use the typed wrappers `EvalStrIntExpression`, `EvalStrFloatExpression` and `EvalStrStringExpression`; the `WithResult` variants also return flags, address-space and size information in `tEvalResult`. Preserve these flags for unresolved first-pass expressions and keep source positions when slicing operands so diagnostics identify the relevant text. Review parser changes carefully because they affect every backend.
 
 #### asmsub.c
 

@@ -7,7 +7,7 @@
 
 | name          | data type | definition | meaning                                                                                   |
 | :------------ | :-------- | :--------- | :---------------------------------------------------------------------------------------- |
-| ARCHITECTURE  | string    | predefined | target platform AS was compiled for, in the style processor-manufacturer-operating system |
+| ARCHITECTURE  | string    | predefined | target platform AS was compiled for, in the form host-processor-host-operating-system (not the selected assembly target) |
 | BIGENDIAN     | boolean   | dynamic(0) | storage of constants MSB first?                                                           |
 | CASESENSITIVE | boolean   | normal     | case sensitivity in symbol names?                                                         |
 | CONSTPI       | float     | normal     | constant Pi (3.1415.....)                                                                 |
@@ -27,8 +27,8 @@
 | FULLPMMU   | boolean   | dynamic(0/1)     | full PMMU instruction set allowed?                            |
 | LISTON     | boolean   | dynamic(1)       | listing enabled?                                              |
 | MACEXP     | boolean   | dynamic(1)       | expansion of macro constructs in listing enabled?             |
-| MOMCPU     | integer   | dynamic\(68008\) | number of target CPU currently set                            |
-| MOMCPUNAME | string    | dynamic\(68008\) | name of target CPU currently set                              |
+| MOMCPU     | integer   | dynamic | internal identifier of the current target CPU (not its model number)                            |
+| MOMCPUNAME | string    | dynamic | name of target CPU currently set                              |
 | MOMFILE    | string    | special          | current source file (including include files)                 |
 | MOMLINE    | integer   | special          | current line number in source file                            |
 | MOMPASS    | integer   | special          | number of current pass                                        |
@@ -42,15 +42,15 @@
 | PADDING   | boolean   | dynamic(1)   | pad byte field to even count?                                             |
 | RELAXED   | boolean   | dynamic(0)   | any syntax allowed integer constants?                                     |
 | . | Integer | special | Current program counter (IM61x0). |
-| PC        | integer   | special      | current program counter (Thomson)                                         |
+| PC        | integer   | special      | current program counter (ST7/ST9 and related targets)                                         |
 | TIME      | string    | predefined   | time of begin of assembly (1. pass)                                       |
 | TRUE      | integer   | predefined   | 1 = logically "true"                                                      |
-| VERSION   | integer   | predefined   | version of AS in BCD coding, e.g. 1331 hex for version 1.33p1             |
+| VERSION   | integer   | predefined   | legacy numeric version identifier; this fork uses $142F, separately from the full -version release string             |
 | WRAPMODE  | Integer   | predefined   | shortened program counter assumed?                                        |
 | \*        | integer   | special      | current program counter (Motorola, Rockwell, Microchip, Hitachi)          |
 | $         | integer   | special      | current program counter (Intel, Zilog, Texas, Toshiba, NEC, Siemens, AMD) |
 
-To be exact, boolean symbols are just ordinary integer symbols with the difference that AS will assign only two different values to them (0 or 1, corresponding to False or True). AS does not store special symbols in the symbol table. For performance reasons, they are realized with hardcoded comparisons directly in the parser. They therefore do not show up in the assembly listing's symbol table. Predefined symbols are only set once at the beginning of a pass. The values of dynamic symbols may in contrast change during assembly as they reflect settings made with related pseudo instructions. The values added in parentheses give the value present at the beginning of a pass.
+To be exact, boolean symbols are just ordinary integer symbols with the difference that AS will assign only two different values to them (0 or 1, corresponding to False or True). AS does not store special symbols in the symbol table. For performance reasons, they are realized with hardcoded comparisons directly in the parser. They therefore do not show up in the assembly listing's symbol table. Predefined symbols are only set once at the beginning of a pass. The values of dynamic symbols may in contrast change during assembly as they reflect settings made with related pseudo instructions. Values in parentheses describe typical initial settings; CPU selection and command-line presets may select different defaults. Target-specific mode symbols exist only where the selected backend registers them.
 
 The names given in this table also reflect the valid way to reference these symbols in case-sensitive mode.
 
@@ -66,3 +66,5 @@ The names listed here should be avoided for own symbols; either one can define b
 On hosts that parse infinity, `INF` is reserved as a floating-point infinity and cannot be a user-defined symbol.
 
 `INTWIDTH` gives the bit width of internal integer arithmetic. `HAS64` is true when that arithmetic has at least 64 bits; supported hosts may use 128 bits.
+
+`COMPMODE`, `PACKING` and `EXTRACOMMENTS` reflect the corresponding on/off settings on targets that register these directives. `MOMCPU` is an internal CPU identifier; use `MOMCPUNAME` when testing a target name. `DATE` and `TIME` retain the values captured at the start of the first pass rather than being refreshed on every pass.

@@ -11,7 +11,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | 3 | Assembler invocation, options, environment, manpage and built-in help | Complete |
 | 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Complete |
 | 5 | Source syntax, macros, conditionals and fork language extensions | Complete |
-| 6 | Data directives, expressions, predefined symbols, includes and file formats | Pending |
+| 6 | Data directives, expressions, predefined symbols, includes and file formats | Complete |
 | 7 | Processor-specific hints and programming examples, including corrected behavior | Pending |
 | 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Pending |
 
@@ -46,6 +46,12 @@ Repair broken continuation lines in the dasl help resource, which made English m
 ### 5. Source syntax, macros and conditionals
 
 Review dynamic source-line reading and continuation handling, the 476-operand parser limit, listing-mask callbacks and all nine listing bits. Correct obsolete fixed-line limits, reversed -t/+t behavior, the listing invocation and omitted DEFINE/register/structure bits. Review macro replacement, IRPN, SHIFT, recursion and conditional directives; distinguish the MAXNEST directive from the NESTMAX symbol, document occupied SHIFT aliases and correct IFDEF/IFNDEF to test a symbol, macro or function name rather than an expression. Validate the existing IRPN, SHIFT, argument-cursor and conditional regressions.
+
+### 6. Expressions, symbols, data and file formats
+
+Check expression strings and host arithmetic against TempResult, parser wrappers and startup symbol initialization. Document length-bearing strings with embedded NUL, configured 64/128-bit arithmetic, actual ARCHITECTURE and VERSION values, CPU identifiers and target/preset-dependent mode defaults. Replace obsolete binary-tree/parser API descriptions in maintenance guidance. Correct DS.D alignment and remove an inaccurate claim about whole zero-filled bytes in wider float formats. Review include suffix/search behavior and data directives against the implementation and regression fixtures.
+
+Check ordinary code records against fileformat.h, headids.c and toolutils.c: separate little-endian metadata from target payload, fix Z8000 ID $34, DSP56000 storage granularity, payload/header lengths, supported sub-byte granularities and MAP ordering/escaping; identify relocation extensions outside the ordinary-record sketch. Existing expression, charset, codepage, predefined-symbol and integer-to-float tests pass. A direct assembly/conversion probe verifies embedded NUL bytes, INTWIDTH/HAS64, DS.D alignment and host/CPU/version symbols.
 
 ## Validation policy
 

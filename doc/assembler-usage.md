@@ -507,7 +507,7 @@ Floating point constants are to be written in the usual scientific notation, whi
 
 String constants have to be enclosed in single or double quotation marks. In order to make it possible to include quotation marks or special characters in string constants, an "escape mechanism" has been implemented, which should sound familiar for C programmers:
 
-The assembler understands a backslash ( `\` ) with a following decimal number of three digits maximum in the string as a character with the according decimal ASCII value. The numerical value may alternatively be written in hexadecimal or octal notation if it is prefixed with an x resp. a 0\. In case of hexadecimal notation, the maximum number of digits is limited to 2\. For example, it is possible to include an ETC character by writing `\3` . But be careful with the definition of NUL characters! The C version currently uses C strings to store strings internally. As C strings use a NUL character for termination, the usage of NUL characters in strings is currently not portable!
+The assembler understands a backslash ( `\` ) with a following decimal number of three digits maximum in the string as a character with the according decimal ASCII value. The numerical value may alternatively be written in hexadecimal or octal notation if it is prefixed with an x resp. a 0\. In case of hexadecimal notation, the maximum number of digits is limited to 2\. For example, `\3` inserts an ETX character and `\000` inserts NUL. Expression strings carry an explicit length, so embedded NUL bytes are preserved in string data and string operations; a filename or other operating-system string still cannot contain NUL.
 
 Some frequently used control characters can also be reached with the following abbreviations:
 
@@ -579,7 +579,7 @@ Important: using the correct quotation is not necessary if the character string 
 
 ### Evaluation
 
-Expressions use the highest supported host precision: 64-bit integers, and IEEE double or extended floating point. The approximate finite floating-point range is ±1.8 × 10^308 for double and ±1.1 × 10^4932 for extended precision. `FLOATMAX` reports the actual host limit. Range checks for the requested operand type apply to the final result.
+Expressions use the configured host precision: 64-bit integers, or 128-bit integers where supported, and IEEE double or extended floating point. `INTWIDTH` reports the integer width and `HAS64` indicates that it is at least 64 bits. The approximate finite floating-point range is ±1.8 × 10^308 for double and ±1.1 × 10^4932 for extended precision. `FLOATMAX` reports the actual host limit. Range checks for the requested operand type apply to the final result.
 
 ### Operators
 
@@ -627,7 +627,7 @@ The compare operators deliver TRUE in case the condition fits, and FALSE in case
 
 The mirroring of bits probably needs a little bit of explanation: the operator mirrors the lowest bits in the first operand and leaves the higher priority bits unchanged. The number of bits which is to be mirrored is given by the right operand and may be between 1 and 32 .
 
-A small pitfall is hidden in the binary complement: As the computation is always done with 32 resp. 64 bits, its application on e.g. 8-bit masks usually results in values that do not fit into 8-bit numbers any more due to the leading ones. A binary AND with a fitting mask is therefore unavoidable!
+A small pitfall is hidden in the binary complement: As computation uses the internal integer width reported by `INTWIDTH`, its application on e.g. 8-bit masks usually results in values that do not fit into 8-bit numbers any more due to the leading ones. A binary AND with a fitting mask is therefore unavoidable!
 
 ### Functions
 
