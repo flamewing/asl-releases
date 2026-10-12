@@ -168,9 +168,9 @@ foreach(disp IN ITEMS 1 -1 255)
         "address form (Rn) requires displacement 0; got ${disp}" 3 8)
 endforeach()
 check_diagnostic(indirect-descriptor ST9040 "odd reg 511\n ld r1,(odd)" 1350
-    "register descriptor 0x1FF is neither a byte in [0,254] nor an even pair in [0x100,0x1ff]" 4 9)
+    "register descriptor 0x1FF is neither a byte in [0,255] nor an even pair in [0x100,0x1ff]" 4 9)
 check_diagnostic(direct-descriptor ST9040 "odd reg 511\n ld r1,odd" 1350
-    "register descriptor 0x1FF is neither a byte in [0,254] nor an even pair in [0x100,0x1ff]" 4 8)
+    "register descriptor 0x1FF is neither a byte in [0,255] nor an even pair in [0x100,0x1ff]" 4 8)
 check_diagnostic(mode-choices ST9040 " adc r1,rr2" 1350
     "operand must be Rn, rn, (rn), (rrn), (rrn)+, -(rrn), d8(rrn), d16(rrn), rrm(rrn), [0..65535], #..." 3 9)
 check_bytes(address-original ST9040
@@ -205,3 +205,13 @@ check_diagnostic(forward-wrong-base ST9040 " push (alias)\nalias equ 10" 1350
     "indirect base must be a register in register address space" 3 8)
 check_diagnostic(missing-base ST9040 " push (missing)" 1010 "symbol undefined" 3 8)
 check_diagnostic(missing-direct ST9040 " push missing" 1010 "symbol undefined" 3 7)
+
+check_bytes(descriptor-original ST9040
+ " ld r1,R254\n push (R254)\n push R254\n ldw rr2,RR254" "18fef7fe66feeffed2")
+check_bytes(byte-descriptor-255 ST9040 " ld r1,R255\n push (R255)\n push R255" "18fff7ff66ff")
+check_bytes(alias-descriptor-255 ST9040
+ "alias reg 255\n ld r1,alias\n push (alias)\n push alias" "18fff7ff66ff")
+check_bytes(forward-descriptor-255 ST9040
+ " ld r1,alias\n push (alias)\n push alias\nalias reg 255" "18fff7ff66ff")
+check_diagnostic(byte-not-pair ST9040 " ldw rr2,R255" 1350 "operand must be RRn" 3 10)
+check_bytes(byte-not-pair-noemit ST9040 " expect 1350\n ldw rr2,R255\n endexpect\n nop" "ff")

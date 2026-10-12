@@ -2771,3 +2771,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     forward byte/pair aliases, zero offset, missing/wrong classes, branch-length
     convergence and rejected emission checked. Byte-255 cutoff remains separate.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+260. ST9 byte descriptor endpoint classification.
+    InternSymbol accepts R255 as byte and marks pairs with added 0x100; shared
+    direct/indirect decoder incorrectly used <0xff and rejected R255 as odd pair.
+    Use <0x100, update diagnostic byte domain to [0,255]. Preserve native
+    reserved-window rules and pair parity. Original byte/pair 254 vectors, byte
+    255 direct/indirect/REG/forward aliases and wrong-size rejection checked.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.

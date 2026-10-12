@@ -412,7 +412,7 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             if (!(EvalResult.AddrSpaceMask & (1 << SegReg))) {
                 WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgST9RegisterBase),
                         &RegComp.Pos);
-            } else if (AdrWord < 0xff) {
+            } else if (AdrWord < 0x100) {
                 AdrVals[0] = Lo(AdrWord);
                 LargeInt displacement = eval_outer_disp(pArg, Int8, &OK);
                 if (!OK)
@@ -465,7 +465,7 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             AdrVals[1] = Lo(AdrWord);
             AdrCnt     = 2;
             ChkSpace(AbsSeg, EvalResult.AddrSpaceMask);
-        } else if (AdrWord < 0xff) {
+        } else if (AdrWord < 0x100) {
             AdrMode    = ModReg;
             AdrVals[0] = Lo(AdrWord);
             AdrCnt     = 1;
