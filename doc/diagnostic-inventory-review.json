@@ -2020,6 +2020,11 @@
       "file": "code870c.c",
       "issue": "LD SP,SP+displacement reports range failure but still emits a truncated displacement byte.",
       "status": "fixed in tranche 153; keep recognized addressing form separate from validation success; both overflow directions/no emission and accepted endpoints/forward displacement checked"
+    },
+    {
+      "file": "codecr16.c",
+      "issue": "LOAD/STOR rejects a nonregister register operand but continues decoding memory and emits an instruction with register zero.",
+      "status": "fixed in tranche 155; return after invalid register-form diagnostic; both directions/two CPUs/no emission/original bytes checked"
     }
   ]
 }

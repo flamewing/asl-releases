@@ -827,6 +827,7 @@ static void decode_load_store(Word code) {
     default:
     wrong:
         WrStrErrorPos(ErrNum_InvAddrMode, p_reg_arg);
+        return;
     }
 
     switch (decode_adr(p_mem_arg, &mem_adr_vals, Int16)) {

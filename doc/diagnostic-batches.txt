@@ -1799,3 +1799,9 @@ manual, EXPECT fixtures, translations and source-position tests.
     Preserve IDs, acceptance predicates and captured accepted encodings;
     position failed component and check no emission. All sites now reviewed.
     Validation: all 413 CTest cases pass with embedded/external catalogs.
+
+155. CR16A/B LOAD/STOR emission after invalid register operand.
+    LOADW 0(R0),0(R1) and STORW 0(R1),0(R0) reject the register operand
+    but continue and encode register zero. Return after the primary error.
+    Both directions/two CPUs verify no emission and preserve accepted bytes.
+    Validation: all 414 CTest cases pass with embedded/external catalogs.
