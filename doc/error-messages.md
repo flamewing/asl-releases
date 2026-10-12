@@ -408,3 +408,6 @@ Shared error 1350 distinguishes repeated/multiple/non-additive address registers
 required HL+A indexing, zero-only displacement with its actual value and
 mask-derived alternatives. Error 1320 identifies the actual indexed displacement
 and signed-byte bounds under `-x`.
+
+TLCS-90 error 2050 rejects an empty direct or parenthesized address operand at
+its source location, including the missing source or destination of LD/LDW.

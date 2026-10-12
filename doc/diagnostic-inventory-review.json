@@ -2298,7 +2298,7 @@
     {
       "file": "code90c141.c",
       "issue": "Reg16Names contains an empty reserved table entry; explicit empty operand matches it and LD HL, silently emits opcode 0x43.",
-      "status": "pending empty-register table entry fix"
+      "status": "fixed in tranche 249; explicitly reject empty direct/parenthesized address operands with located 2050, including () that common IsIndirect deliberately skips. Skip empty reserved table slot. Empty source no longer becomes immediate zero after slot skip; direct, word, indirect and blank operands fail without emission."
     },
     {
       "file": "nlmessages.c",

@@ -184,6 +184,10 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
 
     AdrType = ModNone;
     AdrCnt  = 0;
+    if (!*pArg->str.p_str) {
+        WrStrErrorPos(ErrNum_EmptyArgument, pArg);
+        return;
+    }
 
     /* 1. 8-Bit-Register */
 
@@ -213,7 +217,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
 
     if (Erl & MModReg16) {
         for (z = 0; z < Reg16Cnt; z++) {
-            if (!as_strcasecmp(pArg->str.p_str, Reg16Names[z])) {
+            if (*Reg16Names[z] && !as_strcasecmp(pArg->str.p_str, Reg16Names[z])) {
                 AdrType = ModReg16;
                 AdrMode = z;
                 SetOpSize(1, pArg);
@@ -224,7 +228,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
 
     /* Speicheradresse */
 
-    is_indirect = IsIndirect(pArg->str.p_str);
+    is_indirect = IsIndirect(pArg->str.p_str) || !strcmp(pArg->str.p_str, "()");
     if (is_indirect || (Erl & MAssumeInd)) {
         tlcs90_eval_cb_data_t tlcs90_eval_cb_data;
         LongInt               DispAcc;
@@ -237,6 +241,10 @@ static void DecodeAdr(tStrComp const* pArg, Word Erl) {
         }
         KillPrefBlanksStrCompRef(&Arg);
         KillPostBlanksStrComp(&Arg);
+        if (!*Arg.str.p_str) {
+            WrStrErrorPos(ErrNum_EmptyArgument, &Arg);
+            return;
+        }
 
         as_eval_cb_data_ini(&tlcs90_eval_cb_data.cb_data, tlcs90_eval_cb);
         tlcs90_eval_cb_data.occ_flag = 0;

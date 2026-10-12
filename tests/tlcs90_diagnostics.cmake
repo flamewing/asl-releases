@@ -135,3 +135,11 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German TLCS90 displacement: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(empty-destination 90c141 " ld ,hl" 2050 "empty argument" 3 5)
+check_diagnostic(empty-source 90c141 " ld hl," 2050 "empty argument" 3 8)
+check_diagnostic(empty-immediate 90c141 " ldw ,1" 2050 "empty argument" 3 6)
+check_diagnostic(empty-indirect 90c141 " ld a,()" 2050 "empty argument" 3 8)
+check_diagnostic(blank-indirect 90c141 " ld a,(   )" 2050 "empty argument" 3 11)
+check_bytes(empty-errors-noemit 90c141
+ " expect 2050,2050,2050,2050\n ld ,hl\n ld hl,\n ldw ,1\n ld a,()\n endexpect\n db 18" "12")

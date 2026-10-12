@@ -2677,3 +2677,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     bytes; new 65770-byte catalog failed German loading. Separate prerequisite
     commit removes obsolete cap and adds 70000-byte file regression beyond cap.
     Validation: all 422 CTest cases pass with embedded/external catalogs.
+
+249. TLCS-90 empty operand rejection.
+    Confirm LD HL, and LD ,HL match reserved empty Reg16Names entry and emit
+    register-transfer opcodes; LDW ,1 emits reserved register immediate load.
+    Skip reserved table entry and explicitly reject empty operands, since empty
+    source would otherwise become numeric zero. Handle () as empty indirect too,
+    alongside parenthesized blanks. Located error 2050; no rejected emission.
+    Validation: all 422 CTest cases pass with embedded/external catalogs.
