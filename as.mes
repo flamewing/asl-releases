@@ -2411,3 +2411,7 @@ Message ErrMsgMACWordHalf
 Message ErrMsgMACHalfSuffix
  "Registerh&auml;lften-Suffix '%s' ist ung&uuml;ltig; L oder U erwartet"
  "register half suffix '%s' is invalid; expected L or U"
+
+Message ErrMsgMultiplyDestinationsOverlap
+ "Beide Lang-Multiplikationsziele verwenden D%u; die Zielregister m&uuml;ssen verschieden sein"
+ "both long multiply destinations select D%u; destination registers must be distinct"

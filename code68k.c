@@ -3944,7 +3944,10 @@ static void DecodeMUL_DIV(Word Code) {
                 return;
             }
             if ((dh == dl) && is_mul) {
-                WrStrErrorPos(ErrNum_Unpredictable, &ArgStr[2]);
+                char detail[160];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMultiplyDestinationsOverlap),
+                        (unsigned)dh);
+                WrXErrorPos(ErrNum_Unpredictable, detail, &ArgStr[2].Pos);
             }
         } else {
             if (DecodeReg(&ArgStr[2], &dl, True) != eIsReg) {

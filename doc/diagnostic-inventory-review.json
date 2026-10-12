@@ -520,10 +520,11 @@
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig",
         "ErrNum_InvReg",
-        "ErrNum_InvRegPair"
+        "ErrNum_InvRegPair",
+        "ErrNum_Unpredictable"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 200 reviews all seven historical register sites: MAC half/suffix requirements, MAC/EMAC accumulator choices and D0..D7 long-multiply destinations. Mandatory-register failures retain only their primary evaluator diagnostic; three register helpers copy outputs only after successful lookup to avoid uninitialized descriptor reads. Forward aliases preserved. Five historical pair wrapper sites were already improved in tranche 3, with helper-specific colon/parentheses/half errors and evaluator-primary preservation; re-reviewed and existing focused cases pass. Remaining families pending."
+      "review_notes": "Tranche 200 reviews all seven historical register sites: MAC half/suffix requirements, MAC/EMAC accumulator choices and D0..D7 long-multiply destinations. Mandatory-register failures retain only their primary evaluator diagnostic; three register helpers copy outputs only after successful lookup to avoid uninitialized descriptor reads. Forward aliases preserved. Five historical pair wrapper sites were already improved in tranche 3, with helper-specific colon/parentheses/half errors and evaluator-primary preservation; re-reviewed and existing focused cases pass. Remaining families pending. Tranche 201 reviews the sole unpredictable-execution candidate: actual overlapping long-multiply D register and distinct-destination requirement. Warning 140, aliases, location and emitted bytes retained; divide overlap still does not warn."
     },
     "code68rs08.c": {
       "candidate_counts": {

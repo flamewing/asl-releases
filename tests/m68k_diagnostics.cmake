@@ -316,3 +316,27 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German MAC suffix: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Equal long-multiply destination halves remain a warning with emitted bytes;
+# name the actual overlapping register, including register aliases.
+check_diagnostic(mul-overlap-low 68020 " muls.l d2,d0:d0" 140
+    "both long multiply destinations select D0; destination registers must be distinct" 3 12 0)
+check_diagnostic(mul-overlap-high 68020 " mulu.l d2,d7:d7" 140
+    "both long multiply destinations select D7; destination registers must be distinct" 3 12 0)
+check_diagnostic(mul-overlap-alias 68020 "dest reg d3\n muls.l d2,dest:d3" 140
+    "both long multiply destinations select D3; destination registers must be distinct" 4 12 0)
+check_bytes(mul-overlap-original 68020 " muls.l d2,d0:d0\n mulu.l d2,d7:d7" "4c020c004c027407")
+check_bytes(mul-pairs-and-div-overlap 68020 " muls.l d2,d0:d1\n mulu.l d2,d6:d7\n divs.l d2,d0:d0"
+    "4c021c004c0274064c420c00")
+if(assembly_diagnostic MATCHES "unpredictable execution")
+    message(FATAL_ERROR "Distinct multiply pairs and divide overlap must not warn: ${assembly_diagnostic}")
+endif()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/mul-overlap-high.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Multiplikationsziele verwenden D7" detail_pos)
+if(NOT "${result}" STREQUAL "0" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German multiply overlap: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

@@ -2230,3 +2230,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     validate them; mark that family reviewed. Cover MAC/EMAC, German suffix
     details, unchanged accepted bytes and no failure emission. Other families pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+201. M68K long-multiply overlapping destination warning.
+    The single historical unpredictable-execution candidate now identifies the
+    actual D register shared by both result halves and requires distinct
+    destinations. Preserve warning 140, pair location, emission and all bytes.
+    Low/high registers, aliases, valid distinct pairs, non-warning divide overlap
+    and German detail are covered. Remaining M68K families pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
