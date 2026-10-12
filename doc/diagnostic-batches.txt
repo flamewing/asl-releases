@@ -2306,3 +2306,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     directions and original classic special-register/EMAC bytes pass; rejected
     forms emit no bytes. Nineteen of 98 historical size candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+209. M68K direct integer width requirements.
+    Thirteen candidates identify existing permitted widths at the suffix:
+    LEA, ADDQ/SUBQ An, CMPM, AND/OR SR, EOR CCR/SR, CLR/TST, NBCD/TAS,
+    SWAP, EXT, WDDATA, MOVEQ and EXG. Acceptance and failure precedence unchanged.
+    All sites have focused rejection coverage and original accepted byte vectors.
+    Thirty-two of 98 historical size candidates reviewed; remainder pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

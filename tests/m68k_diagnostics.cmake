@@ -549,3 +549,29 @@ check_bytes(move-mac-original-sizes MCF5470
     " move.l acc0,d0\n move.l d1,acc1\n move.l macsr,ccr" "a180a301a9c0")
 check_bytes(move-size-errors-noemit 68010
     " expect 1130,1130,1130,1130\n move.b a0,d0\n move.b d0,a0\n move.s sr,d0\n move.s d0,sr\n endexpect\n dc.b $12" "12")
+
+# Simple integer checks list their precise width constraints.
+foreach(item IN ITEMS "lea|w|(a0),a1|.L" "addq|b|#1,a0|.W, .L"
+        "cmpm|s|(a0)+,(a1)+|.B, .W, .L" "and|b|#1,sr|.W"
+        "or|l|#1,sr|.W" "eor|w|#1,ccr|.B" "eor|b|#1,sr|.W"
+        "clr|s|d0|.B, .W, .L" "tst|s|d0|.B, .W, .L"
+        "nbcd|w|d0|.B" "tas|w|(a0)|.B" "swap|w|d0|.L"
+        "ext|b|d0|.W, .L" "moveq|w|#1,d0|.L" "exg|w|d0,d1|.L")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 size)
+    list(GET parts 2 args)
+    list(GET parts 3 sizes)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    string(REPLACE "," "-" name "${args}")
+    check_diagnostic(simple-size-${ins}-${name} 68020 " ${ins}.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 3 ${column})
+endforeach()
+check_diagnostic(wddata-size MCF5407 " wddata.s (a0)" 1130
+    "supported operand sizes: .B, .W, .L" 3 9)
+check_bytes(simple-integer-original-sizes 68020
+    " supmode on\n lea.l (a0),a1\n addq.w #1,a0\n cmpm.b (a0)+,(a1)+\n and.w #1,sr\n eor.b #1,ccr\n eor.w #1,sr\n clr.b d0\n tst.w d1\n nbcd.b d0\n tas.b (a0)\n swap.l d0\n ext.w d0\n ext.l d1\n moveq.l #1,d0\n exg.l d0,d1"
+    "43d05248b308027c00010a3c00010a7c000142004a4148004ad04840488048c17001c141")
+check_bytes(wddata-original-sizes MCF5407
+    " supmode on\n wddata.b (a0)\n wddata.w (a0)\n wddata.l (a0)" "f410f450f490")

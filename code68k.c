@@ -2866,7 +2866,7 @@ static void DecodeLEA(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (!ChkArgCnt(2, 2))
         ;
     else {
@@ -3002,7 +3002,7 @@ static void DecodeADDQSUBQ(Word Index) {
     }
 
     if ((ModAdr == AdrResult.AdrMode) && (eSymbolSize8Bit == OpSize)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
         return;
     }
 
@@ -3050,7 +3050,7 @@ static void DecodeCMPM(Word Index) {
     UNUSED(Index);
 
     if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
@@ -3234,7 +3234,7 @@ static void DecodeANDOR(Word Index) {
         } else if (!as_strcasecmp(ArgStr[2].str.p_str, "SR")) /* AND #...,SR */
         {
             if (*AttrPart.str.p_str && (OpSize != eSymbolSize16Bit)) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(".W");
             } else if (CheckNoFamily(1 << eColdfire)) {
                 WAsmCode[0] = 0x007c | (Op << 9);
                 OpSize      = eSymbolSize16Bit;
@@ -3319,7 +3319,7 @@ static void DecodeEOR(Word Index) {
         ;
     else if (!as_strcasecmp(ArgStr[2].str.p_str, "CCR")) {
         if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B");
         } else if (CheckNoFamily(1 << eColdfire)) {
             WAsmCode[0] = 0xa3c;
             OpSize      = eSymbolSize8Bit;
@@ -3330,7 +3330,7 @@ static void DecodeEOR(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "SR")) {
         if (OpSize != eSymbolSize16Bit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W");
         } else if (CheckNoFamily(1 << eColdfire)) {
             WAsmCode[0] = 0xa7c;
             if (DecodeAdr(&ArgStr[1], MModImm, &AdrResult)) {
@@ -3398,7 +3398,7 @@ static void DecodePEA(Word Index) {
 
 static void DecodeCLRTST(Word IsTST) {
     if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (ChkArgCnt(1, 1)) {
         Word       w1 = MModData | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX
                         | MModAbs;
@@ -3459,7 +3459,7 @@ static void DecodeNBCDTAS(Word Index) {
     }
 
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B");
     } else if (!Allowed) {
         if (Index) report_cpu_family_choices(~(1u << eColdfire));
         else report_cpu_capability_choices(eFlagNone, eCfISA_B, True);
@@ -3507,7 +3507,7 @@ static void DecodeSWAP(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -3539,7 +3539,7 @@ static void DecodeEXT(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
     else if ((OpSize == eSymbolSize8Bit) || (OpSize > eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".W, .L");
     } else {
         tAdrResult AdrResult;
 
@@ -3556,7 +3556,7 @@ static void DecodeWDDATA(Word Index) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L");
     } else if (CheckFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
@@ -3662,7 +3662,7 @@ static void DecodeMOVEQ(Word Index) {
     if (!ChkArgCnt(2, 2))
         ;
     else if ((*AttrPart.str.p_str) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (*ArgStr[1].str.p_str != '#') {
         WrStrErrorPos(ErrNum_OnlyImmAddr, &ArgStr[1]);
     } else {
@@ -3830,7 +3830,7 @@ static void DecodeEXG(Word Index) {
     UNUSED(Index);
 
     if ((*AttrPart.str.p_str) && (OpSize != eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".L");
     } else if (ChkArgCnt(2, 2) && CheckNoFamily(1 << eColdfire)) {
         tAdrResult AdrResult;
 
