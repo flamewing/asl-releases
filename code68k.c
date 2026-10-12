@@ -1503,6 +1503,18 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         goto chk;
     }
 
+    /* Quoted literals in an address operand usually mean a missing immediate
+       marker. Diagnose them before the bracket/component scanners. */
+    for (p = Arg.str.p_str; *p; p++) {
+        if (((*p == '\'') || (*p == '"'))
+            && (!QualifyQuote || QualifyQuote(Arg.str.p_str, p))) {
+            tStrComp quote;
+            StrCompRefRight(&quote, &Arg, p - Arg.str.p_str);
+            report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgM68KQuotedAddress, &quote);
+            return ModNone;
+        }
+    }
+
     /* CPU/FPU-Register direkt: */
 
     switch (DecodeRegOrFPReg(&Arg, &pResult->AdrPart, &RegSize, False)) {

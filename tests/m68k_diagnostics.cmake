@@ -199,6 +199,20 @@ endforeach()
 set(ENV{LC_MESSAGES} en)
 
 # Address syntax and capability details retain their established numeric IDs.
+check_diagnostic(quoted-address-single 68000 " move.w ')',d1" 1350
+    "likely missing # for an immediate operand" 3 9)
+check_diagnostic(quoted-address-double 68000 " move.w \"(\",d1" 1350
+    "likely missing # for an immediate operand" 3 9)
+check_diagnostic(quoted-address-letter 68020 " move.w 'A',d1" 1350
+    "likely missing # for an immediate operand" 3 9)
+check_diagnostic(quoted-address-parenthesized 68020 " move.w (']'),d1" 1350
+    "likely missing # for an immediate operand" 3 10)
+check_diagnostic(quoted-address-displacement 68020 " move.w (',',a0),d1" 1350
+    "likely missing # for an immediate operand" 3 10)
+check_bytes(quoted-immediates 68000
+    " move.w #')',d1\n move.w #\"(\",d1\n move.w #'[',d1\n move.w #']',d1\n move.w #'}',d1\n move.w #'A'+1,d1"
+    "323c0029323c0028323c005b323c005d323c007d323c0042")
+
 check_diagnostic(index-width 68000 " move.w (a0,d0.b),d1" 1350
     "invalid index-register width b; expected .W or .L" 3 13)
 check_diagnostic(index-scale 68020 " move.w (a0,d0.w*3),d1" 1350
@@ -249,7 +263,7 @@ check_bytes(address-normalization-and-pairs 68020
     "3230000032309000323b8000323004003230912100000cfc808090c10cfc408090c10cfc808090c14c021c004c421800")
 
 set(ENV{LC_MESSAGES} de)
-foreach(item IN ITEMS "index-width|Indexregisterbreite b" "index-scale|Indexskalierung 3" "pair-second-half|D0..D7" "duplicate-displacement|Doppelte Verschiebung")
+foreach(item IN ITEMS "index-width|Indexregisterbreite b" "index-scale|Indexskalierung 3" "pair-second-half|D0..D7" "duplicate-displacement|Doppelte Verschiebung" "quoted-address-single|vermutlich fehlt #")
     string(REPLACE "|" ";" fields "${item}")
     list(GET fields 0 name)
     list(GET fields 1 detail)
