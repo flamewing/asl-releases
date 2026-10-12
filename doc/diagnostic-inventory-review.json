@@ -466,7 +466,8 @@
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "partially reviewed",
+      "review_notes": "Tranche 182 fixes provisional forward range validation in all three previously detailed branch sites. Remaining register, pair, addressing and numeric candidates still pending."
     },
     "code6816.c": {
       "candidate_counts": {

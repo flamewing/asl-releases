@@ -2035,3 +2035,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     details/positions/no error bytes; English/German no-form detail verified.
     All nineteen historical 65xx candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+182. HC12 forward branch range checks.
+    BRA target+1000 reports provisional distance 998 even when finally valid.
+    Defer all three short/loop/bit branch range checks for unknown/questionable
+    flags; preserve useful numeric detail, predicates and long-branch wrapping.
+    Both CPUs cover all nineteen short mnemonics, six loop opcodes and both
+    bit-branch opcodes across five address widths, with provisional upper/lower
+    offsets. Aggregate vectors verify finally valid original instruction bytes;
+    existing final range/undefined tests remain in place.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

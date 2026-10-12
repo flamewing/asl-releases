@@ -750,7 +750,7 @@ static void DecodeBranch(Word Index) {
         Address = EvalStrIntExpressionWithFlags(&ArgStr[1], AddrInt, &OK, &Flags)
                   - EProgCounter() - 2;
         if (OK) {
-            if (((Address < -128) || (Address > 127)) && !mSymbolQuestionable(Flags)) {
+            if (((Address < -128) || (Address > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 report_branch_distance(Address, -128, 127, EProgCounter() + 2, &ArgStr[1]);
             } else {
                 BAsmCode[0] = pOrder->Code;
@@ -848,7 +848,7 @@ static void DecodeLoop(Word Index) {
                       - (EProgCounter() + 3);
             if (OK) {
                 if (((Address < -256) || (Address > 255))
-                    && !mSymbolQuestionable(Flags)) {
+                    && !mFirstPassUnknownOrQuestionable(Flags)) {
                     report_branch_distance(Address, -256, 255, EProgCounter() + 3, &ArgStr[2]);
                 } else {
                     BAsmCode[0] = 0x04;
@@ -1277,7 +1277,7 @@ static void DecodeBrBit(Word Index) {
                     BAsmCode[CodeLen++] = bit;
                     Address -= 3 + adr_vals.count;
                     if (((Address < -128) || (Address > 127))
-                        & !mSymbolQuestionable(address_flags)) {
+                        & !mFirstPassUnknownOrQuestionable(address_flags)) {
                         report_branch_distance(Address, -128, 127,
                                 EProgCounter() + 3 + adr_vals.count, &ArgStr[ArgCnt]);
                     } else {
