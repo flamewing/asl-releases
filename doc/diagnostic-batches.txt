@@ -2728,3 +2728,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     ArgCnt in stripping loop. Annotated and comment-only final fields across all
     seven builders match unannotated encodings; invalid names remain rejected.
     Validation: all 423 CTest cases pass with embedded/external catalogs.
+
+255. ST9 relative branch displacement diagnostics.
+    Five historical range sites: actual signed displacement, [-128,127] and
+    PC base at target operand for bit/compare/decrement/conditional branches.
+    Defer first-pass unknown targets as well as questionable ones; preserve
+    existing 16-bit wrap semantics. Boundary, primary-error, forward, no-emission,
+    original byte vector and German tests. Fourteen ST9 candidates remain.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.

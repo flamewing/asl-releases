@@ -12,6 +12,9 @@
 
 #include "codest9.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -1437,6 +1440,14 @@ static void DecodeBit1(Word Code) {
     }
 }
 
+static void report_branch_distance(Integer distance, unsigned target, unsigned length) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+            (LargeInt)distance, (LargeInt)-128, (LargeInt)127,
+            (LargeWord)(EProgCounter() + length));
+    WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[target].Pos);
+}
+
 static void DecodeBTJF_BTJT(Word Code) {
     Byte     HReg;
     Integer  AdrInt;
@@ -1454,9 +1465,9 @@ static void DecodeBTJF_BTJT(Word Code) {
                 AdrInt = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult)
                          - (EProgCounter() + 3);
                 if (EvalResult.OK) {
-                    if (!mSymbolQuestionable(EvalResult.Flags)
+                    if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                         && ((AdrInt < -128) || (AdrInt > 127))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrInt, 2, 3);
                     } else {
                         BAsmCode[0] = 0xaf;
                         BAsmCode[2] = AdrInt & 0xff;
@@ -1504,9 +1515,9 @@ static void DecodeCPJFI_CPJTI(Word Code) {
                 AdrInt = EvalStrIntExpressionWithResult(&ArgStr[3], UInt16, &EvalResult)
                          - (EProgCounter() + 3);
                 if (EvalResult.OK) {
-                    if (!mSymbolQuestionable(EvalResult.Flags)
+                    if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                         && ((AdrInt < -128) || (AdrInt > 127))) {
-                        WrError(ErrNum_JmpDistTooBig);
+                        report_branch_distance(AdrInt, 3, 3);
                     } else {
                         ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                         BAsmCode[0] = 0x9f;
@@ -1532,9 +1543,9 @@ static void DecodeDJNZ(Word Code) {
             AdrInt      = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult)
                           - (EProgCounter() + 2);
             if (EvalResult.OK) {
-                if (!mSymbolQuestionable(EvalResult.Flags)
+                if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                     && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, 2, 2);
                 } else {
                     ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                     BAsmCode[1] = AdrInt & 0xff;
@@ -1558,9 +1569,9 @@ static void DecodeDWJNZ(Word Code) {
             AdrInt      = EvalStrIntExpressionWithResult(&ArgStr[2], UInt16, &EvalResult)
                           - (EProgCounter() + 3);
             if (EvalResult.OK) {
-                if (!mSymbolQuestionable(EvalResult.Flags)
+                if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                     && ((AdrInt < -128) || (AdrInt > 127))) {
-                    WrError(ErrNum_JmpDistTooBig);
+                    report_branch_distance(AdrInt, 2, 3);
                 } else {
                     ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                     BAsmCode[0] = 0xc6;
@@ -1594,9 +1605,9 @@ static void DecodeCondRel(Word Code) {
                          - (EProgCounter() + 2);
 
         if (EvalResult.OK) {
-            if (!mSymbolQuestionable(EvalResult.Flags)
+            if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                 && ((AdrInt < -128) || (AdrInt > 127))) {
-                WrError(ErrNum_JmpDistTooBig);
+                report_branch_distance(AdrInt, 1, 2);
             } else {
                 ChkSpace(SegCode, EvalResult.AddrSpaceMask);
                 BAsmCode[0] = 0x0b + Code;

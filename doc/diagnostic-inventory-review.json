@@ -1490,8 +1490,11 @@
         "ErrNum_JmpDistTooBig": 5,
         "ErrNum_OverRange": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig"
+      ],
+      "status": "partial",
+      "review_notes": "Tranche 255 reviews all five relative branch distance sites: actual signed displacement, byte bounds and PC base at target operand; defer first-pass unknown as well as questionable targets, preserve 16-bit wrapping. Fourteen address/register sites remain."
     },
     "codesx20.c": {
       "candidate_counts": {
