@@ -2017,3 +2017,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     against official ca65 CPU documentation, section 3.7:
     https://cc65.github.io/doc/cpus.html#ss3.7
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+180. 65CE02 base-page address restoration on widening.
+    ASSUME B=$12 followed by JMP <$1212 encodes a jump to $0012. When a
+    base-page operand is widened to an absolute-only form, restore RegB as
+    its high byte on 65CE02; other CPUs retain the zero high byte. Direct,
+    X-indexed and Y-indexed widening, forward labels and corresponding
+    unprefixed full-address forms verify that the requested address survives.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

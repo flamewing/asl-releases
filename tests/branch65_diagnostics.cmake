@@ -192,3 +192,13 @@ check_bytes(huc-tst-label-offset HUC6280
     " tst #1,$1234\n lda #after\nafter: db $12" "93013412a90612")
 check_bytes(melps-tst-unchanged MELPS740 " tst $12" "6412")
 check_diagnostic(huc-tst-primary HUC6280 " tst #missing,$34" 1010 "symbol undefined" 3 7)
+
+# Widening a CE02 base-page operand restores its selected high address byte.
+check_bytes(ce-promote-base-page 65CE02
+    " assume b:$12\n jmp <$1212\n jsr <$1234\n ldz <$1256,x\n lda <$1278,y"
+    "4c1212203412bb5612b97812")
+check_bytes(ce-promote-forward 65CE02
+    " assume b:$12\n ldz <target,x\ntarget equ $1234" "bb3412")
+check_bytes(ce-full-address-unchanged 65CE02
+    " assume b:$12\n jmp $1212\n jsr $1234\n ldz $1256,x\n lda $1278,y"
+    "4c1212203412bb5612b97812")

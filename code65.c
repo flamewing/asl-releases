@@ -839,7 +839,7 @@ static void DecodeNorm(Word Index) {
             default: break;
             }
             if (AdrResult.ErgMode != old_mode) {
-                AdrResult.AdrVals[AdrResult.AdrCnt++] = 0;
+                AdrResult.AdrVals[AdrResult.AdrCnt++] = MomCPU == CPU65CE02 ? RegB : 0;
             }
         }
         if (pOrder->Codes[AdrResult.ErgMode] == -1) {
