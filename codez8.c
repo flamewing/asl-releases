@@ -719,7 +719,18 @@ static Boolean ChkCoreFlags(tCoreFlags CoreFlags) {
     if (pCurrCPUProps->CoreFlags & CoreFlags) {
         return True;
     }
-    WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+    static char const* const names[] = {"Z8 NMOS", "Z8 CMOS", "Super8", "Z8 Encore/eZ8"};
+    char choices[100] = "", detail[160];
+    unsigned core;
+    for (core = 0; core < as_array_size(names); core++) {
+        if (!(CoreFlags & (1 << core)))
+            continue;
+        if (*choices)
+            strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, names[core], sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedCoreChoices), choices);
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
     return False;
 }
 
@@ -847,7 +858,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, ShortInt OpS
     /* other # of arguments not allowed */
 
     else {
-        WrError(ErrNum_WrongArgCnt);
+        ChkArgCntExtPos(Stop - Start + 1, 1, 2, &OpPart.Pos);
         return False;
     }
 }

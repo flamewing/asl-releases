@@ -2555,3 +2555,7 @@ Message ErrMsgKonamiIndirectComponents
 Message ErrMsgKonamiEnclosedOperand
  "Eine in [] eingeschlossene Adresse muss ein einzelner Operand sein; zus&auml;tzliche Komponenten au&szlig;erhalb [] sind nicht erlaubt"
  "an address enclosed in [] must be a single operand; extra components outside [] are not allowed"
+
+Message ErrMsgSupportedCoreChoices
+ "Unterst&uuml;tzte Kernklassen: %s"
+ "supported core classes: %s"

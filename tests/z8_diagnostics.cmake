@@ -85,3 +85,31 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German Z8 branch: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(core-disjoint Z8601 " halt" 1500
+    "supported core classes: Z8 CMOS, Z8 Encore/eZ8" 3 2)
+check_diagnostic(core-super Z8601 " enter" 1500
+    "supported core classes: Super8" 3 2)
+check_diagnostic(core-encore Z8601 " brk" 1500
+    "supported core classes: Z8 Encore/eZ8" 3 2)
+check_diagnostic(core-classic eZ8 " wdh" 1500
+    "supported core classes: Z8 NMOS, Z8 CMOS" 3 2)
+check_diagnostic(core-before-operands Z8601 " cpijne missing,@r5,0" 1500
+    "supported core classes: Super8" 3 2)
+check_diagnostic(bit-count-empty eZ8 "flag defbit" 1110
+    "expected between 1 and 2 arguments but got 0" 3 6)
+check_diagnostic(bit-count-extra eZ8 "flag defbit r0,1,2" 1110 "got 3" 3 6)
+check_bytes(core-cmos-original Z86C03 " halt\n stop" "7f6f")
+check_bytes(core-super-original Z88C00 " enter\n exit\n bitc r3,7" "1f2f573e")
+check_bytes(core-encore-original eZ8 " brk\n halt\n stop" "007f6f")
+check_bytes(core-count-noemit Z8601
+    " expect 1500,1110\n halt\nflag defbit\n endexpect\n db 18" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/core-disjoint.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Kernklassen: Z8 CMOS, Z8 Encore/eZ8" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German Z8 core: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

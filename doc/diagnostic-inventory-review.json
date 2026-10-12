@@ -1635,10 +1635,13 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_WrongArgCnt",
+        "ErrNum_InvOpSize"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 235 reviews all five branch candidates: JR/DJNZ/CPIJNE/CPIJE/BTJ/BTJNZ/BTJZ/BTJRF/BTJRT report signed displacement/full interval and instruction-length PC base at actual target (including first-operand bit-relative target). Replace questionable-only guard with unknown-or-questionable to fix premature forward arithmetic rejection reproduced in JR; all five parser paths covered with resolved byte vectors. Classic/Super8/eZ8 originals, boundaries, primary error, no failed emission and German checked. Remaining diagnostic families pending."
+      "review_notes": "Tranche 235 reviews all five branch candidates: JR/DJNZ/CPIJNE/CPIJE/BTJ/BTJNZ/BTJZ/BTJRF/BTJRT report signed displacement/full interval and instruction-length PC base at actual target (including first-operand bit-relative target). Replace questionable-only guard with unknown-or-questionable to fix premature forward arithmetic rejection reproduced in JR; all five parser paths covered with resolved byte vectors. Classic/Super8/eZ8 originals, boundaries, primary error, no failed emission and German checked. Remaining diagnostic families pending. Tranche 236 reviews shared capability/count/bit-size candidates: derive supported core classes from exact mask at mnemonic, retain gating precedence; direct bit count reports actual versus one/two at mnemonic. Retain located defensive width error unchanged because all current callers request eight bits and packed bit dissection always returns eight; reachable bit index range remains evaluator UInt3 with actual value. Core/bit valid originals, disjoint masks, no failed emission and German checked. Remaining register, working-page and mode families pending."
     },
     "codez80.c": {
       "candidate_counts": {

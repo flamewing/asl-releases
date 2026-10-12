@@ -2551,3 +2551,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     no rejected emission and German detail pass. New fixture registers test 420;
     remaining Z8 families pending.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+236. Z8 supported core classes and bit operand counts.
+    Shared capability reporter derives core classes from exact mask at mnemonic;
+    direct bit operand count reports actual versus one/two. Retain feature/count
+    precedence and existing supported byte vectors. Review bit-size guard unchanged:
+    all current callers and packed symbol dissection supply eight bits; reachable
+    bit-index range already reports value through UInt3 evaluator.
+    Disjoint core masks, primary gating, no failed emission and German detail pass.
+    Validation: all 420 CTest cases pass with embedded/external catalogs.
