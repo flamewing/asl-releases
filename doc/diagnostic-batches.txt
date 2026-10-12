@@ -2721,3 +2721,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     Preserve all blank/default-mnemonic encodings; all seven rejected builders
     emit no bytes and German detail passes. All 18 historical sites reviewed.
     Validation: all 423 CTest cases pass with embedded/external catalogs.
+
+254. TC9331 final-field comment handling.
+    Confirm documented parenthesized comments are stripped from all but final
+    argument, so ER(note) receives a spurious invalid-register error. Include
+    ArgCnt in stripping loop. Annotated and comment-only final fields across all
+    seven builders match unannotated encodings; invalid names remain rejected.
+    Validation: all 423 CTest cases pass with embedded/external catalogs.

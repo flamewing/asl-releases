@@ -2323,7 +2323,7 @@
     {
       "file": "code9331.c",
       "issue": "Parenthesized-comment stripping loop stops before final argument; valid ER(note) in final main field fails register lookup although other field comments are stripped.",
-      "status": "pending final-field comment stripping fix"
+      "status": "fixed in tranche 254; loop through ArgCnt inclusive so last field receives same comment stripping as earlier fields. Nonempty and comment-only last fields across all seven builders match unannotated encodings; invalid names still report one located choice error."
     }
   ]
 }

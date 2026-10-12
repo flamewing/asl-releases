@@ -162,3 +162,11 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German TC9331 reserved field: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_bytes(final-field-comments TC9331
+ " nop ,,,,,,,,,,,,,,ER(note)\n lda ,lc0,0,,,,XRD(note)\n ldb ,,,R(note)\n jmp0 ,,,,,,,,OFP+(note)\n jc ,,,,,,,,,OFP+(note)\n ret ,,,,,,,,,,,,OFP+(note)\n gma ,gfs,,,,,,,,,,OFP+(note)"
+ "00000002000100040100000800800080008000d0008000c40080000c")
+check_bytes(final-field-empty-comments TC9331
+ " nop ,,,,,,,,,,,,,,(note)\n lda ,lc0,0,,,,(note)\n ldb ,,,(note)\n jmp0 ,,,,,,,,(note)\n jc ,,,,,,,,,(note)\n ret ,,,,,,,,,,,,(note)\n gma ,gfs,,,,,,,,,,(note)"
+ "00000000000000040000000800000080000000d0000000c40000000c")
+check_field(final-field-invalid-comment nop 15 15 "bad(note)" 1445 "operand must be NOP, ER, empty (default)")

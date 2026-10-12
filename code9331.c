@@ -602,7 +602,7 @@ static void MakeCode_9331(void) {
        but you are not going to use them on a processor of 320 words
        of program space anyway... */
 
-    for (z = 1; z < ArgCnt; z++) {
+    for (z = 1; z <= ArgCnt; z++) {
         StripComment(ArgStr[z].str.p_str);
     }
 
