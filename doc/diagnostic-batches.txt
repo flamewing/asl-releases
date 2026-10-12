@@ -2655,3 +2655,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     endpoints, wrap, primary errors, rejected emission and German checked.
     Fifteen historical TLCS-90 sites remain.
     Validation: all 422 CTest cases pass with embedded/external catalogs.
+
+247. TLCS-90 fixed register and address alternatives.
+    Six historical mode sites: required A/HL, word ADD HL/IX/IY/SP versus other
+    ALU HL-only, PUSH/POP excludes SP, and LDA requires indexed/HL+A source forms.
+    Locate actual failing operand and preserve each accepted predicate. Original
+    fixed-operand byte vector, no rejected emission and German detail checked.
+    Nine historical shared address/size/range sites remain.
+    Validation: all 422 CTest cases pass with embedded/external catalogs.

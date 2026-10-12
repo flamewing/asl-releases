@@ -420,11 +420,17 @@ static void DecodeBit(Word Code) {
     }
 }
 
+static void report_operand_choices(unsigned arg_index, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[arg_index].Pos);
+}
+
 static void DecodeAcc(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "A")) {
-        WrError(ErrNum_InvAddrMode);
+        report_operand_choices(1, "A");
     } else {
         CodeLen     = 1;
         BAsmCode[0] = Code;
@@ -536,7 +542,7 @@ static void DecodeALU2(Word Code) {
                     break;
                 }
             } else {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(1, Code == 0 ? "HL/IX/IY/SP" : "HL");
             }
             break;
         case ModIndReg:
@@ -782,7 +788,7 @@ static void DecodePUSH_POP(Word Code) {
             DecodeAdr(&ArgStr[1], MModReg16);
             if (AdrType == ModReg16) {
                 if (AdrMode == 6) {
-                    WrError(ErrNum_InvAddrMode);
+                    report_operand_choices(1, "AF/BC/DE/HL/IX/IY");
                 } else {
                     CodeLen     = 1;
                     BAsmCode[0] = 0x50 | Code | AdrMode;
@@ -805,7 +811,7 @@ static void DecodeLDA(Word Code) {
             switch (AdrType) {
             case ModIndReg:
                 if (AdrMode < 4) {
-                    WrError(ErrNum_InvAddrMode);
+                    report_operand_choices(2, "(IX)/(IY)/(SP)/(IX+d)/(IY+d)/(SP+d)/(HL+A)");
                 } else {
                     CodeLen     = 3;
                     BAsmCode[0] = 0xf0 | AdrMode;
@@ -830,7 +836,7 @@ static void DecodeLDAR(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "HL")) {
-        WrError(ErrNum_InvAddrMode);
+        report_operand_choices(1, "HL");
     } else {
         Boolean OK;
         Integer AdrInt
@@ -988,7 +994,7 @@ static void DecodeMUL_DIV(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (as_strcasecmp(ArgStr[1].str.p_str, "HL")) {
-        WrError(ErrNum_InvAddrMode);
+        report_operand_choices(1, "HL");
     } else {
         OpSize = 0;
         DecodeAdr(

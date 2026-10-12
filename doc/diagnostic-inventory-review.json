@@ -799,7 +799,7 @@
         "ErrNum_JmpDistTooBig"
       ],
       "status": "partial",
-      "review_notes": "Tranche 246 reviews two branch range sites and one DJNZ fixed-register mode site: actual signed byte displacement/PC+2 and B/BC alternatives at operand. Confirm/fix premature unknown arithmetic checks; preserve signed-16-bit address-wrap calculation. Fifteen historical sites remain."
+      "review_notes": "Tranche 246 reviews two branch range sites and one DJNZ fixed-register mode site: actual signed byte displacement/PC+2 and B/BC alternatives at operand. Confirm/fix premature unknown arithmetic checks; preserve signed-16-bit address-wrap calculation. Fifteen historical sites remain. Tranche 247 reviews six fixed-operand sites (accumulator, word ALU destination, PUSH/POP, LDA indirect base, LDAR and MUL/DIV). Allowed sets derive directly from existing predicates; location now identifies offending operand, original vector and German checked. Nine shared address/size/range sites remain."
     },
     "code9331.c": {
       "candidate_counts": {

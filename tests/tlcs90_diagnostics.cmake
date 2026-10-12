@@ -75,3 +75,27 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German TLCS90 branch: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(accumulator 90c141 " cpl b" 1350 "operand must be A" 3 6)
+check_diagnostic(alu-add-destination 90c141 " add bc,1" 1350 "operand must be HL/IX/IY/SP" 3 6)
+check_diagnostic(alu-sub-destination 90c141 " sub ix,1" 1350 "operand must be HL" 3 6)
+check_diagnostic(push-sp 90c141 " push sp" 1350 "operand must be AF/BC/DE/HL/IX/IY" 3 7)
+check_diagnostic(pop-sp 90c141 " pop sp" 1350 "operand must be AF/BC/DE/HL/IX/IY" 3 6)
+check_diagnostic(lda-base 90c141 " lda hl,(bc)" 1350 "operand must be (IX)/(IY)/(SP)/(IX+d)/(IY+d)/(SP+d)/(HL+A)" 3 9)
+check_diagnostic(ldar-destination 90c141 " ldar bc,2" 1350 "operand must be HL" 3 7)
+check_diagnostic(multiply-destination 90c141 " mul bc,1" 1350 "operand must be HL" 3 6)
+check_diagnostic(divide-destination 90c141 " div bc,1" 1350 "operand must be HL" 3 6)
+check_bytes(fixed-original 90c141
+ " cpl a\n daa a\n neg a\n push af\n push bc\n push de\n push hl\n push ix\n push iy\n add hl,1\n add ix,1\n add iy,1\n add sp,1\n sub hl,1\n lda hl,(ix)\n lda hl,(iy)\n lda hl,(sp)\n lda hl,(hl+a)\n ldar hl,$+2\n mul hl,1\n div hl,1"
+ "100b115650515254557801001401001501001601007a0100f4003af5003af6003af73a17000012011301")
+check_bytes(fixed-errors-noemit 90c141
+ " expect 1350,1350,1350,1350,1350,1350\n cpl b\n add bc,1\n push sp\n lda hl,(bc)\n ldar bc,2\n mul bc,1\n endexpect\n db 18" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/push-sp.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Operand muss AF/BC/DE/HL/IX/IY sein" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German TLCS90 fixed operand: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

@@ -398,3 +398,6 @@ and its required byte/halfword/word scaling multiple.
 
 TLCS-90 error 1370 identifies the signed byte displacement [-128,127] and
 PC+2 base under `-x`; DJNZ error 1350 identifies the required B or BC operand.
+
+TLCS-90 fixed-operand error 1350 names the required A/HL, word ALU destination
+set, PUSH/POP register set or LDA source forms at the failing operand under `-x`.
