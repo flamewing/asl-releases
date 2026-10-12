@@ -2340,3 +2340,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     cover every site; original accepted core/FPU/PMMU/ColdFire byte vectors pass.
     Seventy-one of 98 historical size candidates reviewed; twenty-seven remain.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+213. M68K bit-operation and FPU-specific sizes.
+    Thirteen candidates list exact widths from operand type/native float size:
+    register/memory bit operations, FP/control register arithmetic and transfers,
+    FMOVECR, FSINCOS, FMOVEM both directions and conditional FPU operations.
+    Preserve predicates and precedence. Focused rejection checks cover every site;
+    original classic/ColdFire FP and bit-operation vectors pass. Sanitize test
+    names for Windows paths. Eighty-four of 98 size candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

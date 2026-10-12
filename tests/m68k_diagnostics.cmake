@@ -681,3 +681,45 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German forbidden suffix: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Bit/FPU widths are selected from the decoded operand class and native FP size.
+check_diagnostic(bit-data-size 68020 " btst.b #1,d0" 1130
+    "supported operand sizes: .L" 3 7)
+check_diagnostic(bit-memory-size 68020 " btst.l #1,(a0)" 1130
+    "supported operand sizes: .B" 3 7)
+foreach(item IN ITEMS "fadd|s|fp0,fp1|.X" "fmove|s|fp0,fp1|.X"
+        "fmove|w|d0,fpcr|.L" "fmove|w|fpcr,d0|.L"
+        "fmovecr|s|#1,fp0|.X" "fsincos|q|(a0),fp0:fp1|.B, .W, .L, .S, .D, .X, .P"
+        "fmovem|s|fp0-fp1,(a0)|.X" "fmovem|s|(a0),fp0-fp1|.X"
+        "fmovem|w|fpcr,(a0)|.L" "fmovem|w|(a0),fpcr|.L"
+        "fbne|b|*+4|.W, .L, .X" "fdbne|b|d0,*+6|.W"
+        "fsne|w|d0|.B" "ftrapne|s|#1|.B, .W, .L")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 size)
+    list(GET parts 2 args)
+    list(GET parts 3 sizes)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${args}")
+    check_diagnostic(fpu-specific-size-${ins}-${name} 68020 " fpu on\n ${ins}.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 4 ${column})
+endforeach()
+foreach(ins IN ITEMS fadd fmove fmovem)
+    if(ins STREQUAL "fmovem")
+        set(args "fp0,(a0)")
+    else()
+        set(args "fp0,fp1")
+    endif()
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(cold-native-size-${ins} MCF5407 " fpu on\n ${ins}.s ${args}" 1130
+        "supported operand sizes: .D" 4 ${column})
+endforeach()
+check_bytes(fpu-specific-original-sizes 68020
+    " fpu on\n fadd.x fp0,fp1\n fmove.x fp0,fp1\n fmove.l d0,fpcr\n fmove.l fpcr,d0\n fmovecr.x #1,fp0\n fsincos.b (a0),fp0:fp1\n fmovem.x fp0-fp1,(a0)\n fmovem.x (a0),fp0-fp1\n fmovem.l fpcr,(a0)\n fmovem.l (a0),fpcr\n fbne.w *+4\n fdbne.w d0,*+6\n fsne.b d0\n ftrapne.b\n ftrapne.w #1"
+    "f20000a2f2000080f2009000f200b000f2005c01f21058b0f210f0c0f210d0c0f210b000f2109000f28e0002f248000e0002f240000ef27c000ef27a000e0001")
+check_bytes(cold-native-original-sizes MCF5407
+    " fpu on\n fadd.d fp0,fp1\n fmove.d fp0,fp1\n fmovem.d fp0,(a0)" "f20000a2f2000080f210f080")
+check_bytes(bit-original-sizes 68020
+    " btst.l #1,d0\n btst.b #1,(a0)" "0800000108100001")

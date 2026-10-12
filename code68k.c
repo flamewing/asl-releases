@@ -4489,7 +4489,7 @@ static void DecodeBits(Word Index) {
     }
     if (((AdrResult.AdrMode == ModData) && (OpSize != eSymbolSize32Bit))
         || ((AdrResult.AdrMode != ModData) && (OpSize != eSymbolSize8Bit))) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(AdrResult.AdrMode == ModData ? ".L" : ".B");
         return;
     }
 
@@ -4992,7 +4992,7 @@ static void DecodeFPUOp(Word Index) {
                 if (OpSize == NativeFloatSize) {
                     CodeLen = 4;
                 } else {
-                    WrError(ErrNum_InvOpSize);
+                    report_operand_sizes(NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D");
                 }
             } else if (AdrResult.AdrMode != ModNone) {
                 CodeLen = 4 + AdrResult.Cnt;
@@ -5146,7 +5146,7 @@ static void DecodeFMOVE(Word Code) {
         case ModFPn: /* FMOVE.X FPm,FPn ? */
         {
             if (OpSize != NativeFloatSize) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D");
                 return;
             }
             WAsmCode[1] |= SrcAdrResult.AdrPart << 10;
@@ -5166,7 +5166,7 @@ static void DecodeFMOVE(Word Code) {
     case ModFPCR: /* FMOVE.L <ea>,FPcr ? */
     {
         if ((OpSize != eSymbolSize32Bit) && !op_size_implicit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".L");
             return;
         }
         RelPos      = 4;
@@ -5230,7 +5230,7 @@ static void DecodeFMOVE(Word Code) {
         case ModFPCR: /* FMOVE.L FPcr,<ea> ? */
         {
             if (!op_size_implicit && (OpSize != eSymbolSize32Bit)) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(".L");
                 CodeLen = 0;
                 return;
             }
@@ -5260,7 +5260,7 @@ static void DecodeFMOVECR(Word Code) {
     } else if (!CheckNoFamily(1 << eColdfire))
         ;
     else if (*AttrPart.str.p_str && (OpSize != eSymbolSizeFloat96Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".X");
     } else {
         tAdrResult AdrResult;
 
@@ -5319,7 +5319,7 @@ static void DecodeFSINCOS(Word Code) {
         OpSize = NativeFloatSize;
     }
     if (OpSize == 3) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B, .W, .L, .S, .D, .X, .P");
     } else if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
     } else if (!CheckNoFamily(1 << eColdfire))
@@ -5472,7 +5472,7 @@ static void DecodeFMOVEM(Word Code) {
         if (*AttrPart.str.p_str
             && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
                 || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(Typ < eFMovemTypCtrl ? (NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D") : ".L");
         } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
         } else {
@@ -5502,7 +5502,7 @@ static void DecodeFMOVEM(Word Code) {
         if (*AttrPart.str.p_str
             && (((Typ < eFMovemTypCtrl) && (OpSize != NativeFloatSize))
                 || ((Typ == eFMovemTypCtrl) && (OpSize != eSymbolSize32Bit)))) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(Typ < eFMovemTypCtrl ? (NativeFloatSize == eSymbolSizeFloat96Bit ? ".X" : ".D") : ".L");
         } else if ((Typ != eFMovemTypStatic) && (pCurrCPUProps->Family == eColdfire)) {
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
         } else {
@@ -5537,7 +5537,7 @@ static void DecodeFBcc(Word CondCode) {
     } else {
         if ((OpSize != eSymbolSize16Bit) && (OpSize != eSymbolSize32Bit)
             && (OpSize != eSymbolSizeFloat96Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W, .L, .X");
         } else if (ChkArgCnt(1, 1)) {
             LongInt      HVal;
             Integer      HVal16;
@@ -5584,7 +5584,7 @@ static void DecodeFDBcc(Word CondCode) {
         WrError(ErrNum_FPUNotEnabled);
     } else if (CheckNoFamily(1 << eColdfire)) {
         if ((OpSize != eSymbolSize16Bit) && *AttrPart.str.p_str) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W");
         } else if (ChkArgCnt(2, 2)) {
             tAdrResult AdrResult;
 
@@ -5619,7 +5619,7 @@ static void DecodeFScc(Word CondCode) {
     } else if (!CheckNoFamily(1 << eColdfire))
         ;
     else if ((OpSize != eSymbolSize8Bit) && *AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes(".B");
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -5647,7 +5647,7 @@ static void DecodeFTRAPcc(Word CondCode) {
             OpSize = eSymbolSize8Bit;
         }
         if (OpSize > eSymbolSize32Bit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B, .W, .L");
         } else if (ChkArgCnt(OpSize ? 1 : 0, OpSize ? 1 : 0)) {
             WAsmCode[0] = 0xf278;
             WAsmCode[1] = CondCode;
