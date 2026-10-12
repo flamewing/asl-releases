@@ -88,20 +88,33 @@ static LongInt CutAdr(LongInt Adr) {
     }
 }
 
-static Boolean ChkMinCore(tCPUCore MinCore) {
-    if (pCurrCPUProps->Core < MinCore) {
-        WrError(ErrNum_InstructionNotSupported);
-        return False;
-    }
-    return True;
-}
-
 static Boolean ChkCoreMask(Word CoreMask) {
+    static int const core_names[] = {
+        0, Num_ErrMsgAVRCoreMinTiny, Num_ErrMsgAVRCore90S1200,
+        Num_ErrMsgAVRCoreClassic, Num_ErrMsgAVRCoreTiny,
+        Num_ErrMsgAVRCoreTiny16K, Num_ErrMsgAVRCoreMega
+    };
+    char choices[240] = "", detail[360];
+    unsigned core;
+
     if ((1 << pCurrCPUProps->Core) & CoreMask) {
         return True;
     }
-    WrError(ErrNum_InstructionNotSupported);
+    for (core = eCoreMinTiny; core <= eCoreMega; core++) {
+        if (!(CoreMask & (1 << core)))
+            continue;
+        if (*choices)
+            strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, getmessage(core_names[core]), sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRCoreChoices),
+            pCurrCPUProps->pName, choices);
+    WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
     return False;
+}
+
+static Boolean ChkMinCore(tCPUCore MinCore) {
+    return ChkCoreMask(MinCoreMask(MinCore));
 }
 
 static void DissectBit_AVR(char* pDest, size_t DestSize, LargeWord Inp) {
@@ -273,7 +286,7 @@ static Boolean DecodeBitArg(
     } else if (Stop == Start + 1) {
         return DecodeBitArg2(&ArgStr[Start], &ArgStr[Stop], pResult, p_flags);
     } else {
-        WrError(ErrNum_WrongArgCnt);
+        ChkArgCntExtPos(Stop - Start + 1, 1, 2, &OpPart.Pos);
         return False;
     }
 }

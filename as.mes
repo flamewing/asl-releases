@@ -2483,3 +2483,31 @@ Message ErrMsgAVRDisplacedPointer
 Message ErrMsgAVRDataPointerOverlap
  "Datenregister R%u &uuml;berlappt %c (R%u:R%u), das durch %s ver&auml;ndert wird"
  "data register R%u overlaps %c (R%u:R%u), which is modified by %s"
+
+Message ErrMsgAVRCoreChoices
+ "Ausgew&auml;hlte CPU %s; unterst&uuml;tzte Kernklassen: %s"
+ "selected CPU %s; supported core classes: %s"
+
+Message ErrMsgAVRCoreMinTiny
+ "minimaler ATtiny"
+ "minimal ATtiny"
+
+Message ErrMsgAVRCore90S1200
+ "AT90S1200"
+ "AT90S1200"
+
+Message ErrMsgAVRCoreClassic
+ "klassischer AT90S"
+ "classic AT90S"
+
+Message ErrMsgAVRCoreTiny
+ "ATtiny"
+ "ATtiny"
+
+Message ErrMsgAVRCoreTiny16K
+ "ATtiny 16K"
+ "ATtiny 16K"
+
+Message ErrMsgAVRCoreMega
+ "ATmega"
+ "ATmega"

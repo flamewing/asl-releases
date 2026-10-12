@@ -2460,3 +2460,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     register/pointer-pair overlap. Preserve all forms, warning emission and primary
     expression failures; original pointer/overlap vectors and German detail pass.
     Validation: all 417 CTest cases pass with embedded/external catalogs.
+
+226. AVR supported core classes and bit operand counts.
+    Both capability sites share mask-derived localized class choices and selected
+    CPU at mnemonic, preserving all min/disjoint predicates and parser precedence.
+    Bit descriptor/address-bit count identifies actual versus allowed one/two.
+    Supported byte vectors match preceding build; no rejected emission and German
+    detail checked. Update existing program-pointer tests for mnemonic location.
+    Validation: all 417 CTest cases pass with embedded/external catalogs.

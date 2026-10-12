@@ -150,3 +150,34 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German AVR pointer: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(core-classic AT90S1200 " adiw r24,1" 1500
+    "selected CPU AT90S1200; supported core classes: classic AT90S, ATtiny, ATtiny 16K, ATmega" 3 2)
+check_diagnostic(core-tiny AT90S8515 " movw r0,r2" 1500
+    "supported core classes: ATtiny, ATtiny 16K, ATmega" 3 2)
+check_diagnostic(core-tiny16k ATTINY13 " jmp 0" 1500
+    "supported core classes: ATtiny 16K, ATmega" 3 2)
+check_diagnostic(core-mega ATTINY13 " mul r0,r1" 1500
+    "supported core classes: ATmega" 3 2)
+check_diagnostic(core-disjoint AT90S1200 " ijmp" 1500
+    "supported core classes: minimal ATtiny, classic AT90S, ATtiny, ATtiny 16K, ATmega" 3 2)
+check_diagnostic(core-before-register AT90S1200 " push missing" 1500
+    "selected CPU AT90S1200" 3 2)
+check_diagnostic(bit-count-empty ATMEGA8 " sbi" 1110 "expected between 1 and 2" 3 2)
+check_diagnostic(bit-count-extra ATMEGA8 " sbi 1,2,3" 1110 "got 3" 3 2)
+check_diagnostic(bit-definition-count ATMEGA8 "flag bit" 1110 "expected between 1 and 2" 3 6)
+check_bytes(core-original ATTINY167 " movw r0,r2\n jmp 0\n lpm r0,Z" "01010c9400000490")
+check_bytes(core-disjoint-valid ATTINY10 " ijmp\n push r16" "09940f93")
+check_bytes(bit-count-valid ATMEGA8 " sbi 1,2\n sbi 1.2" "0a9a0a9a")
+check_bytes(core-count-noemit AT90S1200
+ " expect 1500,1110\n push r0\n sbi\n endexpect\n dw 0x1234" "3412")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/core-classic.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "unterst" detail_pos)
+string(FIND "${output}${error}" "klassischer AT90S" core_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR core_pos EQUAL -1)
+    message(FATAL_ERROR "German AVR core: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
