@@ -2331,3 +2331,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     Focused suffix/count/no-emission checks and original size/alias vectors pass.
     Fifty-two of 98 historical size candidates reviewed; remainder pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+212. M68K forbidden operand-size suffix diagnostics.
+    Nineteen candidates explicitly say to omit the suffix, with localized English
+    and German detail at the unwanted attribute. Covers core control/pack/bit-field,
+    FPU save/restore/NOP, PMMU save/restore/flush/load/test and ColdFire INTOUCH.
+    Preserve 1130 and existing count/feature/size precedence. Focused rejections
+    cover every site; original accepted core/FPU/PMMU/ColdFire byte vectors pass.
+    Seventy-one of 98 historical size candidates reviewed; twenty-seven remain.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

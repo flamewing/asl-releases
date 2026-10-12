@@ -2427,3 +2427,7 @@ Message ErrMsgColdFireISAChoices
 Message ErrMsgSupportedOperandSizes
  "Erlaubte Operandengr&ouml;&szlig;en: %s"
  "supported operand sizes: %s"
+
+Message ErrMsgNoOperandSizeSuffix
+ "Operandengroessensuffix ist hier nicht erlaubt; Suffix weglassen"
+ "operand size suffix is not allowed here; omit the suffix"

@@ -625,3 +625,59 @@ check_bytes(conditional-original-sizes 68020
     "66026602660000026600000266ff0000000256c056c8000256fc56fa000156fb00000001")
 check_bytes(set-count-errors-noemit 68020
     " expect 1110,1110\n sne\n sne d0,d1\n endexpect\n dc.b $12" "12")
+
+# Instructions that forbid size suffixes say so explicitly.
+foreach(item IN ITEMS "jsr|(a0)" "jmp|(a0)" "unlk|a0" "callm|#1,(a0)"
+        "pack|d0,d1,#1" "unpk|d0,d1,#1" "rtm|d0" "bftst|d0{0:1}"
+        "bfextu|d0{0:1},d1" "bfins|d0,d1{0:1}")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 args)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(no-suffix-${ins} 68020 " ${ins}.w ${args}" 1130
+        "operand size suffix is not allowed here; omit the suffix" 3 ${column})
+endforeach()
+foreach(item IN ITEMS "fsave|(a0)" "frestore|(a0)" "fnop| ")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 args)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(no-suffix-${ins} 68020 " fpu on\n ${ins}.w ${args}" 1130
+        "operand size suffix is not allowed here; omit the suffix" 4 ${column})
+endforeach()
+foreach(item IN ITEMS "psave|(a0)" "prestore|(a0)" "pflusha| " "pflushan| "
+        "pflush|#1,#1" "pflushs|#1,#1" "ploadr|#1,(a0)" "ploadw|#1,(a0)"
+        "ptestr|#1,(a0),#1" "ptestw|#1,(a0),#1")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 args)
+    string(LENGTH "${ins}" length)
+    math(EXPR column "${length}+3")
+    check_diagnostic(no-suffix-${ins} 68020 " ${ins}.w ${args}" 1130
+        "operand size suffix is not allowed here; omit the suffix" 3 ${column})
+endforeach()
+check_diagnostic(no-suffix-intouch MCF5407 " intouch.w (a0)" 1130
+    "operand size suffix is not allowed here; omit the suffix" 3 10)
+check_bytes(no-suffix-original-core 68020
+    " jsr (a0)\n jmp (a0)\n unlk a0\n callm #1,(a0)\n pack d0,d1,#1\n rtm d0\n bftst d0{0:1}\n bfextu d0{0:1},d1\n bfins d0,d1{0:1}"
+    "4e904ed04e5806d000018340000106c0e8c00001e9c01001efc10001")
+check_bytes(no-suffix-original-fpu 68020
+    " supmode on\n fpu on\n fsave (a0)\n frestore (a0)\n fnop" "f310f350f2800000")
+check_bytes(no-suffix-original-pmmu 68020
+    " supmode on\n pmmu on\n fullpmmu on\n psave (a0)\n prestore (a0)\n pflusha\n pflush #1,#1\n ploadr #1,(a0)\n ptestr #1,(a0),#1"
+    "f110f150f0002400f0003031f0102211f0108611")
+check_bytes(no-suffix-original-pmmu40 68040
+    " supmode on\n pmmu on\n pflushan" "f510")
+check_bytes(no-suffix-original-cold MCF5407
+    " supmode on\n intouch (a0)" "f428")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/no-suffix-jsr.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Suffix weglassen" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German forbidden suffix: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

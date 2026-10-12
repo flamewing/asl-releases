@@ -261,6 +261,10 @@ static void report_operand_sizes(char const* sizes) {
     report_size_choices_at(sizes, *AttrPart.str.p_str ? &AttrPart : &OpPart);
 }
 
+static void report_no_size_suffix(void) {
+    WrXErrorPos(ErrNum_InvOpSize, getmessage(Num_ErrMsgNoOperandSizeSuffix), &AttrPart.Pos);
+}
+
 static Boolean CheckColdSize(void) {
     if ((OpSize > eSymbolSize32Bit)
         || ((pCurrCPUProps->Family == eColdfire) && (OpSize < eSymbolSize32Bit))) {
@@ -3430,7 +3434,7 @@ static void DecodeCLRTST(Word IsTST) {
 
 static void DecodeJSRJMP(Word Index) {
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -3522,7 +3526,7 @@ static void DecodeUNLK(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (ChkArgCnt(1, 1)) {
         tAdrResult AdrResult;
 
@@ -4225,7 +4229,7 @@ static void DecodeCALLM(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!(pCurrCPUProps->SuppFlags & eFlagCALLM_RTM)) {
         report_cpu_capability_choices(eFlagCALLM_RTM, eCfISA_None, False);
     } else if (ChkArgCnt(2, 2)) {
@@ -4348,7 +4352,7 @@ static void DecodePACK(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else {
         tAdrResult AdrResult;
 
@@ -4372,7 +4376,7 @@ static void DecodeRTM(Word Index) {
     UNUSED(Index);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!(pCurrCPUProps->SuppFlags & eFlagCALLM_RTM)) {
         report_cpu_capability_choices(eFlagCALLM_RTM, eCfISA_None, False);
     } else if (ChkArgCnt(1, 1)) {
@@ -4508,7 +4512,7 @@ static void DecodeFBits(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!SplitBitField(&ArgStr[1], WAsmCode + 1, &guess_mask)) {
         WrError(ErrNum_InvBitMask);
     } else {
@@ -4539,7 +4543,7 @@ static void DecodeEBits(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!SplitBitField(&ArgStr[1], WAsmCode + 1, &guess_mask)) {
         WrError(ErrNum_InvBitMask);
     } else {
@@ -4575,7 +4579,7 @@ static void DecodeBFINS(Word Index) {
     else if (!CheckFamily((1 << e68KGen3) | (1 << e68KGen2)))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!SplitBitField(&ArgStr[2], WAsmCode + 1, &guess_mask)) {
         WrError(ErrNum_InvBitMask);
     } else {
@@ -5008,7 +5012,7 @@ static void DecodeFSAVE(Word Code) {
     else if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
     } else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else {
         tAdrResult AdrResult;
 
@@ -5031,7 +5035,7 @@ static void DecodeFRESTORE(Word Code) {
     else if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
     } else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else {
         tAdrResult AdrResult;
 
@@ -5057,7 +5061,7 @@ static void DecodeFNOP(Word Code) {
     else if (!FPUAvail) {
         WrError(ErrNum_FPUNotEnabled);
     } else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else {
         CodeLen     = 4;
         WAsmCode[0] = 0xf280;
@@ -5741,7 +5745,7 @@ static void DecodePSAVE(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (!FullPMMU) {
@@ -5766,7 +5770,7 @@ static void DecodePRESTORE(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (!FullPMMU) {
@@ -5792,7 +5796,7 @@ static void DecodePFLUSHA(Word Code) {
     UNUSED(Code);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (ChkArgCnt(0, 0)) {
@@ -5815,7 +5819,7 @@ static void DecodePFLUSHAN(Word Code) {
     UNUSED(Code);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (ChkArgCnt(0, 0) && CheckFamily(1 << e68KGen3)) {
@@ -5830,7 +5834,7 @@ static void DecodePFLUSH_PFLUSHS(Word Code) {
     Word       guess_fc_mask;
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (pCurrCPUProps->Family == e68KGen3) {
@@ -5931,7 +5935,7 @@ static void DecodePLOADR_PLOADW(Word Code) {
     Word guess_fc_mask;
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (!ChkArgCnt(2, 2))
@@ -6017,7 +6021,7 @@ static void DecodePTESTR_PTESTW(Word Code) {
     tAdrResult AdrResult;
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (!PMMUAvail) {
         WrError(ErrNum_PMMUNotEnabled);
     } else if (pCurrCPUProps->Family == e68KGen3) {
@@ -6287,7 +6291,7 @@ static void DecodeINTOUCH(Word Code) {
     UNUSED(Code);
 
     if (*AttrPart.str.p_str) {
-        WrError(ErrNum_InvOpSize);
+        report_no_size_suffix();
     } else if (
             ChkArgCnt(1, 1) && CheckFamily(1 << eColdfire)
             && (pCurrCPUProps->CfISA >= eCfISA_B)) {
