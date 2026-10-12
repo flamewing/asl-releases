@@ -185,6 +185,36 @@ static Boolean DecodeAcc(char const* pArg, Byte* pReg) {
     return (strlen(pArg) == 1) ? IsAcc(*pArg, pReg) : False;
 }
 
+static void report_operand_choices(tErrorNum error, tStrComp const* arg, char const* choices) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_address_forms(tStrComp const* arg, Byte mask) {
+    char forms[350] = "", detail[450];
+    if (mask & MModAcc) {
+        strmaxcat(forms, "A or B; ", sizeof(forms));
+    }
+    if (mask & MModImm) {
+        strmaxcat(forms, "#value; ", sizeof(forms));
+    }
+    if (mask & MModDir) {
+        strmaxcat(forms, "direct address in [0,255]; ", sizeof(forms));
+    }
+    if (mask & MModExt) {
+        strmaxcat(forms, "extended address; ", sizeof(forms));
+    }
+    if (mask & MModInd) {
+        strmaxcat(forms, MomCPU >= CPU6811 ? "offset,X or offset,Y; " : "offset,X; ", sizeof(forms));
+    }
+    if (*forms) {
+        forms[strlen(forms) - 2] = '\0';
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) {
     tStrComp* pStartArg = &ArgStr[StartInd];
     Boolean   OK, ErrOcc;
@@ -272,7 +302,10 @@ static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) 
                 if ((MModDir & Erl) && (Bit8 != 1)
                     && ((Bit8 == 2) || (!(MModExt & Erl)) || (Hi(AdrWord) == 0))) {
                     if ((Hi(AdrWord) != 0) && !mFirstPassUnknown(adr_vals_symflags)) {
-                        WrError(ErrNum_NoShortAddr);
+                        char detail[200];
+                        as_snprintf(detail, sizeof(detail), getmessage(Bit8 == 2 ? Num_ErrMsgForcedShortAddressRange : Num_ErrMsgAddressRange),
+                                    (LargeInt)AdrWord, (LargeInt)0, (LargeInt)255);
+                        WrXErrorPos(ErrNum_NoShortAddr, detail, &pStartArg->Pos);
                         ErrOcc = True;
                     } else {
                         AdrMode           = ModDir;
@@ -324,7 +357,7 @@ static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) 
                 }
             }
         } else {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[StopInd]);
+            report_operand_choices(ErrNum_InvReg, &ArgStr[StopInd], MomCPU >= CPU6811 ? "X or Y" : "X");
             ErrOcc = True;
         }
     }
@@ -340,7 +373,7 @@ static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) 
     }
 
     if ((!ErrOcc) && (AdrMode == ModNone)) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_forms(pStartArg, Erl);
     }
 }
 
@@ -681,7 +714,7 @@ static void DecodeALU8(Word Code) {
     }
 
     if (!acc_set) {
-        WrError(ErrNum_InvAddrMode);
+        report_operand_choices(ErrNum_InvAddrMode, ArgCnt ? &ArgStr[1] : &OpPart, "A or B accumulator");
         return;
     }
 

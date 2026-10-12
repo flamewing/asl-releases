@@ -1897,3 +1897,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     finally mapped addresses do not warn. Known-unmapped/mapped/forward-mapped
     cases verify detail, original bytes and absence of premature warning.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+167. 6800-family register/address/accumulator diagnostics; historical completion.
+    Remaining generic candidates identify CPU-specific X/Y choices, allowed
+    addressing forms and required A/B accumulator at the failed operand.
+    Adjacent direct-address failures show actual address and [0,255]. The
+    argument-count candidate already reports actual/allowed counts and all
+    callers guard one/two address components; unchanged with recorded reason.
+    All seven historical sites reviewed; five CPUs verify positions/no error
+    bytes and captured accepted encodings.
+    Validation: all 415 CTest cases pass with embedded/external catalogs. IsAcc accepts NUL via strchr terminator, but all registered ALU mnemonic paths have at least three characters and other callers supply nonempty characters; unreachable helper case left unchanged.

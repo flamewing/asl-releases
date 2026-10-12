@@ -392,11 +392,14 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
         "ErrNum_JmpDistTooBig",
-        "ErrNum_InAccPage"
+        "ErrNum_WrongArgCnt"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Branch constraints reviewed earlier and forward checks fixed in 164; JMP/JSR failed-operand emission fixed in 165. Tranche 166 preserves inaccessible-page warning 110 and fallback bytes, reports physical address/segment/MMU at the operand and defers warning until forward expressions resolve. Remaining historical register/address/count sites pending."
+      "status": "complete",
+      "review_notes": "All seven historical candidates reviewed: branch detail/forward checks, physical mapping warning, actual CPU index register choices and mask/accumulator forms. Tranche 167 also details direct-address interval at operand. Address argument-count site already reports actual/allowed counts via localized ErrMsgAddrArgCnt; all callers guard one/two address components, so no further detail available and unchanged. JMP/JSR failed emission fixed in 165. All supported bytes/IDs retained."
     },
     "code6804.c": {
       "candidate_counts": {
