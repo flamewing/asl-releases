@@ -84,7 +84,7 @@ static LongInt CutAdr(LongInt Adr) {
     if ((Adr & SignMask) != 0) {
         return (Adr | ORMask);
     } else {
-        return (Adr & SegLimits[SegCode]);
+        return (Adr & (SegLimits[SegCode] >> !CodeSegSize));
     }
 }
 
@@ -1325,8 +1325,9 @@ static void SwitchTo_AVR(void* pUser) {
     CodeAdrIntType = GetSmallestUIntType(SegLimits[SegCode]);
     DataAdrIntType = GetSmallestUIntType(SegLimits[SegData]);
 
-    SignMask = (SegLimits[SegCode] + 1) >> 1;
-    ORMask   = ((LongInt)-1) - SegLimits[SegCode];
+    /* Relative displacements are always measured in words, even in byte mode. */
+    SignMask = ((SegLimits[SegCode] >> !CodeSegSize) + 1) >> 1;
+    ORMask   = ((LongInt)-1) - (SegLimits[SegCode] >> !CodeSegSize);
 
     onoff_packing_add(False);
     AddONOFF("WRAPMODE", &WrapFlag, WrapFlagName, False);

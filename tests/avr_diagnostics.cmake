@@ -217,3 +217,39 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German AVR branch: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(mode IN ITEMS word byte)
+    if(mode STREQUAL word)
+        set(cpu ATMEGA8)
+        set(last 4095)
+    else()
+        set(cpu ATMEGA8:codesegsize=0)
+        set(last 8190)
+    endif()
+    foreach(instruction IN ITEMS breq rjmp rcall)
+        if(instruction STREQUAL breq)
+            set(forward "01f0")
+            set(backward "f1f3")
+        elseif(instruction STREQUAL rjmp)
+            set(forward "00c0")
+            set(backward "fecf")
+        else()
+            set(forward "00d0")
+            set(backward "fedf")
+        endif()
+        check_bytes("wrap-${mode}-${instruction}-end" ${cpu}
+            " wrapmode on\n org ${last}\n ${instruction} 0" "${forward}")
+        check_bytes("wrap-${mode}-${instruction}-start" ${cpu}
+            " wrapmode on\n ${instruction} ${last}" "${backward}")
+    endforeach()
+    check_bytes("wrap-${mode}-bit-end" ${cpu}
+        " wrapmode on\n org ${last}\n brbs 0,0" "00f0")
+    check_bytes("wrap-${mode}-bit-start" ${cpu}
+        " wrapmode on\n brbc 0,${last}" "f0f7")
+endforeach()
+check_bytes(wrap-small-byte AT90S1200:codesegsize=0
+    " wrapmode on\n org 1022\n breq 0" "01f0")
+check_bytes(wrap-byte-forward-label ATMEGA8:codesegsize=0
+    " wrapmode on\n org 8190\n breq target\ntarget equ 0" "01f0")
+check_diagnostic(wrap-off-byte ATMEGA8:codesegsize=0
+    " org 8190\n breq 0" 1370 "branch word displacement -4096 outside [-64,63]" 4 7)

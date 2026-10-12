@@ -2477,3 +2477,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Original/boundary/forward byte vectors, primary failures and German checked.
     All 17 historical AVR sites reviewed; byte-unit wrap bug tracked separately.
     Validation: all 417 CTest cases pass with embedded/external catalogs.
+
+228. AVR byte-mode relative branch wrap correction.
+    Reproduced byte-mode end-of-flash branch rejected while equivalent word-mode
+    succeeds. Displacements are word-based; derive sign/extension and truncation
+    masks from word-sized flash limit for both source modes. Cover both boundary
+    directions for short/bit/RJMP/RCALL, smaller flash and forward target, preserving
+    disabled-wrap range behavior. Word-mode instruction bytes unchanged.
+    Validation: all 417 CTest cases pass with embedded/external catalogs.

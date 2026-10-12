@@ -2178,7 +2178,7 @@
     {
       "file": "codeavr.c",
       "issue": "WRAPMODE uses byte-mode segment limit to wrap word displacements: branch from byte 8190 to 0 rejected on ATmega8, same branch word 4095 to 0 accepted.",
-      "status": "confirmed while reviewing tranche 227; correct word-unit wrap calculation in separate batch"
+      "status": "fixed in tranche 228; wrap sign/extension and truncation masks use word-sized flash limit in both address modes; end/start crossings for short/bit/RJMP/RCALL, smaller flash, forward reference and disabled-wrap primary range checked"
     }
   ]
 }
