@@ -138,3 +138,13 @@ foreach(cpu 6800 6801 6301 6811 68HC11K4)
     check_bytes(jump-rejections-noemit-${cpu} ${cpu} " expect 1350,1350,1350,1350,1133,1133,1445,1445\n jmp #1\n jsr #1\n jmp a\n jsr a\n jmp 1.5\n jsr 1.5\n jmp 0,z\n jsr 0,z\n endexpect\n db $12" "12")
     check_bytes(original-jumps-${cpu} ${cpu} " jmp $1000\n jsr $1000\n jmp 0,x\n jsr 0,x" "7e1000bd10006e00ad00")
 endforeach()
+
+check_diagnostic(k4-unmapped-physical 68HC11K4 " ldaa $10000" 110
+    "physical address 0x10000 in CODE cannot be translated to a CPU address using 68HC11K4 MMU" 3 7 0)
+check_bytes(k4-unmapped-warning-bytes 68HC11K4 " ldaa $10000" "9600")
+check_bytes(k4-mapped-physical 68HC11K4 " assume mmwbr:$04,mmsiz:$41,mm1cr:$00,mm2cr:$00\n ldaa $10000" "b64000")
+check_bytes(k4-forward-mapped-expression 68HC11K4 " ldaa target+$10000\ntarget equ -$f000" "b61000")
+string(FIND "${assembly_diagnostic}" "warning" warning_pos)
+if(NOT warning_pos EQUAL -1)
+    message(FATAL_ERROR "resolved physical address produces premature warning\n${assembly_diagnostic}")
+endif()

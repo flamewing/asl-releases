@@ -1889,3 +1889,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Five CPUs cover immediate/accumulator/float/invalid-index failures with
     no emission and preserve captured valid absolute/indexed instruction bytes.
     Validation: all 415 CTest cases pass with embedded/external catalogs; consolidated branch fixtures retain every opcode/target direction and pass focused checks in both configurations.
+
+166. HC11K4 physical-address warning.
+    Warning 110 intentionally permits fallback encoding for unmapped physical
+    addresses. Preserve warning/bytes; report actual physical address, segment
+    and MMU at the operand. Defer provisional forward-expression warnings so
+    finally mapped addresses do not warn. Known-unmapped/mapped/forward-mapped
+    cases verify detail, original bytes and absence of premature warning.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.

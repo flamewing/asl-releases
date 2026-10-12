@@ -392,9 +392,11 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InAccPage"
       ],
-      "status": "partially reviewed"
+      "status": "partially reviewed",
+      "review_notes": "Branch constraints reviewed earlier and forward checks fixed in 164; JMP/JSR failed-operand emission fixed in 165. Tranche 166 preserves inaccessible-page warning 110 and fallback bytes, reports physical address/segment/MMU at the operand and defers warning until forward expressions resolve. Remaining historical register/address/count sites pending."
     },
     "code6804.c": {
       "candidate_counts": {
@@ -2073,6 +2075,11 @@
       "file": "code68.c",
       "issue": "JMP and JSR test decoded mode against ModImm rather than ModNone and emit opcodes after failed operand parsing.",
       "status": "fixed in tranche 165; require a successfully decoded mode; five CPUs/immediate-accumulator-float-invalid-index errors/no emission/original absolute-indexed bytes checked"
+    },
+    {
+      "file": "code68.c",
+      "issue": "HC11K4 physical address translation warns on a provisional forward expression even when its final address is mapped.",
+      "status": "fixed in tranche 166; defer warning for unknown/questionable symbols, retain known-unmapped warning/fallback bytes and give physical address/segment/MMU detail; mapped/forward-mapped paths checked"
     }
   ]
 }

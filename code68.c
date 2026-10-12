@@ -251,7 +251,12 @@ static void DecodeAdr(int StartInd, int StopInd, tSymbolSize op_size, Byte Erl) 
                         pStartArg, Offset, UInt21, &OK, &adr_vals_symflags);
                 if (OK) {
                     if (!def_phys_2_cpu(SegCode, &AdrLWord)) {
-                        WrError(ErrNum_InAccPage);
+                        if (!mFirstPassUnknownOrQuestionable(adr_vals_symflags)) {
+                            char detail[250];
+                            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgPhysicalMapping),
+                                        (LargeWord)AdrLWord, SegNames[SegCode], "68HC11K4 MMU");
+                            WrXErrorPos(ErrNum_InAccPage, detail, &pStartArg->Pos);
+                        }
                         AdrWord = AdrLWord & 0xffffu;
                     } else {
                         AdrWord = AdrLWord;
