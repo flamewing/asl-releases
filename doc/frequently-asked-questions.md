@@ -5,6 +5,8 @@
 
 ## **EDITOR's NOTE:** This is Alfred Arnold's FAQ section, mostly unedited, preserved for historical reasons
 
+For current platform support and installation, use [the fork README](../README.md). The historical answers below predate this fork: Windows, Linux, macOS, FreeBSD, OmniOS, Android and WebAssembly builds are covered by its build/workflow configuration, and the installed tools include the `dasl` disassembler. Statements below about unsupported Windows versions, DOS-only distributions or the absence of a disassembler describe the original period.
+
 In this chapter, I tried to collect some questions that arise very often together with their answers. Answers to the problems presented in this chapter might also be found at other places in this manual, but one maybe does not find them immediately...
 
 Q: I am fed up with DOS. Are there versions of AS for other operating systems ?

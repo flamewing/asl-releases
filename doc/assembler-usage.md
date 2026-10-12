@@ -21,111 +21,25 @@
 
 ## Delivery
 
-Principally, you can obtain AS in one of two forms: as a _binary_ or a _source_ distribution. In case of a binary distribution, one gets AS, the accompanying tools and auxiliary files readily compiled, so you can immediately start to use it after unpacking the archive to the desired destination on your hard drive. Binary distributions are made for widespread platforms. A source distribution in contrast contains the complete set of C sources to generate AS; it is ultimately a snapshot of the source tree I use for development on AS. The generation of AS from the sources and their structure is described in detail in [Hints for the AS Source Code](modifying-as.md), which is why at this place, only the contents and installation of a binary distribution will be described:
+This fork is available as source from [flamewing/asl-releases](https://github.com/flamewing/asl-releases) and as platform-specific [snapshot archives](https://github.com/flamewing/asl-releases/releases). Source builds use CMake and a C11 compiler; see [the build instructions](../README.md#create-and-install-the-package). The executable is named `asl` (`asl.exe` on Windows); MSYS2 builds also provide `asw.exe`.
 
-The contents of the archive is separated into several subdirectories, therefore you get a directory subtree immediately after unpacking without having to sort out things manually. The individual directories contain the following groups of files:
+Current snapshot archives place the executables, `COPYING` and generated HTML/ODT manuals together. They do not include the source checkout's complete include-file tree or manpages. Obtain those from the source distribution, or use a CMake installation when you need the full installed layout.
 
-- `BIN`: executable programs, text resources;
+A CMake installation uses the following paths relative to its install prefix. The directory variables can be changed when configuring CMake; `lib` can be `lib64` or another platform-selected library directory.
 
-- `INCLUDE`: include files for assembler programs, e.g. register definitions or standard macros;
+| Installed item | Default location | Purpose |
+| --- | --- | --- |
+| `asl`, `alink`, `dasl`, `pbind`, `p2bin`, `p2hex`, `plist` | `bin` | Assembler, linker, disassembler and binary-file utilities; Windows adds `.exe` |
+| `asw.exe` | `bin` | Additional assembler executable in MSYS2 builds |
+| Include-file tree | `include/asl` | Register definitions and macros; see [Shipped Include Files](shipped-include-files.md) |
+| Manpages | `share/man/man1` | Command-line reference pages |
+| `COPYING` | `share/doc/asl-flamewing` | License text |
+| `asl.html`, `asl.odt` | `share/doc/asl-flamewing` | Manuals generated when Pandoc is available |
+| `as.msg`, `das.msg`, utility catalogs and shared catalogs | `lib/asl` | Installed only with `ASL_EMBED_MESSAGES=OFF` |
 
-- `MAN`: quick references for the individual programs in Unix 'man' format.
+Catalogs are embedded by default, so normal executables do not require companion `.msg` files. External-catalog builds use the message search described under [Help and message levels](#help-and-message-levels); set `AS_MSGPATH` to the catalog directory when running from a relocated installation. Include files are separate from message catalogs. Add the installed include directory with `-i /prefix/include/asl` when a source uses those definitions.
 
-A list of the files found in every binary distribution is given in the following table. In case a file listed in one of these (or the following) tables is missing, someone took a nap during copying (probably me)...
-
-##### **Table:** Standard Contents of a Binary Distribution
-
-| File                  | Function                                                                                 |
-| :-------------------- | :--------------------------------------------------------------------------------------- |
-| **Directory BIN**     | <!-- empty -->                                                                           |
-| `AS.EXE`              | executable of assembler                                                                  |
-| `PLIST.EXE`           | lists contents of code files                                                             |
-| `PBIND.EXE`           | merges code files                                                                        |
-| `P2HEX.EXE`           | converts code files to hex files                                                         |
-| `P2BIN.EXE`           | converts code files to binary files                                                      |
-| `AS.MSG`              | text resources for AS                                                                    |
-| `PLIST.MSG`           | text resources for PLIST                                                                 |
-| `PBIND.MSG`           | text resources for PBIND                                                                 |
-| `P2HEX.MSG`           | text resources for P2HEX                                                                 |
-| `P2BIN.MSG`           | text resources for P2BIN                                                                 |
-| `TOOLS.MSG`           | common text resources for all tools                                                      |
-| `CMDARG.MSG`          | common text resources for all programs                                                   |
-| `IOERRS.MSG`          | common text resources for all programs                                                   |
-| **Directory DOC**     | <!-- empty -->                                                                           |
-| **Directory INCLUDE** | <!-- empty -->                                                                           |
-| `BITFUNCS.INC`        | functions for bit manipulation                                                           |
-| `CTYPE.INC`           | functions for classification of characters                                               |
-| `EBCDIC.INC` | EBCDIC/code page 037 definitions |
-| `80C50X.INC`          | register addresses SAB C50x                                                              |
-| `80C552.INC`          | register addresses 80C552                                                                |
-| `H8_3048.INC`         | register addresses H8/3048                                                               |
-| `KENBAK.INC`          | register addressed Kenbak-1                                                              |
-| `REG166.INC`          | addresses and instruction macros 80C166/167                                              |
-| `REG251.INC`          | addresses and bits 80C251                                                                |
-| `REG29K.INC`          | peripheral addresses AMD 2924x                                                           |
-| `REG53X.INC`          | register addresses H8/53x                                                                |
-| `REG6303.INC`         | register addresses 6303                                                                  |
-| `REG683XX.INC`        | register addresses 68332/68340/68360                                                     |
-| `REG7000.INC`         | register addresses TMS70Cxx                                                              |
-| `REG78310.INC`        | register addresses & vectors 78K3                                                        |
-| `REG78K0.INC`         | register addresses 78K0                                                                  |
-| `REG96.INC`           | register addresses MCS-96                                                                |
-| `REGACE.INC`          | register addresses ACE                                                                   |
-| `REGF8.INC`           | register and memory addresses F8                                                         |
-| `REGAVROLD.INC`       | register and bit addresses AVR family (old)                                              |
-| `REGAVR.INC`          | register and bit addresses AVR family                                                    |
-| `REGCOLD.INC`         | register and bit addresses Coldfire family                                               |
-| `REGCOP8.INC`         | register addresses COP8                                                                  |
-| `REGGP32.INC`         | register addresses 68HC908GP32                                                           |
-| `REGH16.INC`          | register addresses H16                                                                   |
-| `REGHC12.INC`         | register addresses 68HC12                                                                |
-| `REGM16C.INC`         | register addresses Mitsubishi M16C                                                       |
-| `REGMSP.INC`          | register addresses TI MSP430                                                             |
-| `REGPDK.INC`          | register and bit addresses PMC/PMS/PFSxxx                                                |
-| `REGS12Z.INC`         | register and bit addresses S12Z family                                                   |
-| `REGST6.INC`          | register and macro definitions ST6                                                       |
-| `REGST7.INC`          | register and macro definitions ST7                                                       |
-| `REGSTM8.INC`         | register and macro definitions STM8                                                      |
-| `REGV60.INC` | register addresses NEC V60 |
-| `REGST9.INC`          | register and macro definitions ST9                                                       |
-| `REGZ380.INC`         | register addresses Z380                                                                  |
-| `STDDEF04.INC`        | register addresses 6804                                                                  |
-| `STDDEF16.INC`        | instruction macros and register addresses PIC16C5x                                       |
-| `STDDEF17.INC`        | register addresses PIC17C4x                                                              |
-| `STDDEF18.INC`        | register addresses PIC16C8x                                                              |
-| `STDDEF2X.INC`        | register addresses TMS3202x                                                              |
-| `STDDEF37.INC`        | register and bit addresses TMS370xxx                                                     |
-| `STDDEF3X.INC`        | peripheral addresses TMS320C3x                                                           |
-| `STDDEF4X.INC`        | peripheral addresses TMS320C4x                                                           |
-| `STDDEF47.INC`        | instruction macros TLCS-47                                                               |
-| `STDDEF51.INC`        | definition of SFRs and bits for 8051/8052/80515                                          |
-| `STDDEF56K.INC`       | register addresses DSP56000                                                              |
-| `STDDEF5X.INC`        | peripheral addresses TMS320C5x                                                           |
-| `STDDEF60.INC`        | instruction macros and register addresses PowerPC                                        |
-| `REGSX20.INC`         | register and bit addresses Parallax SX20/28                                              |
-| `AVR/*.INC`           | register and bit addresses AVR family (do not include directly, use `REGAVR.INC` )       |
-| `COLDFIRE/*.INC`      | register and bit addresses ColdFire family (do not include directly, use `REGCOLD.INC` ) |
-| `PDK/*.INC`           | register and bit addresses PMC/PMS/PFSxxx (do not include directly, use `REGPDK.INC` )   |
-| `S12Z/*.INC`          | register and bit addresses S12Z family (do not include directly, use `REGS12Z.INC` )     |
-| `ST6/*.INC`           | register and bit addresses ST6 family (do not include directly, use `REGST6.INC` )       |
-| `ST7/*.INC`           | register and bit addresses ST7 family (do not include directly, use `REGST7.INC` )       |
-| `STM8/*.INC`          | register and bit addresses STM8 family (do not include directly, use `REGSTM8.INC` )     |
-| `STDDEF62.INC`        | register addresses and macros ST6 (old)                                                  |
-| `STDDEF75.INC`        | register addresses 75K0                                                                  |
-| `STDDEF87.INC`        | register and memory addresses TLCS-870                                                   |
-| `STDDEF90.INC`        | register and memory addresses TLCS-90                                                    |
-| `STDDEF96.INC`        | register and memory addresses TLCS-900                                                   |
-| `STDDEFXA.INC`        | SFR and bit addresses Philips XA                                                         |
-| `STDDEFZ8.INC`        | register addresses Z8 family (old)                                                       |
-| `REGZ8.INC`           | register addresses Z8 family (new)                                                       |
-| `Z8/*.INC`            | register and bit addresses Z8 family (do not include directly, use `REGZ8.INC` )         |
-| **Directory LIB**     | <!-- empty -->                                                                           |
-| **Directory MAN**     | <!-- empty -->                                                                           |
-| `ASL.1`               | Short Reference for `AS`                                                                 |
-| `PLIST.1`             | Short Reference for `PLIST`                                                              |
-| `PBIND.1`             | Short Reference for `PBIND`                                                              |
-| `P2HEX.1`             | Short Reference for `P2HEX`                                                              |
-| `P2BIN.1`             | Short Reference for `P2BIN`                                                              |
+The `rescomp` resource compiler is a build-time host tool and is not part of the installed executable set. Its exported target allows a cross-build to generate catalogs without executing target binaries on the build host.
 
 ## Start-Up Command, Parameters
 

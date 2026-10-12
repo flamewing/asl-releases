@@ -18,28 +18,25 @@ See [Changes from original AS](doc/fork-changes.md) for the fork's modifications
 
 ## Create and install the package
 
-You need a C development toolchain, and `cmake` at least `3.19`. You also need Git. When everything is setup, run the following commands:
+You need a C11 compiler and CMake 3.19 or later. Configure, build and test with:
 
 ```bash
-cmake -S . -B build -G <generator>
-cmake --build build -j
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+cmake -E chdir build ctest -C Release --output-on-failure --parallel
 ```
 
-Here, `<generator>` stands for any backend for `cmake` to use. I personally use `Ninja`, but you can also use any others, like `Unix Makefiles`, or `MSYS Makefiles`. Check `cmake` help for generators available in your platform.
+CMake chooses an available default generator. To select one explicitly, add an option such as `-G Ninja` when configuring and install that generator's build tool. `CMAKE_BUILD_TYPE` selects the configuration for single-configuration generators; `--config Release` and `ctest -C Release` select it for Visual Studio and other multi-configuration generators. Use a separate build directory when changing generators or toolchains. The `cmake -E chdir` test invocation also works with the minimum supported CMake version.
 
-To install the program, run
+Install to the configured prefix with:
 
 ```bash
-cmake --install build
+cmake --install build --config Release
 ```
 
-Where the later will probably require administrative privileges.
+Set `-DCMAKE_INSTALL_PREFIX=/desired/prefix` when configuring to choose that prefix. Installing to a system directory may require administrative privileges. For a staged installation, pass `--prefix /absolute/staging/path` to `cmake --install`; external-catalog builds may then need `AS_MSGPATH` if the staged location differs from the compiled-in library path. Executables go in the configured binary directory, include files in `include/asl`, manpages in `share/man/man1`, and the license/manual in the documentation directory. See [the package layout](doc/assembler-usage.md#delivery) for details.
 
-To run tests, build as above then run:
-
-```bash
-ctest --build-run-dir build --test-dir build -j
-```
+Message catalogs are embedded by default. Configure with `-DASL_EMBED_MESSAGES=OFF` to install external catalogs in the configured library directory's `asl` subdirectory. Pandoc is optional: it builds the HTML/ODT manual when found, while executables, tests, include files, manpages and the license can be built or installed without it.
 
 This build procedure has been tested on the following environments:
 
@@ -62,23 +59,23 @@ For repeatable Windows and Linux performance measurements and opt-in profiling b
 To cross-compile, you need to have an appropriate toolchain file for your target, in addition to the actual toolchain. You start by doing a (potentially partial) host build:
 
 ```bash
-cmake -S . -B build-host -G <host-generator>
-cmake --build build-host -j --target rescomp
+cmake -S . -B build-host -DCMAKE_BUILD_TYPE=Release
+cmake --build build-host --config Release --parallel --target rescomp
 ```
 
 Then you do the cross-compile build itself:
 
 ```bash
-cmake -S . -B build-target -G <target-generator> \
+cmake -S . -B build-target -DCMAKE_BUILD_TYPE=Release \
         -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake \
         -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain/file.cmake
-cmake --build build-target -j
+cmake --build build-target --config Release --parallel
 ```
 
 If the toolchain file defines an appropriate emulator, you can even run the tests:
 
 ```bash
-ctest --build-run-dir build-target --test-dir build-target -j
+cmake -E chdir build-target ctest -C Release --output-on-failure --parallel
 ```
 
 ### Worked cross-compile example: WASM target, Linux host
@@ -102,19 +99,19 @@ cd ~
 mkdir asl
 cd asl
 git clone https://github.com/flamewing/asl-releases.git .
-cmake -S . -B build-host -G <host-generator>
-cmake --build build-host -j --target rescomp
+cmake -S . -B build-host -DCMAKE_BUILD_TYPE=Release
+cmake --build build-host --config Release --parallel --target rescomp
 emcmake cmake -S . -B build-wasm \
         -DIMPORT_EXECUTABLES=build-host/ImportExecutables.cmake
-cmake --build build-wasm -j
-cmake --build build-wasm -j --target test
+cmake --build build-wasm --parallel
+cmake -E chdir build-wasm ctest --output-on-failure --parallel
 ```
 
 ## Building the documentation
 
 The documentation is built by default if you have [Pandoc][pandoc-url] installed and available through the `PATH` environment variable; otherwise, it is skipped.
 
-"Building", in this case, means turning a loose bunch of Markdown files into a self-contained html file, which will be installed to the `docs` directory when running `cmake --install build`.
+"Building", in this case, means turning a loose bunch of Markdown files into a self-contained html file, which is installed to the configured documentation directory when running `cmake --install build`.
 
 Pandoc can be installed in a few OSes as follows (adapted from [this][pandoc-install]):
 
@@ -130,7 +127,7 @@ Pandoc can be installed in a few OSes as follows (adapted from [this][pandoc-ins
   choco install pandoc
   ```
 
-  There is, unfortunately, no package available for MSYS2 (see the [tracking issue][pandoc-msys2]). So if you are using this environment, you will have to add the installation path of Pandoc to the PATH environment on your profile's `.bashrc`.
+  If Pandoc is installed separately from the MSYS2 toolchain, add its installation directory to `PATH` before configuring CMake.
 
 - macOS:
 

@@ -37,6 +37,8 @@ For historical reasons, the following are preserved:
 1. [Frequently Asked Questions (deprecated)](frequently-asked-questions.md)
 2. [Modifying AS](modifying-as.md)
 
+For the current fork, see [Changes from original AS](fork-changes.md) and the [Documentation Audit](documentation-audit.md).
+
 <!-- markdownlint-enable MD030 -->
 <!-- markdownlint-enable MD025 -->
 

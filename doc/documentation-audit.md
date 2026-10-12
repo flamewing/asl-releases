@@ -7,7 +7,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | Tranche | Scope | Status |
 | --- | --- | --- |
 | 1 | Single-line paragraphs in tracked Markdown files | Complete |
-| 2 | Build, installation, package layout and source-maintenance guidance | Pending |
+| 2 | Build, installation, package layout and source-maintenance guidance | Complete |
 | 3 | Assembler invocation, options, environment, manpage and built-in help | Pending |
 | 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Pending |
 | 5 | Source syntax, macros, conditionals and fork language extensions | Pending |
@@ -24,6 +24,12 @@ The baseline contains 35 tracked Markdown files, six manpages and the help text 
 ### 1. Single-line Markdown paragraphs
 
 Join 335 soft-wrapped lines across 15 Markdown files, including list-continuation paragraphs and benchmark prose. Keep fenced/indented code, shell commands, tables, headings, reference definitions and HTML comments intact. Validate all 35 existing Markdown files with Pandoc's GitHub-flavored Markdown parser: the syntax trees are identical after treating soft breaks as spaces. No soft or hard breaks remain inside parsed prose paragraphs or list prose. The new audit record also uses single-line paragraphs.
+
+### 2. Build, installation and maintenance guidance
+
+Replace obsolete AS.EXE/BIN/MAN package descriptions with the actual installed targets and GNUInstallDirs layout, and distinguish flat snapshot archives from full CMake installations. Document embedded/external catalogs, installed includes, optional Pandoc and the host-only resource compiler. Use runnable build/test commands with matching configurations and a test invocation compatible with CMake 3.19. Update source-maintenance guidance for C11, generated config.h, platform checks and .mes/.msg/.msh/.rsc resources; identify obsolete FAQ claims as historical and link current guidance.
+
+Move COPYING installation outside the Pandoc condition so installation without the optional manual generator includes the license. Validate CMake reconfiguration, a staged MinGW installation without Pandoc, installed executable/include/manpage/license paths, and the documented cmake -E chdir CTest invocation. Existing Windows/Linux build validation supplies the compiler/configuration evidence; external-catalog installation is checked separately.
 
 ## Validation policy
 

@@ -5,38 +5,17 @@
 <!-- markdownlint-disable MD030 -->
 <!-- markdownlint-disable MD036 -->
 
-## **EDITOR's NOTES**
-
-These sections are Alfred Arnold's writing, mostly unedited. My notes are as follows:
-
-1. I do not support K&R at all, and you are a bad person if you suggest I should.
-2. A lot of it is made irrelevant due to my changes to use C11 and cmake.
-
-## **END EDITOR's NOTES**
-
-As I already mentioned in the introduction, I release the source code of AS on request. The following shall give a few hints to their usage.
+This chapter describes the current C implementation of this fork. Original AS began in Turbo Pascal and was later translated to C; older descriptions of DOS platform files, K&R compatibility and hand-edited Makefiles do not describe this build.
 
 ## Language Preliminaries
 
-In the beginning, AS was a program written in Turbo-Pascal. This was roughly at the end of the eighties, and there were a couple of reasons for this choice: First, I was much more used to it than to any C compiler, and compared to Turbo Pascal's IDE, all DOS-based C compilers were just crawling along. In the beginning of 1997 however, it became clear that things had changed: One factor was that Borland had decided to let its confident DOS developers down (once again, explicitly no 'thank you', you boneheads from Borland!) and replaced version 7.0 of Borland Pascal with something called 'Delphi', which is probably a wonderful tool to develop Windows programs which consist of 90% user interface and accidentally a little bit of content, however completely useless for command-line driven programs like AS. Furthermore, my focus of operating systems had made a clear move towards Unix, and I probably could have waited arbitrarily long for a Borland Pascal for Linux (to all those remarking now that Borland would be working on something like that: this is _Vapourware_, don't believe them anything until you can go into a shop and actually buy it!). It was therefore clear that C was the way to go.
+The fork requires C11 and does not require C++. `CMakeLists.txt` specifies the language level and checks compiler/platform capabilities. Fixed-width integer types come from `<stdint.h>`; optional 128-bit expressions are enabled with `AS_USE_INT128` when the compiler supports them. Keep target encodings independent of host integer widths and check evaluator success before consuming its result.
 
-After this experience what results the usage of 'island systems' may have, I put a big emphasize on portability while doing the translation to C; however, since AS for example deals with binary data in an exactly format and uses operating system-specific functions at some places which may need adaptions when one compiles AS the first time for a new platform.
+## Encapsulating System Dependencies
 
-AS is tailored for a C compiler that conforms to the ANSI C standard; C++ is explicitly not required. If you are still using a compiler conforming to the outdated Kernighan&Ritchie standard, you should consider getting a newer compiler: The ANSI C standard has been fixed in 1989 and there should be an ANSI C compiler for every contemporary platform, maybe by using the old compiler to build GNU-C. Though there are some switches in the source code to bring it nearer to K&R, this is not an officially supported feature which I only use internally to support a quite antique Unix. Everything left to say about K&R is located in the file `README.KR`.
+All components are built with CMake's targets and source lists. CMake detects system headers, locale support, integer/float representation, processor and operating-system names, and generates `config.h` from `config.h.in`. `sysdefs.h` includes that generated header and supplies common types, compiler annotations and platform conventions such as path separators and binary file modes. `as_endian.c` provides endian conversion support.
 
-The inclusion of some additional features not present in the Pascal version (e.g. dynamically loadable message files, test suite, automatic generation of the documentation from _one_ source format) has made the source tree substantially more complicated. I will attempt to unravel everything step by step:
-
-## Encapsulating System dependencies
-
-## **EDITOR's NOTE:** This is Alfred Arnold's writing, mostly unedited. Most of it is made irrelevant due to my changes to use C11 and cmake
-
-As I already mentioned, As has been tailored to provide maximum platform independence and portability (at least I believe so...). This means packing all platform dependencies into as few files as possible. I will describe these files now, and this section is the first one because it is probably one of the most important:
-
-All components of AS are built with CMake, using the targets and source lists in `CMakeLists.txt`. CMake detects the compiler and platform; cross-compilation uses a toolchain file. See [the build instructions](../README.md#create-and-install-the-package) for configuration, building, testing, and installation, and [the cross-compilation instructions](../README.md#cross-compiling) for building on a different host platform.
-
-A further component to capture system dependencies is the file `sysdefs.h`. Practically all compilers predefine a couple of preprocessor symbols that describe the target processor and the used operating system. For example, on a Sun Sparc under Solaris equipped with the GNU compiler, the symbols `__sparc` and `__SVR4`. `sysdefs.h` exploits these symbols to provide a homogeneous environment for the remaining, system-independent files. Especially, this covers integer data types of a specific length, but it may also include the (re)definition of C functions which are not present or non-standard-like on a specific platform. It's best to read this files yourself if you like to know which things may occur... Generally, the `#ifdef` statement are ordered in two levels: First, a specific processor platform is selected, the the operating systems are sorted out in such a section.
-
-If you port AS to a new platform, you have to find two symbols typical for this platform and extend `sysdefs.h` accordingly. Once again, I'm interested in the result...
+For configuration, building, testing and installation, follow [the build instructions](../README.md#create-and-install-the-package). Cross-compilation uses a toolchain file plus an imported host `rescomp` executable; see [cross-compiling](../README.md#cross-compiling). When adding a platform, extend CMake feature checks and the narrow platform-specific routines rather than restoring legacy platform Makefiles.
 
 ## System-Independent Files
 
@@ -194,14 +173,15 @@ This is used by _ctest_ to run tests.
 
 ## Generation of Message Files
 
-As already mentioned, the C source tree of AS uses a dynamic load principle for all (error) messages. In contrast to the Pascal sources where all messages were bundled in an include file and compiled into the programs, this method eliminates the need to provide AS in multiple language variants; there is only one version which checks for the language to be used upon runtime and loads the corresponding component from the message files. Just to remind: Under DOS and OS/2, the `COUNTRY` setting is queried, while under Unix, the environment variables `LC_MESSAGES, LC_ALL,` and `LANG` are checked.
+CMake generates message catalogs with `rescomp`. The default `ASL_EMBED_MESSAGES=ON` embeds their bytes in the executables; setting it to `OFF` loads `.msg` files at runtime. Both modes select a language at startup. The catalog reader checks `LC_MESSAGES`, then `LC_ALL`, then `LANG`, and uses the default language if no supported language matches. Platform country information can also participate in matching. The generated message IDs and catalog contents must stay synchronized.
 
 ### Format of the Source Files
 
-A source file for the message compiler _rescomp_ usually has the suffix `.res`. The message compiler generates one or two files from a source:
+A source file for the message compiler _rescomp_ uses the suffix `.mes`. The message compiler can generate these outputs from a source:
 
-- a binary file which is read at runtime by AS resp. its tools
-- optionally one further C header file assigning an index number to all messages. These index numbers in combination with an index table in the binary file allow a fast access to to individual messages at runtime.
+- `-m output.msg`: binary catalog for external-catalog builds;
+- `-i output.msh`: C header containing catalog bytes for embedded builds;
+- `-h output.rsc`: C header assigning an index to each message.
 
 The source file for the message compiler is a pure ASCII file and can therefore be modified with any editor. It consists of a sequence of control commands with parameters. Empty lines and lines beginning with a semicolon are ignored. Inclusion of other files is possible via the `Include` statement:
 
@@ -215,7 +195,7 @@ The first two statements in every source file must be two statements describing 
     Langs DE(049) EN(001,061)
 ```
 
-describes that two languages will be defined in the rest of the file. The first one shall be used under Unix when the language has been set to `DE` via environment variable. Similarly, It shall be used under DOS and OS/2 when the country code was set to 049. Similarly, the second set shall be used for the settings `DE` resp. 061 or 001. While multiple 'telephone numbers' may point to a single language, the assignment to a Unix language code is a one-to-one correspondence. This is no problem in practice since the `LANG` variables Unix uses describe subversions via appendices, e.g.:
+describes that two languages will be defined in the rest of the file. The first one shall be used under Unix when the language has been set to `DE` via environment variable. Similarly, It shall be used under DOS and OS/2 when the country code was set to 049. Similarly, the second set shall be used for the settings `EN` resp. 061 or 001. While multiple 'telephone numbers' may point to a single language, the assignment to a Unix language code is a one-to-one correspondence. This is no problem in practice since the `LANG` variables Unix uses describe subversions via appendices, e.g.:
 
 ```asm
     de.de
@@ -278,9 +258,9 @@ A source distribution of AS contains this documentation in Markdown format.
 
 ## Test Suite
 
-Since AS deals with binary data of a precisely defined structure, it is naturally sensitive for system and compiler dependencies. To reach at least a minimum amount of secureness that everything went right during compilation, a set of test sources is provided in the subdirectory `tests` that allows to test the freshly built assembler. These programs are primarily trimmed to find faults in the translation of the machine instruction set, which are commonplace when integer lengths vary. Target-independent features like the macro processors or conditional assembly are only casually tested, since I assume that they work everywhere when they work for me...
+Build the executables, then run `cmake -E chdir build ctest -C Release --output-on-failure --parallel`, selecting the same configuration used for the build. Architecture fixtures assemble source, convert the result with `p2bin` and compare it with committed reference bytes. Other tests check parsing, diagnostics, source positions, forward references, message catalogs, I/O failures and shared runtime helpers. A pass means the assertions of that test succeeded; not every test is a binary-image comparison.
 
-The test run is started via a simple `ctest --build-run-dir build --test-dir build -j`. Each test program is assembled, converted to a binary file, and compared to a reference image. A test is considered to be passed if and only if the reference image and the newly generated one are identical on a bit-by-bit basis. At the end of the test, the assembly time for every test is printed (those who want may extend the file BENCHES with these results), accompanied with a success or failure message. Track down every error that occurs, even if it occurs in a processor target you are never going to use! It is always possible that this points to an error that may also come up for other targets, but by coincidence not in the test cases.
+Run the relevant tests after a change and investigate failures even on targets you do not normally use. Use [the benchmark guide](../benchmarks/README.md) for controlled timing and output comparisons; CTest elapsed times alone are not a performance measurement.
 
 ## Adding a New Target Processor
 
@@ -373,7 +353,7 @@ You are interested in this topic? Wonderful! This is an issue that is often negl
 
 The localization to a new language can be split into two parts: the adaption of program messages and the translation of the manual. The latter one is definitely a work of gigantic size, however, the adaption of program messages should be a work doable on two or three weekends, given that one knows both the new and one of the already present messages. Unfortunately, this translation cannot be done on a step-by-step basis because the resource compiler currently cannot deal with a variable amount of languages for different messages, so the slogan is 'all or nothing'.
 
-The first operation is to add the new language to `header.res`. The two-letter-abbreviation used for this language is best fetched from the nearest Unix system (in case you don't work on one anyway...), the international telephone prefix from a DOS manual.
+The first operation is to add the new language to `header.mes`. The two-letter-abbreviation used for this language is best fetched from the nearest Unix system (in case you don't work on one anyway...), the international telephone prefix from a DOS manual.
 
 When this is complete, one can rebuild all necessary parts with a simple `cmake --build build -j` and obtains an assembler that supports one more language. Do not forget to forward the results to me. This way, all users will benefit from this with the next release :-)
 

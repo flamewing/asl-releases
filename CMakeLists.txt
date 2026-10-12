@@ -1167,6 +1167,8 @@ endif(NOT CMAKE_CROSSCOMPILING)
 find_program(PANDOC_EXECUTABLE pandoc)
 mark_as_advanced(PANDOC_EXECUTABLE)
 
+install(FILES COPYING DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
 # TODO: Convert man pages to Markdown and install them with
 # include(PandocMan)
 # add_pandoc_man("${CMAKE_SOURCE_DIR}/utility.1.md")
@@ -1243,7 +1245,6 @@ if(EXISTS ${PANDOC_EXECUTABLE})
     add_dependencies(asl.odt_product html_document)
     install(
         FILES
-        COPYING
         ${CMAKE_BINARY_DIR}/asl.html
         ${CMAKE_BINARY_DIR}/asl.odt
         DESTINATION ${CMAKE_INSTALL_DOCDIR}
