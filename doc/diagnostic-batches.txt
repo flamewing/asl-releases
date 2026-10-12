@@ -1882,3 +1882,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     five CPUs (BRN remains CPU-gated) cover provisional upper/lower targets
     and retained final failures. Existing bit-branch checks already defer both.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+165. 6800-family JMP/JSR emission after operand failure.
+    JMP #1 and JSR #1 reject immediate addressing but still emit 4E/8D.
+    Require a successfully decoded mode (ModNone is the failure sentinel).
+    Five CPUs cover immediate/accumulator/float/invalid-index failures with
+    no emission and preserve captured valid absolute/indexed instruction bytes.
+    Validation: all 415 CTest cases pass with embedded/external catalogs; consolidated branch fixtures retain every opcode/target direction and pass focused checks in both configurations.

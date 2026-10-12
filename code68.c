@@ -494,7 +494,7 @@ static void DecodeJMP(Word Index) {
 
     if (ChkArgCnt(1, 2)) {
         DecodeAdr(1, ArgCnt, eSymbolSizeUnknown, MModExt | MModInd);
-        if (AdrMode != ModImm) {
+        if (AdrMode != ModNone) {
             CodeLen           = PrefCnt + 1 + AdrCnt;
             BAsmCode[PrefCnt] = 0x4e + (AdrPart << 4);
             append_adr_vals(1 + PrefCnt);
@@ -509,7 +509,7 @@ static void DecodeJSR(Word Index) {
         DecodeAdr(
                 1, ArgCnt, eSymbolSizeUnknown,
                 MModExt | MModInd | ((MomCPU >= CPU6801) ? MModDir : 0));
-        if (AdrMode != ModImm) {
+        if (AdrMode != ModNone) {
             CodeLen           = PrefCnt + 1 + AdrCnt;
             BAsmCode[PrefCnt] = 0x8d + (AdrPart << 4);
             append_adr_vals(1 + PrefCnt);

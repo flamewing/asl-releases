@@ -2068,6 +2068,11 @@
       "file": "code68.c",
       "issue": "Ordinary 6800-family byte branches reject first-pass unresolved target-expression distances before resolution; bit branches already defer unknown/questionable values.",
       "status": "fixed in tranche 164; defer ordinary branch check for unknown/questionable flags; all 19 branch mnemonics/five CPUs (BRN gated)/upper-lower provisional expressions/final failures checked"
+    },
+    {
+      "file": "code68.c",
+      "issue": "JMP and JSR test decoded mode against ModImm rather than ModNone and emit opcodes after failed operand parsing.",
+      "status": "fixed in tranche 165; require a successfully decoded mode; five CPUs/immediate-accumulator-float-invalid-index errors/no emission/original absolute-indexed bytes checked"
     }
   ]
 }
