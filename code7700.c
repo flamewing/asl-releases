@@ -181,7 +181,14 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
     }
 
     if (DType == -1) {
-        if ((Mask & (1l << Start)) && (Adr >= Reg_DPR) && (Adr < Reg_DPR + 0x100)) {
+        if (mFirstPassUnknownOrQuestionable(Flags)) {
+            /* Select an available provisional width until the address resolves. */
+            for (DType = 0; DType < 2; DType++) {
+                if (Mask & (1l << (Start + DType))) {
+                    break;
+                }
+            }
+        } else if ((Mask & (1l << Start)) && (Adr >= Reg_DPR) && (Adr < Reg_DPR + 0x100)) {
             DType = 0;
         } else if ((Mask & (2l << Start)) && ((Adr >> 16) == BankReg)) {
             DType = 1;
@@ -195,7 +202,7 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
     } else {
         switch (DType) {
         case 0:
-            if (mFirstPassUnknown(Flags) || ((Adr >= Reg_DPR) && (Adr <= Reg_DPR + 0xff))) {
+            if (mFirstPassUnknownOrQuestionable(Flags) || ((Adr >= Reg_DPR) && (Adr <= Reg_DPR + 0xff))) {
                 AdrCnt     = 1;
                 AdrType    = Start;
                 AdrVals[0] = Lo(Adr - Reg_DPR);
@@ -204,7 +211,7 @@ static void CodeDisp(tStrComp const* pArg, LongInt Start, LongWord Mask) {
             }
             break;
         case 1:
-            if (!mFirstPassUnknown(Flags) && ((Adr >> 16) != BankReg)) {
+            if (!mFirstPassUnknownOrQuestionable(Flags) && ((Adr >> 16) != BankReg)) {
                 WrBankRange(pArg, Adr);
             } else {
                 AdrCnt     = 2;

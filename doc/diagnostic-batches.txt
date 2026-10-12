@@ -1737,3 +1737,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     raw PER immediate behavior and accepted bytes. Four CPUs cover both bounds,
     both bank contexts, unknown assumptions and captured endpoint encodings.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+148. MELPS7700/65816 unresolved address width selection.
+    Automatic selection uses unresolved values and chooses unavailable 24-bit
+    mode, failing valid PEI/PEA/RMW/XY/LDM/BBC forward expressions. Select an
+    available provisional width until resolved, defer DPR/bank constraints for
+    unknown/questionable symbols. Four CPUs/13 scalar aliases/PEI/LDM/BBC and
+    forced page/word forms verify valid forward operands; retained final bounds
+    and captured accepted bytes remain covered by existing focused fixtures.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.
