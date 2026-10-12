@@ -184,3 +184,35 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German Z8 addressing: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(bit-window-super Z88C00 "bitsym equ 5\n bitc bitsym" 1350
+ "bit operand address 0x0 outside working-register descriptor range [0xC0,0xCF]; expected a bit in R0..R15" 4 7)
+check_diagnostic(bit-window-encore eZ8 "bitsym equ 5\n btjnz bitsym,0" 1350
+ "working-register descriptor range [0xEE0,0xEEF]" 4 8)
+check_diagnostic(bit-window-conditional eZ8 "bitsym equ 5\n btj 1,bitsym,0" 1350
+ "working-register descriptor range [0xEE0,0xEEF]" 4 8)
+check_diagnostic(bit-two-primary Z88C00 " band r1,1/0" 1310 "division by 0" 3 "")
+check_diagnostic(bit-first-primary Z88C00 " band 1/0,r1" 1310 "division by 0" 3 "")
+check_diagnostic(bit-reversed-compare Z88C00 "bitsym defbit r3,5\n bcp bitsym,r1" 1350
+ "expected R0..R15,bit operand; reversed operands are not allowed" 4 6)
+check_diagnostic(bit-forms Z88C00 " band 1,2" 1350
+ "expected R0..R15,bit operand or bit operand,R0..R15" 3 9)
+check_bytes(bit-original Z88C00
+ "bitsym defbit r3,5\n bitc bitsym\n band r1,bitsym\n ldb bitsym,r1\n bcp r1,bitsym"
+ "573a671ac3471bc3171ac3")
+check_bytes(bit-forward Z88C00
+ " bitc bitsym\n band alias,bitsym\n ldb bitsym,alias\n bcp alias,bitsym\nbitsym defbit r3,5\nalias reg r1"
+ "573a671ac3471bc3171ac3")
+check_bytes(bit-encore-original eZ8 "bitsym defbit r7,5\n btjnz bitsym,$+3" "f6d700")
+check_bytes(bit-encore-forward eZ8 " btjnz bitsym,0\nbitsym defbit r7,5" "f6d7fd")
+check_bytes(bit-noemit Z88C00
+ "bitsym equ 5\n expect 1350,1310,1350\n bitc bitsym\n band r1,1/0\n bcp bitsym,r1\n endexpect\n db 18" "12")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/bit-window-super.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Bitoperandenadresse 0x0" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German Z8 bit: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

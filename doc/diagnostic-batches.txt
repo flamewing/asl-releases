@@ -2579,3 +2579,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Preserve all mask/condition predicates and original byte vector. Primary errors,
     no failed emission and German detail checked. Three bit-mode candidates remain.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+239. Z8 bit descriptor windows, operand pairs and forward classes.
+    Complete three remaining mode sites: actual descriptor range/R0..15 guidance,
+    correct bit operand location in eZ8 BTJ, and one-way/two-way pair alternatives.
+    Carry packed flags to defer unknown window checks; defer unresolved plain
+    names before ambiguous pair classification. Native names skip symbol probe;
+    focused EXPECT caught and corrected wrong builtin deferral. Explicit lookup
+    states/success-only descriptor output preserve primary errors. Original/forward
+    Super8/eZ8 bytes, no rejected emission and German detail checked.
+    All 17 historical Z8 sites reviewed.
+    Validation: all 420 CTest cases pass with embedded/external catalogs.

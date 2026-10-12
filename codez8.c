@@ -165,18 +165,19 @@ static Boolean IsWRegCore(char const* pArg, Byte* pResult) {
  * \return reg eval result
  * ------------------------------------------------------------------------ */
 
-static Boolean IsWReg(tStrComp const* pArg, Byte* pResult, Boolean MustBeReg) {
+static tRegEvalResult IsWReg(tStrComp const* pArg, Byte* pResult, Boolean MustBeReg) {
     tRegDescr      RegDescr;
     tEvalResult    EvalResult;
     tRegEvalResult RegEvalResult;
 
     if (IsWRegCore(pArg->str.p_str, pResult)) {
-        return True;
+        return eIsReg;
     }
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, MustBeReg);
-    *pResult = RegDescr.Reg;
+    if (RegEvalResult == eIsReg)
+        *pResult = RegDescr.Reg;
     return RegEvalResult;
 }
 
@@ -890,8 +891,11 @@ static Boolean DecodeBitArg2(
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, ShortInt OpSize) {
+static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, ShortInt OpSize,
+        tSymbolFlags* p_flags) {
     *pResult = 0;
+    if (p_flags)
+        *p_flags = eSymbolFlag_None;
 
     /* Just one argument -> parse as bit argument */
 
@@ -902,6 +906,8 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, ShortInt OpS
                 &ArgStr[Start], mIsZ8Encore() ? UInt15 : UInt11, &EvalResult);
         if (EvalResult.OK) {
             ChkSpace(SegBData, EvalResult.AddrSpaceMask);
+            if (p_flags)
+                *p_flags = EvalResult.Flags;
         }
         return EvalResult.OK;
     }
@@ -909,7 +915,10 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, ShortInt OpS
     /* register & bit position are given as separate arguments */
 
     else if (Stop == Start + 1) {
-        return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop], OpSize);
+        Boolean result = DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop], OpSize);
+        if (p_flags)
+            *p_flags = adr_val_flags;
+        return result;
     }
 
     /* other # of arguments not allowed */
@@ -983,18 +992,29 @@ static Boolean DissectBitSymbol(
  * \return TRUE if successfully decoded
  * ------------------------------------------------------------------------ */
 
+static void report_bit_window(Word address, tStrComp const* p_arg) {
+    char detail[220];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8BitWindow),
+            (LargeWord)address, (LargeWord)pCurrCPUProps->WorkOfs,
+            (LargeWord)(pCurrCPUProps->WorkOfs + 15));
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+}
+
 static Boolean DecodeWRBitArg(int StartArg, int EndArg, Byte* pResult) {
     LongWord Result;
     Word     Address;
     Byte     BitPos;
     ShortInt OpSize;
+    tSymbolFlags flags;
 
-    if (!DecodeBitArg(&Result, StartArg, EndArg, eSymbolSize8Bit)) {
+    if (!DecodeBitArg(&Result, StartArg, EndArg, eSymbolSize8Bit, &flags)) {
         return False;
     }
     (void)DissectBitSymbol(Result, &Address, &BitPos, &OpSize);
+    if (mFirstPassUnknownOrQuestionable(flags))
+        Address = pCurrCPUProps->WorkOfs;
     if ((Address < pCurrCPUProps->WorkOfs) || (Address >= pCurrCPUProps->WorkOfs + 16)) {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[StartArg]);
+        report_bit_window(Address, &ArgStr[StartArg]);
         return False;
     }
     *pResult = ((Address & 15) << 3) | BitPos;
@@ -2095,7 +2115,7 @@ static void DecodeBit(Word Index) {
             LongWord BitArg;
             ShortInt OpSize = eSymbolSize8Bit;
 
-            if (DecodeBitArg(&BitArg, 1, 1, OpSize)) {
+            if (DecodeBitArg(&BitArg, 1, 1, OpSize, NULL)) {
                 Word Address;
                 Byte BitPos;
 
@@ -2148,18 +2168,20 @@ static void DecodeBTJCore(Word Index, int ArgOffset) {
     case 2: {
         LongWord BitArg;
         ShortInt OpSize = eSymbolSize8Bit;
+        tSymbolFlags flags;
 
-        if (DecodeBitArg(&BitArg, 1 + ArgOffset, 1 + ArgOffset, OpSize)) {
+        if (DecodeBitArg(&BitArg, 1 + ArgOffset, 1 + ArgOffset, OpSize, &flags)) {
             Word Address;
             Byte BitPos;
 
             (void)DissectBitSymbol(BitArg, &Address, &BitPos, &OpSize);
-            if ((Address & 0xff0) == pCurrCPUProps->WorkOfs) {
+            if (mFirstPassUnknownOrQuestionable(flags)
+                    || ((Address & 0xff0) == pCurrCPUProps->WorkOfs)) {
                 BAsmCode[0] = 0xf6;
                 BAsmCode[1] = (Address & 15) | (BitPos << 4);
                 TmpCodeLen  = 2;
             } else {
-                WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
+                report_bit_window(Address, &ArgStr[1 + ArgOffset]);
             }
         }
         break;
@@ -2236,6 +2258,32 @@ static void DecodeBit1(Word Code) {
     }
 }
 
+static Boolean defer_bit_operands(void) {
+    unsigned arg;
+    if (PassNo > MaxSymPass)
+        return False;
+    for (arg = 1; arg <= 2; arg++) {
+        tRegDescr descriptor;
+        tEvalResult result;
+        Byte reg;
+        if (IsWRegCore(ArgStr[arg].str.p_str, &reg)
+                || IsWRRegCore(ArgStr[arg].str.p_str, &reg))
+            continue;
+        if (ChkSymbName(ArgStr[arg].str.p_str)
+                && EvalStrRegExpressionWithResult(&ArgStr[arg], &descriptor, &result)
+                        == ErrNum_SymbolUndef) {
+            Repass = True;
+            return True;
+        }
+    }
+    return False;
+}
+
+static void report_bit_forms(Boolean two_way, tStrComp const* p_arg) {
+    WrXErrorPos(ErrNum_InvAddrMode, getmessage(two_way ? Num_ErrMsgZ8BitFormsTwoWay
+            : Num_ErrMsgZ8BitFormsOneWay), &p_arg->Pos);
+}
+
 static void DecodeBit2(Word Code) {
     if (ChkCoreFlags(eCoreSuper8)) {
         LongWord BitValue;
@@ -2268,16 +2316,32 @@ static void DecodeBit2(Word Code) {
             break;
         }
         case 2: {
-            if ((IsWReg(&ArgStr[1], &Reg, False) == eIsReg)
-                && DecodeBitArg(&BitValue, 2, 2, eSymbolSize8Bit)) {
-                BAsmCode[1] = 0x00;
-            } else if (
-                    (IsWReg(&ArgStr[2], &Reg, False) == eIsReg)
-                    && DecodeBitArg(&BitValue, 1, 1, eSymbolSize8Bit) && Hi(Code)) {
-                BAsmCode[1] = 0x01;
-            } else {
-                WrError(ErrNum_InvAddrMode);
+            tRegEvalResult first;
+            if (defer_bit_operands())
                 return;
+            first = IsWReg(&ArgStr[1], &Reg, False);
+            if (first == eRegAbort)
+                return;
+            if (first == eIsReg) {
+                if (!DecodeBitArg(&BitValue, 2, 2, eSymbolSize8Bit, NULL))
+                    return;
+                BAsmCode[1] = 0x00;
+            } else {
+                tRegEvalResult second;
+                if (!Hi(Code)) {
+                    report_bit_forms(False, &ArgStr[1]);
+                    return;
+                }
+                second = IsWReg(&ArgStr[2], &Reg, False);
+                if (second == eRegAbort)
+                    return;
+                if (second != eIsReg) {
+                    report_bit_forms(True, &ArgStr[2]);
+                    return;
+                }
+                if (!DecodeBitArg(&BitValue, 1, 1, eSymbolSize8Bit, NULL))
+                    return;
+                BAsmCode[1] = 0x01;
             }
             break;
         }
@@ -2349,7 +2413,7 @@ static void DecodeDEFBIT(Word Code) {
         pElement->ExpandFnc    = ExpandZ8Bit;
         AddStructElem(pInnermostNamedStruct->StructRec, pElement);
     } else {
-        if (DecodeBitArg(&BitSpec, 1, ArgCnt, eSymbolSize8Bit)) {
+        if (DecodeBitArg(&BitSpec, 1, ArgCnt, eSymbolSize8Bit, NULL)) {
             *ListLine = '=';
             DissectBit_Z8(ListLine + 1, STRINGSIZE - 3, BitSpec);
             PushLocHandle(-1);

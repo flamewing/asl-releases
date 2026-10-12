@@ -2627,3 +2627,15 @@ Message ErrMsgZ8CodeAddress
 Message ErrMsgZ8ConditionalIndirect
  "Bedingung '%s' erlaubt keinen indirekten Sprung; erwartet wird eine absolute Codeadresse oder JP ohne Bedingung"
  "condition '%s' does not allow an indirect jump; expected absolute code address or unconditional JP"
+
+Message ErrMsgZ8BitWindow
+ "Bitoperandenadresse 0x%lllx au&szlig;erhalb des Arbeitsregister-Deskriptorbereichs [0x%lllx,0x%lllx]; erwartet wird ein Bit in R0..R15"
+ "bit operand address 0x%lllx outside working-register descriptor range [0x%lllx,0x%lllx]; expected a bit in R0..R15"
+
+Message ErrMsgZ8BitFormsOneWay
+ "Erwartet wird R0..R15,Bitoperand; umgekehrte Operanden sind nicht erlaubt"
+ "expected R0..R15,bit operand; reversed operands are not allowed"
+
+Message ErrMsgZ8BitFormsTwoWay
+ "Erwartet wird R0..R15,Bitoperand oder Bitoperand,R0..R15"
+ "expected R0..R15,bit operand or bit operand,R0..R15"
