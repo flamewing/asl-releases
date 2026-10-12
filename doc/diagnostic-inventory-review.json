@@ -327,11 +327,12 @@
       },
       "reviewed_diagnostic_families": [
         "ErrNum_DistIsOdd",
+        "ErrNum_InvAddrMode",
         "ErrNum_OverRange",
         "ErrNum_UnderRange"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Six historical numeric branch sites already report actual range/alignment values through localized helper (numeric diagnostics tranche); tranche 169 corrects premature range/alignment checks on unresolved target expressions, preserving those messages and predicates. Two displacement/base address-form sites remain. Adjacent primary register/condition failure semantics fixed in 168."
+      "status": "complete",
+      "review_notes": "Six historical numeric branch sites already report actual range/alignment values through localized helper (numeric diagnostics tranche); tranche 169 corrects premature range/alignment checks on unresolved target expressions, preserving those messages and predicates. Two displacement/base address-form sites remain. Adjacent primary register/condition failure semantics fixed in 168. Tranche 170 reviews both remaining address-form sites: displacement(R0..R31) guidance and quote-aware bracket validation with character-specific 1300 errors. Existing numeric branch diagnostics remain useful and were preserved in 169. All eight historical candidates reviewed."
     },
     "code6100.c": {
       "candidate_counts": {

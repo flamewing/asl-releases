@@ -15,6 +15,7 @@
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
+#include "asmerr.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -252,6 +253,12 @@ static Boolean DecodeCondBit(
  * \return True if parsing OK
  * ------------------------------------------------------------------------ */
 
+static void ReportDispBaseForm(tStrComp const* pArg) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "displacement(R0..R31)");
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
+}
+
 static Boolean DecodeRegDisp(tStrComp* p_comp, LongWord* p_ret, LongWord* p_guess_mask) {
     char*        p;
     int          l = strlen(p_comp->str.p_str);
@@ -260,17 +267,17 @@ static Boolean DecodeRegDisp(tStrComp* p_comp, LongWord* p_ret, LongWord* p_gues
     tSymbolFlags flags;
     tStrComp     DispArg, RegArg;
 
-    if (p_comp->str.p_str[l - 1] != ')') {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_comp);
+    if (!CheckBrackets(p_comp, "()[]{}", True)) {
+        return False;
+    }
+    if (!l || (p_comp->str.p_str[l - 1] != ')')) {
+        ReportDispBaseForm(p_comp);
         return False;
     }
     p_comp->str.p_str[--l] = '\0';
-    p                      = p_comp->str.p_str + l - 1;
-    while ((p >= p_comp->str.p_str) && (*p != '(')) {
-        p--;
-    }
-    if (p < p_comp->str.p_str) {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_comp);
+    p = RQuotPos(p_comp->str.p_str, '(');
+    if (!p) {
+        ReportDispBaseForm(p_comp);
         return False;
     }
     StrCompSplitRef(&DispArg, &RegArg, p_comp, p);

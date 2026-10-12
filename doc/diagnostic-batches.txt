@@ -1924,3 +1924,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     provisional misaligned/upper/lower out-of-range values and retained final
     errors. Existing useful numeric diagnostics/predicates/encodings retained.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+170. PowerPC memory operand forms and bracket diagnostics; historical completion.
+    Require displacement(R0..R31), reporting that form at the failed operand.
+    Validate quote-aware delimiter balance before splitting the base register;
+    missing/mismatched brackets now use character-specific 1300 instead of
+    generic 1350. Six CPUs cover malformed forms/no emission and preserve
+    load/store and quoted-parenthesis displacement encodings. All eight
+    historical PowerPC candidates are reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
