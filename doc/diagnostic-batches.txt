@@ -2289,3 +2289,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     classic/ColdFire integer and all seven classic float encodings pass.
     Five of 98 historical size candidates reviewed; remaining sites pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+207. M68K ADD/SUB/CMP size detail and rejected-instruction emission.
+    Three size sites list actual CPU/ISA-dependent widths or address-register
+    .W/.L at the suffix. Return after classic byte An-source rejection rather
+    than generating bytes despite 1130. Original EXPECT reproducer emitted
+    d0089409b60a12; now only sentinel 12. Classic word/long arithmetic and
+    ColdFire ISA B CMP byte/word/long encodings retained. All acceptance predicates
+    unchanged. Eight of 98 historical size candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

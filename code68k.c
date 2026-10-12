@@ -3106,7 +3106,9 @@ static void DecodeADDSUBCMP(Word Index) {
     }
 
     if (!OpSizeOK) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes((pCurrCPUProps->Family != eColdfire)
+                || ((pCurrCPUProps->CfISA >= eCfISA_B) && (Op == 1))
+                ? ".B, .W, .L" : ".L");
     } else {
         if (ChkArgCnt(2, 2)) {
             tAdrResult AdrResult;
@@ -3114,7 +3116,7 @@ static void DecodeADDSUBCMP(Word Index) {
             switch (DecodeAdr(&ArgStr[2], DestMask, &AdrResult)) {
             case ModAdr: /* ADDA/SUBA/CMPA ? */
                 if (OpSize == eSymbolSize8Bit) {
-                    WrError(ErrNum_InvOpSize);
+                    report_operand_sizes(".W, .L");
                 } else {
                     WAsmCode[0] = 0x90c0 | ((AdrResult.AdrPart & 7) << 9) | (Op << 13);
                     if (OpSize == eSymbolSize32Bit) {
@@ -3137,7 +3139,8 @@ static void DecodeADDSUBCMP(Word Index) {
 
                 if ((AdrResult.AdrMode == ModAdr) && (OpSize == eSymbolSize8Bit)
                     && (pCurrCPUProps->Family != eColdfire)) {
-                    WrError(ErrNum_InvOpSize);
+                    report_operand_sizes(".W, .L");
+                    return;
                 }
                 if (AdrResult.AdrMode != ModNone) {
                     if ((AdrResult.AdrMode == ModImm) && (Variant == I_Variant)) {

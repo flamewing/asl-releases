@@ -495,3 +495,28 @@ check_bytes(cold-original-sizes MCF5407
 check_bytes(float-original-sizes 68020
     " fpu on\n fmove.b (a0),fp0\n fmove.w (a0),fp0\n fmove.l (a0),fp0\n fmove.s (a0),fp0\n fmove.d (a0),fp0\n fmove.x (a0),fp0\n fmove.p (a0),fp0"
     "f2105800f2105000f2104000f2104400f2105400f2104800f2104c00")
+
+# ADD/SUB/CMP rejects byte address registers before emitting any bytes.
+foreach(ins IN ITEMS add sub cmp)
+    check_diagnostic(alu-source-size-${ins} 68000 " ${ins}.b a0,d0" 1130
+        "supported operand sizes: .W, .L" 3 6)
+    check_diagnostic(alu-destination-size-${ins} 68000 " ${ins}.b d0,a0" 1130
+        "supported operand sizes: .W, .L" 3 6)
+    check_diagnostic(alu-general-size-${ins} 68000 " ${ins}.s d0,d1" 1130
+        "supported operand sizes: .B, .W, .L" 3 6)
+endforeach()
+foreach(ins IN ITEMS add sub)
+    check_diagnostic(alu-cold-size-${ins} MCF5407 " ${ins}.w d0,d1" 1130
+        "supported operand sizes: .L" 3 6)
+endforeach()
+check_diagnostic(cmp-cold-a-size MCF5202 " cmp.w d0,d1" 1130
+    "supported operand sizes: .L" 3 6)
+check_diagnostic(cmp-cold-b-size MCF5407 " cmp.s d0,d1" 1130
+    "supported operand sizes: .B, .W, .L" 3 6)
+check_bytes(alu-size-errors-noemit 68000
+    " expect 1130,1130,1130\n add.b a0,d0\n sub.b a1,d2\n cmp.b a2,d3\n endexpect\n dc.b $12" "12")
+check_bytes(alu-original-sizes 68000
+    " add.w a0,d0\n sub.l a1,d2\n cmp.w a2,d3\n adda.w d0,a0\n suba.l d1,a1\n cmpa.w d2,a2"
+    "d0489489b64ad0c093c1b4c2")
+check_bytes(cmp-cold-original-sizes MCF5407
+    " cmp.b d0,d1\n cmp.w d0,d1\n cmp.l d0,d1" "b200b240b280")
