@@ -472,7 +472,8 @@
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "partially reviewed",
+      "review_notes": "Tranche 172 defers provisional branch range/alignment failures; existing useful contextual branch detail retained. Remaining page/register/address/count families still pending."
     },
     "code68k.c": {
       "candidate_counts": {

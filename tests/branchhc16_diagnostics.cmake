@@ -98,3 +98,22 @@ check_bytes(short 68HC16 " org $1000\n bra *+132\n bne *-122\n bsr *+132" "b07eb
 check_bytes(long 68HC16 " org $9000\n lbra *+32772\n lbne *-32762\n lbsr *+32772" "37807ffe3786800027f97ffe")
 check_bytes(bits 68HC16 " org $9000\n brset $55,x,#2,*+132\n brclr $55,x,#2,*+133\n brset $5aa5,x,#2,*+32773\n brclr $1234,#2,*-32762" "8b02557e0a020055007f0b025aa57fff3a0212348000")
 check_bytes(forward 68HC16 " org $1000\n bra target\ntarget equ $1008" "b002")
+
+# Provisional range/alignment failures must wait until forward targets resolve.
+foreach(item IN ITEMS "bra|b002" "bsr|3602" "lbra|37800002" "lbsr|27f90002")
+    string(REPLACE "|" ";" fields "${item}")
+    list(GET fields 0 mnemonic)
+    list(GET fields 1 bytes)
+    foreach(offset IN ITEMS 1001 100000)
+        check_bytes(forward-${mnemonic}-${offset} 68HC16
+            " org $1000\n ${mnemonic} target+${offset}\ntarget equ $1008-${offset}" "${bytes}")
+    endforeach()
+endforeach()
+foreach(item IN ITEMS "brset $55,x,#2|8b025502" "brset $5555,x,#2|0b0255550002" "brset $1234,#2|3b0212340002")
+    string(REPLACE "|" ";" fields "${item}")
+    list(GET fields 0 instruction)
+    list(GET fields 1 bytes)
+    string(MAKE_C_IDENTIFIER "${instruction}" tag)
+    check_bytes(forward-${tag} 68HC16
+        " org $1000\n ${instruction},target+100000\ntarget equ $1008-100000" "${bytes}")
+endforeach()

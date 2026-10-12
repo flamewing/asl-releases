@@ -1941,3 +1941,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     verify detail/position/no error bytes; existing branch golden vectors
     continue to cover accepted forms. All twelve historical sites reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+172. CPU16 forward branch range/alignment checks.
+    BRA target+1001 reports a provisional alignment error even when the final
+    target is valid. Defer all ten ordinary/long/subroutine/bit branch range
+    and alignment checks for unknown/questionable targets. Preserve existing
+    numeric diagnostics and final range/alignment predicates. Regression
+    vectors cover all decoder paths and finally valid bytes.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

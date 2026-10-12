@@ -311,10 +311,10 @@ static void DecodeRel(Word Code) {
         if (!OK) {
             return;
         }
-        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+        if (!mFirstPassUnknownOrQuestionable(Flags) && (AdrLong & 1)) {
             report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (Code & 0x8000) {
-            if (!mSymbolQuestionable(Flags)
+            if (!mFirstPassUnknownOrQuestionable(Flags)
                 && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) {
                 report_branch_distance(AdrLong, -32768, 32767, True, &ArgStr[1]);
             } else {
@@ -325,7 +325,7 @@ static void DecodeRel(Word Code) {
                 CodeLen     = 4;
             }
         } else {
-            if (!mSymbolQuestionable(Flags)
+            if (!mFirstPassUnknownOrQuestionable(Flags)
                 && ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) {
                 report_branch_distance(AdrLong, -128, 127, True, &ArgStr[1]);
             } else {
@@ -348,10 +348,10 @@ static void DecodeLRel(Word Code) {
         if (!OK) {
             return;
         }
-        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+        if (!mFirstPassUnknownOrQuestionable(Flags) && (AdrLong & 1)) {
             report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (
-                !mSymbolQuestionable(Flags)
+                !mFirstPassUnknownOrQuestionable(Flags)
                 && ((AdrLong > 0x7fffl) || (AdrLong < -0x8000l))) {
             report_branch_distance(AdrLong, -32768, 32767, True, &ArgStr[1]);
         } else {
@@ -671,7 +671,7 @@ static void DecodeBrBit(Word Index) {
                         BAsmCode[3] = AdrLong & 0xff;
                         CodeLen     = 4;
                     } else if (
-                            !mSymbolQuestionable(Flags)
+                            !mFirstPassUnknownOrQuestionable(Flags)
                             && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
                         report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
@@ -684,7 +684,7 @@ static void DecodeBrBit(Word Index) {
                     }
                     break;
                 case ModDisp16:
-                    if (!mSymbolQuestionable(Flags)
+                    if (!mFirstPassUnknownOrQuestionable(Flags)
                         && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
                         report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
@@ -696,7 +696,7 @@ static void DecodeBrBit(Word Index) {
                     }
                     break;
                 case ModAbs:
-                    if (!mSymbolQuestionable(Flags)
+                    if (!mFirstPassUnknownOrQuestionable(Flags)
                         && ((AdrLong < -0x8000l) || (AdrLong > 0x7fffl))) {
                         report_branch_distance(AdrLong, -32768, 32767, False, &ArgStr[ArgCnt]);
                     } else {
@@ -745,10 +745,10 @@ static void DecodeBsr(Word Index) {
         if (!OK) {
             return;
         }
-        if (!mSymbolQuestionable(Flags) && (AdrLong & 1)) {
+        if (!mFirstPassUnknownOrQuestionable(Flags) && (AdrLong & 1)) {
             report_branch_alignment(AdrLong, &ArgStr[1]);
         } else if (
-                !mSymbolQuestionable(Flags) & ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) {
+                !mFirstPassUnknownOrQuestionable(Flags) & ((AdrLong > 0x7fl) || (AdrLong < -0x80l))) {
             report_branch_distance(AdrLong, -128, 127, True, &ArgStr[1]);
         } else {
             BAsmCode[0] = 0x36;
