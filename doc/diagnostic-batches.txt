@@ -2412,3 +2412,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     no-emission cases pass. One of three list sites reviewed; two FPU sites remain.
     Forward MOVEM REG-alias failure confirmed and recorded as separate followup.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+221. M68K FMOVEM list categories and register-alias handling.
+    Two list candidates explain list categories and memory requirement when both
+    operands are dynamic lists. Helper diagnostics identify mixed FP/control lists
+    and forbidden control-register range endpoints. Tri-state parsing preserves
+    primary lookup failures. Combined CPU/FP scalar lookup fixes valid FP/control
+    aliases previously rejected as integer-size errors. Original list/range/dynamic/
+    control vectors retained; aliases match direct-register bytes. Wrong-target,
+    German mixed-list and no-emission checks pass. All three list candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

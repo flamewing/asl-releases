@@ -907,3 +907,44 @@ check_bytes(movem-original-list-forms 68020
     "4891010548e7e0c04cdf0307")
 check_bytes(movem-primary-errors-noemit 68020
     " fpu on\nbad reg fp0\n expect 1130,1130\n movem.l bad,(a0)\n movem.l (a0),bad\n endexpect\n dc.b $12" "12")
+
+# FMOVEM reports list categories/mixing/ranges and preserves lookup failures.
+check_diagnostic(fmovem-list-choices 68020 " fpu on\n fmovem.x #1,(a0)" 1410
+    "one operand must be an FP0..FP7 list" 4 2)
+check_diagnostic(fmovem-both-dynamic 68020 " fpu on\n fmovem.x d0,d1" 1410
+    "both operands are dynamic register lists" 4 14)
+check_diagnostic(fmovem-mixed-source 68020 " fpu on\n fmovem.x fp0/fpcr,(a0)" 1410
+    "FP data registers and FP control registers cannot share one list" 4 11)
+check_diagnostic(fmovem-mixed-destination 68020 " fpu on\n fmovem.x (a0),fp0/fpcr" 1410
+    "FP data registers and FP control registers cannot share one list" 4 16)
+check_diagnostic(fmovem-range-from-control 68020 " fpu on\n fmovem.x fpcr-fp0,(a0)" 1410
+    "FP register ranges require FP0..FP7 endpoints" 4 11)
+check_diagnostic(fmovem-range-to-control 68020 " fpu on\n fmovem.x fp0-fpcr,(a0)" 1410
+    "FP register ranges require FP0..FP7 endpoints" 4 15)
+check_diagnostic(fmovem-wrong-target-source 68020
+    " cpu ATMEGA8\nbad reg r0\n cpu 68020\n fpu on\n fmovem.x bad,(a0)" 1148
+    "register symbol for different target" 7 11)
+check_diagnostic(fmovem-wrong-target-destination 68020
+    " cpu ATMEGA8\nbad reg r0\n cpu 68020\n fpu on\n fmovem.x (a0),bad" 1148
+    "register symbol for different target" 7 16)
+check_bytes(fmovem-single-fp-alias 68020
+    " fpu on\nalias reg fp0\n fmovem.x alias,(a0)\n fmovem.x (a0),alias"
+    "f210f080f210d080")
+check_bytes(fmovem-control-alias 68020
+    " fpu on\nalias reg fpcr\n fmovem.l alias,(a0)\n fmovem.l (a0),alias"
+    "f210b000f2109000")
+check_bytes(fmovem-original-list-forms 68020
+    " fpu on\n fmovem.x fp0/fp2,(a0)\n fmovem.x fp0-fp2,(a0)\n fmovem.x d0,(a0)\n fmovem.l fpcr/fpsr,(a0)\n fmovem.l (a0),fpcr/fpsr"
+    "f210f0a0f210f0e0f210f800f210b800f2109800")
+check_bytes(fmovem-list-errors-noemit 68020
+    " fpu on\n expect 1410,1410,1410\n fmovem.x fp0/fpcr,(a0)\n fmovem.x d0,d1\n fmovem.x fpcr-fp0,(a0)\n endexpect\n dc.b $12" "12")
+
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/fmovem-mixed-source.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "nicht in derselben Liste" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German FP mixed list: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

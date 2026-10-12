@@ -2439,3 +2439,19 @@ Message ErrMsgMACScaleChoices
 Message ErrMsgMOVEMListChoices
  "ein Operand muss eine Registerliste aus D0..D7/A0..A7 sein (Namen mit '/' oder Bereiche mit '-')"
  "one operand must be a D0..D7/A0..A7 register list ('/' separated names or '-' ranges)"
+
+Message ErrMsgFPURegisterRange
+ "FP-Registerbereiche erfordern Endpunkte aus FP0..FP7"
+ "FP register ranges require FP0..FP7 endpoints"
+
+Message ErrMsgFPUMixedList
+ "FP-Datenregister und FP-Steuerregister duerfen nicht in derselben Liste stehen"
+ "FP data registers and FP control registers cannot share one list"
+
+Message ErrMsgFPUDynamicPair
+ "beide Operanden sind dynamische Registerlisten; FMOVEM erfordert einen Speicheroperanden"
+ "both operands are dynamic register lists; FMOVEM requires a memory operand"
+
+Message ErrMsgFMOVEMListChoices
+ "ein Operand muss eine FP0..FP7-Liste, eine FPCR/FPSR/FPIAR-Liste oder eine dynamische D0..D7-Liste sein"
+ "one operand must be an FP0..FP7 list, an FPCR/FPSR/FPIAR list or a dynamic D0..D7 list"

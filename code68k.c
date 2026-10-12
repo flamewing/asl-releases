@@ -4860,82 +4860,74 @@ enum {
     eFMovemTypCtrl   = 3
 };
 
-static void DecodeFRegList(tStrComp const* pArg, Byte* pTyp, Byte* pList) {
-    Word     hw, Reg, RegFrom, RegTo;
-    Byte     z;
-    char *   p, *p2;
-    String   ArgStr;
+static tRegListResult DecodeFRegList(tStrComp const* pArg, Byte* pTyp, Byte* pList) {
+    Word hw, Reg, RegFrom, RegTo;
+    Byte z;
+    char *p, *p2;
+    String ArgStr;
     tStrComp Arg, Remainder, From, To;
+    tSymbolSize reg_size;
+    tRegEvalResult status;
 
     StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
     StrCompCopy(&Arg, pArg);
-
     *pTyp = eFMovemTypNone;
-    if (*Arg.str.p_str == '\0') {
-        return;
-    }
+    if (!*Arg.str.p_str) return eNotRegList;
 
-    switch (DecodeReg(&Arg, &Reg, False)) {
-    case eIsReg:
-        if (Reg & 8) {
-            return;
-        }
-        *pTyp  = eFMovemTypDyn;
+    status = DecodeRegOrFPReg(&Arg, &Reg, &reg_size, False);
+    if (status == eRegAbort) return eRegListAbort;
+    if (status == eIsReg && reg_size == eSymbolSize32Bit) {
+        if (Reg & 8) return eNotRegList;
+        *pTyp = eFMovemTypDyn;
         *pList = Reg << 4;
-        return;
-    case eRegAbort:
-        return;
-    default:
-        break;
+        return eRegList;
     }
 
     hw = 0;
     do {
         p = strchr(Arg.str.p_str, '/');
-        if (p) {
-            StrCompSplitRef(&Arg, &Remainder, &Arg, p);
-        }
+        if (p) StrCompSplitRef(&Arg, &Remainder, &Arg, p);
         p2 = strchr(Arg.str.p_str, '-');
         if (p2) {
             StrCompSplitRef(&From, &To, &Arg, p2);
-            if (!strlen(To.str.p_str) || (DecodeFPReg(&From, &RegFrom, False) != eIsReg)
-                || (RegFrom & REG_FPCTRL) || (DecodeFPReg(&To, &RegTo, False) != eIsReg)
-                || (RegTo & REG_FPCTRL)) {
-                return;
+            if (!*To.str.p_str) return eNotRegList;
+            status = DecodeFPReg(&From, &RegFrom, False);
+            if (status != eIsReg) return status == eRegAbort ? eRegListAbort : eNotRegList;
+            if (RegFrom & REG_FPCTRL) {
+                report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgFPURegisterRange, &From);
+                return eRegListAbort;
+            }
+            status = DecodeFPReg(&To, &RegTo, False);
+            if (status != eIsReg) return status == eRegAbort ? eRegListAbort : eNotRegList;
+            if (RegTo & REG_FPCTRL) {
+                report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgFPURegisterRange, &To);
+                return eRegListAbort;
             }
             if (RegFrom <= RegTo) {
-                for (z = RegFrom; z <= RegTo; z++) {
-                    hw |= (1 << (7 - z));
-                }
+                for (z = RegFrom; z <= RegTo; z++) hw |= 1 << (7 - z);
             } else {
-                for (z = RegFrom; z <= 7; z++) {
-                    hw |= (1 << (7 - z));
-                }
-                for (z = 0; z <= RegTo; z++) {
-                    hw |= (1 << (7 - z));
-                }
+                for (z = RegFrom; z <= 7; z++) hw |= 1 << (7 - z);
+                for (z = 0; z <= RegTo; z++) hw |= 1 << (7 - z);
             }
         } else {
-            if (DecodeFPReg(&Arg, &Reg, False) != eIsReg) {
-                return;
-            }
-            if (Reg & REG_FPCTRL) {
-                hw |= (Reg & 7) << 8;
-            } else {
-                hw |= (1 << (7 - Reg));
-            }
+            status = DecodeFPReg(&Arg, &Reg, False);
+            if (status != eIsReg) return status == eRegAbort ? eRegListAbort : eNotRegList;
+            if (Reg & REG_FPCTRL) hw |= (Reg & 7) << 8;
+            else hw |= 1 << (7 - Reg);
         }
-        if (p) {
-            Arg = Remainder;
-        }
+        if (p) Arg = Remainder;
     } while (p);
     if (Hi(hw) == 0) {
-        *pTyp  = eFMovemTypStatic;
+        *pTyp = eFMovemTypStatic;
         *pList = Lo(hw);
     } else if (Lo(hw) == 0) {
-        *pTyp  = eFMovemTypCtrl;
+        *pTyp = eFMovemTypCtrl;
         *pList = Hi(hw);
+    } else {
+        report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgFPUMixedList, pArg);
+        return eRegListAbort;
     }
+    return eRegList;
 }
 
 static Byte Mirror8(Byte List) {
@@ -5466,7 +5458,7 @@ static void DecodeFMOVEM(Word Code) {
        control register FMOVEM, but also a dynamic FPn data register list.  This
        makes the decision tree a bit more complex: */
 
-    DecodeFRegList(&ArgStr[2], &Typ, &List);
+    if (DecodeFRegList(&ArgStr[2], &Typ, &List) == eRegListAbort) return;
     switch (Typ) {
     case eFMovemTypStatic:
     case eFMovemTypCtrl:
@@ -5474,7 +5466,7 @@ static void DecodeFMOVEM(Word Code) {
 
     case eFMovemTypDyn: {
         Byte src_typ, src_list;
-        DecodeFRegList(&ArgStr[1], &src_typ, &src_list);
+        if (DecodeFRegList(&ArgStr[1], &src_typ, &src_list) == eRegListAbort) return;
         switch (src_typ) {
         case eFMovemTypStatic:
         case eFMovemTypCtrl:
@@ -5482,7 +5474,7 @@ static void DecodeFMOVEM(Word Code) {
             List = src_list;
             goto fp_list_is_src;
         case eFMovemTypDyn:
-            WrError(ErrNum_InvRegList);
+            report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgFPUDynamicPair, &ArgStr[2]);
             return;
         default:
             goto fp_list_is_dest;
@@ -5490,9 +5482,9 @@ static void DecodeFMOVEM(Word Code) {
     }
 
     default: /* eFMovemTypNone */
-        DecodeFRegList(&ArgStr[1], &Typ, &List);
+        if (DecodeFRegList(&ArgStr[1], &Typ, &List) == eRegListAbort) return;
         if (Typ == eFMovemTypNone) {
-            WrError(ErrNum_InvRegList);
+            report_m68k_detail(ErrNum_InvRegList, Num_ErrMsgFMOVEMListChoices, &OpPart);
             return;
         }
         /* Fall-Thru */
