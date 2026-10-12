@@ -113,3 +113,49 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German Z8 core: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+check_diagnostic(working-index-window Z8601 " assume rp:32\n ld r0,1(00h)" 1445
+ "address 0x0 outside working-register windows: RP=0x20:[0x20,0x2F]" 4 10)
+check_diagnostic(forced-working-window Z8601 " assume rp:32\n ld r0,!7" 110
+ "address 0x7 outside working-register windows: RP=0x20:[0x20,0x2F]" 4 8 0)
+check_diagnostic(forced-super-window Z88C00 " assume rp0:32,rp1:64\n ld r0,!7" 110
+ "RP0=0x20:[0x20,0x27]; RP1=0x40:[0x40,0x47]" 4 8 0)
+check_diagnostic(forced-encore-window eZ8 " assume rp:18\n ld r0,!7" 110
+ "RP=0x12:[0x210,0x21F]" 4 8 0)
+check_diagnostic(forced-working-disabled Z8601 " assume rp:NOTHING\n ld r0,!7" 110
+ "address 0x7 outside working-register windows: RP=NOTHING" 4 8 0)
+check_diagnostic(register-target-primary Z8601
+ " cpu 68020\nalias reg d0\n cpu Z8601\n ld r0,alias" 1148
+ "register symbol for different target" 6 8)
+check_bytes(forced-working-index Z8601
+ " assume rp:32\n ld r0,!0\n ld r0,!7\n ld r0,!15" "08e008e708ef" -n -x)
+string(REGEX MATCHALL "warning #110:" warnings "${assembly_diagnostic}")
+list(LENGTH warnings count)
+if(NOT count EQUAL 3)
+    message(FATAL_ERROR "expected three forced-work warnings: ${assembly_diagnostic}")
+endif()
+check_bytes(forced-super-bank Z88C00
+ " assume rp0:32,rp1:64\n ld r0,!64\n ld r0,!7" "08c808c7" -n -x)
+check_bytes(forced-unknown-no-warning Z8601
+ " assume rp:32\n ld r0,!address+1000\naddress equ -968" "08e0" -n -x)
+if(assembly_diagnostic MATCHES "warning #110:")
+    message(FATAL_ERROR "resolved working address emitted a premature warning: ${assembly_diagnostic}")
+endif()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/forced-working-window.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Arbeitsregisterfenster: RP=0x20" detail_pos)
+if(NOT "${result}" STREQUAL "0" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German Z8 window: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
+
+check_bytes(index-working-original Z8601 " assume rp:32\n ld r0,1(20h)" "c70001")
+check_bytes(index-working-forward Z8601 " assume rp:32\n ld r0,1(index)\nindex equ 32" "c70001")
+check_bytes(index-pair-original Z88C00 " assume rp:32\n ldc r0,1(20h)" "e70001")
+check_bytes(index-pair-forward Z88C00 " assume rp:32\n ldc r0,1(index)\nindex equ 32" "e70001")
+check_diagnostic(index-working-forward-invalid Z8601 " assume rp:32\n ld r0,1(index)\nindex equ 0" 1445
+ "address 0x0 outside working-register windows" 4 10)
+check_bytes(index-window-noemit Z8601
+ " assume rp:32\n expect 1445\n ld r0,1(00h)\n endexpect\n db 18" "12")

@@ -1638,10 +1638,12 @@
         "ErrNum_JmpDistTooBig",
         "ErrNum_InstructionNotSupported",
         "ErrNum_WrongArgCnt",
-        "ErrNum_InvOpSize"
+        "ErrNum_InvOpSize",
+        "ErrNum_InvReg",
+        "ErrNum_InAccPage"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 235 reviews all five branch candidates: JR/DJNZ/CPIJNE/CPIJE/BTJ/BTJNZ/BTJZ/BTJRF/BTJRT report signed displacement/full interval and instruction-length PC base at actual target (including first-operand bit-relative target). Replace questionable-only guard with unknown-or-questionable to fix premature forward arithmetic rejection reproduced in JR; all five parser paths covered with resolved byte vectors. Classic/Super8/eZ8 originals, boundaries, primary error, no failed emission and German checked. Remaining diagnostic families pending. Tranche 236 reviews shared capability/count/bit-size candidates: derive supported core classes from exact mask at mnemonic, retain gating precedence; direct bit count reports actual versus one/two at mnemonic. Retain located defensive width error unchanged because all current callers request eight bits and packed bit dissection always returns eight; reachable bit index range remains evaluator UInt3 with actual value. Core/bit valid originals, disjoint masks, no failed emission and German checked. Remaining register, working-page and mode families pending."
+      "review_notes": "Tranche 235 reviews all five branch candidates: JR/DJNZ/CPIJNE/CPIJE/BTJ/BTJNZ/BTJZ/BTJRF/BTJRT report signed displacement/full interval and instruction-length PC base at actual target (including first-operand bit-relative target). Replace questionable-only guard with unknown-or-questionable to fix premature forward arithmetic rejection reproduced in JR; all five parser paths covered with resolved byte vectors. Classic/Super8/eZ8 originals, boundaries, primary error, no failed emission and German checked. Remaining diagnostic families pending. Tranche 236 reviews shared capability/count/bit-size candidates: derive supported core classes from exact mask at mnemonic, retain gating precedence; direct bit count reports actual versus one/two at mnemonic. Retain located defensive width error unchanged because all current callers request eight bits and packed bit dissection always returns eight; reachable bit index range remains evaluator UInt3 with actual value. Core/bit valid originals, disjoint masks, no failed emission and German checked. Remaining register, working-page and mode families pending. Tranche 237 reviews both register and forced-working-page warning candidates: numeric index failure names actual RP/RP0/RP1 windows, including disabled assumptions. Mixed-width numeric index guard unchanged: all current caller masks select either single-register or pair indexing, never both, so only defensive ambiguity case exists. Fix adjacent descriptor/data-size reads on failed lookup and forced !address stale index: documented four-bit force warns outside RP but uses low four bits, mapped Super8 upper bank retained when inside window. Unknown forced addresses defer warning and unknown numeric indices use provisional zero until resolved, fixing forward RP-index rejection. Classic/Super8/eZ8 windows, forced warning bytes, originals/forward index classes, resolved invalid/no emission, primary wrong-target and German checked. Six mode sites pending."
     },
     "codez80.c": {
       "candidate_counts": {
@@ -2229,6 +2231,11 @@
       "file": "codez8.c",
       "issue": "All five relative branch range sites check only questionable flag, rejecting unresolved forward arithmetic with valid final target.",
       "status": "fixed in tranche 235; unknown-or-questionable guard and forward arithmetic encodings cover every branch parser path"
+    },
+    {
+      "file": "codez8.c",
+      "issue": "Working-register lookup copies failed descriptor/size, forced !address warning emits stale register bits, and forward numeric RP index fails before resolution.",
+      "status": "fixed in tranche 237; success-only outputs, documented four-bit forced fallback with warning/windows, retained Super8 upper mapping, deferred unknown checks and direct/forward/primary bytes checked"
     }
   ]
 }

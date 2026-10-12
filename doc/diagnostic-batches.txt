@@ -2560,3 +2560,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     bit-index range already reports value through UInt3 evaluator.
     Disjoint core masks, primary gating, no failed emission and German detail pass.
     Validation: all 420 CTest cases pass with embedded/external catalogs.
+
+237. Z8 working-register windows and forced four-bit index semantics.
+    Both register/working-page candidates reviewed: actual RP/RP0/RP1 windows and
+    NOTHING at operand. Defensive mixed-width ambiguity unreachable in current
+    mutually exclusive caller masks; retain it. Copy descriptor/size only on
+    success. Documented !address warning retains emission with deterministic low
+    four-bit fallback outside window; preserve mapped Super8 upper-bank index.
+    Defer unknown forced warnings and numeric index window validation; fix forward
+    RP-index rejection. Original/forward bytes, actual warning bytes, final invalid,
+    no rejected emission, primary target errors and German detail checked.
+    Validation: all 420 CTest cases pass with embedded/external catalogs.

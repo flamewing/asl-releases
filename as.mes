@@ -2559,3 +2559,7 @@ Message ErrMsgKonamiEnclosedOperand
 Message ErrMsgSupportedCoreChoices
  "Unterst&uuml;tzte Kernklassen: %s"
  "supported core classes: %s"
+
+Message ErrMsgZ8WorkWindows
+ "Adresse 0x%lllx au&szlig;erhalb der Arbeitsregisterfenster: %s"
+ "address 0x%lllx outside working-register windows: %s"

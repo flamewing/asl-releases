@@ -250,7 +250,8 @@ static tRegEvalResult IsWRegOrWRReg(
 
         RegEvalResult = EvalStrRegExpressionAsOperand(
                 pArg, &RegDescr, &EvalResult, eSymbolSizeUnknown, MustBeReg);
-        *pResult = RegDescr.Reg;
+        if (RegEvalResult == eIsReg)
+            *pResult = RegDescr.Reg;
     }
 
     if ((eIsReg == RegEvalResult) && (EvalResult.DataSize == eSymbolSize16Bit)
@@ -259,7 +260,8 @@ static tRegEvalResult IsWRegOrWRReg(
         RegEvalResult = MustBeReg ? eIsNoReg : eRegAbort;
     }
 
-    *pSize = EvalResult.DataSize;
+    if (RegEvalResult == eIsReg)
+        *pSize = EvalResult.DataSize;
     return RegEvalResult;
 }
 
@@ -419,6 +421,33 @@ int GetForceLen(char const* pArg) {
     return Result;
 }
 
+static void append_work_window(char* p_dest, size_t size, char const* name,
+        LongInt value, Word base, unsigned length) {
+    char part[100];
+    if (*p_dest)
+        strmaxcat(p_dest, "; ", size);
+    if (value > 0xff)
+        as_snprintf(part, sizeof(part), "%s=NOTHING", name);
+    else
+        as_snprintf(part, sizeof(part), "%s=0x%x:[0x%x,0x%x]", name,
+                (unsigned)value, (unsigned)base, (unsigned)(base + length - 1));
+    strmaxcat(p_dest, part, size);
+}
+
+static void report_work_window(tErrorNum error, Word address, tStrComp const* p_arg) {
+    char windows[240] = "", detail[340];
+    if (mIsSuper8()) {
+        append_work_window(windows, sizeof(windows), "RP0", RP0Val, RP0Val & 0xf8, 8);
+        append_work_window(windows, sizeof(windows), "RP1", RP1Val, RP1Val & 0xf8, 8);
+    } else {
+        Word base = (RPVal & 0xf0) | (mIsZ8Encore() ? ((RPVal & 15) << 8) : 0);
+        append_work_window(windows, sizeof(windows), "RP", RPVal, base, 16);
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8WorkWindows),
+            (LargeWord)address, windows);
+    WrXErrorPos(error, detail, &p_arg->Pos);
+}
+
 static ShortInt IsWRegWithRP(
         tStrComp const* pComp, Byte* pResult, Word Mask16Modes, Word Mask8Modes) {
     tEvalResult EvalResult;
@@ -447,7 +476,10 @@ static ShortInt IsWRegWithRP(
     if (!EvalResult.OK) {
         return eSymbolSizeUnknown;
     }
-    /* if (mFirstPassUnknown(EvalResult.Flags)) ... */
+    if (mFirstPassUnknownOrQuestionable(EvalResult.Flags)) {
+        *pResult = 0;
+        return Mask16Modes ? eSymbolSize16Bit : eSymbolSize8Bit;
+    }
 
     if (Mask16Modes && IsWRegAddress(Address, pResult)) {
         if (mFirstPassUnknown(EvalResult.Flags)) {
@@ -464,7 +496,7 @@ static ShortInt IsWRegWithRP(
         return eSymbolSize8Bit;
     }
 
-    WrStrErrorPos(ErrNum_InvReg, pComp);
+    report_work_window(ErrNum_InvReg, Address, pComp);
     return eSymbolSizeUnknown;
 }
 
@@ -526,9 +558,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
     if (*pArg->str.p_str == '!') {
         AdrWVal = EvalStrIntExpressionOffsWithResult(pArg, 1, UInt16, &EvalResult);
         if (EvalResult.OK) {
-            if (!mFirstPassUnknown(EvalResult.Flags)
+            AdrVal = AdrWVal & 15;
+            if (!mFirstPassUnknownOrQuestionable(EvalResult.Flags)
                 && !IsWRegAddress(AdrWVal, &AdrVal)) {
-                WrError(ErrNum_InAccPage);
+                report_work_window(ErrNum_InAccPage, AdrWVal, pArg);
             }
             AdrType       = ModWReg;
             adr_val_flags = EvalResult.Flags;
