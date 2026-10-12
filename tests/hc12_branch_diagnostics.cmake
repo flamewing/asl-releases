@@ -221,3 +221,22 @@ endforeach()
 foreach(cpu IN ITEMS 68HC12 68HC12X)
     check_bytes(quoted-brackets-${cpu} ${cpu} " ldaa ['[',x]\n ldaa [']',x]" "a6e3005ba6e3005d")
 endforeach()
+
+# TRAP's accepted domain has two intervals; auto-update has its own bound.
+foreach(cpu IN ITEMS 68HC12 68HC12X)
+    foreach(value IN ITEMS 0 47 58 63)
+        check_diagnostic(trap-${value}-${cpu} ${cpu} " trap #${value}" 1320
+            "TRAP code ${value} outside [48,57] or [64,255]" 3 7)
+    endforeach()
+    check_diagnostic(trap-final-forward-${cpu} ${cpu} " trap #code\ncode equ 58" 1320
+        "TRAP code 58 outside [48,57] or [64,255]" 3 7)
+    check_diagnostic(auto-count-high-${cpu} ${cpu} " ldaa 9,x+" 1320 "auto-update count 9 outside [-8,8]" 3 7)
+    check_diagnostic(auto-count-low-${cpu} ${cpu} " ldaa -9,-x" 1315 "auto-update count -9 outside [-8,8]" 3 7)
+    check_bytes(trap-auto-boundaries-${cpu} ${cpu}
+        " trap #48\n trap 57\n trap #64\n trap 255\n ldaa -8,x+\n ldaa 0,x+\n ldaa 8,x+"
+        "18301839184018ffa638a600a637")
+    check_bytes(trap-forward-${cpu} ${cpu}
+        " trap #code+58\ncode equ -10\n ldaa count+9,x+\ncount equ -1" "1830a637")
+    check_bytes(trap-errors-noemit-${cpu} ${cpu}
+        " expect 1320,1320\n trap #47\n trap #58\n endexpect\n db $12" "12")
+endforeach()

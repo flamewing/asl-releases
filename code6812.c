@@ -536,7 +536,7 @@ static adr_mode_t DecodeAdr(
                 if (!OK) {
                     goto chk;
                 }
-                if (mFirstPassUnknown(p_adr_vals->symflags)) {
+                if (mFirstPassUnknownOrQuestionable(p_adr_vals->symflags)) {
                     AdrWord = 1;
                 }
 
@@ -1341,12 +1341,15 @@ static void DecodeTRAP(Word Index) {
     } else {
         BAsmCode[1] = EvalStrIntExpressionOffsWithFlags(
                 &ArgStr[1], !!(*ArgStr[1].str.p_str == '#'), UInt8, &OK, &Flags);
-        if (mFirstPassUnknown(Flags)) {
+        if (mFirstPassUnknownOrQuestionable(Flags)) {
             BAsmCode[1] = 0x30;
         }
         if (OK) {
             if ((BAsmCode[1] < 0x30) || ((BAsmCode[1] > 0x39) && (BAsmCode[1] < 0x40))) {
-                WrError(ErrNum_OverRange);
+                char detail[140];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgHC12TrapRange),
+                        (LargeInt)BAsmCode[1]);
+                WrXErrorPos(ErrNum_OverRange, detail, &ArgStr[1].Pos);
             } else {
                 BAsmCode[0] = 0x18;
                 set_b_guessed(Flags, 1, 1, 0xff);

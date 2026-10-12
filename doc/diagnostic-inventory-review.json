@@ -465,10 +465,12 @@
       },
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig",
-        "ErrNum_InvAddrMode"
+        "ErrNum_InvAddrMode",
+        "ErrNum_OverRange",
+        "ErrNum_UnderRange"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 182 fixes provisional forward range validation in all three previously detailed branch sites. Remaining register, pair, addressing and numeric candidates still pending. Tranche 183 resets partial bit-branch emission after final range failure; all address widths and PC-relative forms covered on both CPUs/opcodes. Tranche 184 reviews all three mode sites and four of sixteen register sites: mask-specific/indirect forms, component counts, base/auto-update register alternatives and bracket-specific failures. Indirect components retain source positions. Guard trailing-character access for empty index strings. Remaining twelve loop/transfer/sign-extension register sites and both pair sites still pending."
+      "review_notes": "Tranche 182 fixes provisional forward range validation in all three previously detailed branch sites. Remaining register, pair, addressing and numeric candidates still pending. Tranche 183 resets partial bit-branch emission after final range failure; all address widths and PC-relative forms covered on both CPUs/opcodes. Tranche 184 reviews all three mode sites and four of sixteen register sites: mask-specific/indirect forms, component counts, base/auto-update register alternatives and bracket-specific failures. Indirect components retain source positions. Guard trailing-character access for empty index strings. Remaining twelve loop/transfer/sign-extension register sites and both pair sites still pending. Tranche 185 reviews all three numeric candidates: TRAP gives its actual code and disjoint intervals; both auto-update range sites already have useful count/[-8,8] details from earlier tranches. Normalize unknown/questionable provisional values for both constraints; endpoints and primary-error behavior verified."
     },
     "code6816.c": {
       "candidate_counts": {

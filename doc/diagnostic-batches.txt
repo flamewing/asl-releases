@@ -2064,3 +2064,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     All three historical mode sites and four register sites reviewed; remaining
     loop/transfer/sign-extension registers and pairs remain pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+185. HC12 TRAP domain and numeric-site review.
+    TRAP gives the evaluated code and disjoint [48,57]/[64,255] intervals at
+    its operand, preserving 1320 on all custom-domain failures. The two
+    auto-update candidates already provide useful count/[-8,8] details.
+    Normalize both unknown/questionable provisional TRAP/auto-update values
+    until stable. Both CPUs cover disallowed intervals, endpoints, zero-update,
+    forward values, primary errors and absence of rejected instruction bytes.
+    All three historical overflow/underflow candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

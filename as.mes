@@ -2363,3 +2363,7 @@ Message ErrMsgIndirectPointerPageBoundary
 Message ErrMsgNoCPUAddressForms
  "Keine Adressierungsform dieser Anweisung ist auf der gew&auml;hlten CPU verf&uuml;gbar"
  "no addressing form of this instruction is available on the selected CPU"
+
+Message ErrMsgHC12TrapRange
+ "TRAP-Code %llld au&szlig;erhalb [48,57] oder [64,255]"
+ "TRAP code %llld outside [48,57] or [64,255]"
