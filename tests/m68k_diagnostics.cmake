@@ -14,7 +14,11 @@ function(check_diagnostic name cpu body id detail line column)
         RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
     set(diagnostic "${output}${error}")
     string(FIND "${diagnostic}" "${detail}" detail_pos)
-    string(FIND "${diagnostic}" "(${line}):${column}: ${kind} #${id}:" location_pos)
+    set(expected_location "(${line}):")
+    if(NOT "${column}" STREQUAL "")
+        string(APPEND expected_location "${column}:")
+    endif()
+    string(FIND "${diagnostic}" "${expected_location} ${kind} #${id}:" location_pos)
     string(REGEX MATCHALL "${kind} #[0-9]+:" errors "${diagnostic}")
     list(LENGTH errors error_count)
     if(NOT "${result}" STREQUAL "${expected_result}" OR detail_pos EQUAL -1
@@ -798,3 +802,34 @@ check_diagnostic(mode-undefined-primary 68020 " lea.l missing,a0" 1010
 check_bytes(address-original-choices 68020
     " lea.l (a0),a1\n lea.l 1(a0),a1\n lea.l 1(a0,d0.w),a1\n lea.l *+2(pc),a1\n lea.l 1(pc,d0.w),a1\n lea.l $1234,a1"
     "43d043e8000143f0000143fa000043fb0120eff143f81234")
+
+# Scale evaluation failure is distinct from an operand that is not a scale.
+check_diagnostic(mac-scale-choices MCF5470 " maaac.l d0,d1,bad,acc0,acc1" 1350
+    "MAC scale must be <<0, <<1, >>0 or >>1" 3 16)
+foreach(item IN ITEMS "mac|d0,d1|16" "maaac|d0,d1|18")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 ins)
+    list(GET parts 1 args)
+    list(GET parts 2 column)
+    if(ins STREQUAL "maaac")
+        set(tail ",acc0,acc1")
+    else()
+        set(tail "")
+    endif()
+    check_diagnostic(scale-overflow-${ins} MCF5470 " ${ins}.l ${args},<<2${tail}" 1320
+        "2 > 1" 3 ${column})
+    check_diagnostic(scale-undefined-${ins} MCF5470 " ${ins}.l ${args},<<missing${tail}" 1010
+        "symbol undefined" 3 ${column})
+    check_diagnostic(scale-divzero-${ins} MCF5470 " ${ins}.l ${args},<<1/0${tail}" 1310
+        "division by 0" 3 "")
+endforeach()
+check_bytes(mac-scale-original-forms MCF5470
+    " mac.l d0,d1\n mac.l d0,d1,<<\n mac.l d0,d1,<<0\n mac.l d0,d1,<<1\n mac.l d0,d1,>>\n mac.l d0,d1,>>0\n mac.l d0,d1,>>1\n maaac.l d0,d1,<<0,acc0,acc1\n maaac.l d0,d1,<<1,acc0,acc1\n maaac.l d0,d1,>>0,acc0,acc1\n maaac.l d0,d1,>>1,acc0,acc1"
+    "a2000800a2000a00a2000800a2000a00a2000e00a2000800a2000e00a2000805a2000a05a2000805a2000e05")
+check_bytes(mac-scale-empty-forms MCF5470
+    " mac.l d0,d1,\n maaac.l d0,d1,,acc0,acc1" "a2000800a2000805")
+check_bytes(mac-scale-forward MCF5470
+    " mac.l d0,d1,<<count\n maaac.l d0,d1,>>count,acc0,acc1\ncount equ 1"
+    "a2000a00a2000e05")
+check_bytes(mac-scale-errors-noemit MCF5470
+    " expect 1320,1320\n mac.l d0,d1,<<2\n maaac.l d0,d1,<<2,acc0,acc1\n endexpect\n dc.b $12" "12")

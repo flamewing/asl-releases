@@ -2431,3 +2431,7 @@ Message ErrMsgSupportedOperandSizes
 Message ErrMsgNoOperandSizeSuffix
  "Operandengroessensuffix ist hier nicht erlaubt; Suffix weglassen"
  "operand size suffix is not allowed here; omit the suffix"
+
+Message ErrMsgMACScaleChoices
+ "MAC-Skalierung muss <<0, <<1, >>0 oder >>1 sein (auch <<, >> oder ein leeres Argument)"
+ "MAC scale must be <<0, <<1, >>0 or >>1 (also <<, >> or an empty argument)"

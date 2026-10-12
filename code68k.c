@@ -2512,7 +2512,11 @@ static Boolean DecodeRegList(tStrComp const* pArg, Word* Erg) {
     return True;
 }
 
-static Boolean DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess_mask) {
+typedef enum {
+    eNotMACScale, eMACScale, eMACScaleAbort
+} tMACScaleResult;
+
+static tMACScaleResult DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess_mask) {
     int          l = strlen(pArg->str.p_str);
     tStrComp     ShiftArg;
     Boolean      Left = False, OK;
@@ -2523,19 +2527,20 @@ static Boolean DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess
 
     if (!l) {
         *pResult = 0;
-        return True;
+        *p_guess_mask = 0;
+        return eMACScale;
     }
     /* left or right? */
 
     if (l < 2) {
-        return False;
+        return eNotMACScale;
     }
     if (!strncmp(pArg->str.p_str, "<<", 2)) {
         Left = True;
     } else if (!strncmp(pArg->str.p_str, ">>", 2)) {
         Left = False;
     } else {
-        return False;
+        return eNotMACScale;
     }
 
     /* evaluate shift cnt - empty count counts as one */
@@ -2550,7 +2555,7 @@ static Boolean DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess
         ShiftCnt = EvalStrIntExpressionWithFlags(&ShiftArg, UInt1, &OK, &flags);
     }
     if (!OK) {
-        return False;
+        return eMACScaleAbort;
     }
 
     /* codify */
@@ -2561,7 +2566,7 @@ static Boolean DecodeMACScale(tStrComp const* pArg, Word* pResult, Word* p_guess
         *pResult = 0;
     }
     *p_guess_mask = mFirstPassUnknownOrQuestionable(flags) ? 3 : 0;
-    return True;
+    return eMACScale;
 }
 
 static Boolean SplitMACUpperLower(Word* pResult, tStrComp* pArg) {
@@ -6465,9 +6470,10 @@ static void DecodeMAC_MSAC(Word Code) {
 
     /* Is a scale given as next argument? */
 
-    if ((ArgCnt >= CurrArg)
-        && DecodeMACScale(&ArgStr[CurrArg], &Scale, &scale_guess_mask)) {
-        CurrArg++;
+    if (ArgCnt >= CurrArg) {
+        tMACScaleResult scale_result = DecodeMACScale(&ArgStr[CurrArg], &Scale, &scale_guess_mask);
+        if (scale_result == eMACScaleAbort) return;
+        if (scale_result == eMACScale) CurrArg++;
     }
 
     /* We now have between 0 and 3 args left:
@@ -6593,8 +6599,10 @@ static void DecodeMxxAC(Word Code) {
     }
 
     if (5 == ArgCnt) {
-        if (!DecodeMACScale(&ArgStr[3], &Scale, &scale_guess_mask)) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[3]);
+        tMACScaleResult scale_result = DecodeMACScale(&ArgStr[3], &Scale, &scale_guess_mask);
+        if (scale_result != eMACScale) {
+            if (scale_result == eNotMACScale)
+                report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgMACScaleChoices, &ArgStr[3]);
             return;
         }
     }

@@ -2375,3 +2375,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Re-review six parser candidates already improved in tranche 3. Eight of
     fifteen mode candidates reviewed; seven remain.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+217. ColdFire MAC scale syntax and primary evaluation failures.
+    One historical mode candidate reports localized accepted left/right zero/one,
+    shorthand and empty scale forms. Tri-state decoding distinguishes a non-scale
+    operand from failed scale evaluation: optional MAC no longer reinterprets
+    failure as accumulator, and required MxxAC does not add generic mode error.
+    Range/undefined/division primary-only and no-emission cases pass. Original
+    eleven scale forms, empty forms and forward resolution retain their bytes.
+    Nine of fifteen historical mode candidates reviewed; six remain.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
