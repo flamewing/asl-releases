@@ -2519,3 +2519,15 @@ Message ErrMsgAVRBranchRange
 Message ErrMsgIMPRegisterChoices
  "Akkumulator AC%u ist hier nicht erlaubt; erwartet wird %s"
  "accumulator AC%u is not allowed here; expected %s"
+
+Message ErrMsgIMPMemoryChoicesPC
+ "Erlaubte Formen ohne @: Adresse, Verschiebung(AC2/AC3), Adresse(PC) oder #Literal"
+ "allowed forms without @: address, displacement(AC2/AC3), address(PC) or #literal"
+
+Message ErrMsgIMPMemoryChoicesAbsolute
+ "Explizite PC-relative und #Literal-Formen sowie @ sind nicht erlaubt; erwartet wird eine Adresse oder Verschiebung(AC2/AC3)"
+ "explicit PC-relative and #literal forms and @ are not allowed; expected address or displacement(AC2/AC3)"
+
+Message ErrMsgIMPJSRAddress
+ "Adresse 0x%x au&szlig;erhalb erlaubter Bereiche: %s"
+ "address 0x%x outside allowed ranges: %s"

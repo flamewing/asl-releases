@@ -63,6 +63,16 @@ typedef struct {
     cpu_flags_t flags;
 } cpu_props_t;
 
+static cpu_props_t const cpu_props[] = {
+        {"IMP-16C/200",                                          e_cpu_flag_none},
+        {"IMP-16C/300",                               e_cpu_flag_imp16_ext_instr},
+        {"IMP-16P/200",                                          e_cpu_flag_none},
+        {"IMP-16P/300",                               e_cpu_flag_imp16_ext_instr},
+        {    "IMP-16L", e_cpu_flag_imp16_ext_instr | e_cpu_flag_imp16_ien_status},
+        {     "IPC-16",                                     e_cpu_flag_core_pace},
+        {    "INS8900",                                     e_cpu_flag_core_pace}
+};
+
 /*-------------------------------------------------------------------------*/
 /* Locals */
 
@@ -206,6 +216,12 @@ static Boolean decode_arg_reg(tStrComp const* p_arg, Word* p_result,
     return False;
 }
 
+static void report_memory_choices(tStrComp const* p_arg, Boolean allow_pcrel) {
+    WrXErrorPos(ErrNum_InvAddrMode,
+            getmessage(allow_pcrel ? Num_ErrMsgIMPMemoryChoicesPC
+                                   : Num_ErrMsgIMPMemoryChoicesAbsolute), &p_arg->Pos);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Address Parsing */
 
@@ -234,7 +250,7 @@ static Boolean decode_mem_arg(
     StrCompRefRight(&arg, p_arg, 0);
     if (*arg.str.p_str == '@') {
         if (!allow_indirect) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+            report_memory_choices(p_arg, True);
             return False;
         }
         StrCompIncRefLeft(&arg, 1);
@@ -365,7 +381,7 @@ static Boolean decode_long_mem_arg(
 
     StrCompRefRight(&arg, p_arg, 0);
     if (*arg.str.p_str == '@') {
-        WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+        report_memory_choices(p_arg, allow_pcrel);
         return False;
     }
 
@@ -379,7 +395,7 @@ static Boolean decode_long_mem_arg(
         Boolean     critical;
 
         if (!allow_pcrel) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &arg);
+            report_memory_choices(&arg, False);
             return False;
         }
 
@@ -409,7 +425,7 @@ static Boolean decode_long_mem_arg(
 
         if (!as_strcasecmp(reg_arg.str.p_str, "PC")) {
             if (!allow_pcrel) {
-                WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
+                report_memory_choices(p_arg, False);
                 return False;
             }
             force_pcrel = True;
@@ -505,10 +521,27 @@ static void put_code(Word code) {
 
 static Boolean check_imp16_ext_instr(void) {
     if (!(p_curr_cpu_props->flags & e_cpu_flag_imp16_ext_instr)) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        char choices[100] = "", detail[160];
+        cpu_props_t const* p_prop;
+        for (p_prop = cpu_props; p_prop < cpu_props + as_array_size(cpu_props); p_prop++) {
+            if (!(p_prop->flags & e_cpu_flag_imp16_ext_instr))
+                continue;
+            if (*choices)
+                strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, p_prop->p_name, sizeof(choices));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedCPUChoices), choices);
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
         return False;
     }
     return True;
+}
+
+static void report_jsr_address(tErrorNum error, Word address, char const* ranges) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIMPJSRAddress),
+            (unsigned)address, ranges);
+    WrXErrorPos(error, detail, &ArgStr[1].Pos);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -848,7 +881,7 @@ static void decode_jsri(Word code) {
             address &= 0x7f;
         }
         if ((address >= 0x80) && (address < 0xff80)) {
-            WrStrErrorPos(ErrNum_UnderRange, &ArgStr[1]);
+            report_jsr_address(ErrNum_UnderRange, address, "[0x0,0x7f], [0xff80,0xffff]");
         } else {
             put_code(code | (address & 0x7f));
         }
@@ -875,7 +908,7 @@ static void decode_jsrp(Word code) {
             address &= ~0x80;
         }
         if (address & 0x80) {
-            WrStrErrorPos(ErrNum_OverRange, &ArgStr[1]);
+            report_jsr_address(ErrNum_OverRange, address, "[0x0,0x7f], [0x100,0x17f]");
         } else {
             put_code(code | (address & 0x7f));
         }
@@ -962,7 +995,11 @@ static void decode_boc(Word code) {
     if (eval_result.OK) {
         if (!mFirstPassUnknownOrQuestionable(eval_result.Flags)
             && !RangeCheck(dist, SInt8)) {
-            WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
+            char detail[180];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
+                    (LargeInt)dist, (LargeInt)-128, (LargeInt)127,
+                    (LargeWord)(EProgCounter() + 1));
+            WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[2].Pos);
         } else {
             put_code(code | (cond << 8) | (dist & 0xff));
         }
@@ -1382,16 +1419,6 @@ static void init_pass_pace(void) {
  * \fn     codeimp16_init(void)
  * \brief  attach target
  * ------------------------------------------------------------------------ */
-
-static cpu_props_t const cpu_props[] = {
-        {"IMP-16C/200",                                          e_cpu_flag_none},
-        {"IMP-16C/300",                               e_cpu_flag_imp16_ext_instr},
-        {"IMP-16P/200",                                          e_cpu_flag_none},
-        {"IMP-16P/300",                               e_cpu_flag_imp16_ext_instr},
-        {    "IMP-16L", e_cpu_flag_imp16_ext_instr | e_cpu_flag_imp16_ien_status},
-        {     "IPC-16",                                     e_cpu_flag_core_pace},
-        {    "INS8900",                                     e_cpu_flag_core_pace}
-};
 
 void codeimp16_init(void) {
     cpu_props_t const* p_prop;

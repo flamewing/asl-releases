@@ -107,3 +107,37 @@ foreach(body IN ITEMS " push 4" " li 4,1" " radd 4,ac0" " radd ac0,4" " shl 4,1"
     endif()
     check_diagnostic("primary-${name}" IMP-16L "${body}" 1320 "4 > 3" 3 ${column})
 endforeach()
+
+check_diagnostic(short-no-indirect IMP-16L " and ac0,@1" 1350
+ "allowed forms without @: address, displacement(AC2/AC3), address(PC) or #literal" 3 10)
+check_diagnostic(long-no-indirect IMP-16L " mpy @1" 1350 "allowed forms without @" 3 6)
+check_diagnostic(long-no-literal IMP-16L " ldb #1" 1350
+ "explicit PC-relative and #literal forms and @ are not allowed" 3 6)
+check_diagnostic(long-no-pc IMP-16L " ldb 1(pc)" 1350
+ "expected address or displacement(AC2/AC3)" 3 6)
+check_diagnostic(extended-capability IMP-16C/200 " mpy 1" 1500
+ "supported CPUs: IMP-16C/300, IMP-16P/300, IMP-16L" 3 2)
+check_diagnostic(jsri-address IMP-16L " jsri 128" 1315
+ "address 0x80 outside allowed ranges: [0x0,0x7f], [0xff80,0xffff]" 3 7)
+check_diagnostic(jsrp-address IMP-16L " jsrp 384" 1320
+ "address 0x180 outside allowed ranges: [0x0,0x7f], [0x100,0x17f]" 3 7)
+check_diagnostic(boc-upper IMP-16L " boc int,129" 1370
+ "branch displacement 128 outside [-128,127] (PC base 0x1)" 3 10)
+check_diagnostic(boc-lower IMP-16L " org 128\n boc int,0" 1370
+ "branch displacement -129 outside [-128,127] (PC base 0x81)" 4 10)
+check_bytes(memory-original IMP-16L
+ " mpy 4096\n mpy 1(ac2)\n ldb 1(ac3)\n jsri 127\n jsri 65408\n jsrp 127\n jsrp 383\n boc int,135"
+ "8004001080060100c0070100ff0380037f037f037c10")
+check_bytes(memory-errors-noemit IMP-16L
+ " expect 1350,1350,1350,1350,1315,1320,1370\n and ac0,@1\n mpy @1\n ldb #1\n ldb 1(pc)\n jsri 128\n jsrp 384\n boc int,129\n endexpect\n dw 4660" "3412")
+check_bytes(boc-forward IMP-16L " boc int,target\ntarget: push ac0" "00100040")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/jsri-address.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Adresse 0x80" detail_pos)
+string(FIND "${output}${error}" "[0xff80,0xffff]" range_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR range_pos EQUAL -1)
+    message(FATAL_ERROR "German IMP range: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

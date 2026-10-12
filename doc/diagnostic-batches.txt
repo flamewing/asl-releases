@@ -2496,3 +2496,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Defensive width guard stays located and aborts; no reachable non-16-bit native
     register exists. Original direct/numeric/alias bytes and German detail checked.
     Validation: all 418 CTest cases pass with embedded/external catalogs.
+
+230. IMP-16/PACE address forms, capability and control-transfer ranges.
+    Complete remaining four mode/one capability/two JSR range/one branch sites.
+    Accepted explicit forms respect PC/literal policy; supported models derive
+    from existing flags. JSR reports actual address and both disjoint intervals;
+    BOC reports displacement, signed range and PC base. Keep existing predicates,
+    evaluator/unknown behavior and original bytes. No failed emission and German
+    detail checked. All 17 historical candidates reviewed; adjacent silent required
+    condition/status-name lookup tracked separately.
+    Validation: all 418 CTest cases pass with embedded/external catalogs.

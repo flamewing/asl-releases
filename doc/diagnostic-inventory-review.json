@@ -1118,10 +1118,15 @@
       },
       "reviewed_diagnostic_families": [
         "ErrNum_InvReg",
-        "ErrNum_InvOpSize"
+        "ErrNum_InvOpSize",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InstructionNotSupported",
+        "ErrNum_UnderRange",
+        "ErrNum_OverRange",
+        "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 229 reviews all eight direct register and one width candidates. Shared register helper lists actual restricted AC0/AC0..1/AC0..3 (numeric aliases accepted) at operand; adjacent indexed parsing now rejects AC0/1 explicitly with AC2..3 choices instead of silent no emission. Only copy descriptor on successful lookup; abort primary range/division/target errors without secondary InvReg. Unknown numeric/alias registers use permitted provisional register until resolved. Set missing DissectReg callback to fix own accumulator aliases misidentified as different target. Width guard remains located InvOpSize and now aborts; native symbols and numeric fallback are exclusively 16-bit, other-target symbols fail before width check, so no extra unreachable wording added. Original direct/numeric/alias byte vectors, final subset failures, no failed emission, primary register decoder paths and German checked. Four address-mode, capability, two range and branch candidates remain."
+      "status": "complete",
+      "review_notes": "Tranche 229 reviews all eight direct register and one width candidates. Shared register helper lists actual restricted AC0/AC0..1/AC0..3 (numeric aliases accepted) at operand; adjacent indexed parsing now rejects AC0/1 explicitly with AC2..3 choices instead of silent no emission. Only copy descriptor on successful lookup; abort primary range/division/target errors without secondary InvReg. Unknown numeric/alias registers use permitted provisional register until resolved. Set missing DissectReg callback to fix own accumulator aliases misidentified as different target. Width guard remains located InvOpSize and now aborts; native symbols and numeric fallback are exclusively 16-bit, other-target symbols fail before width check, so no extra unreachable wording added. Original direct/numeric/alias byte vectors, final subset failures, no failed emission, primary register decoder paths and German checked. Four address-mode, capability, two range and branch candidates remain. Tranche 230 completes four address-mode, capability, both disjoint JSR range and branch candidates: list explicit accepted forms including actual PC/literal policy, derive supported model list from same CPU flags, name actual address and both JSR intervals, report BOC displacement/full signed range/PC base. Preserve evaluator/range/unknown/selection predicates and valid bytes; no rejected emission and German range checked. All 17 historical sites reviewed. Separate adjacent required condition/status-name silent rejection tracked."
     },
     "codekcp3.c": {
       "candidate_counts": {
@@ -2188,6 +2193,11 @@
       "file": "codeimp16.c",
       "issue": "Failed register lookup reads descriptor, emits secondary InvReg or is treated as true in indexed parsing; own accumulator aliases rejected because DissectReg callback unset.",
       "status": "fixed in tranche 229; success-only descriptor copy, primary-only abort, explicit index subset error, permitted unknown provisional index and matching direct/numeric/alias bytes checked"
+    },
+    {
+      "file": "codeimp16.c",
+      "issue": "Required BOC condition and PACE SFLG/PFLG status flag names return false with no diagnostic; optional named/numeric status lookup must retain numeric fallback.",
+      "status": "identified while tranche 230 reviews branch; resolve with required/optional lookup distinction in separate batch"
     }
   ]
 }
