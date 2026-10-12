@@ -2746,3 +2746,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     aliases such as r256 equ R10. Original, alias, no-emission and German tests.
     Eleven ST9 candidates remain.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+257. ST9 bit complement and immediate-prefix diagnostics.
+    Three historical bit candidates explain uncomplemented operand requirement
+    and removal of ! at first operand; preserve allowed second-operand complement.
+    SPP/SRP-family missing # sites identify immediate-prefix requirement.
+    Original bit/control encodings, rejected emission, division primary-only and
+    German detail checked. Six shared ST9 address candidates remain.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.

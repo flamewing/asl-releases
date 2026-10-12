@@ -119,3 +119,41 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German ST9 predecrement: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(op IN ITEMS band bld bor bxor)
+    string(LENGTH "${op}" column)
+    math(EXPR column "${column} + 3")
+    check_diagnostic(${op}-complement ST9040 " ${op} r4.!5,r8.2" 1350
+        "requires an uncomplemented bit operand; remove '!'" 3 ${column})
+endforeach()
+foreach(op IN ITEMS bcpl bres bset btset)
+    string(LENGTH "${op}" column)
+    math(EXPR column "${column} + 3")
+    check_diagnostic(${op}-complement ST9040 " ${op} r4.!5" 1350
+        "requires an uncomplemented bit operand; remove '!'" 3 ${column})
+endforeach()
+foreach(op IN ITEMS btjf btjt)
+    check_diagnostic(${op}-complement ST9040 " ${op} r4.!5,PC+3" 1350
+        "requires an uncomplemented bit operand; remove '!'" 3 7)
+endforeach()
+foreach(op IN ITEMS spp srp srp0 srp1)
+    string(LENGTH "${op}" column)
+    math(EXPR column "${column} + 3")
+    check_diagnostic(${op}-immediate ST9040 " ${op} 3" 1350
+        "requires an immediate value with # before the expression" 3 ${column})
+    check_diagnostic(${op}-primary ST9040 " ${op} #1/0" 1310 "division by 0" 3 "")
+endforeach()
+check_bytes(bits-original ST9040
+ " band r4.5,r8.2\n band r4.5,r8.!2\n bld r4.5,r8.!2\n bld r4.5,r8.2\n bor r4.5,r8.2\n bor r4.5,r8.!2\n bxor r4.5,r8.2\n bxor r4.5,r8.!2\n bcpl r4.5\n bres r4.5\n bset r4.5\n spp #5\n srp #3\n srp0 #3\n srp1 #3"
+ "1fb4581fb448f258b4f258a40fb4580fb4486fb4486fb4586fa41fa40fa4c716c718c71cc71d")
+check_bytes(fixed-noemit ST9040
+ " expect 1350,1350,1350,1350,1350\n band r4.!5,r8.2\n bset r4.!5\n btjf r4.!5,PC+3\n spp 5\n srp 3\n endexpect\n nop" "ff")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/band-complement.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "nicht komplementierten Bitoperanden" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German ST9 complemented bit: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

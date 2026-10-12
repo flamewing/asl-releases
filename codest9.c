@@ -1390,13 +1390,20 @@ static void DecodeDIVWS(Word Code) {
     }
 }
 
+static void report_uncomplemented_bit(void) {
+    char detail[180];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgST9UncomplementedBit),
+            OpPart.str.p_str);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
+}
+
 static void DecodeBit2(Word Code) {
     Byte     HReg, HPart;
     tStrComp Comp;
 
     if (ChkArgCnt(2, 2) && SplitBit(&Comp, &ArgStr[1], &HReg)) {
         if (Odd(HReg)) {
-            WrError(ErrNum_InvAddrMode);
+            report_uncomplemented_bit();
         } else {
             DecodeAdr(&Comp, MModWReg);
             if (AdrMode == ModWReg) {
@@ -1433,7 +1440,7 @@ static void DecodeBit1(Word Code) {
 
     if (ChkArgCnt(1, 1) && SplitBit(&Comp, &ArgStr[1], &HReg)) {
         if (Odd(HReg)) {
-            WrError(ErrNum_InvAddrMode);
+            report_uncomplemented_bit();
         } else {
             DecodeAdr(&Comp, MModWReg + (Hi(Code) * MModIWRReg));
             switch (AdrMode) {
@@ -1467,7 +1474,7 @@ static void DecodeBTJF_BTJT(Word Code) {
 
     if (ChkArgCnt(2, 2) && SplitBit(&Comp, &ArgStr[1], &HReg)) {
         if (Odd(HReg)) {
-            WrError(ErrNum_InvAddrMode);
+            report_uncomplemented_bit();
         } else {
             DecodeAdr(&Comp, MModWReg);
             if (AdrMode == ModWReg) {
@@ -1638,7 +1645,8 @@ static void DecodeSPP(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*ArgStr[1].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgImmediateRequired),
+                &ArgStr[1].Pos);
     } else {
         BAsmCode[1] = (EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt6, &OK) << 2) + 0x02;
         if (OK) {
@@ -1654,7 +1662,8 @@ static void DecodeSRP(Word Code) {
     if (!ChkArgCnt(1, 1))
         ;
     else if (*ArgStr[1].str.p_str != '#') {
-        WrError(ErrNum_InvAddrMode);
+        WrXErrorPos(ErrNum_InvAddrMode, getmessage(Num_ErrMsgImmediateRequired),
+                &ArgStr[1].Pos);
     } else {
         BAsmCode[1] = EvalStrIntExpressionOffs(&ArgStr[1], 1, UInt5, &OK) << 3;
         if (OK) {
