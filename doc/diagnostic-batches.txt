@@ -1856,3 +1856,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     for unknown/questionable flags. Four CPUs cover shift forms; 80296 covers
     both MVAC/MSAC variants. Retain final failures and captured accepted bytes.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+162. MCS-96 branch, forced-short and count diagnostics.
+    Twelve historical candidates show byte/short branch displacement with
+    exact bounds/PC base, forced-short displacement/address intervals and
+    encoded immediate count byte versus count register-file address limits.
+    Preserve IDs, predicates, arithmetic and accepted bytes. Short absolute
+    upper bound follows existing MemInt domain, including 24-bit CPUs.
+    Window/address-form sites remain for the next tranche.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.

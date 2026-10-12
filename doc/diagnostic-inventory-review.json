@@ -762,8 +762,12 @@
         "ErrNum_OverRange": 4,
         "ErrNum_UnderRange": 4
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_UnderRange"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 162 improves 12 of 16 historical candidates: five byte/short branch constraints, two forced-short displacement limits, short absolute address predicate and four count byte/register constraints. Existing IDs/predicates/calculations preserved. Remaining: register-file window OverRange and three address-form errors. Forward validation fixed in 159-161."
     },
     "code960.c": {
       "candidate_counts": {

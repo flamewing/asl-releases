@@ -13,6 +13,9 @@
 
 #include "code96.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
+
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -71,6 +74,33 @@ static Word    Win1Start, Win1Stop, Win1Begin, Win1End;
 static IntType MemInt;
 
 /*---------------------------------------------------------------------------*/
+
+static void WrNumericRange(tErrorNum ErrorNum, tStrComp const* pArg, int Message,
+                           LargeInt Value, LargeInt Min, LargeInt Max) {
+    char Detail[250];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Message), Value, Min, Max);
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
+
+static void WrBranchRange(tStrComp const* pArg, LongInt Disp, LongInt Min, LongInt Max, LongWord Base) {
+    char Detail[250];
+    as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgBranchDispRange),
+                (LargeInt)Disp, (LargeInt)Min, (LargeInt)Max, (LargeWord)Base);
+    WrXErrorPos(ErrNum_JmpDistTooBig, Detail, &pArg->Pos);
+}
+
+static void WrCountRange(tErrorNum ErrorNum, tStrComp const* pArg, Byte Value,
+                         Boolean IsImmediate, Byte Limit) {
+    char Detail[200];
+    if (IsImmediate) {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgImmediateCountByteRange),
+                    (LargeInt)Value, (LargeInt)Limit);
+    } else {
+        as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgCountRegisterRange),
+                    (LargeWord)Value, (LargeWord)Limit);
+    }
+    WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
+}
 
 static void ChkSFR(Word Adr, tStrComp const* pArg) {
     if ((Adr >= SFRStart) && (Adr <= SFRStop)) {
@@ -299,11 +329,11 @@ static tAdrType DecodeAdr(
                                 }
                                 if (ForceSize == eForceShort) {
                                     if ((AdrInt > 127) && !mFirstPassUnknownOrQuestionable(Flags)) {
-                                        WrStrErrorPos(ErrNum_OverRange, &Left);
+                                        WrNumericRange(ErrNum_OverRange, &Left, Num_ErrMsgEADispRange, AdrInt, -128, 127);
                                     } else if (
                                             (AdrInt < -128)
                                             && !mFirstPassUnknownOrQuestionable(Flags)) {
-                                        WrStrErrorPos(ErrNum_UnderRange, &Left);
+                                        WrNumericRange(ErrNum_UnderRange, &Left, Num_ErrMsgEADispRange, AdrInt, -128, 127);
                                     } else {
                                         adr_type        = ModIdx;
                                         p_vals->mode    = 3;
@@ -359,7 +389,8 @@ static tAdrType DecodeAdr(
                     }
                     if (ForceSize == eForceShort) {
                         if (!IsShort && !mFirstPassUnknownOrQuestionable(p_vals->value_flags)) {
-                            WrStrErrorPos(ErrNum_UnderRange, pArg);
+                            WrNumericRange(ErrNum_UnderRange, pArg, Num_ErrMsgForcedShortAddressRange,
+                                           AdrWord, 0xff80, IntTypeDefs[MemInt].Max);
                         } else {
                             adr_type        = ModIdx;
                             p_vals->mode    = 3;
@@ -712,14 +743,14 @@ static void DecodeShift(Word Code) {
         switch (DecodeAdr(&ArgStr[2], &adr_vals, MModDir | MModImm, False)) {
         case ModImm:
             if ((adr_vals.vals[0] > 15) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+                WrCountRange(ErrNum_OverRange, &ArgStr[2], adr_vals.vals[0], True, 15);
             } else {
                 goto common;
             }
             break;
         case ModDir:
             if ((adr_vals.vals[0] < 16) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
-                WrStrErrorPos(ErrNum_UnderRange, &ArgStr[2]);
+                WrCountRange(ErrNum_UnderRange, &ArgStr[2], adr_vals.vals[0], False, 16);
             } else {
                 goto common;
             }
@@ -804,14 +835,14 @@ static void DecodeMVAC_MSAC(Word Code) {
         switch (DecodeAdr(&ArgStr[2], &adr_vals, MModImm | MModDir, False)) {
         case ModImm:
             if ((adr_vals.vals[0] > 31) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
-                WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
+                WrCountRange(ErrNum_OverRange, &ArgStr[2], adr_vals.vals[0], True, 31);
             } else {
                 goto common;
             }
             break;
         case ModDir:
             if ((adr_vals.vals[0] < 32) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
-                WrStrErrorPos(ErrNum_UnderRange, &ArgStr[2]);
+                WrCountRange(ErrNum_UnderRange, &ArgStr[2], adr_vals.vals[0], False, 32);
             } else {
                 goto common;
             }
@@ -854,7 +885,7 @@ static void DecodeRel(Word Code) {
 
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
-                WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                WrBranchRange(&ArgStr[1], AdrInt, -128, 127, EProgCounter() + 2);
             } else {
                 CodeLen     = 2;
                 BAsmCode[0] = Code;
@@ -877,7 +908,7 @@ static void DecodeSCALL_LCALL_CALL(Word Code) {
 
             if (IsShort) {
                 if (!mFirstPassUnknownOrQuestionable(Flags) && !IsShortBranch(AdrInt)) {
-                    WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                    WrBranchRange(&ArgStr[1], AdrInt, -1024, 1023, EProgCounter() + 2);
                 } else {
                     CodeLen = 2;
                     set_b_guessed(Flags, 1, 1, 0xff);
@@ -922,7 +953,7 @@ static void DecodeBR_LJMP_SJMP(Word Code) {
 
             if (IsShort) {
                 if (!mFirstPassUnknownOrQuestionable(Flags) && !IsShortBranch(AdrInt)) {
-                    WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[1]);
+                    WrBranchRange(&ArgStr[1], AdrInt, -1024, 1023, EProgCounter() + 2);
                 } else {
                     CodeLen = 2;
                     set_b_guessed(Flags, 1, 1, 0xff);
@@ -985,7 +1016,7 @@ static void DecodeDJNZ_DJNZW(Word Size) {
                           - (EProgCounter() + 3);
             if (OK) {
                 if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
-                    WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[2]);
+                    WrBranchRange(&ArgStr[2], AdrInt, -128, 127, EProgCounter() + 3);
                 } else {
                     set_b_guessed(Flags, Start, 1, 0xff);
                     BAsmCode[Start] = AdrInt & 0xff;
@@ -1018,7 +1049,7 @@ static void DecodeJBC_JBS(Word Code) {
                          - (EProgCounter() + 3);
                 if (OK) {
                     if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
-                        WrStrErrorPos(ErrNum_JmpDistTooBig, &ArgStr[3]);
+                        WrBranchRange(&ArgStr[3], AdrInt, -128, 127, EProgCounter() + 3);
                     } else {
                         set_b_guessed(Flags, Start, 1, 0xff);
                         BAsmCode[Start] = AdrInt & 0xff;
