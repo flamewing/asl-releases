@@ -948,3 +948,23 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German FP mixed list: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Count failures describe the selected operand layout, not just its total count.
+check_diagnostic(sincos-destination-pair 68020 " fpu on\n fsincos.x fp0,fp1" 1110
+    "FSINCOS requires source,FPm,FPn or source,FPm:FPn" 4 16)
+check_diagnostic(sincos-pair-primary 68020 " fpu on\n fsincos.x missing,fp1" 1110
+    "destination register pair is missing" 4 20)
+check_diagnostic(macl-missing-load MCF5470 " macl.l d0,d1" 1110
+    "expected 2..3 additional operands; got 0" 3 2)
+check_diagnostic(macl-missing-load-after-scale MCF5470 " macl.l d0,d1,<<1" 1110
+    "expected 2..3 additional operands; got 0" 3 2)
+check_diagnostic(macl-one-extra MCF5470 " macl.l d0,d1,acc0" 1110
+    "expected 2..3 additional operands; got 1" 3 2)
+check_diagnostic(mac-excess-extra MCF5470 " mac.l d0,d1,d2,d3,d4,acc0" 1110
+    "expected 0..3 additional operands; got 4" 3 2)
+check_bytes(sincos-original-layouts 68020
+    " fpu on\n fsincos.x fp0,fp1:fp2\n fsincos.x fp0,fp1,fp2" "f2000131f2000131")
+check_bytes(macl-original-layouts MCF5470
+    " macl.l d0,d1,(a0),d2\n macl.l d0,d1,<<1,(a0),d2,acc1" "a4901800a4101a00")
+check_bytes(mac-count-errors-noemit MCF5470
+    " expect 1110,1110\n macl.l d0,d1\n mac.l d0,d1,d2,d3,d4,acc0\n endexpect\n dc.b $12" "12")

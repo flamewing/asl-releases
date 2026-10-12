@@ -5356,7 +5356,7 @@ static void DecodeFSINCOS(Word Code) {
             char* pKSep = strrchr(ArgStr[2].str.p_str, ':');
 
             if (!pKSep) {
-                WrError(ErrNum_WrongArgCnt);
+                report_m68k_detail(ErrNum_WrongArgCnt, Num_ErrMsgFSINCOSDestinationPair, &ArgStr[2]);
                 return;
             }
             StrCompSplitRef(&Arg2, &Arg3, &ArgStr[2], pKSep);
@@ -6484,7 +6484,10 @@ static void DecodeMAC_MSAC(Word Code) {
 
     RemArgCnt = ArgCnt - CurrArg + 1;
     if ((RemArgCnt > 3) || (ExplicitLoad && (RemArgCnt < 2))) {
-        WrError(ErrNum_WrongArgCnt);
+        char detail[220];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMACRemainingOperands),
+                ExplicitLoad ? 2 : 0, 3, RemArgCnt);
+        WrXErrorPos(ErrNum_WrongArgCnt, detail, &OpPart.Pos);
         return;
     }
 

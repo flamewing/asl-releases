@@ -2455,3 +2455,11 @@ Message ErrMsgFPUDynamicPair
 Message ErrMsgFMOVEMListChoices
  "ein Operand muss eine FP0..FP7-Liste, eine FPCR/FPSR/FPIAR-Liste oder eine dynamische D0..D7-Liste sein"
  "one operand must be an FP0..FP7 list, an FPCR/FPSR/FPIAR list or a dynamic D0..D7 list"
+
+Message ErrMsgFSINCOSDestinationPair
+ "FSINCOS erfordert Quelle,FPm,FPn oder Quelle,FPm:FPn; Zielregisterpaar fehlt"
+ "FSINCOS requires source,FPm,FPn or source,FPm:FPn; destination register pair is missing"
+
+Message ErrMsgMACRemainingOperands
+ "nach den zwei Registern und optionaler Skalierung werden %d..%d weitere Operanden erwartet; erhielt %d"
+ "after the two registers and optional scale, expected %d..%d additional operands; got %d"

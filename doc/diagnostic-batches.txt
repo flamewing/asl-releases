@@ -2422,3 +2422,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     control vectors retained; aliases match direct-register bytes. Wrong-target,
     German mixed-list and no-emission checks pass. All three list candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+222. M68K FSINCOS destination layout and MAC remaining operand counts.
+    Two direct-count candidates retain 1110 while identifying missing paired FP
+    destinations or actual/allowed additional operands after two registers and
+    optional scale. Explicit MACL load requires two/three additional operands.
+    Locate missing pair at operand two and count at mnemonic. Feature/size/parser
+    precedence and original FSINCOS/MACL layout vectors retained, with no failed
+    emission. All 166 historical M68K candidates reviewed; forward-list followup
+    remains separately tracked before completing adjacent fixes.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
