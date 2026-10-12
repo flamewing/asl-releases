@@ -470,10 +470,11 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InAccPage"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 172 defers provisional branch range/alignment failures; existing useful contextual branch detail retained. Remaining page/register/address/count families still pending."
+      "review_notes": "Tranche 172 defers provisional branch range/alignment failures; existing useful contextual branch detail retained. Remaining page/register/address/count families still pending. Tranche 173 reviews the bank warning with contextual EK/window detail and unresolved deferral."
     },
     "code68k.c": {
       "candidate_counts": {

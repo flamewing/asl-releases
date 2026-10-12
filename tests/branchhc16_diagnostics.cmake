@@ -117,3 +117,16 @@ foreach(item IN ITEMS "brset $55,x,#2|8b025502" "brset $5555,x,#2|0b0255550002" 
     check_bytes(forward-${tag} 68HC16
         " org $1000\n ${instruction},target+100000\ntarget equ $1008-100000" "${bytes}")
 endforeach()
+
+# Bank warnings retain fallback bytes and wait for unresolved expressions.
+check_diagnostic(bank-window 68HC16 " ldaa $10000" 110
+    "address 0x10000 uses bank 1; ASSUME EK=0 permits [0x0,0xFFFF]" 3 7 0)
+check_diagnostic(bank-nothing 68HC16 " assume ek:nothing\n ldaa $1234" 110
+    "ASSUME EK=NOTHING; no address window is known for address 0x1234" 4 7 0)
+check_bytes(unmapped-bank-bytes 68HC16 " ldaa $10000" "17750000")
+check_bytes(mapped-bank-bytes 68HC16 " assume ek:1\n ldaa $10000" "17750000")
+check_bytes(forward-bank-bytes 68HC16
+    " ldaa target+$10000\ntarget equ -$f000" "17751000")
+if(assembly_diagnostic MATCHES "warning #110:")
+    message(FATAL_ERROR "finally mapped CPU16 address warned: ${assembly_diagnostic}")
+endif()

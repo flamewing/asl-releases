@@ -108,6 +108,7 @@ static void DecodeAdr(
     Boolean  OK;
     unsigned Offset;
     DispType Size;
+    tSymbolFlags flags;
 
     AdrMode = ModNone;
     AdrCnt  = 0;
@@ -232,7 +233,7 @@ static void DecodeAdr(
 
     else {
         Offset = SplitSize(ArgStr[Start].str.p_str, &Size);
-        V32    = EvalStrIntExpressionOffs(&ArgStr[Start], Offset, UInt20, &OK);
+        V32    = EvalStrIntExpressionOffsWithFlags(&ArgStr[Start], Offset, UInt20, &OK, &flags);
         if (OK) {
             if (LongAdr) {
                 AdrVals[0] = (V32 >> 16) & 0xff;
@@ -241,8 +242,17 @@ static void DecodeAdr(
                 AdrMode    = ModAbs;
                 AdrCnt     = 3;
             } else {
-                if ((V32 >> 16) != Reg_EK) {
-                    WrError(ErrNum_InAccPage);
+                if (!mFirstPassUnknownOrQuestionable(flags) && ((V32 >> 16) != Reg_EK)) {
+                    char detail[240];
+                    if (Reg_EK == 0x100) {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAssumedAddressRegisterUnknown),
+                                "EK", (LargeWord)V32);
+                    } else {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
+                                (LargeWord)V32, (LargeInt)(V32 >> 16), "EK", (LargeInt)Reg_EK,
+                                (LargeWord)(Reg_EK << 16), (LargeWord)((Reg_EK << 16) + 0xffff));
+                    }
+                    WrXErrorPos(ErrNum_InAccPage, detail, &ArgStr[Start].Pos);
                 }
                 AdrVals[0] = (V32 >> 8) & 0xff;
                 AdrVals[1] = V32 & 0xff;

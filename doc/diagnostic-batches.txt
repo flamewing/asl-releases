@@ -1949,3 +1949,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     numeric diagnostics and final range/alignment predicates. Regression
     vectors cover all decoder paths and finally valid bytes.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+173. CPU16 assumed-bank warning.
+    Warning 110 reports the actual address/bank and ASSUME EK window, or
+    explicitly identifies EK=NOTHING. Preserve warning severity and low-word
+    fallback encoding. Defer unresolved address checks: a forward expression
+    that finally enters the assumed bank no longer warns. Known unmapped,
+    mapped, unknown-bank and forward-mapped cases verify detail and bytes.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
