@@ -227,6 +227,21 @@ check_diagnostic(full-extension 68000 " move.w (0.w,a0,d0.w),d1" 1505
     "requires a full extension word" 3 9)
 check_diagnostic(memory-indirect 68000 " move.w ([0,a0],d0.w),d1" 1505
     "memory-indirect addressing is unsupported" 3 9)
+foreach(cpu IN ITEMS 68020 68030 68040)
+    check_diagnostic(pc-indirect-destination-null-${cpu} ${cpu}
+        " move.w d1,([pc])" 1350 "operand must be" 3 12)
+    check_diagnostic(pc-indirect-destination-zero-${cpu} ${cpu}
+        " move.w d1,([*+2,pc])" 1350 "operand must be" 3 12)
+    check_diagnostic(pc-indirect-destination-word-${cpu} ${cpu}
+        " move.w d1,([*+4.w,pc,d0.w],8)" 1350 "operand must be" 3 12)
+    check_diagnostic(pc-indirect-destination-long-${cpu} ${cpu}
+        " move.w d1,([*+4.l,pc],d0.w,8)" 1350 "operand must be" 3 12)
+    check_diagnostic(pc-indirect-clear-${cpu} ${cpu}
+        " clr.w ([pc])" 1350 "operand must be" 3 8)
+endforeach()
+check_bytes(pc-indirect-sources 68020
+    " move.w ([pc]),d1\n move.w ([*+2,pc]),d1\n move.w ([*+4.w,pc,d0.w],8),d1\n move.w ([*+4.l,pc],d0.w,8),d1\n move.w d1,([a0])"
+    "323b0151323b0151323b012200020008323b013600000002000831810151")
 check_diagnostic(displacement-width 68020 " move.w (0.b,a0),d1" 1350
     "invalid displacement width b; expected .W or .L" 3 10)
 check_diagnostic(duplicate-displacement 68020 " move.w 1(2,a0),d1" 1350

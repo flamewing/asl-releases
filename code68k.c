@@ -2262,7 +2262,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                 if (AdrComps[0].Art == None) {
                     pResult->AdrPart = 0x3b;
                     append_adr_vals_const(pResult, ext_word | 0x10);
-                    pResult->AdrMode = ModAIX;
+                    pResult->AdrMode = ModPCIdx;
                 } else {
                     HVal = EvalStrIntExpressionWithFlags(
                             &AdrComps[0].Comp, Int32, &ValOK, &symbol_flags);
@@ -2292,20 +2292,20 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     PCIs0:
                         pResult->AdrPart = 0x3b;
                         append_adr_vals_const(pResult, ext_word | 0x10);
-                        pResult->AdrMode = ModAIX;
+                        pResult->AdrMode = ModPCIdx;
                         break;
                     PCIs16:
                         pResult->AdrPart = 0x3b;
                         append_adr_vals_const(pResult, ext_word | 0x20);
                         append_adr_vals_16(pResult, HVal & 0xffff, symbol_flags);
-                        pResult->AdrMode = ModAIX;
+                        pResult->AdrMode = ModPCIdx;
                         break;
                     case eSymbolSize32Bit:
                     PCIs32:
                         pResult->AdrPart = 0x3b;
                         append_adr_vals_const(pResult, ext_word | 0x30);
                         append_adr_vals_32(pResult, HVal, symbol_flags);
-                        pResult->AdrMode = ModAIX;
+                        pResult->AdrMode = ModPCIdx;
                         break;
                     default:
                         WrError(ErrNum_InternalError);
