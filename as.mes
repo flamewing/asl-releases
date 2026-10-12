@@ -2355,3 +2355,7 @@ Message ErrMsgHUC6280PageMap
 Message ErrMsgMappedAddressRange
  "Physische Adresse 0x%lllx ergibt CPU-Adresse 0x%lllx au&szlig;erhalb [%llld,%llld]"
  "physical address 0x%lllx maps to CPU address 0x%lllx outside [%llld,%llld]"
+
+Message ErrMsgIndirectPointerPageBoundary
+ "Indirekte Zeigeradresse 0x%lllx endet in 0xff; diese CPU erlaubt die Anweisung nicht an dieser Zeigeradresse"
+ "indirect pointer address 0x%lllx ends in 0xff; this CPU does not permit the instruction at that pointer"

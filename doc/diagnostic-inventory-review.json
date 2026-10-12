@@ -385,10 +385,12 @@
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig",
         "ErrNum_InAccPage",
-        "ErrNum_OverRange"
+        "ErrNum_OverRange",
+        "ErrNum_UnderRange",
+        "ErrNum_NotOnThisAddress"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 175 fixes the operand-count mixup found at the normal-instruction address fallback while reviewing invalid modes. Remaining nonbranch diagnostic families still pending. Tranche 176 reviews the HuC6280 MPR page-map warning and both short-address overflow candidates with physical/CPU address or ASSUME B/window details. Unresolved/questionable addresses defer warning/range validation; severity and fallback bytes preserved. Tranche 177 adds quote-aware address bracket validation: both historical malformed-opening mode paths now receive precise delimiter errors (the stack path already requires IsIndirect and cannot lack its opener). Guard the stack suffix read for short operands. Other invalid-mode sites remain pending."
+      "review_notes": "Tranche 175 fixes the operand-count mixup found at the normal-instruction address fallback while reviewing invalid modes. Remaining nonbranch diagnostic families still pending. Tranche 176 reviews the HuC6280 MPR page-map warning and both short-address overflow candidates with physical/CPU address or ASSUME B/window details. Unresolved/questionable addresses defer warning/range validation; severity and fallback bytes preserved. Tranche 177 adds quote-aware address bracket validation: both historical malformed-opening mode paths now receive precise delimiter errors (the stack path already requires IsIndirect and cannot lack its opener). Guard the stack suffix read for short operands. Other invalid-mode sites remain pending. Tranche 178 reviews the special-page mismatch and indirect-pointer placement restriction with evaluated address/window or forbidden low-byte detail. Existing IDs and 65C02 exception preserved; provisional pointer checks defer until known."
     },
     "code68.c": {
       "candidate_counts": {

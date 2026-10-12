@@ -287,11 +287,18 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
             AdrWord = EvalStrIntExpressionOffsWithFlags(
                     &ArgStr[1], 1, UInt16, &ValOK, &pResult->symbol_flags);
             if (ValOK) {
-                if (mFirstPassUnknown(pResult->symbol_flags)) {
-                    AdrWord = (SpecPage << 8) | Lo(AdrWord);
-                }
-                if (Hi(AdrWord) != SpecPage) {
-                    WrError(ErrNum_UnderRange);
+                if (!mFirstPassUnknownOrQuestionable(pResult->symbol_flags)
+                    && (Hi(AdrWord) != SpecPage)) {
+                    char detail[240];
+                    if (MomCPU == CPUM740) {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
+                                (LargeWord)AdrWord, (LargeInt)Hi(AdrWord), "SP", (LargeInt)SpecPage,
+                                (LargeWord)(SpecPage << 8), (LargeWord)((SpecPage << 8) + 255));
+                    } else {
+                        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressRange),
+                                (LargeInt)AdrWord, (LargeInt)(SpecPage << 8), (LargeInt)((SpecPage << 8) + 255));
+                    }
+                    WrXErrorPos(ErrNum_UnderRange, detail, &ArgStr[1].Pos);
                 } else {
                     pResult->ErgMode    = ModSpec;
                     pResult->AdrVals[0] = Lo(AdrWord);
@@ -843,8 +850,13 @@ static void DecodeNorm(Word Index) {
             set_b_guessed(AdrResult.symbol_flags, 1, AdrResult.AdrCnt, 0xff);
             CodeLen = AdrResult.AdrCnt + 1;
             if ((AdrResult.ErgMode == ModInd16) && (MomCPU != CPU65C02)
-                && (BAsmCode[1] == 0xff)) {
-                WrError(ErrNum_NotOnThisAddress);
+                && (BAsmCode[1] == 0xff)
+                && !mFirstPassUnknownOrQuestionable(AdrResult.symbol_flags)) {
+                char detail[200];
+                Word pointer = BAsmCode[1] | ((Word)BAsmCode[2] << 8);
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgIndirectPointerPageBoundary),
+                        (LargeWord)pointer);
+                WrXErrorPos(ErrNum_NotOnThisAddress, detail, &ArgStr[1].Pos);
                 code_len_reset();
             }
         }

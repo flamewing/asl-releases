@@ -162,3 +162,22 @@ endforeach()
 check_bytes(stack-indirect-valid 65CE02 " lda (1,sp),y" "e201")
 
 check_diagnostic(short-indirect-unsupported 65C19 " lda (1),y" 1500 "instruction not supported on 65C19" 3 "")
+
+# Special-page and indirect-pointer placement diagnostics retain their IDs.
+check_diagnostic(special-page-low MELPS740 " assume sp:$ff\n jsr \\$fe12" 1315
+    "address 0xFE12 uses bank 254; ASSUME SP=255 permits [0xFF00,0xFFFF]" 4 6)
+check_diagnostic(special-page-high MELPS740 " assume sp:$12\n jsr \\$1312" 1315
+    "address 0x1312 uses bank 19; ASSUME SP=18 permits [0x1200,0x12FF]" 4 6)
+check_bytes(special-page-valid MELPS740 " assume sp:$ff\n jsr \\$ff12" "2212")
+check_bytes(special-page-forward MELPS740
+    " assume sp:$ff\n jsr \\target+1\ntarget equ $ff11" "2212")
+foreach(cpu IN ITEMS 6502 65SC02 65CE02 W65C02S 65C19 MELPS740 HUC6280 6502UNDOC)
+    check_diagnostic(pointer-boundary-${cpu} ${cpu} " jmp ($12ff)" 1900
+        "indirect pointer address 0x12FF ends in 0xff" 3 6)
+    check_bytes(pointer-before-${cpu} ${cpu} " jmp ($12fe)" "6cfe12")
+    check_bytes(pointer-forward-${cpu} ${cpu}
+        " jmp (target+$ff)\ntarget equ $1101" "6c0012")
+    check_bytes(pointer-noemit-${cpu} ${cpu}
+        " expect 1900\n jmp ($12ff)\n endexpect\n db $12" "12")
+endforeach()
+check_bytes(pointer-c02-exception 65C02 " jmp ($12ff)" "6cff12")

@@ -1996,3 +1996,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     65C19 retains its primary unsupported-mode error. Two historical malformed
     mode sites reviewed; other mode sites remain pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+178. 65xx special-page and indirect-pointer placement diagnostics.
+    MELPS740 special-page mismatch shows actual address/page and ASSUME SP
+    window; retain 1315 for both lower/upper failures. Indirect-pointer error
+    1900 identifies the pointer and forbidden 0xFF low byte at its operand,
+    preserving the CPU predicate and 65C02 exception. Defer provisional
+    pointer/page checks. Special-page lower/upper/valid/forward cases and
+    eight pointer-restricted CPUs cover detail, boundaries and no error bytes.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
