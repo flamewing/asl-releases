@@ -1490,7 +1490,7 @@
         "ErrNum_JmpDistTooBig"
       ],
       "status": "partial",
-      "review_notes": "Tranche 265 prerequisite: valid packed two-operand BTJF/BTJT reads ArgStr[3] rather than final target; reproduce Windows access violation 0xc0000005 with bit definition and first btjf instruction. Use ArgCnt for target evaluation/location, avoiding absent/stale operand. Explicit three-operand forms unchanged. All 21 historical diagnostic candidates remain for semantic review. Tranche 266 reviews both branch-distance candidates: actual signed displacement, byte bounds and prefix/address-dependent PC base at target. Defer first-pass unknown as well as questionable targets, preserve existing 16-bit wrapping until separate STM8 full-width fix. Packed/explicit bit branches, prefixed/unprefixed branches, endpoints, forward references, primary-only/no-emission and German checked. Nineteen candidates remain."
+      "review_notes": "Tranche 265 prerequisite: valid packed two-operand BTJF/BTJT reads ArgStr[3] rather than final target; reproduce Windows access violation 0xc0000005 with bit definition and first btjf instruction. Use ArgCnt for target evaluation/location, avoiding absent/stale operand. Explicit three-operand forms unchanged. All 21 historical diagnostic candidates remain for semantic review. Tranche 266 reviews both branch-distance candidates: actual signed displacement, byte bounds and prefix/address-dependent PC base at target. Defer first-pass unknown as well as questionable targets, preserve existing 16-bit wrapping until separate STM8 full-width fix. Packed/explicit bit branches, prefixed/unprefixed branches, endpoints, forward references, primary-only/no-emission and German checked. Nineteen candidates remain. Tranche 267 fixes adjacent 16-bit truncation of STM8 branch distance: normalize in selected CPU address width (16-bit ST7 / 24-bit STM8), retain LargeInt until signed-byte validation. Preserve both CPU address-space wrapping and legitimate 64K boundary crossings; distant positive/negative explicit/packed bit and prefixed branches fail without emission."
     },
     "codest9.c": {
       "candidate_counts": {
@@ -2368,7 +2368,7 @@
     {
       "file": "codest7.c",
       "issue": "STM8 relative branch distance stored in 16-bit Integer despite 24-bit address space; jra PC+2+$10000 accepted as zero displacement. Bit opcode capability guard Hi(Code==0x90) always zero.",
-      "status": "pending; separate full-width STM8 displacement and bit-op capability validation from packed target crash fix."
+      "status": "STM8 full-width distance fixed in tranche 267; shared address-width normalization preserves ST7 and STM8 top wraps, legitimate bank crossings and short branch encodings. Bit-op capability guard remains pending separate correction."
     }
   ]
 }

@@ -2831,3 +2831,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     endpoints, originals, forward expressions, primary-only/no-emission and German
     checked. Preserve ST7 wrap; STM8 full-width defect separate. Nineteen remain.
     Validation: all 426 CTest cases pass with embedded/external catalogs.
+
+267. STM8 full-width branch distance validation.
+    Confirm 24-bit STM8 targets 65536 bytes away become zero after assignment to
+    16-bit Integer. Keep LargeInt distance through validation, normalize with
+    selected CPU address mask (16-bit ST7 / 24-bit STM8), then encode byte only
+    within [-128,127]. Preserve top-of-address-space wrapping, 64K crossings and
+    all valid short branch bytes. Positive/negative distant prefixed/unprefixed,
+    explicit/packed bit branches and rejected emission checked.
+    Validation: all 426 CTest cases pass with embedded/external catalogs.

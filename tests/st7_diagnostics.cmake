@@ -137,3 +137,24 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR base_pos EQUAL -1)
     message(FATAL_ERROR "German STM8 branch: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+foreach(distance IN ITEMS 65536 -65536 65792 -65792)
+    check_diagnostic(wide-jra-${distance} STM8
+        " org $20000\n jra PC+2+(${distance})" 1370
+        "branch displacement ${distance} outside [-128,127]" 4 6)
+    check_diagnostic(wide-jrh-${distance} STM8
+        " org $20000\n jrh PC+3+(${distance})" 1370
+        "branch displacement ${distance} outside [-128,127]" 4 6)
+    check_diagnostic(wide-bit-${distance} STM8
+        " org $20000\n btjf $12,#5,PC+5+(${distance})" 1370
+        "branch displacement ${distance} outside [-128,127]" 4 14)
+    check_diagnostic(wide-packed-${distance} STM8
+        "mybit bit $12,#5\n org $20000\n btjf mybit,PC+5+(${distance})" 1370
+        "branch displacement ${distance} outside [-128,127]" 5 13)
+endforeach()
+check_bytes(wide-noemit STM8
+ " org $20000\nmybit bit $12,#5\n expect 1370,1370,1370,1370\n jra PC+2+$10000\n jrh PC+3-$10000\n btjf $12,#5,PC+5+$10000\n btjf mybit,PC+5-$10000\n endexpect\n nop" "9d")
+check_bytes(STM8-top-wrap STM8 " org $fffffe\n jra 0" "2000")
+check_bytes(STM8-bank-crossing STM8 " org $ffff\n jrh $10002" "902900")
+check_bytes(STM8-high-pc STM8
+ " org $20000\n jra PC+2-128\n jrh PC+3+127\n btjf $1234,#5,PC+5-128\n btjt $1234,#2,PC+5+127" "208090297f720b123480720412347f")

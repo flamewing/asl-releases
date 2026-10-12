@@ -2062,7 +2062,20 @@ static void DecodeBitOp(Word Code) {
  * \param  Code instruction code
  * ------------------------------------------------------------------------ */
 
-static void report_branch_distance(Integer distance, unsigned target, unsigned length) {
+static LargeInt eval_branch_distance(tStrComp const* target, unsigned length,
+        Boolean* ok, tSymbolFlags* flags) {
+    LargeInt address = EvalStrIntExpressionWithFlags(
+            target, pCurrCPUProps->AddrIntType, ok, flags);
+    LargeWord mask = IntTypeDefs[pCurrCPUProps->AddrIntType].Mask;
+    LargeWord distance = ((LargeWord)address - (EProgCounter() + length)) & mask;
+    LargeWord sign = (mask + 1) >> 1;
+
+    /* Preserve wrapping at the selected CPU's address-space boundary. */
+    return (distance & sign) ? (LargeInt)distance - (LargeInt)(mask + 1)
+                            : (LargeInt)distance;
+}
+
+static void report_branch_distance(LargeInt distance, unsigned target, unsigned length) {
     char detail[180];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgBranchDispRange),
             (LargeInt)distance, (LargeInt)-128, (LargeInt)127,
@@ -2079,7 +2092,7 @@ static void DecodeBTJF_BTJT(Word Code) {
     else if (*AttrPart.str.p_str) {
         WrStrErrorPos(ErrNum_UseLessAttr, &AttrPart);
     } else if (DecodeBitAdrWithIndir(1, ArgCnt - 1, &BitPos, &AdrVals)) {
-        Integer      AdrInt;
+        LargeInt     AdrInt;
         Boolean      OK;
         tSymbolFlags Flags;
 
@@ -2089,9 +2102,8 @@ static void DecodeBTJF_BTJT(Word Code) {
         }
         BAsmCode[PrefixCnt] = Code + (BitPos << 1);
         memcpy(BAsmCode + 1 + PrefixCnt, AdrVals.Vals, AdrVals.Cnt);
-        AdrInt = EvalStrIntExpressionWithFlags(
-                         &ArgStr[ArgCnt], pCurrCPUProps->AddrIntType, &OK, &Flags)
-                 - (EProgCounter() + PrefixCnt + 1 + AdrVals.Cnt + 1);
+        AdrInt = eval_branch_distance(&ArgStr[ArgCnt], PrefixCnt + 2 + AdrVals.Cnt,
+                &OK, &Flags);
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
                 report_branch_distance(AdrInt, ArgCnt, PrefixCnt + 2 + AdrVals.Cnt);
@@ -2177,15 +2189,13 @@ static void DecodeRel(Word Code) {
         }
     } else {
         Boolean      OK;
-        Integer      AdrInt;
+        LargeInt     AdrInt;
         tSymbolFlags Flags;
 
         if (Hi(Code)) {
             BAsmCode[PrefixCnt++] = Hi(Code);
         }
-        AdrInt = EvalStrIntExpressionWithFlags(
-                         &ArgStr[1], pCurrCPUProps->AddrIntType, &OK, &Flags)
-                 - (EProgCounter() + 2 + PrefixCnt);
+        AdrInt = eval_branch_distance(&ArgStr[1], PrefixCnt + 2, &OK, &Flags);
         if (OK) {
             if (!mFirstPassUnknownOrQuestionable(Flags) && ((AdrInt < -128) || (AdrInt > 127))) {
                 report_branch_distance(AdrInt, 1, PrefixCnt + 2);
