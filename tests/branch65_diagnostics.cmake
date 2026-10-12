@@ -107,3 +107,17 @@ check_bytes(wrap-start 6502 " bne $ff82" "d080")
 check_bytes(forward-short 6502 " org $1000\n bne target\ntarget equ $1004" "d002")
 check_bytes(forward-long 65CE02 " org $1000\n bne target\ntarget equ $10c8" "d3c500")
 
+
+# Byte addresses promoted to an absolute-only instruction need two address bytes.
+foreach(cpu IN ITEMS 6502 65SC02 65C02 65CE02 W65C02S 65C19 MELPS740 HUC6280 6502UNDOC)
+    check_bytes(promote-${cpu} ${cpu}
+        " jmp <$12\n jsr <$34\n lda #1\n jmp <$56" "4c1200203400a9014c5600")
+    check_bytes(rejected-not-promoted-${cpu} ${cpu}
+        " expect 1350,1350\n jmp #1\n jsr #1\n endexpect\n db $12" "12")
+endforeach()
+check_bytes(promote-index-x 6502 " ldy <$12,x" "b412")
+check_bytes(promote-indirect 65C19 " jpi (<$12)" "0c1200")
+
+check_bytes(promote-index-only 65CE02 " ldz <$12,x" "bb1200")
+
+check_bytes(promote-index-y 6502 " lda <$12,y" "b91200")

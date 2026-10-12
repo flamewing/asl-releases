@@ -1967,3 +1967,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     carries expected/actual information; all callers guard its unreachable
     missing-component path, left unchanged. All thirteen sites reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+175. 65xx byte-address promotion encoding.
+    JMP <$12 emits 4C 00 instead of 4C 12 00: fallback widening writes through
+    global AdrCnt and leaves the decoded operand byte count unchanged. Use
+    AdrResult.AdrCnt, append the high zero byte only when a mode is widened,
+    and avoid touching operand storage on unrelated invalid modes. Nine CPUs
+    cover JMP/JSR sequences; direct/index-X/index-Y/indirect widening and
+    rejected immediate forms verify correct bytes and no error emission.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

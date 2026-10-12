@@ -795,19 +795,17 @@ static void DecodeNorm(Word Index) {
     DecodeAdr(&AdrResult, pOrder);
     if (AdrResult.ErgMode != -1) {
         if (pOrder->Codes[AdrResult.ErgMode] == -1) {
-            if (AdrResult.ErgMode == ModZA) {
-                AdrResult.ErgMode = ModA;
+            ShortInt old_mode = AdrResult.ErgMode;
+            switch (old_mode) {
+            case ModZA: AdrResult.ErgMode = ModA; break;
+            case ModZIX: AdrResult.ErgMode = ModIX; break;
+            case ModZIY: AdrResult.ErgMode = ModIY; break;
+            case ModInd8: AdrResult.ErgMode = ModInd16; break;
+            default: break;
             }
-            if (AdrResult.ErgMode == ModZIX) {
-                AdrResult.ErgMode = ModIX;
+            if (AdrResult.ErgMode != old_mode) {
+                AdrResult.AdrVals[AdrResult.AdrCnt++] = 0;
             }
-            if (AdrResult.ErgMode == ModZIY) {
-                AdrResult.ErgMode = ModIY;
-            }
-            if (AdrResult.ErgMode == ModInd8) {
-                AdrResult.ErgMode = ModInd16;
-            }
-            AdrResult.AdrVals[AdrCnt++] = 0;
         }
         if (pOrder->Codes[AdrResult.ErgMode] == -1) {
             WrError(ErrNum_InvAddrMode);

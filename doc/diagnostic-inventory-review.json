@@ -385,7 +385,8 @@
       "reviewed_diagnostic_families": [
         "ErrNum_JmpDistTooBig"
       ],
-      "status": "partially reviewed"
+      "status": "partially reviewed",
+      "review_notes": "Tranche 175 fixes the operand-count mixup found at the normal-instruction address fallback while reviewing invalid modes. Remaining nonbranch diagnostic families still pending."
     },
     "code68.c": {
       "candidate_counts": {
