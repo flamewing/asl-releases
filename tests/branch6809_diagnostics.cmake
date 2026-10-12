@@ -203,3 +203,70 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German transfer updates: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# Detailed indexed syntax, address masks and CPU requirements; no secondary
+# mode error when the displacement evaluator has already reported failure.
+foreach(cpu IN ITEMS 6809 6809UNDOC 6309)
+    foreach(base IN ITEMS x x+ --y)
+        check_diagnostic(missing-component-${base}-${cpu} ${cpu} " lda ${base}" 1110
+            "base addressing requires a displacement component; use ,base or enable PLAINBASE ON" 3 6)
+    endforeach()
+    check_diagnostic(auto-nonzero-${cpu} ${cpu} " lda 7,x+" 1350
+        "auto-update requires zero displacement; specified displacement 7" 3 6)
+    check_diagnostic(auto-undefined-primary-${cpu} ${cpu} " lda missing,x+" 1010 "symbol undefined" 3 6)
+    check_diagnostic(indirect-five-${cpu} ${cpu} " lda [<<1,x]" 1350
+        "allowed addressing forms: [<offset,X/Y/U/S]; [>offset,X/Y/U/S]" 3 7)
+    check_diagnostic(pc-five-${cpu} ${cpu} " lda <<*+1,pc" 1350
+        "allowed addressing forms: <target,PC/PCR; >target,PC/PCR" 3 6)
+    check_diagnostic(absolute-five-${cpu} ${cpu} " lda <<$12" 1350
+        "allowed addressing forms: <<offset,X/Y/U/S" 3 6)
+    check_diagnostic(invalid-base-${cpu} ${cpu} " lda 1,a" 1350
+        "allowed addressing forms: #value; <address (ASSUME DPR); >address; offset,X/Y/U/S" 3 8)
+    check_diagnostic(store-immediate-${cpu} ${cpu} " sta #1" 1350
+        "allowed addressing forms: <address (ASSUME DPR); >address; offset,X/Y/U/S" 3 6)
+    check_diagnostic(rmw-immediate-${cpu} ${cpu} " inc #1" 1350
+        "allowed addressing forms: <address (ASSUME DPR); >address; offset,X/Y/U/S" 3 6)
+    check_diagnostic(lea-absolute-${cpu} ${cpu} " leax $12" 1350
+        "allowed addressing forms: offset,X/Y/U/S" 3 7)
+    check_diagnostic(unclosed-index-${cpu} ${cpu} " lda [1,x" 1300
+        "unclosed bracket '['; expected ']' before end of input" 3 6)
+    check_diagnostic(mismatched-index-${cpu} ${cpu} " lda (1,x]" 1300
+        "mismatched closing bracket ']'; expected ')'" 3 10)
+    if(NOT cpu STREQUAL "6309")
+        check_diagnostic(w-pre-requires-${cpu} ${cpu} " lda ,--w" 1505 "supported by 6309 and above" 3 7)
+        check_diagnostic(w-post-requires-${cpu} ${cpu} " lda ,w++" 1505 "supported by 6309 and above" 3 7)
+    else()
+        check_diagnostic(w-missing-component ${cpu} " lda w" 1110 "use ,base or enable PLAINBASE ON" 3 6)
+    endif()
+    if(NOT cpu STREQUAL "6809UNDOC")
+        check_diagnostic(hcf-cpu-${cpu} ${cpu} " hcf" 1500 "supported only by 6809UNDOC" 3 2)
+    endif()
+    check_bytes(auto-forward-zero-${cpu} ${cpu}
+        " org $1000\n lda value+1000,x+\nvalue equ -1000" "a680")
+    check_bytes(address-mode-errors-noemit-${cpu} ${cpu}
+        " expect 1110,1350,1350,1350,1350,1300\n lda x\n lda 7,x+\n lda [<<1,x]\n lda <<*+1,pc\n sta #1\n lda [1,x\n endexpect\n db $12" "12")
+    if(cpu STREQUAL "6809")
+        check_bytes(address-forms-original-${cpu} ${cpu}
+            " lda #1\n sta $12\n lda $1234\n lda ,x\n lda a,y\n lda -16,u\n lda 16,s\n lda 128,x\n lda ,--x\n lda ,y++\n lda [1,u]\n lda [$1234]\n leax *+3,pc\n plainbase on\n lda x\n lda x+\n plainbase off"
+            "86019712b61234a684a6a6a650a6e810a6890080a683a6a1a6d801a69f1234308c00a684a680")
+    endif()
+    if(cpu STREQUAL "6809UNDOC")
+        check_bytes(address-forms-original-${cpu} ${cpu}
+            " lda #1\n sta $12\n lda $1234\n lda ,x\n lda a,y\n lda -16,u\n lda 16,s\n lda 128,x\n lda ,--x\n lda ,y++\n lda [1,u]\n lda [$1234]\n leax *+3,pc\n plainbase on\n lda x\n lda x+\n plainbase off"
+            "86019712b61234a684a6a6a650a6e810a6890080a683a6a1a6d801a69f1234308c00a684a680")
+    endif()
+    if(cpu STREQUAL "6309")
+        check_bytes(address-forms-original-${cpu} ${cpu}
+            " lda #1\n sta $12\n lda $1234\n lda ,x\n lda a,y\n lda -16,u\n lda 16,s\n lda 128,x\n lda ,--x\n lda ,y++\n lda [1,u]\n lda [$1234]\n leax *+3,pc\n plainbase on\n lda x\n lda x+\n plainbase off\n lda e,x\n lda f,y\n lda w,u\n lda 1,w"
+            "86019712b61234a684a6a6a650a6e810a6890080a683a6a1a6d801a69f1234308c00a684a680a687a6aaa6cea6af0001")
+    endif()
+endforeach()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/auto-nonzero-6309.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Auto-Update erfordert eine Verschiebung von null; angegebene Verschiebung 7" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German auto displacement: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

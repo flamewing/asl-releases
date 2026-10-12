@@ -2171,3 +2171,17 @@ manual, EXPECT fixtures, translations and source-position tests.
     Shared Konami 052001 decoder is checked with prior reversed encodings and
     forbidden-update diagnostics. Remaining address/count/capability sites pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+196. Remaining 6809 address forms, components and CPU requirements.
+    Seven decoder mode candidates now show mask-specific or forced-index forms,
+    or the actual forbidden auto-update displacement. Three reachable component
+    count candidates explain ,base/PLAINBASE ON; the defensive default count
+    branch is unreachable after caller/component limits. Preserve primary
+    evaluation errors and defer unknown/questionable zero-displacement checks,
+    fixing forward auto-update expressions. Bracket checking identifies cases
+    before decoding. Both W-update capability candidates name 6309, HCF names
+    6809UNDOC at its mnemonic. The immediate-size default is unreachable: callers
+    use only 8/16/32-bit or explicitly handled unknown size; retained unchanged.
+    All 22 historical candidates reviewed. Identified adjacent LDQ/HCF failure
+    handling and register-decoder secondary diagnostics remain for later batches.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

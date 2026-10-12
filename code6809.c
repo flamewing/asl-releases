@@ -18,6 +18,7 @@
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
+#include "asmerr.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
@@ -149,17 +150,6 @@ static Boolean MayShort(Integer Arg) {
     return ((Arg >= -128) && (Arg <= 127));
 }
 
-static Boolean IsZeroOrEmpty(tStrComp const* pArg) {
-    Boolean OK;
-    LongInt Value;
-
-    if (!*pArg->str.p_str) {
-        return True;
-    }
-    Value = EvalStrIntExpression(pArg, Int32, &OK);
-    return OK && !Value;
-}
-
 static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->mode         = e_adr_mode_none;
     p_vals->cnt          = 0;
@@ -194,19 +184,52 @@ static void report_direct_page(tStrComp const* arg, Word address) {
     WrXErrorPos(ErrNum_NoShortAddr, detail, &arg->Pos);
 }
 
+static void report_base_component(tStrComp const* arg) {
+    WrXErrorPos(ErrNum_WrongArgCnt, getmessage(Num_ErrMsgPlainBaseComponent), &arg->Pos);
+}
+
+static void report_address_choices(tStrComp const* arg, unsigned mask) {
+    char forms[540] = "", detail[650];
+    if (mask & adr_mode_mask_imm) strmaxcat(forms, "#value; ", sizeof(forms));
+    if (mask & adr_mode_mask_dir) strmaxcat(forms, "<address (ASSUME DPR); ", sizeof(forms));
+    if (mask & adr_mode_mask_ext) strmaxcat(forms, ">address; ", sizeof(forms));
+    if (mask & adr_mode_mask_ind) {
+        strmaxcat(forms, "offset,X/Y/U/S; A/B/D,X/Y/U/S; target,PC/PCR; ,base; ,--base; ,base++; [address]; [offset,base]; ", sizeof(forms));
+        if (MomCPU >= CPU6309) strmaxcat(forms, "E/F/W,X/Y/U/S; offset,W; ,--W; ,W++; ", sizeof(forms));
+    }
+    if (*forms) forms[strlen(forms) - 2] = '\0';
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
+static void report_specific_address_choices(tStrComp const* arg, char const* forms) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
+}
+
 static Boolean check_plain_base_arg(int adr_arg_cnt, tStrComp const* p_start_arg) {
     switch (adr_arg_cnt) {
     case 1:
         if (!plain_base_mode) {
-            WrStrErrorPos(ErrNum_WrongArgCnt, p_start_arg);
+            report_base_component(p_start_arg);
         }
         return plain_base_mode;
     case 2: {
-        Boolean ret = IsZeroOrEmpty(p_start_arg);
-        if (!ret) {
-            WrStrErrorPos(ErrNum_InvAddrMode, p_start_arg);
+        Boolean ok;
+        tSymbolFlags flags;
+        LongInt value;
+        if (!*p_start_arg->str.p_str) return True;
+        value = EvalStrIntExpressionWithFlags(p_start_arg, Int32, &ok, &flags);
+        if (!ok) return False;
+        if (value && !mFirstPassUnknownOrQuestionable(flags)) {
+            char detail[160];
+            as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAutoUpdateZeroDisplacement),
+                    (LargeInt)value);
+            WrXErrorPos(ErrNum_InvAddrMode, detail, &p_start_arg->Pos);
+            return False;
         }
-        return ret;
+        return True;
     }
     default:
         WrError(ErrNum_WrongArgCnt);
@@ -232,6 +255,9 @@ static adr_mode_t DecodeAdr(
     reset_adr_vals(p_vals);
     pStartArg = &ArgStr[ArgStartIdx];
     pEndArg   = &ArgStr[ArgEndIdx];
+    for (int index = ArgStartIdx; index <= ArgEndIdx; index++) {
+        if (!CheckBrackets(&ArgStr[index], "()[]{}", True)) return e_adr_mode_none;
+    }
 
     /* immediate */
 
@@ -265,7 +291,7 @@ static adr_mode_t DecodeAdr(
             }
             break;
         case eSymbolSizeUnknown:
-            WrStrErrorPos(ErrNum_InvAddrMode, pStartArg);
+            report_address_choices(pStartArg, mode_mask & ~adr_mode_mask_imm);
             OK = False;
             break;
         default:
@@ -337,7 +363,7 @@ static adr_mode_t DecodeAdr(
         if (!check_plain_base_arg(AdrArgCnt, pStartArg))
             ;
         else if (!allow_6309) {
-            WrError(ErrNum_AddrModeNotSupported);
+            (void)AChkMinCPUPos(CPU6309, pEndArg);
         } else {
             p_vals->cnt     = 1;
             p_vals->vals[0] = 0xef + Ord(IndFlag);
@@ -381,7 +407,7 @@ static adr_mode_t DecodeAdr(
         if (!check_plain_base_arg(AdrArgCnt, pStartArg))
             ;
         else if (!allow_6309) {
-            WrError(ErrNum_AddrModeNotSupported);
+            (void)AChkMinCPUPos(CPU6309, pEndArg);
         } else {
             p_vals->cnt     = 1;
             p_vals->vals[0] = 0xcf + Ord(IndFlag);
@@ -399,7 +425,7 @@ static adr_mode_t DecodeAdr(
 
         if (AdrArgCnt == 1) {
             if (!plain_base_mode) {
-                WrStrErrorPos(ErrNum_WrongArgCnt, pEndArg);
+                report_base_component(pEndArg);
             } else {
                 p_vals->cnt = 1;
                 p_vals->vals[0] += 0x84;
@@ -485,7 +511,8 @@ static adr_mode_t DecodeAdr(
                 && !mFirstPassUnknownOrQuestionable(p_vals->symbol_flags)) {
                 report_index_range(ErrNum_NoShortAddr, pStartArg, AdrInt, -16, 15, False, 0);
             } else if (IndFlag) {
-                WrError(ErrNum_InvAddrMode);
+                report_specific_address_choices(pStartArg,
+                        "[<offset,X/Y/U/S]; [>offset,X/Y/U/S]");
             } else {
                 p_vals->mode = e_adr_mode_ind;
                 p_vals->cnt  = 1;
@@ -531,7 +558,7 @@ static adr_mode_t DecodeAdr(
 
         if (AdrArgCnt == 1) {
             if (!plain_base_mode) {
-                WrStrErrorPos(ErrNum_WrongArgCnt, pEndArg);
+                report_base_component(pEndArg);
             } else {
                 p_vals->cnt  = 1;
                 p_vals->mode = e_adr_mode_ind;
@@ -586,7 +613,9 @@ static adr_mode_t DecodeAdr(
             AdrInt -= EProgCounter() + 2 + OpcodeLen;
 
             if (ZeroMode == 3) {
-                WrError(ErrNum_InvAddrMode);
+                report_specific_address_choices(pStartArg, IndFlag
+                        ? "[<target,PC/PCR]; [>target,PC/PCR]"
+                        : "<target,PC/PCR; >target,PC/PCR");
             }
 
             else if ((ZeroMode == 2) || ((ZeroMode == 0) && MayShort(AdrInt))) {
@@ -625,7 +654,7 @@ static adr_mode_t DecodeAdr(
 
         if (OK) {
             if (ZeroMode == 3) {
-                WrError(ErrNum_InvAddrMode);
+                report_specific_address_choices(pStartArg, "<<offset,X/Y/U/S");
             }
 
             else if (
@@ -662,12 +691,12 @@ static adr_mode_t DecodeAdr(
     }
 
     if (p_vals->mode == e_adr_mode_none) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_choices(AdrArgCnt > 1 ? pEndArg : pStartArg, mode_mask);
     }
 
 chk_mode:
     if ((p_vals->mode != e_adr_mode_none) && !((mode_mask >> p_vals->mode) & 1)) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_choices(pStartArg, mode_mask);
         reset_adr_vals(p_vals);
     }
     return p_vals->mode;
@@ -1254,7 +1283,10 @@ static void DecodeBITMD_LDMD(Word Code) {
 
 static void DecodeHCF(Word Code) {
     if (MomCPU != CPU6809UNDOC) {
-        WrStrErrorPos(ErrNum_InstructionNotSupported, &OpPart);
+        char detail[100];
+        as_snprintf(detail, sizeof(detail), "%s6809UNDOC%s",
+                getmessage(Num_ErrMsgOnlyCPUSupported1), getmessage(Num_ErrMsgOnlyCPUSupported2));
+        WrXErrorPos(ErrNum_InstructionNotSupported, detail, &OpPart.Pos);
         return;
     }
     switch (ArgCnt) {

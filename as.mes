@@ -2387,3 +2387,11 @@ Message ErrMsgRegisterUpdatesForbidden
 Message ErrMsgTransferUpdates
  "Quellregister-Update %d und Zielregister-Update %d sind nicht erlaubt; erlaubte Paare (+1,+1), (-1,-1), (+1,0), (0,+1)"
  "source register update %d and destination register update %d not permitted; allowed pairs (+1,+1), (-1,-1), (+1,0), (0,+1)"
+
+Message ErrMsgPlainBaseComponent
+ "Basisadressierung erfordert eine Verschiebungskomponente; ,base verwenden oder PLAINBASE ON einschalten"
+ "base addressing requires a displacement component; use ,base or enable PLAINBASE ON"
+
+Message ErrMsgAutoUpdateZeroDisplacement
+ "Auto-Update erfordert eine Verschiebung von null; angegebene Verschiebung %llld"
+ "auto-update requires zero displacement; specified displacement %llld"
