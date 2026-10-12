@@ -23,6 +23,8 @@
 
 Custom version of AS, intended to track the original source and fix some issues.
 
+See [Changes from original AS](doc/fork-changes.md) for the fork's modifications, grouped by snapshot tag, including changes pending the next snapshot.
+
 ## Create and install the package
 
 You need a C development toolchain, and `cmake` at least `3.19`. You also need Git. When everything is setup, run the following commands:
