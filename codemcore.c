@@ -275,6 +275,18 @@ static Boolean DecodeArgCReg(int Index, Word* pErg) {
     return Result;
 }
 
+static void report_operand_sizes(void) {
+    char detail[160];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgSupportedOperandSizes),
+            ".B (8), .H (16), .W (32)");
+    WrXErrorPos(ErrNum_InvOpSize, detail,
+            *AttrPart.str.p_str ? &AttrPart.Pos : &OpPart.Pos);
+}
+
+static void report_address_mode(tStrComp const* arg, int message) {
+    WrXErrorPos(ErrNum_InvAddrMode, getmessage(message), &arg->Pos);
+}
+
 static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     Word         Base    = 0xff, Tmp;
     LongInt      DispAcc = 0, DMask, DMax;
@@ -284,14 +296,14 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     tStrComp     Arg, Remainder;
 
     if ((OpSize < eSymbolSize8Bit) || (OpSize > eSymbolSize32Bit)) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes();
         return False;
     }
     DMask = (1 << OpSize) - 1;
     DMax = 15 << OpSize;
 
     if (!IsIndirect(pArg->str.p_str)) {
-        WrError(ErrNum_InvAddrMode);
+        report_address_mode(pArg, Num_ErrMsgMCoreAddressSyntax);
         return False;
     }
 
@@ -307,13 +319,13 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
             if (Base == 0xff) {
                 Base = Tmp;
             } else {
-                WrError(ErrNum_InvAddrMode);
+                report_address_mode(&Arg, Num_ErrMsgMCoreMultipleBases);
                 return False;
             }
             break;
         case eIsNoReg:
             DispAcc += EvalStrIntExpressionWithFlags(&Arg, Int32, &OK, &Flags);
-            if (mFirstPassUnknown(Flags)) {
+            if (mFirstPassUnknownOrQuestionable(Flags)) {
                 FirstFlag = True;
             }
             if (!OK) {
@@ -329,8 +341,13 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     } while (Pos);
 
     if (Base == 0xff) {
-        WrError(ErrNum_InvAddrMode);
-        return False;
+        if (FirstFlag) {
+            /* An unresolved term may become a register alias in a later pass. */
+            Base = 0;
+        } else {
+            report_address_mode(pArg, Num_ErrMsgMCoreMissingBase);
+            return False;
+        }
     }
 
     if (FirstFlag) {
@@ -344,10 +361,17 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     }
 
     if ((DispAcc & DMask) != 0) {
-        WrError(ErrNum_NotAligned);
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMCoreDisplacementAlignment),
+                (LargeInt)DispAcc, (LargeInt)(1 << OpSize));
+        WrXErrorPos(ErrNum_NotAligned, detail, &pArg->Pos);
         return False;
     }
-    if (!ChkRange(DispAcc, 0, DMax)) {
+    if ((DispAcc < 0) || (DispAcc > DMax)) {
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                (LargeInt)DispAcc, (LargeInt)0, (LargeInt)DMax);
+        WrXErrorPos((DispAcc < 0) ? ErrNum_UnderRange : ErrNum_OverRange, detail, &pArg->Pos);
         return False;
     }
     *Erg = Base + ((DispAcc >> OpSize) << 4);
@@ -411,20 +435,23 @@ static void DecodeUImm5(Word Index) {
     } else if (ChkArgCnt(2, 2) && DecodeArgReg(1, &RegX, AllRegMask)) {
         ImmV = EvalStrIntExpressionWithFlags(
                 &ArgStr[2], (Instr->Ofs > 0) ? UInt6 : UInt5, &OK, &Flags);
-        if ((Instr->Min > 0) && (ImmV < Instr->Min)) {
-            if (mFirstPassUnknown(Flags)) {
-                ImmV = Instr->Min;
-            } else {
-                WrError(ErrNum_UnderRange);
-                OK = False;
-            }
+        if (!OK) {
+            return;
         }
-        if ((Instr->Ofs > 0) && ((ImmV < Instr->Ofs) || (ImmV > 31 + Instr->Ofs))) {
-            if (mFirstPassUnknown(Flags)) {
-                ImmV = Instr->Ofs;
-            } else {
-                WrError((ImmV < Instr->Ofs) ? ErrNum_UnderRange : ErrNum_OverRange);
-                OK = False;
+        {
+            Word minimum = (Instr->Min > Instr->Ofs) ? Instr->Min : Instr->Ofs;
+            Word maximum = 31 + Instr->Ofs;
+            if ((ImmV < minimum) || (ImmV > maximum)) {
+                if (mFirstPassUnknownOrQuestionable(Flags)) {
+                    ImmV = minimum;
+                } else {
+                    char detail[180];
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgImmediateValueRange),
+                            (LargeInt)ImmV, (LargeInt)minimum, (LargeInt)maximum);
+                    WrXErrorPos((ImmV < minimum) ? ErrNum_UnderRange : ErrNum_OverRange,
+                            detail, &ArgStr[2].Pos);
+                    return;
+                }
             }
         }
         if (OK) {
@@ -503,7 +530,9 @@ static void DecodeSJmp(Word Index) {
     else if (
             (*ArgStr[1].str.p_str != '[')
             || (ArgStr[1].str.p_str[l = strlen(ArgStr[1].str.p_str) - 1] != ']')) {
-        WrError(ErrNum_InvAddrMode);
+        char detail[120];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "[address]");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[1].Pos);
     } else {
         ArgStr[1].str.p_str[l] = '\0';
         Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[1], 1, UInt32, &OK, &Flags);
@@ -583,7 +612,7 @@ static void DecodeLdSt(Word Index) {
     } else if (!ChkArgCnt(2, 2))
         ;
     else if (OpSize > eSymbolSize32Bit) {
-        WrError(ErrNum_InvOpSize);
+        report_operand_sizes();
     } else {
         if (Lo(Index) != 0xff) {
             OpSize = (tSymbolSize)Lo(Index);
@@ -664,7 +693,9 @@ static void DecodeLrm(Word Index) {
     else if (
             (*ArgStr[2].str.p_str != '[')
             || (ArgStr[2].str.p_str[l = strlen(ArgStr[2].str.p_str) - 1] != ']')) {
-        WrError(ErrNum_InvAddrMode);
+        char detail[120];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), "[address]");
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[2].Pos);
     } else {
         ArgStr[2].str.p_str[l] = '\0';
         Dest = EvalStrIntExpressionOffsWithFlags(&ArgStr[2], 1, UInt32, &OK, &Flags);

@@ -2619,3 +2619,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Original fixtures, known/forward aliases, control endpoints, primary failures,
     rejected emission and German checked. Eight historical candidates remain.
     Validation: all 421 CTest cases pass with embedded/external catalogs.
+
+243. MCore address syntax, aggregate displacement and immediate constraints.
+    Complete eight remaining historical sites: parenthesized one-base address,
+    duplicate/missing base cases, bracketed literal syntax, supported .B/.H/.W
+    suffixes and actual immediate bounds. Adjacent aggregate displacement failures
+    report byte value/range or required scaling multiple at full memory operand.
+    Confirm and fix premature missing-base failure for forward register alias and
+    secondary immediate range error after division failure. Preserve all final
+    encoding bounds; original/forward encodings, byte/halfword/word endpoints,
+    primary errors and rejected emission checked. All 18 MCore sites reviewed.
+    Validation: German mode/alignment/immediate details checked; all 421 CTest cases pass with embedded/external catalogs.

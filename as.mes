@@ -2651,3 +2651,19 @@ Message ErrMsgMCoreIndirectRegister
 Message ErrMsgMCoreRegisterRange
  "Registerbereich first-last erwartet; first aus %s, last aus %s"
  "expected register range first-last; first from %s, last from %s"
+
+Message ErrMsgMCoreAddressSyntax
+ "Adresse in Klammern mit genau einem Basisregister R0..R15 und optionalen Verschiebungstermen erwartet"
+ "expected a parenthesized address with one R0..R15 base register and optional displacement terms"
+
+Message ErrMsgMCoreMultipleBases
+ "Effektive Adresse enth&auml;lt mehr als ein Basisregister; genau ein R0..R15 erwartet"
+ "effective address contains more than one base register; expected exactly one R0..R15"
+
+Message ErrMsgMCoreMissingBase
+ "Effektive Adresse erfordert ein Basisregister R0..R15"
+ "effective address requires one R0..R15 base register"
+
+Message ErrMsgMCoreDisplacementAlignment
+ "Adressverschiebung %llld muss ein Vielfaches von %llld sein"
+ "address displacement %llld must be a multiple of %llld"

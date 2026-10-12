@@ -389,3 +389,9 @@ MCore error 1445 identifies the actual register and allowed mask-derived R set
 under `-x`. Error 1350 identifies required parenthesized register or first-last
 range syntax with instruction-specific register sets. Error 1440 lists CR0..31
 and the named control registers.
+
+MCore error 1350 distinguishes missing/multiple base registers, required
+parenthesized address syntax and bracketed literal syntax under `-x`. Error 1130
+lists .B/.H/.W sizes. Errors 1315/1320 give instruction-specific immediate bounds
+or aggregate effective-address displacement bounds; 1325 gives the displacement
+and its required byte/halfword/word scaling multiple.
