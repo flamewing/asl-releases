@@ -711,14 +711,14 @@ static void DecodeShift(Word Code) {
         OpSize            = eSymbolSize8Bit;
         switch (DecodeAdr(&ArgStr[2], &adr_vals, MModDir | MModImm, False)) {
         case ModImm:
-            if (adr_vals.vals[0] > 15) {
+            if ((adr_vals.vals[0] > 15) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
                 WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
             } else {
                 goto common;
             }
             break;
         case ModDir:
-            if (adr_vals.vals[0] < 16) {
+            if ((adr_vals.vals[0] < 16) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
                 WrStrErrorPos(ErrNum_UnderRange, &ArgStr[2]);
             } else {
                 goto common;
@@ -803,14 +803,14 @@ static void DecodeMVAC_MSAC(Word Code) {
         OpSize            = eSymbolSize8Bit;
         switch (DecodeAdr(&ArgStr[2], &adr_vals, MModImm | MModDir, False)) {
         case ModImm:
-            if (adr_vals.vals[0] > 31) {
+            if ((adr_vals.vals[0] > 31) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
                 WrStrErrorPos(ErrNum_OverRange, &ArgStr[2]);
             } else {
                 goto common;
             }
             break;
         case ModDir:
-            if (adr_vals.vals[0] < 32) {
+            if ((adr_vals.vals[0] < 32) && !mFirstPassUnknownOrQuestionable(adr_vals.value_flags)) {
                 WrStrErrorPos(ErrNum_UnderRange, &ArgStr[2]);
             } else {
                 goto common;

@@ -2052,6 +2052,11 @@
       "file": "code96.c",
       "issue": "Forced short indexed displacement and short absolute address constraints reject unresolved operand expressions before resolution.",
       "status": "fixed in tranche 160; defer indexed upper/lower checks and forced-short address interval check for unknown/questionable symbols; four CPUs/forward endpoints/final upper-lower failures/original bytes checked"
+    },
+    {
+      "file": "code96.c",
+      "issue": "Shift and MVAC/MSAC count constraints reject provisional immediate counts or register addresses before forward expressions resolve.",
+      "status": "fixed in tranche 161; defer four upper/lower checks for unknown/questionable symbols; shifts on four CPUs and both 80296 MVAC/MSAC variants cover immediate/register forward values and final failures"
     }
   ]
 }

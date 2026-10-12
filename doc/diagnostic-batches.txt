@@ -1849,3 +1849,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     both indexed limits, forward short absolute addresses, retained final
     errors and captured endpoint encodings. Existing acceptance rules retained.
     Validation: all 415 CTest cases pass with embedded/external catalogs.
+
+161. MCS-96 forward shift and MVAC/MSAC count operands.
+    Immediate-count upper bounds and count-register lower bounds reject
+    unresolved expressions before resolution. Defer all four constraints
+    for unknown/questionable flags. Four CPUs cover shift forms; 80296 covers
+    both MVAC/MSAC variants. Retain final failures and captured accepted bytes.
+    Validation: all 415 CTest cases pass with embedded/external catalogs.
