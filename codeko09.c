@@ -161,6 +161,18 @@ static void report_address_choices(unsigned mask, tStrComp const* p_arg) {
     WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
 }
 
+static void report_direct_page(tStrComp const* p_arg, Word address) {
+    char detail[210];
+    if (DPRValue == 0x100)
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgDirectPageUnavailable),
+                (LargeWord)address, "DPR");
+    else
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
+                (LargeWord)address, (LargeInt)Hi(address), "DPR", (LargeInt)DPRValue,
+                (LargeWord)(DPRValue << 8), (LargeWord)((DPRValue << 8) | 0xff));
+    WrXErrorPos(ErrNum_NoShortAddr, detail, &p_arg->Pos);
+}
+
 static adr_mode_t DecodeAdr(
         int ArgStartIdx, int ArgEndIdx, tSymbolSize op_size, unsigned mode_mask,
         adr_vals_t* p_vals) {
@@ -342,16 +354,20 @@ static adr_mode_t DecodeAdr(
 
         /* Displacement auswerten */
 
+        tEvalResult eval_result;
         Offset = ChkZero(pStartArg->str.p_str, &ZeroMode);
         if (EReg == IDX_PCREG) {
-            AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, UInt16, &OK)
+            AdrInt = EvalStrIntExpressionOffsWithResult(
+                    pStartArg, Offset, UInt16, &eval_result)
                      - (EProgCounter() + 2 + OpcodeLen);
         } else if (ZeroMode > 1) {
-            AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, SInt8, &OK);
+            AdrInt = EvalStrIntExpressionOffsWithResult(
+                    pStartArg, Offset, SInt8, &eval_result);
         } else {
-            AdrInt = EvalStrIntExpressionOffs(pStartArg, Offset, SInt16, &OK);
+            AdrInt = EvalStrIntExpressionOffsWithResult(
+                    pStartArg, Offset, SInt16, &eval_result);
         }
-        if (!OK) {
+        if (!eval_result.OK) {
             goto chk_mode;
         }
 
@@ -367,8 +383,17 @@ static adr_mode_t DecodeAdr(
         /* 8-Bit-Displacement */
 
         else if ((ZeroMode == 2) || ((ZeroMode == 0) && (MayShort(AdrInt)))) {
-            if (!MayShort(AdrInt)) {
-                WrError(ErrNum_NoShortAddr);
+            if (!MayShort(AdrInt)
+                    && !mFirstPassUnknownOrQuestionable(eval_result.Flags)) {
+                char detail[180];
+                if (EReg == IDX_PCREG)
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
+                            (LargeInt)AdrInt, (LargeInt)-128, (LargeInt)126,
+                            (LargeWord)(EProgCounter() + 2 + OpcodeLen));
+                else
+                    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgEADispRange),
+                            (LargeInt)AdrInt, (LargeInt)-128, (LargeInt)126);
+                WrXErrorPos(ErrNum_NoShortAddr, detail, &pStartArg->Pos);
             } else {
                 p_vals->mode = e_adr_mode_ind;
                 p_vals->cnt  = 2;
@@ -408,7 +433,7 @@ static adr_mode_t DecodeAdr(
         if (OK) {
             if ((ZeroMode == 2) || ((ZeroMode == 0) && (Hi(AdrInt) == DPRValue))) {
                 if (Hi(AdrInt) != DPRValue) {
-                    WrError(ErrNum_NoShortAddr);
+                    report_direct_page(pStartArg, AdrInt);
                 } else {
                     p_vals->mode    = e_adr_mode_ind;
                     p_vals->cnt     = 2;

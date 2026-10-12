@@ -2533,3 +2533,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     German detail checked. All 17 historical sites reviewed; NoShortAddr detail
     followup remains separately tracked.
     Validation: all 419 CTest cases pass with embedded/external catalogs.
+
+234. Konami 052001 forced-short displacement and DPR context.
+    Two adjacent NoShortAddr sites now identify actual displacement and current
+    [-128,126] predicate (with PC base where applicable), or actual address/DPR
+    and permitted page window/NOTHING. Preserve existing selection/boundary policy.
+    Retain evaluation flags so unresolved PC-relative arithmetic cannot prematurely
+    fail short-range check. Original boundary/page bytes, primary errors, forward
+    arithmetic, no rejected emission and German detail checked.
+    Validation: all 419 CTest cases pass with embedded/external catalogs.

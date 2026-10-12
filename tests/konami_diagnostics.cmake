@@ -120,3 +120,30 @@ endif()
 set(ENV{LC_MESSAGES} en)
 
 check_diagnostic(immediate-mask 052001 " andcc 1" 1350 "operand must be #expression" 3 8)
+
+check_diagnostic(short-index-boundary 052001 " lda <127,x" 1340
+ "effective address displacement 127 outside [-128,126]" 3 6)
+check_diagnostic(short-pc-boundary 052001 " lda <130,pc" 1340
+ "address displacement 127 outside [-128,126] (PC base 0x3)" 3 6)
+check_diagnostic(short-page 052001 " assume dpr:$12\n lda <$1300" 1340
+ "address 0x1300 uses bank 19; ASSUME DPR=18 permits [0x1200,0x12FF]" 4 6)
+check_diagnostic(short-page-disabled 052001 " assume dpr:NOTHING\n lda <$1234" 1340
+ "address 0x1234 cannot use direct addressing; ASSUME DPR=NOTHING" 4 6)
+check_diagnostic(short-primary 052001 " lda <1/0,pc" 1310 "division by 0" 3 "")
+check_bytes(short-pc-forward 052001 " lda <target+1000,pc\ntarget equ -1000" "1274fd")
+check_bytes(short-known-invalid-noemit 052001
+ " expect 1340,1340\n lda <127,x\n lda <130,pc\n endexpect\n fcb $12" "12")
+
+check_bytes(short-original 052001
+ " assume dpr:$12\n lda <$1234\n lda >$1300\n lda <126,x\n lda <-128,x\n lda <*+129,pc\n assume dpr:NOTHING\n lda $1234"
+ "12c4341207130012247e12248012747e12071234")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/short-page-disabled.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "ASSUME DPR=NOTHING" detail_pos)
+string(FIND "${output}${error}" "direkte Adressierung" mode_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR mode_pos EQUAL -1)
+    message(FATAL_ERROR "German Konami DPR: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

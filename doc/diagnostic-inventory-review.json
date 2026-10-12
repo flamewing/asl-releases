@@ -2217,7 +2217,7 @@
     {
       "file": "codeko09.c",
       "issue": "Two NoShortAddr sites lack actual forced displacement/domain or DPR address/page detail; forced-short predicate MayShort excludes 127.",
-      "status": "review contextual details after tranche 233, preserving current selection/range policy unless separately justified"
+      "status": "contextual diagnostics completed in tranche 234; actual current [-128,126] displacement domain and PC base, or address/DPR/both page endpoints/NOTHING; existing MayShort selection/boundary preserved. Unknown PC-relative arithmetic defers final short-range check; original bytes, primary failures and German checked."
     }
   ]
 }
