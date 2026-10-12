@@ -968,3 +968,35 @@ check_bytes(macl-original-layouts MCF5470
     " macl.l d0,d1,(a0),d2\n macl.l d0,d1,<<1,(a0),d2,acc1" "a4901800a4101a00")
 check_bytes(mac-count-errors-noemit MCF5470
     " expect 1110,1110\n macl.l d0,d1\n mac.l d0,d1,d2,d3,d4,acc0\n endexpect\n dc.b $12" "12")
+
+# Wait for forward list names before deciding CPU/FP class or direction.
+foreach(cpu IN ITEMS 68020 MCF5407)
+    check_bytes(movem-forward-alias-${cpu} ${cpu}
+        " movem.l list,(a0)\nlist reg d0" "48d00001")
+    check_bytes(movem-forward-lists-${cpu} ${cpu}
+        " movem.l low/high,(a0)\n movem.l (a0),low-high\nlow reg d0\nhigh reg d2"
+        "48d000054cd00007")
+endforeach()
+check_bytes(movem-forward-branch 68020
+    " bra.w after\n movem.l list,(a0)\nafter dc.w 0\nlist reg d0"
+    "6000000648d000010000")
+check_bytes(fmovem-forward-classes 68020
+    " fpu on\n fmovem.x fpdata,(a0)\n fmovem.l fpctrl,d0\n fmovem.x dynamic,(a0)\nfpdata reg fp0\nfpctrl reg fpcr\ndynamic reg d0"
+    "f210f080f200b000f210f800")
+check_bytes(fmovem-forward-cold MCF5407
+    " fpu on\n fmovem.d fpdata,(a0)\nfpdata reg fp0" "f210f080")
+check_diagnostic(movem-missing-list-final 68020 " movem.l missing,(a0)" 1410
+    "one operand must be a D0..D7/A0..A7 register list" 3 2)
+check_diagnostic(fmovem-missing-list-final 68020 " fpu on\n fmovem.x missing,(a0)" 1410
+    "one operand must be an FP0..FP7 list" 4 2)
+check_diagnostic(movem-forward-wrong-class 68020
+    " fpu on\n movem.l list,(a0)\nlist reg fp0" 1130
+    "invalid operand size" 4 10)
+check_diagnostic(fmovem-forward-invalid-cold  MCF5407
+    " fpu on\n fmovem.d list,(a0)\nlist reg d0" 1350
+    "operand must be FP0..FP7" 4 11)
+
+check_bytes(movem-forward-both-store 68020
+    " movem.l list,address\naddress dc.w 0\nlist reg d0" "48f8000110060000")
+check_bytes(movem-forward-both-load 68020
+    " movem.l address,list\naddress dc.w 0\nlist reg d0" "4cf8000110060000")

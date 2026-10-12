@@ -2461,6 +2461,40 @@ static Boolean DecodeMACReg(char const* pArg, Word* pResult) {
     return DecodeMACACC(pArg, pResult);
 }
 
+static Boolean unresolved_list_name(tStrComp const* arg) {
+    String buffer;
+    tStrComp part, remainder;
+    Word reg;
+    tRegDescr reg_descr;
+    tEvalResult eval_result;
+    char* separator;
+
+    StrCompMkTemp(&part, buffer, sizeof(buffer));
+    StrCompCopy(&part, arg);
+    do {
+        separator = strpbrk(part.str.p_str, "/-");
+        if (separator) StrCompSplitRef(&part, &remainder, &part, separator);
+        KillPrefBlanksStrComp(&part);
+        KillPostBlanksStrComp(&part);
+        if (ChkSymbName(part.str.p_str)
+            && !DecodeRegCore(part.str.p_str, &reg)
+            && !DecodeFPRegCore(part.str.p_str, &reg)
+            && EvalStrRegExpressionWithResult(&part, &reg_descr, &eval_result) == ErrNum_SymbolUndef)
+            return True;
+        if (separator) part = remainder;
+    } while (separator);
+    return False;
+}
+
+static Boolean defer_unresolved_lists(void) {
+    if (PassNo <= MaxSymPass
+        && (unresolved_list_name(&ArgStr[1]) || unresolved_list_name(&ArgStr[2]))) {
+        Repass = True;
+        return True;
+    }
+    return False;
+}
+
 typedef enum {
     eNotRegList, eRegList, eRegListAbort
 } tRegListResult;
@@ -3644,7 +3678,10 @@ static void DecodeMOVEM(Word Index) {
         report_operand_sizes(".L");
     } else {
         tAdrResult AdrResult;
-        tRegListResult list_result = DecodeRegList(&ArgStr[2], WAsmCode + 1);
+        tRegListResult list_result;
+
+        if (defer_unresolved_lists()) return;
+        list_result = DecodeRegList(&ArgStr[2], WAsmCode + 1);
 
         if (list_result == eRegListAbort) return;
         RelPos = 4;
@@ -5458,6 +5495,7 @@ static void DecodeFMOVEM(Word Code) {
        control register FMOVEM, but also a dynamic FPn data register list.  This
        makes the decision tree a bit more complex: */
 
+    if (defer_unresolved_lists()) return;
     if (DecodeFRegList(&ArgStr[2], &Typ, &List) == eRegListAbort) return;
     switch (Typ) {
     case eFMovemTypStatic:
