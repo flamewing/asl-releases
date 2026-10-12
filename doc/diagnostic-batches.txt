@@ -1805,3 +1805,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     but continue and encode register zero. Return after the primary error.
     Both directions/two CPUs verify no emission and preserve accepted bytes.
     Validation: all 414 CTest cases pass with embedded/external catalogs.
+
+156. CR16A/B forward mandatory registers and pairs.
+    Request required 16-bit width from the register evaluator rather than
+    rejecting its unresolved placeholder. Preserve unknown state through
+    pair validation and defer adjacency until both aliases resolve. Read
+    register descriptor only on success. Two CPUs cover destination/base/
+    pair/jump aliases, final undefined/nonadjacent errors and no emission.
+    Optional register-versus-address classification retains existing behavior.
+    Validation: all 414 CTest cases pass with embedded/external catalogs.

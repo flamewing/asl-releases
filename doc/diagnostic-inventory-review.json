@@ -2025,6 +2025,11 @@
       "file": "codecr16.c",
       "issue": "LOAD/STOR rejects a nonregister register operand but continues decoding memory and emits an instruction with register zero.",
       "status": "fixed in tranche 155; return after invalid register-form diagnostic; both directions/two CPUs/no emission/original bytes checked"
+    },
+    {
+      "file": "codecr16.c",
+      "issue": "Mandatory unresolved register aliases are provisionally width-unknown and fail the parser width check; unresolved pairs also fail adjacency before resolution, and failed decoding reads the register descriptor.",
+      "status": "fixed in tranche 156; request 16-bit register size from evaluator, propagate provisional unknown flags to pair validation, and read descriptor only on eIsReg; two CPUs/destination-base-pair-jump aliases/final undefined/nonadjacent errors checked"
     }
   ]
 }

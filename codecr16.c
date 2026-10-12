@@ -144,35 +144,45 @@ static void append_word(Word word) {
 /* Argument Decoding */
 
 /*!------------------------------------------------------------------------
- * \fn     decode_reg(const tStrComp *p_arg, Word *p_result, Boolean must_be_reg)
+ * \fn     decode_reg_with_flags(const tStrComp *p_arg, Word *p_result, Boolean must_be_reg, tSymbolFlags *p_flags)
  * \brief  decode register argument
  * \param  p_arg source argument
  * \param  p_result returns register #
  * \param  must_be_reg argument must be  a register
+ * \param  p_flags optional symbol flags, including unresolved placeholders
  * \return OK/No/Abort
  * ------------------------------------------------------------------------ */
 
-static tRegEvalResult decode_reg(
-        tStrComp const* p_arg, Word* p_result, Boolean must_be_reg) {
+static tRegEvalResult decode_reg_with_flags(
+        tStrComp const* p_arg, Word* p_result, Boolean must_be_reg, tSymbolFlags* p_flags) {
     tRegDescr      reg_descr;
     tEvalResult    eval_result;
     tRegEvalResult reg_eval_result;
 
     if (decode_reg_core(p_arg->str.p_str, p_result, &eval_result.DataSize)) {
-        reg_descr.Reg   = *p_result;
-        reg_eval_result = eIsReg;
+        eval_result.Flags = eSymbolFlag_None;
+        reg_descr.Reg     = *p_result;
+        reg_eval_result   = eIsReg;
     } else {
         reg_eval_result = EvalStrRegExpressionAsOperand(
-                p_arg, &reg_descr, &eval_result, eSymbolSizeUnknown, must_be_reg);
+                p_arg, &reg_descr, &eval_result, eSymbolSize16Bit, must_be_reg);
+        if ((reg_eval_result == eIsReg) && !eval_result.OK) {
+            eval_result.Flags |= eSymbolFlag_FirstPassUnknown;
+        }
     }
 
-    if ((reg_eval_result == eIsReg) && (eval_result.DataSize != eSymbolSize16Bit)) {
-        WrStrErrorPos(ErrNum_InvOpSize, p_arg);
-        reg_eval_result = must_be_reg ? eIsNoReg : eRegAbort;
+    if (reg_eval_result == eIsReg) {
+        *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
+        if (p_flags) {
+            *p_flags = eval_result.Flags;
+        }
     }
-
-    *p_result = reg_descr.Reg & ~REGSYM_FLAG_ALIAS;
     return reg_eval_result;
+}
+
+static tRegEvalResult decode_reg(
+        tStrComp const* p_arg, Word* p_result, Boolean must_be_reg) {
+    return decode_reg_with_flags(p_arg, p_result, must_be_reg, NULL);
 }
 
 /*!------------------------------------------------------------------------
@@ -312,6 +322,7 @@ static adr_mode_t decode_adr(
 
         do {
             tStrComp base_arg_remainder;
+            tSymbolFlags reg_flags;
 
             p_split = QuotPos(base_arg.str.p_str, ',');
             if (p_split) {
@@ -323,9 +334,10 @@ static adr_mode_t decode_adr(
                 WrStrErrorPos(ErrNum_InvAddrMode, &base_arg);
                 return reset_adr_vals(p_vals);
             }
-            if (eIsReg != decode_reg(&base_arg, &regs[reg_cnt++], True)) {
+            if (eIsReg != decode_reg_with_flags(&base_arg, &regs[reg_cnt++], True, &reg_flags)) {
                 return reset_adr_vals(p_vals);
             }
+            p_vals->disp_flags |= reg_flags;
             if (p_split) {
                 base_arg = base_arg_remainder;
             }
@@ -344,7 +356,7 @@ static adr_mode_t decode_adr(
             }
             break;
         case 2:
-            if (regs[0] != regs[1] + 1) {
+            if ((regs[0] != regs[1] + 1) && !mFirstPassUnknownOrQuestionable(p_vals->disp_flags)) {
                 goto bad;
             }
             p_vals->part                    = regs[1];
