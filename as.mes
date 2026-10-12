@@ -2643,3 +2643,11 @@ Message ErrMsgZ8BitFormsOneWay
 Message ErrMsgZ8BitFormsTwoWay
  "Erwartet wird R0..R15,Bitoperand oder Bitoperand,R0..R15"
  "expected R0..R15,bit operand or bit operand,R0..R15"
+
+Message ErrMsgMCoreIndirectRegister
+ "Register in Klammern erwartet; erlaubt sind %s"
+ "expected a parenthesized register from %s"
+
+Message ErrMsgMCoreRegisterRange
+ "Registerbereich first-last erwartet; first aus %s, last aus %s"
+ "expected register range first-last; first from %s, last from %s"

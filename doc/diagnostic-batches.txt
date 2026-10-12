@@ -2608,3 +2608,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     errors, rejected emission, forward targets and German detail checked.
     Record identical JMPI/JSRI registration for separate primary ISA verification.
     Validation: all 421 CTest cases pass with embedded/external catalogs.
+
+242. MCore register masks, ranges and native index parsing.
+    Three historical sites: actual register/mask-derived choices, required
+    parenthesized index and first-last register-range syntax. Adjacent control
+    register failures list CR0..31 and every named control register.
+    Confirm R65536/CR65536 encode as zero; validate full signed long before Word
+    assignment, including missing digits and overflow. Copy descriptors only on
+    success; unresolved required aliases choose mask-compatible provisional index.
+    Original fixtures, known/forward aliases, control endpoints, primary failures,
+    rejected emission and German checked. Eight historical candidates remain.
+    Validation: all 421 CTest cases pass with embedded/external catalogs.

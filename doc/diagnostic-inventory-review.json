@@ -1216,10 +1216,11 @@
       "reviewed_diagnostic_families": [
         "ErrNum_AddrNotAligned",
         "ErrNum_DistIsOdd",
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InvReg"
       ],
       "status": "partial",
-      "review_notes": "Seven historical control-transfer/alignment sites completed in tranche 241; byte displacement/bounds/alignment/PC base, literal-table byte displacement and actual aligned base, operand location, unknown-or-questionable deferral. Also contextualize both adjacent literal-address alignment sites. Register/address/size/immediate families remain."
+      "review_notes": "Seven historical control-transfer/alignment sites completed in tranche 241; byte displacement/bounds/alignment/PC base, literal-table byte displacement and actual aligned base, operand location, unknown-or-questionable deferral. Also contextualize both adjacent literal-address alignment sites. Register/address/size/immediate families remain. Tranche 242 reviews register mask and two indirect/range syntax sites (3 more historical sites); actual R number and mask choices, parenthesized-register/range requirements and adjacent control-register choices. Native/control numeric parsers validate full signed long before Word narrowing; copy only successful alias descriptors; choose allowed provisional register for forward aliases. Five address mode, two size and one immediate candidate remain."
     },
     "codemic8.c": {
       "candidate_counts": {
@@ -2257,6 +2258,11 @@
       "file": "codemcore.c",
       "issue": "JMPI and JSRI both registered with index zero, producing the same opcode; need primary ISA verification before changing encoding.",
       "status": "pending ISA encoding verification"
+    },
+    {
+      "file": "codemcore.c",
+      "issue": "Native/control parsers narrow strtol to Word before range checks, accepting R65536/CR65536 as zero; masked forward aliases fail provisionally and failed lookup copies descriptor.",
+      "status": "fixed in tranche 242; full long checked before narrowing, success-only descriptor copy and mask-compatible unresolved register; original, known/forward register-looking aliases, huge indices, control endpoints, rejected emission and German checked"
     }
   ]
 }

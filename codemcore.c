@@ -85,10 +85,11 @@ static Boolean DecodeRegCore(char const* pArg, Word* pResult) {
     } else {
         char* endptr;
 
-        *pResult = strtol(pArg + 1, &endptr, 10);
-        if (*endptr || (*pResult > 15)) {
+        long value = strtol(pArg + 1, &endptr, 10);
+        if ((endptr == pArg + 1) || *endptr || (value < 0) || (value > 15)) {
             return False;
         }
+        *pResult = value;
     }
     return True;
 }
@@ -132,6 +133,30 @@ static void DissectReg_MCORE(
  * \return True if it is an allowed register
  * ------------------------------------------------------------------------ */
 
+static void register_choices(char* choices, size_t size, Word mask) {
+    unsigned reg;
+    choices[0] = '\0';
+    for (reg = 0; reg < 16; reg++) {
+        if ((mask >> reg) & 1) {
+            unsigned last = reg;
+            char piece[32];
+            while ((last < 15) && ((mask >> (last + 1)) & 1)) {
+                last++;
+            }
+            if (last == reg) {
+                as_snprintf(piece, sizeof(piece), "R%u", reg);
+            } else {
+                as_snprintf(piece, sizeof(piece), "R%u..R%u", reg, last);
+            }
+            if (*choices) {
+                strmaxcat(choices, ", ", size);
+            }
+            strmaxcat(choices, piece, size);
+            reg = last;
+        }
+    }
+}
+
 static tRegEvalResult DecodeReg(
         tStrComp const* pArg, Word* pResult, Word Mask, Boolean MustBeReg) {
     tRegEvalResult RegEvalResult;
@@ -144,12 +169,28 @@ static tRegEvalResult DecodeReg(
 
         RegEvalResult = EvalStrRegExpressionAsOperand(
                 pArg, &RegDescr, &EvalResult, eSymbolSize32Bit, MustBeReg);
+        if (RegEvalResult != eIsReg) {
+            return RegEvalResult;
+        }
         *pResult = RegDescr.Reg;
+        if (!EvalResult.OK && MustBeReg) {
+            unsigned reg;
+            for (reg = 0; reg < 16; reg++) {
+                if ((Mask >> reg) & 1) {
+                    *pResult = reg;
+                    return eIsReg;
+                }
+            }
+        }
     }
     *pResult &= ~REGSYM_FLAG_ALIAS;
-    if ((RegEvalResult == eIsReg) && !(Mask & (1 << *pResult))) {
-        RegEvalResult = MustBeReg ? eRegAbort : eIsNoReg;
-        WrStrErrorPos(ErrNum_InvReg, pArg);
+    if ((*pResult > 15) || !(Mask & (1u << *pResult))) {
+        char choices[120], detail[220];
+        register_choices(choices, sizeof(choices), Mask);
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRRegisterChoices),
+                (unsigned)*pResult, choices);
+        WrXErrorPos(ErrNum_InvReg, detail, &pArg->Pos);
+        return MustBeReg ? eRegAbort : eIsNoReg;
     }
     return RegEvalResult;
 }
@@ -164,7 +205,10 @@ static Boolean DecodeArgIReg(int Index, Word* pErg, Word Mask) {
     int         l    = strlen(pArg);
 
     if ((l <= 3) || (pArg[0] != '(') || (pArg[l - 1] != ')')) {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[Index]);
+        char choices[120], detail[200];
+        register_choices(choices, sizeof(choices), Mask);
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMCoreIndirectRegister), choices);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[Index].Pos);
         return False;
     }
     StrCompRefRight(&RegComp, &ArgStr[Index], 1);
@@ -178,7 +222,12 @@ static Boolean DecodeArgRegPair(
     char*    pSep = strchr(ArgStr[Index].str.p_str, '-');
 
     if (!pSep) {
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[Index]);
+        char from_choices[120], to_choices[120], detail[320];
+        register_choices(from_choices, sizeof(from_choices), FromMask);
+        register_choices(to_choices, sizeof(to_choices), ToMask);
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgMCoreRegisterRange),
+                from_choices, to_choices);
+        WrXErrorPos(ErrNum_InvAddrMode, detail, &ArgStr[Index].Pos);
         return False;
     }
 
@@ -201,8 +250,12 @@ static Boolean DecodeCReg(char* Asc, Word* Erg) {
     if ((as_toupper(*Asc) != 'C') || (as_toupper(Asc[1]) != 'R')) {
         return False;
     } else {
-        *Erg = strtol(Asc + 2, &endptr, 10);
-        return ((*endptr == '\0') && (*Erg <= 31));
+        long value = strtol(Asc + 2, &endptr, 10);
+        if ((endptr == Asc + 2) || *endptr || (value < 0) || (value > 31)) {
+            return False;
+        }
+        *Erg = value;
+        return True;
     }
 }
 
@@ -210,7 +263,14 @@ static Boolean DecodeArgCReg(int Index, Word* pErg) {
     Boolean Result = DecodeCReg(ArgStr[Index].str.p_str, pErg);
 
     if (!Result) {
-        WrStrErrorPos(ErrNum_InvCtrlReg, &ArgStr[Index]);
+        char choices[180] = "CR0..CR31", detail[240];
+        unsigned reg;
+        for (reg = 0; CRegs[reg].Name; reg++) {
+            strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, CRegs[reg].Name, sizeof(choices));
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+        WrXErrorPos(ErrNum_InvCtrlReg, detail, &ArgStr[Index].Pos);
     }
     return Result;
 }

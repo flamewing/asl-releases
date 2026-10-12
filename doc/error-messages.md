@@ -384,3 +384,8 @@ required two-byte alignment and PC+2 base under `-x`. Literal-table error 1370
 identifies the byte displacement [0,1020] and the actual four-byte-aligned PC
 base; error 1325 identifies the target address and four-byte alignment. Warning
 180 identifies the odd instruction address and required two-byte alignment.
+
+MCore error 1445 identifies the actual register and allowed mask-derived R set
+under `-x`. Error 1350 identifies required parenthesized register or first-last
+range syntax with instruction-specific register sets. Error 1440 lists CR0..31
+and the named control registers.
