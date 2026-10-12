@@ -301,3 +301,46 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
     message(FATAL_ERROR "German HCF: ${result}\n${output}${error}")
 endif()
 set(ENV{LC_MESSAGES} en)
+
+# A known unavailable register has only its CPU diagnostic; invalid names and
+# instruction subsets come from the decoder's existing table at the operand.
+foreach(cpu IN ITEMS 6809 6809UNDOC 6309)
+    set(names "D, X, Y, U, S, SP, PC, A, B, CCR, DPR, CC, DP, Z")
+    if(cpu STREQUAL "6309")
+        set(names "D, X, Y, U, S, SP, PC, W, V, A, B, CCR, DPR, CC, DP, Z, E, F")
+    else()
+        foreach(reg IN ITEMS w v e f)
+            check_diagnostic(unavailable-source-${reg}-${cpu} ${cpu} " tfr ${reg},a" 1505
+                "supported by 6309 and above" 3 6)
+            check_diagnostic(unavailable-dest-${reg}-${cpu} ${cpu} " tfr a,${reg}" 1505
+                "supported by 6309 and above" 3 8)
+        endforeach()
+    endif()
+    check_diagnostic(unknown-transfer-source-${cpu} ${cpu} " tfr bogus,x" 1980 "operand must be ${names}" 3 6)
+    check_diagnostic(unknown-transfer-dest-${cpu} ${cpu} " tfr x,bogus" 1980 "operand must be ${names}" 3 8)
+    if(cpu STREQUAL "6809")
+        check_bytes(register-alias-original-${cpu} ${cpu}
+            " tfr d,d\n tfr x,x\n tfr y,y\n tfr u,u\n tfr s,s\n tfr sp,sp\n tfr pc,pc\n tfr a,a\n tfr b,b\n tfr ccr,ccr\n tfr dpr,dpr\n tfr cc,cc\n tfr dp,dp\n tfr z,z"
+            "1f001f111f221f331f441f441f551f881f991faa1fbb1faa1fbb1fdd")
+    endif()
+    if(cpu STREQUAL "6809UNDOC")
+        check_bytes(register-alias-original-${cpu} ${cpu}
+            " tfr d,d\n tfr x,x\n tfr y,y\n tfr u,u\n tfr s,s\n tfr sp,sp\n tfr pc,pc\n tfr a,a\n tfr b,b\n tfr ccr,ccr\n tfr dpr,dpr\n tfr cc,cc\n tfr dp,dp\n tfr z,z"
+            "1f001f111f221f331f441f441f551f881f991faa1fbb1faa1fbb1fdd")
+    endif()
+    if(cpu STREQUAL "6309")
+        check_bytes(register-alias-original-${cpu} ${cpu}
+            " tfr d,d\n tfr x,x\n tfr y,y\n tfr u,u\n tfr s,s\n tfr sp,sp\n tfr pc,pc\n tfr a,a\n tfr b,b\n tfr ccr,ccr\n tfr dpr,dpr\n tfr cc,cc\n tfr dp,dp\n tfr z,z\n tfr w,w\n tfr v,v\n tfr e,e\n tfr f,f\n band a.1,$12.2\n band b.1,$12.2\n band ccr.1,$12.2\n band dpr.1,$12.2\n band cc.1,$12.2\n band dp.1,$12.2"
+            "1f001f111f221f331f441f441f551f881f991faa1fbb1faa1fbb1fdd1f661f771fee1fff113051121130911211301112113011121130111211301112")
+    endif()
+endforeach()
+check_diagnostic(tfm-byte-source 6309 " tfm a+,x+" 1980 "operand must be D, X, Y, U, S, SP" 3 6)
+check_diagnostic(tfm-byte-dest 6309 " tfm x+,a+" 1980 "operand must be D, X, Y, U, S, SP" 3 9)
+check_diagnostic(bit-register-subset 6309 " band x.1,$12.2" 1980 "operand must be A, B, CCR, DPR, CC, DP" 3 7)
+check_diagnostic(alu-unknown-source 6309 " addr bogus,x" 1980 "operand must be D, X, Y, U, S, SP, PC, W, V" 3 7)
+check_diagnostic(alu-unknown-dest 6309 " addr x,bogus" 1980 "operand must be D, X, Y, U, S, SP, PC, W, V" 3 9)
+check_bytes(register-name-errors-noemit 6309
+    " expect 1980,1980,1980\n tfr bogus,x\n tfm a+,x+\n band x.1,$12.2\n endexpect\n db $12" "12")
+check_bytes(register-capability-errors-noemit 6809
+    " expect 1505,1505\n tfr e,a\n exg a,w\n endexpect\n db $12" "12")
+check_diagnostic(konami-invalid-source 052001 " tfr bogus,x" 1980 "invalid register name" 3 6)

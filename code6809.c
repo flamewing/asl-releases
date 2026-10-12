@@ -702,33 +702,53 @@ chk_mode:
     return p_vals->mode;
 }
 
+static char const CPURegNames[][4]
+        = {"D", "X", "Y", "U", "S", "SP", "PC", "W", "V",
+           "A", "B", "CCR", "DPR", "CC", "DP", "Z", "E", "F"};
+static Byte const CPURegVals[as_array_size(CPURegNames)]
+        = {0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 10, 11, 13, 14, 15};
+
+static Boolean cpu_register_available(Byte code) {
+    return ((code & 6) != 6) || (MomCPU >= CPU6309);
+}
+
 static Boolean CodeCPUReg(char const* Asc, Byte* Erg) {
-#define RegCnt (sizeof(RegNames) / sizeof(*RegNames))
-    static char const RegNames[][4]
-            = {"D", "X", "Y",   "U",   "S",  "SP", "PC", "W", "V",
-               "A", "B", "CCR", "DPR", "CC", "DP", "Z",  "E", "F"};
-    static Byte const RegVals[RegCnt]
-            = {0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 10, 11, 13, 14, 15};
-
     unsigned z;
-    String   Asc_N;
-
-    strmaxcpy(Asc_N, Asc, STRINGSIZE);
-    NLS_UpString(Asc_N);
-    Asc = Asc_N;
-
-    for (z = 0; z < RegCnt; z++) {
-        if (!strcmp(Asc, RegNames[z])) {
-            if (((RegVals[z] & 6) == 6)
-                && !ChkMinCPUExt(CPU6309, ErrNum_AddrModeNotSupported))
-                ;
-            else {
-                *Erg = RegVals[z];
-                return True;
-            }
+    for (z = 0; z < as_array_size(CPURegNames); z++) {
+        if (!as_strcasecmp(Asc, CPURegNames[z])) {
+            if (!cpu_register_available(CPURegVals[z])) return False;
+            *Erg = CPURegVals[z];
+            return True;
         }
     }
     return False;
+}
+
+/* Keep the callback contract free of diagnostics, then report one error at
+ * the failing operand. Other backends supply their own register decoder. */
+static void report_register_failure(tStrComp const* arg, reg_decoder_6809_t decoder,
+        unsigned minimum, unsigned maximum) {
+    char choices[160] = "", detail[210];
+    unsigned z;
+    if (decoder != CodeCPUReg) {
+        WrStrErrorPos(ErrNum_InvRegName, arg);
+        return;
+    }
+    for (z = 0; z < as_array_size(CPURegNames); z++) {
+        if (!as_strcasecmp(arg->str.p_str, CPURegNames[z])
+            && !cpu_register_available(CPURegVals[z])) {
+            (void)AChkMinCPUPos(CPU6309, arg);
+            return;
+        }
+    }
+    for (z = 0; z < as_array_size(CPURegNames); z++) {
+        if (!cpu_register_available(CPURegVals[z])
+            || CPURegVals[z] < minimum || CPURegVals[z] > maximum) continue;
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, CPURegNames[z], sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvRegName, detail, &arg->Pos);
 }
 
 static void SplitIncDec(char* s, int* Erg) {
@@ -1035,9 +1055,9 @@ static void DecodeBit(Word Code) {
         && SplitBit(&ArgStr[1], &bit_num_1, &bit_flags_1)
         && SplitBit(&ArgStr[2], &bit_num_2, &bit_flags_2)) {
         if (!CodeCPUReg(ArgStr[1].str.p_str, BAsmCode + 2)) {
-            WrError(ErrNum_InvRegName);
+            report_register_failure(&ArgStr[1], CodeCPUReg, 8, 11);
         } else if ((BAsmCode[2] < 8) || (BAsmCode[2] > 11)) {
-            WrError(ErrNum_InvRegName);
+            report_register_failure(&ArgStr[1], CodeCPUReg, 8, 11);
         } else {
             adr_vals_t vals;
 
@@ -1096,11 +1116,11 @@ void DecodeTFR_TFM_EXG_6809(
             } else if (
                     !reg_decoder(ArgStr[1].str.p_str, BAsmCode + 3)
                     || (BAsmCode[3] > 4)) {
-                WrStrErrorPos(ErrNum_InvRegName, &ArgStr[1]);
+                report_register_failure(&ArgStr[1], reg_decoder, 0, 4);
             } else if (
                     !reg_decoder(ArgStr[2].str.p_str, BAsmCode + 2)
                     || (BAsmCode[2] > 4)) {
-                WrStrErrorPos(ErrNum_InvRegName, &ArgStr[2]);
+                report_register_failure(&ArgStr[2], reg_decoder, 0, 4);
             } else {
                 BAsmCode[0] = 0x11;
                 BAsmCode[1] = 0;
@@ -1127,9 +1147,9 @@ void DecodeTFR_TFM_EXG_6809(
         } else if (Memo("TFM")) {
             report_transfer_updates(Inc1, Inc2);
         } else if (!reg_decoder(ArgStr[1].str.p_str, BAsmCode + 2)) {
-            WrError(ErrNum_InvRegName);
+            report_register_failure(&ArgStr[1], reg_decoder, 0, 15);
         } else if (!reg_decoder(ArgStr[2].str.p_str, BAsmCode + 1)) {
-            WrError(ErrNum_InvRegName);
+            report_register_failure(&ArgStr[2], reg_decoder, 0, 15);
         } else if (
                 (BAsmCode[1] != 13)
                 && (BAsmCode[2] != 13) /* Z Register compatible to all other registers */
@@ -1159,9 +1179,9 @@ static void DecodeALU2(Word Code) {
     if (!ChkArgCnt(2, 2))
         ;
     else if (!CodeCPUReg(ArgStr[1].str.p_str, &BAsmCode[3])) {
-        WrError(ErrNum_InvRegName);
+        report_register_failure(&ArgStr[1], CodeCPUReg, 0, 15);
     } else if (!CodeCPUReg(ArgStr[2].str.p_str, &BAsmCode[2])) {
-        WrError(ErrNum_InvRegName);
+        report_register_failure(&ArgStr[2], CodeCPUReg, 0, 15);
     } else if (
             (BAsmCode[2] != 13)
             && (BAsmCode[3] != 13) /* Z Register compatible to all other registers */

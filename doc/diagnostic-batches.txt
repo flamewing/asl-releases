@@ -2196,3 +2196,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     errors, no failure emission, all original addresses/opcodes, forward domains
     and German detail. Register/stack diagnostic followups remain pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+198. 6809 register-name subsets and unavailable-register primary errors.
+    Keep register lookup free of diagnostics and report once at the operand.
+    Known unavailable W/V/E/F names retain only their 1505 CPU requirement;
+    unknown names/subsets retain 1980 with CPU/instruction-specific choices
+    derived from the same name/value table. Cover transfer, TFM, bit and ALU
+    operands, both CPU variants, aliases, exact positions and no failure bytes.
+    Preserve all accepted-name predicates/encodings and shared Konami behavior.
+    Stack-list failure positioning/secondary diagnostics remain pending.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
