@@ -2736,3 +2736,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     existing 16-bit wrap semantics. Boundary, primary-error, forward, no-emission,
     original byte vector and German tests. Fourteen ST9 candidates remain.
     Validation: all 424 CTest cases pass with embedded/external catalogs.
+
+256. ST9 working-register auto-update diagnostics and failure handling.
+    Three historical sites: postincrement syntax, working byte/even-pair names
+    and pair-only predecrement at actual operand/register. Stop after failed
+    lookup instead of selecting mode or falling through with a removed bracket.
+    Confirm adc r13,(rr1)+ emitted bytes despite 1445; now emits none.
+    Validate full native index before narrowing, preserving general-register
+    aliases such as r256 equ R10. Original, alias, no-emission and German tests.
+    Eleven ST9 candidates remain.
+    Validation: all 424 CTest cases pass with embedded/external catalogs.

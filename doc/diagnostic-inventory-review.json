@@ -1491,10 +1491,11 @@
         "ErrNum_OverRange": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_JmpDistTooBig"
+        "ErrNum_JmpDistTooBig",
+        "ErrNum_InvReg"
       ],
       "status": "partial",
-      "review_notes": "Tranche 255 reviews all five relative branch distance sites: actual signed displacement, byte bounds and PC base at target operand; defer first-pass unknown as well as questionable targets, preserve 16-bit wrapping. Fourteen address/register sites remain."
+      "review_notes": "Tranche 255 reviews all five relative branch distance sites: actual signed displacement, byte bounds and PC base at target operand; defer first-pass unknown as well as questionable targets, preserve 16-bit wrapping. Fourteen address/register sites remain. Tranche 256 reviews the three auto-update address/register sites: syntax, valid byte/pair registers and pair-only predecrement at actual component. Stop after native lookup failure; validate full native index before Byte conversion. Eleven candidates remain."
     },
     "codesx20.c": {
       "candidate_counts": {
@@ -2327,6 +2328,11 @@
       "file": "code9331.c",
       "issue": "Parenthesized-comment stripping loop stops before final argument; valid ER(note) in final main field fails register lookup although other field comments are stripped.",
       "status": "fixed in tranche 254; loop through ArgCnt inclusive so last field receives same comment stripping as earlier fields. Nonempty and comment-only last fields across all seven builders match unannotated encodings; invalid names still report one located choice error."
+    },
+    {
+      "file": "codest9.c",
+      "issue": "Native register index narrows to Byte before <=15; invalid postincrement still selects mode/emits code; invalid predecrement falls through after truncating closing bracket.",
+      "status": "fixed in tranche 256; full unsigned long validation, success-only update mode and located working-register alternatives; original bytes, alias fallback, primary-only failures and no rejected emission checked."
     }
   ]
 }

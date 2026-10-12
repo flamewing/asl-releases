@@ -95,6 +95,7 @@ static as_assume_rec_t ASSUMEST9s[] = {
 
 static Boolean DecodeReg(char* Asc_O, Byte* Erg, Byte* Size) {
     char *Asc, *p_end;
+    unsigned long value;
 
     *Size = 0;
     Asc   = Asc_O;
@@ -116,15 +117,22 @@ static Boolean DecodeReg(char* Asc_O, Byte* Erg, Byte* Size) {
         *Size = 0;
     }
 
-    *Erg = strtoul(Asc, &p_end, 10);
-    if (*p_end || (*Erg > 15)) {
+    value = strtoul(Asc, &p_end, 10);
+    if ((p_end == Asc) || *p_end || (value > 15)) {
         return False;
     }
-    if ((*Size == 1) && (Odd(*Erg))) {
+    if ((*Size == 1) && (Odd(value))) {
         return False;
     }
 
+    *Erg = value;
     return True;
+}
+
+static void report_address_choices(tStrComp const* arg, unsigned error, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
 }
 
 static LargeInt eval_outer_disp(tStrComp const* p_arg, IntType type, Boolean* p_ok) {
@@ -200,7 +208,7 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
 
     if ((l > 0) && (pArg->str.p_str[l - 1] == '+')) {
         if ((l < 3) || (*pArg->str.p_str != '(') || (pArg->str.p_str[l - 2] != ')')) {
-            WrError(ErrNum_InvAddrMode);
+            report_address_choices(pArg, ErrNum_InvAddrMode, "(rn)+ or (rrn)+");
         } else {
             tStrComp RegComp;
 
@@ -208,7 +216,9 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
             pArg->Pos.Len -= 2;
             StrCompRefRight(&RegComp, pArg, 1);
             if (!DecodeReg(RegComp.str.p_str, &AdrPart, &Size)) {
-                WrStrErrorPos(ErrNum_InvReg, &RegComp);
+                report_address_choices(&RegComp, ErrNum_InvReg,
+                        "r0..r15 or rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14");
+                goto func_exit;
             }
             AdrMode = (Size == 0) ? ModIncWReg : ModIncWRReg;
         }
@@ -224,14 +234,16 @@ static void DecodeAdr(tStrComp* pArg, LongWord Mask) {
         pArg->str.p_str[l - 1] = '\0';
         pArg->Pos.Len--;
         StrCompRefRight(&RegComp, pArg, 2);
-        if (DecodeReg(RegComp.str.p_str, &AdrPart, &Size)) {
-            if (Size == 0) {
-                WrError(ErrNum_InvAddrMode);
-            } else {
-                AdrMode = ModDecWRReg;
-            }
-            goto func_exit;
+        if (!DecodeReg(RegComp.str.p_str, &AdrPart, &Size)) {
+            report_address_choices(&RegComp, ErrNum_InvReg,
+                    "rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14");
+        } else if (Size == 0) {
+            report_address_choices(&RegComp, ErrNum_InvAddrMode,
+                    "rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14");
+        } else {
+            AdrMode = ModDecWRReg;
         }
+        goto func_exit;
     }
 
     /* indirekt<->direkt */

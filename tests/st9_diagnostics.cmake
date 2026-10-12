@@ -90,3 +90,32 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR range_pos EQUAL -1)
 endif()
 set(ENV{LC_MESSAGES} en)
 
+
+check_diagnostic(postinc-shape ST9040 " adc r13,rr4+" 1350 "operand must be (rn)+ or (rrn)+" 3 10)
+foreach(reg IN ITEMS bad rr1 rr15 rr16 rr256 rr4294967296)
+    check_diagnostic(postinc-${reg} ST9040 " adc r13,(${reg})+" 1445
+        "operand must be r0..r15 or rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14" 3 11)
+    check_diagnostic(predec-${reg} ST9040 " adc r13,-(${reg})" 1445
+        "operand must be rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14" 3 12)
+endforeach()
+check_diagnostic(predec-byte ST9040 " adc r13,-(r4)" 1350
+    "operand must be rr0, rr2, rr4, rr6, rr8, rr10, rr12, rr14" 3 12)
+check_diagnostic(native-narrow ST9040 " ld r1,r256" 1010 "symbol undefined" 3 8)
+check_diagnostic(native-pair-narrow ST9040 " ldw rr2,rr256" 1010 "symbol undefined" 3 10)
+check_bytes(update-original ST9040
+ " adc r13,(rr4)+\n adc r13,-(rr4)\n adc (rr4)+,r13\n adc -(rr4),r13"
+ "b435ddc235ddb434ddc234dd")
+check_bytes(update-noemit ST9040
+ " expect 1445,1445,1350\n adc r13,(rr1)+\n adc r13,-(rr1)\n adc r13,-(r4)\n endexpect\n nop" "ff")
+check_bytes(native-looking-number ST9040
+ "r256 equ 1000\nrr256 equ 1000\n ld r1,r256\n ldw rr2,rr256" "c4f103e8e2f203e8")
+check_bytes(native-looking-alias ST9040 "r256 equ R10\nrr256 equ RR10\n ld r1,r256\n ldw rr2,rr256" "c4f1000ae2f2010a")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/predec-rr1.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Operand muss rr0, rr2" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German ST9 predecrement: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)
