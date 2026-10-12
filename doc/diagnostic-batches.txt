@@ -2442,3 +2442,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     branch displacement convergence pass; known-alias original bytes retained.
     Correct owned-buffer trimming after a focused assertion caught wrong helper.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+224. AVR register subsets and forward register aliases.
+    One historical candidate derives compact allowed register ranges/lists from
+    actual mask and reports resolved R number at the operand. Guard descriptor
+    copy on lookup success. Provisional mandatory-register lookup selects first
+    permitted register until alias resolves, fixing premature LDI/multiply/even/
+    upper-even rejection. Original byte vectors, forward classes, resolved invalid,
+    missing/wrong-target, no-emission and German checks pass. New AVR focused fixture
+    registers test 417. Remaining AVR diagnostic families pending.
+    Validation: all 417 CTest cases pass with embedded/external catalogs.

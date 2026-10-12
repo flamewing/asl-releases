@@ -913,8 +913,11 @@
         "ErrNum_Unpredictable": 3,
         "ErrNum_WrongArgCnt": 1
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvReg"
+      ],
+      "status": "partially reviewed",
+      "review_notes": "Tranche 224 reviews the shared register-subset candidate: derive compact allowed ranges/list from actual mask, show resolved R number at offending operand. Register helper copies descriptor only on successful lookup. Detect provisional mandatory-register result, choose first permitted register (respect minimal-core register bank) until alias resolves, rather than prematurely rejecting subset. Forward upper-half/multiply/even/upper-even aliases match original bytes; resolved invalid/missing/wrong-target errors remain, no rejected emission and German detail checked. Remaining families pending."
     },
     "codec16c.c": {
       "candidate_counts": {
@@ -2160,6 +2163,11 @@
       "file": "code68k.c",
       "issue": "FMOVEM probes scalar FP register aliases as integer registers, rejecting valid aliases with 1130 plus generic 1410.",
       "status": "fixed in tranche 221; combined CPU/FP lookup distinguishes dynamic data-register lists from static FP/control lists, aliases match direct-register bytes and lookup failures stop primary-only"
+    },
+    {
+      "file": "codeavr.c",
+      "issue": "Register-subset filtering rejects provisional forward aliases (LDI alias,1 / alias REG R16), and register helper reads descriptor after failed lookup.",
+      "status": "fixed in tranche 224; choose permitted provisional register for unknown aliases, check resolved subset and copy descriptor only on success; forward mask classes and primary failures verified"
     }
   ]
 }

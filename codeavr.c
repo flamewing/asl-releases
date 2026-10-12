@@ -168,19 +168,24 @@ static void DissectReg_AVR(
  * \return True if it's a register
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeReg(tStrComp const* pArg, Word* pResult) {
+static Boolean DecodeReg(tStrComp const* pArg, Word* pResult, Boolean* p_unknown) {
     tRegDescr      RegDescr;
     tEvalResult    EvalResult;
     tRegEvalResult RegEvalResult;
 
+    *p_unknown = False;
     if (DecodeRegCore(pArg->str.p_str, pResult)) {
         return True;
     }
 
     RegEvalResult = EvalStrRegExpressionAsOperand(
             pArg, &RegDescr, &EvalResult, eSymbolSize8Bit, True);
-    *pResult = RegDescr.Reg;
-    return (RegEvalResult == eIsReg);
+    if (RegEvalResult == eIsReg) {
+        *pResult = RegDescr.Reg;
+        *p_unknown = !EvalResult.OK;
+        return True;
+    }
+    return False;
 }
 
 static Boolean DecodeMem(char* Asc, Word* Erg) {
@@ -278,11 +283,35 @@ static LongWord const AllRegMask = 0xfffffffful, UpperHalfRegMask = 0xffff0000ul
                       UpperEightEvenRegMask = 0x55000000ul;
 
 static Boolean DecodeArgReg(unsigned ArgIndex, Word* pReg, LongWord RegMask) {
-    Boolean Result;
+    Boolean Result, unknown;
 
-    Result = DecodeReg(&ArgStr[ArgIndex], pReg);
+    Result = DecodeReg(&ArgStr[ArgIndex], pReg, &unknown);
+    if (Result && unknown) {
+        LongWord available = RegMask & (pCurrCPUProps->Core == eCoreMinTiny ? 0xffff0000ul : AllRegMask);
+        unsigned reg;
+        for (reg = 0; reg < RegBankSize; reg++) {
+            if ((available >> reg) & 1) {
+                *pReg = reg;
+                return True;
+            }
+        }
+    }
     if (Result && !((RegMask >> *pReg) & 1)) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[ArgIndex]);
+        char choices[200] = "", piece[24], detail[280];
+        unsigned reg;
+        for (reg = 0; reg < RegBankSize; reg++) {
+            if ((RegMask >> reg) & 1) {
+                unsigned first = reg;
+                while (reg + 1 < RegBankSize && ((RegMask >> (reg + 1)) & 1)) reg++;
+                if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+                if (first == reg) as_snprintf(piece, sizeof(piece), "R%u", reg);
+                else as_snprintf(piece, sizeof(piece), "R%u..R%u", first, reg);
+                strmaxcat(choices, piece, sizeof(choices));
+            }
+        }
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRRegisterChoices),
+                (unsigned)*pReg, choices);
+        WrXErrorPos(ErrNum_InvReg, detail, &ArgStr[ArgIndex].Pos);
         return False;
     }
     return Result;

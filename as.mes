@@ -2463,3 +2463,7 @@ Message ErrMsgFSINCOSDestinationPair
 Message ErrMsgMACRemainingOperands
  "nach den zwei Registern und optionaler Skalierung werden %d..%d weitere Operanden erwartet; erhielt %d"
  "after the two registers and optional scale, expected %d..%d additional operands; got %d"
+
+Message ErrMsgAVRRegisterChoices
+ "Register R%u ist hier nicht erlaubt; erwartet %s"
+ "register R%u is not allowed here; expected %s"
