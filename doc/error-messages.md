@@ -417,3 +417,7 @@ TLCS-90 error 1925 reports the actual absolute address and permitted ordinary
 
 TC9331 error 1380 reports the actual shift-field value and accepted 0, 1, 4
 counts at operand 2 under `-x`. Failed evaluation retains its primary error.
+
+TC9331 error 1445 lists the field's table- and instruction-specific choices at
+the operand under `-x`, including empty defaults where permitted. Error 1360
+lists accepted flag names for conditional jumps.

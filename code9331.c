@@ -52,33 +52,50 @@ static void StripComment(char* pArg) {
     }
 }
 
-static Boolean DecodeRegList(char const* pNames[], char const* pArg, LongWord* pResult) {
-    if (!*pArg) {
-        *pResult = 0;
-        return True;
-    }
-
-    for (*pResult = 0; pNames[*pResult]; (*pResult)++) {
-        if (!as_strcasecmp(pArg, pNames[*pResult])) {
-            return True;
+static void report_field_choices(char const* names[], tStrComp const* arg,
+        LongWord mask, Boolean allow_empty) {
+    char choices[360] = "", detail[440];
+    unsigned index;
+    for (index = 0; names[index]; index++) {
+        if (*names[index] && (index < 32) && ((mask >> index) & 1)) {
+            if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+            strmaxcat(choices, names[index], sizeof(choices));
         }
     }
+    if (allow_empty) {
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, getmessage(Num_ErrMsgTC9331EmptyDefault), sizeof(choices));
+    }
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(names == pFNames ? ErrNum_UndefCond : ErrNum_InvReg, detail, &arg->Pos);
+}
 
-    WrXError(pNames == pFNames ? ErrNum_UndefCond : ErrNum_InvReg, pArg);
+static Boolean decode_reg_list_mask(char const* names[], tStrComp const* arg,
+        LongWord* result, LongWord mask, Boolean allow_empty) {
+    if (!*arg->str.p_str && allow_empty) {
+        *result = 0;
+        return True;
+    }
+    for (*result = 0; names[*result]; (*result)++) {
+        if (*names[*result] && !as_strcasecmp(arg->str.p_str, names[*result])) {
+            if ((*result < 32) && ((mask >> *result) & 1)) return True;
+            break;
+        }
+    }
+    report_field_choices(names, arg, mask, allow_empty);
     return False;
 }
 
-static Boolean DecodeDSTA(char const* pArg, LongWord* pResult, IntType* pSize) {
+static Boolean DecodeRegList(char const* names[], tStrComp const* arg, LongWord* result) {
+    return decode_reg_list_mask(names, arg, result, 0xfffffffful, True);
+}
+
+static Boolean DecodeDSTA(tStrComp const* pArg, LongWord* pResult, IntType* pSize) {
     static char const* pNames[]
             = {"LC0",  "LC1",  "CP",   "OFP",  "DP0", "DP1", "DP2", "DP3",
                "MOD0", "MOD1", "MOD2", "MOD3", "DF0", "DF1", NULL};
 
-    if (!*pArg) {
-        WrXError(ErrNum_InvReg, pArg);
-        return False;
-    }
-
-    if (!DecodeRegList(pNames, pArg, pResult)) {
+    if (!decode_reg_list_mask(pNames, pArg, pResult, 0xfffffffful, False)) {
         return False;
     }
 
@@ -92,170 +109,112 @@ static Boolean DecodeDSTA(char const* pArg, LongWord* pResult, IntType* pSize) {
     return True;
 }
 
-static Boolean DecodeWRF(char const* pArg, LongWord* pResult) {
+static Boolean DecodeWRF(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"WF0", "WF1", "WF2", "W1", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeDEST(char const* pArg, LongWord* pResult, Boolean AllowAll) {
+static Boolean DecodeDEST(tStrComp const* pArg, LongWord* pResult, Boolean AllowAll) {
     static char const* pNames[]
             = {"NOP", "X",  "W0", "W1", "Y", "DP", "XAD", "PO", "SO0", "SO1",
                "SO2", "XD", "C",  "O",  "D", "B",  "XA",  "A",  NULL};
-    Boolean Result;
-
-    Result = DecodeRegList(pNames, pArg, pResult);
-    if (!Result) {
-        return Result;
-    }
-
-    switch (*pResult) {
-    case 17:
-        if (AllowAll) {
-            *pResult = 14; /* A -> D */
-        } else {
-            Result = False;
-        }
-        break;
-    case 16:
-        if (AllowAll) {
-            *pResult = 11; /* XA -> XD */
-        } else {
-            Result = False;
-        }
-        break;
-    case 15:
-        if (!AllowAll) {
-            Result = False;
-        }
-        break;
-    default:
-        break;
-    }
-    if (!Result) {
-        WrXError(ErrNum_InvReg, pArg);
-    }
-    return Result;
+    if (!decode_reg_list_mask(pNames, pArg, pResult,
+                AllowAll ? 0xfffffffful : 0x7ffful, True)) return False;
+    if (*pResult == 17) *pResult = 14; /* A -> D */
+    else if (*pResult == 16) *pResult = 11; /* XA -> XD */
+    return True;
 }
 
-static Boolean DecodeSOUR(char const* pArg, LongWord* pResult, Boolean AllowAll) {
+static Boolean DecodeSOUR(tStrComp const* pArg, LongWord* pResult, Boolean AllowAll) {
     static char const* pNames[] = {"RND", "X",   "W0",  "W1", "",  "DP", "",  "PI", "PO",
                                    "SI0", "SI1", "RMR", "C",  "O", "D",  "B", "A",  NULL};
-    Boolean            Result;
-
-    Result = DecodeRegList(pNames, pArg, pResult);
-    if (!Result) {
-        return Result;
-    }
-
-    switch (*pResult) {
-    case 16:
-        if (AllowAll) {
-            *pResult = 14; /* A -> D */
-        } else {
-            Result = False;
-        }
-        break;
-    case 15:
-        if (!AllowAll) {
-            Result = False;
-        }
-        break;
-    default:
-        break;
-    }
-
-    if (!Result) {
-        WrXError(ErrNum_InvReg, pArg);
-    }
-    return Result;
+    if (!decode_reg_list_mask(pNames, pArg, pResult,
+                AllowAll ? 0xfffffffful : 0x7ffful, True)) return False;
+    if (*pResult == 16) *pResult = 14; /* A -> D */
+    return True;
 }
 
-static Boolean DecodeXCNT(char const* pArg, LongWord* pResult) {
+static Boolean DecodeXCNT(tStrComp const* pArg, LongWord* pResult, Boolean allow_wrx) {
     static char const* pNames[] = {"STBY", "XRD", "WRX", "XREF", NULL};
 
-    return DecodeRegList(pNames, pArg, pResult);
+    return decode_reg_list_mask(pNames, pArg, pResult, allow_wrx ? 0xful : 0xbul, True);
 }
 
-static Boolean DecodeXS(char const* pArg, LongWord* pResult) {
+static Boolean DecodeXS(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"X", "W", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeYS(char const* pArg, LongWord* pResult) {
+static Boolean DecodeYS(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"Y", "X", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeZS(char const* pArg, LongWord* pResult) {
+static Boolean DecodeZS(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"0", "W", "AC", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeWS(char const* pArg, LongWord* pResult) {
+static Boolean DecodeWS(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"W0", "W1", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeCP(char const* pArg, LongWord* pResult) {
+static Boolean DecodeCP(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"NOP", "CP+", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeDPS(char const* pArg, LongWord* pResult) {
+static Boolean DecodeDPS(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"DP0", "DP1", "DP2", "DP3", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeMODE(char const* pArg, LongWord* pResult) {
+static Boolean DecodeMODE(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[]
             = {"NOP", "", "-", "+", "-DF0", "+DF0", "-DF1", "+DF1", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeOFP(char const* pArg, LongWord* pResult) {
+static Boolean DecodeOFP(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"NOP", "OFP+", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeER(char const* pArg, LongWord* pResult) {
+static Boolean DecodeER(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"NOP", "ER", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeDSTB(char const* pArg, LongWord* pResult) {
+static Boolean DecodeDSTB(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"W1", "X", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeFORM(char const* pArg, LongWord* pResult) {
+static Boolean DecodeFORM(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"L", "R", NULL};
 
     return DecodeRegList(pNames, pArg, pResult);
 }
 
-static Boolean DecodeGFX(char const* pArg, LongWord* pResult) {
+static Boolean DecodeGFX(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[] = {"GFS", "", "", "GFC", NULL};
 
-    if (!*pArg) {
-        WrXError(ErrNum_InvReg, pArg);
-        return False;
-    }
-
-    return DecodeRegList(pNames, pArg, pResult);
+    return decode_reg_list_mask(pNames, pArg, pResult, 0xfffffffful, False);
 }
 
-static Boolean DecodeGF(char const* pArg, LongWord* pResult) {
+static Boolean DecodeGF(tStrComp const* pArg, LongWord* pResult) {
     static char const* pNames[]
             = {"GF0", "GF1", "GF2", "GF3", "OV0", "OV1", "FCHG", "BNK", NULL};
 
@@ -296,33 +255,31 @@ static void DecodeMAIN(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeXS(ArgStr[3].str.p_str, &Xs))
+    } else if (!DecodeXS(&ArgStr[3], &Xs))
         ;
-    else if (!DecodeYS(ArgStr[4].str.p_str, &Ys))
+    else if (!DecodeYS(&ArgStr[4], &Ys))
         ;
-    else if (!DecodeZS(ArgStr[5].str.p_str, &Zs))
+    else if (!DecodeZS(&ArgStr[5], &Zs))
         ;
-    else if (!DecodeWRF(ArgStr[6].str.p_str, &Wrf))
+    else if (!DecodeWRF(&ArgStr[6], &Wrf))
         ;
-    else if (!DecodeWS(ArgStr[7].str.p_str, &Ws))
+    else if (!DecodeWS(&ArgStr[7], &Ws))
         ;
-    else if (!DecodeCP(ArgStr[8].str.p_str, &Cp))
+    else if (!DecodeCP(&ArgStr[8], &Cp))
         ;
-    else if (!DecodeDPS(ArgStr[9].str.p_str, &Dps))
+    else if (!DecodeDPS(&ArgStr[9], &Dps))
         ;
-    else if (!DecodeMODE(ArgStr[10].str.p_str, &Mode))
+    else if (!DecodeMODE(&ArgStr[10], &Mode))
         ;
-    else if (!DecodeDEST(ArgStr[11].str.p_str, &Dest, True))
+    else if (!DecodeDEST(&ArgStr[11], &Dest, True))
         ;
-    else if (!DecodeSOUR(ArgStr[12].str.p_str, &Sour, True))
+    else if (!DecodeSOUR(&ArgStr[12], &Sour, True))
         ;
-    else if (!DecodeXCNT(ArgStr[13].str.p_str, &Xcnt))
+    else if (!DecodeXCNT(&ArgStr[13], &Xcnt, False))
         ;
-    else if (Xcnt == 2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[13]);
-    } else if (!DecodeOFP(ArgStr[14].str.p_str, &Ofp))
+    else if (!DecodeOFP(&ArgStr[14], &Ofp))
         ;
-    else if (!DecodeER(ArgStr[15].str.p_str, &Er))
+    else if (!DecodeER(&ArgStr[15], &Er))
         ;
     else {
         LongWord shift_code;
@@ -350,21 +307,19 @@ static void DecodeLDA(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeDSTA(ArgStr[2].str.p_str, &DstA, &IntSize))
+    } else if (!DecodeDSTA(&ArgStr[2], &DstA, &IntSize))
         ;
-    else if (!DecodeWRF(ArgStr[4].str.p_str, &Wrf))
+    else if (!DecodeWRF(&ArgStr[4], &Wrf))
         ;
-    else if (!DecodeDEST(ArgStr[5].str.p_str, &Dest, False))
+    else if (!DecodeDEST(&ArgStr[5], &Dest, False))
         ;
-    else if (!DecodeSOUR(ArgStr[6].str.p_str, &Sour, False))
+    else if (!DecodeSOUR(&ArgStr[6], &Sour, False))
         ;
     else if (Sour > 14) {
         WrStrErrorPos(ErrNum_InvReg, &ArgStr[6]);
-    } else if (!DecodeXCNT(ArgStr[7].str.p_str, &Xcnt))
+    } else if (!DecodeXCNT(&ArgStr[7], &Xcnt, False))
         ;
-    else if (Xcnt == 2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[7]);
-    } else {
+    else {
         Boolean  OK;
         LongWord Value = EvalStrIntExpression(&ArgStr[3], IntSize, &OK);
 
@@ -385,9 +340,9 @@ static void DecodeLDB(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeDSTB(ArgStr[2].str.p_str, &DstB))
+    } else if (!DecodeDSTB(&ArgStr[2], &DstB))
         ;
-    else if (!DecodeFORM(ArgStr[4].str.p_str, &Form))
+    else if (!DecodeFORM(&ArgStr[4], &Form))
         ;
     else {
         Boolean  OK;
@@ -408,19 +363,19 @@ static void DecodeBR(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeCP(ArgStr[3].str.p_str, &Cp))
+    } else if (!DecodeCP(&ArgStr[3], &Cp))
         ;
-    else if (!DecodeDPS(ArgStr[4].str.p_str, &Dps))
+    else if (!DecodeDPS(&ArgStr[4], &Dps))
         ;
-    else if (!DecodeMODE(ArgStr[5].str.p_str, &Mode))
+    else if (!DecodeMODE(&ArgStr[5], &Mode))
         ;
-    else if (!DecodeDEST(ArgStr[6].str.p_str, &Dest, False))
+    else if (!DecodeDEST(&ArgStr[6], &Dest, False))
         ;
-    else if (!DecodeSOUR(ArgStr[7].str.p_str, &Sour, False))
+    else if (!DecodeSOUR(&ArgStr[7], &Sour, False))
         ;
-    else if (!DecodeXCNT(ArgStr[8].str.p_str, &Xcnt))
+    else if (!DecodeXCNT(&ArgStr[8], &Xcnt, True))
         ;
-    else if (!DecodeOFP(ArgStr[9].str.p_str, &Ofp))
+    else if (!DecodeOFP(&ArgStr[9], &Ofp))
         ;
     else {
         Boolean      OK;
@@ -447,21 +402,21 @@ static void DecodeJC(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeRegList(pFNames, ArgStr[3].str.p_str, &F))
+    } else if (!DecodeRegList(pFNames, &ArgStr[3], &F))
         ;
-    else if (!DecodeCP(ArgStr[4].str.p_str, &Cp))
+    else if (!DecodeCP(&ArgStr[4], &Cp))
         ;
-    else if (!DecodeDPS(ArgStr[5].str.p_str, &Dps))
+    else if (!DecodeDPS(&ArgStr[5], &Dps))
         ;
-    else if (!DecodeMODE(ArgStr[6].str.p_str, &Mode))
+    else if (!DecodeMODE(&ArgStr[6], &Mode))
         ;
-    else if (!DecodeDEST(ArgStr[7].str.p_str, &Dest, False))
+    else if (!DecodeDEST(&ArgStr[7], &Dest, False))
         ;
-    else if (!DecodeSOUR(ArgStr[8].str.p_str, &Sour, False))
+    else if (!DecodeSOUR(&ArgStr[8], &Sour, False))
         ;
-    else if (!DecodeXCNT(ArgStr[9].str.p_str, &Xcnt))
+    else if (!DecodeXCNT(&ArgStr[9], &Xcnt, True))
         ;
-    else if (!DecodeOFP(ArgStr[10].str.p_str, &Ofp))
+    else if (!DecodeOFP(&ArgStr[10], &Ofp))
         ;
     else {
         Boolean      OK;
@@ -491,29 +446,27 @@ static void DecodeRET(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeXS(ArgStr[3].str.p_str, &Xs))
+    } else if (!DecodeXS(&ArgStr[3], &Xs))
         ;
-    else if (!DecodeYS(ArgStr[4].str.p_str, &Ys))
+    else if (!DecodeYS(&ArgStr[4], &Ys))
         ;
-    else if (!DecodeWRF(ArgStr[5].str.p_str, &Wrf))
+    else if (!DecodeWRF(&ArgStr[5], &Wrf))
         ;
-    else if (!DecodeWS(ArgStr[6].str.p_str, &Ws))
+    else if (!DecodeWS(&ArgStr[6], &Ws))
         ;
-    else if (!DecodeCP(ArgStr[7].str.p_str, &Cp))
+    else if (!DecodeCP(&ArgStr[7], &Cp))
         ;
-    else if (!DecodeDPS(ArgStr[8].str.p_str, &Dps))
+    else if (!DecodeDPS(&ArgStr[8], &Dps))
         ;
-    else if (!DecodeMODE(ArgStr[9].str.p_str, &Mode))
+    else if (!DecodeMODE(&ArgStr[9], &Mode))
         ;
-    else if (!DecodeDEST(ArgStr[10].str.p_str, &Dest, True))
+    else if (!DecodeDEST(&ArgStr[10], &Dest, True))
         ;
-    else if (!DecodeSOUR(ArgStr[11].str.p_str, &Sour, True))
+    else if (!DecodeSOUR(&ArgStr[11], &Sour, True))
         ;
-    else if (!DecodeXCNT(ArgStr[12].str.p_str, &Xcnt))
+    else if (!DecodeXCNT(&ArgStr[12], &Xcnt, False))
         ;
-    else if (Xcnt == 2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[12]);
-    } else if (!DecodeOFP(ArgStr[13].str.p_str, &Ofp))
+    else if (!DecodeOFP(&ArgStr[13], &Ofp))
         ;
     else {
         LongWord shift_code;
@@ -541,29 +494,27 @@ static void DecodeGMAx(Word Code) {
         ;
     else if (*ArgStr[1].str.p_str) {
         WrError(ErrNum_InvAddrMode);
-    } else if (!DecodeGFX(ArgStr[2].str.p_str, &Gfx))
+    } else if (!DecodeGFX(&ArgStr[2], &Gfx))
         ;
-    else if (!DecodeGF(ArgStr[3].str.p_str, &Gf))
+    else if (!DecodeGF(&ArgStr[3], &Gf))
         ;
-    else if (!DecodeWRF(ArgStr[4].str.p_str, &Wrf))
+    else if (!DecodeWRF(&ArgStr[4], &Wrf))
         ;
-    else if (!DecodeWS(ArgStr[5].str.p_str, &Ws))
+    else if (!DecodeWS(&ArgStr[5], &Ws))
         ;
-    else if (!DecodeCP(ArgStr[6].str.p_str, &Cp))
+    else if (!DecodeCP(&ArgStr[6], &Cp))
         ;
-    else if (!DecodeDPS(ArgStr[7].str.p_str, &Dps))
+    else if (!DecodeDPS(&ArgStr[7], &Dps))
         ;
-    else if (!DecodeMODE(ArgStr[8].str.p_str, &Mode))
+    else if (!DecodeMODE(&ArgStr[8], &Mode))
         ;
-    else if (!DecodeDEST(ArgStr[9].str.p_str, &Dest, True))
+    else if (!DecodeDEST(&ArgStr[9], &Dest, True))
         ;
-    else if (!DecodeSOUR(ArgStr[10].str.p_str, &Sour, True))
+    else if (!DecodeSOUR(&ArgStr[10], &Sour, True))
         ;
-    else if (!DecodeXCNT(ArgStr[11].str.p_str, &Xcnt))
+    else if (!DecodeXCNT(&ArgStr[11], &Xcnt, False))
         ;
-    else if (Xcnt == 2) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[11]);
-    } else if (!DecodeOFP(ArgStr[12].str.p_str, &Ofp))
+    else if (!DecodeOFP(&ArgStr[12], &Ofp))
         ;
     else {
         DAsmCode[0] = 0x0c000000ul | (((LongWord)Code) << 16) | (Gfx << 28) | (Gf << 23)

@@ -2703,3 +2703,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     Original/forward main/RET vector, primary-only errors, no rejected emission
     and German detail checked. Sixteen historical register/mode sites remain.
     Validation: all 423 CTest cases pass with embedded/external catalogs.
+
+252. TC9331 register/flag field alternatives.
+    Nine historical register sites reviewed: table/mask-derived alternatives at
+    actual field, required DSTA/GFX names versus optional empty defaults, filtered
+    A/XA/B aliases and WRX restrictions. Shared restricted lookup replaces duplicate
+    post-validation; preserve all defaults, alias remapping and branch WRX.
+    LDA Sour>14 defensive guard is unreachable after its restricted decoder and
+    remains located; no speculative policy change. Field matrix, original fixture,
+    no rejected emission and German checked. Seven reserved-field sites remain.
+    Validation: all 423 CTest cases pass with embedded/external catalogs.

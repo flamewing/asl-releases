@@ -812,10 +812,11 @@
         "ErrNum_InvShiftArg": 2
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_InvShiftArg"
+        "ErrNum_InvShiftArg",
+        "ErrNum_InvReg"
       ],
       "status": "partial",
-      "review_notes": "Tranche 251 reviews two shift sites in main and return instruction builders: shared optional shift decoder, actual count/accepted 0,1,4 at field 2; stop on failed UInt3 evaluation before shift classification or emission. Defer unknown/questionable shift. Original/forward byte vectors, primary-only errors, no rejected emission and German checked. Nine register and seven reserved-field mode sites remain."
+      "review_notes": "Tranche 251 reviews two shift sites in main and return instruction builders: shared optional shift decoder, actual count/accepted 0,1,4 at field 2; stop on failed UInt3 evaluation before shift classification or emission. Defer unknown/questionable shift. Original/forward byte vectors, primary-only errors, no rejected emission and German checked. Nine register and seven reserved-field mode sites remain. Tranche 252 reviews all nine register sites and adjacent common field/flag lookup: choices derived from actual table and instruction mask, required DSTA/GFX blanks excluded, optional empty defaults localized, actual field positions. Preserve A/XA aliases and WRX in branches, exclude forbidden alias/WRX names elsewhere before encoding. LDA Sour>14 guard is unreachable because restricted DecodeSOUR excludes B/A and all admitted codes are <=14; located defensive guard retained. Original fixture, field matrix, no rejected emission and German pass. Seven reserved-field mode sites remain."
     },
     "code96.c": {
       "candidate_counts": {
@@ -2317,6 +2318,11 @@
       "file": "code9331.c",
       "issue": "Both main and return builders ignore failed optional shift evaluation, emitting misleading secondary shift errors or potentially code from failed result.",
       "status": "fixed in tranche 251; decode_shift returns failure before classification/bit insertion/emission; division primary-only and EXPECT/no emission regression for both builders"
+    },
+    {
+      "file": "code9331.c",
+      "issue": "Parenthesized-comment stripping loop stops before final argument; valid ER(note) in final main field fails register lookup although other field comments are stripped.",
+      "status": "pending final-field comment stripping fix"
     }
   ]
 }

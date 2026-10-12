@@ -2695,3 +2695,7 @@ Message ErrMsgTLCS90BareBases
 Message ErrMsgTLCS90BareIndices
  "IX+d/IY+d/SP+d/HL+A (auch in Klammern)"
  "IX+d/IY+d/SP+d/HL+A (also parenthesized)"
+
+Message ErrMsgTC9331EmptyDefault
+ "leer (Vorgabe)"
+ "empty (default)"
