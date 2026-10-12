@@ -1334,6 +1334,24 @@ static int pc_outdisp_qualifier(
     return ((z < 0) || !isalnum_ubar_par(p_arg[z])) ? split_pos : -1;
 }
 
+/* The final parenthesized group may be a function call in an absolute
+   expression, rather than the base/index part of an effective address. */
+static Boolean is_function_call_split(tStrComp const* arg, int split_pos) {
+    String name;
+    int end = NextNonBlankBefore(arg->str.p_str, split_pos), start = end;
+
+    while ((start >= 0)
+           && (as_isalnum_ubar(arg->str.p_str[start]) || (arg->str.p_str[start] == '.'))) {
+        start--;
+    }
+    start++;
+    if ((start > end) || as_isdigit(arg->str.p_str[start])) {
+        return False;
+    }
+    strmaxcpy(name, arg->str.p_str + start, end - start + 2);
+    return IsFunction(name);
+}
+
 static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
     Byte  i;
     int   ArgLen;
@@ -1643,6 +1661,9 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
 
     outdisp_split_pos = FindDispBaseSplitWithQualifier(
             Arg.str.p_str, &ArgLen, pc_outdisp_qualifier, "()");
+    if ((outdisp_split_pos > 0) && is_function_call_split(&Arg, outdisp_split_pos)) {
+        outdisp_split_pos = -1;
+    }
     if (outdisp_split_pos >= 0) {
         tStrComp OutDisp, IndirComps, Remainder;
         char*    pCompSplit;

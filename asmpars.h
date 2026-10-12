@@ -308,6 +308,8 @@ extern void EnterFunction(
 
 extern PFunction FindFunction(char const* Name);
 
+extern Boolean IsFunction(char const* Name);
+
 extern void PrintFunctionList(void);
 
 extern void ClearFunctionList(void);

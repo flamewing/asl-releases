@@ -4541,6 +4541,20 @@ PFunction FindFunction(char const* Name) {
     return Lauf;
 }
 
+/* Includes the symbol-query functions handled directly by EvalExpression. */
+Boolean IsFunction(char const* Name) {
+    String name;
+
+    if (FindFunction(Name)) {
+        return True;
+    }
+    strmaxcpy(name, Name, sizeof(name));
+    NLS_UpString(name);
+    return function_find(name) || !strcmp(name, "SYMTYPE")
+           || !strcmp(name, "DEFINED") || !strcmp(name, "SYMEXIST")
+           || !strcmp(name, "SYMUSED") || !strcmp(name, "ASSUMEDVAL");
+}
+
 void PrintFunctionList(void) {
     PFunction Lauf;
     String    OneS;

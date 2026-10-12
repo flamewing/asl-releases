@@ -199,6 +199,25 @@ endforeach()
 set(ENV{LC_MESSAGES} en)
 
 # Address syntax and capability details retain their established numeric IDs.
+check_bytes(bare-function-addresses 68000
+    "mul function x,y,x*y\n move.w mul(2,3),d1\n move.w mul ( 2 , 3 ),d1\n move.w MUL(2,mul(3,4)),d1\n move.w 2+mul(2,3),d1\n move.w abs(-4),d1\n move.w defined(MOMCPU),d1\n move.w mul(200,500),d1\n move.w mul(2,3)(a0),d1\n move.w mul(*+2,1)(pc,d0.w),d1"
+    "3238000632380006323800183238000832380004323800013239000186a032280006323b0000")
+check_diagnostic(bare-function-argument-count 68000
+    "mul function x,y,x*y\n move.w mul(2),d1" 1490
+    "function mul: argument count 2 required, got 1" 4 9)
+check_diagnostic(bare-function-undefined-argument 68000
+    "mul function x,y,x*y\n move.w mul(missing,2),d1" 1010
+    "symbol undefined" 4 13)
+check_bytes(bare-function-forward-argument 68000
+    "mul function x,y,x*y\n move.w mul(target,2),d1\ntarget equ 8"
+    "32380010")
+check_bytes(bare-function-destination 68020
+    "mul function x,y,x*y\n move.w d1,mul(2,3)\n move.w mul(2,3).l,d1\nzero function 8\n move.w zero(),d1"
+    "31c1000632390000000632380008")
+check_diagnostic(bare-builtin-argument-count 68000
+    " move.w ABS(2,3),d1" 1490
+    "function ABS: argument count 1 required, got 2" 3 9)
+
 check_diagnostic(quoted-address-single 68000 " move.w ')',d1" 1350
     "likely missing # for an immediate operand" 3 9)
 check_diagnostic(quoted-address-double 68000 " move.w \"(\",d1" 1350
