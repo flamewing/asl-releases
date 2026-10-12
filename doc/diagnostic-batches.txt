@@ -2694,3 +2694,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     valid address bytes. Error 1925 reports full value/bounds at address; zero-only
     displacement detail also retains full width. Endpoints/no emission checked.
     Validation: all 422 CTest cases pass with embedded/external catalogs.
+
+251. TC9331 shift fields and failed expression handling.
+    Two historical shift sites: actual count and accepted 0,1,4 at field 2.
+    Confirm division failure receives secondary shift error in main/RET builders;
+    shared optional shift decoder stops on failed evaluation before classification
+    or emission, defers unknown/questionable values, returns unchanged shift bits.
+    Original/forward main/RET vector, primary-only errors, no rejected emission
+    and German detail checked. Sixteen historical register/mode sites remain.
+    Validation: all 423 CTest cases pass with embedded/external catalogs.

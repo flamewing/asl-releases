@@ -811,8 +811,11 @@
         "ErrNum_InvReg": 9,
         "ErrNum_InvShiftArg": 2
       },
-      "reviewed_diagnostic_families": [],
-      "status": "pending full inventory review"
+      "reviewed_diagnostic_families": [
+        "ErrNum_InvShiftArg"
+      ],
+      "status": "partial",
+      "review_notes": "Tranche 251 reviews two shift sites in main and return instruction builders: shared optional shift decoder, actual count/accepted 0,1,4 at field 2; stop on failed UInt3 evaluation before shift classification or emission. Defer unknown/questionable shift. Original/forward byte vectors, primary-only errors, no rejected emission and German checked. Nine register and seven reserved-field mode sites remain."
     },
     "code96.c": {
       "candidate_counts": {
@@ -2309,6 +2312,11 @@
       "file": "code90c141.c",
       "issue": "Absolute address path sums/evaluates Int32 into LongInt, wrapping 4294967295 into -1 and accepting -65536 as address zero, outside the ordinary Int16 domain.",
       "status": "fixed in tranche 250; retain LargeInt evaluation value before 16-bit address validation using existing IntTypeDefs[Int16] domain [-32768,65535]. Located 1925 reports actual value/bounds. Negative bit-pattern endpoints and original bytes preserved; zero-only index helper also retains full width."
+    },
+    {
+      "file": "code9331.c",
+      "issue": "Both main and return builders ignore failed optional shift evaluation, emitting misleading secondary shift errors or potentially code from failed result.",
+      "status": "fixed in tranche 251; decode_shift returns failure before classification/bit insertion/emission; division primary-only and EXPECT/no emission regression for both builders"
     }
   ]
 }

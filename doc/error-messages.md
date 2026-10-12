@@ -414,3 +414,6 @@ its source location, including the missing source or destination of LD/LDW.
 
 TLCS-90 error 1925 reports the actual absolute address and permitted ordinary
 16-bit numeric domain [-32768,65535] under `-x`; validation precedes narrowing.
+
+TC9331 error 1380 reports the actual shift-field value and accepted 0, 1, 4
+counts at operand 2 under `-x`. Failed evaluation retains its primary error.

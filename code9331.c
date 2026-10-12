@@ -12,6 +12,8 @@
 
 #include "code9331.h"
 
+#include "as.rsc"
+#include "nlmessages.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -263,6 +265,28 @@ static Boolean DecodeGF(char const* pArg, LongWord* pResult) {
 /* ------------------------------------------------------------------------- */
 /* Instruction Decoders */
 
+static Boolean decode_shift(LongWord* shift_code) {
+    Boolean ok = True;
+    tSymbolFlags flags = eSymbolFlag_None;
+    Word shift = *ArgStr[2].str.p_str
+            ? EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &ok, &flags) : 0;
+    if (!ok) return False;
+    if (mFirstPassUnknownOrQuestionable(flags)) shift = 0;
+    switch (shift) {
+    case 0: *shift_code = 0; break;
+    case 1: *shift_code = 0x00040000ul; break;
+    case 4: *shift_code = 0x00080000ul; break;
+    default: {
+        char detail[180];
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAllowedShiftCounts),
+                (LargeInt)shift, "0, 1, 4");
+        WrXErrorPos(ErrNum_InvShiftArg, detail, &ArgStr[2].Pos);
+        return False;
+    }
+    }
+    return True;
+}
+
 static void DecodeMAIN(Word Code) {
     LongWord Xs, Ys, Zs, Wrf, Ws, Cp, Dps, Mode, Dest, Sour, Xcnt, Ofp, Er,
             LCode = Lo(Code);
@@ -301,16 +325,8 @@ static void DecodeMAIN(Word Code) {
     else if (!DecodeER(ArgStr[15].str.p_str, &Er))
         ;
     else {
-        Boolean      OK = True;
-        Word         Shift;
-        tSymbolFlags Flags = eSymbolFlag_None;
-
-        Shift = *ArgStr[2].str.p_str
-                        ? EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &OK, &Flags)
-                        : 0;
-        if (mFirstPassUnknown(Flags)) {
-            Shift = 0;
-        }
+        LongWord shift_code;
+        if (!decode_shift(&shift_code)) return;
 
         DAsmCode[0] = (LCode << 26) | (Xs << 24) | (Ys << 23) | (Wrf << 20) | (Ws << 22)
                       | (Cp << 16) | (Dps << 13) | (Mode << 10) | (Dest << 0)
@@ -318,19 +334,7 @@ static void DecodeMAIN(Word Code) {
         if (UseZS) {
             DAsmCode[0] |= (Zs << 26);
         }
-        switch (Shift) {
-        case 0:
-            break;
-        case 1:
-            DAsmCode[0] |= 0x00040000ul;
-            break;
-        case 4:
-            DAsmCode[0] |= 0x00080000ul;
-            break;
-        default:
-            WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[2]);
-            return;
-        }
+        DAsmCode[0] |= shift_code;
 
         CodeLen = 1;
     }
@@ -512,33 +516,13 @@ static void DecodeRET(Word Code) {
     } else if (!DecodeOFP(ArgStr[13].str.p_str, &Ofp))
         ;
     else {
-        Boolean      OK = True;
-        Word         Shift;
-        tSymbolFlags Flags = eSymbolFlag_None;
-
-        Shift = *ArgStr[2].str.p_str
-                        ? EvalStrIntExpressionWithFlags(&ArgStr[2], UInt3, &OK, &Flags)
-                        : 0;
-        if (mFirstPassUnknown(Flags)) {
-            Shift = 0;
-        }
+        LongWord shift_code;
+        if (!decode_shift(&shift_code)) return;
 
         DAsmCode[0] = 0xc4000000ul | (Xs << 24) | (Ys << 23) | (Wrf << 20) | (Ws << 22)
                       | (Cp << 16) | (Dps << 13) | (Mode << 10) | (Dest << 0)
                       | (Sour << 4) | (Xcnt << 8) | (Ofp << 15);
-        switch (Shift) {
-        case 0:
-            break;
-        case 1:
-            DAsmCode[0] |= 0x00040000ul;
-            break;
-        case 4:
-            DAsmCode[0] |= 0x00080000ul;
-            break;
-        default:
-            WrStrErrorPos(ErrNum_InvShiftArg, &ArgStr[2]);
-            return;
-        }
+        DAsmCode[0] |= shift_code;
 
         /* ??? */
 
