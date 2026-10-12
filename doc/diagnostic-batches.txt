@@ -2025,3 +2025,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     X-indexed and Y-indexed widening, forward labels and corresponding
     unprefixed full-address forms verify that the requested address survives.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+181. 65xx remaining mode/register diagnostics; historical completion.
+    List normal-instruction forms from its opcode table filtered to the active
+    CPU; explicitly report when no form is available. Direct indexing names
+    X/Y, bit operations require an unforced byte address, LDM requires #value,
+    and branch failures identify short/long forms. Preserve IDs and CPU gating,
+    locating the failed operand or operand-less mnemonic. Nine CPUs cover
+    details/positions/no error bytes; English/German no-form detail verified.
+    All nineteen historical 65xx candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

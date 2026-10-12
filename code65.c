@@ -234,6 +234,38 @@ static Boolean IsBasePage(Byte Page) {
     return (MomCPU == CPU65CE02) ? (Page == RegB) : !Page;
 }
 
+static void report_operand_choices(tErrorNum error, tStrComp const* arg, char const* choices) {
+    char detail[220];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(error, detail, &arg->Pos);
+}
+
+static void report_normal_forms(NormOrder const* order) {
+    static char const* const syntax[] = {
+        "base-page address", "absolute address",
+        "base-page address,X", "absolute address,X",
+        "base-page address,Y", "absolute address,Y",
+        "(base-page address,X)", "(base-page address),X",
+        "(base-page address),Y", "(base-page address),Z",
+        "(absolute address)", "#value", "A", "no operands",
+        "(base-page address)", "(offset,SP),Y", "\\address in ASSUME SP page"
+    };
+    char forms[700] = "", detail[800];
+    unsigned mode;
+    for (mode = 0; mode < as_array_size(syntax); mode++) {
+        if (IsAllowed(order->Codes[mode])) {
+            if (*forms) strmaxcat(forms, "; ", sizeof(forms));
+            strmaxcat(forms, syntax[mode], sizeof(forms));
+        }
+    }
+    if (*forms) {
+        as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
+    } else {
+        strmaxcpy(detail, getmessage(Num_ErrMsgNoCPUAddressForms), sizeof(detail));
+    }
+    WrXErrorPos(ErrNum_InvAddrMode, detail, ArgCnt ? &ArgStr[1].Pos : &OpPart.Pos);
+}
+
 static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
     Word    AdrWord;
     Boolean ValOK;
@@ -314,7 +346,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
                 && (!as_strcasecmp(
                         ArgStr[1].str.p_str + strlen(ArgStr[1].str.p_str) - 3, ",X)"))) {
             if (*ArgStr[1].str.p_str != '(') {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "(address,X)");
             } else {
                 tStrComp AddrArg;
 
@@ -412,7 +444,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
             && (!as_strcasecmp(
                     ArgStr[1].str.p_str + strlen(ArgStr[1].str.p_str) - 4, ",SP)"))) {
             if (*ArgStr[1].str.p_str != '(') {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "(offset,SP),Y");
             } else {
                 tStrComp DistArg;
 
@@ -464,7 +496,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
                     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "Y")) {
                         pResult->ErgMode = ModZIY;
                     } else {
-                        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+                        report_operand_choices(ErrNum_InvReg, &ArgStr[2], "X or Y");
                     }
                 }
             } else {
@@ -478,7 +510,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
                     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "Y")) {
                         pResult->ErgMode = ModIY;
                     } else {
-                        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+                        report_operand_choices(ErrNum_InvReg, &ArgStr[2], "X or Y");
                     }
                     if (pResult->ErgMode != -1) {
                         if (IsBasePage(pResult->AdrVals[1]) && (ZeroMode == 0)) {
@@ -634,7 +666,7 @@ static void DecodeBBR_BBS(Word Code) {
         unsigned Offset = ChkZero(&ArgStr[1], &ForceSize);
 
         if (ForceSize == 1) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "byte address in [0,255] without >");
         } else {
             Boolean      ValOK;
             tSymbolFlags Flags;
@@ -672,7 +704,7 @@ static void DecodeRMB_SMB(Word Code) {
         unsigned Offset = ChkZero(&ArgStr[1], &ForceSize);
 
         if (ForceSize == 1) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
+            report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "byte address in [0,255] without >");
         } else {
             Boolean      ValOK;
             tSymbolFlags symbol_flags;
@@ -778,7 +810,7 @@ static void DecodeLDM(Word Code) {
         if (ValOK) {
             set_b_guessed(flags, 2, 1, 0xff);
             if (*ArgStr[1].str.p_str != '#') {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "#value");
             } else {
                 BAsmCode[1] = EvalStrIntExpressionOffsWithFlags(
                         &ArgStr[1], 1, Int8, &ValOK, &flags);
@@ -843,7 +875,7 @@ static void DecodeNorm(Word Index) {
             }
         }
         if (pOrder->Codes[AdrResult.ErgMode] == -1) {
-            WrError(ErrNum_InvAddrMode);
+            report_normal_forms(pOrder);
         } else if (ChkExactCPUMask(pOrder->Codes[AdrResult.ErgMode] >> 8, CPU6502) >= 0) {
             BAsmCode[0] = Lo(pOrder->Codes[AdrResult.ErgMode]);
             memcpy(BAsmCode + 1, AdrResult.AdrVals, AdrResult.AdrCnt);
@@ -935,7 +967,7 @@ static void DecodeCond(Word Index) {
         switch (ForceSize) {
         case 2:
             if (!MayShort) {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], ">target or unprefixed target (long branch)");
             } else if (
                     !RangeCheck(AdrInt, SInt8)
                     && !mFirstPassUnknownOrQuestionable(Flags)) {
@@ -949,7 +981,7 @@ static void DecodeCond(Word Index) {
             break;
         case 1:
             if (!MayLong) {
-                WrError(ErrNum_InvAddrMode);
+                report_operand_choices(ErrNum_InvAddrMode, &ArgStr[1], "<target or unprefixed target (short branch)");
             } else {
                 BAsmCode[0] = pOrder->CodeLong;
                 BAsmCode[1] = AdrInt & 0xff;

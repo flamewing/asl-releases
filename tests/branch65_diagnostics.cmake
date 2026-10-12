@@ -202,3 +202,40 @@ check_bytes(ce-promote-forward 65CE02
 check_bytes(ce-full-address-unchanged 65CE02
     " assume b:$12\n jmp $1212\n jsr $1234\n ldz $1256,x\n lda $1278,y"
     "4c1212203412bb5612b97812")
+
+# Remaining mode diagnostics derive alternatives from the selected CPU table.
+foreach(cpu IN ITEMS 6502 65SC02 65C02 65CE02 W65C02S 65C19 MELPS740 HUC6280 6502UNDOC)
+    check_diagnostic(index-word-${cpu} ${cpu} " lda $12,z" 1445 "X or Y" 3 10)
+    check_diagnostic(index-byte-${cpu} ${cpu} " lda <$12,z" 1445 "X or Y" 3 11)
+    check_diagnostic(jsr-forms-${cpu} ${cpu} " jsr #1" 1350 "absolute address" 3 6)
+    check_diagnostic(accumulator-forms-${cpu} ${cpu} " asl #1" 1350 "A" 3 6)
+    check_diagnostic(missing-address-${cpu} ${cpu} " lda" 1350 "#value" 3 2)
+    if(NOT cpu STREQUAL "65CE02")
+        check_diagnostic(short-branch-only-${cpu} ${cpu} " bne >*" 1350
+            "<target or unprefixed target (short branch)" 3 6)
+    endif()
+endforeach()
+foreach(cpu IN ITEMS 65C02 65CE02 W65C02S 65C19 HUC6280)
+    check_diagnostic(bit-branch-byte-${cpu} ${cpu} " bbr0 >$12,*" 1350
+        "byte address in [0,255] without >" 3 7)
+    check_diagnostic(bit-memory-byte-${cpu} ${cpu} " rmb0 >$12" 1350
+        "byte address in [0,255] without >" 3 7)
+endforeach()
+check_diagnostic(long-branch-only 65CE02 " bsr <*" 1350
+    ">target or unprefixed target (long branch)" 3 6)
+check_diagnostic(ldm-immediate MELPS740 " ldm 1,$12" 1350 "#value" 3 6)
+check_diagnostic(no-cpu-form 6502 " tst #1" 1350
+    "no addressing form of this instruction is available on the selected CPU" 3 6)
+check_bytes(form-errors-noemit 65CE02
+    " expect 1445,1350,1350,1350\n lda $12,z\n jsr #1\n bbr0 >$12,*\n bsr <*\n endexpect\n db $12" "12")
+
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/no-cpu-form.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Keine Adressierungsform dieser Anweisung" detail_pos)
+string(FIND "${output}${error}" "(3):6: Fehler #1350:" location_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1 OR location_pos EQUAL -1)
+    message(FATAL_ERROR "German no-form: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

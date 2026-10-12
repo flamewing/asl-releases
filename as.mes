@@ -2359,3 +2359,7 @@ Message ErrMsgMappedAddressRange
 Message ErrMsgIndirectPointerPageBoundary
  "Indirekte Zeigeradresse 0x%lllx endet in 0xff; diese CPU erlaubt die Anweisung nicht an dieser Zeigeradresse"
  "indirect pointer address 0x%lllx ends in 0xff; this CPU does not permit the instruction at that pointer"
+
+Message ErrMsgNoCPUAddressForms
+ "Keine Adressierungsform dieser Anweisung ist auf der gew&auml;hlten CPU verf&uuml;gbar"
+ "no addressing form of this instruction is available on the selected CPU"
