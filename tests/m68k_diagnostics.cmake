@@ -244,6 +244,23 @@ check_bytes(pc-indirect-sources 68020
     "323b0151323b0151323b012200020008323b013600000002000831810151")
 check_diagnostic(displacement-width 68020 " move.w (0.b,a0),d1" 1350
     "invalid displacement width b; expected .W or .L" 3 10)
+foreach(cpu IN ITEMS 68000 68010 68020 68030 68040 68332 MCF5204)
+    check_diagnostic(an-byte-displacement-${cpu} ${cpu}
+        " move.w 1.b(a0),d1" 1130 "supported operand sizes: .W, .L" 3 11)
+    check_diagnostic(pc-byte-displacement-${cpu} ${cpu}
+        " move.w *+2.b(pc),d1" 1130 "supported operand sizes: .W, .L" 3 13)
+endforeach()
+check_diagnostic(suppressed-base-byte-displacement 68020
+    " move.w 40000.b(d0.w),d1" 1130 "supported operand sizes: .W, .L" 3 15)
+check_diagnostic(indirect-byte-displacement 68020
+    " move.w 40000.b([a0]),d1" 1130 "supported operand sizes: .W, .L" 3 15)
+check_diagnostic(indirect-postindexed-byte-displacement 68020
+    " move.w 1.b([a0],d0.w),d1" 1130 "supported operand sizes: .W, .L" 3 11)
+check_diagnostic(absolute-byte-displacement 68020
+    " move.w 1.b(),d1" 1130 "supported operand sizes: .W, .L" 3 11)
+check_bytes(explicit-brief-displacements 68020
+    " move.w -128.b(a0,d0.w),d1\n move.w 127.b(a0,d0.w),d1\n move.w *+129.b(pc,d0.w),d1"
+    "323000803230007f323b007f")
 check_diagnostic(duplicate-displacement 68020 " move.w 1(2,a0),d1" 1350
     "duplicate displacement in effective address" 3 11)
 check_diagnostic(duplicate-index 68020 " move.w (d0.w,d1.w),d1" 1350

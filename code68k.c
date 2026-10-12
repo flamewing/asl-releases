@@ -1798,6 +1798,17 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
             return ModNone;
         }
 
+        /* Only brief indexed addressing can encode a byte displacement. */
+        if ((OutDispLen == eSymbolSize8Bit)
+            && !((CompCnt == 2)
+                 && ((AdrComps[0].Art == AReg) || (AdrComps[0].Art == PC)))) {
+            tStrComp suffix = OutDisp;
+            suffix.Pos.StartCol += suffix.Pos.Len + 1;
+            suffix.Pos.Len = 1;
+            report_size_choices_at(".W, .L", &suffix);
+            return ModNone;
+        }
+
         /* 0. Absolut in Klammern (d) */
 
         if (CompCnt == 0) {
