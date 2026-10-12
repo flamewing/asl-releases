@@ -2298,3 +2298,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     ColdFire ISA B CMP byte/word/long encodings retained. All acceptance predicates
     unchanged. Eight of 98 historical size candidates reviewed.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+208. M68K MOVE special/address-register size diagnostics.
+    Eleven size candidates list USP/MAC .L, SR .W, CCR .B/.W, ordinary
+    .B/.W/.L or address-register .W/.L at the suffix. Preserve all predicates,
+    including ColdFire source exception and implicit-size handling. Both operand
+    directions and original classic special-register/EMAC bytes pass; rejected
+    forms emit no bytes. Nineteen of 98 historical size candidates reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

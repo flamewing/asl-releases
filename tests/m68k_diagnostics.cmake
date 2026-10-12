@@ -520,3 +520,32 @@ check_bytes(alu-original-sizes 68000
     "d0489489b64ad0c093c1b4c2")
 check_bytes(cmp-cold-original-sizes MCF5407
     " cmp.b d0,d1\n cmp.w d0,d1\n cmp.l d0,d1" "b200b240b280")
+
+# MOVE size choices depend on the decoded special/address registers.
+foreach(item IN ITEMS "usp,a0|.L" "a0,usp|.L" "sr,d0|.W" "d0,sr|.W"
+        "ccr,d0|.B, .W" "d0,ccr|.B, .W" "a0,d0|.W, .L" "d0,a0|.W, .L")
+    string(REPLACE "|" ";" parts "${item}")
+    list(GET parts 0 args)
+    list(GET parts 1 sizes)
+    string(REPLACE "," "-" name "${args}")
+    if(args MATCHES "a0,d0|d0,a0")
+        set(size b)
+    else()
+        set(size s)
+    endif()
+    check_diagnostic(move-size-${name} 68010 " move.${size} ${args}" 1130
+        "supported operand sizes: ${sizes}" 3 7)
+endforeach()
+check_diagnostic(move-general-size 68000 " move.s d0,d1" 1130
+    "supported operand sizes: .B, .W, .L" 3 7)
+check_diagnostic(move-mac-source-size MCF5470 " move.w acc0,d0" 1130
+    "supported operand sizes: .L" 3 7)
+check_diagnostic(move-mac-destination-size MCF5470 " move.w d0,acc0" 1130
+    "supported operand sizes: .L" 3 7)
+check_bytes(move-special-original-sizes 68010
+    " supmode on\n move.l usp,a0\n move.l a1,usp\n move.w sr,d0\n move.w d1,sr\n move.b ccr,d2\n move.w ccr,d3\n move.b d4,ccr\n move.w d5,ccr\n move.w a0,d0\n move.l d1,a1"
+    "4e684e6140c046c142c242c344c444c530082241")
+check_bytes(move-mac-original-sizes MCF5470
+    " move.l acc0,d0\n move.l d1,acc1\n move.l macsr,ccr" "a180a301a9c0")
+check_bytes(move-size-errors-noemit 68010
+    " expect 1130,1130,1130,1130\n move.b a0,d0\n move.b d0,a0\n move.s sr,d0\n move.s d0,sr\n endexpect\n dc.b $12" "12")

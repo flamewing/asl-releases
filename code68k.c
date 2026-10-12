@@ -2605,7 +2605,7 @@ static void DecodeMOVE(Word Index) {
         ;
     else if (!as_strcasecmp(ArgStr[1].str.p_str, "USP")) {
         if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".L");
         } else if (
                 (pCurrCPUProps->Family != eColdfire)
                 || CheckISA((1 << eCfISA_APlus) | (1 << eCfISA_B) | (1 << eCfISA_C))) {
@@ -2619,7 +2619,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "USP")) {
         if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".L");
         } else if (
                 (pCurrCPUProps->Family != eColdfire)
                 || CheckISA((1 << eCfISA_APlus) | (1 << eCfISA_B) | (1 << eCfISA_C))) {
@@ -2633,7 +2633,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[1].str.p_str, "SR")) {
         if (OpSize != eSymbolSize16Bit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W");
         } else {
             tAdrResult AdrResult;
 
@@ -2655,7 +2655,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[1].str.p_str, "CCR")) {
         if (*AttrPart.str.p_str && (OpSize > eSymbolSize16Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B, .W");
         } else if (!CheckNoFamily(1 << e68KGen1a))
             ;
         else {
@@ -2681,7 +2681,7 @@ static void DecodeMOVE(Word Index) {
         Word DestMACReg;
 
         if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".L");
         } else if ((MACReg == 4) && (!as_strcasecmp(ArgStr[2].str.p_str, "CCR"))) {
             WAsmCode[0] = 0xa9c0;
             CodeLen     = 2;
@@ -2702,7 +2702,7 @@ static void DecodeMOVE(Word Index) {
             (pCurrCPUProps->SuppFlags & eFlagMAC)
             && (DecodeMACReg(ArgStr[2].str.p_str, &MACReg))) {
         if (*AttrPart.str.p_str && (OpSize != eSymbolSize32Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".L");
         } else {
             tAdrResult AdrResult;
 
@@ -2714,7 +2714,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "SR")) {
         if (OpSize != eSymbolSize16Bit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".W");
         } else {
             tAdrResult AdrResult;
 
@@ -2735,7 +2735,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else if (!as_strcasecmp(ArgStr[2].str.p_str, "CCR")) {
         if (*AttrPart.str.p_str && (OpSize > eSymbolSize16Bit)) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B, .W");
         } else {
             tAdrResult AdrResult;
 
@@ -2755,7 +2755,7 @@ static void DecodeMOVE(Word Index) {
         }
     } else {
         if (OpSize > eSymbolSize32Bit) {
-            WrError(ErrNum_InvOpSize);
+            report_operand_sizes(".B, .W, .L");
         } else {
             tAdrResult AdrResult;
 
@@ -2773,7 +2773,7 @@ static void DecodeMOVE(Word Index) {
 
             if ((AdrResult.AdrMode == ModAdr) && (OpSize == eSymbolSize8Bit)
                 && (pCurrCPUProps->Family != eColdfire)) {
-                WrError(ErrNum_InvOpSize);
+                report_operand_sizes(".W, .L");
             } else if (AdrResult.AdrMode != ModNone) {
                 unsigned SrcAdrNum = AdrResult.AdrMode;
 
@@ -2796,7 +2796,7 @@ static void DecodeMOVE(Word Index) {
                         &AdrResult);
                 if ((AdrResult.AdrMode == ModAdr) && (OpSize == eSymbolSize8Bit)) {
                     CodeLen = 0;
-                    WrError(ErrNum_InvOpSize);
+                    report_operand_sizes(".W, .L");
                 } else if (AdrResult.AdrMode == ModNone) {
                     CodeLen = 0;
                 } else {
