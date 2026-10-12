@@ -2467,3 +2467,19 @@ Message ErrMsgMACRemainingOperands
 Message ErrMsgAVRRegisterChoices
  "Register R%u ist hier nicht erlaubt; erwartet %s"
  "register R%u is not allowed here; expected %s"
+
+Message ErrMsgAVRDataPointerSyntax
+ "Unbekannte Datenzeiger-Syntax; erwartet wird X, X+, -X, Y, Y+, -Y, Z, Z+ oder -Z"
+ "unrecognized data-pointer syntax; expected X, X+, -X, Y, Y+, -Y, Z, Z+ or -Z"
+
+Message ErrMsgAVRSmallDataPointer
+ "Diese CPU erlaubt nur Z ohne automatische Aktualisierung als Datenzeiger"
+ "this CPU accepts only Z without auto-update as its data pointer"
+
+Message ErrMsgAVRDisplacedPointer
+ "Erwartet wird Y+q oder Z+q mit Verschiebung q im Bereich [0,63]"
+ "expected Y+q or Z+q with displacement q in [0,63]"
+
+Message ErrMsgAVRDataPointerOverlap
+ "Datenregister R%u &uuml;berlappt %c (R%u:R%u), das durch %s ver&auml;ndert wird"
+ "data register R%u overlaps %c (R%u:R%u), which is modified by %s"

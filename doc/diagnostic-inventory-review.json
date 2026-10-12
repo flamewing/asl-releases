@@ -914,10 +914,12 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
-        "ErrNum_InvReg"
+        "ErrNum_InvReg",
+        "ErrNum_InvAddrMode",
+        "ErrNum_Unpredictable"
       ],
       "status": "partially reviewed",
-      "review_notes": "Tranche 224 reviews the shared register-subset candidate: derive compact allowed ranges/list from actual mask, show resolved R number at offending operand. Register helper copies descriptor only on successful lookup. Detect provisional mandatory-register result, choose first permitted register (respect minimal-core register bank) until alias resolves, rather than prematurely rejecting subset. Forward upper-half/multiply/even/upper-even aliases match original bytes; resolved invalid/missing/wrong-target errors remain, no rejected emission and German detail checked. Remaining families pending."
+      "review_notes": "Tranche 224 reviews the shared register-subset candidate: derive compact allowed ranges/list from actual mask, show resolved R number at offending operand. Register helper copies descriptor only on successful lookup. Detect provisional mandatory-register result, choose first permitted register (respect minimal-core register bank) until alias resolves, rather than prematurely rejecting subset. Forward upper-half/multiply/even/upper-even aliases match original bytes; resolved invalid/missing/wrong-target errors remain, no rejected emission and German detail checked. Remaining families pending. Tranche 225 reviews all six mode and three unpredictable candidates: remaining LD/ST syntax and AT90S1200-only Z restriction now located with actual choices (former alignment category corrected to mode); LDD/STD describes displacement syntax/domain. Data auto-update overlaps identify actual register/pointer pair at data operand, retaining warnings and emitted bytes. Four LPM/ELPM mode and two program overlap sites already detailed in tranche 17, re-reviewed against current syntax/availability and focused cpu_operand coverage. All nine LD/ST forms, twelve overlap vectors, primary expression errors, no failed emission and German detail checked. Capability, branch, alignment and count families remain."
     },
     "codec16c.c": {
       "candidate_counts": {

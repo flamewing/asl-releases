@@ -615,9 +615,11 @@ static void DecodeLDST(Word Index) {
         if (!DecodeArgReg(RegI, &Reg, AllRegMask))
             ;
         else if (!DecodeMem(ArgStr[MemI].str.p_str, &Mem)) {
-            WrError(ErrNum_InvAddrMode);
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRDataPointerSyntax), &ArgStr[MemI].Pos);
         } else if ((pCurrCPUProps->Core == eCore90S1200) && (Mem != 0)) {
-            WrError(ErrNum_AddrMustBeAligned);
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRSmallDataPointer), &ArgStr[MemI].Pos);
         } else {
             AppendCode(0x8000 | Index | (Reg << 4) | (Mem & 0x0f) | ((Mem & 0x10) << 8));
             if (((Mem >= 0x1d) && (Mem <= 0x1e) && (Reg >= 26)
@@ -626,7 +628,12 @@ static void DecodeLDST(Word Index) {
                     && (Reg <= 29)) /* Y+/-Y with Y */
                 || ((Mem >= 0x11) && (Mem <= 0x12) && (Reg >= 30)
                     && (Reg <= 31))) { /* Z+/-Z with Z */
-                WrError(ErrNum_Unpredictable);
+                char detail[240];
+                unsigned base = (Mem >= 0x1d) ? 26 : (Mem >= 0x19) ? 28 : 30;
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAVRDataPointerOverlap),
+                        (unsigned)Reg, 'X' + (base - 26) / 2, base + 1, base,
+                        ArgStr[MemI].str.p_str);
+                WrXErrorPos(ErrNum_Unpredictable, detail, &ArgStr[RegI].Pos);
             }
         }
     }
@@ -650,7 +657,8 @@ static void DecodeLDDSTD(Word Index) {
             OK = False;
         }
         if (!OK) {
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[MemI]);
+            WrXErrorPos(ErrNum_InvAddrMode,
+                    getmessage(Num_ErrMsgAVRDisplacedPointer), &ArgStr[MemI].Pos);
         } else if (DecodeArgReg(RegI, &Reg, AllRegMask)) {
             tSymbolFlags flags;
             Word         Disp;

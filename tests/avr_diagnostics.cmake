@@ -84,3 +84,69 @@ set(ENV{LC_MESSAGES} en)
 
 check_diagnostic(register-forward-divzero ATMEGA8 " ldi alias,1/0\nalias reg r16" 1310
     "division by 0" 3 "")
+
+foreach(pointer IN ITEMS W Z++ X+1)
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${pointer}")
+    check_diagnostic("ld-pointer-${name}" ATMEGA8 " ld r0,${pointer}" 1350
+        "expected X, X+, -X, Y, Y+, -Y, Z, Z+ or -Z" 3 8)
+    check_diagnostic("st-pointer-${name}" ATMEGA8 " st ${pointer},r0" 1350
+        "unrecognized data-pointer syntax" 3 5)
+endforeach()
+foreach(pointer IN ITEMS X X+ -X Y Y+ -Y Z+ -Z)
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${pointer}")
+    check_diagnostic("small-ld-${name}" AT90S1200 " ld r0,${pointer}" 1350
+        "this CPU accepts only Z without auto-update as its data pointer" 3 8)
+    check_diagnostic("small-st-${name}" AT90S1200 " st ${pointer},r0" 1350
+        "only Z without auto-update" 3 5)
+endforeach()
+check_diagnostic(ldd-pointer ATMEGA8 " ldd r0,X+1" 1350
+    "expected Y+q or Z+q with displacement q in [0,63]" 3 9)
+check_diagnostic(std-pointer ATMEGA8 " std W+1,r0" 1350
+    "expected Y+q or Z+q with displacement q in [0,63]" 3 6)
+check_diagnostic(ldd-displacement-primary ATMEGA8 " ldd r0,Y+64" 1320
+    "64" 3 9)
+check_diagnostic(ldd-expression-primary ATMEGA8 " ldd r0,Y+1/0" 1310
+    "division by 0" 3 "")
+foreach(base IN ITEMS 26 28 30)
+    if(base EQUAL 26)
+        set(pointer X)
+    elseif(base EQUAL 28)
+        set(pointer Y)
+    else()
+        set(pointer Z)
+    endif()
+    math(EXPR high "${base}+1")
+    foreach(reg IN ITEMS ${base} ${high})
+        foreach(mode IN ITEMS "${pointer}+" "-${pointer}")
+            string(REGEX REPLACE "[^A-Za-z0-9_-]" "_" name "${mode}")
+            check_diagnostic("ld-overlap-${reg}-${name}" ATMEGA8 " ld r${reg},${mode}" 140
+                "data register R${reg} overlaps ${pointer} (R${high}:R${base}), which is modified by ${mode}" 3 5 0)
+            check_diagnostic("st-overlap-${reg}-${name}" ATMEGA8 " st ${mode},r${reg}" 140
+                "data register R${reg} overlaps ${pointer} (R${high}:R${base}), which is modified by ${mode}" 3 8 0)
+        endforeach()
+    endforeach()
+endforeach()
+check_bytes(data-pointers-original ATMEGA8
+ " ld r0,X\n ld r1,X+\n ld r2,-X\n ld r3,Y\n ld r4,Y+\n ld r5,-Y\n ld r6,Z\n ld r7,Z+\n ld r8,-Z\n st X,r0\n st X+,r1\n st -X,r2\n st Y,r3\n st Y+,r4\n st -Y,r5\n st Z,r6\n st Z+,r7\n st -Z,r8\n ldd r0,Y+0\n ldd r1,Z+63\n std Y+63,r2\n std Z+0,r3"
+ "0c901d902e90388049905a906080719082900c921d922e92388249925a92608271928292088017ac2fae3082")
+check_bytes(data-overlap-original ATMEGA8
+ " ld r26,X+\n ld r27,-X\n ld r28,Y+\n ld r29,-Y\n ld r30,Z+\n ld r31,-Z\n st X+,r26\n st -X,r27\n st Y+,r28\n st -Y,r29\n st Z+,r30\n st -Z,r31"
+ "ad91be91c991da91e191f291ad93be93c993da93e193f293" -n -x)
+string(REGEX MATCHALL "warning #140:" warnings "${assembly_diagnostic}")
+list(LENGTH warnings count)
+if(NOT count EQUAL 12)
+    message(FATAL_ERROR "expected twelve overlap warnings: ${assembly_diagnostic}")
+endif()
+check_bytes(small-pointer-valid AT90S1200 " ld r0,Z\n st Z,r0" "00800082")
+check_bytes(pointer-errors-noemit AT90S1200
+ " expect 1350,1350\n ld r0,X\n st Z+,r0\n endexpect\n dw 0x1234" "3412")
+
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/ldd-pointer.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Erwartet wird Y+q oder Z+q" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German AVR pointer: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

@@ -2452,3 +2452,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     missing/wrong-target, no-emission and German checks pass. New AVR focused fixture
     registers test 417. Remaining AVR diagnostic families pending.
     Validation: all 417 CTest cases pass with embedded/external catalogs.
+
+225. AVR data pointer restrictions and overlap diagnostics.
+    Review six mode and three warning candidates, including previously improved
+    program-pointer sites. Locate data syntax/choices, AT90S1200 unmodified Z
+    restriction (1351 corrected to 1350), displaced Y/Z forms and actual data
+    register/pointer-pair overlap. Preserve all forms, warning emission and primary
+    expression failures; original pointer/overlap vectors and German detail pass.
+    Validation: all 417 CTest cases pass with embedded/external catalogs.
