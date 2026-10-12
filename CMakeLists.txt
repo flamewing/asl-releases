@@ -2468,6 +2468,16 @@ define_executable(test_tempresult_float
 target_link_libm(test_tempresult_float)
 add_test(NAME tempresult_float COMMAND test_tempresult_float)
 
+add_test(NAME assembler_cli COMMAND ${CMAKE_COMMAND}
+    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/AssemblerCLI"
+    -P "${CMAKE_SOURCE_DIR}/tests/assembler_cli.cmake"
+)
+set_tests_properties(assembler_cli PROPERTIES
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
+)
+
 define_executable(test_nonzstring
     tests/nonzstring.c
     nonzstring.c strutil.c dynstr.c

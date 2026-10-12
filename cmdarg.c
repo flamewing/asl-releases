@@ -417,6 +417,7 @@ as_cmd_result_t as_cmd_process(
     String  EnvLine;
     char*   pEnv;
     Boolean skip_next;
+    as_cmd_result_t env_result;
 
     p_results->file_arg_list   = NULL;
     p_results->write_help_exit = p_results->write_version_exit = False;
@@ -427,14 +428,12 @@ as_cmd_result_t as_cmd_process(
     strmaxcpy(EnvLine, pEnv ? pEnv : "", STRINGSIZE);
 
     if (EnvLine[0] == '@') {
-        if (e_cmd_err
-            == ProcessFile(EnvLine + 1, sum_cmd_recs, sum_cmd_rec_cnt, p_results)) {
-            return e_cmd_err;
-        }
+        env_result = ProcessFile(EnvLine + 1, sum_cmd_recs, sum_cmd_rec_cnt, p_results);
     } else {
-        if (e_cmd_err == DecodeLine(sum_cmd_recs, sum_cmd_rec_cnt, EnvLine, p_results)) {
-            return e_cmd_err;
-        }
+        env_result = DecodeLine(sum_cmd_recs, sum_cmd_rec_cnt, EnvLine, p_results);
+    }
+    if (env_result != e_cmd_ok) {
+        return env_result;
     }
 
     argv0 = argv[0];

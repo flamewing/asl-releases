@@ -4867,6 +4867,9 @@ int main(int argc, char** argv) {
                 tmp, sizeof(tmp), "%s%s%s", getmessage(Num_InfoMessHead1),
                 as_cmdarg_get_executable_name(), getmessage(Num_InfoMessHead2));
         write_console_next(tmp);
+        as_snprintf(tmp, sizeof(tmp), "%s%s -help | -version | -cpu list",
+                    getmessage(Num_InfoMessHead1), as_cmdarg_get_executable_name());
+        write_console_next(tmp);
         for (ph1 = getmessage(Num_InfoMessHelp), ph2 = strchr(ph1, '\n'); ph2;
              ph1 = ph2 + 1, ph2 = strchr(ph1, '\n')) {
             *ph2 = '\0';

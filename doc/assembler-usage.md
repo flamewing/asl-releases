@@ -43,206 +43,121 @@ The `rescomp` resource compiler is a build-time host tool and is not part of the
 
 ## Start-Up Command, Parameters
 
-AS is a command line driven program, i.e. all parameters and file options are to be given in the command line.
-
-A couple of message files belongs to AS (recognizable by their suffix `MSG` ) AS accesses to dynamically load the messages appropriate for the national language. AS searches the following directories for these files:
-
-- the current directory;
-
-- the EXE-file's directory;
-
-- the directory named in the `AS_MSGPATH` environment variable, or alternatively the directories listed in the `PATH` environment variable;
-
-- the directory compiled into AS via the `LIBDIR` macro.
-
-These files are _indispensable_ for a proper operation of AS, i.e. AS will terminate immediately if these files are not found.
-
-The language selection (currently only German and English) is based on the `COUNTRY` setting under DOS and OS/2 respectively on the `LANG` environment variable under Unix.
-
-The command line parameters can roughly be divided into three categories: switches, key file references (see below) and file specifications. Parameters of these two categories may be arbitrarily mixed in the command line. The assembler evaluates at first all parameters and then assembles the specified files. From this follow two things:
-
-- the specified switches affect all specified source files. If several source files shall be assembled with different switches, this has to be done in separate runs.
-
-- it is possible to assemble more than one file in one shot and to bring it to the top, it is allowed that the file specs contain wildcards.
-
-Parameter switches are recognized by AS by starting with a slash (/) or hyphen (-). There are switches that are only one character long, and additionally switches composed of a whole word. Whenever AS cannot interpret a switch as a whole word, it tries to interpret every letter as an individual switch. For example, if you write
+Use `asl [options] source [source ...]` to assemble files, `asl -help` for help, `asl -version` for version/build information, and `asl -cpu list` for the available targets. On Windows the executable has an `.exe` suffix; MSYS2 also builds `asw`. A filename without an extension receives `.asm`, and the default code output replaces that extension with `.p`. Set the CPU in the source with `CPU` or supply `-cpu name`.
 
 ```sh
--queit
+asl -cpu 68000 -i include -o output.p source.asm
+asl -L -olist source.lst -g map source.asm
+asl '-nx' '*.asm'
+asl -help
+asl -cpu list
 ```
 
-instead of
+Quote shell metacharacters and paths containing spaces. Quoting a wildcard lets the assembler expand it; unquoted patterns may instead be expanded by the shell. Prefix a source filename beginning with `-`, `+` or `@` with a directory such as `./` so it is treated as a filename. On Windows use a backslash directory prefix such as `.\source.asm`; slash-prefixed arguments are also recognized as options in Windows builds. Unix builds accept absolute paths beginning with `/`.
+
+Options may appear before, between or after filenames. They are parsed before assembly and apply to every input file; output/list/share filename options maintain ordered filename lists. Use separate invocations when sources need different option settings. A leading `-` enables an option and `+` negates it or invokes its documented reset behavior. Multi-letter names are case-insensitive, while single-letter options distinguish case, for example `-l` versus `-L`. Single-letter options can be combined, as in `-nx` or `-xx`. The supported help spelling is `-help`; GNU-style `--help` and a `--` end-of-options marker are not implemented.
+
+Optional arguments can consume the following filename. Write `-g map source.asm`, or place argument-free `-g` after the source. The same care applies to `-E [name]` and `-splitbyte [character]`. `-r` consumes a following valid pass number but leaves a nonnumeric filename for assembly. Argument-taking options such as `-o`, `-i`, `-t` and `-noicemask` require a separate argument.
+
+### Option Reference
+
+| Option | Effect |
+| --- | --- |
+| `-A` | balance remaining macro/structure trees |
+| `-a` | share file formatted for AS |
+| `-alias <new>=<old>` | define processor alias |
+| `-bigendian` | turn on BIGENDIAN mode by default |
+| `-C` | generate cross reference list |
+| `-c` | share file formatted for C |
+| `-compmode` | enable COMPMODE by default |
+| `-cpu <name>` | set target processor |
+| `-D <symbol>[,symbol]` | predefine symbols |
+| `-E [name]` | target file for error list, |
+| `-extracomments` | enable EXTRACOMMENTS mode by default |
+| `-fred` | force restricted extension of digits |
+| `+G` | suppress code generation |
+| `-g [map\|atmel\|noice]` | write debug info |
+| `-gnuerrors` | error messages in GNU format |
+| `-help` | print help and exit |
+| `-h` | use lower case in hexadecimal output |
+| `-I` | generate include nesting list |
+| `-i <path>` | add include directory (repeatable) |
+| `-intsyntax <arg>[,arg]` | modify syntax for integer constants |
+| `-L` | listing to file |
+| `-l` | listing to console |
+| `-listline-prefix <fmt>` | set format of listing per-line prefix |
+| `-listing <off\|on\|purecode\|noskipped>` | limit listing of assembled code |
+| `-listradix <2...36>` | number system in listing |
+| `-list-macro-handles` | list macro's symbol handles |
+| `-[no-]list-unknown-values` | display unknown values in listing as question marks |
+| `-M` | extract macro definitions |
+| `-maxerrors <number>` | terminate assembly after <number> errors |
+| `-maxinclevel <number>` | limit include nesting level to <number> |
+| `-maxsympass <number>` | unresolved symbols allowed through pass (default 1) |
+| `-n` | add error #s to error messages |
+| `-noicemask <mask>` | set NoICE segment mask |
+| `-olist <name>` | change name of list file |
+| `-o <name>` | change name of code file |
+| `-p` | share file formatted for Pascal |
+| `-P` | write macro processor output |
+| `-packing` | enable PACKING by default |
+| `-plainbase` | enable PLAINBASE mode by default |
+| `-q, -quiet` | silent operation |
+| `-r [pass]` | report additional passes from pass (default 1) |
+| `-radix <2...36>` | set default number system |
+| `-relaxed` | allow arbitrary integer syntax by default |
+| `-screenheight <#>` | set screen height for paging of '-help' |
+| `-s` | generate section list |
+| `-shareout <name>` | change name of share file |
+| `-splitbyte [char]` | use split byte display of numbers |
+| `-supmode` | allow privileged instructions by default |
+| `-t <mask>` | enable listing parts; +t disables them |
+| `-U` | case-sensitive operation |
+| `-u` | generate usage list |
+| `-underscore-macroargs` | allow underbars in macro arguments |
+| `-v` | verbose operation |
+| `-version` | print version info and exit |
+| `-w` | suppress warnings |
+| `-warnranges` | warn instead of failing eligible range checks |
+| `-Werror` | treat warnings as errors |
+| `-w[no-]implicit-sign-extension` | enable/disable sign extension warnings |
+| `-w[no-]relative` | enable/disable warnings about possible relative jump |
+| `-x` | extended error messages |
+| `-X` | internal trace to as.deb (developer option) |
+| `-Y` | branch error suppression (see manual) |
+
+Symbols use hash tables in this fork. `-A` balances remaining tree-based definitions, such as macros/structures; it does not replace the symbol hash tables or change assembly semantics. `-D name` defines TRUE, and `-D name=value` evaluates a symbol-free constant expression. Set `-U` before `-D` when case preservation matters. Repeated `-i` options add directories; a path-list argument uses `:` in Unix builds and `;` in Windows builds. See [INCLUDE](pseudo-instructions.md#include) for include lookup order.
+
+`-x` adds contextual diagnostic detail, and `-xx` also displays the offending source line; `+x` reduces the level. `-n` adds diagnostic numbers. `-q` suppresses normal progress while leaving errors visible; repeating it suppresses source MESSAGE output too. `-warnranges` softens eligible evaluator range checks, while directive-specific hard range checks remain errors. `-maxerrors 0` means unlimited errors, `-maxinclevel` defaults to 200, and `-maxsympass` defaults to 1. Listing-mask values accepted by `-t` are 0 through 511: `-t mask` enables bits, `+t mask` disables them, and the default mask is 511.
+
+### Preset Options and Key Files
+
+`ASCMD` supplies options before the command line, allowing command-line options to override them. It can contain options directly or an `@filename` key-file reference. A command-line `@filename` is expanded at that argument's position. Key files contain whitespace-separated options, one or more lines at a time; each option and its argument must be on the same line. Lines starting with `;` are comments, and key files cannot include other key files. The line buffer is 1024 bytes including its terminator. Key-file/environment parsing does not implement shell quoting; use the real command line for paths with spaces.
 
 ```sh
--quiet
+ASCMD='-L -i include' asl source.asm
+asl @build-options.key source.asm
+asl +L source.asm
 ```
 
-AS will take the letters `q, u, e, i` , and `t` as individual switches. Multiple-letter switches additionally have the difference to single-letter switches that AS will accept an arbitrary mixture of upper and lower casing, whereas single-letter switches may have a different meaning depending on whether upper or lower case is used.
+On PowerShell use `$env:ASCMD = '-L -i include'` to set the preset options; remove that variable when you no longer want those defaults. ASCMD and key files can also supply source filenames; these are collected with the command-line sources. The case-conversion prefixes `-#u` and `-~I` force the following single-letter option to uppercase (`-U`) or lowercase (`-i`) for environments that alter command-line case.
 
-At the moment, the following switches are defined:
+### Message Catalogs and Language
 
-- `l`: sends assembler listing to console terminal (mostly screen). In case several passes have to be done, the listing of all passes will be send to the console (in opposite to the next option).
+The default embedded-catalog build needs no companion `.msg` files. External-catalog builds search the current directory, then an explicitly supplied executable directory, then AS_MSGPATH (or PATH when AS_MSGPATH is unset), and finally the compiled-in library directory. Set `AS_MSGPATH` to one catalog directory rather than a path list. Failure to load a required external catalog aborts startup.
 
-- `L`: writes assembler listing into a file. The list file will get the same name as the source file, only the extension is replaced by `LST`. Except one uses...
+Language selection checks `LC_MESSAGES`, then `LC_ALL`, then `LANG`; supported languages are German and English, with English as the default. Country information can also select a catalog. These variables are consulted by the catalog reader independently of whether the operating system has that locale installed. Node-based WebAssembly command-line builds forward the host environment before C startup.
 
-- `OLIST`: with a fiel name as argument allows to redirect the listing to a different file or a different path. This option may be used multiple times in case multiple files are assembled with one execution.
+### Exit Status
 
-- `LISTRADIX`: By default, all numeric output in the listing (addresses, generated code, symbol values) is written in hexadecimal notation. This switch requests usage of a different number system in the range of 2 to 36\. For instance, '-listradix 8' requests octal output.
-
-- `SPLITBYTE [character]`: Display numbers in the listing in byte groups, separated by the given character. A period is used as separator if no explicit character is given. This option is usually used in conjunction with the `LISTRADIX` option. For instance, list radix 8 with a period as character results in the so-called 'split octal' notation.
-
-- `o`: Sets the new name of the code file generated by AS. If this option is used multiple times, the names will be assigned, one after the other, to the source files which have to be assembled. A negation (see below) of this option in connection with a name erases this name from the list. A negation without a name erases the whole list.
-
-- `SHAREOUT`:ditto for a SHARE file eventually to be created.
-
-- `c`: SHARED-variables will be written in a format which permits an easy integration into a C-source file. The extension of the file is `H`.
-
-- `p`: SHARED-variables will be written in a format which permits easy integration into the CONST-block of a Pascal program. The extension of the file is `INC`.
-
-- `a`: SHARED-variables will be written in a format which permits easy integration into an assembler source file. The extension of the file is `INC`.
-
-Concerning effect and function of the SHARED-symbols please see [Share File](#share-file) resp. [SHARED](pseudo-instructions.md#shared).
-
-- `g [format]`: This switch instructs AS to create an additional file that contains debug information for the program. Allowed formats are the AS-specific MAP format (`format=MAP`), a NoICE-compatible command file (`format=NOICE`), and the Atmel format used by the AVR tools (`format=ATMEL`). The information stored in the MAP format is comprised of a symbol table and a table describing the assignment of source lines to machine addresses. A more detailed description of the MAP format can be found in [Debug Files](file-formats.md#debug-files) The file's extension is `MAP`, `NOI`, resp. `OBJ`, depending on the chosen format. If no explicit format specification is done, the MAP format is chosen.
-
-- `noicemask [value]`: By default, AS lists only symbols from the CODE segment in NoICE debug info files. With this option and an integer value interpreted as a bit mask, symbols fom other segments may be added. The assignment of segments to bit positions may be taken from [Codings of the `Segment` Field table](file-formats.md#table-codings-of-the-segment-field).
-
-- `w`: suppress issue of warnings;
-
-- `E [file]`: error messages and warnings produced by AS will be redirected to a file. Instead of a file, the 5 standard handles (STDIN...STDPRN) can also be specified as `!0, !1, !2, !3, or !4` . Default is `STDERR == !2`. If the file option is left out, the name of the error file is the same as of the source file, but with the extension `LOG`.
-
-- `q`: This switch suppresses all messages of AS, the exceptions are error messages and outputs which are are forced from the source file. The time needed for assembly is slightly reduced hereby and if you call AS from a shell there is no redirection required. The disadvantage is that you may "stay in the dark" for several minutes ... It is valid to write `quiet` instead of `q`.
-
-- `h`: write hexadecimal numbers in lowercase instead of capital letters. This option is primarily a question of personal taste.
-
-- `i <path list>`: issues a list of directories where the assembler shall automatically search for include files, in case it didn't find a file in the current directory. The different directories have to be separated by semicolons.
-
-- `u`: calculate a list of areas which are occupied in the segments. This option is effective only in case a listing is produced. This option requires considerable additional memory and computing performance. In normal operation it should be switched off.
-
-- `C`: generates a list of cross references. It lists which (global) symbols are used in files and lines. This list will also be generated only in case a listing is produced. This option occupies, too, additional memory capacity during assembly.
-
-- `s`: issues a list of all sections (see [Local Symbols](pseudo-instructions.md#local-symbols)). The nesting is indicated by indentations (Pascal like).
-
-- `t`: by means of this switch it is possible to separate single components of the standard issued assembler-listing. The assignment of bits to parts can be found in the next section, where the exact format of the assembly listing is explained.
-
-- `D`: defines symbols. The symbols which are specified behind this option and separated by commas are written to the global symbol table before starting the assembly. As default these symbols are written as integer numbers with the value TRUE, by means of an appended equal sign, however, you can select other values. The expression following the equals sign may include operators or internal functions, but **not** any further symbols, even if these should have been defined before in the list! Together with the commands for conditional assembly (see there) you may produce different program versions out of one source file by command line inputs. **CAUTION!** If the case-sensitive mode is used, this has to be specified in the command line _before_ any symbol definitions, otherwise symbol names will be converted to upper case at this place!
-
-- `A`: stores the list of global symbols in another, more compact form. Use this option if the assembler crashes with a stack overflow because of too long symbol tables. Sometimes this option can increase the processing speed of the assembler, but this depends on the sources.
-
-- `x`: Sets the level of detail for error messages. The level is increased resp. decreased by one each time this option is given. While on level 0 (default) only the error message itself is printed, an extended message is added beginning at level 1 that should simplify the identification of the error's cause. [Error messages](error-messages.md) lists which error messages carry which extended messages. At level 2 (maximum), the source line containing the error is additionally printed.
-
-- `n`: If this option is set, the error messages will be issued additionally with their error number (see [Error messages](error-messages.md)). This is primarily intended for use with shells or IDE's to make the identification of errors easier by those numbers.
-
-- `U`: This option switches AS to the case-sensitive mode, i.e. upper and lower case in the names of symbols, sections, macros, character sets, and user-defined functions will be distinguished. This is not the case by default.
-
-- `P`: Instructs AS to write the source text processed by macro processor and conditional assembly into a file. Additional blank and pure comment lines are missing in this file. The extension of this file is `I`.
-
-- `M`: If this switch is given, AS generates a file, that contains definitions of macros defined in the source file that did not use the `NOEXPORT` option. This new file has the same name as the source file, only the extension is modified into `MAC`.
-
-- `G`: this switch defines whether AS should produce code or not. If switched off, the processing will be stopped after the macro processor. This switch is activated by default (logically, otherwise you would not get a code file). This switch can be used in conjunction with the `P` switch, if only the macro processor of AS shall be used.
-
-- `r [n]`: issue warnings if situations occur that force a further pass. This information can be used to reduce the number of passes. You may optionally specify the number of the first pass where issuing of such messages shall start. Without this argument, warnings will come starting with the first pass. Be prepared for a bunch of messages!!
-
-- `relaxed`: this switch enables the RELAXED mode right from the beginning of the program, which otherwise has to be enabled by the pseudo instruction of sane name (see [RELAXED](pseudo-instructions.md#relaxed)).
-
-- `supmode`: this switch enables right from the beginning of the program usage of machine instructions that may only be used in the processor's supervisor mode (see [SUPMODE, FPU, PMMU, CUSTOM](pseudo-instructions.md#supmode-fpu-pmmu-custom)).
-
-- `Y`: This switch instructs AS to to suppress all messages about out-of-branch conditions, once the necessity for another pass is given. See [Forward References and Other Disasters](#forward-references-and-other-disasters) for the (rare) situations that might make use of this switch necessary.
-
-- `cpu <name>`: this switch allows to set the target processor AS shall generate code for, in case the source file does not contain a `CPU` instruction . If the selected target supports CPU arguments (see [CPU](pseudo-instructions.md#cpu)), they may be used on the command line as well.
-
-- `alias <new>=<old>`: defines the processor type `<new>` to be an alias for the type `<old>`. See [Processor Aliases](#processor-aliases) for the sense of processor aliases.
-
-- `gnuerrors`: display messages about errors resp. warnings not in the AS standard format, but instead in a format similar to the GNU C compiler. This simplifies the integration of AS into environments tuned for this format, however also suppresses the display of precise error positions in macro bodies!
-
-- `maxerrors [n]`: instructs the assembler to terminate assembly after the given number of errors.
-
-- `maxinclevel [n]`: instructs the assembler to terminate assembly if the include nesting level exceeds the given limit (default is 200).
-
-- `Werror`: instructs the assembler to treat warnings as errors.
-
-- `compmode`: This switch instructs the assembler to operate by default in compatibility mode. See [COMPMODE](pseudo-instructions.md#compmode) for more information about this mode.
-
-As long as switches require no arguments and their concatenation does not result in a multi-letter switch, it is possible to specify several switches at one time, as in the following example :
-
-```dosbat
-as test*.asm firstprog -cl /i c:\as\8051\include
-```
-
-All files `TEST*.ASM` as well as the file `FIRSTPROG.ASM` will be assembled, whereby listings of all files are displayed on the console terminal. Additional sharefiles will be generated in the C- format. The assembler should search for additional include files in the directory `C:\AS\8051\INCLUDE` .
-
-This example shows that the assembler assumes `ASM` as the default extension for source files.
-
-A bit of caution should be applied when using switches that have optional arguments: if a file specification immediately follows such a switch without the optional argument, AS will try to interpret the file specification as argument - what of course fails:
-
-```dosbat
-as -g test.asm
-```
-
-The solution in this case would either be to move the -g option the end or to specify an explicit MAP argument.
-
-Beside from specifying options in the command line, permanently needed options may be placed in the environment variable `ASCMD` . For example, if someone always wants to have assembly listings and has a fixed directory for include files, he can save a lot of typing with the following command:
-
-```dosbat
-set ascmd=-L -i c:\as\8051\include
-```
-
-The environment options are processed before the command line, so options in the command line can override contradicting ones in the environment variable.
-
-In the case of very long path names, space in the `ASCMD` variable may become a problem. For such cases a key file may be the alternative, in which the options can be written in the same way as in the command line or the `ASCMD` -variable. But this file may contain several lines each with a maximum length of 255 characters. In a key file it is important, that for options which require an argument, switches and argument have to be written in the **same** line. AS gets informed of the name of the key file by a `@` ahead in the `ASCMD` variable, e.g.
-
-```dosbat
-set ASCMD=@c:\as\as.key
-```
-
-In order to neutralize options in the `ASCMD` variable (or in the key file), prefix the option with a plus sign. For example, if you do not want to generate an assembly listing in an individual case, the option can be retracted in this way:
-
-```dosbat
-as +L <file>
-```
-
-Naturally it is not consequently logical to deny an option by a plus sign.... UNIX soit qui mal y pense.
-
-References to key files may not only come from the `ASCMD` variable, but also directly from the command line. Similarly to the `ASCMD` variable, prepend the file's name with a character:
-
-```dosbat
-as @<file> ....
-```
-
-The options read from a key file in this situation are processed as if they had been written out in the command line in place of the reference, _not_ like the key file referenced by the `ASCMD` variable that is processed prior to the command line options.
-
-Referencing a key file from a key file itself is not allowed and will be answered wit an error message by AS.
-
-In case that you like to start AS from another program or a shell and this shell hands over only lower-case or capital letters in the command line, the following workaround exists: if a tilde ( `~` ) is put in front of an option letter, the following letter is always interpreted as a lower-case letter. Similarly a `#` demands the interpretation as a capital letter. For example, the following transformations result for:
-
-```dosbat
-/~I ---> /i
--#u ---> -U
-```
-
-In dependence of the assembly's outcome, the assembler ends with the following return codes:
-
-0 error free run, at maximum warnings occurred
-
-1 The assembler displayed only its command-line parameters and terminated immediately afterwards.
-
-2 Errors occurred during assembly, no code file has been produced.
-
-3 A fatal error occurred what led to immediate termination of the run.
-
-4 An error occurred already while starting the assembler. This may be a parameter error or a faulty overlay file.
-
-255 An internal error occurred during initialization that should not occur in any case...reboot, try again, and contact me if the problem is reproducible!
-
-Similar to UNIX, OS/2 extends an application's data segment on demand when the application really needs the memory. Therefore, an output like
-
-```sh
-511 KByte available memory
-```
-
-does not indicate a shortly to come system crash due to memory lack, it simply shows the distance to the limit when OS/2 will push up the data segment's size again...
-
-As there is no compatible way in C under different operating systems to find out the amount of available memory resp. stack, both lines are missing completely from the statistics the C version prints.
+| Status | Meaning |
+| --- | --- |
+| 0 | Successful assembly (possibly warnings), or successful help/version/CPU-list request |
+| 1 | No input source files were supplied |
+| 2 | Assembly errors; output for the failing source is not a usable successful assembly |
+| 3 | Fatal assembly/I/O failure |
+| 4 | Invalid command-line or preset option, or key-file startup failure |
+| 255 | Catalog/resource initialization failure or other internal initialization failure |
 
 ## Format of the Input Files
 

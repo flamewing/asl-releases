@@ -1,457 +1,300 @@
-.TH asl 1
-
+.TH ASL 1 "2026-10-12" "ASL 1.42.313" "User Commands"
 .SH NAME
-.B asl \- cross assembler for microprocessors and -controllers
-
-.SH SYNTAX
+asl \- macro cross assembler
+.SH SYNOPSIS
 .B asl
-[ option(s) ] file(s) [ option(s) ] file(s) ...
-
+.RI [ options ] " source" " [source ...]"
+.br
+.B asl \-help
+.br
+.B asl \-version
+.br
+.B asl \-cpu list
 .SH DESCRIPTION
-
-AS is a cross assembler that can be used to write assembler programs
-for a variety of different microprocessors and -controllers.
-.B asl
-is the UNIX/C implementation of AS.  A complete description of AS is
-far beyond the scope of this manual page, which is only intended as
-a quick reference for AS's command line interface.  For a more detailed
-introduction into the usage of AS, see the user's manual.
-
-.SH COMMAND-LINE PARAMETERS
-
-Every argument that starts with a slash (/), plus (+) or minus (-) sign
-is regarded as a command-line parameter.  Some command-line parameters
-take an argument as additional parameter.  Every argument that is not
-recognized as a command-line parameter is regarded as an assembler source
-file to be assembled.  A source file name that does not have an extension
-is automatically extended with the default extension '.asm'.
-Options are turned on with a parameter starting with
-a slash (/) or minus sign (-), whereas a parameter with a leading plus sign
-(+) turns an option off.  In the following list, all options will be shown in
-the form that is needed to change the default behaviour, which might be a
-plus or minus sign, depending on whether the option is on or off by default.
-
-.B asl
-accepts the following command-line parameters:
+The flamewing fork of Macro Assembler AS assembles sources for multiple target
+processors. Select a CPU in the source or with \-cpu. Source names without an
+extension receive .asm; default code output uses .p. Convert .p code files
+with p2bin or p2hex when a raw binary or hexadecimal file is required.
+.PP
+Windows executables have an .exe suffix. MSYS2 also provides asw.
+The full user manual documents source syntax and target-specific details.
+.SH INVOCATION
+Options can appear before or after sources and apply to every source in the
+invocation. Word options are case-insensitive; single-letter options are
+case-sensitive. A minus sign enables an option and a plus sign negates or
+resets it. Single-letter options can be combined, for example \-nx.
+Slash-prefixed options are supported by Windows builds; Unix builds treat
+absolute slash-prefixed paths as filenames. GNU-style \-\-help and the
+\-\- end-of-options marker are not supported.
+.PP
+Quote wildcard patterns to let the assembler expand them, and quote paths
+containing spaces. Prefix filenames beginning with an option marker with a
+directory such as ./ (or .\\ on Windows).
+.PP
+Optional arguments can consume a following source name. Use \-g map source.asm
+or source.asm \-g rather than \-g source.asm. Options requiring arguments
+receive them as a separate command-line argument.
+.SH OPTIONS
 .TP
-.B -A
-
-Change the data structure that is internally used to store the symbol table.
-By default, AS uses binary trees to store macro and symbol definitions.  Turning
-this option on will change this to AVL-balanced trees.  Depending on the ratio
-of symbol entries and lookups, this might speed up assembly.  Using AVL-balanced
-trees helps also reducing the stack usage, which is however irrelevant for the C
-version of AS.
+.B \-A
+balance remaining macro/structure trees.
 .TP
-.B -a
-
-Instruct AS to write out the shared symbol definitions in a format suitable
-for including into an AS assembler program.  The file's name is constructed by
-replacing the source file's extension with '.inc'.  See the user manual for more
-information about symbol sharing.
+.B \-a
+share file formatted for AS.
 .TP
-.B -cpu <name>
-Set the target processor to <name>.  Use this option if the source file does
-not contain a CPU statement.
+.B \-alias <new>=<old>
+define processor alias.
 .TP
-.B -alias <new name=old name>
-Define a CPU alias.  An alias is a name that can be used as an argument to the
-CPU pseudo-instruction just like an intrinsic CPU type.  Its usage will set
-the same target as the old name, however the predefined symbols MOMCPU and
-MOMCPUNAME will be set to the new name.  This option is primarily useful for
-adding a new member to a processor family that has the same core, but is
-different in its internal peripherals, thus allowing to distinguish between
-them.
+.B \-bigendian
+turn on BIGENDIAN mode by default.
 .TP
-.B -C
-
-Add a cross reference table to the assembler listing.  A cross reference
-table lists all symbols that have been referenced at least once during assembly,
-including the source line number(s) and count of every reference.  This option
-only makes sense when the generation of an assembly listing has been turned on
-via the
-.B -L
-or
-.B -l
-parameters.
+.B \-C
+generate cross reference list.
 .TP
-.B -c
-
-Instruct AS to write out the shared symbol definitions in a format suitable
-for including into a C program.  The file's name is constructed by replacing
-the source file's extension with '.h'. See the user manual for more information
-about symbol sharing.
+.B \-c
+share file formatted for C.
 .TP
-.B -compmode
-Enable the 'compatibility mode', which aims at making the behaviour of AS more
-like the respective 'original assembler' in some situations.  See the manual for
-target-specific details.
+.B \-compmode
+enable COMPMODE by default.
 .TP
-.B -D <name[=value]>[,...]
-Pre-define symbols.  Predefined symbols are entered into the global symbol
-table prior to assembly of the source file(s).  If no value is given for a
-symbol, it is assigned the integer value 1.  Value expressions may contain
-arithmetic expressions as described in the user manual, but they may not
-reference any other predefined or internal symbols.
+.B \-cpu <name>
+set target processor.
 .TP
-.B -E [file]
-Force AS to send warning and error messages to
-.B file
-rather than to the standard error output.  The file names !0 to !4 are used
-to refer to the standard input, output, error, auxillary, and printer channels
-predefined by the operating system (on some systems, some of these handles
-might not exist).  If the [file] specification is omitted, a name is constructed
-by replacing the source file's extension with '.log'.
+.B \-D <symbol>[,symbol]
+predefine symbols.
+.TP
+.B \-E [name]
+target file for error list,.
+.TP
+.B \-extracomments
+enable EXTRACOMMENTS mode by default.
+.TP
+.B \-fred
+force restricted extension of digits.
 .TP
 .B +G
-Suppress code generation, reducing the functionality of AS to macro
-preprocessing.
+suppress code generation.
 .TP
-.B -g [MAP|Atmel|NoICE]
-
-Instruct AS to write an additional file containing debug information. This
-information covers the symbol table and the relation between source line
-numbers and machine addresses.  The argument specifies whether debug info
-shall be written in AS's own MAP format, the object format for Atmel's AVR
-tools, or a command file suitable for John Hartman's NoICE.  If no argument
-is given, MAP will be chosen.  The file's name is constructed by replacing
-the source file's extension with '.map', '.obj', or '.noi' respectively.
+.B \-g [map|atmel|noice]
+write debug info.
 .TP
-.B -gnuerrors
-
-Output errors and their location in the source code in a format similar
-to the GNU C compiler, thus making it easier to integrate AS into
-environments designed for this format.  Note that in contrast to the
-standard format used by AS, locations inside macros are not reported!
+.B \-gnuerrors
+error messages in GNU format.
 .TP
-.B -maxerrors <num>
-
-Force AS to terminate assembly after the given number of errors occurred.
+.B \-help
+print help and exit.
 .TP
-.B -maxinclevel <num>
-
-Limit the maximum nesting level of include statements to the given number.
-By default, this limit is set to 200.
+.B \-h
+use lower case in hexadecimal output.
 .TP
-
-.B -extracomments
-
-For 68xx targets, enable the usage of an asterisk as alternate comment
-lead-in character, plus the usage of end-of-line comments by default.
+.B \-I
+generate include nesting list.
 .TP
-.B -Werror
-
-
-Force AS to treat warnings as errors.
+.B \-i <path>
+add include directory (repeatable).
 .TP
-.B -h
-
-Force AS to print all hexadecimal constants with lowercase letters, rather
-than with uppercase letters A..F which is the default.
+.B \-intsyntax <arg>[,arg]
+modify syntax for integer constants.
 .TP
-.B -listing <on|off|purecode|noskipped>
-
-Define which parts of the assembled code shall be include in the listing.
-The default is to include all source, but it is possible to exclude
-code parts skipped via conditional assembly, or even to leave out the
-conditional statements themselves.
+.B \-L
+listing to file.
 .TP
-.B -listradix <2..36>
-Set the number system to be used in the listing.  By default, all integer
-values are printed in hex, but an arbitrary base between 2 and 36 may be
-used via this switch.
+.B \-l
+listing to console.
 .TP
-.B -splitbyte [character]
-
-Use split-byte display of numbers in the listing, e.g. to obtain split
-octal notation.
+.B \-listline\-prefix <fmt>
+set format of listing per-line prefix.
 .TP
-.B -i <path[:path...]>
-Add new entries to the list of paths that are searched for include files.
-New entries are prepended to the current include path list, so if multiple
-paths are given with one command-line parameter, they will be entered into
-the path list in reverse order.
+.B \-listing <off|on|purecode|noskipped>
+limit listing of assembled code.
 .TP
-.B -I
-
-Add an include file list to the assembly listing.  An include file list contains
-all files that have been included while assembling the source files, including
-multiple and nested inclusion.  Nesting of inclusion is identified by different
-indention.  This option only makes sense when the generation of an assembly
-listing has been turned on via the
-.B -L
-or
-.B -l
-parameters.
+.B \-listradix <2...36>
+number system in listing.
 .TP
-.B -L
-
-Turn on generation of an assembly listing and send it to a file whose name is
-constructed by replacing the source file's extension with '.lst'.
+.B \-list\-macro\-handles
+list macro's symbol handles.
 .TP
-.B -l
-
-Turn on generation of an assembly listing and send it to the console.
+.B \-[no\-]list\-unknown\-values
+display unknown values in listing as question marks.
 .TP
-.B -olist <file name>
-Override the default path and file name for the file the listing is written to.
+.B \-M
+extract macro definitions.
 .TP
-.B -M
-
-Turn on generation of a macro definition file.  A macro definition file is
-a file that contains all macro definitions that have been detected during
-assembly, in a format suitable for an inclusion into another file.  The macro
-definition file's name is constructed by replacing the source file's
-extension with '.mac'.
+.B \-maxerrors <number>
+terminate assembly after <number> errors.
 .TP
-.B -n
-
-Force AS to extend all error and warning messages with their internal error
-resp. warning number.
+.B \-maxinclevel <number>
+limit include nesting level to <number>.
 .TP
-.B -noicemask [mask]
-By default, AS will only write symbols to the NoICE debug info that are
-located in the code segment.  By changing this binary mask, more and/or
-different masks may be chosen.  The assignment is bit 1=code, 2=data,
-3=idata, 4=xdata, 5=ydata, 6=bitdata, 7=io, 8=reg, 9=romdata .  Negating
-this option reverts the mask to code-only.
+.B \-maxsympass <number>
+unresolved symbols allowed through pass (default 1).
 .TP
-.B -o <name>
-Tell AS to write the code output to a file <name>.  By default, the code
-output file's name is constructed by replacing the source file's extension
-with '.p'.  If multiple files are assembled with one command, this parameter
-may also be given multiply.  If there are less output specifications than
-source file names, AS will switch back to the default naming convention after
-all output specifications have been used up.
+.B \-n
+add error #s to error messages.
 .TP
-.B -olist <name>
-
-Tell AS to write the assembly listing to a file <name>, instead of a file
-with the standard name in the source file's directory.  This option only
-makes sense when an assembly listing has been requested via the '-L' option.
+.B \-noicemask <mask>
+set NoICE segment mask.
 .TP
-.B -shareout <name>
-
-Tell AS to write shared symbol definitions to a file <name>, instead of
-constructing the name from the source file's name. See the user manual for
-more information about symbol sharing.
+.B \-olist <name>
+change name of list file.
 .TP
-.B -P
-
-Turn on generation of a macro output file.  A macro output file contains the
-intermediate source code that remains after macro expansion and conditional assembly.
-The macro output file's  name is constructed by replacing the source file's
-extension with '.i'.
+.B \-o <name>
+change name of code file.
 .TP
-.B -p
-
-Instruct AS to write out the shared symbol definitions in a format suitable
-for including into a Pascal or Modula-2 program.  The file's name is
-constructed by replacing the source file's extension with '.inc'. See the
-user manual for more information about symbol sharing.
+.B \-p
+share file formatted for Pascal.
 .TP
-.B -q or -quiet
-Turn on silent assembly mode.  In silent compilation mode, AS will not
-do any console output except for warning and error messages.
+.B \-P
+write macro processor output.
 .TP
-.B -r [pass number]
-Tell AS to output warnings when a situation appears in a source file that
-forces another pass of assembly.  Such situations either take place when a symbol
-is undefined in the first pass or a symbol's value has changed compared to the
-previous pass.  This option is useful to track down sources of excessive
-multi-passing, but be aware that it might yield a fairly large number of
-warnings, especially in the first pass.  Optionally, a pass number may be added
-to this option to inhibit output until a certain pass is reached.
+.B \-packing
+enable PACKING by default.
 .TP
-.B -relaxed
-Enable the relaxed mode by default, which allows all syntax variants
-for hexadecimal/binary/octal constants (Intel, Motorola, Hitachi, C),
-rather than only the target-specific one.
+.B \-plainbase
+enable PLAINBASE mode by default.
 .TP
-.B -s
-
-Add a section list to the assembly listing.  A section list contains
-all sections that have been defined in the source files, marking their
-nesting level by different levels of indentation.   This option only
-makes sense when the generation of an assembly listing has been turned
-on via the
-.B -L
-or
-.B -l
-parameters.
+.B \-q, \-quiet
+silent operation.
 .TP
-.B -shareout <file>
-Override the default path and file name for the file containing shared
-symbols.
+.B \-r [pass]
+report additional passes from pass (default 1).
 .TP
-.B -t <mask>
-Turn on or off parts of the assembly listing that have no individual
-command line parameter.  AS internally keeps an integer value whose bits
-represent certain components of the listing.  A positive command line
-parameter (-t or /t) sets the bits set in <mask>, whereas a negated
-parameter (+t) resets the bits set in <mask>.  The individual bits have
-the following meaning: bit 0 = source lines and generated machine code,
-bit 1 = symbol table, bit 2 = macro table, bit 3 = function table, bit 4 =
-line numbering.
+.B \-radix <2...36>
+set default number system.
 .TP
-.B -u
-
-Tell AS to do additional bookkeeping about which address ranges have been
-used by the assembled program.  This option enables the detection of overlapping
-memory usage.  If an assembly listing has been turned on via the
-.B -L
-or
-.B -l
-parameters, it will also contain a list of all used memory areas.
+.B \-relaxed
+allow arbitrary integer syntax by default.
 .TP
-.B -U
-
-Force AS to operate in case-sensitive mode.  By default, names of symbols,
-macros, user-defined functions and sections are treated in a case-insensitive
-manner.
+.B \-screenheight <#>
+set screen height for paging of '-help'.
 .TP
-.B -w
-
-Suppress output of warnings.
+.B \-s
+generate section list.
 .TP
-.B -x
-
-Turn on extended error reporting.  With extended error reporting, several
-error and warning messages will also print the item that created the message,
-e.g. the name of an unknown instruction.  When this option is given twice,
-the erroneous source line is additionally printed.
+.B \-shareout <name>
+change name of share file.
 .TP
-.B -warnranges
-
-Only warn about integer constants exceeding the given data type's range, instead
-of issuing an error.
-
-.SH PRESETTING PARAMETERS
-
-Parameters need not necessarily be given in the command line itself.  Before
-processing of command line parameters starts, AS will look if the
+.B \-splitbyte [char]
+use split byte display of numbers.
+.TP
+.B \-supmode
+allow privileged instructions by default.
+.TP
+.B \-t <mask>
+enable listing parts; +t disables them.
+.TP
+.B \-U
+case-sensitive operation.
+.TP
+.B \-u
+generate usage list.
+.TP
+.B \-underscore\-macroargs
+allow underbars in macro arguments.
+.TP
+.B \-v
+verbose operation.
+.TP
+.B \-version
+print version info and exit.
+.TP
+.B \-w
+suppress warnings.
+.TP
+.B \-warnranges
+warn instead of failing eligible range checks.
+.TP
+.B \-Werror
+treat warnings as errors.
+.TP
+.B \-w[no\-]implicit\-sign\-extension
+enable/disable sign extension warnings.
+.TP
+.B \-w[no\-]relative
+enable/disable warnings about possible relative jump.
+.TP
+.B \-x
+extended error messages.
+.TP
+.B \-X
+internal trace to as.deb (developer option).
+.TP
+.B \-Y
+branch error suppression (see manual).
+.SH OPTION DETAILS
+\-A balances remaining macro/structure trees; symbols use hash tables.
+\-x adds diagnostic context, and \-xx adds the source line.
+\-q suppresses progress; repeating it also suppresses source MESSAGE output.
+\-warnranges changes eligible evaluator range errors into warnings, but does
+not soften every directive-specific hard range check.
+.PP
+Repeat \-i for multiple include directories. A path list uses : on Unix and ;
+on Windows. \-t mask enables listing bits; +t mask disables them (0..511,
+default 511). \-maxerrors 0 means no error-count limit. The defaults for
+\-maxinclevel and \-maxsympass are 200 and 1.
+.SH ENVIRONMENT
+.TP
 .B ASCMD
-environment variable is defined.  If it exists, its contents will be
-treated as additional command line parameters whose syntax is absolutely
-equal to normal command line parameters.  An exception is made if the
-variable's contents start with a '@' sign; in such a case, the string after
-the '@' sign is treated as the name of a file that contains the options.
-Such a file (also called a 'key file') has the advantage that it allows
-the options to be written in different lines, and it does not have a size
-limit.  Some operating systems (like MS-DOS) have a length limit on
-command lines and environment variable contents, so the key file may be
-your only option if you have a lot of lengthy parameters for AS.
-
-As parameters given in the
-.B ASCMD
-environment variable or a key file are processed prior to the command line
-itself, and can therefore be overridden by command line parameters.
-
-.SH NATIONAL LANGUAGE SUPPORT
-
-AS supports the needs of different languages and countries in the sense that
-it will try to adapt to the language and date/time formats valid for the
-current environment.  Upon startup, the COUNTRY setting made in the
-CONFIG.SYS file is queried for DOS and OS/2 implementations of AS.  For
-UNIX systems, AS tries to read the LC_TIME resp. LC_MESSAGES environment
-variables to find out the correct format for date/time outputs resp. the
-local language.  If this fails, the LC_ALL and finally LANG variables are
-probed.  If none of these environment variables points to a specific local
-environment resp. contains a locale specification unknown to AS, the
-standard english/C locale is used.
-
-The messages AS can output in different languages are stored in separate
-files with the extension '.msg' .  AS will search for these files in the
-following directories:
-
-- The current directory
-
-- The directory the executable of AS was loaded from (only on DOS platforms version >=3.0 or if path was explicitly specified)
-
-- The directory specified in the AS_MSGPATH environment variable resp. the directories listed in the PATH environment variable if AS_MSGPATH does not exist.
-
-- The LIBDIR directory set at compile time by CMake.
-
-
-.SH RETURN CODES
-
-Depending on the assembly's turnout,
-.B asl
-will generate different return codes:
+Preset options, processed before command-line options; may refer to a key
+file with @filename. Preset options and key files can also supply source names.
+.TP
+.B AS_MSGPATH
+One external-catalog directory. Catalogs are embedded by default; configure
+ASL_EMBED_MESSAGES=OFF to use external .msg files. The reader searches the
+current directory, explicit executable directory, AS_MSGPATH (or PATH when
+unset), then the compiled-in library directory.
+.TP
+.B LC_MESSAGES, LC_ALL, LANG
+Catalog language overrides, checked in this order. German and English are
+supported; English is the default. Country information can also select the
+language. Node-based WebAssembly builds inherit the host environment.
+.TP
+.B USEANSI
+Set to N to disable ANSI console control sequences.
+.SH KEY FILES
+Use @filename on the command line to insert options at that position.
+Options and their arguments must be on the same line; lines beginning with
+; are comments. Key files cannot reference other key files. The line buffer
+is 1024 bytes including the terminator. Key-file and ASCMD parsing split on
+whitespace without shell quoting; use command-line arguments for paths with
+spaces. A leading + can undo an earlier preset option, for example +L.
+.SH EXIT STATUS
 .TP
 .B 0
-No errors, warnings might have occurred.
+Successful assembly, help, version or CPU-list request; warnings may occur.
 .TP
 .B 1
-No command line parameters were given, AS printed a short list
-of possible command line parameters and terminated thereafter.
+No input sources supplied. No interactive filename prompt is issued.
 .TP
 .B 2
-Errors occurred during assembly of at least one source file, no
-code file was generated for the corresponding source file(s).
+Assembly errors in one or more sources.
 .TP
 .B 3
-A fatal error occurred during assembly that forced immediate
-program termination.  Code files may be generated, but are probably
-unusable.
+Fatal assembly or I/O failure.
 .TP
 .B 4
-Program termination already occurred during initialization.  This
-might be either due to a incorrect command line parameter or an error
-during loading the program's overlay file (only possible on MS-DOS).
+Invalid command-line/preset option or key-file startup failure.
 .TP
 .B 255
-During initialization, an internal error happened that should not
-occur.  If the reaction is reproducible, note down the situation and
-send a bug report to the author.
-
+Catalog/resource or internal initialization failure.
 .SH EXAMPLES
-
-To assemble a source file
-.B file1.asm
-without any additional bells and whistles, use:
-.PP
-.B asl file1
-.PP
-which will create an output file
-.B file1.p
-given that there are no errors.  If you additionally want a listing and
-rename the output file to
-.B a.out,
-use
-.PP
-.B asl -L file1 -o a.out
-.PP
-To make the listing as comprehensive as possible and to get more detailed
-error messages, use:
-.PP
-.B asl -LuCIs -t 16 -nx file1
-
-.SH TIPS
-
-calling AS without any parameters will print a short help containing all
-command line parameters and implemented target processors, while calling
-with command line parameters but without any source file name will result
-in AS asking for a source file name on the console.
-
+.nf
+asl \-cpu 68000 \-i include \-o output.p source.asm
+asl \-L \-olist source.lst \-g map source.asm
+asl \-nx '*.asm'
+asl @build-options.key source.asm
+asl \-help
+asl \-cpu list
+.fi
 .SH SEE ALSO
-
-plist(1), pbind(1), p2hex(1), p2bin(1)
-
-.SH HISTORY
-
-AS originally appeared as a DOS program in 1989, written in
-Borland-Pascal, and was ported to C and UNIX in 1996.
-
-.SH BUGS
-
-There are too many options.
-
-Command line interpreters of some operating systems reserve some
-characters for their own use, so it might be necessary to give
-command line parameters with certain tricks (e.g., with the help
-of escape characters).
-
-.SH AUTHOR(S)
-
-Alfred Arnold (alfred@ccac.rwth-aachen.de), and a few others...
+.BR alink (1),
+.BR dasl (1),
+.BR pbind (1),
+.BR p2bin (1),
+.BR p2hex (1),
+.BR plist (1)
+.PP
+The AS user manual and the fork README contain installation and language
+reference material. Source and bug reports:
+.UR https://github.com/flamewing/asl-releases
+.UE

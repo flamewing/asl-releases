@@ -8,7 +8,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | --- | --- | --- |
 | 1 | Single-line paragraphs in tracked Markdown files | Complete |
 | 2 | Build, installation, package layout and source-maintenance guidance | Complete |
-| 3 | Assembler invocation, options, environment, manpage and built-in help | Pending |
+| 3 | Assembler invocation, options, environment, manpage and built-in help | Complete |
 | 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Pending |
 | 5 | Source syntax, macros, conditionals and fork language extensions | Pending |
 | 6 | Data directives, expressions, predefined symbols, includes and file formats | Pending |
@@ -30,6 +30,12 @@ Join 335 soft-wrapped lines across 15 Markdown files, including list-continuatio
 Replace obsolete AS.EXE/BIN/MAN package descriptions with the actual installed targets and GNUInstallDirs layout, and distinguish flat snapshot archives from full CMake installations. Document embedded/external catalogs, installed includes, optional Pandoc and the host-only resource compiler. Use runnable build/test commands with matching configurations and a test invocation compatible with CMake 3.19. Update source-maintenance guidance for C11, generated config.h, platform checks and .mes/.msg/.msh/.rsc resources; identify obsolete FAQ claims as historical and link current guidance.
 
 Move COPYING installation outside the Pandoc condition so installation without the optional manual generator includes the license. Validate CMake reconfiguration, a staged MinGW installation without Pandoc, installed executable/include/manpage/license paths, and the documented cmake -E chdir CTest invocation. Existing Windows/Linux build validation supplies the compiler/configuration evidence; external-catalog installation is checked separately.
+
+### 3. Assembler invocation, help and manpage
+
+Audit command records and callbacks in as.c, cmdarg.c, msg_level.c, asmerr.c, asmlist.c, asmsub.c, asmpars.c, onoff_common.c and code6809.c. Align the manual option reference, man/asl.1 and both help languages with actual source/help/version/CPU-list invocations. Include omitted COMPMODE, PACKING, SUPMODE, NoICE mask, warning-range and developer-trace options; repair missing help newlines and incorrect include separators. Document optional arguments, global option application, wildcard/path quoting, presets/key files, real exit statuses, hashed symbols versus remaining macro/structure trees, and embedded-catalog/language behavior.
+
+The audit reproduces silently ignored unknown ASCMD options (ASCMD=-z with -help exits 0). Propagate all non-success preset/key-file parser results so unknown options are rejected as documented. Add an assembler_cli regression covering English/German help, informational exit codes, source paths with spaces, explicit output, key files and ASCMD failures. Tests pass with embedded/external catalogs, together with M68K diagnostics, Coverity inputs and formatter contracts. Render the new manpage with groff without warnings and the updated manual chapter with Pandoc.
 
 ## Validation policy
 

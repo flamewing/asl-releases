@@ -1939,8 +1939,8 @@ Message InfoMessHead1
  "usage: "
 
 Message InfoMessHead2
- " [Optionen] [Datei] [Optionen] ..."
- " [options] [file] [options] ..."
+ " [Optionen] Quelldatei [Quelldatei ...]"
+ " [options] source [source ...]"
 
 Message KeyWaitMsg
  "--- weiter mit <ENTER> ---"
@@ -1969,7 +1969,7 @@ Message InvMsgSource
 Message InfoMessHelp
  "\n" \
  "Optionen:\n" \
- "  -A                   : kompaktere Symbolablage\n" \
+ "  -A                   : verbleibende Makro-/Strukturb&auml;ume ausgleichen\n" \
  "  -a                   : Sharefile im AS-Format\n" \
  "  -alias <neu>=<alt>   : Prozessor-Alias definieren\n" \
  "  -bigendian           : BIGENDIAN Modus im Default einschalten\n" \
@@ -1977,6 +1977,7 @@ Message InfoMessHelp
  "                         ('?' oder 'list', um verf&uuml;gbare nur anzuzeigen)\n" \
  "  -C                   : Querverweisliste erzeugen\n" \
  "  -c                   : Sharefile im C-Format\n" \
+ "  -compmode            : COMPMODE im Default einschalten\n" \
  "  -D <Symbol>[,Symbol] : Symbole vordefinieren\n" \
  "  -E [Name]            : Zieldatei f&uuml;r Fehlerliste,\n" \
  "                         !0..!4 f&uuml;r Standardhandles\n" \
@@ -1989,10 +1990,10 @@ Message InfoMessHelp
  "  -help                : nur Hilfe ausgeben\n" \
  "  -h                   : Hexadezimalzahlen mit Kleinbuchstaben\n" \
  "  -I                   : Include-Verschachtelungsliste ausgeben\n" \
- "  -i <Pfad>[:Pfad]...  : Pfadliste f&uuml;r Includedateien\n" \
+ "  -i <Pfad>           : Include-Verzeichnis hinzuf&uuml;gen (wiederholbar)\n" \
  "  -intsyntax <arg>[,arg] : Syntax f&uuml;r Ganzzahlen &auml;ndern\n" \
  "  -L                   : Listing auf Datei\n" \
- "  -listing <off|on|purecode|noskipped>: Listing des assemblierten Codes beschr&auml;nken" \
+ "  -listing <off|on|purecode|noskipped>: Listing des assemblierten Codes beschr&auml;nken\n" \
  "  -listline-prefix <fmt> : Format des Pro-Zeile-Pr&auml;fix im Listing setzen\n" \
  "  -listradix <2...36>  : Zahlensystem im Listing\n" \
  "  -list-macro-handles  : Symbol-Handles von Makros im Listing anzeigen\n" \
@@ -2001,15 +2002,17 @@ Message InfoMessHelp
  "  -M                   : Makrodefinitionen extrahieren\n" \
  "  -maxerrors <Anzahl>  : Assemblierung nach <Anzahl> Fehlern abbrechen\n" \
  "  -maxinclevel <Anzahl>: Include-Verschachtelungstiefe auf <Anzahl> begrenzen\n" \
- "  -maxsympass <Nummer> : Unaufgel&ouml;ste Vorw&auml;rtsreferenzen bis Pass <Nummer> erlauben\n" \
+ "  -maxsympass <Nummer> : Vorw&auml;rtsreferenzen bis Pass erlauben (Default 1)\n" \
  "  -n                   : Fehlermeldungen mit Nummer\n" \
+ "  -noicemask <Maske>   : NoICE-Segmentmaske setzen\n" \
  "  -olist <Name>        : Namen der Listdatei neu setzen\n" \
  "  -o <Name>            : Namen der Code-Datei neu setzen\n" \
  "  -P                   : Makroprozessorausgabe erzeugen\n" \
+ "  -packing             : PACKING im Default einschalten\n" \
  "  -p                   : Sharefile im Pascal-Format\n" \
  "  -plainbase           : PLAINBASE Modus im Default einschalten\n" \
  "  -q, -quiet           : Stiller Betrieb\n" \
- "  -r                   : Meldungen erzeugen, falls zus&auml;tzlicher Pass erforderlich\n" \
+ "  -r [Pass]            : Zusatzpass-Meldungen ab Pass (Default 1)\n" \
  "  -radix <2...36>      : Default-Zahlensystem setzen\n" \
  "  -relaxed             : beliebige Integer-Syntax im Default zulassen\n" \
  "  -s                   : Sektionsliste erzeugen\n" \
@@ -2017,32 +2020,41 @@ Message InfoMessHelp
  "                         und '-cpu list' setzen\n" \
  "  -shareout <Name>     : Namen des Sharefiles neu setzen\n" \
  "  -splitbyte [char]    : Split-Byte-Darstellung von Zahlen\n" \
- "  -t                   : Listing-Teile ein/ausblenden\n" \
+ "  -supmode             : privilegierte Befehle standardm&auml;ssig zulassen\n" \
+ "  -t <Maske>           : Listing-Teile einschalten; +t schaltet aus\n" \
  "  -U                   : case-sensitiv arbeiten\n" \
  "  -u                   : Belegungsliste erzeugen\n" \
  "  -underscore-macroargs: Unterstriche in Makro-Argumenten zulassen\n" \
  "  -v                   : wortreicher Betrieb\n" \
  "  -version             : nur Versionsinfo ausgeben\n" \
  "  -w                   : Warnungen unterdr&uuml;cken\n" \
+ "  -warnranges          : geeignete Bereichsfehler als Warnungen melden\n" \
  "  -Werror              : Warnungen als Fehler behandeln\n" \
  "  -w[no-]implicit-sign-extension : Warnungen &uuml;ber Vorzeichen-Erweiterungen ein/ausschalten\n" \
  "  -w[no-]relative      : Warnung, wenn relativer Sprung m&ouml;glich\n" \
  "  -x                   : erweiterte Fehlermeldungen\n" \
+ "  -X                   : interne Debug-Ausgabe in as.deb (Entwickler)\n" \
  "  -Y                   : Sprungfehlerunterdr&uuml;ckung (siehe Anleitung)\n" \
  "\n" \
- "Quelldateiangabe darf Jokerzeichen enthalten\n"
+ "Quelldateiangabe darf Jokerzeichen enthalten; im Shell-Aufruf zitieren.\n" \
+ "Optionen vor/nach Dateien gelten f&uuml;r alle Dateien; +Option negiert.\n" \
+ "Einbuchstabenoptionen unterscheiden Gross-/Kleinschreibung.\n" \
+ "Optionale Argumente: -g map explizit verwenden oder -g zuletzt angeben.\n" \
+ "ASCMD und @Optionsdatei erlauben voreingestellte Optionen.\n" \
+ "Kein Dateiname: Ende mit Status 1; -help/-version/-cpu list: Status 0.\n"
  "\n" \
  "options:\n" \
- "  -A                   : compact symbol table\n" \
+ "  -A                   : balance remaining macro/structure trees\n" \
  "  -a                   : share file formatted for AS\n" \
  "  -alias <new>=<old>   : define processor alias\n" \
  "  -bigendian           : turn on BIGENDIAN mode by default\n" \
  "  -C                   : generate cross reference list\n" \
  "  -c                   : share file formatted for C\n" \
+ "  -compmode            : enable COMPMODE by default\n" \
  "  -cpu <name>          : set target processor\n" \
  "                         ('?' or 'list' to list available ones and exit)\n" \
  "  -D <symbol>[,symbol] : predefine symbols\n" \
- "  -E <name>            : target file for error list,\n" \
+ "  -E [name]            : target file for error list,\n" \
  "                         !0..!4 for standard handles\n" \
  "                         default is <srcname>.LOG\n" \
  "  -extracomments       : enable EXTRACOMMENTS mode by default\n" \
@@ -2053,48 +2065,58 @@ Message InfoMessHelp
  "  -help                : print help and exit\n" \
  "  -h                   : use lower case in hexadecimal output\n" \
  "  -I                   : generate include nesting list\n" \
- "  -i <path>[;path]...  : list of paths for include files\n" \
+ "  -i <path>           : add include directory (repeatable)\n" \
  "  -intsyntax <arg>[,arg] : modify syntax for integer constants\n" \
  "  -L                   : listing to file\n" \
  "  -l                   : listing to console\n" \
  "  -listline-prefix <fmt> : set format of listing per-line prefix\n" \
- "  -listing <off|on|purecode|noskipped>: limit listing of assembled code" \
+ "  -listing <off|on|purecode|noskipped>: limit listing of assembled code\n" \
  "  -listradix <2...36>  : number system in listing\n" \
  "  -list-macro-handles  : list macro's symbol handles\n" \
  "  -[no-]list-unknown-values : display unknown values in listing as question marks\n" \
  "  -M                   : extract macro definitions\n" \
  "  -maxerrors <number>  : terminate assembly after <number> errors\n" \
  "  -maxinclevel <number>: limit include nesting level to <number>\n" \
- "  -maxsympass <number> : allow unresolved forward references up to pass <number>\n" \
+ "  -maxsympass <number> : unresolved symbols allowed through pass (default 1)\n" \
  "  -n                   : add error #s to error messages\n" \
- "  -olist <nname>       : change name of list file\n" \
+ "  -noicemask <mask>    : set NoICE segment mask\n" \
+ "  -olist <name>       : change name of list file\n" \
  "  -o <name>            : change name of code file\n" \
  "  -p                   : share file formatted for Pascal\n" \
  "  -P                   : write macro processor output\n" \
+ "  -packing             : enable PACKING by default\n" \
  "  -plainbase           : enable PLAINBASE mode by default\n" \
  "  -q, -quiet           : silent operation\n" \
- "  -r                   : generate messages if repassing necessary\n" \
+ "  -r [pass]            : report additional passes from pass (default 1)\n" \
  "  -radix <2...36>      : set default number system\n" \
  "  -relaxed             : allow arbitrary integer syntax by default\n" \
  "  -screenheight <#>    : set screen height for paging of '-help'\n" \
  "                         and '-cpu list'\n" \
  "  -s                   : generate section list\n" \
- "  -shareout <nname>    : change name of share file\n" \
+ "  -shareout <name>    : change name of share file\n" \
  "  -splitbyte [char]    : use split byte display of numbers\n" \
- "  -t                   : enable/disable parts of listing\n" \
+ "  -supmode             : allow privileged instructions by default\n" \
+ "  -t <mask>            : enable listing parts; +t disables them\n" \
  "  -U                   : case-sensitive operation\n" \
  "  -u                   : generate usage list\n" \
  "  -underscore-macroargs: allow underbars in macro arguments\n" \
  "  -v                   : verbose operation\n" \
  "  -version             : print version info and exit\n" \
  "  -w                   : suppress warnings\n" \
+ "  -warnranges          : warn instead of failing eligible range checks\n" \
  "  -Werror              : treat warnings as errors\n" \
  "  -w[no-]implicit-sign-extension : enable/disable sign extension warnings\n" \
  "  -w[no-]relative      : enable/disable warnings about possible relative jump\n" \
  "  -x                   : extended error messages\n" \
+ "  -X                   : internal trace to as.deb (developer option)\n" \
  "  -Y                   : branch error suppression (see manual)\n" \
  "\n" \
- "source file specification may contain wildcards\n"
+ "Source patterns may contain wildcards; quote patterns in the shell.\n" \
+ "Options before/after sources apply to all sources; +option negates.\n" \
+ "Single-letter options are case-sensitive; word options are not.\n" \
+ "Optional arguments: specify -g map explicitly, or put -g last.\n" \
+ "Use ASCMD or @options-file for preset options.\n" \
+ "No source: exit 1; -help/-version/-cpu list: exit 0.\n"
 
 Message InfoMessCPUList
  "implementierte Prozessoren :"
