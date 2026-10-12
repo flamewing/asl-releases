@@ -80,3 +80,10 @@ foreach(cpu MELPS7700 MELPS7750 MELPS7751)
 endforeach()
 
 check_bytes(reject_b_cpu 65816 " expect 1505\n lda b,#1\n endexpect\n db 18" "12")
+
+foreach(op ASL DEC ROL INC LSR ROR)
+    check_bytes(reject_rmw_b_${op} 65816 " expect 1505\n ${op} b\n endexpect\n db 18" "12")
+endforeach()
+foreach(cpu MELPS7700 MELPS7750 MELPS7751)
+    check_bytes(rmw_b_original_${cpu} ${cpu} " asl b\n dec b\n rol b\n inc b\n lsr b\n ror b" "420a421a422a423a424a426a")
+endforeach()

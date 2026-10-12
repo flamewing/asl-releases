@@ -1978,6 +1978,11 @@
       "file": "code7700.c",
       "issue": "Accumulator-B decoder emits prefix 0x42 before operand validation and CPU gating, leaving lone prefix on failed mode/range/count/long-form/65816 rejection.",
       "status": "fixed in tranche 145; gate CPU before prefix and reset CodeLen for failed address or long-form constraint; three MELPS CPUs/65816 gate/all failure classes/no emission/original B forms checked"
+    },
+    {
+      "file": "code7700.c",
+      "issue": "Read/modify/write accumulator-B decoder emits both prefix/opcode before 65816 CPU rejection (EXPECT 1505 ASL B leaves 42 0A).",
+      "status": "fixed in tranche 146; perform CPU gate before setting bytes/CodeLen; all six RMW mnemonics/no emission/three MELPS CPUs original bytes checked"
     }
   ]
 }

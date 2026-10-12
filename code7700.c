@@ -554,12 +554,12 @@ static void DecodeRMW(Word Code) {
         CodeLen     = 1;
         BAsmCode[0] = Hi(Code);
     } else if ((ArgCnt == 1) && (!as_strcasecmp(ArgStr[1].str.p_str, "B"))) {
-        CodeLen     = 2;
-        BAsmCode[0] = PrefAccB;
-        BAsmCode[1] = Hi(Code);
         if (!ChkExcludeCPUExt(CPU65816, ErrNum_AddrModeNotSupported)) {
             return;
         }
+        CodeLen     = 2;
+        BAsmCode[0] = PrefAccB;
+        BAsmCode[1] = Hi(Code);
     } else if (!ChkArgCnt(0, 2))
         ;
     else {

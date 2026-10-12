@@ -1720,3 +1720,10 @@ manual, EXPECT fixtures, translations and source-position tests.
     mode/range/count/long-form failures and 65816 rejection with EXPECT/no
     emission, plus original accepted B immediate/direct/long-indirect bytes.
     Validation: all 411 CTest cases pass with embedded/external catalogs.
+
+146. MELPS7700 read/modify/write accumulator-B CPU gate.
+    ASL/DEC/ROL/INC/LSR/ROR B set both prefix and opcode before 65816 rejection;
+    EXPECT 1505 ASL B still emits 42 0A. Gate CPU before instruction emission.
+    All six mnemonics verify no emission on 65816 and preserve captured bytes
+    on three MELPS CPUs; retain CPU rules and diagnostic ID.
+    Validation: all 411 CTest cases pass with embedded/external catalogs.
