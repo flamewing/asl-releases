@@ -2797,3 +2797,11 @@ manual, EXPECT fixtures, translations and source-position tests.
     Defer unresolved immediate constraints. Both CPUs, primary-only, original,
     forward/no-emission and German checks. Eleven fixed-register sites remain.
     Validation: all 425 CTest cases pass with embedded/external catalogs.
+
+263. MN1613 fixed register and block pointer constraints.
+    Eleven final historical sites: R0 at actual required operand, BLK ordered
+    (R2),(R1),R0, and base-register alternatives excluding CSBR in LB/SETB.
+    Preserve unrestricted STB/CPYB. Original fixed-register vector, all eleven
+    no-emission rejects, CSBR successes and German checked. All 20 historical
+    candidates reviewed; adjacent generic helper alternatives tracked separately.
+    Validation: all 425 CTest cases pass with embedded/external catalogs.

@@ -127,3 +127,32 @@ if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
 endif()
 set(ENV{LC_MESSAGES} en)
 
+
+check_diagnostic(mvwr-fixed MN1613 " mvwr R1,(R1)" 1445 "operand must be R0" 3 7)
+check_diagnostic(daa-fixed MN1613 " daa R1,(R1)" 1445 "operand must be R0" 3 6)
+check_diagnostic(fix-fixed MN1613 " fix R1,DR0" 1445 "operand must be R0" 3 6)
+check_diagnostic(flt-fixed MN1613 " flt DR0,R1" 1445 "operand must be R0" 3 10)
+check_diagnostic(srbt-fixed MN1613 " srbt R1,R1" 1445 "operand must be R0" 3 7)
+check_diagnostic(debp-fixed MN1613 " debp R1,R1" 1445 "operand must be R0" 3 10)
+check_diagnostic(blk-first MN1613 " blk (R1),(R1),R0" 1445 "operand must be (R2)" 3 6)
+check_diagnostic(blk-second MN1613 " blk (R2),(R2),R0" 1445 "operand must be (R1)" 3 11)
+check_diagnostic(blk-third MN1613 " blk (R2),(R1),R1" 1445 "operand must be R0" 3 16)
+check_diagnostic(lb-restricted MN1613 " lb CSBR,1" 1445
+    "operand must be SSBR, TSR0, TSR1, OSR0, OSR1, OSR2, OSR3" 3 5)
+check_diagnostic(setb-restricted MN1613 " setb R0,CSBR" 1445
+    "operand must be SSBR, TSR0, TSR1, OSR0, OSR1, OSR2, OSR3" 3 10)
+check_bytes(fixed-original MN1613
+ " mvwr R0,(R1)\n daa R0,(R1)\n fix R0,DR0\n flt DR0,R0\n srbt R0,R1\n debp R1,R0\n blk (R2),(R1),R0\n lb SSBR,1\n setb R0,SSBR"
+ "7f085f041f0f1f073f713ff13f170f1700010f10")
+check_bytes(fixed-noemit MN1613
+ " expect 1445,1445,1445,1445,1445,1445,1445,1445,1445,1445,1445\n mvwr R1,(R1)\n daa R1,(R1)\n fix R1,DR0\n flt DR0,R1\n srbt R1,R1\n debp R1,R1\n blk (R1),(R1),R0\n blk (R2),(R2),R0\n blk (R2),(R1),R1\n lb CSBR,1\n setb R0,CSBR\n endexpect\n nop" "7808")
+check_bytes(csbr-unrestricted MN1613 " stb CSBR,1\n cpyb R0,CSBR" "0f8700010f80")
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/blk-first.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "Operand muss (R2) sein" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German MN1613 block pointer: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

@@ -831,7 +831,7 @@ static void DecodeMVWR(Word Index) {
         return;
     }
     if (reg != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvReg, "R0");
         return;
     }
 
@@ -1041,7 +1041,7 @@ static void DecodeDAA(Word Index) {
         return;
     }
     if (reg != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvReg, "R0");
         return;
     }
 
@@ -1088,7 +1088,7 @@ static void DecodeFIX(Word Index) {
         return;
     }
     if (reg != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvReg, "R0");
         return;
     }
 
@@ -1127,7 +1127,7 @@ static void DecodeFLT(Word Index) {
         return;
     }
     if (reg != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_operand_choices(&ArgStr[2], ErrNum_InvReg, "R0");
         return;
     }
 
@@ -1291,13 +1291,13 @@ static void DecodeSRBT(Word Index) {
     switch (Index) {
     case 0x3f70: /* SRBT */
         if (reg1 != 0) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            report_operand_choices(&ArgStr[1], ErrNum_InvReg, "R0");
             return;
         }
         break;
     case 0x3ff0: /* DEBP */
         if (reg2 != 0) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+            report_operand_choices(&ArgStr[2], ErrNum_InvReg, "R0");
             return;
         }
         break;
@@ -1329,7 +1329,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
     if (ii1 != 1) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+        report_operand_choices(&ArgStr[1], ErrNum_InvReg, "(R2)");
         return;
     }
 
@@ -1337,7 +1337,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
     if (ii2 != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+        report_operand_choices(&ArgStr[2], ErrNum_InvReg, "(R1)");
         return;
     }
 
@@ -1345,7 +1345,7 @@ static void DecodeBLK(Word Index) {
         return;
     }
     if (reg != 0) {
-        WrStrErrorPos(ErrNum_InvReg, &ArgStr[3]);
+        report_operand_choices(&ArgStr[3], ErrNum_InvReg, "R0");
         return;
     }
 
@@ -1406,7 +1406,7 @@ static void DecodeLB(Word Index) {
             return;
         }
         if (reg == 0 && !(Index & 0x0080)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[1]);
+            report_operand_choices(&ArgStr[1], ErrNum_InvReg, "SSBR, TSR0, TSR1, OSR0, OSR1, OSR2, OSR3");
             return;
         }
     }
@@ -1449,7 +1449,7 @@ static void DecodeCPYB(Word Index) {
             return;
         }
         if (reg2 == 0 && !(Index & 0x0080)) {
-            WrStrErrorPos(ErrNum_InvReg, &ArgStr[2]);
+            report_operand_choices(&ArgStr[2], ErrNum_InvReg, "SSBR, TSR0, TSR1, OSR0, OSR1, OSR2, OSR3");
             return;
         }
         break;
