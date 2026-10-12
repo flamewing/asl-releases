@@ -344,3 +344,59 @@ check_bytes(register-name-errors-noemit 6309
 check_bytes(register-capability-errors-noemit 6809
     " expect 1505,1505\n tfr e,a\n exg a,w\n endexpect\n db $12" "12")
 check_diagnostic(konami-invalid-source 052001 " tfr bogus,x" 1980 "invalid register name" 3 6)
+
+# List processing must retain the failing operand, and stop after primary
+# mask/availability errors instead of misidentifying the final register.
+foreach(cpu IN ITEMS 6809 6809UNDOC 6309 052001)
+    check_diagnostic(stack-invalid-first-${cpu} ${cpu} " pshs bogus,a" 1980
+        "operand must be CCR, A, B, DPR, X, Y, S/U, PC, CC, DP, U, D, ALL, #mask" 3 7)
+    check_diagnostic(stack-invalid-middle-${cpu} ${cpu} " pshu a,bogus,d" 1980
+        "operand must be CCR, A, B, DPR, X, Y, S/U, PC, CC, DP, S, D, ALL, #mask" 3 9)
+    check_diagnostic(stack-invalid-last-${cpu} ${cpu} " puls a,b,bogus" 1980
+        "operand must be CCR, A, B, DPR, X, Y, S/U, PC, CC, DP, U, D, ALL, #mask" 3 11)
+    check_diagnostic(stack-mask-range-primary-${cpu} ${cpu} " pshs a,#256,b" 1320 "256 > 255" 3 10)
+    check_diagnostic(stack-mask-divide-primary-${cpu} ${cpu} " pshs #1/0,a" 1310 "division by 0" 3 "")
+    check_diagnostic(stack-wrong-stack-${cpu} ${cpu} " pshs s" 1980
+        "S/U, PC, CC, DP, U, D, ALL, #mask" 3 7)
+    check_bytes(stack-errors-noemit-${cpu} ${cpu}
+        " expect 1980,1320,1310\n pshs bogus,a\n pshs a,#256,b\n pshs #1/0,a\n endexpect\n db $12" "12")
+    if(cpu STREQUAL "6809")
+        check_bytes(stack-original-${cpu} ${cpu}
+            " pshs ccr,a,b,dpr,x,y,u,pc\n pshu cc,dp,s,d\n puls all\n pulu #$12"
+            "34ff364f35ff3712")
+    endif()
+    if(cpu STREQUAL "6809UNDOC")
+        check_bytes(stack-original-${cpu} ${cpu}
+            " pshs ccr,a,b,dpr,x,y,u,pc\n pshu cc,dp,s,d\n puls all\n pulu #$12"
+            "34ff364f35ff3712")
+    endif()
+    if(cpu STREQUAL "6309")
+        check_bytes(stack-original-${cpu} ${cpu}
+            " pshs ccr,a,b,dpr,x,y,u,pc\n pshu cc,dp,s,d\n puls all\n pulu #$12\n pshs w\n pshu w\n puls w\n pulu w"
+            "34ff364f35ff37121038103a1039103b")
+    endif()
+    if(cpu STREQUAL "052001")
+        check_bytes(stack-original-${cpu} ${cpu}
+            " pshs ccr,a,b,dpr,x,y,u,pc\n pshu cc,dp,s,d\n puls all\n pulu #$12"
+            "0cff0d4f0eff0f12")
+    endif()
+    if(cpu STREQUAL "6309")
+        check_diagnostic(stack-w-mixed-first ${cpu} " pshs w,a" 1335
+            "W must be the only stack operand; 2 operands supplied" 3 7)
+        check_diagnostic(stack-w-mixed-last ${cpu} " pshu a,w" 1335
+            "W must be the only stack operand; 2 operands supplied" 3 9)
+        check_bytes(stack-w-errors-noemit ${cpu}
+            " expect 1335,1335\n pshs w,a\n pshu a,w\n endexpect\n db $12" "12")
+    else()
+        check_diagnostic(stack-no-w-${cpu} ${cpu} " pshs w" 1980 "ALL, #mask" 3 7)
+    endif()
+endforeach()
+set(ENV{LC_MESSAGES} de)
+file(TO_NATIVE_PATH "${TEST_DIR}/stack-w-mixed-first.asm" source)
+execute_process(COMMAND ${TEST_EMULATOR} "${ASL_PROGRAM}" "${source}" -n -q -x
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+string(FIND "${output}${error}" "W muss der einzige Stack-Operand sein; 2 Operanden angegeben" detail_pos)
+if(NOT "${result}" STREQUAL "2" OR detail_pos EQUAL -1)
+    message(FATAL_ERROR "German stack W: ${result}\n${output}${error}")
+endif()
+set(ENV{LC_MESSAGES} en)

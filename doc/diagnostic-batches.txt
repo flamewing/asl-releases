@@ -2206,3 +2206,14 @@ manual, EXPECT fixtures, translations and source-position tests.
     Preserve all accepted-name predicates/encodings and shared Konami behavior.
     Stack-list failure positioning/secondary diagnostics remain pending.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+199. 6809/shared Konami stack-list diagnostic positions and primary errors.
+    Stop processing at the first failed register/mask instead of reporting the
+    final list element. Unknown names identify the actual stack-specific choices
+    at their operand. Numeric mask failures retain only the evaluator's error;
+    mixed W lists retain 1335 at W and explain that it must stand alone. Preserve
+    all accepted masks, aliases and encodings. All three CPUs plus Konami cover
+    first/middle/last failures, primary errors, German details and no failure
+    bytes. All 22 historical 6809 candidates and identified adjacent diagnostic
+    followups reviewed; file complete.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

@@ -1213,65 +1213,73 @@ static void DecodeLEA(Word Index) {
 
 /* Push/Pull */
 
+static void report_stack_register(tStrComp const* arg, Boolean has_w) {
+    char choices[180] = "", detail[230];
+    unsigned index;
+    for (index = 0; index < StackRegCnt; index++) {
+        if (*choices) strmaxcat(choices, ", ", sizeof(choices));
+        strmaxcat(choices, StackRegNames[index], sizeof(choices));
+    }
+    strmaxcat(choices, has_w ? ", ALL, #mask, W" : ", ALL, #mask", sizeof(choices));
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(ErrNum_InvRegName, detail, &arg->Pos);
+}
+
 void DecodeStack_6809(Word code) {
-    Boolean OK = True, Extent = False;
-    int     z2, z3;
+    Boolean Extent = False;
+    int z2, z3;
     Boolean has_w = !!Hi(code);
 
     BAsmCode[1] = 0;
 
     /* S oder U einsetzen, entsprechend Opcode */
-
     *StackRegNames[StackRegCnt - 2]
             = OpPart.str.p_str[strlen(OpPart.str.p_str) - 1] ^ ('S' ^ 'U');
     for (z2 = 1; z2 <= ArgCnt; z2++) {
-        if (OK) {
-            if (!as_strcasecmp(ArgStr[z2].str.p_str, "W")) {
-                if (!has_w) {
-                    OK = False;
-                } else if (ArgCnt != 1) {
-                    WrError(ErrNum_InAccReg);
-                    OK = False;
-                } else {
-                    Extent = True;
-                }
+        if (!as_strcasecmp(ArgStr[z2].str.p_str, "W")) {
+            if (!has_w) {
+                report_stack_register(&ArgStr[z2], has_w);
+                return;
+            } else if (ArgCnt != 1) {
+                char detail[150];
+                as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgStackWAlone),
+                        (unsigned)ArgCnt);
+                WrXErrorPos(ErrNum_InAccReg, detail, &ArgStr[z2].Pos);
+                return;
             } else {
-                for (z3 = 0; z3 < StackRegCnt; z3++) {
-                    if (!as_strcasecmp(ArgStr[z2].str.p_str, StackRegNames[z3])) {
-                        BAsmCode[1] |= StackRegMasks[z3];
-                        break;
-                    }
+                Extent = True;
+            }
+        } else {
+            for (z3 = 0; z3 < StackRegCnt; z3++) {
+                if (!as_strcasecmp(ArgStr[z2].str.p_str, StackRegNames[z3])) {
+                    BAsmCode[1] |= StackRegMasks[z3];
+                    break;
                 }
-                if (z3 >= StackRegCnt) {
-                    if (!as_strcasecmp(ArgStr[z2].str.p_str, "ALL")) {
-                        BAsmCode[1] = 0xff;
-                    } else if (*ArgStr[z2].str.p_str != '#') {
-                        OK = False;
-                    } else {
-                        tSymbolFlags flags;
-
-                        BAsmCode[2] = EvalStrIntExpressionOffsWithFlags(
-                                &ArgStr[z2], 1, Int8, &OK, &flags);
-                        if (OK) {
-                            set_b_guessed(flags, 1, 1, 0xff);
-                            BAsmCode[1] |= BAsmCode[2];
-                        }
-                    }
+            }
+            if (z3 >= StackRegCnt) {
+                if (!as_strcasecmp(ArgStr[z2].str.p_str, "ALL")) {
+                    BAsmCode[1] = 0xff;
+                } else if (*ArgStr[z2].str.p_str != '#') {
+                    report_stack_register(&ArgStr[z2], has_w);
+                    return;
+                } else {
+                    Boolean ok;
+                    tSymbolFlags flags;
+                    BAsmCode[2] = EvalStrIntExpressionOffsWithFlags(
+                            &ArgStr[z2], 1, Int8, &ok, &flags);
+                    if (!ok) return;
+                    set_b_guessed(flags, 1, 1, 0xff);
+                    BAsmCode[1] |= BAsmCode[2];
                 }
             }
         }
     }
-    if (OK) {
-        if (Extent) {
-            CodeLen     = 2;
-            BAsmCode[0] = 0x10;
-            BAsmCode[1] = Lo(code) + 4;
-        } else {
-            CodeLen     = 2;
-            BAsmCode[0] = code;
-        }
+    CodeLen = 2;
+    if (Extent) {
+        BAsmCode[0] = 0x10;
+        BAsmCode[1] = Lo(code) + 4;
     } else {
-        WrStrErrorPos(ErrNum_InvRegName, &ArgStr[z2 - 1]);
+        BAsmCode[0] = code;
     }
 }
 

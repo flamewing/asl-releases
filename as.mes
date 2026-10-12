@@ -2399,3 +2399,7 @@ Message ErrMsgAutoUpdateZeroDisplacement
 Message ErrMsgHCFOpcode
  "HCF-Opcode 0x%lllx ist nicht einer von 0x14, 0x15 oder 0xCD"
  "HCF opcode 0x%lllx is not one of 0x14, 0x15 or 0xCD"
+
+Message ErrMsgStackWAlone
+ "W muss der einzige Stack-Operand sein; %u Operanden angegeben"
+ "W must be the only stack operand; %u operands supplied"
