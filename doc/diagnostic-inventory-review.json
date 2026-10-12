@@ -470,11 +470,14 @@
         "ErrNum_WrongArgCnt": 1
       },
       "reviewed_diagnostic_families": [
+        "ErrNum_InAccPage",
+        "ErrNum_InvAddrMode",
+        "ErrNum_InvReg",
         "ErrNum_JmpDistTooBig",
-        "ErrNum_InAccPage"
+        "ErrNum_WrongArgCnt"
       ],
-      "status": "partially reviewed",
-      "review_notes": "Tranche 172 defers provisional branch range/alignment failures; existing useful contextual branch detail retained. Remaining page/register/address/count families still pending. Tranche 173 reviews the bank warning with contextual EK/window detail and unresolved deferral."
+      "status": "complete",
+      "review_notes": "Tranche 172 defers provisional branch range/alignment failures; existing useful contextual branch detail retained. Remaining page/register/address/count families still pending. Tranche 173 reviews the bank warning with contextual EK/window detail and unresolved deferral. Tranche 174 reviews both register and both mode candidates with X/Y/Z index choices, complete stack-register list, mask-specific addressing syntax and MOVB/MOVW pair contracts. The address-count helper already provides expected/actual detail; its Stop<1 path is unreachable because every current caller guards the operand count and passes one/two address components, so left unchanged. All thirteen historical candidates reviewed."
     },
     "code68k.c": {
       "candidate_counts": {

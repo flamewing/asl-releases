@@ -1957,3 +1957,13 @@ manual, EXPECT fixtures, translations and source-position tests.
     that finally enters the assumed bank no longer warns. Known unmapped,
     mapped, unknown-bank and forward-mapped cases verify detail and bytes.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+174. CPU16 register/address diagnostics; historical completion.
+    Index operands identify X/Y/Z, stack operands list all seven registers,
+    rejected modes list instruction-mask alternatives, and MOVB/MOVW identify
+    the permitted indexed/absolute combinations. Detail locates the failed
+    operand or mnemonic. Captured accepted vectors and failed instructions
+    verify unchanged bytes/no error emission. The count candidate already
+    carries expected/actual information; all callers guard its unreachable
+    missing-component path, left unchanged. All thirteen sites reviewed.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.

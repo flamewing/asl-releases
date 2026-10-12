@@ -130,3 +130,17 @@ check_bytes(forward-bank-bytes 68HC16
 if(assembly_diagnostic MATCHES "warning #110:")
     message(FATAL_ERROR "finally mapped CPU16 address warned: ${assembly_diagnostic}")
 endif()
+
+# CPU16 register sets and instruction-specific addressing alternatives.
+check_diagnostic(index-choices 68HC16 " ldaa 1,sp" 1445 "X, Y or Z" 3 9)
+check_diagnostic(stack-choices 68HC16 " pshm d,sp" 1445 "D, E, X, Y, Z, K or CCR" 3 9)
+check_diagnostic(stack-pull-choices 68HC16 " pulm a" 1445 "D, E, X, Y, Z, K or CCR" 3 7)
+check_diagnostic(store-forms 68HC16 " staa #1" 1350 "absolute address" 3 7)
+check_diagnostic(immediate-forms 68HC16 " andp $1234" 1350 "#value" 3 7)
+check_diagnostic(move-pair 68HC16 " movb 1,y,$1234" 1350
+    "offset,X,address or address,offset,X" 3 2)
+check_bytes(forms-valid 68HC16
+    " ldaa #1\n ldaa 1,x\n ldaa >256,y\n ldaa e,z\n ldaa $1234\n pshm d,e,x,y,z,k,ccr\n movb 1,x,$1234\n movb $1234,1,x\n movw $1234,$5678"
+    "7501450117550100276517751234347f300112343201123437ff12345678")
+check_bytes(forms-error-emission 68HC16
+    " expect 1445,1350,1350\n ldaa 1,sp\n staa #1\n movb 1,y,$1234\n endexpect\n db $12" "12")
