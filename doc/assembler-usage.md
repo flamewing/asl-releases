@@ -161,7 +161,7 @@ Language selection checks `LC_MESSAGES`, then `LC_ALL`, then `LANG`; supported l
 
 ## Format of the Input Files
 
-Like most assemblers, AS expects exactly one instruction per line (blank lines are naturally allowed as well). The lines must not be longer than 255 characters, additional characters are discarded.
+Like most assemblers, AS expects exactly one instruction per line (blank lines are naturally allowed as well). Source lines are read into a dynamically growing buffer; they are not truncated at the former 255-character limit. Individual instructions and directives still impose their own operand and value limits.
 
 A single line has following format:
 
@@ -169,7 +169,7 @@ A single line has following format:
 [label[:]] <mnemonic>[.attr] [param[,param...]] [;comment]
 ```
 
-A line may also be split over several lines in the source file, continuation characters chain these parts together to a single line. One must however consider that, due to the internal buffer structure, the total line must not be longer than 256 characters. Line references in error messages always relate to the last line of such a composed source line.
+A trailing backslash joins a physical source line to the next line. The backslash and line ending are removed, and the remaining text is concatenated without an inserted separator. Continued lines use the same dynamically growing input buffer. Line references in error messages always relate to the last line of such a composed source line.
 
 The colon for the label is optional, in case the label starts in the first column (the consequence is that a machine or pseudo instruction must not start in column 1). It is necessary to set the colon in case the label does not start in the first column so that AS is able to distinguish it from a mnemonic. In the latter case, there must be at least one space between colon and mnemonic if the processor belongs to a family that supports an attribute that denotes an instruction format and is separated from the mnemonic by a colon. This restriction is necessary to avoid ambiguities: a distinction between a mnemonic with format and a label with mnemonic would otherwise be impossible.
 
@@ -199,7 +199,7 @@ add.w:g   rw10,rw8
 
 This example does not show that there may be a format specification without an operand size. In contrast, if an operand size is used without a format specification, AS will automatically use the shortest possible format. The allowed formats and operand sizes again depend on the machine instruction and may be looked up e.g. in [^Tosh900], [^HitH8_5], [^MitM16], resp. [^MitM16C].
 
-The number of instruction parameters depends on the mnemonic and is principally located between 0 and 20\. The separation of the parameters from each other is to be performed only by commas (exception: DSP56xxx, its parallel data transfers are separated with blanks). Commas that are included in brackets or quotes, of course, are not taken into consideration.
+The number of instruction parameters depends on the mnemonic and is limited to 476 operands per source statement; individual instructions usually accept far fewer. The separation of the parameters from each other is to be performed only by commas (exception: DSP56xxx, its parallel data transfers are separated with blanks). Commas that are included in brackets or quotes, of course, are not taken into consideration.
 
 Instead of a comment at the end, the whole line can consist of comment if it starts in the first column with a semicolon.
 
@@ -207,7 +207,7 @@ To separate the individual components you may also use tabulators instead of spa
 
 ## Format of the Listing
 
-The listing produced by AS using the command line options i or I is roughly divisible into the following parts :
+The listing produced by AS using the command line options `-l` or `-L` is roughly divisible into the following parts :
 
 1. issue of the source code assembled;
 
@@ -237,7 +237,7 @@ The symbol table was designed in a way that it can be displayed on an 80-column 
 
 <!-- markdownlint-disable MD038-->
 
-The parts mentioned so far as well as the list of all macros/functions defined can be selectively masked out from the listing. This can be done by the already mentioned command line switch `-t` . There is an internal byte inside AS whose bits represent which parts are to be written. The assignment of bits to parts of the listing is listed in the following table:
+The parts mentioned so far as well as the list of all macros/functions defined can be selectively masked out from the listing. This can be done by the already mentioned command line switch `-t` . There is an internal listing mask inside AS whose bits represent which parts are to be written. The assignment of bits to parts of the listing is listed in the following table:
 
 <!-- markdownlint-enable MD038-->
 
@@ -248,8 +248,10 @@ The parts mentioned so far as well as the list of all macros/functions defined c
 | 2   | macro list                     |
 | 3   | function list                  |
 | 4   | line numbering                 |
-| 5   | register symbol list           |
+| 5   | textual DEFINE list            |
+| 6   | register symbol list           |
 | 7   | character set table            |
+| 8   | structure list                 |
 
 All bits are set to 1 by default, when using the switch
 
@@ -257,10 +259,10 @@ All bits are set to 1 by default, when using the switch
 -t <mask>
 ```
 
-Bits set in `<mask>` are cleared, so that the respective listing parts are suppressed. Accordingly it is possible to switch on single parts again with a plus sign, in case you had switched off too much with the `ASCMD` variable... If someone wants to have, for example, only the symbol table, it is enough to write:
+Bits set in `<mask>` are enabled by `-t`; `+t` clears those bits and suppresses the corresponding parts. The default mask is 511 (all nine bits set). If someone wants to have, for example, only the symbol table, it is enough to write:
 
 ```dosbat
--t 2
++t 511 -t 2
 ```
 
 The usage list issues the occupied areas hexadecimally for every single segment. If the area has only one address, only this is written, otherwise the first and last address.

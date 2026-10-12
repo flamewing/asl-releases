@@ -1931,7 +1931,7 @@ will therefore result in
         call    module_function
 ```
 
-Additionally, parameter names surrounded by `\\` will be replaced as one. For example:
+Additionally, parameter names enclosed by backslashes (`\name\`) will be replaced as one. For example:
 
 ```asm
 concat  macro   part1,part2
@@ -1981,7 +1981,7 @@ __LABEL__
 
 The result after expanding `myinstr` is identical to the previous example without macro.
 
-Recursion of macros, i.e. the repeated call of a macro from within its own body is completely legal. However, like for any other sort of recursion, one has to assure that there is an end at someplace. For cases where one forgot this, AS keeps an internal counter for every macro that is incremented when an expansion of this macro is begun and decremented again when the expansion is completed. In case of recursive calls, this counter reaches higher and higher values, and at a limit settable via `NESTMAX`, AS will refuse to expand. Be careful when you turn off this emergency brake: the memory consumption on the heap may go beyond all limits and even shut down a Unix system...
+Recursion of macros, i.e. the repeated call of a macro from within its own body is completely legal. However, like for any other sort of recursion, one has to assure that there is an end at someplace. For cases where one forgot this, AS keeps an internal counter for every macro that is incremented when an expansion of this macro is begun and decremented again when the expansion is completed. In case of recursive calls, this counter reaches higher and higher values, and at a limit settable via `MAXNEST`, AS will refuse to expand. Be careful when you turn off this emergency brake: the memory consumption on the heap may go beyond all limits and even shut down a Unix system...
 
 A small example to remove all clarities ;-)
 
@@ -2195,7 +2195,7 @@ pushlist  macro reg
         endm
 ```
 
-In case `SHIFT` ist already a machine instruction for a certain target, one has to use `SHIFT` instead.
+Use `.SHIFT` to request the macro directive explicitly. If `SHIFT` is occupied by a target instruction, `SHFT` and `.SHFT` are also available as directive aliases.
 
 ### MAXNEST
 
@@ -2408,8 +2408,8 @@ The `ELSEIF` parts are optional, i.e. `IF` may directly be followed by an `ENDIF
 
 In addition to `IF`, the following further conditional statements are defined:
 
-- `IFDEF <expression>`: true if every symbol in the expression is already defined.
-- `IFNDEF <expression>`: counterpart to `IFDEF`.
+- `IFDEF <name>`: true if the named symbol, macro or user-defined function is already defined. This tests a name, not a formula containing several symbols.
+- `IFNDEF <name>`: counterpart to `IFDEF`.
 - `IFUSED <symbol>`: true if if the given symbol has been referenced at least once up to now.
 - `IFNUSED <symbol>`: counterpart to `IFUSED`.
 - `IFEXIST <name>`: true if the given file exists. The same rules for search paths and syntax apply as for the `INCLUDE` instruction (see section [INCLUDE](#include)).

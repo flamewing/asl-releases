@@ -10,7 +10,7 @@ Audit baseline: `f28e43a7`, following the CI portability fixes in `02ed1452`. Re
 | 2 | Build, installation, package layout and source-maintenance guidance | Complete |
 | 3 | Assembler invocation, options, environment, manpage and built-in help | Complete |
 | 4 | Binary utilities, disassembler/resource compiler invocations, manpages and help | Complete |
-| 5 | Source syntax, macros, conditionals and fork language extensions | Pending |
+| 5 | Source syntax, macros, conditionals and fork language extensions | Complete |
 | 6 | Data directives, expressions, predefined symbols, includes and file formats | Pending |
 | 7 | Processor-specific hints and programming examples, including corrected behavior | Pending |
 | 8 | Diagnostics, cross-document consistency, links and final help/manual validation | Pending |
@@ -42,6 +42,10 @@ The audit reproduces silently ignored unknown ASCMD options (ASCMD=-z with -help
 Audit the utility command records and actual help output. Add explicit -o and informational synopsis forms to the five binary-tool manpages, correct obsolete no-argument prompting/help claims, document named-file input and quoting, and add dasl/rescomp manpages. Distinguish positional alink output from converter/pbind -o output, and runtime utility presets from the host-only resource compiler. Add missing P2HEX C-format help and clarify include-only CPU header filters and extracted address ranges.
 
 Repair broken continuation lines in the dasl help resource, which made English mode print only a German fragment; correct its indirect-entry syntax and reject unknown command options rather than ignoring them. Add rescomp -help with successful exit and accurate named/legacy output order. The utility_cli regression checks complete DAS help in both languages, C-format help, version exits, invalid DAS options and native host-resource help, with embedded/external catalogs. All eight manpages render with groff without warnings. All 428 CTest cases pass with both embedded and external catalogs.
+
+### 5. Source syntax, macros and conditionals
+
+Review dynamic source-line reading and continuation handling, the 476-operand parser limit, listing-mask callbacks and all nine listing bits. Correct obsolete fixed-line limits, reversed -t/+t behavior, the listing invocation and omitted DEFINE/register/structure bits. Review macro replacement, IRPN, SHIFT, recursion and conditional directives; distinguish the MAXNEST directive from the NESTMAX symbol, document occupied SHIFT aliases and correct IFDEF/IFNDEF to test a symbol, macro or function name rather than an expression. Validate the existing IRPN, SHIFT, argument-cursor and conditional regressions.
 
 ## Validation policy
 
