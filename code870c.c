@@ -985,7 +985,7 @@ static void DecodeJRS(Word Code) {
             AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[2], Int16, &OK, &Flags)
                      - (EProgCounter() + 2);
             if (OK) {
-                if (((AdrInt < -16) || (AdrInt > 15)) && !mSymbolQuestionable(Flags)) {
+                if (((AdrInt < -16) || (AdrInt > 15)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                     WrError(ErrNum_JmpDistTooBig);
                 } else {
                     CodeLen     = 1;
@@ -1018,7 +1018,7 @@ static void DecodeJR(Word Code) {
         AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[ArgCnt], Int16, &OK, &Flags)
                  - (EProgCounter() + Delta);
         if (OK) {
-            if (((AdrInt < -128) || (AdrInt > 127)) && !mSymbolQuestionable(Flags)) {
+            if (((AdrInt < -128) || (AdrInt > 127)) && !mFirstPassUnknownOrQuestionable(Flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 if (3 == Delta) {

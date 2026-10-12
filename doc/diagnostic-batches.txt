@@ -1774,3 +1774,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     retain all IDs/predicates/direct-address aliases and captured endpoint
     bytes. All historical sites now reviewed; trailing operand bug fixed in 150.
     Validation: all 412 CTest cases pass with embedded/external catalogs.
+
+152. TLCS-870/C forward branch constraints.
+    JRS/JR reject first-pass unresolved target expressions before resolution.
+    Defer both displacement constraints for unknown/questionable symbols;
+    preserve existing signed 16-bit displacement calculation and encoding.
+    All 20 JR conditions (including extended three-byte forms), both JRS
+    conditions and unconditional JR cover upper/lower provisional targets,
+    retained final errors and captured accepted bytes.
+    Validation: all 413 CTest cases pass with embedded/external catalogs.
