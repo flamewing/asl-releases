@@ -2624,6 +2624,40 @@ static Boolean SplitMACANDMASK(Word* pResult, tStrComp* pArg) {
 
 /* 0=MOVE 1=MOVEA */
 
+static Boolean cold_move_combination_ok(unsigned source, unsigned destination) {
+    switch (source) {
+    case ModData:
+    case ModAdr:
+    case ModAdrI:
+    case ModPost:
+    case ModPre:
+        return True;
+    case ModDAdrI:
+    case ModPC:
+        return destination != ModAIX && destination != ModAbs;
+    case ModAIX:
+    case ModPCIdx:
+    case ModAbs:
+        return destination != ModDAdrI && destination != ModAIX && destination != ModAbs;
+    case ModImm:
+        if (destination == ModDAdrI)
+            return pCurrCPUProps->CfISA >= eCfISA_B && OpSize <= eSymbolSize16Bit;
+        return destination != ModAIX && destination != ModAbs;
+    default:
+        return False;
+    }
+}
+
+static Word cold_move_destinations(unsigned source) {
+    Word mask = MModData | MModAdr | MModAdrI | MModPost | MModPre | MModDAdrI | MModAIX | MModAbs;
+    unsigned destination;
+    for (destination = ModData; destination <= ModAbs; destination++) {
+        if (!cold_move_combination_ok(source, destination)) mask &= ~(1u << (destination - 1));
+    }
+    if (OpSize == eSymbolSize8Bit) mask &= ~MModAdr;
+    return mask;
+}
+
 static void DecodeMOVE(Word Index) {
     Word     MACReg;
     unsigned Variant = Index & VariantMask;
@@ -2831,50 +2865,10 @@ static void DecodeMOVE(Word Index) {
 
                     /* ColdFire does not allow all combinations of src+dest: */
 
-                    if (pCurrCPUProps->Family == eColdfire) {
-                        switch (SrcAdrNum) {
-                        case ModData: /* Dn */
-                        case ModAdr:  /* An */
-                        case ModAdrI: /* (An) */
-                        case ModPost: /* (An)+ */
-                        case ModPre:  /* -(An) */
-                            CombinationOK = True;
-                            break;
-                        case ModDAdrI: /* (d16,An) */
-                        case ModPC:    /* (d16,PC) */
-                            CombinationOK
-                                    = (AdrResult.AdrMode != ModAIX) /* no (d8,An,Xi) */
-                                      && (AdrResult.AdrMode != ModAbs); /* no (xxx).W/L */
-                            break;
-                        case ModAIX:   /* (d8,An,Xi) */
-                        case ModPCIdx: /* (d8,PC,Xi) */
-                        case ModAbs:   /* (xxx).W/L */
-                            CombinationOK
-                                    = (AdrResult.AdrMode != ModDAdrI)  /* no (d16,An) */
-                                      && (AdrResult.AdrMode != ModAIX) /* no (d8,An,Xi) */
-                                      && (AdrResult.AdrMode != ModAbs); /* no (xxx).W/L */
-                            break;
-                        case ModImm: /* #xxx */
-                            if (AdrResult.AdrMode
-                                == ModDAdrI) { /* (d16,An) OK for 8/16 bit starting with
-                                                  ISA B */
-                                CombinationOK = (pCurrCPUProps->CfISA >= eCfISA_B)
-                                                && (OpSize <= eSymbolSize16Bit);
-                            } else {
-                                CombinationOK = (AdrResult.AdrMode
-                                                 != ModAIX) /* no (d8,An,Xi) */
-                                                && (AdrResult.AdrMode
-                                                    != ModAbs); /* no (xxx).W/L */
-                            }
-                            break;
-                        default: /* should not occur */
-                            CombinationOK = False;
-                        }
-                    } else {
-                        CombinationOK = True;
-                    }
+                    CombinationOK = (pCurrCPUProps->Family != eColdfire)
+                            || cold_move_combination_ok(SrcAdrNum, AdrResult.AdrMode);
                     if (!CombinationOK) {
-                        WrError(ErrNum_InvAddrMode);
+                        report_address_choices(cold_move_destinations(SrcAdrNum), &ArgStr[2]);
                         CodeLen = 0;
                     } else {
                         AdrResult.AdrPart = ((AdrResult.AdrPart & 7) << 3)

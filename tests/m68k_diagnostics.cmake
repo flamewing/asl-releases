@@ -833,3 +833,31 @@ check_bytes(mac-scale-forward MCF5470
     "a2000a00a2000e05")
 check_bytes(mac-scale-errors-noemit MCF5470
     " expect 1320,1320\n mac.l d0,d1,<<2\n maaac.l d0,d1,<<2,acc0,acc1\n endexpect\n dc.b $12" "12")
+
+# ColdFire MOVE derives destination choices from the same acceptance predicate.
+check_diagnostic(cold-move-displacement-pair MCF5202 " move.w 1(a0),$1000" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An), d(An)" 3 15)
+check_diagnostic(cold-move-index-pair MCF5202 " move.l (a0,d0.l),1(a1)" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 19)
+check_diagnostic(cold-move-absolute-pair MCF5202 " move.l $1000,1(a1)" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 15)
+check_diagnostic(cold-move-immediate-a MCF5202 " move.w #1,1(a0)" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 12)
+check_diagnostic(cold-move-immediate-b-long MCF5407 " move.l #1,1(a0)" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 12)
+check_diagnostic(cold-move-immediate-b-word MCF5407 " move.w #1,$1000" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An), d(An)" 3 12)
+check_diagnostic(cold-move-byte-pair MCF5407 " move.b #1,$1000" 1350
+    "operand must be D0..D7, (An), (An)+, -(An), d(An)" 3 12)
+check_bytes(cold-move-original-a MCF5202
+    " move.w 1(a0),(a1)+\n move.l (a0,d0.l),-(a1)\n move.l $1000,(a1)\n move.w #1,(a1)"
+    "32e800012330080022b8100032bc0001")
+check_bytes(cold-move-original-b MCF5407
+    " move.w #1,1(a0)\n move.l #1,(a1)" "317c0001000122bc00000001")
+check_bytes(cold-move-pair-errors-noemit MCF5202
+    " expect 1350,1350,1350\n move.w 1(a0),$1000\n move.l (a0,d0.l),1(a1)\n move.w #1,1(a0)\n endexpect\n dc.b $12" "12")
+
+check_diagnostic(cold-move-pc-pair MCF5202 " move.w *+3(pc),$1000" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An), d(An)" 3 17)
+check_diagnostic(cold-move-pc-index-pair MCF5202 " move.l *+3(pc,d0.l),1(a1)" 1350
+    "operand must be D0..D7, A0..A7, (An), (An)+, -(An)" 3 22)

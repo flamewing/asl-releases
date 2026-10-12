@@ -2385,3 +2385,12 @@ manual, EXPECT fixtures, translations and source-position tests.
     eleven scale forms, empty forms and forward resolution retain their bytes.
     Nine of fifteen historical mode candidates reviewed; six remain.
     Validation: all 416 CTest cases pass with embedded/external catalogs.
+
+218. ColdFire MOVE source-dependent destination choices.
+    One candidate now derives permitted destination forms from the same extracted
+    acceptance predicate, preserving all source/ISA/size conditions. Report at
+    operand two; omit An from byte-size suggestions. Displacement/index/PC/PC-index/
+    absolute/immediate failures and ISA A/B word/long cases pass. Captured successful
+    vectors and EXPECT no-emission cases retain their bytes.
+    Ten of fifteen historical mode candidates reviewed; five remain.
+    Validation: all 416 CTest cases pass with embedded/external catalogs.
