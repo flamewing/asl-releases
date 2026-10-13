@@ -210,6 +210,8 @@ Fix unary expression parsing within binary operands and chained prefixes. Give u
 
 Widen bank-window diagnostic operands before shifting, making the intended arithmetic width explicit. Reject an empty bracket stack explicitly before decrementing its depth, preserving existing delimiter diagnostics and valid-input behavior.
 
+Report malformed operand delimiters before an instruction's operand-count error when unmatched brackets hide argument separators. Locate the mismatched closing bracket or unmatched opener, preserving quoted operands, inactive conditional lines and unexpanded macro bodies.
+
 ## Updating this document
 
 Keep the snapshot tag boundaries and comparison links. Summarize changes to assembler or utility behavior, compatibility, performance and bug fixes, distinguishing upstream additions from fork changes. Group related fixes rather than listing individual commits. Keep paragraphs and list items on one physical line and rely on editor or previewer word wrapping.

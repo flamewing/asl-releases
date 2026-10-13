@@ -139,6 +139,17 @@ Boolean ChkArgCntExtPos(
     }
 }
 
+/* An unmatched delimiter can hide argument separators from the line splitter.
+   Check the original argument list only after a full-line count failure;
+   subexpression counts and successfully parsed operands retain their own rules. */
+Boolean ChkArgCntPos(int MinCnt, int MaxCnt, const struct sLineComp* pComp) {
+    if (((ArgCnt < MinCnt) || (ArgCnt > MaxCnt))
+            && !CheckBrackets(&ArgPart, "()[]{}", True)) {
+        return False;
+    }
+    return ChkArgCntExtPos(ArgCnt, MinCnt, MaxCnt, pComp);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt)
  * \brief  check whether argument count is according to given values and issue error if not
@@ -152,6 +163,9 @@ Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt) {
     if ((ThisCnt != EitherCnt) && (ThisCnt != OrCnt)) {
         char Str[100];
 
+        if ((ThisCnt == ArgCnt) && !CheckBrackets(&ArgPart, "()[]{}", True)) {
+            return False;
+        }
         as_snprintf(
                 Str, sizeof(Str), getmessage(Num_ErrMsgArgCntEitherOr), EitherCnt, OrCnt,
                 ThisCnt);

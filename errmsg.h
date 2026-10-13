@@ -337,7 +337,8 @@ extern Boolean ChkRangeWarnPos(
 
 extern Boolean ChkArgCntExtPos(
         int ThisCnt, int MinCnt, int MaxCnt, const struct sLineComp* pComp);
-#define ChkArgCnt(MinCnt, MaxCnt) ChkArgCntExtPos(ArgCnt, MinCnt, MaxCnt, NULL)
+extern Boolean ChkArgCntPos(int MinCnt, int MaxCnt, const struct sLineComp* pComp);
+#define ChkArgCnt(MinCnt, MaxCnt) ChkArgCntPos(MinCnt, MaxCnt, NULL)
 #define ChkArgCntExt(ThisCnt, MinCnt, MaxCnt) \
     ChkArgCntExtPos(ThisCnt, MinCnt, MaxCnt, NULL)
 extern Boolean ChkArgCntExtEitherOr(int ThisCnt, int EitherCnt, int OrCnt);

@@ -4857,7 +4857,7 @@ static void DecodeBcc(Word CondCode) {
 static void DecodeScc(Word CondCode) {
     if (*AttrPart.str.p_str && (OpSize != eSymbolSize8Bit)) {
         report_operand_sizes(".B");
-    } else if (!ChkArgCntExtPos(ArgCnt, 1, 1, &OpPart.Pos)) {
+    } else if (!ChkArgCntPos(1, 1, &OpPart.Pos)) {
         /* The count helper reports the expected and actual operand counts. */
     } else {
         tAdrResult AdrResult;
