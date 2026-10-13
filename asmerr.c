@@ -1355,7 +1355,7 @@ static int bracket_error_cb(const char* pos, as_quoted_iterator_cb_data_t* itera
     } else {
         char expected = data->depth
                 ? strchr(data->pairs, *data->stack[data->depth - 1])[1] : 0;
-        if (*pos != expected) {
+        if (!data->depth || *pos != expected) {
             WrBracketErrorPos(data->arg, pos - data->arg->str.p_str, *pos, expected, False);
             data->failed = True;
             return -1;

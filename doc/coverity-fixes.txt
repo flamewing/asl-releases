@@ -489,3 +489,17 @@ Validation: all eight focused 65xx, HC16, Konami and MELPS7700 diagnostic
 and instruction tests pass. Accepted encodings and diagnostic text remain
 unchanged. These are defensive contract improvements, not demonstrated
 runtime bug fixes; elimination requires a later scan.
+
+Rescan 122076: explicit bracket stack guard (914535)
+
+The trace requires depth == 0 and *pos == expected == '\0'. Both callback
+callers stop at the NUL terminator, so an actual closing bracket cannot
+take that path. Explicitly reject an empty stack alongside a mismatched
+closer before decrementing depth, making the local invariant independent
+of that caller contract. Preserve the existing error ID, source position
+and unexpected-closer explanation.
+
+Validation: all five focused bracket, backend-delimiter, expression and
+temporary-symbol tests pass, including English/German messages and valid
+golden bytes. This addresses a false-positive path defensively; it does
+not establish a previously reachable stack underflow.
