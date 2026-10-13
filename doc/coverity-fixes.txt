@@ -473,3 +473,19 @@ with memcpy using that checked length, including the terminator and
 accounting for an optional leading sign. This preserves accepted inputs
 and makes the existing bound explicit. Both complete 338-test suites pass.
 The complete surviving-finding review is in coverity-rescan-122001.txt.
+
+Rescan 122076: bank-window arithmetic (914530, 914534, 914536, 914540, 914544)
+
+Analyzed revision 620181ba24456ebec09353bc8b243d7c908ee69e, 2026-10-13.
+These traces lose ASSUME register bounds: SP/B/DPR are bytes, and EK/PG/DT
+are bytes with a separately handled 0x100 unknown sentinel. SP's -1 record
+value means NOTHING is unsupported; it cannot be assigned by ASSUME.
+No actual signed overflow is reachable in the reported shifts. Cast each
+operand to the diagnostic's LargeWord/LargeInt type before shifting, so
+the intended arithmetic width is explicit rather than widening afterward.
+All occurrences of the five CIDs are covered, including both SP formats.
+
+Validation: all eight focused 65xx, HC16, Konami and MELPS7700 diagnostic
+and instruction tests pass. Accepted encodings and diagnostic text remain
+unchanged. These are defensive contract improvements, not demonstrated
+runtime bug fixes; elimination requires a later scan.

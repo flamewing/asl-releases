@@ -215,7 +215,7 @@ static Word EvalAddress(
                 *pOK = False;
                 as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
                         (LargeWord)Address, (LargeInt)Hi(Address), "B", (LargeInt)RegB,
-                        (LargeWord)(RegB << 8), (LargeWord)((RegB << 8) + 255));
+                        (LargeWord)RegB << 8, ((LargeWord)RegB << 8) + 255);
                 WrXErrorPos(ErrNum_OverRange, detail, &pArg->Pos);
             }
             if (*pOK) {
@@ -325,10 +325,10 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
                     if (MomCPU == CPUM740) {
                         as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
                                 (LargeWord)AdrWord, (LargeInt)Hi(AdrWord), "SP", (LargeInt)SpecPage,
-                                (LargeWord)(SpecPage << 8), (LargeWord)((SpecPage << 8) + 255));
+                                (LargeWord)SpecPage << 8, ((LargeWord)SpecPage << 8) + 255);
                     } else {
                         as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressRange),
-                                (LargeInt)AdrWord, (LargeInt)(SpecPage << 8), (LargeInt)((SpecPage << 8) + 255));
+                                (LargeInt)AdrWord, (LargeInt)SpecPage << 8, ((LargeInt)SpecPage << 8) + 255);
                     }
                     WrXErrorPos(ErrNum_UnderRange, detail, &ArgStr[1].Pos);
                 } else {

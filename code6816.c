@@ -269,7 +269,7 @@ static void DecodeAdr(
                     } else {
                         as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
                                 (LargeWord)V32, (LargeInt)(V32 >> 16), "EK", (LargeInt)Reg_EK,
-                                (LargeWord)(Reg_EK << 16), (LargeWord)((Reg_EK << 16) + 0xffff));
+                                (LargeWord)Reg_EK << 16, ((LargeWord)Reg_EK << 16) + 0xffff);
                     }
                     WrXErrorPos(ErrNum_InAccPage, detail, &ArgStr[Start].Pos);
                 }

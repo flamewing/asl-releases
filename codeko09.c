@@ -169,7 +169,7 @@ static void report_direct_page(tStrComp const* p_arg, Word address) {
     else
         as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressBankWindow),
                 (LargeWord)address, (LargeInt)Hi(address), "DPR", (LargeInt)DPRValue,
-                (LargeWord)(DPRValue << 8), (LargeWord)((DPRValue << 8) | 0xff));
+                (LargeWord)DPRValue << 8, ((LargeWord)DPRValue << 8) | 0xff);
     WrXErrorPos(ErrNum_NoShortAddr, detail, &p_arg->Pos);
 }
 

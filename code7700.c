@@ -193,7 +193,7 @@ static void WrBankRange(tStrComp const* pArg, LongInt Address, tErrorNum ErrorNu
     } else {
         as_snprintf(Detail, sizeof(Detail), getmessage(Num_ErrMsgAddressBankWindow),
                     (LargeWord)Address, (LargeInt)(Address >> 16), BankRegName, (LargeInt)BankReg,
-                    (LargeWord)(BankReg << 16), (LargeWord)((BankReg << 16) | 0xffff));
+                    (LargeWord)BankReg << 16, ((LargeWord)BankReg << 16) | 0xffff);
     }
     WrXErrorPos(ErrorNum, Detail, &pArg->Pos);
 }
