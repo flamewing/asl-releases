@@ -503,3 +503,13 @@ Validation: all five focused bracket, backend-delimiter, expression and
 temporary-symbol tests pass, including English/German messages and valid
 golden bytes. This addresses a false-positive path defensively; it does
 not establish a previously reachable stack underflow.
+
+Rescan 122076: complete triage
+
+All 16 outstanding CIDs were reviewed and dismissed as false positives;
+the nine custom-formatter findings retain Modeling Required as follow-up.
+The rediscovered, already-dismissed 455997 is unchanged. All 428 native
+MinGW tests pass after both defensive code batches. Exact occurrence
+locations, constraints and server dispositions are recorded in
+coverity-rescan-122076.txt. No analyzer models, push or scan submission
+were performed; dismissal does not imply elimination in a later scan.

@@ -208,6 +208,8 @@ Preserve M68K index-register classification in optimized MSVC builds by completi
 
 Fix unary expression parsing within binary operands and chained prefixes. Give unary minus independent precedence above binary operators, preserving existing binary precedence, spellings and temporary-symbol syntax.
 
+Widen bank-window diagnostic operands before shifting, making the intended arithmetic width explicit. Reject an empty bracket stack explicitly before decrementing its depth, preserving existing delimiter diagnostics and valid-input behavior.
+
 ## Updating this document
 
 Keep the snapshot tag boundaries and comparison links. Summarize changes to assembler or utility behavior, compatibility, performance and bug fixes, distinguishing upstream additions from fork changes. Group related fixes rather than listing individual commits. Keep paragraphs and list items on one physical line and rely on editor or previewer word wrapping.

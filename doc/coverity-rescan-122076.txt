@@ -1,0 +1,85 @@
+Coverity snapshot 122076 review (2026-10-13)
+Analyzed revision: 620181ba24456ebec09353bc8b243d7c908ee69e
+Report: https://scan3.scan.coverity.com/#/project-view/54634/14153
+195 detected; 17 newly detected; zero newly eliminated.
+Sixteen new CIDs were outstanding. The seventeenth newly detected item is
+the rediscovered CID 455997, already False Positive / Modeling Required.
+No confirmed runtime defect was found in these sixteen outstanding traces.
+
+False Positive / Ignore: bounded diagnostic arithmetic
+
+914530 (two occurrences, code65.c:328/331): SP is constrained to 0..255.
+Its ASSUME record's -1 means NOTHING is unsupported, not a permitted value.
+Both window expressions are bounded by 65535. Checked the unsigned bank
+message and the signed generic address-range message.
+914534 (two occurrences, code6816.c:272): EK is 0..255; its unknown 0x100
+sentinel takes the separate unavailable-window branch. Both shifts fit.
+914536 (one occurrence, code65.c:218): B is 0..255; maximum end is 65535.
+914540 (two occurrences, codeko09.c:172): DPR is 0..255; unknown 0x100 is
+handled separately. Both ends of the window fit in signed 32-bit arithmetic.
+914544 (one occurrence, code7700.c:196): BankReg copies PG/DT, each 0..255;
+the 0x100 unknown sentinel is handled separately. The window is <=0xffffff.
+Commit bc4b9c9 widens operands before all reported shifts, exposing the
+intended diagnostic arithmetic width. This is defensive clarification of
+existing bounds, not evidence of a reachable overflow in the analyzed code.
+
+False Positive / Ignore: callback and mode bounds
+
+914535 (one occurrence, asmerr.c:1363): at depth zero, expected is NUL.
+The reported non-error branch therefore requires *pos == NUL. The quoted
+iterator and the unquoted CheckBrackets loop both exclude NUL before
+invoking the callback. An actual closer cannot decrement an empty stack.
+Commit f96a07f additionally makes the empty-stack rejection explicit.
+914532 (one occurrence, codecop8.c:79/115): the warned loop assigns z only
+from ModAcc (0) through ModXDec (6). All other mode assignments are constants
+ModNone (-1), ModDir (7), or ModImm (8), fitting the signed-byte Mode field
+and return type. No narrowing overflow is reachable; no code change needed.
+
+False Positive / Modeling Required: custom format grammar
+
+914531: code96.c:156, WSR1 window uses %lllx with LargeWord arguments.
+914533: codeol50.c:183, address-form bound uses %llld with LargeInt.
+914538: code96.c:151, WSR window uses %lllx with LargeWord arguments.
+914539: codest6.c:103, ROM-window assumption uses %llld with LargeInt.
+914541: code65.c:170, MPR assumptions use %u and %llld with matching types.
+The project formatter recognizes three 'l' characters as its LargeInt/
+LargeWord conversion width, including AS_USE_INT128 configurations. These
+are not libc printf calls. Do not substitute libc spellings or suppress
+standard-format diagnostics globally. Hosted custom-format modeling remains
+a separate follow-up; no models were uploaded during this review.
+
+False Positive / Modeling Required: formatter termination
+
+914537 (two occurrences): MCORE R%u and R%u..R%u branches write piece[32],
+then append it to the choices buffer (codemcore.c:147/149 -> 154).
+914542 (two occurrences): AVR single-register and register-range branches
+write piece[24], then append it (codeavr.c:320/321 -> 322).
+914543 (two occurrences): WSR and WSR1 branches write Window[80], then
+append it (code96.c:150 -> 152 and 155 -> 157).
+914545 (one occurrence): the MPR loop writes entry[30], then appends it
+(code65.c:170 -> 171).
+All seven traces incorrectly infer a one-byte destination capacity through
+the custom formatter's forwarded va_list/context and count the format
+literal as copied output. The real capacities are 32, 24, 80, and 30.
+as_snprintf initializes positive-capacity buffers; limit_minus_one reserves
+the terminator; vsprcatf_core writes the final NUL. Even actual capacity one
+produces an empty terminated string. The formatter_contracts regression
+checks capacities 1..33, forwarded/direct calls, append/replace paths and
+canaries, as well as the custom large-integer/radix grammar.
+The rediscovered 455997 belongs to the same family; retain its existing
+False Positive / Modeling Required disposition unchanged.
+
+Validation and server triage
+
+All 428 native MinGW tests pass after both code batches. This includes
+the formatter contracts and the actual AVR, MCORE, MCS96, OLMS50, ST6,
+HuC6280 and bank-window diagnostic paths, in addition to bracket checks.
+All sixteen CIDs were classified on Coverity as False Positive. Seven
+bounded arithmetic/mode/stack findings use Ignore; the nine formatter
+findings use Modeling Required. External-reference fields link the code
+commits or this evidence file. The Outstanding Issues view was verified
+to show zero matching issues after saving the dispositions.
+
+Dismissal is a triage decision, not proof of analyzer elimination. A future
+scan is needed to assess the two defensive code batches. No push, model
+upload or scan submission was performed.
