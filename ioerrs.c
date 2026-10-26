@@ -206,7 +206,10 @@ char const* GetReadErrorMsg(void) {
 }
 
 void ioerrs_init(char* ProgPath) {
-    hs = (char*)malloc(sizeof(char) * STRINGSIZE);
+    msg_catalog_close(&MsgCat);
+    if (!hs) {
+        hs = (char*)malloc(sizeof(char) * STRINGSIZE);
+    }
 #ifdef _USE_MSH
     msg_catalog_open_buffer(
             &MsgCat, ioerrs_msh_data, sizeof(ioerrs_msh_data), MsgId1, MsgId2);

@@ -379,6 +379,8 @@ add_library(ST_OBJECTS
     dynstr.c
     dynstr.h
     stdhandl.c
+    as_runtime.c
+    as_runtime.h
     stdhandl.h
     strcomp.c
     strcomp.h
@@ -870,7 +872,7 @@ function(define_executable NAME)
     endif(CMAKE_CROSSCOMPILING)
 endfunction(define_executable)
 
-define_executable(asl
+add_library(asl_library STATIC
     $<TARGET_OBJECTS:AS_OBJECTS>
     $<TARGET_OBJECTS:AS_DAS_COMMON>
     $<TARGET_OBJECTS:ADDRSPACE_COMMON>
@@ -880,26 +882,42 @@ define_executable(asl
     $<TARGET_OBJECTS:CHUNKS_COMMON>
     $<TARGET_OBJECTS:HEADIDS_COMMON>
 )
-target_link_libm(asl)
+target_link_libm(asl_library)
+
+add_library(ASL::asl ALIAS asl_library)
+set_target_properties(asl_library PROPERTIES OUTPUT_NAME asl EXPORT_NAME asl)
+target_include_directories(asl_library PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/asl>
+)
+define_executable(asl asl_main.c)
+target_link_libraries(asl PRIVATE asl_library)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(cmake/ASLConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/ASLConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ASL"
+)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/ASLConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion
+)
+install(TARGETS asl_library EXPORT ASLTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES asl_library.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/asl)
+install(EXPORT ASLTargets NAMESPACE ASL:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ASL)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ASLConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/ASLConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ASL
+)
 
 if(EMSCRIPTEN)
     # Recursive expression evaluation needs more than Emscripten's 64 KiB stack.
     set(ASL_EMSCRIPTEN_STACK_SIZE 1048576 CACHE STRING "Assembler WebAssembly stack size in bytes")
-    target_link_options(asl PRIVATE "-sSTACK_SIZE=${ASL_EMSCRIPTEN_STACK_SIZE}")
+    target_link_options(asl_library INTERFACE "-sSTACK_SIZE=${ASL_EMSCRIPTEN_STACK_SIZE}")
 endif()
 
 if(DEFINED ENV{MSYSTEM_PREFIX})
-    define_executable(asw
-        $<TARGET_OBJECTS:AS_OBJECTS>
-        $<TARGET_OBJECTS:AS_DAS_COMMON>
-        $<TARGET_OBJECTS:ADDRSPACE_COMMON>
-        $<TARGET_OBJECTS:ST_OBJECTS>
-        $<TARGET_OBJECTS:NLS_OBJECTS>
-        $<TARGET_OBJECTS:CMDLINE_COMMON>
-        $<TARGET_OBJECTS:CHUNKS_COMMON>
-        $<TARGET_OBJECTS:HEADIDS_COMMON>
-    )
-    target_link_libm(asw)
+    define_executable(asw asl_main.c)
+    target_link_libraries(asw PRIVATE asl_library)
     set(ASW_TARGET asw)
 else()
     set(ASW_TARGET "")
@@ -1182,6 +1200,22 @@ endif()
 enable_testing()
 include(BackendTests)
 include(tests/RegressionTests.cmake)
+
+define_executable(test_asl_library tests/library.c)
+target_link_libraries(test_asl_library PRIVATE asl_library)
+asl_test_available(library_lifecycle can_run REQUIRES M68K Z80)
+if(can_run)
+    add_test(NAME library_lifecycle COMMAND ${CMAKE_COMMAND}
+        "-DTEST_PROGRAM=$<TARGET_FILE:test_asl_library>"
+        "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+        "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+        "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Library"
+        -P "${CMAKE_SOURCE_DIR}/tests/library.cmake"
+    )
+    set_tests_properties(library_lifecycle PROPERTIES
+        ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+    )
+endif()
 
 add_test(NAME backend_selection COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"

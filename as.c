@@ -22,13 +22,15 @@
 #include <assert.h>
 #include <ctype.h>
 #include <float.h>
+#include <locale.h>
 #include <setjmp.h>
 #include <string.h>
 #ifdef _USE_MSH
 #    include "as.msh"
 #endif
 #include "as.h"
-#include "backend_registry.h"
+#include "as_runtime.h"
+#include "asl_library.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdebug.h"
@@ -45,6 +47,7 @@
 #include "asmrelocs.h"
 #include "asmstructs.h"
 #include "asmsub.h"
+#include "backend_registry.h"
 #include "chunks.h"
 #include "cmdarg.h"
 #include "codenone.h"
@@ -53,6 +56,7 @@
 #include "console.h"
 #include "cpulist.h"
 #include "fwd_refs.h"
+#include "fwd_sym.h"
 #include "intpseudo.h"
 #include "ioerrs.h"
 #include "literals.h"
@@ -71,6 +75,17 @@
 static long     StartTime, StopTime;
 static Boolean  GlobErrFlag, ResetLastLabel;
 static unsigned MacroNestLevel = 0;
+static Boolean  library_initialized, file_active, pass_active;
+
+typedef struct {
+    jmp_buf          escape;
+    int              status;
+    as_cmd_results_t commands;
+    char*            current_file;
+} asl_call_t;
+
+static asl_call_t* active_call;
+static void        discard_incomplete_definitions(void);
 
 /*=== Zeilen einlesen ======================================================*/
 
@@ -3078,6 +3093,7 @@ static void TWrite(long DTime, char* dest, size_t DestSize) {
 /*--------------------------------------------------------------------------*/
 
 static void AssembleFile_InitPass(void) {
+    pass_active = True;
     static char DateS[31], TimeS[31];
     int         z;
     String      ArchVal;
@@ -3235,6 +3251,7 @@ static void AssembleFile_InitPass(void) {
 }
 
 static void AssembleFile_ExitPass(void) {
+    pass_active = False;
     tSavePhase* pSavePhase;
     int         z;
 
@@ -3266,6 +3283,7 @@ static void AssembleFile_ExitPass(void) {
     if (StructStack) {
         WrXError(ErrNum_OpenStruct, StructStack->Name);
     }
+    discard_incomplete_definitions();
 }
 
 static void AssembleFile_WrSummary(char const* pStr) {
@@ -3294,6 +3312,7 @@ static void AssembleFile(char* Name) {
     AsmParsInit();
     AsmIFInit();
     InitFileList();
+    file_active = True;
 
     /* Kommandozeilenoptionen verarbeiten */
 
@@ -3710,6 +3729,7 @@ static void AssembleFile(char* Name) {
     ClearDefineList();
     ClearFileList();
     ClearStructList();
+    file_active = False;
 
     dbgentry("AssembleFile");
 }
@@ -4471,49 +4491,38 @@ static as_cmd_rec_t const ASParams[] = {
 
 /*--------------------------------------------------------------------------*/
 
-static void GlobExitProc(void) {
-    if (MakeDebug) {
-        CloseIfOpen(&Debug);
+static int assemble_command(int argc, char** argv) {
+    char*             Env;
+    String            Dummy;
+    as_cmd_results_t* cmd_results = &active_call->commands;
+
+    nls_init();
+    bpemu_init();
+    stdhandl_init();
+    strutil_init();
+    if (!NLS_Initialize(&argc, argv)) {
+        return 4;
     }
-}
-
-int main(int argc, char** argv) {
-    char*            Env;
-    String           Dummy;
-    static Boolean   First = TRUE;
-    as_cmd_results_t cmd_results;
-
-    if (First) {
-        nls_init();
-        bpemu_init();
-        stdhandl_init();
-        strutil_init();
-        chunks_init();
-        if (!NLS_Initialize(&argc, argv)) {
-            exit(4);
-        }
-
 #ifdef _USE_MSH
-        nlmessages_init_buffer(as_msh_data, sizeof(as_msh_data), MsgId1, MsgId2);
+    nlmessages_init_buffer(as_msh_data, sizeof(as_msh_data), MsgId1, MsgId2);
 #else
-        nlmessages_init_file("as.msg", *argv, MsgId1, MsgId2);
+    nlmessages_init_file("as.msg", *argv, MsgId1, MsgId2);
 #endif
-        ioerrs_init(*argv);
-        as_cmdarg_init(*argv);
+    ioerrs_init(*argv);
+    as_cmdarg_init(*argv);
+
+    if (!library_initialized) {
+        chunks_init();
         msg_level_init();
         as_cmd_register(ASParams, as_array_size(ASParams));
-
         asmfnums_init();
         asminclist_init();
         asmitree_init();
-
         asmdef_init();
         cpulist_init();
         asmsub_init();
         asmpars_init();
         as_forward_ref_init();
-        intformat_init();
-
         asmmac_init();
         asmstruct_init();
         asmif_init();
@@ -4522,16 +4531,24 @@ int main(int argc, char** argv) {
         asmlabel_init();
         asmdebug_init();
         asmlist_init();
-
         codeallg_init();
         onoff_common_init();
         literals_init();
-
         asl_register_backends();
-        First = FALSE;
+        library_initialized = True;
     }
-
-    atexit(GlobExitProc);
+    as_cmd_reset();
+    intformat_init();
+    *DefCPU            = '\0';
+    BalanceTrees       = False;
+    SplitByteCharacter = '\0';
+    PassNoForMessage   = 0;
+    *LstName           = '\0';
+    *OutName           = '\0';
+    *ShareName         = '\0';
+    *MacroName         = '\0';
+    *MacProName        = '\0';
+    MacroNestLevel     = 0;
 
     *CursUp = '\0';
     switch (Redirected) {
@@ -4590,26 +4607,26 @@ int main(int argc, char** argv) {
 #if defined(INCDIR)
     CMD_IncludeList(False, INCDIR);
 #endif
-    switch (as_cmd_process(argc, argv, EnvName, &cmd_results)) {
+    switch (as_cmd_process(argc, argv, EnvName, cmd_results)) {
     case e_cmd_err:
         printf("%s%s\n",
                getmessage(
-                       cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvParam
-                                                    : Num_ErrMsgInvParam),
-               cmd_results.error_arg);
-        exit(4);
+                       cmd_results->error_arg_in_env ? Num_ErrMsgInvEnvParam
+                                                     : Num_ErrMsgInvParam),
+               cmd_results->error_arg);
+        return 4;
     case e_cmd_unknown:
         printf("%s%s\n",
                getmessage(
-                       cmd_results.error_arg_in_env ? Num_ErrMsgInvEnvOption
-                                                    : Num_ErrMsgInvOption),
-               cmd_results.error_arg);
-        exit(4);
+                       cmd_results->error_arg_in_env ? Num_ErrMsgInvEnvOption
+                                                     : Num_ErrMsgInvOption),
+               cmd_results->error_arg);
+        return 4;
     default:
         break;
     }
 
-    if ((msg_level >= e_msg_level_verbose) || cmd_results.write_version_exit) {
+    if ((msg_level >= e_msg_level_verbose) || cmd_results->write_version_exit) {
         String Tmp;
 
         as_snprintf(Tmp, sizeof(Tmp), "%s%s", getmessage(Num_InfoMessMacroAss), Version);
@@ -4621,7 +4638,7 @@ int main(int argc, char** argv) {
         write_console_next("");
     }
 
-    if (cmd_results.write_help_exit) {
+    if (cmd_results->write_help_exit) {
         char * ph1, *ph2;
         String tmp;
         as_snprintf(
@@ -4642,12 +4659,11 @@ int main(int argc, char** argv) {
     if (write_cpu_list_exit) {
         write_console_next(getmessage(Num_InfoMessCPUList));
         PrintCPUList(write_console_next);
-        ClearCPUList();
     }
 
-    if (cmd_results.write_version_exit || write_cpu_list_exit
-        || cmd_results.write_help_exit) {
-        exit(0);
+    if (cmd_results->write_version_exit || write_cpu_list_exit
+        || cmd_results->write_help_exit) {
+        return 0;
     }
 
     /* ListRadixBase must have been set */
@@ -4660,22 +4676,24 @@ int main(int argc, char** argv) {
         unlink(ErrorName);
     }
 
-    if (StringListEmpty(cmd_results.file_arg_list)) {
+    if (StringListEmpty(cmd_results->file_arg_list)) {
         fprintf(stderr, "%s: %s\n", as_cmdarg_get_executable_name(),
                 getmessage(Num_ErrMessNoInputFiles));
-        exit(1);
+        return 1;
     } else {
         char* pFile;
 
         while (True) {
-            pFile = MoveAndCutStringListFirst(&cmd_results.file_arg_list);
+            pFile = MoveAndCutStringListFirst(&cmd_results->file_arg_list);
             if (!pFile) {
                 break;
             }
+            active_call->current_file = pFile;
             if (*pFile) {
                 AssembleGroup(pFile);
             }
             free(pFile);
+            active_call->current_file = NULL;
         }
     }
 
@@ -4683,7 +4701,184 @@ int main(int argc, char** argv) {
         CloseIfOpen(&ErrorFile);
     }
 
-    ClearCPUList();
-
     return GlobErrFlag ? 2 : 0;
+}
+
+static void library_fatal(int status) {
+    active_call->status = status;
+    longjmp(active_call->escape, 1);
+}
+
+static void discard_forward_symbols(as_fwd_sym_t* symbol) {
+    while (symbol) {
+        as_fwd_sym_t* next = symbol->p_next;
+        as_fwd_sym_free(symbol);
+        symbol = next;
+    }
+}
+
+static void discard_incomplete_definitions(void) {
+    while (FirstInputTag) {
+        PInputTag input = FirstInputTag;
+        input->Cleanup(input);
+        input->Restorer(input);
+        FirstInputTag = input->Next;
+        free(input);
+    }
+    while (FirstOutputTag) {
+        POutputTag output = FirstOutputTag;
+        FirstOutputTag    = output->Next;
+        ClearStringList(&output->ParamNames);
+        ClearStringList(&output->ParamDefVals);
+        if (output->Mac) {
+            ClearMacroRec(&output->Mac, True);
+        }
+        if (output->Tag) {
+            output->Tag->Cleanup(output->Tag);
+            free(output->Tag);
+        }
+        free(output);
+    }
+    RestoreIFs(0);
+    while (FirstSaveState) {
+        PSaveState state = FirstSaveState;
+        FirstSaveState   = state->Next;
+        free(state->pSaveCPUArgs);
+        free(state);
+    }
+    while (SectionStack) {
+        PSaveSection section = SectionStack;
+        SectionStack         = section->Next;
+        discard_forward_symbols(section->LocSyms);
+        discard_forward_symbols(section->GlobSyms);
+        discard_forward_symbols(section->ExportSyms);
+        free(section);
+    }
+    while (StructStack) {
+        PStructStack structure = StructStack;
+        StructStack            = structure->Next;
+        DestroyStructRec(structure->StructRec);
+        free(structure->Name);
+        free(structure);
+    }
+    pInnermostNamedStruct = NULL;
+}
+
+static void finish_library_call(Boolean failed) {
+    if (!library_initialized) {
+        return;
+    }
+    asmerr_set_silent_cleanup(True);
+    if (failed && file_active) {
+        asmcode_abort();
+        discard_incomplete_definitions();
+        if (pass_active) {
+            AssembleFile_ExitPass();
+        }
+        ClearUp();
+        ClearSymbolList();
+        ClearCodepages();
+        ClearMacroList();
+        ClearFunctionList();
+        ClearDefineList();
+        ClearFileList();
+        ClearStructList();
+        ClearSectionList();
+        ClearIncludeList();
+        if (MakeUseList) {
+            ClearUseList();
+        }
+        if (MakeCrossList) {
+            ClearCrossList();
+        }
+        if (DebugMode != DebugNone) {
+            ClearLineInfo();
+        }
+        file_active = pass_active = False;
+    }
+    CloseIfOpen(&ErrorFile);
+    CloseIfOpen(&LstFile);
+    CloseIfOpen(&PrgFile);
+    CloseIfOpen(&ShareFile);
+    CloseIfOpen(&MacProFile);
+    CloseIfOpen(&MacroFile);
+    CloseIfOpen(&Debug);
+    ClearOutList();
+    ClearShareOutList();
+    ClearListOutList();
+    ClearCPUAliases();
+    as_dynstr_free(&def_int_syntax);
+    asmerr_set_silent_cleanup(False);
+}
+
+int asl_assemble(int argc, char const* const argv[]) {
+    asl_call_t*       call;
+    char**            args;
+    char*             strings;
+    size_t            length = 0, offset = 0;
+    int               result;
+    as_exit_handler_t previous_handler;
+#ifdef LOCALE_NLS
+    char* time_locale;
+    char* monetary_locale;
+#endif
+
+    if (active_call) {
+        return 5;
+    }
+    if (argc < 1 || !argv) {
+        return 4;
+    }
+    for (int index = 0; index < argc; index++) {
+        size_t size;
+        if (!argv[index]) {
+            return 4;
+        }
+        size = strlen(argv[index]) + 1;
+        if (size > SIZE_MAX - length) {
+            return 3;
+        }
+        length += size;
+    }
+    call    = (asl_call_t*)calloc(1, sizeof(*call));
+    args    = (char**)calloc((size_t)argc + 1, sizeof(*args));
+    strings = (char*)malloc(length);
+    if (!call || !args || !strings) {
+        free(call);
+        free(args);
+        free(strings);
+        return 3;
+    }
+    for (int index = 0; index < argc; index++) {
+        size_t size = strlen(argv[index]) + 1;
+        args[index] = strings + offset;
+        memcpy(args[index], argv[index], size);
+        offset += size;
+    }
+#ifdef LOCALE_NLS
+    time_locale     = as_strdup(setlocale(LC_TIME, NULL));
+    monetary_locale = as_strdup(setlocale(LC_MONETARY, NULL));
+#endif
+    active_call      = call;
+    previous_handler = as_set_exit_handler(library_fatal);
+    if (setjmp(call->escape) == 0) {
+        result = assemble_command(argc, args);
+    } else {
+        result = call->status;
+    }
+    finish_library_call(call->status != 0);
+    ClearStringList(&call->commands.file_arg_list);
+    free(call->current_file);
+    as_set_exit_handler(previous_handler);
+    active_call = NULL;
+#ifdef LOCALE_NLS
+    setlocale(LC_TIME, time_locale);
+    setlocale(LC_MONETARY, monetary_locale);
+    free(time_locale);
+    free(monetary_locale);
+#endif
+    free(strings);
+    free(args);
+    free(call);
+    return result;
 }

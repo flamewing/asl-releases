@@ -41,6 +41,8 @@ typedef struct {
 } as_cmd_results_t;
 
 extern void as_cmd_register(as_cmd_rec_t const* p_new_recs, size_t new_rec_cnt);
+extern void as_cmd_register_reset(void (*reset)(void));
+extern void as_cmd_reset(void);
 
 extern long as_cmd_strtol(char const* p_inp, char const** pp_end);
 

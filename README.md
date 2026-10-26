@@ -42,6 +42,10 @@ All assembler CPU families are enabled by default. To build a smaller assembler,
 
 CTest registers a test only when all its required families are enabled. Configuration reports the number of registered tests and writes omitted tests and their missing families to `disabled-tests.txt` in the build directory. New regression fixtures must declare their requirements in [RegressionTests.cmake](tests/RegressionTests.cmake), including fixtures that require no family. Diagnostic scripts declare requirements beside their registration in `CMakeLists.txt`.
 
+The build also produces a static assembler library. Installed CMake consumers can use `find_package(ASL CONFIG REQUIRED)` and link `ASL::asl`; the public header is `asl_library.h`. Call `asl_assemble(argc, argv)` with the same arguments accepted by the CLI, including a program name at `argv[0]`. The library copies arguments, returns CLI status codes, and supports successive calls with independent options, symbols and CPU aliases. Assembly inputs and outputs remain file based, diagnostics use the CLI streams and options, and environment settings such as `ASCMD` and `AS_MSGPATH` apply to each invocation.
+
+Library calls must be serialized: the assembler retains process-wide tables and reusable buffers, and recursive entry returns status 5. Fatal assembly errors return status 3 after cleanup instead of terminating the host. Message-catalog initialization failures return 255. The API does not provide independent concurrent assembler instances.
+
 This build procedure has been tested on the following environments:
 
 - FreeBSD (x86-64 build)

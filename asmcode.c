@@ -21,6 +21,7 @@
 #include "chunks.h"
 #include "errmsg.h"
 #include "fileformat.h"
+#include "stdhandl.h"
 #include "strutil.h"
 #include "version.h"
 
@@ -383,7 +384,7 @@ void CloseFile(void) {
     if (fwrite(h, 1, strlen(h), PrgFile) != strlen(h)) {
         ChkIO(ErrNum_FileWriteError);
     }
-    fclose(PrgFile);
+    CloseIfOpen(&PrgFile);
 }
 
 /*--- erzeugten Code einer Zeile in Datei ablegen ---------------------------*/
@@ -1196,4 +1197,24 @@ void asmcode_init(void) {
     ExportList = ExportLast = NULL;
     CodeBuffer              = (Byte*)malloc(sizeof(Byte) * (CodeBufferSize + 1));
     basmcode_partially_used = 0;
+}
+
+/* Discard pending output without attempting to finish a failed object file. */
+void asmcode_abort(void) {
+    basmcode_partially_used = 0;
+    CodeBufferFill          = 0;
+    while (PatchList) {
+        PPatchEntry next = PatchList->Next;
+        free(PatchList->Ref);
+        free(PatchList);
+        PatchList = next;
+    }
+    PatchLast = NULL;
+    while (ExportList) {
+        PExportEntry next = ExportList->Next;
+        free(ExportList->Name);
+        free(ExportList);
+        ExportList = next;
+    }
+    ExportLast = NULL;
 }

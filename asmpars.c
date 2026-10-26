@@ -4642,10 +4642,11 @@ void AddDefSymbol(char* Name, TempResult* Value) {
         Neu = Neu->Next;
     }
 
-    Neu            = (PDefSymbol)malloc(sizeof(TDefSymbol));
-    Neu->Next      = FirstDefSymbol;
-    Neu->SymName   = as_strdup(Name);
-    Neu->Wert      = (*Value);
+    Neu          = (PDefSymbol)malloc(sizeof(TDefSymbol));
+    Neu->Next    = FirstDefSymbol;
+    Neu->SymName = as_strdup(Name);
+    as_tempres_ini(&Neu->Wert);
+    as_tempres_copy(&Neu->Wert, Value);
     FirstDefSymbol = Neu;
 }
 
@@ -4671,6 +4672,7 @@ void RemoveDefSymbol(char* Name) {
         Lauf->Next = Lauf->Next->Next;
     }
     free(Save->SymName);
+    as_tempres_free(&Save->Wert);
     free(Save);
 }
 
@@ -5255,7 +5257,16 @@ static as_cmd_rec_t const asmpars_params[] = {
         {"radix", cmd_radix},
 };
 
+static void reset_options(void) {
+    while (FirstDefSymbol) {
+        RemoveDefSymbol(FirstDefSymbol->SymName);
+    }
+    def_radix_base = 10;
+    BalanceTrees   = False;
+}
+
 void asmpars_init(void) {
+    as_cmd_register_reset(reset_options);
     tIntTypeDef* pCurr;
     char*        p_end;
 

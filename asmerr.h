@@ -50,5 +50,6 @@ extern void asmerr_warn_relative_add(void);
 extern Boolean asmerr_check_fp_dispose_result(int ret, const struct sStrComp* p_arg);
 
 extern void asmerr_init(void);
+extern void asmerr_set_silent_cleanup(Boolean silent);
 
 #endif /* ASMERR_H */

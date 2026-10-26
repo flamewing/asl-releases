@@ -16,6 +16,7 @@
 #include "nlmessages.h"
 
 #include "as_endian.h"
+#include "as_runtime.h"
 #include "bpemu.h"
 #include "chardefs.h"
 #include "nls.h"
@@ -199,7 +200,7 @@ func_exit:
 
 static void error(char const* Msg) {
     fprintf(stderr, "message catalog handling: %s - program terminated\n", Msg);
-    exit(255);
+    as_runtime_exit(255);
 }
 
 char* catgetmessage(PMsgCat Catalog, int Num) {
@@ -553,7 +554,7 @@ void msg_catalog_open_buffer(
     if (!check_header_raw(p_raw, msg_id1, msg_id2)) {
         fprintf(stderr, "message catalog handling: error: catalog'y buffer has invalid "
                         "format or is out of date\n");
-        exit(255);
+        as_runtime_exit(255);
     }
 
     parse_raw_file(p_catalog, p_raw);
@@ -570,6 +571,7 @@ void msg_catalog_open_buffer(
 
 void nlmessages_init_file(
         char const* p_file_name, char* p_exe_path, LongInt msg_id1, LongInt msg_id2) {
+    msg_catalog_close(&DefaultCatalog);
     msg_catalog_open_file(&DefaultCatalog, p_file_name, p_exe_path, msg_id1, msg_id2);
 }
 
@@ -584,5 +586,12 @@ void nlmessages_init_file(
 void nlmessages_init_buffer(
         unsigned char const* p_buffer, size_t buffer_size, LongInt msg_id1,
         LongInt msg_id2) {
+    msg_catalog_close(&DefaultCatalog);
     msg_catalog_open_buffer(&DefaultCatalog, p_buffer, buffer_size, msg_id1, msg_id2);
+}
+
+void msg_catalog_close(PMsgCat catalog) {
+    free(catalog->MsgBlock);
+    free(catalog->StrPosis);
+    memset(catalog, 0, sizeof(*catalog));
 }

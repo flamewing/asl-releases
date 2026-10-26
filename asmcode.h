@@ -31,6 +31,7 @@ extern void NewRecord(LargeWord NStart);
 extern void OpenFile(void);
 
 extern void CloseFile(void);
+extern void asmcode_abort(void);
 
 extern void as_code_write_bytes(LongInt this_code_len);
 

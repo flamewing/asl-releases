@@ -14,6 +14,7 @@
 
 #include "as.h"
 #include "as.rsc"
+#include "as_runtime.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmpars.h"
@@ -41,6 +42,11 @@ static Boolean       treat_warnings_as_errors, warn_sign_extension, def_warn_rel
         def_warn_relative_set, warn_relative;
 
 static unsigned warn_registered;
+static Boolean  silent_cleanup;
+
+void asmerr_set_silent_cleanup(Boolean silent) {
+    silent_cleanup = silent;
+}
 
 static void ClearExpectErrors(void) {
     tExpectError* pOld;
@@ -1157,6 +1163,10 @@ void WrErrorString(
     FILE*       pErrFile;
     Boolean     ErrorsWrittenToListing = False;
 
+    if (silent_cleanup) {
+        return;
+    }
+
     if (treat_warnings_as_errors && Warning && !Fatal) {
         Warning = False;
     }
@@ -1242,7 +1252,7 @@ void WrErrorString(
 
     if (Fatal) {
         EmergencyStop();
-        exit(3);
+        as_runtime_exit(3);
     }
 }
 
@@ -1342,6 +1352,9 @@ typedef struct {
     const char** stack;
     size_t depth;
     Boolean failed;
+    size_t error_offset;
+    char actual, expected;
+    Boolean missing;
 } bracket_error_data_t;
 
 static int bracket_error_cb(const char* pos, as_quoted_iterator_cb_data_t* iterator) {
@@ -1356,7 +1369,10 @@ static int bracket_error_cb(const char* pos, as_quoted_iterator_cb_data_t* itera
         char expected = data->depth
                 ? strchr(data->pairs, *data->stack[data->depth - 1])[1] : 0;
         if (!data->depth || *pos != expected) {
-            WrBracketErrorPos(data->arg, pos - data->arg->str.p_str, *pos, expected, False);
+            data->error_offset = pos - data->arg->str.p_str;
+            data->actual = *pos;
+            data->expected = expected;
+            data->missing = False;
             data->failed = True;
             return -1;
         }
@@ -1392,12 +1408,18 @@ Boolean CheckBrackets(const struct sStrComp* arg, const char* pairs, Boolean quo
     if (!data.failed) {
         if (data.depth) {
             const char* opener = data.stack[data.depth - 1];
-            WrBracketErrorPos(arg, opener - arg->str.p_str, *opener,
-                    strchr(pairs, *opener)[1], True);
+            data.error_offset = opener - arg->str.p_str;
+            data.actual = *opener;
+            data.expected = strchr(pairs, *opener)[1];
+            data.missing = True;
             data.failed = True;
         }
     }
     free(data.stack);
+    /* Reporting may unwind the assembly on -maxerrors; release scratch first. */
+    if (data.failed) {
+        WrBracketErrorPos(arg, data.error_offset, data.actual, data.expected, data.missing);
+    }
     return !data.failed;
 }
 
@@ -1666,7 +1688,16 @@ static void init_pass(void) {
  * \brief  module setup
  * ------------------------------------------------------------------------ */
 
+static void reset_options(void) {
+    treat_warnings_as_errors = False;
+    warn_sign_extension      = True;
+    def_warn_relative = def_warn_relative_set = False;
+    ClearExpectErrors();
+    InExpect = False;
+}
+
 void asmerr_init(void) {
+    as_cmd_register_reset(reset_options);
     treat_warnings_as_errors = False;
     warn_sign_extension      = True;
     def_warn_relative = def_warn_relative_set = False;

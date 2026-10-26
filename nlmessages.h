@@ -34,6 +34,8 @@ extern void msg_catalog_open_buffer(
         PMsgCat p_catalog, unsigned char const* p_buffer, size_t buffer_size,
         LongInt file_msg_id1, LongInt file_msg_id2);
 
+extern void msg_catalog_close(PMsgCat catalog);
+
 extern char* getmessage(int Num);
 
 extern void nlmessages_init_file(

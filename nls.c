@@ -14,6 +14,7 @@
 
 #include "nls.h"
 
+#include "as_runtime.h"
 #include "strutil.h"
 
 #include <ctype.h>
@@ -685,7 +686,7 @@ Boolean NLS_Initialize(int* argc, char** argv) {
 void NLS_DateString(Word Year, Word Month, Word Day, char* Dest, size_t DestSize) {
     if (!NLSInfo.DateString) {
         fprintf(stderr, "NLS not yet initialized\n");
-        exit(255);
+        as_runtime_exit(255);
     }
     NLSInfo.DateString(Year, Month, Day, Dest, DestSize);
 }
@@ -703,7 +704,7 @@ void NLS_TimeString(
         Word Hour, Word Minute, Word Second, Word Sec100, char* Dest, size_t DestSize) {
     if (!NLSInfo.TimeString) {
         fprintf(stderr, "NLS not yet initialized\n");
-        exit(255);
+        as_runtime_exit(255);
     }
     NLSInfo.TimeString(Hour, Minute, Second, Sec100, Dest, DestSize);
 }
@@ -869,7 +870,7 @@ int NLS_StrCmp(char const* s1, char const* s2) {
 Word NLS_GetCountryCode(void) {
     if (!NLSInfo.Initialized) {
         fprintf(stderr, "NLS_GetCountryCode() called before initialization\n");
-        exit(255);
+        as_runtime_exit(255);
     }
     return NLSInfo.Country;
 }
@@ -877,12 +878,13 @@ Word NLS_GetCountryCode(void) {
 tCodepage NLS_GetCodepage(void) {
     if (!NLSInfo.Initialized) {
         fprintf(stderr, "NLS_GetCodepage() called before initialization\n");
-        exit(255);
+        as_runtime_exit(255);
     }
     return NLSInfo.Codepage;
 }
 
 void nls_init(void) {
+    OverrideCodepage = eCodepageCnt;
 #ifdef LOCALE_NLS
     (void)setlocale(LC_TIME, "");
     (void)setlocale(LC_MONETARY, "");

@@ -46,7 +46,12 @@ static as_cmd_rec_t const cmds_msg_level[] = {
         {    "v", cmd_msg_level_verbose}
 };
 
+static void reset_options(void) {
+    msg_level = e_msg_level_normal;
+}
+
 void msg_level_init(void) {
+    as_cmd_register_reset(reset_options);
     msg_level = e_msg_level_normal;
     as_cmd_register(cmds_msg_level, as_array_size(cmds_msg_level));
 }

@@ -504,8 +504,10 @@ void asmlist_setup(void) {
     int       z;
     String    Dummy;
 
-    p_system_list_len
-            = (unsigned*)calloc(system_list_len_max + 1, sizeof(*p_system_list_len));
+    if (!p_system_list_len) {
+        p_system_list_len
+                = (unsigned*)calloc(system_list_len_max + 1, sizeof(*p_system_list_len));
+    }
     l = 0;
     for (z = 0; z <= system_list_len_max; z++) {
         SysString(
@@ -521,7 +523,15 @@ void asmlist_setup(void) {
  * \brief  global setup at program start
  * ------------------------------------------------------------------------ */
 
+static void reset_options(void) {
+    free(p_listline_prefix_format);
+    p_listline_prefix_format = NULL;
+    list_unknown_values      = True;
+    default_liston           = e_liston_on;
+}
+
 void asmlist_init(void) {
+    as_cmd_register_reset(reset_options);
     as_dynstr_ini(&list_buf, STRINGSIZE);
 
     default_liston = e_liston_on;

@@ -223,7 +223,16 @@ static as_cmd_rec_t const onoff_params[] = {
         {extra_comments_name, cmd_extra_comments}
 };
 
+static void reset_options(void) {
+    DefSupAllowed = False;
+    DefBigEndian  = False;
+    DefCompMode   = False;
+    DefPacking = DefPackingSet = False;
+    def_extra_comments = extra_comments = False;
+}
+
 extern void onoff_common_init(void) {
+    as_cmd_register_reset(reset_options);
     as_cmd_register(onoff_params, as_array_size(onoff_params));
     DefSupAllowed = False;
     DefBigEndian  = False;

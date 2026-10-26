@@ -60,6 +60,7 @@ extern void IterateCPUList(tCPUListIterator Iterator, void* pUser);
 extern void PrintCPUList(tPrintLineCPUProc PrintProc);
 
 extern void ClearCPUList(void);
+extern void ClearCPUAliases(void);
 
 extern void cpulist_init(void);
 

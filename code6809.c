@@ -1781,7 +1781,12 @@ static as_cmd_rec_t const onoff_params[] = {
         {plain_base_mode_cmd_name, cmd_plain_base}
 };
 
+static void reset_options(void) {
+    def_plain_base_mode = def_plain_base_mode_set = False;
+}
+
 void code6809_init(void) {
+    as_cmd_register_reset(reset_options);
     CPU6809      = AddCPU("6809", SwitchTo_6809);
     CPU6809UNDOC = AddCPU("6809UNDOC", SwitchTo_6809);
     CPU6309      = AddCPU("6309", SwitchTo_6809);

@@ -1802,6 +1802,12 @@ void ClearUp(void) {
 }
 
 void AddInitPassProc(SimpProc NewProc) {
+    tProcStore* existing;
+    for (existing = pInitPassProcStore; existing; existing = existing->pNext) {
+        if (existing->Proc == NewProc) {
+            return;
+        }
+    }
     tProcStore* pNewStore = (tProcStore*)calloc(1, sizeof(*pNewStore));
 
     pNewStore->pNext   = pInitPassProcStore;
@@ -1810,6 +1816,12 @@ void AddInitPassProc(SimpProc NewProc) {
 }
 
 void add_exit_pass_proc(SimpProc new_proc) {
+    tProcStore* existing;
+    for (existing = p_exit_pass_proc_store; existing; existing = existing->pNext) {
+        if (existing->Proc == new_proc) {
+            return;
+        }
+    }
     tProcStore* p_new_store = (tProcStore*)calloc(1, sizeof(*p_new_store));
 
     p_new_store->pNext     = p_exit_pass_proc_store;
@@ -1818,6 +1830,12 @@ void add_exit_pass_proc(SimpProc new_proc) {
 }
 
 void AddClearUpProc(SimpProc NewProc) {
+    tProcStore* existing;
+    for (existing = pClearUpProcStore; existing; existing = existing->pNext) {
+        if (existing->Proc == NewProc) {
+            return;
+        }
+    }
     tProcStore* pNewStore = (tProcStore*)calloc(1, sizeof(*pNewStore));
 
     pNewStore->pNext  = pClearUpProcStore;
@@ -1966,16 +1984,10 @@ static as_cmd_rec_t const cmd_params[] = {
         {"underscore-macroargs", cmd_underscore_macroargs}
 };
 
-void asmsub_init(void) {
-    InitStringList(&CopyrightList);
-    InitStringList(&OutList);
-    InitStringList(&ShareOutList);
-    InitStringList(&ListOutList);
-
-    as_cmd_register(cmd_params, as_array_size(cmd_params));
-
+static void reset_options(void) {
     /* initialize array of valid characters */
 
+    free(ValidSymChar);
     ValidSymCharLen = (NLS_GetCodepage() == eCodepageUTF8) ? 1280 : 256;
     ValidSymChar    = (Byte*)calloc(ValidSymCharLen, sizeof(Byte));
 
@@ -2095,6 +2107,18 @@ void asmsub_init(void) {
       fprintf(stderr, "\n");
   }
 #endif
+
+}
+
+void asmsub_init(void) {
+    as_cmd_register_reset(reset_options);
+    reset_options();
+    InitStringList(&CopyrightList);
+    InitStringList(&OutList);
+    InitStringList(&ShareOutList);
+    InitStringList(&ListOutList);
+
+    as_cmd_register(cmd_params, as_array_size(cmd_params));
 
     AddInitPassProc(initpass_asmsub);
 }

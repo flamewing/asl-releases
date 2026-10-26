@@ -180,10 +180,26 @@ void ClearCPUList(void) {
         Save        = FirstCPUDef;
         FirstCPUDef = Save->Next;
         free(Save->Name);
-        if (Save->FreeProc) {
+        if (Save->FreeProc && (Save->Number == Save->Orig)) {
             Save->FreeProc(Save->pUserData);
         }
         free(Save);
+    }
+}
+
+void ClearCPUAliases(void) {
+    tpCPUDef* link = &FirstCPUDef;
+    CPUCnt         = 0;
+    while (*link) {
+        tpCPUDef cpu = *link;
+        if (cpu->Number != cpu->Orig) {
+            *link = cpu->Next;
+            free(cpu->Name);
+            free(cpu);
+        } else {
+            CPUCnt = cpu->Number + 1;
+            link   = &cpu->Next;
+        }
     }
 }
 

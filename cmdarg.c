@@ -17,6 +17,7 @@
 
 #include "cmdarg.rsc"
 
+#include "as_runtime.h"
 #include "nlmessages.h"
 #include "stringlists.h"
 #include "strutil.h"
@@ -33,6 +34,30 @@ TMsgCat MsgCat;
 
 static as_cmd_rec_t* sum_cmd_recs    = NULL;
 static size_t        sum_cmd_rec_cnt = 0;
+
+typedef struct as_cmd_reset {
+    struct as_cmd_reset* next;
+    void (*reset)(void);
+} as_cmd_reset_t;
+
+static as_cmd_reset_t* resets;
+
+void as_cmd_register_reset(void (*reset)(void)) {
+    as_cmd_reset_t* entry = (as_cmd_reset_t*)malloc(sizeof(*entry));
+    if (!entry) {
+        as_runtime_exit(255);
+    }
+    entry->reset = reset;
+    entry->next  = resets;
+    resets       = entry;
+}
+
+void as_cmd_reset(void) {
+    as_cmd_reset_t* entry;
+    for (entry = resets; entry; entry = entry->next) {
+        entry->reset();
+    }
+}
 
 /* --------------------------------------------------------------- */
 
@@ -476,6 +501,7 @@ char const* as_cmdarg_get_executable_name(void) {
 }
 
 void as_cmdarg_init(char* ProgPath) {
+    msg_catalog_close(&MsgCat);
 #ifdef _USE_MSH
     msg_catalog_open_buffer(
             &MsgCat, cmdarg_msh_data, sizeof(cmdarg_msh_data), MsgId1, MsgId2);
