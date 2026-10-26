@@ -38,5 +38,13 @@ int main(void) {
     StrCompCopySubKnown(&dynamic, &ref, 2, 3);
     failed |= check(&dynamic, "789", 107);
     StrCompFree(&dynamic);
+    {
+        char high_byte[] = {' ', '\t', (char)0xe9, '\0'};
+        StrCompMkTemp(&ref, high_byte, 0);
+        ref.Pos.StartCol = 10;
+        ref.Pos.Len = strlen(high_byte);
+        KillPrefBlanksStrCompRef(&ref);
+        failed |= check(&ref, high_byte + 2, 12);
+    }
     return failed;
 }

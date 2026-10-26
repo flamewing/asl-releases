@@ -297,7 +297,7 @@ void KillPrefBlanksStrComp(struct sStrComp* pComp) {
 
 void KillPrefBlanksStrCompRef(struct sStrComp* pComp) {
     check_no_capacity(pComp);
-    while (isspace(*pComp->str.p_str)) {
+    while (as_isspace(*pComp->str.p_str)) {
         pComp->str.p_str++;
         if (pComp->str.capacity > 0) {
             pComp->str.capacity--;
