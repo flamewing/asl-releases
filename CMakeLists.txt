@@ -540,7 +540,11 @@ target_include_directories(HEADIDS_COMMON
     ${CMAKE_BINARY_DIR}
 )
 
+include(SelectBackends)
+
 add_library(AS_OBJECTS
+    ${ASL_BACKEND_SOURCES}
+    ${CMAKE_CURRENT_BINARY_DIR}/backend_registry.c
     as.c
     as.h
     ${CMAKE_BINARY_DIR}/as.msg
@@ -605,15 +609,10 @@ add_library(AS_OBJECTS
     sha1.h
     chartrans.c
     chartrans.h
-    codenano.c
     codenano.h
-    code61860.c
     code61860.h
-    code62015.c
     code62015.h
-    codepalm.c
     codepalm.h
-    codepdp11.c
     codepdp11.h
     codepseudo.c
     codepseudo.h
@@ -648,253 +647,138 @@ add_library(AS_OBJECTS
     codevars.c
     codevars.h
     dyn_array.h
-    codenone.c
     codenone.h
-    code68k.c
     code68k.h
     code68k.hpp
-    code56k.c
     code56k.h
-    code601.c
     code601.h
-    codemcore.c
     codemcore.h
-    codexgate.c
     codexgate.h
-    code68.c
     code68.h
-    code6805.c
     code6805.h
-    codeuc43.c
     codeuc43.h
-    codetbil.c
     codetbil.h
-    codec16c.c
     codec16c.h
-    codecr16.c
     codecr16.h
-    code340xx.c
     code340xx.h
-    codewe32.c
     codewe32.h
     codewe32.hpp
     int_type.c
     int_type.h
-    codevax.c
     codevax.h
-    coderx.c
     coderx.h
-    codeko09.c
     codeko09.h
-    code6809.c
     code6809.h
-    code6812.c
     code6812.h
-    codes12z.c
     codes12z.h
-    code6816.c
     code6816.h
-    code68rs08.c
     code68rs08.h
-    codeh8_3.c
     codeh8_3.h
-    codeh8_5.c
     codeh8_5.h
-    code7000.c
     code7000.h
     code7000.hpp
-    code6100.c
     code6100.h
-    code65.c
     code65.h
-    codeh16.c
     codeh16.h
     codeh16.hpp
-    code7700.c
     code7700.h
-    codehmcs400.c
     codehmcs400.h
-    code4500.c
     code4500.h
-    codem16.c
     codem16.h
-    codem16c.c
     codem16c.h
-    code4004.c
     code4004.h
-    code8008.c
     code8008.h
-    code48.c
     code48.h
-    code51.c
     code51.h
-    code96.c
     code96.h
-    code85.c
     code85.h
-    code86.c
     code86.h
-    code960.c
     code960.h
-    code8x30x.c
     code8x30x.h
-    code2650.c
     code2650.h
-    codexa.c
     codexa.h
-    codeavr.c
     codeavr.h
-    code29k.c
     code29k.h
-    code166.c
     code166.h
-    codev60.c
     codev60.h
-    codez80.c
     codez80.h
     codez80.hpp
-    codez8.c
     codez8.h
     codez8.hpp
-    codez8000.c
     codez8000.h
     codez8000.hpp
-    codekcpsm.c
     codekcpsm.h
-    codekcp3.c
     codekcp3.h
-    codemic8.c
     codemic8.h
-    code96c141.c
     code96c141.h
-    code90c141.c
     code90c141.h
-    code87c800.c
     code87c800.h
-    code870c.c
     code870c.h
-    code42c00.c
     code42c00.h
     code42c00.hpp
-    code47c00.c
     code47c00.h
-    code97c241.c
     code97c241.h
-    code9331.c
     code9331.h
-    code16c5x.c
     code16c5x.h
-    code16c8x.c
     code16c8x.h
-    code17c4x.c
     code17c4x.h
-    codesx20.c
     codesx20.h
-    codepdk.c
     codepdk.h
-    codest6.c
     codest6.h
-    codest7.c
     codest7.h
-    codest9.c
     codest9.h
-    code6804.c
     code6804.h
-    code3201x.c
     code3201x.h
-    code3202x.c
     code3202x.h
-    code3203x.c
     code3203x.h
-    code3205x.c
     code3205x.h
-    code3254x.c
     code3254x.h
-    code3206x.c
     code3206x.h
     code3206x.hpp
-    code9900.c
     code9900.h
-    codetms7.c
     codetms7.h
-    code370.c
     code370.h
-    codemsp.c
     codemsp.h
-    codetms1.c
     codetms1.h
-    code78c10.c
     code78c10.h
-    code75xx.c
     code75xx.h
-    code75k0.c
     code75k0.h
-    code78k0.c
     code78k0.h
-    code78k2.c
     code78k2.h
-    code78k3.c
     code78k3.h
-    code78k4.c
     code78k4.h
-    code7720.c
     code7720.h
-    code77230.c
     code77230.h
-    codescmp.c
     codescmp.h
-    code807x.c
     code807x.h
-    codecop4.c
     codecop4.h
-    codecop8.c
     codecop8.h
-    codesc14xxx.c
     codesc14xxx.h
-    codens32k.c
     codens32k.h
     codens32k.hpp
-    codeace.c
     codeace.h
-    codef8.c
     codef8.h
-    code53c8xx.c
     code53c8xx.h
-    codefmc8.c
     codefmc8.h
-    codefmc16.c
     codefmc16.h
-    codemn1610.c
     codemn1610.h
-    codemn2610.c
     codemn2610.h
-    codeol40.c
     codeol40.h
-    codeol50.c
     codeol50.h
-    code1802.c
     code1802.h
-    codevector.c
     codevector.h
-    codexcore.c
     codexcore.h
-    code1750.c
     code1750.h
-    codekenbak.c
     codekenbak.h
-    codecp3f.c
     codecp3f.h
     aplfloat.c
     aplfloat.h
     literals.c
     literals.h
-    codeimp16.c
     codeimp16.h
-    codepps4.c
     codepps4.h
     dynstr_nls.c
     dynstr_nls.h
-    codecp1600.c
     codecp1600.h
     math64.c
     math64.h
@@ -1296,1072 +1180,468 @@ else()
 endif()
 
 enable_testing()
+include(BackendTests)
+include(tests/RegressionTests.cmake)
 
-add_test(NAME st7_diagnostics COMMAND ${CMAKE_COMMAND}
+add_test(NAME backend_selection COMMAND ${CMAKE_COMMAND}
     "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
     "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/ST7Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/st7_diagnostics.cmake"
+    "-DENABLED_BACKENDS=${ASL_ENABLED_BACKENDS}"
+    -P "${CMAKE_SOURCE_DIR}/tests/backend_selection.cmake"
 )
-set_tests_properties(st7_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+set_tests_properties(backend_selection PROPERTIES
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
 )
 
-add_test(NAME mn1610_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MN1610Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mn1610_diagnostics.cmake"
+asl_add_script_test(st7_diagnostics
+    DIRECTORY ST7Diagnostics
+    REQUIRES ST7
 )
-set_tests_properties(mn1610_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME st9_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/ST9Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/st9_diagnostics.cmake"
-)
-set_tests_properties(st9_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(mn1610_diagnostics
+    DIRECTORY MN1610Diagnostics
+    REQUIRES MN1610
 )
 
-add_test(NAME tc9331_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TC9331Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tc9331_diagnostics.cmake"
+asl_add_script_test(st9_diagnostics
+    DIRECTORY ST9Diagnostics
+    REQUIRES ST9
 )
-set_tests_properties(tc9331_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME tlcs90_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TLCS90Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tlcs90_diagnostics.cmake"
-)
-set_tests_properties(tlcs90_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(tc9331_diagnostics
+    DIRECTORY TC9331Diagnostics
+    REQUIRES 9331
 )
 
-add_test(NAME mcore_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MCoreDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mcore_diagnostics.cmake"
+asl_add_script_test(tlcs90_diagnostics
+    DIRECTORY TLCS90Diagnostics
+    REQUIRES 90C141
 )
-set_tests_properties(mcore_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME z8_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Z8Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/z8_diagnostics.cmake"
-)
-set_tests_properties(z8_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(mcore_diagnostics
+    DIRECTORY MCoreDiagnostics
+    REQUIRES MCORE
 )
 
-add_test(NAME konami_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/KonamiDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/konami_diagnostics.cmake"
+asl_add_script_test(z8_diagnostics
+    DIRECTORY Z8Diagnostics
+    REQUIRES M68K Z8
 )
-set_tests_properties(konami_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME imp16_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/IMP16Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/imp16_diagnostics.cmake"
-)
-set_tests_properties(imp16_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(konami_diagnostics
+    DIRECTORY KonamiDiagnostics
+    REQUIRES KONAMI
 )
 
-add_test(NAME avr_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/AVRDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/avr_diagnostics.cmake"
+asl_add_script_test(imp16_diagnostics
+    DIRECTORY IMP16Diagnostics
+    REQUIRES AVR IMP16
 )
-set_tests_properties(avr_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME m68k_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/M68KDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/m68k_diagnostics.cmake"
-)
-set_tests_properties(m68k_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(avr_diagnostics
+    DIRECTORY AVRDiagnostics
+    REQUIRES AVR M68K
 )
 
-add_test(NAME numeric_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/NumericDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/numeric_diagnostics.cmake"
+asl_add_script_test(m68k_diagnostics
+    DIRECTORY M68KDiagnostics
+    REQUIRES AVR M68K
 )
-set_tests_properties(numeric_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME data_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/DataDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/data_diagnostics.cmake"
-)
-set_tests_properties(data_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(numeric_diagnostics
+    DIRECTORY NumericDiagnostics
+    REQUIRES 51 601 6812 M6800 PPS4
 )
 
-add_test(NAME function_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/FunctionDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/function_diagnostics.cmake"
+asl_add_script_test(data_diagnostics
+    DIRECTORY DataDiagnostics
+    REQUIRES 51 M6800 M68K S12Z Z80
 )
-set_tests_properties(function_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME cpu_operand_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CPUOperandDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cpu_operand_diagnostics.cmake"
-)
-set_tests_properties(cpu_operand_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(function_diagnostics
+    DIRECTORY FunctionDiagnostics
+    REQUIRES M68K
 )
 
-add_test(NAME branchhc16_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/BranchHC16Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branchhc16_diagnostics.cmake"
+asl_add_script_test(cpu_operand_diagnostics
+    DIRECTORY CPUOperandDiagnostics
+    REQUIRES 3205X AVR
 )
-set_tests_properties(branchhc16_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME ucom_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/UCOMDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/ucom_diagnostics.cmake"
-)
-set_tests_properties(ucom_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(branchhc16_diagnostics
+    DIRECTORY BranchHC16Diagnostics
+    REQUIRES 6816
 )
 
-add_test(NAME kcpsm_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/KCPSMDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/kcpsm_diagnostics.cmake"
+asl_add_script_test(ucom_diagnostics
+    DIRECTORY UCOMDiagnostics
+    REQUIRES UC43
 )
-set_tests_properties(kcpsm_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME cp3f_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CP3FDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cp3f_diagnostics.cmake"
-)
-set_tests_properties(cp3f_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(kcpsm_diagnostics
+    DIRECTORY KCPSMDiagnostics
+    REQUIRES KCPSM
 )
 
-add_test(NAME hmcs400_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/HMCS400Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/hmcs400_diagnostics.cmake"
+asl_add_script_test(cp3f_diagnostics
+    DIRECTORY CP3FDiagnostics
+    REQUIRES CP3F
 )
-set_tests_properties(hmcs400_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME am29k_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/AM29KDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/am29k_diagnostics.cmake"
-)
-set_tests_properties(am29k_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(hmcs400_diagnostics
+    DIRECTORY HMCS400Diagnostics
+    REQUIRES HMCS400
 )
 
-add_test(NAME cop4_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/COP4Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cop4_diagnostics.cmake"
+asl_add_script_test(am29k_diagnostics
+    DIRECTORY AM29KDiagnostics
+    REQUIRES 29K
 )
-set_tests_properties(cop4_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME mico8_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MICO8Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mico8_diagnostics.cmake"
+asl_add_script_test(cop4_diagnostics
+    DIRECTORY COP4Diagnostics
+    REQUIRES COP4
 )
-set_tests_properties(mico8_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME tms3201x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS3201XDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms3201x_diagnostics.cmake"
-)
-set_tests_properties(tms3201x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(mico8_diagnostics
+    DIRECTORY MICO8Diagnostics
+    REQUIRES MICO8
 )
 
-add_test(NAME tms3202x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS3202XDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms3202x_diagnostics.cmake"
+asl_add_script_test(tms3201x_diagnostics
+    DIRECTORY TMS3201XDiagnostics
+    REQUIRES 3201X
 )
-set_tests_properties(tms3202x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME nec75xx_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/NEC75XXDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/nec75xx_diagnostics.cmake"
-)
-set_tests_properties(nec75xx_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(tms3202x_diagnostics
+    DIRECTORY TMS3202XDiagnostics
+    REQUIRES 3202X
 )
 
-add_test(NAME xgate_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/XGATEDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/xgate_diagnostics.cmake"
+asl_add_script_test(nec75xx_diagnostics
+    DIRECTORY NEC75XXDiagnostics
+    REQUIRES 75XX
 )
-set_tests_properties(xgate_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME cop8_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/COP8Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cop8_diagnostics.cmake"
-)
-set_tests_properties(cop8_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(xgate_diagnostics
+    DIRECTORY XGATEDiagnostics
+    REQUIRES XGATE
 )
 
-add_test(NAME f8_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/F8Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/f8_diagnostics.cmake"
+asl_add_script_test(cop8_diagnostics
+    DIRECTORY COP8Diagnostics
+    REQUIRES COP8
 )
-set_tests_properties(f8_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME olms40_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/OLMS40Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/olms40_diagnostics.cmake"
-)
-set_tests_properties(olms40_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(f8_diagnostics
+    DIRECTORY F8Diagnostics
+    REQUIRES F8
 )
 
-add_test(NAME im6100_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/IM6100Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/im6100_diagnostics.cmake"
+asl_add_script_test(olms40_diagnostics
+    DIRECTORY OLMS40Diagnostics
+    REQUIRES OLMS40
 )
-set_tests_properties(im6100_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME palm_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/PALMDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/palm_diagnostics.cmake"
-)
-set_tests_properties(palm_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(im6100_diagnostics
+    DIRECTORY IM6100Diagnostics
+    REQUIRES 6100
 )
 
-add_test(NAME xcore_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/XCoreDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/xcore_diagnostics.cmake"
+asl_add_script_test(palm_diagnostics
+    DIRECTORY PALMDiagnostics
+    REQUIRES PALM
 )
-set_tests_properties(xcore_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME mil1750_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MIL1750Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mil1750_diagnostics.cmake"
-)
-set_tests_properties(mil1750_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(xcore_diagnostics
+    DIRECTORY XCoreDiagnostics
+    REQUIRES XCORE
 )
 
-add_test(NAME upd772x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/UPD772xDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/upd772x_diagnostics.cmake"
+asl_add_script_test(mil1750_diagnostics
+    DIRECTORY MIL1750Diagnostics
+    REQUIRES 1750
 )
-set_tests_properties(upd772x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME olms50_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/OLMS50Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/olms50_diagnostics.cmake"
-)
-set_tests_properties(olms50_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(upd772x_diagnostics
+    DIRECTORY UPD772xDiagnostics
+    REQUIRES 7720
 )
 
-add_test(NAME ns32000_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/NS32000Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/ns32000_diagnostics.cmake"
+asl_add_script_test(olms50_diagnostics
+    DIRECTORY OLMS50Diagnostics
+    REQUIRES OLMS50
 )
-set_tests_properties(ns32000_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+
+asl_add_script_test(ns32000_diagnostics
+    DIRECTORY NS32000Diagnostics
+    REQUIRES NS32K
 )
 
 
-add_test(NAME vax_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/VAXDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/vax_diagnostics.cmake"
-)
-set_tests_properties(vax_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(vax_diagnostics
+    DIRECTORY VAXDiagnostics
+    REQUIRES VAX
 )
 
 
-add_test(NAME melps7700_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MELPS7700Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/melps7700_diagnostics.cmake"
+asl_add_script_test(melps7700_diagnostics
+    DIRECTORY MELPS7700Diagnostics
+    REQUIRES 7700
 )
-set_tests_properties(melps7700_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
 
-add_test(NAME ins8070_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/INS8070Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/ins8070_diagnostics.cmake"
-)
-set_tests_properties(ins8070_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(ins8070_diagnostics
+    DIRECTORY INS8070Diagnostics
+    REQUIRES 807X
 )
 
 
-add_test(NAME tlcs870c_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TLCS870CDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tlcs870c_diagnostics.cmake"
+asl_add_script_test(tlcs870c_diagnostics
+    DIRECTORY TLCS870CDiagnostics
+    REQUIRES 870C
 )
-set_tests_properties(tlcs870c_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME cr16_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CR16Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cr16_diagnostics.cmake"
-)
-set_tests_properties(cr16_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(cr16_diagnostics
+    DIRECTORY CR16Diagnostics
+    REQUIRES CR16
 )
 
-add_test(NAME mcs96_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MCS96Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mcs96_diagnostics.cmake"
+asl_add_script_test(mcs96_diagnostics
+    DIRECTORY MCS96Diagnostics
+    REQUIRES 96
 )
-set_tests_properties(mcs96_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME powerpc_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/PowerPCDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/powerpc_diagnostics.cmake"
+asl_add_script_test(powerpc_diagnostics
+    DIRECTORY PowerPCDiagnostics
+    REQUIRES 601
 )
-set_tests_properties(powerpc_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
 
-add_test(NAME tms320c54x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS320C54xDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms320c54x_diagnostics.cmake"
-)
-set_tests_properties(tms320c54x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(tms320c54x_diagnostics
+    DIRECTORY TMS320C54xDiagnostics
+    REQUIRES 32054X
 )
 
 
-add_test(NAME intel8008_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Intel8008Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/intel8008_diagnostics.cmake"
+asl_add_script_test(intel8008_diagnostics
+    DIRECTORY Intel8008Diagnostics
+    REQUIRES 8008
 )
-set_tests_properties(intel8008_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
 
-add_test(NAME mn1610alt_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MN1610AltDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mn1610alt_diagnostics.cmake"
-)
-set_tests_properties(mn1610alt_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(mn1610alt_diagnostics
+    DIRECTORY MN1610AltDiagnostics
+    REQUIRES MN2610
 )
 
 
-add_test(NAME signetics2650_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Signetics2650Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/signetics2650_diagnostics.cmake"
+asl_add_script_test(signetics2650_diagnostics
+    DIRECTORY Signetics2650Diagnostics
+    REQUIRES 2650
 )
-set_tests_properties(signetics2650_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
 
-add_test(NAME pdp11_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/PDP11Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/pdp11_diagnostics.cmake"
-)
-set_tests_properties(pdp11_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(pdp11_diagnostics
+    DIRECTORY PDP11Diagnostics
+    REQUIRES PDP11
 )
 
 
-add_test(NAME cp1600_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CP1600Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/cp1600_diagnostics.cmake"
+asl_add_script_test(cp1600_diagnostics
+    DIRECTORY CP1600Diagnostics
+    REQUIRES CP1600
 )
-set_tests_properties(cp1600_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
 
-add_test(NAME tms9900_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS9900Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms9900_diagnostics.cmake"
-)
-set_tests_properties(tms9900_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(tms9900_diagnostics
+    DIRECTORY TMS9900Diagnostics
+    REQUIRES 9900
 )
 
-add_test(NAME signetics8x30x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Signetics8x30xDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/signetics8x30x_diagnostics.cmake"
+asl_add_script_test(signetics8x30x_diagnostics
+    DIRECTORY Signetics8x30xDiagnostics
+    REQUIRES 8X30X
 )
-set_tests_properties(signetics8x30x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME sx20_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/SX20Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/sx20_diagnostics.cmake"
-)
-set_tests_properties(sx20_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(sx20_diagnostics
+    DIRECTORY SX20Diagnostics
+    REQUIRES SX20
 )
 
-add_test(NAME tms370_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS370Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms370_diagnostics.cmake"
+asl_add_script_test(tms370_diagnostics
+    DIRECTORY TMS370Diagnostics
+    REQUIRES 370
 )
-set_tests_properties(tms370_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME ti_pseudo_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TIPseudoDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/ti_pseudo_diagnostics.cmake"
-)
-set_tests_properties(ti_pseudo_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(ti_pseudo_diagnostics
+    DIRECTORY TIPseudoDiagnostics
+    REQUIRES 3202X 3203X
 )
 
-add_test(NAME i960_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/I960Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/i960_diagnostics.cmake"
+asl_add_script_test(i960_diagnostics
+    DIRECTORY I960Diagnostics
+    REQUIRES 960
 )
-set_tests_properties(i960_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME sc62015_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/SC62015Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/sc62015_diagnostics.cmake"
-)
-set_tests_properties(sc62015_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(sc62015_diagnostics
+    DIRECTORY SC62015Diagnostics
+    REQUIRES 62015
 )
 
-add_test(NAME kenbak_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/KENBAKDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/kenbak_diagnostics.cmake"
+asl_add_script_test(kenbak_diagnostics
+    DIRECTORY KENBAKDiagnostics
+    REQUIRES KENBAK
 )
-set_tests_properties(kenbak_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME f2mc8l_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/F2MC8LDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/f2mc8l_diagnostics.cmake"
-)
-set_tests_properties(f2mc8l_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(f2mc8l_diagnostics
+    DIRECTORY F2MC8LDiagnostics
+    REQUIRES F2MC8
 )
 
-add_test(NAME st6_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/ST6Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/st6_diagnostics.cmake"
+asl_add_script_test(st6_diagnostics
+    DIRECTORY ST6Diagnostics
+    REQUIRES ST6
 )
-set_tests_properties(st6_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME padauk_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/PadaukDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/padauk_diagnostics.cmake"
-)
-set_tests_properties(padauk_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(padauk_diagnostics
+    DIRECTORY PadaukDiagnostics
+    REQUIRES PDK
 )
 
-add_test(NAME scmp_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/SCMPDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/scmp_diagnostics.cmake"
+asl_add_script_test(scmp_diagnostics
+    DIRECTORY SCMPDiagnostics
+    REQUIRES SCMP
 )
-set_tests_properties(scmp_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME nec77230_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/NEC77230Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/nec77230_diagnostics.cmake"
-)
-set_tests_properties(nec77230_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(nec77230_diagnostics
+    DIRECTORY NEC77230Diagnostics
+    REQUIRES 77230
 )
 
-add_test(NAME tms320c5x_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS320C5xDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms320c5x_diagnostics.cmake"
+asl_add_script_test(tms320c5x_diagnostics
+    DIRECTORY TMS320C5xDiagnostics
+    REQUIRES 3205X
 )
-set_tests_properties(tms320c5x_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME tms7000_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TMS7000Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tms7000_diagnostics.cmake"
-)
-set_tests_properties(tms7000_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(tms7000_diagnostics
+    DIRECTORY TMS7000Diagnostics
+    REQUIRES TMS7
 )
 
-add_test(NAME ace_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/ACEDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/ace_diagnostics.cmake"
-)
-set_tests_properties(ace_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(ace_diagnostics
+    DIRECTORY ACEDiagnostics
+    REQUIRES ACE
 )
 
-add_test(NAME tlcs42_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TLCS42Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tlcs42_diagnostics.cmake"
+asl_add_script_test(tlcs42_diagnostics
+    DIRECTORY TLCS42Diagnostics
+    REQUIRES 42C00
 )
-set_tests_properties(tlcs42_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME operand4004_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Operand4004Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/operand4004_diagnostics.cmake"
-)
-set_tests_properties(operand4004_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(operand4004_diagnostics
+    DIRECTORY Operand4004Diagnostics
+    REQUIRES 4004
 )
 
-add_test(NAME tbil_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/TBILDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/tbil_diagnostics.cmake"
+asl_add_script_test(tbil_diagnostics
+    DIRECTORY TBILDiagnostics
+    REQUIRES TBIL
 )
-set_tests_properties(tbil_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME branch61860_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch61860Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch61860_diagnostics.cmake"
-)
-set_tests_properties(branch61860_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(branch61860_diagnostics
+    DIRECTORY Branch61860Diagnostics
+    REQUIRES 61860
 )
 
-add_test(NAME fixed_operand_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/FixedOperandDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/fixed_operand_diagnostics.cmake"
+asl_add_script_test(fixed_operand_diagnostics
+    DIRECTORY FixedOperandDiagnostics
+    REQUIRES 1802 KCPSM3 NANO
 )
-set_tests_properties(fixed_operand_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME pic_vector_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/PICVectorDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/pic_vector_diagnostics.cmake"
-)
-set_tests_properties(pic_vector_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(pic_vector_diagnostics
+    DIRECTORY PICVectorDiagnostics
+    REQUIRES 16C5X 16C8X VECTOR
 )
 
-add_test(NAME equate_data_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/EquateDataDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/equate_data_diagnostics.cmake"
+asl_add_script_test(equate_data_diagnostics
+    DIRECTORY EquateDataDiagnostics
+    REQUIRES 1802 4004
 )
-set_tests_properties(equate_data_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME expression_range_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/ExpressionRangeDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/expression_range_diagnostics.cmake"
-)
-set_tests_properties(expression_range_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(expression_range_diagnostics
+    DIRECTORY ExpressionRangeDiagnostics
+    REQUIRES 68RS08
 )
 
-add_test(NAME shared_contract_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/SharedContractDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/shared_contract_diagnostics.cmake"
+asl_add_script_test(shared_contract_diagnostics
+    DIRECTORY SharedContractDiagnostics
+    REQUIRES 166 68RS08
 )
-set_tests_properties(shared_contract_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME operandrs08_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/OperandRS08Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/operandrs08_diagnostics.cmake"
-)
-set_tests_properties(operandrs08_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(operandrs08_diagnostics
+    DIRECTORY OperandRS08Diagnostics
+    REQUIRES 68RS08
 )
 
-add_test(NAME operand6804_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Operand6804Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/operand6804_diagnostics.cmake"
+asl_add_script_test(operand6804_diagnostics
+    DIRECTORY Operand6804Diagnostics
+    REQUIRES 6804
 )
-set_tests_properties(operand6804_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME branch6804_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch6804Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch6804_diagnostics.cmake"
-)
-set_tests_properties(branch6804_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(branch6804_diagnostics
+    DIRECTORY Branch6804Diagnostics
+    REQUIRES 6804
 )
 
-add_test(NAME branchrs08_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/BranchRS08Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branchrs08_diagnostics.cmake"
+asl_add_script_test(branchrs08_diagnostics
+    DIRECTORY BranchRS08Diagnostics
+    REQUIRES 68RS08
 )
-set_tests_properties(branchrs08_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME branch6809_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch6809Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch6809_diagnostics.cmake"
-)
-set_tests_properties(branch6809_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(branch6809_diagnostics
+    DIRECTORY Branch6809Diagnostics
+    REQUIRES 6809 KONAMI
 )
 
-add_test(NAME branch6805_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch6805Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch6805_diagnostics.cmake"
+asl_add_script_test(branch6805_diagnostics
+    DIRECTORY Branch6805Diagnostics
+    REQUIRES 6805
 )
-set_tests_properties(branch6805_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME branch68_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch68Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch68_diagnostics.cmake"
-)
-set_tests_properties(branch68_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(branch68_diagnostics
+    DIRECTORY Branch68Diagnostics
+    REQUIRES M6800
 )
 
-add_test(NAME hc12_branch_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/HC12BranchDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/hc12_branch_diagnostics.cmake"
+asl_add_script_test(hc12_branch_diagnostics
+    DIRECTORY HC12BranchDiagnostics
+    REQUIRES 6812
 )
-set_tests_properties(hc12_branch_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME melps740_nop COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MELPS740NOP"
-    -P "${CMAKE_SOURCE_DIR}/tests/melps740_nop.cmake"
-)
-set_tests_properties(melps740_nop PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(melps740_nop
+    DIRECTORY MELPS740NOP
+    REQUIRES 6502
 )
 
-add_test(NAME branch65_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/Branch65Diagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/branch65_diagnostics.cmake"
+asl_add_script_test(branch65_diagnostics
+    DIRECTORY Branch65Diagnostics
+    REQUIRES 6502
 )
-set_tests_properties(branch65_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME backend_delimiter_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/BackendDelimiterDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/backend_delimiter_diagnostics.cmake"
-)
-set_tests_properties(backend_delimiter_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(backend_delimiter_diagnostics
+    DIRECTORY BackendDelimiterDiagnostics
+    REQUIRES 370 8X30X 960 9900 KCPSM NS32K TMS7 VECTOR Z80
 )
 
-add_test(NAME bracket_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/BracketDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/bracket_diagnostics.cmake"
+asl_add_script_test(bracket_diagnostics
+    DIRECTORY BracketDiagnostics
+    REQUIRES 78K2 78K3 78K4 86 KENBAK M68K PDK Z8 Z80
 )
-set_tests_properties(bracket_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
-)
 
-add_test(NAME mapping_diagnostics COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/MappingDiagnostics"
-    -P "${CMAKE_SOURCE_DIR}/tests/mapping_diagnostics.cmake"
-)
-set_tests_properties(mapping_diagnostics PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_MESSAGES=en;LC_ALL=C"
+asl_add_script_test(mapping_diagnostics
+    DIRECTORY MappingDiagnostics
+    REQUIRES MSP Z80
 )
 
 define_executable(test_coverity_inputs
@@ -2375,22 +1655,25 @@ define_executable(test_coverity_inputs
     $<TARGET_OBJECTS:ADDRSPACE_COMMON>
 )
 target_link_libm(test_coverity_inputs)
-add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}
-    "-DTEST_PROGRAM=$<TARGET_FILE:test_coverity_inputs>"
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DDAS_PROGRAM=$<TARGET_FILE:dasl>"
-    "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
-    "-DP2HEX_PROGRAM=$<TARGET_FILE:p2hex>"
-    "-DALINK_PROGRAM=$<TARGET_FILE:alink>"
-    "-DPBIND_PROGRAM=$<TARGET_FILE:pbind>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CoverityInputs"
-    -P "${CMAKE_SOURCE_DIR}/tests/coverity_inputs.cmake"
-)
-set_tests_properties(coverity_inputs PROPERTIES
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};ASL_COVERITY_TEST_CMD="
-)
+asl_test_available(coverity_inputs can_run REQUIRES 6812 96 M16 M16C MSP RX Z80)
+if(can_run)
+    add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}
+        "-DTEST_PROGRAM=$<TARGET_FILE:test_coverity_inputs>"
+        "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+        "-DDAS_PROGRAM=$<TARGET_FILE:dasl>"
+        "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+        "-DP2HEX_PROGRAM=$<TARGET_FILE:p2hex>"
+        "-DALINK_PROGRAM=$<TARGET_FILE:alink>"
+        "-DPBIND_PROGRAM=$<TARGET_FILE:pbind>"
+        "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+        "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/CoverityInputs"
+        -P "${CMAKE_SOURCE_DIR}/tests/coverity_inputs.cmake"
+    )
+    set_tests_properties(coverity_inputs PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};ASL_COVERITY_TEST_CMD="
+    )
+endif()
 
 define_executable(test_driver_io tests/test_driver_io.c)
 if(LOCALE_NLS)
@@ -2468,15 +1751,18 @@ define_executable(test_tempresult_float
 target_link_libm(test_tempresult_float)
 add_test(NAME tempresult_float COMMAND test_tempresult_float)
 
-add_test(NAME assembler_cli COMMAND ${CMAKE_COMMAND}
-    "-DASL_PROGRAM=$<TARGET_FILE:asl>"
-    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
-    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/AssemblerCLI"
-    -P "${CMAKE_SOURCE_DIR}/tests/assembler_cli.cmake"
-)
-set_tests_properties(assembler_cli PROPERTIES
-    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
-)
+asl_test_available(assembler_cli can_run REQUIRES M68K)
+if(can_run)
+    add_test(NAME assembler_cli COMMAND ${CMAKE_COMMAND}
+        "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+        "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+        "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/AssemblerCLI"
+        -P "${CMAKE_SOURCE_DIR}/tests/assembler_cli.cmake"
+    )
+    set_tests_properties(assembler_cli PROPERTIES
+        ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
+    )
+endif()
 
 add_test(NAME utility_cli COMMAND ${CMAKE_COMMAND}
     "-DPLIST_PROGRAM=$<TARGET_FILE:plist>"
@@ -2522,6 +1808,13 @@ endif()
 
 foreach(TEST_TARGET ${test_dirs})
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET}/${TEST_TARGET}.asm" AND EXISTS "${CMAKE_SOURCE_DIR}/tests/${TEST_TARGET}/${TEST_TARGET}.ori")
+        if(NOT DEFINED ASL_TEST_${TEST_TARGET}_REQUIRES)
+            message(FATAL_ERROR "Missing backend requirements for regression ${TEST_TARGET}")
+        endif()
+        asl_test_available(${TEST_TARGET} can_run REQUIRES ${ASL_TEST_${TEST_TARGET}_REQUIRES})
+        if(NOT can_run)
+            continue()
+        endif()
         add_test(
             NAME ${TEST_TARGET}
             COMMAND
@@ -2535,3 +1828,5 @@ foreach(TEST_TARGET ${test_dirs})
         )
     endif()
 endforeach()
+
+asl_report_test_selection()

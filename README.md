@@ -38,6 +38,10 @@ Set `-DCMAKE_INSTALL_PREFIX=/desired/prefix` when configuring to choose that pre
 
 Message catalogs are embedded by default. Configure with `-DASL_EMBED_MESSAGES=OFF` to install external catalogs in the configured library directory's `asl` subdirectory. Pandoc is optional: it builds the HTML/ODT manual when found, while executables, tests, include files, manpages and the license can be built or installed without it.
 
+All assembler CPU families are enabled by default. To build a smaller assembler, pass a semicolon-separated selection, for example `-DASL_CPU_BACKENDS="M68K;Z80"`. Use `ALL` to restore the complete selection or `NONE` for only the CPU-independent assembler. Family names and shared implementation dependencies are listed in [the backend manifest](cmake/Backends.cmake). Selection controls assembler registration; the disassembler is built independently. The `NONE` target is always available, and linking shared implementation code does not enable its CPU family.
+
+CTest registers a test only when all its required families are enabled. Configuration reports the number of registered tests and writes omitted tests and their missing families to `disabled-tests.txt` in the build directory. New regression fixtures must declare their requirements in [RegressionTests.cmake](tests/RegressionTests.cmake), including fixtures that require no family. Diagnostic scripts declare requirements beside their registration in `CMakeLists.txt`.
+
 This build procedure has been tested on the following environments:
 
 - FreeBSD (x86-64 build)

@@ -167,6 +167,9 @@ void PrintCPUList(tPrintLineCPUProc PrintProc) {
     Context.PrintProc      = PrintProc;
     Context.perline        = 79 / (MaxNameLen + 1);
     IterateCPUList(PrintIterator, &Context);
+    if (Context.cnt) {
+        PrintProc(Context.line_buffer);
+    }
     PrintProc("");
 }
 
