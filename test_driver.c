@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+#ifdef ASL_TEST_USE_LIBRARY
+#    include "asl_library.h"
+#endif
 
 #define PATH_BUFFER_SIZE 4096
 
@@ -93,6 +98,84 @@ static void read_flags(
         }
     }
 }
+
+#ifdef ASL_TEST_USE_LIBRARY
+static bool append_flags(char* flags, char const** args, int* count, int limit) {
+    char* read = flags;
+    char* write = flags;
+    while (*read) {
+        char quote = '\0';
+        while (isspace((unsigned char)*read)) {
+            read++;
+        }
+        if (!*read) {
+            break;
+        }
+        if (*count >= limit) {
+            printf("Too many assembler flags\n");
+            return false;
+        }
+        args[(*count)++] = write;
+        while (*read && (quote || !isspace((unsigned char)*read))) {
+            char current = *read++;
+            if (quote && current == quote) {
+                quote = '\0';
+            } else if (!quote && (current == '\'' || current == '"')) {
+                quote = current;
+            } else if (current == '\\' && quote != '\''
+                    && (*read == '\\' || *read == '"'
+                        || (!quote && (*read == '\'' || isspace((unsigned char)*read))))) {
+                *write++ = *read++;
+            } else {
+                *write++ = current;
+            }
+        }
+        if (quote) {
+            printf("Unterminated quote in assembler flags\n");
+            return false;
+        }
+        if (*read) {
+            read++;
+        }
+        *write++ = '\0';
+    }
+    return true;
+}
+
+static int assemble_in_process(
+        char const* asl_path, char const* source_dir, char const* test_name,
+        char const* include_dir, char const* output_dir, bool verbose,
+        char* flags) {
+    char source[PATH_BUFFER_SIZE], object[PATH_BUFFER_SIZE], share[PATH_BUFFER_SIZE];
+    char const* args[256];
+    int count = 0;
+    int source_length = snprintf(source, sizeof(source), "%s" PATHSEP "%s.asm", source_dir, test_name);
+    int object_length = snprintf(object, sizeof(object), "%s" PATHSEP "%s.p", output_dir, test_name);
+    int share_length = snprintf(share, sizeof(share), "%s" PATHSEP "%s.h", output_dir, test_name);
+    if (source_length < 0 || (size_t)source_length >= sizeof(source)
+            || object_length < 0 || (size_t)object_length >= sizeof(object)
+            || share_length < 0 || (size_t)share_length >= sizeof(share)) {
+        printf("Test path exceeds driver buffer capacity\n");
+        return 4;
+    }
+    args[count++] = asl_path;
+    if (!append_flags(flags, args, &count, (int)(sizeof(args) / sizeof(*args)) - 9)) {
+        return 4;
+    }
+    if (!verbose) {
+        args[count++] = "-q";
+    }
+    args[count++] = "-i";
+    args[count++] = include_dir;
+    args[count++] = source;
+    args[count++] = "-o";
+    args[count++] = object;
+    args[count++] = "-shareout";
+    args[count++] = share;
+    printf("Assembling in process: %s\n", source);
+    return asl_assemble(count, args);
+}
+#endif
 
 /**
  * Prints a failure message for a test and logs the failure.
@@ -264,6 +347,10 @@ int main(int argc, char* argv[]) {
     char flags[1024];
     read_flags(file_name, sizeof(file_name), source_dir, "asflags", flags, sizeof(flags));
 
+#ifdef ASL_TEST_USE_LIBRARY
+    int asl_ret = assemble_in_process(
+            asl_path, source_dir, test_name, include_dir, output_dir, verbose, flags);
+#else
     snprintf(
             io_buffer, sizeof(io_buffer),
             "%s %s %s -i %s %s" PATHSEP "%s.asm -o %s" PATHSEP "%s.p -shareout %s" PATHSEP
@@ -272,6 +359,7 @@ int main(int argc, char* argv[]) {
             test_name, output_dir, test_name);
     printf("Running: %s\n", io_buffer);
     int asl_ret = system(io_buffer);
+#endif
 
     if (asl_ret != 0) {
         test_failed(test_name);

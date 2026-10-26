@@ -998,6 +998,11 @@ add_dependencies(p2bin p2bin_res)
 define_executable(test_driver
     test_driver.c
 )
+option(ASL_TEST_USE_LIBRARY "Assemble regression fixtures in the test driver process" ON)
+if(ASL_TEST_USE_LIBRARY)
+    target_compile_definitions(test_driver PRIVATE ASL_TEST_USE_LIBRARY)
+    target_link_libraries(test_driver PRIVATE asl_library)
+endif()
 
 file(GLOB_RECURSE ALL_SOURCE_FILES *.c *.h *.hpp)
 
@@ -1200,6 +1205,19 @@ endif()
 enable_testing()
 include(BackendTests)
 include(tests/RegressionTests.cmake)
+
+asl_test_available(library_driver can_run REQUIRES M68K)
+if(ASL_TEST_USE_LIBRARY AND can_run)
+    add_test(NAME library_driver COMMAND ${CMAKE_COMMAND}
+        "-DTEST_PROGRAM=$<TARGET_FILE:test_driver>"
+        "-DASL_PROGRAM=$<TARGET_FILE:asl>"
+        "-DP2BIN_PROGRAM=$<TARGET_FILE:p2bin>"
+        "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+        "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/LibraryDriver"
+        -P "${CMAKE_SOURCE_DIR}/tests/library_driver.cmake"
+    )
+    set_tests_properties(library_driver PROPERTIES ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR}")
+endif()
 
 define_executable(test_asl_library tests/library.c)
 target_link_libraries(test_asl_library PRIVATE asl_library)

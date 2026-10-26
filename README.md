@@ -46,6 +46,8 @@ The build also produces a static assembler library. Installed CMake consumers ca
 
 Library calls must be serialized: the assembler retains process-wide tables and reusable buffers, and recursive entry returns status 5. Fatal assembly errors return status 3 after cleanup instead of terminating the host. Message-catalog initialization failures return 255. The API does not provide independent concurrent assembler instances.
 
+Regression tests call the assembler library directly by default, avoiding the shell and assembler child process for each fixture. The driver passes fixture flags and paths as arguments, supporting quoted flags without shell expansion. Configure with `-DASL_TEST_USE_LIBRARY=OFF` to exercise the original subprocess path. P2BIN conversion and the diagnostic scripts continue to use subprocesses.
+
 This build procedure has been tested on the following environments:
 
 - FreeBSD (x86-64 build)
