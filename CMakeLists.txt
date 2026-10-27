@@ -1459,6 +1459,11 @@ asl_add_script_test(cr16_diagnostics
     REQUIRES CR16
 )
 
+asl_add_script_test(national_pseudo
+    DIRECTORY NationalPseudo
+    REQUIRES CR16 CR16C
+)
+
 asl_add_script_test(mcs96_diagnostics
     DIRECTORY MCS96Diagnostics
     REQUIRES 96

@@ -17,6 +17,7 @@
 #include "intpseudo.h"
 
 #include "as_endian.h"
+#include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -4167,6 +4168,76 @@ void DecodeIntelDS(Word item_size) {
             BookKeeping();
         }
     }
+}
+
+/*!------------------------------------------------------------------------
+ * \brief  add a pseudo instruction with and without its leading dot
+ * ------------------------------------------------------------------------ */
+
+static void add_national_pseudo(
+        PInstTable p_inst_table, char const* p_name, Word code, InstProc decode_fnc) {
+    AddInstTable(p_inst_table, p_name, code, decode_fnc);
+    AddInstTable(p_inst_table, p_name + 1, code, decode_fnc);
+}
+
+/*!------------------------------------------------------------------------
+ * \fn     AddNationalPseudo(PInstTable p_inst_table)
+ * \brief  add National Semiconductor CR16-family pseudo instructions
+ * \param  p_inst_table table to add to
+ * ------------------------------------------------------------------------ */
+
+void AddNationalPseudo(PInstTable p_inst_table) {
+    add_national_pseudo(p_inst_table, ".REG", 0, CodeREG);
+    add_national_pseudo(
+            p_inst_table, ".BYTE",
+            eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString,
+            DecodeIntelDB);
+    add_national_pseudo(
+            p_inst_table, ".DC8",
+            eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt
+                    | eIntPseudoFlag_AllowString,
+            DecodeIntelDB);
+    add_national_pseudo(
+            p_inst_table, ".WORD", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDW);
+    add_national_pseudo(
+            p_inst_table, ".DC16", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDW);
+    add_national_pseudo(
+            p_inst_table, ".LONG", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDD);
+    add_national_pseudo(
+            p_inst_table, ".DC24", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDP);
+    add_national_pseudo(
+            p_inst_table, ".DC32", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDD);
+    add_national_pseudo(
+            p_inst_table, ".DC64", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
+            DecodeIntelDQ);
+    add_national_pseudo(
+            p_inst_table, ".FLOAT", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDD);
+    add_national_pseudo(
+            p_inst_table, ".DF32", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDD);
+    add_national_pseudo(
+            p_inst_table, ".DOUBLE", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDQ);
+    add_national_pseudo(
+            p_inst_table, ".DF64", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
+            DecodeIntelDQ);
+    add_national_pseudo(p_inst_table, ".DS8", 1, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".BLKB", 1, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".SPACE", 1, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".DS16", 2, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".BLKW", 2, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".DS32", 4, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".BLKF", 4, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".BLKL", 4, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".DS64", 8, DecodeIntelDS);
+    add_national_pseudo(p_inst_table, ".BLKD", 8, DecodeIntelDS);
 }
 
 /*!------------------------------------------------------------------------

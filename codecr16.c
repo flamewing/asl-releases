@@ -1200,13 +1200,6 @@ static void add_mem_bit(char const* p_name, Word code) {
     AddInstTable(InstTable, name, code | 0x2000, decode_mem_bit);
 }
 
-static void add_dot_pseudo(char const* p_name, Word code, InstProc decode_fnc) {
-    AddInstTable(InstTable, p_name, code, decode_fnc);
-    if (*p_name == '.') {
-        AddInstTable(InstTable, p_name + 1, code, decode_fnc);
-    }
-}
-
 void codecr16_iter_conditions(void (*callback)(char const*, Word)) {
     callback("EQ", 0);
     callback("NE", 1);
@@ -1292,57 +1285,7 @@ static void init_fields(void) {
     AddInstTable(InstTable, "STORM", 0x7e84, decode_loadm_storm);
 
     inst_table_set_prefix_proc(InstTable, NULL, 0);
-    add_dot_pseudo(".REG", 0, CodeREG);
-    add_dot_pseudo(
-            ".BYTE",
-            eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt
-                    | eIntPseudoFlag_AllowString,
-            DecodeIntelDB);
-    add_dot_pseudo(
-            ".DC8",
-            eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt
-                    | eIntPseudoFlag_AllowString,
-            DecodeIntelDB);
-    add_dot_pseudo(
-            ".WORD", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDW);
-    add_dot_pseudo(
-            ".DC16", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDW);
-    add_dot_pseudo(
-            ".LONG", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDD);
-    add_dot_pseudo(
-            ".DC24", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDP);
-    add_dot_pseudo(
-            ".DC32", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDD);
-    add_dot_pseudo(
-            ".DC64", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowInt,
-            DecodeIntelDQ);
-    add_dot_pseudo(
-            ".FLOAT", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
-            DecodeIntelDD);
-    add_dot_pseudo(
-            ".DF32", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
-            DecodeIntelDD);
-    add_dot_pseudo(
-            ".DOUBLE", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
-            DecodeIntelDQ);
-    add_dot_pseudo(
-            ".DF64", eIntPseudoFlag_LittleEndian | eIntPseudoFlag_AllowFloat,
-            DecodeIntelDQ);
-    add_dot_pseudo(".DS8", 1, DecodeIntelDS);
-    add_dot_pseudo(".BLKB", 1, DecodeIntelDS);
-    add_dot_pseudo(".SPACE", 1, DecodeIntelDS);
-    add_dot_pseudo(".DS16", 2, DecodeIntelDS);
-    add_dot_pseudo(".BLKW", 2, DecodeIntelDS);
-    add_dot_pseudo(".DS32", 4, DecodeIntelDS);
-    add_dot_pseudo(".BLKF", 4, DecodeIntelDS);
-    add_dot_pseudo(".BLKL", 4, DecodeIntelDS);
-    add_dot_pseudo(".DS64", 8, DecodeIntelDS);
-    add_dot_pseudo(".BLKD", 8, DecodeIntelDS);
+    AddNationalPseudo(InstTable);
 }
 
 /*!------------------------------------------------------------------------
