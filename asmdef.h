@@ -153,7 +153,6 @@ typedef struct tag_TSaveState {
     PTransTable            SaveTransTable;
     Integer                SaveEnumSegment;
     LongInt                SaveEnumCurrentValue, SaveEnumIncrement;
-
 } TSaveState, *PSaveState;
 
 struct as_fwd_sym;

@@ -12,10 +12,13 @@ body {
     padding: 1em;
     margin: auto;
     max-width: 95%;
+    color: #444444;
+    background: #fefefe;
 }
 
 a {
     text-decoration: none;
+    color: #0645ad;
 }
 
 a:focus {
@@ -28,6 +31,9 @@ p {
 
 img {
     max-width: 100%;
+    border: 0;
+    -ms-interpolation-mode: bicubic;
+    vertical-align: baseline;
 }
 
 h1,
@@ -39,6 +45,7 @@ h6 {
     line-height: 125%;
     margin-top: 2em;
     font-weight: normal;
+    color: #111111;
 }
 
 h4,
@@ -76,6 +83,9 @@ blockquote {
     padding-left: 3em;
     border-left-width: 0.5em;
     border-left-style: solid;
+    color: #666666;
+    border-left-color: #cccccc;
+    background: #eeeeee;
 }
 
 hr {
@@ -84,19 +94,25 @@ hr {
     border: 0;
     border-top-width: 1px;
     border-top-style: solid;
+    border-top-color: #aaaaaa;
     border-bottom-width: 1px;
     border-bottom-style: solid;
     margin: 1em 0;
     padding: 0;
+    border-bottom-color: #eeeeee;
 }
 
 pre,
 code,
 kbd,
 samp {
+    /* Keep the repeated generic family to avoid browser monospace font shrinking. */
+    /* stylelint-disable-next-line font-family-no-duplicate-names */
     font-family: monospace, monospace;
     _font-family: 'courier new', monospace;
     font-size: 0.98em;
+    color: #000000;
+    background-color: #eeeeee;
 }
 
 pre {
@@ -116,11 +132,15 @@ dfn {
 
 ins {
     text-decoration: none;
+    background: #ffff99;
+    color: #000000;
 }
 
 mark {
     font-style: italic;
     font-weight: bold;
+    background: #ffff00;
+    color: #000000;
 }
 
 sub,
@@ -171,12 +191,6 @@ dd:last-child {
     margin-bottom: 0;
 }
 
-img {
-    border: 0;
-    -ms-interpolation-mode: bicubic;
-    vertical-align: baseline;
-}
-
 figure {
     display: block;
     text-align: center;
@@ -202,6 +216,8 @@ table {
     border-right-style: solid;
     border-spacing: 0;
     border-collapse: collapse;
+    border-bottom-color: #dddddd;
+    border-right-color: #dddddd;
 }
 
 table th {
@@ -210,6 +226,9 @@ table th {
     border-top-style: solid;
     border-left-width: 1px;
     border-left-style: solid;
+    background-color: #eeeeee;
+    border-top-color: #dddddd;
+    border-left-color: #dddddd;
 }
 
 table td {
@@ -219,6 +238,8 @@ table td {
     border-left-width: 1px;
     border-left-style: solid;
     vertical-align: baseline;
+    border-top-color: #dddddd;
+    border-left-color: #dddddd;
 }
 
 .author {
@@ -259,7 +280,8 @@ table td {
     hr {
         height: 1px;
         border: 0;
-        border-bottom: 1px solid black;
+        border-top: 1px solid #aaaaaa;
+        border-bottom: 1px solid #eeeeee;
     }
 
     a[href]:after {
@@ -281,6 +303,10 @@ table td {
         border: 1px solid #999999;
         padding-right: 1em;
         page-break-inside: avoid;
+    }
+
+    blockquote {
+        border-left-color: #cccccc;
     }
 
     tr,
@@ -313,17 +339,6 @@ table td {
     }
 }
 
-/* Light theme */
-
-body {
-    color: #444444;
-    background: #fefefe;
-}
-
-a {
-    color: #0645ad;
-}
-
 a:visited {
     color: #0b0080;
 }
@@ -334,10 +349,6 @@ a:hover {
 
 a:active {
     color: #faa700;
-}
-
-a:focus {
-    outline: thin dotted;
 }
 
 *::-moz-selection {
@@ -358,60 +369,6 @@ a::-moz-selection {
 a::selection {
     background: rgba(255, 255, 0, 0.3);
     color: #0645ad;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    color: #111111;
-}
-
-blockquote {
-    color: #666666;
-    border-left-color: #cccccc;
-    background: #eeeeee;
-}
-
-hr {
-    border-top: 1px solid #aaaaaa;
-    border-bottom-color: #eeeeee;
-}
-
-pre,
-code,
-kbd,
-samp {
-    color: #000000;
-    background-color: #eeeeee;
-}
-
-ins {
-    background: #ffff99;
-    color: #000000;
-}
-
-mark {
-    background: #ffff00;
-    color: #000000;
-}
-
-table {
-    border-bottom-color: #dddddd;
-    border-right-color: #dddddd;
-}
-
-table th {
-    background-color: #eeeeee;
-    border-top-color: #dddddd;
-    border-left-color: #dddddd;
-}
-
-table td {
-    border-top-color: #dddddd;
-    border-left-color: #dddddd;
 }
 
 code {
@@ -466,6 +423,7 @@ code.sourceCode>span {
 
 div.sourceCode {
     margin: 1em 0;
+    background-color: #f8f8f8;
 }
 
 pre.sourceCode {
@@ -522,10 +480,6 @@ pre.numberSource {
     margin-left: 3em;
     border-left: 1px solid #aaaaaa;
     padding-left: 4px;
-}
-
-div.sourceCode {
-    background-color: #f8f8f8;
 }
 
 @media screen {
@@ -716,10 +670,6 @@ code span.wa {
         color: #faa700;
     }
 
-    a:focus {
-        outline: thin dotted;
-    }
-
     *::-moz-selection {
         background: rgba(162, 162, 0, 0.3);
         color: #d1cbc7;
@@ -794,126 +744,18 @@ code span.wa {
         border-left-color: #83716b;
     }
 
-    code {
-        white-space: pre-wrap;
-    }
-
-    span.smallcaps {
-        font-variant: small-caps;
-    }
-
-    span.underline {
-        text-decoration: underline;
-    }
-
-    div.column {
-        display: inline-block;
-        vertical-align: baseline;
-        width: 50%;
-    }
-
-    div.hanging-indent {
-        margin-left: 1.5em;
-        text-indent: -1.5em;
-    }
-
-    ul.task-list {
-        list-style: none;
-    }
-
-    pre>code.sourceCode {
-        white-space: pre;
-        position: relative;
-    }
-
-    pre>code.sourceCode>span {
-        display: inline-block;
-        line-height: 1.25;
-    }
-
-    pre>code.sourceCode>span:empty {
-        height: 1.2em;
-    }
-
-    .sourceCode {
-        overflow: visible;
-    }
-
-    code.sourceCode>span {
-        color: inherit;
-        text-decoration: inherit;
-    }
-
-    div.sourceCode {
-        margin: 1em 0;
-    }
-
-    pre.sourceCode {
-        margin: 0;
-    }
-
-    @media screen {
-        div.sourceCode {
-            overflow: auto;
-        }
-    }
-
-    @media print {
-        pre>code.sourceCode {
-            white-space: pre-wrap;
-        }
-
-        pre>code.sourceCode>span {
-            text-indent: -5em;
-            padding-left: 5em;
-        }
-    }
-
-    pre.numberSource code {
-        counter-reset: source-line 0;
-    }
-
-    pre.numberSource code>span {
-        position: relative;
-        left: -4em;
-        counter-increment: source-line;
-    }
-
-    pre.numberSource code>span>a:first-child::before {
-        content: counter(source-line);
-        position: relative;
-        left: -1em;
-        text-align: right;
-        vertical-align: baseline;
-        border: none;
-        display: inline-block;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        padding: 0 4px;
-        width: 4em;
-        background-color: #232629;
-        color: #7a7c7d;
-    }
-
-    pre.numberSource {
-        margin-left: 3em;
-        border-left: 1px solid #7a7c7d;
-        padding-left: 4px;
-    }
-
     div.sourceCode {
         color: #cfcfc2;
         background-color: #232629;
     }
 
-    @media screen {
-        pre>code.sourceCode>span>a:first-child::before {
-            text-decoration: underline;
-        }
+    pre.numberSource code>span>a:first-child::before {
+        background-color: #232629;
+        color: #7a7c7d;
+    }
+
+    pre.numberSource {
+        border-left-color: #7a7c7d;
     }
 
     code span {
