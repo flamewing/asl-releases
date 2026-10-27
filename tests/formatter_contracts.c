@@ -59,6 +59,24 @@ int main(void) {
         }
     }
     char dest[64];
+    /* CID 915445: literal text and multiple substitutions remain terminated,
+       including when a later append runs out of space. */
+    if (as_snprintf(dest, sizeof(dest), "(%s-%s)", "cpu", "system") != 12
+        || strcmp(dest, "(cpu-system)")) {
+        return 1;
+    }
+    for (size_t capacity = 1; capacity <= 14; ++capacity) {
+        if (capacity == sizeof(char*)) {
+            continue;
+        }
+        memset(dest, 0xa5, sizeof(dest));
+        size_t stored = capacity - 1 < 12 ? capacity - 1 : 12;
+        if (as_snprintf(dest, capacity, "(%s-%s)", "cpu", "system") != (int)stored
+            || memcmp(dest, "(cpu-system)", stored) || dest[stored] != '\0'
+            || (unsigned char)dest[capacity] != 0xa5) {
+            return 1;
+        }
+    }
     /* Project integer precision selects radix, and lll selects LargeWord. */
     char const* custom = "%.*lllu";
     if (as_snprintf(dest, sizeof(dest), custom, 2, (LargeWord)13) != 4

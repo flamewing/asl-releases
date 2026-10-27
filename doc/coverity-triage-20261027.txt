@@ -1,0 +1,47 @@
+Coverity outstanding-issue review, 2026-10-27
+
+Source reviewed: master at 41c70d88, using the supplied screenshots of
+CIDs 915444 and 915445. No Coverity reanalysis was run and no hosted triage
+fields were changed. Neither supplied trace identifies a runtime defect.
+
+915444: INTEGER_OVERFLOW, code96c141.c, DecodeImm
+Recommended classification: False Positive (argument-count correlation).
+
+ImmOrder.Default == -1 marks an instruction with a required immediate.
+DecodeImm then calls ChkArgCnt(1, 1). ChkArgCntPos delegates to
+ChkArgCntExtPos, which returns False for ArgCnt == 0, whether or not the
+bracket check also rejects the input. The reported path requires this
+check to return True and then ArgCnt == 0; that path is infeasible.
+The assignment to Word only sees the nonnegative defaults: EI uses 0
+and SWI uses 7. LDF uses -1 and requires its explicit argument.
+
+Regression t_900imm checks rejection of missing LDF arguments in both
+minimum and maximum modes, the EI/SWI defaults, explicit immediate
+encodings, and the maximum-mode LDF range boundary.
+
+915445: STRING_NULL, as.c, assemble_core version banner
+Recommended classification: False Positive / Modeling Required.
+
+Tmp is a String, a char[STRINGSIZE] with default capacity 1024. The call
+passes sizeof(Tmp), not a capacity of 1 as the screenshot's trace claims.
+as_snprintf clears the destination and calls as_vsnprcatf. Formatting
+uses limit_minus_one to reserve a terminator byte for each append,
+including literal characters, substitutions, and padding. vsprcatf_core
+writes that terminator after processing the format. The destination is
+therefore terminated even when output is truncated. A zero-capacity
+call intentionally writes nothing, but the banner call has positive
+capacity. Investigate the analyzer's inferred custom-formatter capacity
+mapping; do not change its project-specific return/conversion semantics
+to libc semantics or suppress all string diagnostics.
+
+formatter_contracts already exercises capacities 1..33, canaries,
+variadic entry points, append mode and dynamic output. Additional cases
+exercise the banner format "(%s-%s)" with multiple substitutions and
+literal characters across complete and truncated output, including
+capacity 1. The existing fatal pointer-size capacity guard is retained.
+
+Validation: GCC 13.3.0 Release build with all backends and embedded
+catalogs. The five targeted formatter/TLCS-900 tests pass, and the CLI
+-version banner prints successfully. All 434 CTest tests pass, with
+strcomp_span rerun after restoring execute permission on its generated
+test binary (its initial invocation could not start).
