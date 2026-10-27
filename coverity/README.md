@@ -30,6 +30,15 @@ check does not validate the model's analyzer semantics.
 Local checks completed: GCC 13.3.0 C11 syntax-only checks for `model.c` and
 `probes.c`, and the existing `formatter_contracts` runtime test, all pass.
 
+The first Scan upload rejected a conflicting declaration of
+`__coverity_string_null_sink__`: its injected `primitives.h` declares the
+parameter as `void *`. The model now uses that call signature and leaves
+all primitive declarations to Coverity when `__COVERITY__` is defined.
+Fallback declarations are only for native syntax checks. The error path
+identified a `cov-analysis-linux64-2024.12` model compiler installation;
+this does not establish the hosted analysis engine version. The corrected
+file still needs to be uploaded and compiled by Scan.
+
 Analyze the same revision/configuration with and without the model. Include
 `probes.c` in a separate diagnostic capture with the repository include path
 and real formatter implementation; never execute its invalid probes. Confirm:

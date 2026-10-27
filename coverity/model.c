@@ -11,12 +11,16 @@ typedef __SIZE_TYPE__ size_t;
 #error Define size_t to match the captured target before compiling this model
 #endif
 
+/* Scan predeclares modeling primitives in its own primitives.h. These
+   declarations are only for native syntax checks, never for cov-emit. */
+#if !defined(__COVERITY__)
 void __coverity_panic__(void);
 void __coverity_write_buffer_bytes__(void* buffer, unsigned size);
-void __coverity_string_null_sink__(const char* string);
+void __coverity_string_null_sink__(void* string);
 void __coverity_read_buffer_bytes__(const void* buffer, unsigned size);
 void __coverity_tainted_data_transitive__(void* dest, const void* source);
 void __coverity_tainted_data_transitive_vararg_inbound__(unsigned dest, unsigned first);
+#endif
 
 int as_snprintf(char* dest, size_t capacity, const char* format, ...) {
     /* An uninitialized scalar represents an unknown value in model source.
@@ -32,7 +36,7 @@ int as_snprintf(char* dest, size_t capacity, const char* format, ...) {
     }
 
     __coverity_read_buffer_bytes__(format, 1);
-    __coverity_string_null_sink__(format);
+    __coverity_string_null_sink__((void*)format);
 
     /* The real formatter returns characters stored, NOT libc's would-have-
        written count. Comparisons avoid arithmetic in model constraints. */
