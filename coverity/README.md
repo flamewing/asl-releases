@@ -55,17 +55,26 @@ project uses. Do not silently replace it with an arbitrary integer type.
 
 ## Capacity inference and vendor report
 
-The supplied trace labels the size argument as `1` and treats the literal
-`(%s-%s)` as a copied string. That does not by itself prove the C front end
-evaluated `sizeof(Tmp)` as 1. The error could be in the generated summary,
-format/copy heuristic, argument mapping, or diagnostic rendering.
+The expanded events identify the displayed `1` as the byte count in
+`append(p_dest_ctx, pFormat, 1, &FormatContext)`, which handles a literal
+character. Inside `append`, `memcpy(..., p_src, cnt)` intentionally copies
+that byte without a NUL. The string-copy summary carries this count back to
+the public call. It is not evidence of `sizeof(Tmp)` becoming 1.
 
-The captured source uses `String Tmp`, `String` is `char[STRINGSIZE]`, the
-default `STRINGSIZE` is 1024, and the second argument is `sizeof(Tmp)`.
-Inspect expanded **Show details** events and request the derived model and
-captured preprocessed declaration from support. For a licensed local analyzer,
-inspect its derived models with the installed version's documented tools.
-Adding a postcondition model does not teach Coverity a global array-size rule.
+The decisive false branch is in `vsprcatf_core`: Coverity takes
+`dest_remlen > 0` as false and therefore skips the final NUL. For this
+replacement-format call, the initially empty destination has positive
+remaining capacity. Both `append` and `append_pad` use `limit_minus_one`,
+which limits each write to at most remaining capacity minus one. Thus
+positive remaining capacity stays positive, even after truncation. The
+shown zero-capacity exit is infeasible for this call.
+
+The trace also takes `arg[0] > cnt` as true for the literal-character append.
+For the initial `(`, reset sets the width to zero and `cnt` is 1, so that
+branch is also infeasible in the concrete banner call. These events point
+to lost invariants/correlations in helper summaries, rather than an array
+size inference error. The exact analyzer mechanism still requires vendor
+investigation; this has not been reproduced with a local analyzer.
 
 [The Scan contact page](https://scan.coverity.com/contact) offers administrator
 contact and community support. `report-915445.txt` is a prepared report, not a

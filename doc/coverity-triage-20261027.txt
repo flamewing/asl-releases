@@ -23,15 +23,21 @@ encodings, and the maximum-mode LDF range boundary.
 Recommended classification: False Positive / Modeling Required.
 
 Tmp is a String, a char[STRINGSIZE] with default capacity 1024. The call
-passes sizeof(Tmp), not a capacity of 1 as the screenshot's trace claims.
+passes sizeof(Tmp). Expanded events show that the displayed 1 comes from
+the literal-character append's byte count, not from sizeof(Tmp).
 as_snprintf clears the destination and calls as_vsnprcatf. Formatting
 uses limit_minus_one to reserve a terminator byte for each append,
 including literal characters, substitutions, and padding. vsprcatf_core
 writes that terminator after processing the format. The destination is
-therefore terminated even when output is truncated. A zero-capacity
+therefore terminated even when output is truncated. Expanded events take
+dest_remlen > 0 as false at the final terminator: an infeasible branch,
+because the initially positive capacity stays positive after each bounded
+append, including padding. They also take a positive-width branch for the
+literal append, although the first literal has reset width 0 and count 1.
+A zero-capacity
 call intentionally writes nothing, but the banner call has positive
-capacity. Investigate the analyzer's inferred custom-formatter capacity
-mapping; do not change its project-specific return/conversion semantics
+capacity. Investigate the analyzer's helper summaries and lost reserved-NUL
+invariant; do not change its project-specific return/conversion semantics
 to libc semantics or suppress all string diagnostics.
 
 formatter_contracts already exercises capacities 1..33, canaries,

@@ -1,4 +1,4 @@
-Subject: Scan CID 915445: incorrect size/termination summary for as_snprintf
+Subject: Scan CID 915445: lost reserved-NUL invariant in formatter helpers
 
 Project: flamewing/asl-releases
 Issue: https://scan3.scan.coverity.com/#/project-view/54634/14153?selectedIssue=915445
@@ -15,11 +15,28 @@ At the version banner in as.c, the source is:
     write_console_next(Tmp);
 
 datatypes.h defines String as char[STRINGSIZE]; STRINGSIZE defaults to 1024.
-The screenshot reports a size argument of 1 and a seven-character source
-string "(%s-%s)", followed by a STRING_NULL warning at write_console_next.
-Please inspect the captured preprocessed type and argument mapping: is 1
-coming from the inferred function summary, a copy/format heuristic, or the
-front end? The screenshot alone does not distinguish these possibilities.
+The expanded screenshots identify where the displayed size of 1 originates:
+
+    vsprcatf_core:
+        append(p_dest_ctx, pFormat, 1, &FormatContext);
+    append:
+        cnt = limit_minus_one(p_dest_ctx, cnt);
+        memcpy(p_dest_ctx->p_dest, p_src, cnt);
+
+This is a bounded single-character copy, intentionally not terminated until
+formatting completes. Its byte count is carried through the string-copy
+summaries to the banner call. This is not evidence of sizeof(Tmp) being 1.
+
+The core trace then takes `dest_remlen > 0` as false, skipping the final
+NUL. That branch is infeasible here: as_snprintf starts with an empty
+destination and positive capacity, and limit_minus_one limits every write
+in append and append_pad to at most the remaining capacity minus one.
+Consequently each write preserves at least one remaining byte.
+
+The append trace additionally takes `pFormatContext->arg[0] > (int)cnt`
+as true. At the first literal `(`, reset has set arg[0] to 0 and cnt is 1,
+so this is another infeasible branch in the concrete banner call. Please
+investigate loss of these state correlations in the helper summaries.
 
 as_snprintf is a custom formatter, not libc snprintf. For positive capacity
 it initializes the destination; limit_minus_one reserves a terminator byte
@@ -30,10 +47,10 @@ value counts characters actually stored, not the would-have-written count.
 The custom integer format grammar includes radix and LargeWord conversions.
 
 Requested investigation:
-1. Explain/correct the reported size of 1 for this call, and the apparent
-   treatment of the format literal as a source string being copied.
-2. Correct the derived termination model, or provide a supported narrow
-   modeling mechanism preserving custom conversions and input checking.
+1. Preserve the positive remaining-capacity/reserved-NUL invariant across
+   limit_minus_one, append_pad, append, and vsprcatf_core.
+2. Correct the propagated STRING_NULL summary, or provide a supported narrow
+   helper model preserving custom conversions and format-input checking.
 3. Confirm that genuine output bounds, unterminated %s inputs, invalid format
    arguments, and zero-capacity behavior retain their expected diagnostics.
 
