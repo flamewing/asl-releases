@@ -1,0 +1,46 @@
+Subject: Scan CID 915445: incorrect size/termination summary for as_snprintf
+
+Project: flamewing/asl-releases
+Issue: https://scan3.scan.coverity.com/#/project-view/54634/14153?selectedIssue=915445
+Checker: STRING_NULL
+Repository: https://github.com/flamewing/asl-releases
+Source review and regression revision: da7e15ed9144131c25a71882cc390b7da9c9ef06
+Analyzed snapshot/revision: please attach the values shown in Scan.
+Hosted analyzer version: unknown; please identify it for this project.
+
+At the version banner in as.c, the source is:
+
+    String Tmp;
+    as_snprintf(Tmp, sizeof(Tmp), "(%s-%s)", ARCHPRNAME, ARCHSYSNAME);
+    write_console_next(Tmp);
+
+datatypes.h defines String as char[STRINGSIZE]; STRINGSIZE defaults to 1024.
+The screenshot reports a size argument of 1 and a seven-character source
+string "(%s-%s)", followed by a STRING_NULL warning at write_console_next.
+Please inspect the captured preprocessed type and argument mapping: is 1
+coming from the inferred function summary, a copy/format heuristic, or the
+front end? The screenshot alone does not distinguish these possibilities.
+
+as_snprintf is a custom formatter, not libc snprintf. For positive capacity
+it initializes the destination; limit_minus_one reserves a terminator byte
+on each append, and vsprcatf_core writes the NUL at the end. Capacity 1
+produces an empty terminated string. Capacity 0 intentionally performs no
+access. A capacity equal to sizeof(char*) is a fatal usage error. The return
+value counts characters actually stored, not the would-have-written count.
+The custom integer format grammar includes radix and LargeWord conversions.
+
+Requested investigation:
+1. Explain/correct the reported size of 1 for this call, and the apparent
+   treatment of the format literal as a source string being copied.
+2. Correct the derived termination model, or provide a supported narrow
+   modeling mechanism preserving custom conversions and input checking.
+3. Confirm that genuine output bounds, unterminated %s inputs, invalid format
+   arguments, and zero-capacity behavior retain their expected diagnostics.
+
+Tests in tests/formatter_contracts.c cover positive/truncated output with
+capacities 1..33 and the banner format specifically. coverity/probes.c has
+analyzer acceptance cases, but no local Coverity analysis is available, so
+these are not claimed as a minimized reproducer of the hosted warning.
+
+Attachments to include: full issue events with expanded details, screenshot,
+captured revision/configuration and preprocessed source, and capture log.
