@@ -66,6 +66,8 @@ extern void DecodeIntelDT(Word Flags);
 extern void DecodeIntelDO(Word Flags);
 extern void DecodeIntelDS(Word Flags);
 
+extern void AddNationalPseudo(struct sInstTable* p_inst_table);
+
 extern void AddIntelPseudo(struct sInstTable* p_inst_table, int_pseudo_flags_t flags);
 
 extern void AddZ80Syntax(struct sInstTable* InstTable);
