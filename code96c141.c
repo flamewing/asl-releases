@@ -1662,6 +1662,9 @@ static void DecodeImm(Word Index) {
 
     if (ChkArgCnt((ImmZ->Default == -1) ? 1 : 0, 1)) {
         if (ArgCnt == 0) {
+            /* CID 915444: Default == -1 requires one argument, so the
+               successful ChkArgCnt above excludes that sentinel here. */
+            /* coverity[overflow_const : FALSE] */
             AdrWord = ImmZ->Default;
             OK      = True;
         } else {

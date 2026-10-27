@@ -19,6 +19,19 @@ Regression t_900imm checks rejection of missing LDF arguments in both
 minimum and maximum modes, the EI/SWI defaults, explicit immediate
 encodings, and the maximum-mode LDF range boundary.
 
+The reported assignment now has a local coverity[overflow_const : FALSE]
+annotation with the argument-count proof. This records a false-positive
+classification, not an execution assumption or a runtime behavior change.
+It deliberately does not model ChkArgCntPos: that wrapper depends on the
+global ArgCnt, and Coverity documents limited contextual tracking of global
+variables across function summaries. The annotation's effect needs the next
+hosted analysis. Code-line annotations do not override manually triaged CIDs;
+if already triaged, set the existing issue's classification in the UI.
+
+References:
+https://docs.blackduck.com/r/coverity/2026.9/coverity-documentation/the-false-classification.html?contentId=tBBHI8vT2OnUls8foqtjeg
+https://docs.blackduck.com/r/coverity/latest/coverity-documentation/using-models-to-tune-the-interprocedural-analysis.html?contentId=S2OpJ8z~gP3_HziJEh0jHg
+
 915445: STRING_NULL, as.c, assemble_core version banner
 Recommended classification: False Positive / Modeling Required.
 
