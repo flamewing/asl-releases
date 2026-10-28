@@ -3183,7 +3183,7 @@ static Boolean ChkMoreZeroArg(void) {
     return (ArgCnt > 0);
 }
 
-static void SwitchTo_NS32K(void* pUser) {
+static void SwitchTo_NS32K(void const* pUser) {
     TFamilyDescr const* pDescr = FindFamilyByName("NS32000");
 
     TurnWords = True;
@@ -3238,7 +3238,7 @@ void codens32k_init(void) {
     tCPUProps const* pRun;
 
     for (pRun = CPUProps; pRun->pName; pRun++) {
-        (void)AddCPUUser(pRun->pName, SwitchTo_NS32K, (void*)pRun, NULL);
+        (void)AddCPUConstUser(pRun->pName, SwitchTo_NS32K, pRun);
     }
 
     AddInitPassProc(InitCode_NS32K);

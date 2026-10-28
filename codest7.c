@@ -2471,7 +2471,7 @@ static Boolean IsDef_ST7(void) {
  * \brief  switch to target
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_ST7(void* pUser) {
+static void SwitchTo_ST7(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName("ST7");
 
     pCurrCPUProps = (tCPUProps const*)pUser;
@@ -2708,6 +2708,6 @@ void codest7_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUser(pProp->pName, SwitchTo_ST7, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->pName, SwitchTo_ST7, pProp);
     }
 }

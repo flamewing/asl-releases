@@ -3877,7 +3877,7 @@ static void switch_from_sh(void) {
  * \param  p_user description of specific target
  * ------------------------------------------------------------------------ */
 
-static void switch_to_sh(void* p_user) {
+static void switch_to_sh(void const* p_user) {
     TFamilyDescr const* p_descr = FindFamilyByName("SH7xx0");
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -3941,6 +3941,6 @@ void code7000_init(void) {
     cpu_props_t const* p_prop;
 
     for (p_prop = cpu_props; p_prop->name[0]; p_prop++) {
-        (void)AddCPUUser(p_prop->name, switch_to_sh, (void*)p_prop, NULL);
+        (void)AddCPUConstUser(p_prop->name, switch_to_sh, p_prop);
     }
 }

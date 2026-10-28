@@ -1298,7 +1298,7 @@ static void InternSymbol_9900(char* Asc, TempResult* Erg) {
     as_tempres_set_int(Erg, Num);
 }
 
-static void SwitchTo_9900(void* pUser) {
+static void SwitchTo_9900(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName("TMS9900");
 
     TurnWords = True;
@@ -1338,7 +1338,7 @@ void code9900_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUser(pProp->pName, SwitchTo_9900, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->pName, SwitchTo_9900, pProp);
     }
 
     AddInitPassProc(InitCode_TI990);

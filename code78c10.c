@@ -3121,7 +3121,7 @@ static void SwitchFrom_78C10(void) {
  * \param  pUser * to target details
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_78C10(void* pUser) {
+static void SwitchTo_78C10(void const* pUser) {
     TFamilyDescr const* pDescr = FindFamilyByName("78(C)xx");
 
     pCurrCPUProps = (tCPUProps const*)pUser;
@@ -3189,7 +3189,7 @@ void code78c10_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->Name[0]; pProp++) {
-        (void)AddCPUUserWithArgs(pProp->Name, SwitchTo_78C10, (void*)pProp, NULL, NULL);
+        (void)AddCPUConstUserWithArgs(pProp->Name, SwitchTo_78C10, pProp, NULL);
     }
 
     AddInitPassProc(InitCode_78C10);

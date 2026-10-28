@@ -1381,7 +1381,7 @@ static Boolean is_def_imp16(void) {
  * \param  properties descriptor
  * ------------------------------------------------------------------------ */
 
-static void switch_to_imp16(void* p_user) {
+static void switch_to_imp16(void const* p_user) {
     TFamilyDescr const* p_descr;
     Boolean             is_pace;
 
@@ -1443,7 +1443,7 @@ void codeimp16_init(void) {
     cpu_props_t const* p_prop;
 
     for (p_prop = cpu_props; p_prop < cpu_props + as_array_size(cpu_props); p_prop++) {
-        (void)AddCPUUser(p_prop->p_name, switch_to_imp16, (void*)p_prop, NULL);
+        (void)AddCPUConstUser(p_prop->p_name, switch_to_imp16, p_prop);
     }
     AddInitPassProc(init_pass_pace);
 }

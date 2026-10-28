@@ -546,7 +546,7 @@ static void switch_from_uc43(void) {
  * \param  points to selected properties
  * ------------------------------------------------------------------------ */
 
-static void switch_to_uc43(void* p_user) {
+static void switch_to_uc43(void const* p_user) {
     TFamilyDescr const* p_descr;
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -608,6 +608,6 @@ void codeuc43_init(void) {
     cpu_props_t const* p_run;
 
     for (p_run = cpu_props; p_run->name[0]; p_run++) {
-        (void)AddCPUUser(p_run->name, switch_to_uc43, (void*)p_run, NULL);
+        (void)AddCPUConstUser(p_run->name, switch_to_uc43, p_run);
     }
 }

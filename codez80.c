@@ -6662,7 +6662,7 @@ static Boolean chk_pc_z380(LargeWord addr) {
  * \param  p_user properties of CPU
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_Z80(void* p_user) {
+static void SwitchTo_Z80(void const* p_user) {
     TFamilyDescr const* p_descr = FindFamilyByName("Zx80");
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -6785,7 +6785,7 @@ void codez80_init(void) {
     cpu_props_t const* p_props;
 
     for (p_props = cpu_props; p_props < cpu_props + as_array_size(cpu_props); p_props++) {
-        (void)AddCPUUser(p_props->p_name, SwitchTo_Z80, (void*)p_props, NULL);
+        (void)AddCPUConstUser(p_props->p_name, SwitchTo_Z80, p_props);
     }
 
     p_z280_data = (z280_data_t*)calloc(1, sizeof(*p_z280_data));

@@ -1844,7 +1844,7 @@ static void switch_from_vax(void) {
  * \brief  prepare to assemble code for this target
  * ------------------------------------------------------------------------ */
 
-static void switch_to_vax(void* p_user) {
+static void switch_to_vax(void const* p_user) {
     TFamilyDescr const* p_descr;
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -1898,7 +1898,7 @@ void codevax_init(void) {
     cpu_props_t const* p_prop;
 
     for (p_prop = cpu_props; p_prop < cpu_props + as_array_size(cpu_props); p_prop++) {
-        (void)AddCPUUserWithArgs(p_prop->name, switch_to_vax, (void*)p_prop, NULL, NULL);
+        (void)AddCPUConstUserWithArgs(p_prop->name, switch_to_vax, p_prop, NULL);
     }
     AddInitPassProc(initpass_vax);
 }

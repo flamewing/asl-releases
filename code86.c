@@ -3667,7 +3667,7 @@ static void intern_symbol_86(char* p_arg, TempResult* p_result) {
  * \param  p_user * to properties of specific variant
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_86(void* p_user) {
+static void SwitchTo_86(void const* p_user) {
     TFamilyDescr const* p_descr = FindFamilyByName("8086");
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -3737,7 +3737,7 @@ static cpu_props_t const cpu_props[] = {
 void code86_init(void) {
     cpu_props_t const* p_prop;
     for (p_prop = cpu_props; p_prop->name[0]; p_prop++) {
-        (void)AddCPUUser(p_prop->name, SwitchTo_86, (void*)p_prop, NULL);
+        (void)AddCPUConstUser(p_prop->name, SwitchTo_86, p_prop);
     }
 
     AddInitPassProc(InitCode_86);

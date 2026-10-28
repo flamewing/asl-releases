@@ -2194,7 +2194,7 @@ static void switch_from_pdp11(void) {
  * \brief  prepare to assemble code for this target
  * ------------------------------------------------------------------------ */
 
-static void switch_to_pdp11(void* p_user) {
+static void switch_to_pdp11(void const* p_user) {
     static as_assume_rec_t* p_assumes     = NULL;
     static size_t           assumes_count = 0;
     TFamilyDescr const*     p_descr;
@@ -2389,8 +2389,7 @@ void codepdp11_init(void) {
     cpu_props_t const* p_prop;
 
     for (p_prop = cpu_props; p_prop < cpu_props + as_array_size(cpu_props); p_prop++) {
-        (void)AddCPUUserWithArgs(
-                p_prop->name, switch_to_pdp11, (void*)p_prop, NULL, NULL);
+        (void)AddCPUConstUserWithArgs(p_prop->name, switch_to_pdp11, p_prop, NULL);
     }
 
     AddInitPassProc(initpass_pdp11);

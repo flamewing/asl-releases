@@ -344,6 +344,7 @@ static void IterateExclude(tCPUDef const* pThisCPUDef, void* pUser) {
 
     if (pThisCPUDef) {
         if ((pThisCPUDef->SwitchProc != pContext->pExcludeCPUDef->SwitchProc)
+            || (pThisCPUDef->ConstSwitchProc != pContext->pExcludeCPUDef->ConstSwitchProc)
             || ((1 << (pThisCPUDef->Number - pContext->ExcludeCPUFirst))
                 & pContext->ExcludeMask)
             || (pThisCPUDef->Number != pThisCPUDef->Orig)) {

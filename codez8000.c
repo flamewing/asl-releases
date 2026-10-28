@@ -3416,7 +3416,7 @@ static Boolean TrueFnc(void) {
     return True;
 }
 
-static void SwitchTo_Z8000(void* pUser) {
+static void SwitchTo_Z8000(void const* pUser) {
     TFamilyDescr const* pDescr = FindFamilyByName("Z8000");
 
     TurnWords = True;
@@ -3476,7 +3476,6 @@ void codez8000_init(void) {
     };
 
     for (pRun = CPUProps; pRun->pName; pRun++) {
-        (void)AddCPUUserWithArgs(
-                pRun->pName, SwitchTo_Z8000, (void*)pRun, NULL, Z8000Args);
+        (void)AddCPUConstUserWithArgs(pRun->pName, SwitchTo_Z8000, pRun, Z8000Args);
     }
 }

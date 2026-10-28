@@ -1604,7 +1604,7 @@ static as_assume_rec_t ASSUME75s[] = {
         {"MBE", &MBEValue, 0, 0x01, 0x01, CheckMBE}
 };
 
-static void SwitchTo_75K0(void* pUser) {
+static void SwitchTo_75K0(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName("75K0");
     char*               p_end;
     Word                ROMEnd;
@@ -1672,7 +1672,7 @@ void code75k0_init(void) {
     tCPUProps const* pProps;
 
     for (pProps = CPUProps; pProps->Name[0]; pProps++) {
-        (void)AddCPUUser(pProps->Name, SwitchTo_75K0, (void*)pProps, NULL);
+        (void)AddCPUConstUser(pProps->Name, SwitchTo_75K0, pProps);
     }
 
     AddInitPassProc(InitCode_75K0);

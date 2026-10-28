@@ -16,6 +16,7 @@ typedef void (*tPrintLineCPUProc)(char const*);
 
 typedef void (*tCPUSwitchProc)(void);
 typedef void (*tCPUSwitchUserProc)(void* pUserData);
+typedef void (*tCPUSwitchConstUserProc)(void const* pUserData);
 typedef void (*tPrintNextCPUProc)(void);
 typedef void (*tCPUFreeUserDataProc)(void* pUserData);
 
@@ -29,13 +30,15 @@ typedef struct sCPUArg {
 } tCPUArg;
 
 typedef struct sCPUDef {
-    struct sCPUDef*      Next;
-    char*                Name;
-    CPUVar               Number, Orig;
-    tCPUSwitchUserProc   SwitchProc;
-    tCPUFreeUserDataProc FreeProc;
-    void*                pUserData;
-    tCPUArg const*       pArgs;
+    struct sCPUDef*         Next;
+    char*                   Name;
+    CPUVar                  Number, Orig;
+    tCPUSwitchUserProc      SwitchProc;
+    tCPUSwitchConstUserProc ConstSwitchProc;
+    tCPUFreeUserDataProc    FreeProc;
+    void*                   pUserData;
+    void const*             pConstUserData;
+    tCPUArg const*          pArgs;
 } tCPUDef, *tpCPUDef;
 
 typedef void (*tCPUListIterator)(tCPUDef const* pRun, void* pUser);
@@ -49,7 +52,15 @@ extern CPUVar AddCPUUserWithArgs(
 #define AddCPUUser(NewName, Switcher, pUserData, Freeer) \
     AddCPUUserWithArgs(NewName, Switcher, pUserData, Freeer, NULL)
 
-extern Boolean AddCPUAlias(char* OrigName, char* AliasName);
+/* Read-only borrowed properties; the registry never owns or frees this data. */
+extern CPUVar AddCPUConstUserWithArgs(
+        char const* NewName, tCPUSwitchConstUserProc Switcher, void const* pUserData,
+        tCPUArg const* pArgs);
+#define AddCPUConstUser(NewName, Switcher, pUserData) \
+    AddCPUConstUserWithArgs(NewName, Switcher, pUserData, NULL)
+extern void SwitchCPU(tCPUDef const* pCPUDef);
+
+extern Boolean AddCPUAlias(char const* OrigName, char const* AliasName);
 
 extern tCPUDef const* LookupCPUDefByVar(CPUVar Var);
 

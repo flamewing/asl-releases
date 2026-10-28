@@ -7379,7 +7379,7 @@ static Boolean ChkPC_68k(LargeWord Addr) {
     }
 }
 
-static void SwitchTo_68K(void* pUser) {
+static void SwitchTo_68K(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName("680x0");
 
     TurnWords = True;
@@ -7707,6 +7707,6 @@ static void report_cpu_capability_choices(tSuppFlags flags, tCfISA minimum_isa, 
 void code68k_init(void) {
     tCPUProps const* pProp;
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUser(pProp->pName, SwitchTo_68K, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->pName, SwitchTo_68K, pProp);
     }
 }

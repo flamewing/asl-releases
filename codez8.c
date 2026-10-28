@@ -2725,7 +2725,7 @@ static as_assume_rec_t ASSUMEeZ8s[] = {
  * \param  pUser CPU properties
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_Z8(void* pUser) {
+static void SwitchTo_Z8(void const* pUser) {
     TFamilyDescr const* pDescr;
 
     TurnWords = False;
@@ -2866,7 +2866,7 @@ void codez8_init(void) {
     tCPUProps const* pRun;
 
     for (pRun = CPUProps; pRun->pName; pRun++) {
-        (void)AddCPUUser(pRun->pName, SwitchTo_Z8, (void*)pRun, NULL);
+        (void)AddCPUConstUser(pRun->pName, SwitchTo_Z8, pRun);
     }
 
     AddInitPassProc(InitCode_Z8);

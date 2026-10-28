@@ -203,7 +203,7 @@ static void SetCPUCore(tCPUDef const* pCPUDef, tStrComp const* pCPUArgs) {
     strmaxcpy(MomCPUArgs, pCPUArgs ? pCPUArgs->str.p_str : "", STRINGSIZE);
 
     ParseCPUArgs(pCPUArgs, pCPUDef->pArgs);
-    pCPUDef->SwitchProc(pCPUDef->pUserData);
+    SwitchCPU(pCPUDef);
 
 #if 0
   {

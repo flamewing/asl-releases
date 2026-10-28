@@ -3838,7 +3838,7 @@ static void SwitchFrom_RX(void) {
     DeinitFields();
 }
 
-static void SwitchTo_RX(void* pUser) {
+static void SwitchTo_RX(void const* pUser) {
     TFamilyDescr const* pDescr;
 
     TurnWords = False;
@@ -3904,7 +3904,7 @@ void coderx_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->Name[0]; pProp++) {
-        (void)AddCPUUser(pProp->Name, SwitchTo_RX, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->Name, SwitchTo_RX, pProp);
     }
 
     AddCopyright("Renesas RX Generator (C) 2023 Haruo Asano");

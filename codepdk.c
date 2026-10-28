@@ -1217,7 +1217,7 @@ static void SwitchFrom_Padauk(void) {
     DeinitFields();
 }
 
-static void SwitchTo_Padauk(void* pUser) {
+static void SwitchTo_Padauk(void const* pUser) {
     TFamilyDescr const* p_descr;
     static char const   CommentLeadIn[] = {';', '\0', '/', '/', '\0', '\0'};
 
@@ -1367,6 +1367,6 @@ void codepdk_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUser(pProp->pName, SwitchTo_Padauk, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->pName, SwitchTo_Padauk, pProp);
     }
 }

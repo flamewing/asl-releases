@@ -1281,7 +1281,7 @@ static Boolean ChkZeroArg(void) {
     return (0 == ArgCnt);
 }
 
-static void SwitchTo_AVR(void* pUser) {
+static void SwitchTo_AVR(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName(CodeSegSize ? "AVR" : "AVR(CSEG8)");
 
     pCurrCPUProps = (tCPUProps const*)pUser;
@@ -1469,6 +1469,6 @@ void codeavr_init(void) {
     };
 
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUserWithArgs(pProp->pName, SwitchTo_AVR, (void*)pProp, NULL, AVRArgs);
+        (void)AddCPUConstUserWithArgs(pProp->pName, SwitchTo_AVR, pProp, AVRArgs);
     }
 }

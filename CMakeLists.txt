@@ -1766,6 +1766,9 @@ define_executable(test_forward_refs
 )
 add_test(NAME forward_refs COMMAND test_forward_refs)
 
+define_executable(test_cpu_registry tests/cpu_registry.c cpulist.c strutil.c dynstr.c)
+add_test(NAME cpu_registry COMMAND test_cpu_registry)
+
 define_executable(test_strmaxprep2
     tests/strmaxprep2.c
     strutil.c

@@ -534,7 +534,7 @@ static as_cmd_result_t CMD_CPU(Boolean Negate, char const* pArg) {
         return ArgError(Num_ErrMsgUnknownCPU, pArg);
     }
 
-    pCPUDef->SwitchProc(pCPUDef->pUserData);
+    SwitchCPU(pCPUDef);
 
     return e_cmd_arg;
 }

@@ -23,24 +23,19 @@ static int      MaxNameLen = 0;
 /****************************************************************************/
 /* neuen Prozessor definieren */
 
-CPUVar AddCPUUserWithArgs(
-        char const* NewName, tCPUSwitchUserProc Switcher, void* pUserData,
-        tCPUFreeUserDataProc Freeer, tCPUArg const* pArgs) {
+static tpCPUDef AddCPUDef(char const* NewName, tCPUArg const* pArgs) {
     tpCPUDef Lauf, Neu;
     char*    p;
     int      l;
 
-    Neu        = (tpCPUDef)malloc(sizeof(tCPUDef));
+    Neu        = (tpCPUDef)calloc(1, sizeof(tCPUDef));
     Neu->Name  = as_strdup(NewName);
     Neu->pArgs = pArgs;
     /* kein UpString, weil noch nicht initialisiert ! */
     for (p = Neu->Name; *p != '\0'; p++) {
         *p = as_toupper(*p);
     }
-    Neu->SwitchProc = Switcher;
-    Neu->FreeProc   = Freeer;
-    Neu->pUserData  = pUserData;
-    Neu->Next       = NULL;
+    Neu->Next   = NULL;
     Neu->Number = Neu->Orig = CPUCnt;
 
     l = strlen(NewName);
@@ -58,7 +53,35 @@ CPUVar AddCPUUserWithArgs(
         Lauf->Next = Neu;
     }
 
-    return CPUCnt++;
+    CPUCnt++;
+    return Neu;
+}
+
+CPUVar AddCPUUserWithArgs(
+        char const* NewName, tCPUSwitchUserProc Switcher, void* pUserData,
+        tCPUFreeUserDataProc Freeer, tCPUArg const* pArgs) {
+    tpCPUDef cpu    = AddCPUDef(NewName, pArgs);
+    cpu->SwitchProc = Switcher;
+    cpu->FreeProc   = Freeer;
+    cpu->pUserData  = pUserData;
+    return cpu->Number;
+}
+
+CPUVar AddCPUConstUserWithArgs(
+        char const* NewName, tCPUSwitchConstUserProc Switcher, void const* pUserData,
+        tCPUArg const* pArgs) {
+    tpCPUDef cpu         = AddCPUDef(NewName, pArgs);
+    cpu->ConstSwitchProc = Switcher;
+    cpu->pConstUserData  = pUserData;
+    return cpu->Number;
+}
+
+void SwitchCPU(tCPUDef const* pCPUDef) {
+    if (pCPUDef->ConstSwitchProc) {
+        pCPUDef->ConstSwitchProc(pCPUDef->pConstUserData);
+    } else {
+        pCPUDef->SwitchProc(pCPUDef->pUserData);
+    }
 }
 
 typedef struct {
@@ -81,7 +104,7 @@ CPUVar AddCPUWithArgs(
     return AddCPUUserWithArgs(NewName, SwitchNoUserProc, pData, FreeNoUserProc, pArgs);
 }
 
-Boolean AddCPUAlias(char* OrigName, char* AliasName) {
+Boolean AddCPUAlias(char const* OrigName, char const* AliasName) {
     tpCPUDef Lauf = FirstCPUDef, Neu;
 
     while ((Lauf) && (strcmp(Lauf->Name, OrigName))) {
@@ -91,15 +114,17 @@ Boolean AddCPUAlias(char* OrigName, char* AliasName) {
     if (!Lauf) {
         return False;
     } else {
-        Neu             = (tpCPUDef)malloc(sizeof(tCPUDef));
-        Neu->Next       = NULL;
-        Neu->Name       = as_strdup(AliasName);
-        Neu->Number     = CPUCnt++;
-        Neu->Orig       = Lauf->Orig;
-        Neu->SwitchProc = Lauf->SwitchProc;
-        Neu->FreeProc   = Lauf->FreeProc;
-        Neu->pUserData  = Lauf->pUserData;
-        Neu->pArgs      = Lauf->pArgs;
+        Neu                  = (tpCPUDef)malloc(sizeof(tCPUDef));
+        Neu->Next            = NULL;
+        Neu->Name            = as_strdup(AliasName);
+        Neu->Number          = CPUCnt++;
+        Neu->Orig            = Lauf->Orig;
+        Neu->SwitchProc      = Lauf->SwitchProc;
+        Neu->ConstSwitchProc = Lauf->ConstSwitchProc;
+        Neu->FreeProc        = Lauf->FreeProc;
+        Neu->pUserData       = Lauf->pUserData;
+        Neu->pConstUserData  = Lauf->pConstUserData;
+        Neu->pArgs           = Lauf->pArgs;
         while (Lauf->Next) {
             Lauf = Lauf->Next;
         }
@@ -117,11 +142,12 @@ void IterateCPUList(tCPUListIterator Iterator, void* pUser) {
 }
 
 typedef struct {
-    int                cnt, perline;
-    tCPUSwitchUserProc Proc;
-    tCPUSwitchProc     NoUserProc;
-    tPrintLineCPUProc  PrintProc;
-    String             line_buffer;
+    int                     cnt, perline;
+    tCPUSwitchUserProc      Proc;
+    tCPUSwitchConstUserProc ConstProc;
+    tCPUSwitchProc          NoUserProc;
+    tPrintLineCPUProc       PrintProc;
+    String                  line_buffer;
 } tPrintContext;
 
 static void PrintIterator(tCPUDef const* pCPUDef, void* pUser) {
@@ -136,7 +162,8 @@ static void PrintIterator(tCPUDef const* pCPUDef, void* pUser) {
                           : NULL;
         Boolean Unequal;
 
-        if (pCPUDef->SwitchProc != pContext->Proc) {
+        if ((pCPUDef->SwitchProc != pContext->Proc)
+            || (pCPUDef->ConstSwitchProc != pContext->ConstProc)) {
             Unequal = True;
         } else if (pCPUDef->SwitchProc == SwitchNoUserProc) {
             Unequal = (pContext->NoUserProc != ThisNoUserProc);
@@ -145,6 +172,7 @@ static void PrintIterator(tCPUDef const* pCPUDef, void* pUser) {
         }
         if (Unequal || (pContext->cnt == pContext->perline)) {
             pContext->Proc       = pCPUDef->SwitchProc;
+            pContext->ConstProc  = pCPUDef->ConstSwitchProc;
             pContext->NoUserProc = ThisNoUserProc;
             pContext->PrintProc(pContext->line_buffer);
             pContext->cnt            = 0;
@@ -161,6 +189,7 @@ void PrintCPUList(tPrintLineCPUProc PrintProc) {
     tPrintContext Context;
 
     Context.Proc           = NULL;
+    Context.ConstProc      = NULL;
     Context.NoUserProc     = NULL;
     Context.cnt            = 0;
     Context.line_buffer[0] = '\0';

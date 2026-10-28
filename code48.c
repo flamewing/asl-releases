@@ -1294,7 +1294,7 @@ static void InitCode_48(void) {
     Reg_MB = MB_NOTHING;
 }
 
-static void SwitchTo_48(void* pUser) {
+static void SwitchTo_48(void const* pUser) {
     static as_assume_rec_t ASSUME48s[] = {
             {"MB", &Reg_MB, 0, 1, MB_NOTHING, NULL},
     };
@@ -1428,7 +1428,7 @@ void code48_init(void) {
     tCPUProps* pProp;
 
     for (pProp = CPUProps; pProp->Name[0]; pProp++) {
-        (void)AddCPUUser(pProp->Name, SwitchTo_48, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->Name, SwitchTo_48, pProp);
     }
 
     AddInitPassProc(InitCode_48);

@@ -850,7 +850,7 @@ static void InternSymbol_ST6(char* pArg, TempResult* pErg) {
  * \brief  switch to target
  * ------------------------------------------------------------------------ */
 
-static void SwitchTo_ST6(void* pUser) {
+static void SwitchTo_ST6(void const* pUser) {
     TFamilyDescr const* p_descr = FindFamilyByName("ST6");
     int                 ASSUMEOffset;
 
@@ -927,7 +927,7 @@ void codest6_init(void) {
     tCPUProps const* pProp;
 
     for (pProp = CPUProps; pProp->pName; pProp++) {
-        (void)AddCPUUser(pProp->pName, SwitchTo_ST6, (void*)pProp, NULL);
+        (void)AddCPUConstUser(pProp->pName, SwitchTo_ST6, pProp);
     }
 
     AddInitPassProc(InitCode_ST6);

@@ -699,7 +699,7 @@ static Boolean TrueFnc(void) {
     return True;
 }
 
-static void switch_to_42c00(void* p_user) {
+static void switch_to_42c00(void const* p_user) {
     TFamilyDescr const* p_descr = FindFamilyByName("TLCS-42xx");
 
     p_curr_cpu_props = (cpu_props_t const*)p_user;
@@ -752,6 +752,6 @@ void code42c00_init(void) {
     cpu_props_t const* p_props;
 
     for (p_props = cpu_props; p_props < cpu_props + as_array_size(cpu_props); p_props++) {
-        (void)AddCPUUser(p_props->name, switch_to_42c00, (void*)p_props, NULL);
+        (void)AddCPUConstUser(p_props->name, switch_to_42c00, p_props);
     }
 }
