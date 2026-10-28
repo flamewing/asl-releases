@@ -547,12 +547,11 @@ static void SetCross(LongWord Reg) {
 
 static Boolean DecideUnit(LongWord Reg, char const* Units) {
     Integer z;
-    TUnit   TestUnit;
 
     if (ThisUnit == NoUnit) {
         z = 0;
         while ((Units[z] != '\0') && (ThisUnit == NoUnit)) {
-            TestUnit = UnitCode(Units[z]);
+            TUnit TestUnit = UnitCode(Units[z]);
             if (Reg >= 16) {
                 TestUnit++;
             }
@@ -563,8 +562,8 @@ static Boolean DecideUnit(LongWord Reg, char const* Units) {
         }
         if (ThisUnit == NoUnit) {
             ThisUnit = UnitCode(*Units);
-            if (Reg > 16) {
-                TestUnit++;
+            if (Reg >= 16) {
+                ThisUnit++;
             }
         }
     }

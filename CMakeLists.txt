@@ -1370,6 +1370,11 @@ asl_add_script_test(tms3202x_diagnostics
     REQUIRES 3202X
 )
 
+asl_add_script_test(tms3206x_unit_selection
+    DIRECTORY TMS3206XUnitSelection
+    REQUIRES 3206X
+)
+
 asl_add_script_test(nec75xx_diagnostics
     DIRECTORY NEC75XXDiagnostics
     REQUIRES 75XX
