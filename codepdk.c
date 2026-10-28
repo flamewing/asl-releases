@@ -1248,7 +1248,10 @@ static void SwitchTo_Padauk(void* pUser) {
         IOMemBits         = 6;
         break;
     default:
-        p_descr = NULL;
+        as_abort("invalid Padauk core\n");
+    }
+    if (!p_descr) {
+        as_abort("missing Padauk family description\n");
     }
 
     PCSymbol       = "*";
