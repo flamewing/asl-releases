@@ -167,6 +167,14 @@ typedef struct sSymbolEntry {
     LongInt    LineNum;
 } TSymbolEntry, *PSymbolEntry;
 
+_Static_assert(offsetof(TSymbolEntry, Tree) == 0, "symbol tree must be the first member");
+
+/* Symbol callbacks receive the first member of an allocated TSymbolEntry.
+   Recover the enclosing allocation, whose alignment is stronger than TTree's. */
+static PSymbolEntry SymbolEntryFromTree(PTree tree) {
+    return (PSymbolEntry)(void*)tree;
+}
+
 static oh_size_t SymbolHashFn(PSymbolEntry pSymbol) {
     oh_size_t      Hash = 5381;
     unsigned char* pRun;
@@ -2999,7 +3007,7 @@ typedef struct {
 } TEnterStruct, *PEnterStruct;
 
 static Boolean SymbolAdder(PTree* PDest, PTree Neu, void* pData) {
-    PSymbolEntry NewEntry    = (PSymbolEntry)Neu, *Node;
+    PSymbolEntry NewEntry    = SymbolEntryFromTree(Neu), *Node;
     PEnterStruct EnterStruct = (PEnterStruct)pData;
 
     /* added to an empty leaf ? */
@@ -4098,7 +4106,7 @@ static void PrintSymbolList_AddOut(char* s, TListContext* pContext) {
 }
 
 static void PrintSymbolList_PNode(PTree Tree, void* pData) {
-    PSymbolEntry Node = (PSymbolEntry)Tree;
+    PSymbolEntry Node = SymbolEntryFromTree(Tree);
 
     if (Node->SymWert.Typ != TempReg) {
         TListContext*     pContext = (TListContext*)pData;
@@ -4189,7 +4197,7 @@ static Boolean match_space_mask(unsigned mask, as_addrspace_t space) {
 }
 
 static void PrintDebSymbols_PNode(PTree Tree, void* pData) {
-    PSymbolEntry Node       = (PSymbolEntry)Tree;
+    PSymbolEntry Node       = SymbolEntryFromTree(Tree);
     TDebContext* DebContext = (TDebContext*)pData;
     int          l1;
 
@@ -4265,7 +4273,7 @@ typedef struct {
 } TNoISymContext;
 
 static void PrNoISection(PTree Tree, void* pData) {
-    PSymbolEntry    Node     = (PSymbolEntry)Tree;
+    PSymbolEntry    Node     = SymbolEntryFromTree(Tree);
     TNoISymContext* pContext = (TNoISymContext*)pData;
 
     if ((Node->SymWert.AddrSpaceMask & NoICEMask)
@@ -4312,7 +4320,7 @@ void PrintSymbolTree(void) {
 }
 
 static void ClearSymbolList_ClearNode(PTree Node, void* pData) {
-    PSymbolEntry SymbolEntry = (PSymbolEntry)Node;
+    PSymbolEntry SymbolEntry = SymbolEntryFromTree(Node);
     UNUSED(pData);
 
     FreeSymbolEntry(&SymbolEntry, FALSE);
@@ -4611,7 +4619,7 @@ void ClearFunctionList(void) {
 /*-------------------------------------------------------------------------*/
 
 static void ResetSymbolDefines_ResetNode(PTree Node, void* pData) {
-    PSymbolEntry SymbolEntry = (PSymbolEntry)Node;
+    PSymbolEntry SymbolEntry = SymbolEntryFromTree(Node);
     UNUSED(pData);
 
     set_symbol_entry_flag(SymbolEntry, defined, False);
@@ -4939,7 +4947,7 @@ static void PrintCrossList_PNode(PTree Node, void* pData) {
     String       LineAcc;
     String       h;
     char         LineStr[30];
-    PSymbolEntry SymbolEntry = (PSymbolEntry)Node;
+    PSymbolEntry SymbolEntry = SymbolEntryFromTree(Node);
     as_dynstr_t* p_val_str   = (as_dynstr_t*)pData;
     Boolean      First;
 
@@ -5007,7 +5015,7 @@ void PrintCrossList(void) {
 
 static void ClearCrossList_CNode(PTree Tree, void* pData) {
     PCrossRef    Lauf;
-    PSymbolEntry SymbolEntry = (PSymbolEntry)Tree;
+    PSymbolEntry SymbolEntry = SymbolEntryFromTree(Tree);
     UNUSED(pData);
 
     while (SymbolEntry->RefList) {
@@ -5058,7 +5066,7 @@ void ClearLocStack(void) {
 /*--------------------------------------------------------------------------*/
 
 static void PrintRegList_PNode(PTree Tree, void* pData) {
-    PSymbolEntry Node = (PSymbolEntry)Tree;
+    PSymbolEntry Node = SymbolEntryFromTree(Tree);
 
     if (Node->SymWert.Typ == TempReg) {
         TListContext* pContext = (TListContext*)pData;

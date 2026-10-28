@@ -224,9 +224,12 @@ static Boolean GetByte(char** ppLine, Byte* pResult) {
 }
 
 static void FlushChunk(tCodeChunk* pChunk) {
+    /* ResizeBuffer allocated this base with malloc/realloc, so both wider
+       views retain the original allocation's alignment. */
+    void* code = pChunk->pCode;
     pChunk->Granularity = 1;
-    pChunk->pLongCode   = (LongWord*)pChunk->pCode;
-    pChunk->pWordCode   = (Word*)pChunk->pCode;
+    pChunk->pLongCode   = (LongWord*)code;
+    pChunk->pWordCode   = (Word*)code;
     MoveCodeChunkToList(&CodeChunks, pChunk, TRUE);
     InitCodeChunk(pChunk);
 }
