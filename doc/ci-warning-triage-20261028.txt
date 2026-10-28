@@ -11,7 +11,11 @@ The warning-policy bucket is complete under the agreed C11, header-compatibility
 
 At the user's direction, custom-format warnings are deferred to a future snprintf change: render custom literals through a dedicated function, then pass the resulting buffer with %s to standard snprintf. The existing untracked printf audit and inventory remain unchanged.
 
-The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory, const-API and warning-policy recommendations are superseded by the resolution reports.
+The cleanup bucket is addressed through declaration/linkage corrections, documentation repair, macro normalization, unused-state removal, distinct local names and explicit switch/endian intent. Review also found and fixed discarded KCPSM port displacements and a truncated SHA-1 hex result. Local Clang/GCC cleanup scans are clear; the resolution report records complete-suite results and the corrected legacy KCPSM fixture.
+
+The toolchain bucket has SHA-1 byte decoding, explicit macOS SDK selection and current Pandoc options. SDK warning removal still needs hosted macOS verification. Node DEP0005 remains an upstream follow-up: the action is already at the latest release, and the download step now enables a deprecation stack trace. See doc/ci-cleanup-toolchain-resolution-20261028.txt for batches, validation and limitations.
+
+The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory, const-API, warning-policy and cleanup recommendations are superseded by the resolution reports. The toolchain report also corrects the initial classification of the second deprecated Pandoc invocation: it generates ODT rather than HTML.
 
 Scope and result
 ===============

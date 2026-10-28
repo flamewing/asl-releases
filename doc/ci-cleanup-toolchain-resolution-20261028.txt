@@ -1,0 +1,71 @@
+Cleanup and toolchain resolution, 2026-10-28
+===========================================
+
+Baseline: b2803d77, as recorded in ci-warning-inventory-20261028.json. The cleanup bucket has 13,210 observations and 1,232 source-line/diagnostic-flag entries. The toolchain bucket has 1,149 observations: 18 undefined-endian-macro reports, 1,080 macOS system-directory reports, 50 Pandoc deprecations and one Node deprecation. These repeated observations are not separate defects. The original inventory and the untracked printf audits remain unchanged.
+
+Disposition: cleanup is addressed in source, apart from the explicit Clang maybe-unused advisory policy described below. Toolchain changes address SHA-1 portability, SDK selection and Pandoc options. The Node warning remains an upstream follow-up with tracing enabled. No hosted CI run, macOS runtime validation or push is claimed. Numeric warnings, the separately classified buffer-migration advisories and the deferred custom-format work remain outside this task.
+
+Correctness changes
+===================
+
+ef22479: SHA-1 message words are decoded explicitly from big-endian bytes, independently of host endianness, alignment and aliasing. This removes reliance on undefined BYTE_ORDER/LITTLE_ENDIAN macros. Known-answer tests also exposed SHA1ToHexString terminating the output at character 20 instead of 40; the terminator is corrected. The new SHA-1 test covers empty/abc/standard long messages, a million a characters, high-byte inputs around block/padding boundaries, split and unaligned input, and the output terminator boundary.
+
+c12b837: KCPSM INPUT/OUTPUT previously evaluated but discarded a nonzero register-port displacement. The encoding has no displacement field. These operands now receive an addressing-mode error once resolved; absent and zero displacements remain supported. Tests cover INPUT and OUTPUT, zero and symbolic-zero compatibility, and a forward nonzero displacement. 131fea0 updates the older delimiter fixture to use zero displacement rather than depend on the bug; its golden bytes are unchanged.
+
+f1939de: case conversion consistently uses the existing unsigned-byte wrappers, including formerly direct ctype calls. The wrappers call the libc functions explicitly rather than expand glibc's self-referential macros. This removes disabled-macro-expansion warnings and prevents undefined ctype arguments from signed char values. Locale/byte tests cover upper/lower conversion over inputs -512..767. An optimized Linux assembly probe gives identical instructions for the original macro and explicit function forms.
+
+Declarations, macros and documentation
+=====================================
+
+26b7f75: statement macros use do/while or no-op expressions as appropriate, so ordinary call-site semicolons remain valid. True redundant semicolons are removed. Strict-prototype declarations are corrected. Internal reserved names and generated resource-header guards receive project prefixes; MinGW's required CRT _dowildcard ABI name is retained with a local, documented reserved-identifier exception.
+
+38802c4 and 3f44b24: API comments are attached to their intended functions after intervening helpers/typedefs had made many comments describe the wrong declaration. Obsolete parameter names, empty/stale tags and typos are corrected. C token streams across the 66 documentation-only files were checked unchanged. 8403b07 removes the colon attached to the AccDest parameter name in codepdk.c.
+
+d6ce96a: private helpers and state have internal linkage. Implementations include their own/shared declaration headers; shared integer-format declarations live with their owning API. Obsolete unused stubs and the uncalled Z80 helper chain are removed. Intentionally retained debug functions and partially used generated hash APIs carry maybe-unused annotations. No missing-prototype or unused-function diagnostic is globally disabled.
+
+ababf4f: 122 unused CPU-ID variables are removed while preserving every CPU-registration call, argument and registration order. Other unused backend/core state is removed after tracing its assignments and uses; KCPSM's ignored displacement is handled separately as a defect.
+
+f384393: obsolete/duplicate backend macros are removed, and the DEC debug switch is defined only in the configuration that consumes it.
+
+f774e4d and 51b31a0: 212 shadowing locals/parameters receive distinct names, including GCC-only reports involving enum constants or typedefs. Clang AST declaration bindings determine all reference edits. Source-identifier coverage and macro checks found no unaccounted references; attached parameter comments follow the renamed declarations.
+
+51b31a0: 81 intentional switch transitions use portable AS_FALLTHROUGH annotations. Fifteen cases now break directly instead of falling into an empty default. Host-endian paths use preprocessor guards rather than runtime tests of compile-time constants, preserving both byte orders. Two genuinely unreachable statements, an empty nested conditional, a redundant equal-arm opcode conditional and a comma-separated assignment are removed or simplified. The integer-syntax separator uses an explicit conditional string. No encoding changes are intended by this batch.
+
+8403b07 disables Clang's -Wused-but-marked-unused advisory for routine builds: GNU unused is the portable C11 spelling used for functions that may be unused, and Clang otherwise diagnoses legitimate calls to those functions, including recursion in a debug helper. Avoiding this advisory through C23 attributes would add extension suppressions or declaration-specific pragma scaffolding. Unused-function, unused-variable and unused-parameter checks remain enabled.
+
+Build/toolchain maintenance
+===========================
+
+43dee04: macOS CI selects CMAKE_OSX_SYSROOT=macosx; the snapshot matrix exports the SDK selected by xcrun on macOS. Inspection of the original macOS command lines found /usr/bin/cc without an explicit sysroot and no explicit -I/usr/local/include. CMake 4's documented empty-sysroot default explains the Apple compiler's native /usr/local/include search. Explicit SDK selection addresses that configuration cause; the next hosted macOS run must verify the warning is gone.
+
+43dee04: HTML uses --embed-resources --standalone. The other active deprecated invocation generates ODT, not HTML as the initial triage said; ODT now uses --standalone without the HTML-only embedding option. HTML and ODT generation pass with isolated Pandoc 3.1.11, and Linux documentation also builds with Pandoc 3.7.0.2. Generated HTML contains inline styles and no external runtime resources. actionlint validates the edited workflows.
+
+43dee04: actions/download-artifact remains pinned to v8.0.2 (9000827ccba6bdab643e8b6fd33ac0654aef8333), verified as the current upstream release. NODE_OPTIONS=--trace-deprecation is scoped to the download step to identify the source of DEP0005 on the next run. The warning is not claimed fixed and the exact emitting dependency is not yet known.
+
+fe272d2: formatting/tidy source collection no longer recursively descends arbitrary root-level build directories. The file set covers root sources plus the source-bearing ulib and tests trees. This also fixed an observed Linux configure stall and avoids formatting generated/tool files.
+
+Verification
+============
+
+The native GCC 16.2 build succeeds with all CPU backends. The serial 440-test run passed everything except the old KCPSM delimiter fixture that depended on discarded displacements. After correcting that fixture, an 18-test follow-up passes, including delimiter/KCPSM, library lifecycle, SHA-1, byte classification, integer-span and floating/formatter coverage. The full-run failure is therefore resolved; it was not hidden or treated as flaky.
+
+The WSL Ubuntu Clang 21.1.8 build also succeeds with all CPU backends and documentation. Its serial 441-test run had the same single fixture failure; that test passes after correction, and all 18 follow-up tests pass after the final rebuild. The additional Linux locale test passed in the full run. Thus every configured test passes across the full run and the relevant reruns on each host.
+
+Optimized native GCC object compilation and Clang 23.1.3 checks cover all 233 configured C source paths. Linux Clang 21 checks cover all 234 paths, including its extra locale test. Cleanup diagnostics are clear, including documentation, linkage/prototypes, shadowing, semicolons, fallthrough, unused symbols/macros, reserved names, unreachable code, comma/string operators and GCC duplicated branches. Full native/Linux build logs also contain no remaining cleanup diagnostics. A separate native Clang initialization/control-flow scan is clear across all 233 paths.
+
+The six sources with revised endian guards compile with the big-endian preprocessor branch selected. This checks branch syntax, not execution on a big-endian machine; no such runtime was available. SHA-1's byte decoding is covered by independent known-answer tests on the available hosts.
+
+Both edited workflows pass actionlint. HTML/ODT generation and inline-resource inspection pass as described above. Formatter command inspection verifies source-tree files are included and generated build-tree files are excluded. git diff --check is clean. Hosted matrix verification, including macOS SDK behavior and the Node deprecation stack, remains for the next CI run.
+
+References
+==========
+
+Original run/log references and census methodology: ci-warning-triage-20261028.txt and ci-warning-inventory-20261028.json.
+
+CMake 4 SDK defaults and Apple compiler search behavior: https://cmake.org/cmake/help/v4.0/variable/CMAKE_OSX_SYSROOT.html
+
+Pandoc embedding and deprecated option behavior: https://pandoc.org/MANUAL.html
+
+KCPSM port selection/encoding: AMD UG129, https://docs.amd.com/api/khub/documents/H3qOE94lnn_iL_mF6Gt6gQ/content (register or literal port selection; no displacement field). The local encoder and regression tests independently demonstrate the discarded displacement.
+
+Upstream download action: https://github.com/actions/download-artifact/releases/tag/v8.0.2
