@@ -19,9 +19,11 @@
 #endif
 
 #if defined(__GNUC__)
+#    define AS_MAYBE_UNUSED __attribute__((unused))
 #    define AS_MALLOC __attribute__((malloc))
 #    define AS_ALLOC_SIZE(count, size) __attribute__((alloc_size(count, size)))
 #else
+#    define AS_MAYBE_UNUSED
 #    define AS_MALLOC
 #    define AS_ALLOC_SIZE(count, size)
 #endif

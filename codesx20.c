@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "codesx20.h"
+
 #include "as.rsc"
 #include "nlmessages.h"
 

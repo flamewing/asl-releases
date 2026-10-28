@@ -79,7 +79,7 @@ static void decode_lit3u(Word code) {
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
 
-Boolean str_arg(tStrComp* p_arg, as_nonz_dynstr_t* p_str, tEvalResult* p_eval_result) {
+static Boolean str_arg(tStrComp* p_arg, as_nonz_dynstr_t* p_str, tEvalResult* p_eval_result) {
     EvalStrStringExpressionWithResult(p_arg, p_eval_result, p_str);
 
     if (p_eval_result->OK) {

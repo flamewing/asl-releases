@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only */
+int test_driver_program_main(int argc, char** argv);
+
 #define main test_driver_program_main
 #include "../test_driver.c"
 #undef main

@@ -22,6 +22,7 @@
 #define STR(x)        STR_STRING(x)
 
 extern char const* Version;
+extern char const* DebVersion;
 extern LongInt     VerNo;
 
 extern char const* InfoMessCopyright;

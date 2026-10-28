@@ -402,7 +402,7 @@ typedef struct {
     Byte              base, index;
 } upd78_eval_cb_data_t;
 
-DECLARE_AS_EVAL_CB(upd78_eval_cb) {
+static DECLARE_AS_EVAL_CB(upd78_eval_cb) {
     upd78_eval_cb_data_t* p_upd78_eval_cb_data = (upd78_eval_cb_data_t*)p_data;
     Byte                  reg;
     Boolean               bad_reg = False;

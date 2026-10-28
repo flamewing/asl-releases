@@ -32,6 +32,13 @@
 #include <stdlib.h>    // IWYU pragma: export
 #include <string.h>    // IWYU pragma: export
 
+/* An instantiation may use only a subset of this generated private API. */
+#if defined(__GNUC__) || defined(__clang__)
+#    define OH_MAYBE_UNUSED __attribute__((unused))
+#else
+#    define OH_MAYBE_UNUSED
+#endif
+
 #define OH_SWAP(type, a, b)             \
     do {                                \
         type oh_swap_tmp = (a);         \
@@ -97,11 +104,11 @@ enum {
         val_t*     vals;                                                          \
     } openhash_##name##_t;                                                        \
                                                                                   \
-    static inline openhash_##name##_t* openhash_init_##name(void) {                   \
+    static inline OH_MAYBE_UNUSED openhash_##name##_t* openhash_init_##name(void) {                   \
         return (openhash_##name##_t*)calloc(1, sizeof(openhash_##name##_t));      \
     }                                                                             \
                                                                                   \
-    static inline void openhash_destroy_##name(openhash_##name##_t* h) {          \
+    static inline OH_MAYBE_UNUSED void openhash_destroy_##name(openhash_##name##_t* h) {          \
         if (h) {                                                                  \
             free(h->flags);                                                       \
             free(h->keys);                                                        \
@@ -110,7 +117,7 @@ enum {
         }                                                                         \
     }                                                                             \
                                                                                   \
-    static inline void openhash_clear_##name(openhash_##name##_t* h) {            \
+    static inline OH_MAYBE_UNUSED void openhash_clear_##name(openhash_##name##_t* h) {            \
         if (h && h->flags) {                                                      \
             memset(h->flags, 0xaa, OH_FLAGS_BYTE(h->nbucket));                    \
             h->nelem     = 0;                                                     \
@@ -118,7 +125,7 @@ enum {
         }                                                                         \
     }                                                                             \
                                                                                   \
-    static inline oh_iter_t openhash_get_##name(                                  \
+    static inline OH_MAYBE_UNUSED oh_iter_t openhash_get_##name(                                  \
             const openhash_##name##_t* h, keyref_t key) {                         \
         if (h->nbucket) {                                                         \
             oh_size_t i, k, last;                                                 \
@@ -138,7 +145,7 @@ enum {
             return 0;                                                             \
     }                                                                             \
                                                                                   \
-    static inline int openhash_resize_##name(                                     \
+    static inline OH_MAYBE_UNUSED int openhash_resize_##name(                                     \
             openhash_##name##_t* h, oh_size_t nbucket) {                          \
         oh_size_t* flags;                                                         \
         key_t*     keys;                                                          \
@@ -215,7 +222,7 @@ enum {
         return 0;                                                                 \
     }                                                                             \
                                                                                   \
-    static inline oh_iter_t openhash_set_##name(                                  \
+    static inline OH_MAYBE_UNUSED oh_iter_t openhash_set_##name(                                  \
             openhash_##name##_t* h, keyref_t key, int* ret) {                     \
         oh_size_t i, x, k, step, mask, site, last;                                \
         if (h->noccupied >= h->bound) {                                           \
@@ -270,7 +277,7 @@ enum {
         return x;                                                                 \
     }                                                                             \
                                                                                   \
-    static inline void openhash_del_##name(openhash_##name##_t* h, oh_iter_t x) { \
+    static inline OH_MAYBE_UNUSED void openhash_del_##name(openhash_##name##_t* h, oh_iter_t x) { \
         if (x != h->nbucket && !OH_ISEITHER(h->flags, x)) {                       \
             OH_SET_DEL(h->flags, x);                                              \
             --h->nelem;                                                           \

@@ -39,9 +39,9 @@ typedef struct sLineInfoList {
     TLineInfo             Contents;
 } TLineInfoList, *PLineInfoList;
 
-String        TempFileName;
-FILE*         TempFile;
-PLineInfoList LineInfoRoot;
+static String        TempFileName;
+static FILE*         TempFile;
+static PLineInfoList LineInfoRoot;
 
 void AddLineInfo(
         Boolean InMacro, LongInt LineNum, char* FileName, ShortInt Space,

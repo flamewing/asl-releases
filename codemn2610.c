@@ -952,7 +952,7 @@ static void DecodeSKIP(Word Code) {
     }
 }
 
-void IncMaxCodeLen(unsigned NumWords) {
+static void IncMaxCodeLen(unsigned NumWords) {
     SetMaxCodeLen((CodeLen + NumWords) * 2);
 }
 

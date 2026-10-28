@@ -431,7 +431,7 @@ typedef struct {
     tAdrResult*       p_result;
 } s166_eval_cb_data_t;
 
-DECLARE_AS_EVAL_CB(s166_eval_cb) {
+static DECLARE_AS_EVAL_CB(s166_eval_cb) {
     s166_eval_cb_data_t* p_s166_eval_cb_data = (s166_eval_cb_data_t*)p_data;
     Byte                 reg;
 

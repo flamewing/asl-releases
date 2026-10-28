@@ -371,7 +371,7 @@ static void DecideSize(
  * \return True if successfully parsed
  * ------------------------------------------------------------------------ */
 
-Boolean DecideIndirectSize(
+static Boolean DecideIndirectSize(
         tStrComp const* pArg, tAdrMode Mode8_8, tAdrMode Mode8_16, tAdrMode Mode16_16,
         tAdrMode Mode16_24, Byte Part8_8, Byte Part8_16, Byte Part16_16, Byte Part16_24,
         tAdrVals* pAdrVals) {

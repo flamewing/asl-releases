@@ -95,7 +95,7 @@ typedef struct {
 } adr_vals_t;
 
 static tCPUProps const* pCurrCPUProps;
-clr_cpl_t*              clr_cpl_args;
+static clr_cpl_t*              clr_cpl_args;
 static SelOrder*        SelOrders;
 static LongInt          Reg_MB;
 

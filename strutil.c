@@ -56,7 +56,7 @@ char const* Blanks(int cnt) {
 
 
 
-char* SysStringCore(
+static char* SysStringCore(
         char* pDest, char* pDestCurr AS_LIFETIMEBOUND, LargeWord Num, int System, int Digits,
         char StartCharacter) {
     LargeWord Digit;
@@ -623,7 +623,7 @@ static int vsprcatf_core(
  * \return # of characters appended
  * ------------------------------------------------------------------------ */
 
-int as_vsdprcatf(as_dynstr_t* p_dest, char const* pFormat, va_list ap) {
+static int as_vsdprcatf(as_dynstr_t* p_dest, char const* pFormat, va_list ap) {
     dest_format_context_t ctx;
 
     ctx.p_dest      = p_dest->p_str;
@@ -641,7 +641,7 @@ int as_vsdprcatf(as_dynstr_t* p_dest, char const* pFormat, va_list ap) {
  * \return # of characters written
  * ------------------------------------------------------------------------ */
 
-int as_vsdprintf(as_dynstr_t* p_dest, char const* pFormat, va_list ap) {
+static int as_vsdprintf(as_dynstr_t* p_dest, char const* pFormat, va_list ap) {
     if (p_dest->capacity > 0) {
         p_dest->p_str[0] = '\0';
     }

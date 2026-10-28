@@ -667,7 +667,7 @@ static void deinit_fields(void) {
  * \brief  actual code generator
  * ------------------------------------------------------------------------ */
 
-void make_code_42c00(void) {
+static void make_code_42c00(void) {
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);
     }

@@ -172,7 +172,7 @@ static void SetLoUp(Byte Lo, Byte Up) {
     LowCaseTable[Up] = Lo;
 }
 
-void UpCaseFromCodeTable(void) {
+static void UpCaseFromCodeTable(void) {
     int z;
 
     for (z = 0; z < 128; z++) {

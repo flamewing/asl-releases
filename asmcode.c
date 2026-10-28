@@ -46,7 +46,6 @@ Boolean         last_basmcode_bit_field_set_be;
 PPatchEntry  PatchList, PatchLast;
 PExportEntry ExportList, ExportLast;
 LongInt      SectSymbolCounter;
-String       SectSymbolName;
 
 static LongWord  code_len_guessed = 0, max_code_len_guessed = 0;
 static Byte*     basmcode_guessed;

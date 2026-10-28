@@ -223,7 +223,7 @@ typedef struct {
     Byte              reg;
 } xa_eval_cb_data_t;
 
-DECLARE_AS_EVAL_CB(xa_eval_cb) {
+static DECLARE_AS_EVAL_CB(xa_eval_cb) {
     xa_eval_cb_data_t* p_xa_eval_cb_data = (xa_eval_cb_data_t*)p_data;
     Byte               reg;
     tSymbolSize        reg_size;

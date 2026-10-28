@@ -835,20 +835,7 @@ static Boolean IsReg(tStrComp const* pArg, tZ80Reg ExpectedReg) {
            && Z80RegAvailable(Reg);
 }
 
-static Boolean DecodeIndirectReg(tStrComp const* pArg, tZ80Reg ExpectedReg) {
-    size_t ArgLen = strlen(pArg->str.p_str);
 
-    if ((ArgLen >= 3) && (*pArg->str.p_str == '(')
-        && (pArg->str.p_str[ArgLen - 1] == ')')) {
-        String   RegStr;
-        tStrComp RegArg;
-
-        StrCompMkTemp(&RegArg, RegStr, sizeof(RegStr));
-        StrCompCopySub(&RegArg, pArg, 1, ArgLen - 2);
-        return IsReg(&RegArg, ExpectedReg);
-    }
-    return False;
-}
 
 static Boolean DecodeReg8Code(tStrComp const* pArg, Byte* pCode) {
     tZ80Reg Reg;
@@ -866,15 +853,9 @@ static Boolean DecodeReg8Code(tStrComp const* pArg, Byte* pCode) {
     return True;
 }
 
-static Boolean ParRegPair(tZ80Reg Reg1, tZ80Reg Reg2) {
-    return (IsReg(&ArgStr[1], Reg1) && IsReg(&ArgStr[2], Reg2))
-           || (IsReg(&ArgStr[1], Reg2) && IsReg(&ArgStr[2], Reg1));
-}
 
-static Boolean ParIndRegPair(tZ80Reg IndReg, tZ80Reg Reg) {
-    return (DecodeIndirectReg(&ArgStr[1], IndReg) && IsReg(&ArgStr[2], Reg))
-           || (IsReg(&ArgStr[1], Reg) && DecodeIndirectReg(&ArgStr[2], IndReg));
-}
+
+
 
 static Boolean IsAltAF(tStrComp const* pArg) {
     return !as_strcasecmp(pArg->str.p_str, "AF\'")
@@ -979,7 +960,7 @@ typedef struct {
 #define EncIX_IYReg ((IYPrefix & 0xf0) | 8)
 #define EncPCReg    7
 
-DECLARE_AS_EVAL_CB(z80_eval_cb) {
+static DECLARE_AS_EVAL_CB(z80_eval_cb) {
     z80_eval_cb_data_t* p_z80_eval_cb_data = (z80_eval_cb_data_t*)p_data;
     tSymbolSize         this_reg_size;
     Byte                this_reg;
@@ -1855,12 +1836,7 @@ static void append_adr_vals_count(adr_vals_t const* p_adr_vals, unsigned count) 
 #define append_adr_vals(p_adr_vals) \
     append_adr_vals_count(p_adr_vals, (p_adr_vals)->count)
 
-static Boolean ParPair(char const* Name1, char const* Name2) {
-    return (((!as_strcasecmp(ArgStr[1].str.p_str, Name1))
-             && (!as_strcasecmp(ArgStr[2].str.p_str, Name2)))
-            || ((!as_strcasecmp(ArgStr[1].str.p_str, Name2))
-                && (!as_strcasecmp(ArgStr[2].str.p_str, Name1))));
-}
+
 
 static void append_z280(
         adr_vals_t const* p_adr_vals, Boolean use_addr_prefix, Word opcode,

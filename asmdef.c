@@ -164,7 +164,7 @@ tStrComp  LabPart, CommPart, ArgPart, OpPart, AttrPart;
 char      AttrSplit;
 Boolean   oppart_leading_dot;
 int       ArgCnt; /* Argumentzahl */
-int       AllocArgCnt;
+static int       AllocArgCnt;
 tStrComp  SrcLine; /* eingelesene Zeile */
 #ifdef PROFILE_MEMO
 unsigned      NumMemo;

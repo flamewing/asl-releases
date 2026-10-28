@@ -272,7 +272,7 @@ typedef struct {
     tSymbolSize       base_reg_size, ind_reg_size;
 } tlcs9000_eval_cb_data_t;
 
-DECLARE_AS_EVAL_CB(tlcs9000_eval_cb) {
+static DECLARE_AS_EVAL_CB(tlcs9000_eval_cb) {
     tlcs9000_eval_cb_data_t* p_eval_cb_data = (tlcs9000_eval_cb_data_t*)p_data;
     Byte                     this_reg;
     tSymbolSize              size;

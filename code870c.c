@@ -129,7 +129,7 @@ typedef struct {
 
 #define REGFLAG_DISP 0x100
 
-DECLARE_AS_EVAL_CB(tlcs870c1_eval_cb) {
+static DECLARE_AS_EVAL_CB(tlcs870c1_eval_cb) {
     tlcs870c1_eval_cb_data_t* p_tlcs870c1_eval_cb_data
             = (tlcs870c1_eval_cb_data_t*)p_data;
     size_t            z;

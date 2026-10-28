@@ -69,11 +69,8 @@ typedef struct tag_TIncList {
     FILE*                Contents;
 } TIncList, *PIncList;
 
-PIncList IncList = NULL;
+static PIncList IncList = NULL;
 
-void WrError(Word Num) {
-    (void)Num;
-}
 
 static void fwritechk(
         char const* pArg, int retcode, void const* pBuffer, size_t size, size_t nmemb,

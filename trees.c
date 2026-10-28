@@ -95,7 +95,7 @@ void DestroyTree(PTree* Tree, TTreeCallback Callback, void* pData) {
     }
 }
 
-void DumpTreeNode(FILE* p_file, TTree* p_tree, int indent) {
+static void DumpTreeNode(FILE* p_file, TTree* p_tree, int indent) {
     if (indent > 0) {
         fprintf(p_file, "%*s", indent, "");
     }
@@ -122,7 +122,7 @@ void DumpTree(FILE* p_file, PTree Tree) {
     DumpTreeIter(p_file, Tree, 0);
 }
 
-void DumpTreePath(FILE* p_file, as_tree_path_t const* p_path) {
+static AS_MAYBE_UNUSED void DumpTreePath(FILE* p_file, as_tree_path_t const* p_path) {
     size_t z;
     for (z = 0; z < p_path->length; z++) {
         fprintf(p_file, "->");

@@ -154,8 +154,8 @@ typedef struct {
 LongInt    MomLocHandle; /* Merker, den lokale Symbole erhalten        */
 LongInt    FwdSymCounter, BackSymCounter;
 String     TmpSymCounterVal; /* representation as string                   */
-TTmpSymLog TmpSymLog[LOCSYMSIGHT];
-LongInt    TmpSymLogDepth;
+static TTmpSymLog TmpSymLog[LOCSYMSIGHT];
+static LongInt    TmpSymLogDepth;
 
 static LongInt next_loc_handle;
 
@@ -257,7 +257,7 @@ typedef struct sRegDef {
 
 static PSymbolHashTable FirstSymbol, FirstLocSymbol;
 static PDefSymbol       FirstDefSymbol;
-/*static*/ PCToken      FirstSection;
+static PCToken      FirstSection;
 static Boolean          DoRefs, /* Querverweise protokollieren */
         RegistersDefined;
 static PLocHandle   FirstLocHandle;
@@ -409,7 +409,7 @@ static void DestroySymbolHashTable(
  * \brief  module-specific pass initialization
  * ------------------------------------------------------------------------ */
 
-void initpass_asmpars(void) {
+static void initpass_asmpars(void) {
     RadixBase       = def_radix_base;
     OutRadixBase    = 16;
     next_loc_handle = LOC_HANDLE_OFFSET;
@@ -1853,7 +1853,7 @@ typedef struct {
     TempResult**      p_arg_vals;
 } function_eval_cb_data_t;
 
-DECLARE_AS_EVAL_CB(function_eval_cb) {
+static DECLARE_AS_EVAL_CB(function_eval_cb) {
     function_eval_cb_data_t* p_function_eval_cb_data = (function_eval_cb_data_t*)p_data;
     int                      z;
     char const*              p_arg_name;
@@ -3205,7 +3205,7 @@ static void EnterSymbol(PSymbolEntry Neu, Boolean MayChange, LongInt ResHandle) 
     EnterSymbolHashTable(FirstSymbol, Neu, SymbolAdder, &EnterStruct);
 }
 
-void PrintSymTree(char* Name) {
+static AS_MAYBE_UNUSED void PrintSymTree(char* Name) {
     fprintf(Debug, "---------------------\n");
     fprintf(Debug, "Enter Symbol %s\n\n", Name);
     PrintSymbolTree();
@@ -3238,7 +3238,7 @@ void ChangeSymbol(PSymbolEntry pEntry, LargeInt Value) {
  * \return * to container or NULL
  * ------------------------------------------------------------------------ */
 
-PSymbolEntry CreateSymbolEntry(
+static PSymbolEntry CreateSymbolEntry(
         tStrComp const* pName, LongInt* pDestHandle, tSymbolFlags symbol_flags) {
     PSymbolEntry pNeu = NULL;
     String       exp_name_buf;
@@ -4042,7 +4042,7 @@ Boolean IsSymbolUsed(const struct sStrComp* pName) {
     return pEntry && update_and_get_used(pEntry);
 }
 
-as_addrspace_t addrspace_from_mask(unsigned mask) {
+static as_addrspace_t addrspace_from_mask(unsigned mask) {
     as_addrspace_t space;
 
     for (space = SegCode; space < SegCount; space++) {

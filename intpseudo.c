@@ -102,7 +102,7 @@ tZ80Syntax  CurrZ80Syntax;
  * Local Functions
  *****************************************************************************/
 
-void DumpCodeFill(char const* pTitle, tCurrCodeFill const* pFill) {
+static AS_MAYBE_UNUSED void DumpCodeFill(char const* pTitle, tCurrCodeFill const* pFill) {
     fprintf(stderr, "%s %u %d\n", pTitle, (unsigned)pFill->FullWordCnt,
             pFill->LastWordFill);
 }

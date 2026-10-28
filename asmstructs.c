@@ -43,7 +43,7 @@ typedef struct sStructNode {
 PStructStack StructStack, /* momentan offene Strukturen */
         pInnermostNamedStruct;
 as_addrspace_t StructSaveSeg; /* gesichertes Segment waehrend Strukturdef.*/
-PStructNode    StructRoot = NULL;
+static PStructNode    StructRoot = NULL;
 
 /*****************************************************************************/
 
@@ -89,7 +89,7 @@ void DestroyStructRec(PStructRec StructRec) {
 
 
 
-void ExpandStructStd(
+static void ExpandStructStd(
         tStrComp const* pVarName, const struct sStructElem* pStructElem, LargeWord Base) {
     LabelHandle(pVarName, Base + pStructElem->Offset, True);
     if (pStructElem->OpSize != eSymbolSizeUnknown) {

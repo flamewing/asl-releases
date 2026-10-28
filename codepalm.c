@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "codepalm.h"
+
 #include "as.rsc"
 #include "nlmessages.h"
 

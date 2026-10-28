@@ -75,7 +75,7 @@ typedef struct {
 
 #define REGFLAG_DISP 0x20
 
-DECLARE_AS_EVAL_CB(tlcs870_eval_cb) {
+static DECLARE_AS_EVAL_CB(tlcs870_eval_cb) {
     tlcs870_eval_cb_data_t* p_tlcs870_eval_cb_data = (tlcs870_eval_cb_data_t*)p_data;
     size_t                  z;
     static char const       AdrRegs[][3] = {"HL", "DE", "C", "PC", "A"};

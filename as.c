@@ -461,7 +461,7 @@ static void PrepareInputReplacements(
     }
 }
 
-Boolean MACRO_Processor(PInputTag PInp, tStrComp* p_dest) {
+static Boolean MACRO_Processor(PInputTag PInp, tStrComp* p_dest) {
     StringRecPtr Lauf = PInp->LineRun;
     Boolean      Result;
     unsigned     ParamCount = PInp->ParCnt > 0 ? PInp->ParCnt : 0;
@@ -1024,7 +1024,7 @@ static void ExpandSHIFT(Word code) {
 /* Diese Routine liefert bei der Expansion eines IRP-Statements die expan-
   dierten Zeilen */
 
-Boolean IRP_Processor(PInputTag PInp, tStrComp* p_dest) {
+static Boolean IRP_Processor(PInputTag PInp, tStrComp* p_dest) {
     StringRecPtr Lauf;
     int          z;
     Boolean      Result;
@@ -1173,9 +1173,6 @@ static void IRP_OutProcessor(void) {
 
     if (FirstOutputTag->NestLevel > -1) {
         as_dynstr_t  s;
-        StringRecPtr Dummy;
-        char const*  p_first_param
-                = GetStringListFirst(FirstOutputTag->ParamNames, &Dummy);
 
         as_dynstr_ini_clone(&s, &SrcLine.str);
         KillCtrl(s.p_str);
@@ -1459,7 +1456,7 @@ static Boolean ExpandIRPN(void) {
 /* Diese Routine liefert bei der Expansion eines IRPC-Statements die expan-
   dierten Zeilen */
 
-Boolean IRPC_Processor(PInputTag PInp, tStrComp* p_dest) {
+static Boolean IRPC_Processor(PInputTag PInp, tStrComp* p_dest) {
     Boolean Result;
     char    tmp[5];
 
@@ -1646,7 +1643,7 @@ static Boolean REPT_GetPos(
     return False;
 }
 
-Boolean REPT_Processor(PInputTag PInp, tStrComp* p_dest) {
+static Boolean REPT_Processor(PInputTag PInp, tStrComp* p_dest) {
     Boolean Result;
 
     Result = True;
@@ -1844,7 +1841,7 @@ static Boolean WHILE_GetPos(
     return False;
 }
 
-Boolean WHILE_Processor(PInputTag PInp, tStrComp* p_dest) {
+static Boolean WHILE_Processor(PInputTag PInp, tStrComp* p_dest) {
     int     z;
     Boolean OK, Result;
 

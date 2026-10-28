@@ -67,7 +67,7 @@ static PPart PartList, PartLast;
 static FILE* TargFile;
 
 static Byte* Buffer;
-LongInt      BufferSize;
+static LongInt      BufferSize;
 
 static LargeWord SegStarts[SegCount];
 

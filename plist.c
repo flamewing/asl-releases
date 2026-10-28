@@ -41,7 +41,7 @@
 #include "c_implementation.h"
 
 static unsigned num_files;
-LongWord        Sums[SegCount];
+static LongWord        Sums[SegCount];
 
 /* --------------------------------------------------------------- */
 

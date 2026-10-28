@@ -247,7 +247,7 @@ static Boolean check_header_raw(
  * \return * to raw file or NULL if failed
  * ------------------------------------------------------------------------ */
 
-as_raw_msg_struct_t* open_raw_file_and_check(
+static as_raw_msg_struct_t* open_raw_file_and_check(
         char const* name, LongInt MsgId1, LongInt MsgId2) {
     as_raw_msg_struct_t* p_ret = NULL;
 

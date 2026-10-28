@@ -105,7 +105,7 @@ static void report_address_register(tStrComp const* arg, Boolean repeated, Boole
     WrXErrorPos(ErrNum_InvAddrMode, detail, &arg->Pos);
 }
 
-DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
+static DECLARE_AS_EVAL_CB(tlcs90_eval_cb) {
     tlcs90_eval_cb_data_t* p_tlcs90_eval_cb_data = (tlcs90_eval_cb_data_t*)p_data;
     size_t                 z;
 

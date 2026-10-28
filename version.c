@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "version.h"
+
 #include "c_implementation.h"
 
 char const* Version    = "1.42 Beta [Bld 313]";

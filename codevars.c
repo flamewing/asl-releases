@@ -12,6 +12,8 @@
 
 #include "stdinc.h"
 
+#include "codevars.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 

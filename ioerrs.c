@@ -183,7 +183,7 @@ static ErrorDef ErrorDefs[] = {
         {          -1,                     -1}
 };
 
-char* hs;
+static char* hs;
 
 char const* GetErrorMsg(int number) {
     ErrorDef* z;

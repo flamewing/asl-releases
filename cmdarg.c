@@ -32,7 +32,7 @@
 
 #include "c_implementation.h"
 
-TMsgCat MsgCat;
+static TMsgCat MsgCat;
 
 static as_cmd_rec_t* sum_cmd_recs    = NULL;
 static size_t        sum_cmd_rec_cnt = 0;
@@ -425,7 +425,7 @@ long as_cmd_strtol(char const* p_inp, char const** pp_end) {
     return ret;
 }
 
-char const* argv0;
+static char const* argv0;
 
 /*!------------------------------------------------------------------------
  * \fn     as_cmd_process(int argc, char** argv, char const* p_env_name, as_cmd_results_t* p_results)

@@ -494,7 +494,7 @@ typedef struct {
 
 #define DBG_CB 0
 
-DECLARE_AS_EVAL_CB(x86_eval_cb) {
+static DECLARE_AS_EVAL_CB(x86_eval_cb) {
     x86_eval_cb_data_t* p_x86_eval_cb_data = (x86_eval_cb_data_t*)p_data;
     ShortInt *          p_buf, buf_val;
     Byte                reg_num;

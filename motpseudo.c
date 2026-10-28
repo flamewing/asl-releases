@@ -343,7 +343,7 @@ void DecodeMotoADR(Word flags) {
     }
 }
 
-void DecodeMotoDCM(Word flags) {
+static void DecodeMotoDCM(Word flags) {
     if (ChkArgCnt(1, ArgCntMax)) {
         tStrComp *pArg, Arg;
         Boolean   OK = True;

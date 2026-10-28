@@ -47,7 +47,6 @@ String target_name;
 
 static TMsgCat MsgCat;
 
-Boolean QuietMode, Verbose;
 
 /****************************************************************************/
 
@@ -492,19 +491,9 @@ as_cmd_result_t CMD_Range(
     return e_cmd_arg;
 }
 
-as_cmd_result_t CMD_QuietMode(Boolean Negate, char const* Arg) {
-    UNUSED(Arg);
 
-    QuietMode = !Negate;
-    return e_cmd_ok;
-}
 
-as_cmd_result_t CMD_Verbose(Boolean Negate, char const* Arg) {
-    UNUSED(Arg);
 
-    Verbose = !Negate;
-    return e_cmd_ok;
-}
 
 as_cmd_result_t cmd_target_name(Boolean negate, char const* p_arg) {
     if (negate) {
@@ -591,8 +580,4 @@ void toolutils_init(char const* ProgPath) {
 
 Boolean AddressWildcard(char const* addr) {
     return ((strcmp(addr, "$") == 0) || (as_strcasecmp(addr, "0x") == 0));
-}
-
-void WrError(Word Num) {
-    UNUSED(Num);
 }

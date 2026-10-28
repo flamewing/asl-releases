@@ -78,7 +78,7 @@ static void from16(t64* pOut, Word const* pIn) {
  * \param  n length of v in words
  * ------------------------------------------------------------------------ */
 
-void mulmnu(Word w[], Word u[], Word v[], int m, int n) {
+static void mulmnu(Word w[], Word u[], Word v[], int m, int n) {
     unsigned int k, t;
     int          i, j;
 

@@ -267,8 +267,6 @@ extern Boolean       PhaseSignExtend; /* signed 32-bit phase addresses */
 extern Boolean       TurnWords;
 extern Byte          HeaderID;
 extern char const*   PCSymbol;
-extern tIntConstMode IntConstMode;
-extern Boolean       IntConstModeIBMNoTerm;
 extern Boolean (*SetIsOccupiedFnc)(void), (*SaveIsOccupiedFnc)(void),
         (*RestoreIsOccupiedFnc)(void);
 extern Boolean SwitchIsOccupied, PageIsOccupied, ShiftIsOccupied;

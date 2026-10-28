@@ -204,7 +204,7 @@ static void dissect_reg_pdp11(
 
 static Byte ext_registered = 0;
 
-unsigned ext_test_and_set(unsigned mask) {
+static unsigned ext_test_and_set(unsigned mask) {
     unsigned curr = ext_registered;
 
     ext_registered |= mask;

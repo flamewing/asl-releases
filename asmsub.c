@@ -1330,7 +1330,7 @@ void ChkSpace(Byte AddrSpace, unsigned AddrSpaceMask) {
 /****************************************************************************/
 /* eine Chunkliste im Listing ausgeben & Speicher loeschen */
 
-void PrintChunk(ChunkList* NChunk, DissectBitProc Dissect, int ItemsPerLine) {
+static void PrintChunk(ChunkList* NChunk, DissectBitProc Dissect, int ItemsPerLine) {
     LargeWord NewMin, FMin;
     Boolean   Found;
     Word      p = 0, z;
@@ -1558,8 +1558,8 @@ static Boolean IsValidParameterName(as_dynstr_t* p_str, int Pos, int End, int St
 
 typedef int (*tCompareFnc)(char const* s1, char const* s2, size_t n);
 
-int ReplaceToken(
-        as_dynstr_t* p_str, char const* pReplace, int Pos, int End, int SearchLen,
+static int ReplaceToken(
+        as_dynstr_t* p_str, char const* pReplace, int Pos, int End,
         int ReplaceLen, int DeltaLen, int* StrLen) {
     if (*StrLen + DeltaLen + 1 > (int)p_str->capacity) {
         as_dynstr_realloc(p_str, as_dynstr_roundup_len(p_str->capacity + DeltaLen));
@@ -1581,7 +1581,7 @@ int ReplaceToken(
     return Pos + nCopy;
 }
 
-int ReplaceLine(
+static int ReplaceLine(
         as_dynstr_t* p_str, char const* pSearch, char const* pReplace,
         Boolean CaseSensitive) {
     int const   SearchLen  = strlen(pSearch);
@@ -1609,7 +1609,7 @@ int ReplaceLine(
             && (IsSurroundedByBackslashes
                 || IsValidParameterName(p_str, Pos, End, StrLen))) {
             Pos = ReplaceToken(
-                    p_str, pReplace, Pos, End, SearchLen, ReplaceLen,
+                    p_str, pReplace, Pos, End, ReplaceLen,
                     DeltaLen - extraDeltaLen, &StrLen);
             NumReplace++;
         } else {
@@ -1619,7 +1619,7 @@ int ReplaceLine(
     return NumReplace;
 }
 
-int ReplaceLineUnchecked(
+static int ReplaceLineUnchecked(
         as_dynstr_t* p_str, char const* pSearch, char const* pReplace,
         Boolean CaseSensitive) {
     int const   SearchLen  = strlen(pSearch);
@@ -1634,7 +1634,7 @@ int ReplaceLineUnchecked(
         int const CmpRes = Compare(&p_str->p_str[Pos], pSearch, SearchLen);
         if (!CmpRes) {
             Pos = ReplaceToken(
-                    p_str, pReplace, Pos, Pos + SearchLen, SearchLen, ReplaceLen,
+                    p_str, pReplace, Pos, Pos + SearchLen, ReplaceLen,
                     DeltaLen, &StrLen);
             NumReplace++;
         } else {

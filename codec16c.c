@@ -604,7 +604,7 @@ check:
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-Boolean decode_adr_reg(tStrComp const* p_arg, Word* p_result, tSymbolSize op_size) {
+static Boolean decode_adr_reg(tStrComp const* p_arg, Word* p_result, tSymbolSize op_size) {
     adr_vals_t adr_vals;
     switch (decode_adr(p_arg, &adr_vals, op_size, False)) {
     case e_mode_reg:
@@ -625,7 +625,7 @@ Boolean decode_adr_reg(tStrComp const* p_arg, Word* p_result, tSymbolSize op_siz
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-Boolean decode_adr_reg_ra(tStrComp const* p_arg) {
+static Boolean decode_adr_reg_ra(tStrComp const* p_arg) {
     Word reg;
 
     if (!decode_adr_reg(p_arg, &reg, eSymbolSize32Bit)) {

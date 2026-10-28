@@ -334,7 +334,16 @@ Boolean Odd(int inp) {
  */
 
 #if (defined _WIN32) && (defined __MINGW32__)
+/* This name is part of MinGW's startup ABI, not a project identifier. */
+#    if defined(__clang__)
+#        pragma clang diagnostic push
+#        pragma clang diagnostic ignored "-Wreserved-identifier"
+#    endif
+extern int _dowildcard;
 int _dowildcard = -1;
+#    if defined(__clang__)
+#        pragma clang diagnostic pop
+#    endif
 #endif
 
 Boolean DirScan(char const* Mask, charcallback callback) {

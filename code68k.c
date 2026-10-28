@@ -1083,7 +1083,7 @@ static Boolean IsDisp16(LongInt Disp) {
     return ((Disp >= -32768) && (Disp <= 32767));
 }
 
-tSymbolSize GetDispLen(LongInt Disp) {
+static tSymbolSize GetDispLen(LongInt Disp) {
     if (IsDisp8(Disp)) {
         return eSymbolSize8Bit;
     } else if (IsDisp16(Disp)) {

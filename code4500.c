@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "code4500.h"
+
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"

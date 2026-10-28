@@ -28,9 +28,9 @@
 
 #include "c_implementation.h"
 
-char const* pEnvName = "DASCMD";
+static char const* pEnvName = "DASCMD";
 
-void WrCopyRight(char const* Msg) {
+static void WrCopyRight(char const* Msg) {
     printf("%s\n%s\n", Msg, InfoMessCopyright);
 }
 

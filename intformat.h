@@ -84,6 +84,9 @@ extern char const* GetIntConstCPrefix(unsigned Radix);
 extern void    SetIntConstModeByMask(LongWord Mask);
 extern Boolean ModifyIntConstModeByMask(LongWord ANDMask, LongWord ORMask);
 
+extern tIntConstMode IntConstMode;
+extern Boolean IntConstModeIBMNoTerm;
+
 extern void SetIntConstMode(tIntConstMode Mode);
 
 extern void SetIntConstRelaxedMode(Boolean NewRelaxedMode);

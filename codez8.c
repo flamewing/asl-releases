@@ -436,7 +436,7 @@ static Boolean IsRegAddress(Word Address) {
     return ((RPVal <= 0xff) && (Hi(Address) == (RPVal & 15)));
 }
 
-int GetForceLen(char const* pArg) {
+static int GetForceLen(char const* pArg) {
     int Result = 0;
 
     while ((Result < 2) && (pArg[Result] == '>')) {

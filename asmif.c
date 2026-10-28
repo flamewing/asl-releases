@@ -189,7 +189,7 @@ static void CodeIFUSED(Word Negate) {
     PushIF(IfExpr);
 }
 
-void CodeIFEXIST(Word Negate) {
+static void CodeIFEXIST(Word Negate) {
     LongInt IfExpr;
 
     ActiveIF = IfAsm;
