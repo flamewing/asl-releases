@@ -1908,7 +1908,7 @@ static void EvalExpressionView(
         as_eval_flags_t eval_flags,
         as_eval_cb_data_t* p_callback_data) {
     Boolean                   OK, int_probed = False, int_valid = False;
-    int                       int_outof_range, float_outof_range;
+    int                       int_outof_range = 0, float_outof_range;
     as_strcomp_view_t         InArgs[3];
     TempResult                InVals[3];
     int                       z1, cnt;

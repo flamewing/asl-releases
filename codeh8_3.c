@@ -1664,7 +1664,7 @@ static void DecodeBit2(Word Code) {
 
 static void DecodeINC_DEC(Word Code) {
     Boolean OK;
-    int     z;
+    int     z = 1;
     Byte    HReg;
 
     if (ChkArgCnt(1, 2)) {
@@ -1674,7 +1674,6 @@ static void DecodeINC_DEC(Word Code) {
                 HReg = AdrPart;
                 if (ArgCnt == 1) {
                     OK = True;
-                    z  = 1;
                 } else {
                     DecodeAdr(&ArgStr[1], MModImm);
                     OK = (AdrMode == ModImm);

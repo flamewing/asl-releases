@@ -587,7 +587,6 @@ static void SwapReg(LongWord* r1, LongWord* r2) {
 
 static Boolean DecodePseudo(void) {
     Boolean   OK;
-    unsigned  dword_index;
     tStrComp* pArg;
     LongInt   Size;
 
@@ -595,12 +594,12 @@ static Boolean DecodePseudo(void) {
         if (ChkArgCnt(1, ArgCntMax)) {
             OK = True;
             forallargs(pArg, OK) {
-                as_float_t Float = EvalStrFloatExpression(pArg, &OK);
+                unsigned   dword_index = CodeLen >> 2;
+                as_float_t Float       = EvalStrFloatExpression(pArg, &OK);
 
                 if (OK) {
                     int ret;
 
-                    dword_index = CodeLen >> 2;
                     if ((ret = as_float_2_ieee4(
                                  Float, (Byte*)(DAsmCode + dword_index), HostBigEndian))
                         < 0) {
@@ -623,11 +622,11 @@ static Boolean DecodePseudo(void) {
         if (ChkArgCnt(1, ArgCntMax)) {
             OK = True;
             forallargs(pArg, OK) {
-                as_float_t Float = EvalStrFloatExpression(pArg, &OK);
+                unsigned   dword_index = CodeLen >> 2;
+                as_float_t Float       = EvalStrFloatExpression(pArg, &OK);
                 if (OK) {
                     int ret;
 
-                    dword_index = CodeLen >> 2;
                     if ((ret = as_float_2_ieee8(
                                  Float, (Byte*)(DAsmCode + dword_index), HostBigEndian))
                         < 0) {

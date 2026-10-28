@@ -1376,10 +1376,11 @@ static void CodeALIGN(Word Index) {
 
         if (2 == ArgCnt) {
             AlignFill = EvalStrIntExpressionWithFlags(&ArgStr[2], Int8, &OK, &Flags);
+            if (!OK) {
+                return;
+            }
         }
-        if (OK) {
-            AlignValue = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
-        }
+        AlignValue = EvalStrIntExpression(&ArgStr[1], Int16, &OK);
         if (OK) {
             if (mFirstPassUnknown(Flags)) {
                 WrError(ErrNum_FirstPassCalc);
