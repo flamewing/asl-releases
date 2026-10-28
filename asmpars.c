@@ -783,7 +783,7 @@ tStrComp* ExpandStrSymbol(
                 as_dynstr_append(&p_dest->str, src_comp.str.p_str, ls);
             }
 
-            p_stop = QuotPos(p_start + 1, '}');
+            p_stop = QuotPosConst(p_start + 1, '}');
             if (!p_stop) {
                 WrStrErrorPos(ErrNum_InvSymName, p_src);
                 return NULL;

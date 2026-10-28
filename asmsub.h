@@ -29,14 +29,23 @@ extern long GTime(void);
 extern void UpString(char* s);
 
 extern char* QuotPosQualify(
+        char* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc);
+extern char const* QuotPosConstQualify(
         char const* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotPos(s, Zeichen) QuotPosQualify(s, Zeichen, NULL)
+#define QuotPosConst(s, Zeichen) QuotPosConstQualify(s, Zeichen, NULL)
 extern char* QuotMultPosQualify(
+        char* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc);
+extern char const* QuotMultPosConstQualify(
         char const* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotMultPos(s, pSearch) QuotMultPosQualify(s, pSearch, NULL)
+#define QuotMultPosConst(s, pSearch) QuotMultPosConstQualify(s, pSearch, NULL)
 extern char* QuotSMultPosQualify(
+        char* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc);
+extern char const* QuotSMultPosConstQualify(
         char const* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc);
 #define QuotSMultPos(s, pStrs) QuotSMultPosQualify(s, pStrs, NULL)
+#define QuotSMultPosConst(s, pStrs) QuotSMultPosConstQualify(s, pStrs, NULL)
 
 extern char* RQuotPos(char* s, char Zeichen);
 
@@ -44,19 +53,19 @@ extern void KillBlanks(char* s);
 
 extern int CopyNoBlanks(char* pDest, char const* pSrc, size_t MaxLen);
 
-extern char* FirstBlank(char const* s);
+extern char* FirstBlank(char* s);
 
 extern void SplitString(char* Source, char* Left, char* Right, char* Trenner);
 
 extern ShortInt StrCaseCmp(char const* s1, char const* s2, LongInt Hand1, LongInt Hand2);
 
-extern char* MatchChars(char const* pStr, char const* pPattern, ...);
-extern char* MatchCharsRev(char const* pStr, char const* pPattern, ...);
+extern char* MatchChars(char* pStr, char const* pPattern, ...);
+extern char* MatchCharsRev(char* pStr, char const* pPattern, ...);
 
-extern char* FindClosingParenthese(char const* pStr);
+extern char* FindClosingParenthese(char* pStr);
 
 extern char* FindOpeningParenthese(
-        char const* pStrBegin, char const* pStrEnd, char const Bracks[2]);
+        char* pStrBegin, char const* pStrEnd, char const Bracks[2]);
 
 #ifdef PROFILE_MEMO
 static inline Boolean Memo(char const* s) {
@@ -136,10 +145,10 @@ extern void AddCopyright(char const* NewLine);
 
 extern void WriteCopyrights(void (*PrintProc)(char const*));
 
-extern char*   ChkSymbNameUpTo(char const* pSym, char const* pUpTo);
+extern char const* ChkSymbNameUpTo(char const* pSym, char const* pUpTo);
 extern Boolean ChkSymbName(char const* pSym);
 
-extern char*   ChkMacSymbNameUpTo(char const* pSym, char const* pUpTo);
+extern char const* ChkMacSymbNameUpTo(char const* pSym, char const* pUpTo);
 extern Boolean ChkMacSymbName(char const* pSym);
 extern Boolean ChkMacSymbChar(char ch);
 

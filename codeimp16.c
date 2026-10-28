@@ -1385,7 +1385,7 @@ static void switch_to_imp16(void const* p_user) {
     TFamilyDescr const* p_descr;
     Boolean             is_pace;
 
-    p_curr_cpu_props = (cpu_props_t*)p_user;
+    p_curr_cpu_props = (cpu_props_t const*)p_user;
     is_pace          = !!(p_curr_cpu_props->flags & e_cpu_flag_core_pace);
     p_descr          = FindFamilyByName(is_pace ? "IPC-16" : "IMP-16");
 

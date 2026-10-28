@@ -122,7 +122,13 @@ static int quot_search_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_
     return 0;
 }
 
-static char* QuotPosCore(
+/* Iterator positions borrow this same buffer. Recover a writable position only
+   when the caller supplied a writable buffer, preserving its pointer type. */
+static char* MutablePosition(char* buffer, char const* position) {
+    return position ? buffer + (position - buffer) : NULL;
+}
+
+static char const* QuotPosCore(
         char const* s, int (*SearchFnc)(char const*, char const*), char const* pSearch,
         as_qualify_quote_fnc_t QualifyQuoteFnc) {
     quot_search_cb_data data;
@@ -135,7 +141,7 @@ static char* QuotPosCore(
     data.p_search               = pSearch;
 
     as_iterate_str_quoted(s, quot_search_cb, &data.data);
-    return (char*)data.p_result;
+    return data.p_result;
 }
 
 /*!------------------------------------------------------------------------
@@ -152,6 +158,11 @@ static int SearchMultChar(char const* pPos, char const* pSearch) {
 }
 
 char* QuotMultPosQualify(
+        char* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc) {
+    return MutablePosition(s, QuotMultPosConstQualify(s, pSearch, QualifyQuoteFnc));
+}
+
+char const* QuotMultPosConstQualify(
         char const* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc) {
     return QuotPosCore(s, SearchMultChar, pSearch, QualifyQuoteFnc);
 }
@@ -169,7 +180,11 @@ static int SearchSingleChar(char const* pPos, char const* pSearch) {
     return ((int)*pSearch) - ((int)*pPos);
 }
 
-char* QuotPosQualify(
+char* QuotPosQualify(char* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc) {
+    return MutablePosition(s, QuotPosConstQualify(s, Zeichen, QualifyQuoteFnc));
+}
+
+char const* QuotPosConstQualify(
         char const* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc) {
     if (!strchr(s, Zeichen)) {
         return NULL;
@@ -201,10 +216,15 @@ static int SearchMultString(char const* pPos, char const* pSearch) {
 }
 
 char* QuotSMultPosQualify(
+        char* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc) {
+    return MutablePosition(s, QuotSMultPosConstQualify(s, pStrs, QualifyQuoteFnc));
+}
+
+char const* QuotSMultPosConstQualify(
         char const* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc) {
     /* Optimize the usual one-character comment delimiter. */
     if (pStrs[0] && !pStrs[1] && !pStrs[2]) {
-        return QuotPosQualify(s, pStrs[0], QualifyQuoteFnc);
+        return QuotPosConstQualify(s, pStrs[0], QualifyQuoteFnc);
     }
     return QuotPosCore(s, SearchMultString, pStrs, QualifyQuoteFnc);
 }
@@ -274,7 +294,7 @@ char* RQuotPos(char* s, char Zeichen) {
     data.search                 = Zeichen;
 
     as_iterate_str_quoted(s, rquot_search_cb, &data.data);
-    return (char*)data.p_result;
+    return MutablePosition(s, data.p_result);
 }
 
 /*!------------------------------------------------------------------------
@@ -336,8 +356,8 @@ void KillBlanks(char* s) {
 /*--------------------------------------------------------------------------*/
 /* ermittelt das erste (nicht-) Leerzeichen in einem String */
 
-char* FirstBlank(char const* s) {
-    char const *h, *Min = NULL;
+char* FirstBlank(char* s) {
+    char *h, *Min = NULL;
 
     h = strchr(s, ' ');
     if (h) {
@@ -351,7 +371,7 @@ char* FirstBlank(char const* s) {
             Min = h;
         }
     }
-    return (char*)Min;
+    return Min;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -381,30 +401,36 @@ void SplitString(char* Source, char* Left, char* Right, char* Trenner) {
  * \param  s string to convert
  * ------------------------------------------------------------------------ */
 
+typedef struct {
+    as_quoted_iterator_cb_data_t data;
+    char*                        buffer;
+} upstring_cb_data_t;
+
 static int upstring_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) {
-    UNUSED(p_cb_data);
-    *((char*)p_pos) = UpCaseTable[(int)*p_pos];
+    upstring_cb_data_t* data               = (upstring_cb_data_t*)p_cb_data;
+    data->buffer[p_pos - p_cb_data->p_str] = UpCaseTable[(int)*p_pos];
     return 0;
 }
 
 void UpString(char* s) {
-    as_quoted_iterator_cb_data_t data;
+    upstring_cb_data_t data;
 
-    data.qualify_quote   = QualifyQuote;
-    data.callback_before = False;
+    data.data.qualify_quote   = QualifyQuote;
+    data.data.callback_before = False;
+    data.buffer               = s;
 
-    as_iterate_str_quoted(s, upstring_cb, &data);
+    as_iterate_str_quoted(s, upstring_cb, &data.data);
 }
 
 /*!------------------------------------------------------------------------
- * \fn     MatchChars(const char *pStr, const char *pPattern, ...)
+ * \fn     MatchChars(char *pStr, const char *pPattern, ...)
  * \brief  see if beginning of string matches given pattern
  * \param  pStr string to check
  * \param  pPattern expected pattern
  * \return * to character following match or NULL if no match
  * ------------------------------------------------------------------------ */
 
-char* MatchChars(char const* pStr, char const* pPattern, ...) {
+char* MatchChars(char* pStr, char const* pPattern, ...) {
     va_list ap;
     char*   pResult = NULL;
 
@@ -420,7 +446,7 @@ char* MatchChars(char const* pStr, char const* pPattern, ...) {
             char const* pPatternStr = va_arg(ap, char const*);
             char*       pSave       = va_arg(ap, char*);
 
-            if (!strchr(pPatternStr, as_toupper(*pStr))) {
+            if (!*pStr || !strchr(pPatternStr, as_toupper(*pStr))) {
                 goto func_exit;
             }
             if (pSave) {
@@ -436,62 +462,64 @@ char* MatchChars(char const* pStr, char const* pPattern, ...) {
             pStr++;
         }
     }
-    pResult = (char*)pStr;
+    pResult = pStr;
 func_exit:
     va_end(ap);
     return pResult;
 }
 
 /*!------------------------------------------------------------------------
- * \fn     MatchCharsRev(const char *pStr, const char *pPattern, ...)
+ * \fn     MatchCharsRev(char *pStr, const char *pPattern, ...)
  * \brief  see if end of string matches given pattern
  * \param  pStr string to check
  * \param  pPattern expected pattern
  * \return * to trailing string matching pattern or NULL if no match
  * ------------------------------------------------------------------------ */
 
-char* MatchCharsRev(char const* pStr, char const* pPattern, ...) {
+char* MatchCharsRev(char* pStr, char const* pPattern, ...) {
     va_list     ap;
     char*       pResult     = NULL;
-    char const *pPatternRun = pPattern + strlen(pPattern) - 1,
-               *pStrRun     = pStr + strlen(pStr) - 1;
+    char const* pPatternRun = pPattern + strlen(pPattern);
+    char*       pStrRun     = pStr + strlen(pStr);
 
     va_start(ap, pPattern);
-    for (; pPatternRun >= pPattern; pPatternRun--) {
+    while (pPatternRun != pPattern) {
+        pPatternRun--;
         switch (*pPatternRun) {
         /* single space in pattern matches arbitrary # of spaces in string */
         case ' ':
-            for (; (pStrRun >= pStr) && as_isspace(*pStrRun); pStrRun--)
+            for (; (pStrRun != pStr) && as_isspace(pStrRun[-1]); pStrRun--)
                 ;
             break;
         case '?': {
             char const* pPatternStr = va_arg(ap, char const*);
             char*       pSave       = va_arg(ap, char*);
 
-            if (!strchr(pPatternStr, as_toupper(*pStrRun))) {
+            if ((pStrRun == pStr) || !strchr(pPatternStr, as_toupper(pStrRun[-1]))) {
                 goto func_exit;
             }
             if (pSave) {
-                *pSave = *pStrRun;
+                *pSave = pStrRun[-1];
             }
             pStrRun--;
             break;
         }
         default:
-            if ((pStrRun < pStr) || (as_toupper(*pStrRun) != as_toupper(*pPatternRun))) {
+            if ((pStrRun == pStr)
+                || (as_toupper(pStrRun[-1]) != as_toupper(*pPatternRun))) {
                 goto func_exit;
             }
             pStrRun--;
         }
     }
-    pResult = (char*)(pStrRun + 1);
+    pResult = pStrRun;
 func_exit:
     va_end(ap);
     return pResult;
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FindClosingParenthese(const char *pStr)
+ * \fn     FindClosingParenthese(char *pStr)
  * \brief  find matching closing parenthese
  * \param  pStr * to string right after opening parenthese
  * \return * to closing parenthese or NULL
@@ -520,7 +548,7 @@ static int close_par_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_da
     return 0;
 }
 
-char* FindClosingParenthese(char const* pStr) {
+char* FindClosingParenthese(char* pStr) {
     close_par_cb_data_t data;
 
     data.data.callback_before = False;
@@ -530,11 +558,11 @@ char* FindClosingParenthese(char const* pStr) {
 
     as_iterate_str_quoted(pStr, close_par_cb, &data.data);
 
-    return (char*)data.p_ret;
+    return MutablePosition(pStr, data.p_ret);
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FindOpeningParenthese(const char *pStrBegin, const char *pStrEnd, const char Bracks[2])
+ * \fn     FindOpeningParenthese(char *pStrBegin, const char *pStrEnd, const char Bracks[2])
  * \brief  find matching opening parenthese in string
  * \param  pStrBegin start of string
  * \param  pStrEnd end of string, preceding closing parenthese in question
@@ -568,8 +596,7 @@ static int open_par_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_dat
     return ((p_pos + 1) < p_data->p_str_end) ? 0 : -1;
 }
 
-char* FindOpeningParenthese(
-        char const* pStrBegin, char const* pStrEnd, char const Bracks[2]) {
+char* FindOpeningParenthese(char* pStrBegin, char const* pStrEnd, char const Bracks[2]) {
     open_par_cb_data_t data;
 
     data.data.callback_before = False;
@@ -581,7 +608,7 @@ char* FindOpeningParenthese(
 
     as_iterate_str_quoted(pStrBegin, open_par_cb, &data.data);
 
-    return (char*)data.p_ret;
+    return MutablePosition(pStrBegin, data.p_ret);
 }
 
 /****************************************************************************/
@@ -850,8 +877,8 @@ void StrSym(
         digits     = digit_bits ? ((int_num_bits + digit_bits - 1) / digit_bits) : 1;
         SysString(
                 Buf, sizeof(Buf), IntVal, Radix, False, digits,
-                (16 == Radix) && (IntConstMode == eIntConstModeIntel), HexStartCharacter,
-                SplitByteCharacter);
+                    (16 == Radix) && (IntConstMode == eIntConstModeIntel),
+                    HexStartCharacter, SplitByteCharacter);
         as_sdprcatf(p_dest, "%s", Buf);
         if (WithSystem) {
             switch (IntConstMode) {
@@ -1157,13 +1184,13 @@ static Byte GetValidSymChar(unsigned Ch) {
     return (Ch < ValidSymCharLen) ? ValidSymChar[Ch] : 0;
 }
 
-static char* ChkNameUpTo(char const* pSym, char const* pUpTo, Byte Mask_) {
+static char const* ChkNameUpTo(char const* pSym, char const* pUpTo, Byte Mask_) {
     Byte        Mask = Mask_;
     unsigned    Ch;
     char const* pPrev;
 
     if (!*pSym) {
-        return (char*)pSym;
+        return pSym;
     }
 
     while (*pSym && (pSym != pUpTo)) {
@@ -1175,15 +1202,15 @@ static char* ChkNameUpTo(char const* pSym, char const* pUpTo, Byte Mask_) {
         }
 
         if (!(GetValidSymChar(Ch) & Mask)) {
-            return (char*)pPrev;
+            return pPrev;
         }
         Mask = Mask_ << 1;
     }
-    return (char*)pSym;
+    return pSym;
 }
 
-char* ChkSymbNameUpTo(char const* pSym, char const* pUpTo) {
-    char* pResult = ChkNameUpTo(pSym, pUpTo, VALID_S1);
+char const* ChkSymbNameUpTo(char const* pSym, char const* pUpTo) {
+    char const* pResult = ChkNameUpTo(pSym, pUpTo, VALID_S1);
 
     /* If NULL as UpTo was given, and all is fine up to end of string,
        also return NULL as result.  So Equation 'Result==UpTo' is fulfilled: */
@@ -1199,8 +1226,8 @@ Boolean ChkSymbName(char const* pSym) {
     return *pSym && !pEnd;
 }
 
-char* ChkMacSymbNameUpTo(char const* pSym, char const* pUpTo) {
-    char* pResult = ChkNameUpTo(pSym, pUpTo, VALID_M1);
+char const* ChkMacSymbNameUpTo(char const* pSym, char const* pUpTo) {
+    char const* pResult = ChkNameUpTo(pSym, pUpTo, VALID_M1);
 
     /* If NULL as UpTo was given, and all is fine up to end of string,
        also return NULL as result.  So Equation 'Result==UpTo' is fulfilled: */
@@ -1443,15 +1470,16 @@ void AddIncludeList(char const* p_new_path) {
 
 void RemoveIncludeList(char const* p_rem_path) {
     String      one_path;
-    char const *p_list_run, *p_list_next;
+    char*       p_list_run;
+    char const* p_list_next;
 
     p_list_run = IncludeList;
     while (*p_list_run) {
         p_list_next = get_first_path_from_list(p_list_run, one_path, sizeof(one_path));
         if (!strcmp(one_path, p_rem_path)) {
-            strmov((char*)p_list_run, p_list_next);
+            strmov(p_list_run, p_list_next);
         } else {
-            p_list_run = p_list_next;
+            p_list_run = MutablePosition(p_list_run, p_list_next);
         }
     }
 }

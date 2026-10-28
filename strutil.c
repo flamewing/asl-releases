@@ -831,10 +831,10 @@ char* strstr(char const* haystack, char const* needle) {
  * \return last occurence or NULL
  * ------------------------------------------------------------------------ */
 
-char* strmultchr(char const* p_haystack, char const* p_needles) {
+char* strmultchr(char* p_haystack, char const* p_needles) {
     for (; *p_haystack; p_haystack++) {
         if (strchr(p_needles, *p_haystack)) {
-            return (char*)p_haystack;
+            return p_haystack;
         }
     }
     return NULL;
@@ -848,12 +848,13 @@ char* strmultchr(char const* p_haystack, char const* p_needles) {
  * \return last occurence or NULL
  * ------------------------------------------------------------------------ */
 
-char* strrmultchr(char const* haystack, char const* needles) {
-    char const* pPos;
+char const* strrmultchr(char const* haystack, char const* needles) {
+    char const* pPos = haystack + strlen(haystack);
 
-    for (pPos = haystack + strlen(haystack) - 1; pPos >= haystack; pPos--) {
+    while (pPos != haystack) {
+        pPos--;
         if (strchr(needles, *pPos)) {
-            return (char*)pPos;
+            return pPos;
         }
     }
     return NULL;

@@ -1221,6 +1221,9 @@ endif()
 
 define_executable(test_asl_library tests/library.c)
 target_link_libraries(test_asl_library PRIVATE asl_library)
+define_executable(test_const_strings tests/const_strings.c)
+target_link_libraries(test_const_strings PRIVATE asl_library)
+add_test(NAME const_strings COMMAND test_const_strings)
 asl_test_available(library_lifecycle can_run REQUIRES M68K Z80)
 if(can_run)
     add_test(NAME library_lifecycle COMMAND ${CMAKE_COMMAND}

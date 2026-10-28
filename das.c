@@ -26,7 +26,7 @@
 
 #define TABSIZE 8
 
-char* pEnvName = "DASCMD";
+char const* pEnvName = "DASCMD";
 
 void WrCopyRight(char const* Msg) {
     printf("%s\n%s\n", Msg, InfoMessCopyright);

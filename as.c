@@ -2745,7 +2745,7 @@ static void split_arguments(tStrComp* p_args, char const* p_divide_chars) {
 #endif
         p_div_pos = p_end;
         for (p_act_div = p_divide_chars; *p_act_div; p_act_div++) {
-            p_act_div_pos = QuotPosQualify(p_run, *p_act_div, QualifyQuote);
+            p_act_div_pos = QuotPosConstQualify(p_run, *p_act_div, QualifyQuote);
             if (p_act_div_pos && (p_act_div_pos < p_div_pos)) {
                 p_div_pos = p_act_div_pos;
             }
@@ -2894,7 +2894,7 @@ static void SplitLine(void) {
                 char save = *comment;
 
                 *comment = '\0';
-                p_arg_term                = QuotSMultPos(pRun, blanks);
+                p_arg_term                = QuotSMultPosConst(pRun, blanks);
                 *comment = save;
                 if (p_arg_term) {
                     p_comment_start = p_arg_term;
