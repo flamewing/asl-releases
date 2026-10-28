@@ -11,7 +11,7 @@
 #include "c_implementation.h"
 
 static unsigned entry_allocations, name_allocations;
-static void* counted_calloc(size_t count, size_t size) {
+static AS_MALLOC AS_ALLOC_SIZE(1, 2) void* counted_calloc(size_t count, size_t size) {
     entry_allocations++;
     return calloc(count, size);
 }

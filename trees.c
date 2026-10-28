@@ -334,7 +334,7 @@ static void add_path(as_tree_path_t* p_path, TTree* p_tree, int state) {
 }
 
 static TTree* find_min_for_recursive(
-        TTree* p_tree, char const* p_name, as_tree_path_t* p_path) {
+        TTree* p_tree AS_LIFETIMEBOUND, char const* p_name, as_tree_path_t* p_path) {
     int this_cmp;
 
     if (!p_tree) {
@@ -369,7 +369,7 @@ static TTree* find_min_for_recursive(
 }
 
 static TTree* find_min_for_iterative(
-        TTree* p_tree, char const* p_name, as_tree_path_t* p_path) {
+        TTree* p_tree AS_LIFETIMEBOUND, char const* p_name, as_tree_path_t* p_path) {
     TTree* p_ret;
 
     for (p_ret = p_tree; p_ret;) {
@@ -436,7 +436,7 @@ TTree* find_tree_first(TTree* p_tree, char const* p_name, as_tree_path_t* p_path
  * \return next element or NULL if end of tree or no more symbols of given name
  * ------------------------------------------------------------------------ */
 
-static TTree* find_tree_next_sub(TTree* p_sub, as_tree_path_t* p_path) {
+static TTree* find_tree_next_sub(TTree* p_sub AS_LIFETIMEBOUND, as_tree_path_t* p_path) {
     if (!p_sub) {
         return NULL;
     }

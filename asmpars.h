@@ -145,7 +145,7 @@ extern Boolean ChkRangeWarnByType(
 extern Boolean IdentifySection(const struct sStrComp* pName, LongInt* Erg);
 
 extern struct sStrComp* ExpandStrSymbol(
-        struct sStrComp* p_exp_comp, const struct sStrComp* pSrc, Boolean convert_upper);
+        struct sStrComp* p_exp_comp AS_LIFETIMEBOUND, const struct sStrComp* pSrc, Boolean convert_upper);
 
 extern void ChangeSymbol(struct sSymbolEntry* pEntry, LargeInt Value);
 

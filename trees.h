@@ -44,9 +44,9 @@ extern void DestroyTree(PTree* Tree, TTreeCallback Callback, void* pData);
 
 extern void DumpTree(FILE* p_file, PTree Tree);
 
-extern PTree SearchTree(PTree Tree, char const* Name, LongInt Attribute);
+extern PTree SearchTree(PTree Tree AS_LIFETIMEBOUND, char const* Name, LongInt Attribute);
 
-extern TTree* find_tree_first(TTree* p_tree, char const* p_name, as_tree_path_t* p_path);
+extern TTree* find_tree_first(TTree* p_tree AS_LIFETIMEBOUND, char const* p_name, as_tree_path_t* p_path);
 extern TTree* find_tree_next(char const* p_name, as_tree_path_t* p_path);
 
 extern Boolean EnterTree(PTree* PDest, PTree Neu, TTreeAdder Adder, void* pData);

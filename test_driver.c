@@ -15,6 +15,7 @@
 
 #define PATH_BUFFER_SIZE 4096
 
+#include "as_attributes.h"
 #include "c_implementation.h"
 
 static char io_buffer[32768];
@@ -34,7 +35,7 @@ static bool remove_output(char const* name) {
 #endif
 
 // TODO: Need to fix AS path handling so this is not needed
-static char* convert_path(char* path) {
+static char* convert_path(char* path AS_LIFETIMEBOUND) {
 #ifdef _WIN32
     char* p = path;
     while (*p) {

@@ -173,7 +173,7 @@ _Static_assert(offsetof(TSymbolEntry, Tree) == 0, "symbol tree must be the first
 
 /* Symbol callbacks receive the first member of an allocated TSymbolEntry.
    Recover the enclosing allocation, whose alignment is stronger than TTree's. */
-static PSymbolEntry SymbolEntryFromTree(PTree tree) {
+static PSymbolEntry SymbolEntryFromTree(PTree tree AS_LIFETIMEBOUND) {
     return (PSymbolEntry)(void*)tree;
 }
 

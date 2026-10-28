@@ -592,7 +592,7 @@ static Boolean RetrieveData(LargeWord Address, Byte* pBuffer, unsigned Count) {
 }
 
 static char const* MakeSymbolic(
-        Word Address, int AddrLen, char const* pSymbolPrefix, char* pBuffer,
+        Word Address, int AddrLen, char const* pSymbolPrefix, char* pBuffer AS_LIFETIMEBOUND,
         int BufferSize) {
     char const* pResult;
 

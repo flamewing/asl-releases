@@ -78,8 +78,8 @@ extern int as_strncasecmp(char const* src1, char const* src2, size_t maxlen);
 extern char* strstr(char const* haystack, char const* needle);
 #endif
 
-extern char*       strmultchr(char* p_haystack, char const* p_needles);
-extern char const* strrmultchr(char const* haystack, char const* needles);
+extern char*       strmultchr(char* p_haystack AS_LIFETIMEBOUND, char const* p_needles);
+extern char const* strrmultchr(char const* haystack AS_LIFETIMEBOUND, char const* needles);
 
 extern size_t strmaxcpy(char* dest, char const* src, size_t Max);
 extern size_t strmaxcat(char* Dest, char const* Src, size_t MaxLen);
@@ -106,7 +106,7 @@ extern size_t ReadLnCont(FILE* Datei, struct as_dynstr* p_line);
 
 extern int DigitVal(char ch, int Base);
 
-extern char* ParenthPos(char* pHaystack, char Needle);
+extern char* ParenthPos(char* pHaystack AS_LIFETIMEBOUND, char Needle);
 
 extern int KillPrefBlanks(char* s);
 
@@ -116,7 +116,7 @@ extern char TabCompressed(char in);
 
 extern int strqcmp(char const* s1, char const* s2);
 
-extern char* strmov(char* pDest, char const* pSrc);
+extern char* strmov(char* pDest AS_LIFETIMEBOUND, char const* pSrc);
 
 extern int strmemcpy(char* pDest, size_t DestSize, char const* pSrc, size_t SrcLen);
 

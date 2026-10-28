@@ -72,7 +72,7 @@ char const* Blanks(int cnt) {
  * ------------------------------------------------------------------------ */
 
 char* SysStringCore(
-        char* pDest, char* pDestCurr, LargeWord Num, int System, int Digits,
+        char* pDest, char* pDestCurr AS_LIFETIMEBOUND, LargeWord Num, int System, int Digits,
         char StartCharacter) {
     LargeWord Digit;
 

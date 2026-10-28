@@ -30,12 +30,12 @@ extern LongInt literal_forward_count;
 
 extern void literals_chk_alldone(void);
 
-extern as_literal_t* literals_new(void);
+extern AS_MALLOC as_literal_t* literals_new(void);
 
 extern void literals_free(as_literal_t* p_literal);
 
 extern char const* literals_get_name(
-        as_literal_t const* p_lit, char* p_result, size_t result_size);
+        as_literal_t const* p_lit, char* p_result AS_LIFETIMEBOUND, size_t result_size);
 
 struct sStrComp;
 extern void literal_make(

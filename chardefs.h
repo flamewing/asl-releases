@@ -107,7 +107,7 @@ extern char const NLS_HtmlCharacterTab[eCH_cnt][9];
 extern int CharTab_GetLength(tNLSCharacterTab const* pTab, tNLSCharacter Character);
 
 extern char const* CharTab_GetNULTermString(
-        tNLSCharacterTab const* pTab, tNLSCharacter Character, char* pBuffer);
+        tNLSCharacterTab const* pTab AS_LIFETIMEBOUND, tNLSCharacter Character, char* pBuffer AS_LIFETIMEBOUND);
 
 extern LongWord UTF8ToUnicode(char const** ppChr);
 

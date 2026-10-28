@@ -1802,7 +1802,7 @@ static var_arg_order_t* rsv_var_arg_order(void) {
     return p_order;
 }
 
-static char const* handle_order_format(gen_order_t* p_order, char const* p_format) {
+static char const* handle_order_format(gen_order_t* p_order, char const* p_format AS_LIFETIMEBOUND) {
     unsigned mask = MModExpand;
 
     p_order->arg_cnt = 0;

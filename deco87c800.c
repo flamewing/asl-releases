@@ -31,7 +31,7 @@ static char const* ALUInstr[8]
 
 static unsigned nData;
 
-static char* ZeroHexString(char* pBuffer, size_t BufferSize, LargeWord Num, int ByteLen) {
+static char* ZeroHexString(char* pBuffer AS_LIFETIMEBOUND, size_t BufferSize, LargeWord Num, int ByteLen) {
     HexString(pBuffer + 1, BufferSize - 1, Num, ByteLen * 2);
     if (isdigit(pBuffer[1])) {
         return pBuffer + 1;
@@ -42,7 +42,7 @@ static char* ZeroHexString(char* pBuffer, size_t BufferSize, LargeWord Num, int 
 }
 
 static char const* MakeSymbolic(
-        LargeWord Address, int AddrLen, char const* pSymbolPrefix, char* pBuffer,
+        LargeWord Address, int AddrLen, char const* pSymbolPrefix, char* pBuffer AS_LIFETIMEBOUND,
         int BufferSize) {
     char const* pResult;
 

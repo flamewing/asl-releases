@@ -126,7 +126,7 @@ static int quot_search_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_
 
 /* Iterator positions borrow this same buffer. Recover a writable position only
    when the caller supplied a writable buffer, preserving its pointer type. */
-static char* MutablePosition(char* buffer, char const* position) {
+static char* MutablePosition(char* buffer AS_LIFETIMEBOUND, char const* position) {
     return position ? buffer + (position - buffer) : NULL;
 }
 
@@ -1186,7 +1186,7 @@ static Byte GetValidSymChar(unsigned Ch) {
     return (Ch < ValidSymCharLen) ? ValidSymChar[Ch] : 0;
 }
 
-static char const* ChkNameUpTo(char const* pSym, char const* pUpTo, Byte Mask_) {
+static char const* ChkNameUpTo(char const* pSym AS_LIFETIMEBOUND, char const* pUpTo, Byte Mask_) {
     Byte        Mask = Mask_;
     unsigned    Ch;
     char const* pPrev;

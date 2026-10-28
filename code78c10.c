@@ -810,7 +810,7 @@ static Boolean Decode_f(char* Asc, Byte* Erg) {
  * \return * to record of decoded register
  * ------------------------------------------------------------------------ */
 
-static sreg_t const* decode_sr_core(sreg_t const* p_sregs, tStrComp const* p_arg) {
+static sreg_t const* decode_sr_core(sreg_t const* p_sregs AS_LIFETIMEBOUND, tStrComp const* p_arg) {
     for (; p_sregs->p_name; p_sregs++) {
         if (check_core(p_sregs->core_mask)
             && !as_strcasecmp(p_arg->str.p_str, p_sregs->p_name)) {

@@ -73,5 +73,6 @@ int main(void) {
     ModifyIntConstModeByMask(0, 1ul << eIntFormatIBMAsc);
     failed |= check(ibm, 5, True, 0x4100, 0, 16, eSymbolFlag_None);
     failed |= translation_reads != 1 || unmapped_errors != 1;
+    CurrTransTable = NULL;
     return failed;
 }

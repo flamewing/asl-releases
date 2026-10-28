@@ -21,7 +21,7 @@ typedef struct as_fwd_sym {
 
 extern as_fwd_sym_t* as_fwd_sym_create(void);
 extern void          as_fwd_sym_free(as_fwd_sym_t* p_symbol);
-extern as_fwd_sym_t* as_fwd_sym_search(as_fwd_sym_t* p_root, char const* p_name);
+extern as_fwd_sym_t* as_fwd_sym_search(as_fwd_sym_t* p_root AS_LIFETIMEBOUND, char const* p_name);
 extern Boolean       as_fwd_sym_search_and_move_dest_section(
         as_fwd_sym_t** pp_root, char const* p_name, LongInt* p_dest_section);
 

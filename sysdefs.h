@@ -19,11 +19,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-#    define AS_NORETURN [[noreturn]]
-#else
-#    define AS_NORETURN _Noreturn
-#endif
+#include "as_attributes.h"
 
 #ifdef _MSC_VER
 #    include <stddef.h>

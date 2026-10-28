@@ -415,7 +415,7 @@ static void Try2Split(int Src) {
  * \return NULL if no accumulator given, otherwise * to remainder of argument
  * ------------------------------------------------------------------------ */
 
-static char const* extract_acc_arg(char const* p_src_arg, Byte* p_acc_reg) {
+static char const* extract_acc_arg(char const* p_src_arg AS_LIFETIMEBOUND, Byte* p_acc_reg) {
     int l = strlen(p_src_arg);
 
     if ((l >= 1) && IsAcc(*p_src_arg, p_acc_reg) && as_isspace_or_nul(p_src_arg[1])) {

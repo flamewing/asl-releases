@@ -213,7 +213,7 @@ static void EmergencyStop(void) {
  * \return * to message
  * ------------------------------------------------------------------------ */
 
-static char const* ErrorNum2String(tErrorNum Num, char* Buf, int BufSize) {
+static char const* ErrorNum2String(tErrorNum Num, char* Buf AS_LIFETIMEBOUND, int BufSize) {
     int msgno = -1;
 
     *Buf = '\0';
