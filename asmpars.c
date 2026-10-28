@@ -175,25 +175,29 @@ static PSymbolEntry SymbolEntryFromTree(PTree tree) {
     return (PSymbolEntry)(void*)tree;
 }
 
-static oh_size_t SymbolHashFn(PSymbolEntry pSymbol) {
-    oh_size_t      Hash = 5381;
-    unsigned char* pRun;
+typedef struct {
+    char const* Name;
+    LongInt Attribute;
+} TSymbolKey;
 
-    for (pRun = (unsigned char*)pSymbol->Tree.Name; *pRun; ++pRun) {
+static oh_size_t SymbolHashFn(TSymbolKey Key) {
+    oh_size_t      Hash = 5381;
+    unsigned char const* pRun;
+
+    for (pRun = (unsigned char const*)Key.Name; *pRun; ++pRun) {
         Hash = (Hash * 33u) + *pRun;
     }
 
-    return Hash ^ ((oh_size_t)pSymbol->Tree.Attribute * 0x9e3779b1u);
+    return Hash ^ ((oh_size_t)Key.Attribute * 0x9e3779b1u);
 }
 
-static int SymbolHashEq(PSymbolEntry pA, PSymbolEntry pB) {
-    return (pA->Tree.Attribute == pB->Tree.Attribute)
-           && !strcmp(pA->Tree.Name, pB->Tree.Name);
+static int SymbolHashEq(TSymbolKey A, TSymbolKey B) {
+    return (A.Attribute == B.Attribute) && !strcmp(A.Name, B.Name);
 }
 
 #define SYMBOLHASH_IS_MAP 1
 DEFINE_OPENHASH(
-        symbolhash, PSymbolEntry, PSymbolEntry, SYMBOLHASH_IS_MAP, SymbolHashFn,
+        symbolhash, TSymbolKey, PSymbolEntry, SYMBOLHASH_IS_MAP, SymbolHashFn,
         SymbolHashEq)
 #undef SYMBOLHASH_IS_MAP
 
@@ -302,9 +306,8 @@ static void GetSymbolHashTableDepth(
 
     for (It = openhash_begin(pHash); It < openhash_end(pHash); It++) {
         if (openhash_exist(pHash, It)) {
-            PSymbolEntry pEntry = openhash_value(pHash, It);
             oh_size_t    Mask   = openhash_nbucket(pHash) - 1;
-            oh_size_t    Base   = SymbolHashFn(pEntry) & Mask;
+            oh_size_t    Base   = SymbolHashFn(openhash_key(pHash, It)) & Mask;
             LongInt Depth = (LongInt)(((It + openhash_nbucket(pHash) - Base) & Mask) + 1);
 
             if (Depth < *pMin) {
@@ -332,18 +335,15 @@ static void DumpSymbolHashTable(PSymbolHashTable pHash) {
 }
 
 static PSymbolEntry SearchSymbolHashTable(
-        PSymbolHashTable pHash, char* pName, LongInt Attribute) {
-    TSymbolEntry Key;
+        PSymbolHashTable pHash, char const* pName, LongInt Attribute) {
+    TSymbolKey Key = {pName, Attribute};
     oh_iter_t    It;
 
     if (!pHash) {
         return NULL;
     }
 
-    memset(&Key, 0, sizeof(Key));
-    Key.Tree.Name      = pName;
-    Key.Tree.Attribute = Attribute;
-    It                 = openhash_get(symbolhash, pHash, &Key);
+    It = openhash_get(symbolhash, pHash, Key);
     if (It == openhash_end(pHash)) {
         return NULL;
     }
@@ -352,15 +352,11 @@ static PSymbolEntry SearchSymbolHashTable(
 
 static Boolean EnterSymbolHashTable(
         PSymbolHashTable pHash, PSymbolEntry pNew, TTreeAdder Adder, void* pData) {
-    TSymbolEntry LookupKey;
+    TSymbolKey LookupKey = {pNew->Tree.Name, pNew->Tree.Attribute};
     oh_iter_t    It;
     int          InsRes;
 
-    memset(&LookupKey, 0, sizeof(LookupKey));
-    LookupKey.Tree.Name      = pNew->Tree.Name;
-    LookupKey.Tree.Attribute = pNew->Tree.Attribute;
-
-    It = openhash_get(symbolhash, pHash, &LookupKey);
+    It = openhash_get(symbolhash, pHash, LookupKey);
     if (It != openhash_end(pHash)) {
         PSymbolEntry pDest = openhash_value(pHash, It);
 
@@ -368,13 +364,13 @@ static Boolean EnterSymbolHashTable(
             return False;
         }
 
-        openhash_key(pHash, It)   = pNew;
+        openhash_key(pHash, It)   = LookupKey;
         openhash_value(pHash, It) = pNew;
         free(pDest);
         return True;
     }
 
-    It = openhash_set(symbolhash, pHash, pNew, &InsRes);
+    It = openhash_set(symbolhash, pHash, LookupKey, &InsRes);
     if (It == openhash_end(pHash)) {
         return False;
     }
