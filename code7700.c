@@ -1104,18 +1104,18 @@ static void DecodePSH_PUL(Word Code) {
         OK          = True;
         z           = 1;
         while ((z <= ArgCnt) && (OK)) {
-            Boolean OK;
+            Boolean ok;
 
             if (*ArgStr[z].str.p_str == '#') {
-                BAsmCode[1] |= EvalStrIntExpressionOffs(&ArgStr[z], 1, Int8, &OK);
+                BAsmCode[1] |= EvalStrIntExpressionOffs(&ArgStr[z], 1, Int8, &ok);
             } else {
                 Start = 0;
                 while ((Start < PushRegCnt)
                        && (as_strcasecmp(PushRegNames[Start], ArgStr[z].str.p_str))) {
                     Start++;
                 }
-                OK = (Start < PushRegCnt);
-                if (OK) {
+                ok = (Start < PushRegCnt);
+                if (ok) {
                     BAsmCode[1] |= 1l << PushRegCodes[Start];
                 } else {
                     WrStrErrorPos(ErrNum_InvRegName, &ArgStr[z]);

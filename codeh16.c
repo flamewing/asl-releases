@@ -225,16 +225,16 @@ static unsigned GetH16SymbolSizeBytes(tSymbolSize Size) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     AppendBySize(Byte *pDest, LongInt Value, tSymbolSize OpSize)
+ * \fn     AppendBySize(Byte *pDest, LongInt Value, tSymbolSize operand_size)
  * \brief  append an integer value to byte array, BE order
  * \param  pDest where to write
  * \param  Value integer value to append
- * \param  OpSize operand size of value (3/4/5/8/16/32 bits)
+ * \param  operand_size operand size of value (3/4/5/8/16/32 bits)
  * \return # of bytes appended
  * ------------------------------------------------------------------------ */
 
-static unsigned AppendBySize(Byte* pDest, LongInt Value, tSymbolSize OpSize) {
-    unsigned Cnt = GetH16SymbolSizeBytes(OpSize);
+static unsigned AppendBySize(Byte* pDest, LongInt Value, tSymbolSize operand_size) {
+    unsigned Cnt = GetH16SymbolSizeBytes(operand_size);
 
     for (unsigned z = Cnt; z > 0; --z) {
         pDest[z - 1] = Value & 0xff;
@@ -244,21 +244,21 @@ static unsigned AppendBySize(Byte* pDest, LongInt Value, tSymbolSize OpSize) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     AppendToAdrValsBySize(tAdrVals *pAdrVals, LongInt Value, tSymbolSize OpSize)
+ * \fn     AppendToAdrValsBySize(tAdrVals *pAdrVals, LongInt Value, tSymbolSize operand_size)
  * \brief  append an integer value to tAdrVals
  * \param  pAdrVals AdrVals to extend
  * \param  Value integer value to append
- * \param  OpSize operand size of value (3/4/5/8/16/32 bits)
+ * \param  operand_size operand size of value (3/4/5/8/16/32 bits)
  * ------------------------------------------------------------------------ */
 
-static void AppendToAdrValsBySize(tAdrVals* pAdrVals, LongInt Value, tSymbolSize OpSize) {
-    unsigned Cnt = GetH16SymbolSizeBytes(OpSize);
+static void AppendToAdrValsBySize(tAdrVals* pAdrVals, LongInt Value, tSymbolSize operand_size) {
+    unsigned Cnt = GetH16SymbolSizeBytes(operand_size);
 
     if ((pAdrVals->Cnt + Cnt) > (sizeof(pAdrVals->Vals) / sizeof(*pAdrVals->Vals))) {
         WrError(ErrNum_CodeOverflow);
         return;
     }
-    AppendBySize(pAdrVals->Vals + pAdrVals->Cnt, Value, OpSize);
+    AppendBySize(pAdrVals->Vals + pAdrVals->Cnt, Value, operand_size);
     pAdrVals->Cnt += Cnt;
 }
 
@@ -644,15 +644,15 @@ static tSymbolSize DeduceSize8_32(LongInt Value) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkSize(LongInt Value, tSymbolSize OpSize)
+ * \fn     ChkSize(LongInt Value, tSymbolSize operand_size)
  * \brief  check whether given value can be represented with given size, assuming sign extension
  * \param  Value value to judge
- * \param  OpSize proposed operand size
+ * \param  operand_size proposed operand size
  * \return True if value can be represented with this size
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkSize(LongInt Value, tSymbolSize OpSize) {
-    switch (OpSize) {
+static Boolean ChkSize(LongInt Value, tSymbolSize operand_size) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         return ChkRange(Value, -128, 127);
     case eSymbolSize16Bit:
@@ -692,18 +692,18 @@ static tSymbolSize DeduceSize16M(LongInt Value) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ChkSize16M(LongInt Value, tSymbolSize OpSize)
+ * \fn     ChkSize16M(LongInt Value, tSymbolSize operand_size)
  * \brief  check whether given memory address can be represented with given size, assuming sign extension
  * \param  Value address to judge
- * \param  OpSize proposed operand size
+ * \param  operand_size proposed operand size
  * \return True if value can be represented with this size
  * ------------------------------------------------------------------------ */
 
-static Boolean ChkSize16M(LongInt Value, tSymbolSize OpSize) {
+static Boolean ChkSize16M(LongInt Value, tSymbolSize operand_size) {
     LongWord TmpVal;
     Boolean  OK;
 
-    switch (OpSize) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         TmpVal = Value & 0xff;
         if (TmpVal & 0x80) {
@@ -832,18 +832,18 @@ static Boolean SetRegPrefix(Byte* pDest, Byte Src, tStrComp const* pArg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EvalArg(const tStrComp *pArg, int Offset, tSymbolSize OpSize, Boolean *pOK)
+ * \fn     EvalArg(const tStrComp *pArg, int Offset, tSymbolSize operand_size, Boolean *pOK)
  * \brief  evaluate integer expression accoring to operand size
  * \param  pArg argument to evaluate
  * \param  Offset offset into argument where expression begins
- * \param  OpSize operand size to use
+ * \param  operand_size operand size to use
  * \param  pOK returns True if evaluation succeeded
  * \return result of evaluation
  * ------------------------------------------------------------------------ */
 
 static LongInt EvalArg(
-        tStrComp const* pArg, int Offset, tSymbolSize OpSize, Boolean* pOK) {
-    switch ((int)OpSize) {
+        tStrComp const* pArg, int Offset, tSymbolSize operand_size, Boolean* pOK) {
+    switch ((int)operand_size) {
     case eSymbolSize8Bit:
         return EvalStrIntExpressionOffs(pArg, Offset, Int8, pOK);
     case eSymbolSize16Bit:
@@ -898,7 +898,7 @@ static Boolean ValidIndexRegSize(tSymbolSize Size) {
 static Boolean ClassCompList(tAdrComps* pComps, tStrComp* pArg);
 
 static Boolean ClassComp(tStrComp* pArg, tAdrComps* pComps) {
-    tSymbolSize OpSize;
+    tSymbolSize operand_size;
     Byte        Reg, Scale, Prefix;
     char        Save;
     LongInt     Value;
@@ -946,20 +946,20 @@ static Boolean ClassComp(tStrComp* pArg, tAdrComps* pComps) {
 
         return True;
     }
-    switch (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix, False)) {
+    switch (DecodeRegWithSize(pArg, &Reg, &operand_size, &Prefix, False)) {
     case eIsReg:
         if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg)) {
             return False;
         }
-        if ((pComps->BaseReg == NOREG) && (OpSize == eSymbolSizeUnknown)) {
+        if ((pComps->BaseReg == NOREG) && (operand_size == eSymbolSizeUnknown)) {
             pComps->BaseReg     = Reg;
             pComps->BaseRegIncr = 0;
             return True;
-        } else if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize)) {
+        } else if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(operand_size)) {
             pComps->IndexReg      = Reg;
             pComps->IndexRegScale = 0;
-            if (OpSize != eSymbolSizeUnknown) {
-                pComps->IndexRegSize = OpSize;
+            if (operand_size != eSymbolSizeUnknown) {
+                pComps->IndexRegSize = operand_size;
             }
             return True;
         } else {
@@ -1015,19 +1015,19 @@ static Boolean ClassComp(tStrComp* pArg, tAdrComps* pComps) {
     }
     Save = SplitScale(pArg, &Scale);
     if (Save) {
-        switch (DecodeRegWithSize(pArg, &Reg, &OpSize, &Prefix, False)) {
+        switch (DecodeRegWithSize(pArg, &Reg, &operand_size, &Prefix, False)) {
         case eIsReg:
             if (!SetRegPrefix(&pComps->RegPrefix, Prefix, pArg)) {
                 return False;
             }
-            if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(OpSize)) {
+            if ((pComps->IndexReg == NOREG) && ValidIndexRegSize(operand_size)) {
                 pComps->IndexReg      = Reg;
                 pComps->IndexRegScale = Scale;
-                if (OpSize != eSymbolSizeUnknown) {
-                    pComps->IndexRegSize = OpSize;
+                if (operand_size != eSymbolSizeUnknown) {
+                    pComps->IndexRegSize = operand_size;
                 }
             } else if (pComps->BaseReg == NOREG) {
-                if ((Scale == 0) && ValidBaseRegSize(OpSize)) {
+                if ((Scale == 0) && ValidBaseRegSize(operand_size)) {
                     pComps->BaseReg = Reg;
                 } else if (
                         (Scale != 0) && (pComps->IndexRegScale == 0)
@@ -1036,7 +1036,7 @@ static Boolean ClassComp(tStrComp* pArg, tAdrComps* pComps) {
                     pComps->IndexReg      = Reg;
                     pComps->IndexRegScale = Scale;
                     pComps->IndexRegSize
-                            = (OpSize == eSymbolSizeUnknown) ? DefIndexRegSize : OpSize;
+                            = (operand_size == eSymbolSizeUnknown) ? DefIndexRegSize : operand_size;
                 } else {
                     return False;
                 }
@@ -1052,16 +1052,16 @@ static Boolean ClassComp(tStrComp* pArg, tAdrComps* pComps) {
         }
     }
 
-    if (!SplitOpSize(pArg, &OpSize)) {
-        OpSize = eSymbolSizeUnknown;
+    if (!SplitOpSize(pArg, &operand_size)) {
+        operand_size = eSymbolSizeUnknown;
     }
     Value = EvalArg(pArg, 0, eSymbolSize32Bit, &OK);
     if (!OK) {
         return False;
     }
     pComps->OuterDispPresent = True;
-    if (OpSize > pComps->OuterDispSize) {
-        pComps->OuterDispSize = OpSize;
+    if (operand_size > pComps->OuterDispSize) {
+        pComps->OuterDispSize = operand_size;
     }
     pComps->OuterDisp += Value;
     return True;
@@ -1472,18 +1472,18 @@ static void AppendAdrValPair(tAdrVals* pSrcAdrVals, tAdrVals const* pDestAdrVals
  */
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const char *pBitArg, Boolean *pOK, tSymbolSize OpSize)
+ * \fn     EvalBitPosition(const char *pBitArg, Boolean *pOK, tSymbolSize operand_size)
  * \brief  evaluate constant bit position, with bit range depending on operand size
  * \param  pBitArg bit position argument
  * \param  pOK returns True if OK
- * \param  OpSize operand size (0,1,2 -> 8,16,32 bits)
+ * \param  operand_size operand size (0,1,2 -> 8,16,32 bits)
  * \return bit position as number
  * ------------------------------------------------------------------------ */
 
-static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize OpSize) {
+static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize operand_size) {
     int Offset = !!(*pBitArg->str.p_str == '#');
 
-    switch (OpSize) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         return EvalStrIntExpressionOffs(pBitArg, Offset, UInt3, pOK);
     case eSymbolSize16Bit:
@@ -1498,18 +1498,18 @@ static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize O
 }
 
 /*!------------------------------------------------------------------------
- * \fn     AssembleBitSymbol(Byte BitPos, tSymbolSize OpSize, LongWord Address)
+ * \fn     AssembleBitSymbol(Byte BitPos, tSymbolSize operand_size, LongWord Address)
   * \brief  build the compact internal representation of a bit field symbol
  * \param  BitPos bit position in word
- * \param  OpSize operand size (8/16/32 bit)
+ * \param  operand_size operand size (8/16/32 bit)
  * \param  Address register address
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
-static LongWord AssembleBitSymbol(Byte BitPos, tSymbolSize OpSize, LongWord Address) {
-    int AddrShift = 3 + OpSize;
+static LongWord AssembleBitSymbol(Byte BitPos, tSymbolSize operand_size, LongWord Address) {
+    int AddrShift = 3 + operand_size;
 
-    return BitPos | ((Address & 0xfffffful) << AddrShift) | ((LongWord)OpSize << 30);
+    return BitPos | ((Address & 0xfffffful) << AddrShift) | ((LongWord)operand_size << 30);
 }
 
 /*!------------------------------------------------------------------------
@@ -1556,11 +1556,11 @@ static Boolean DissectBitSymbol(
 static void DissectBit_H16(char* pDest, size_t DestSize, LargeWord Inp) {
     Byte        BitPos;
     LongWord    Address;
-    tSymbolSize OpSize;
+    tSymbolSize operand_size;
     char        Attribute;
 
-    DissectBitSymbol(Inp, &Address, &BitPos, &OpSize);
-    Attribute = "bwl"[OpSize];
+    DissectBitSymbol(Inp, &Address, &BitPos, &operand_size);
+    Attribute = "bwl"[operand_size];
 
     as_snprintf(
             pDest, DestSize, "$%lx(%c).%u", (unsigned long)Address, Attribute,
@@ -1577,41 +1577,41 @@ static void DissectBit_H16(char* pDest, size_t DestSize, LargeWord Inp) {
 
 static void ExpandH16Bit(
         tStrComp const* pVarName, const struct sStructElem* pStructElem, LargeWord Base) {
-    tSymbolSize OpSize
+    tSymbolSize operand_size
             = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
     LongWord Address = Base + pStructElem->Offset;
 
     if (!ChkRange(Address, 0, 0xfffffful)
-        || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)) {
+        || !ChkRange(pStructElem->BitPos, 0, (8 << operand_size) - 1)) {
         return;
     }
 
     PushLocHandle(-1);
     EnterIntSymbol(
-            pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address), SegBData,
+            pVarName, AssembleBitSymbol(pStructElem->BitPos, operand_size, Address), SegBData,
             False);
     PopLocHandle();
     /* TODO: MakeUseList? */
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pRegArg, const tStrComp *pBitArg, tSymbolSize OpSize)
+ * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pRegArg, const tStrComp *pBitArg, tSymbolSize operand_size)
  * \brief  encode a bit symbol, address & bit position separated
  * \param  pResult resulting encoded bit
  * \param  pRegArg register argument
  * \param  pBitArg bit argument
- * \param  OpSize register size (0/1/2 = 8/16/32 bit)
+ * \param  operand_size register size (0/1/2 = 8/16/32 bit)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeBitArg2(
         LongWord* pResult, tStrComp const* pRegArg, tStrComp const* pBitArg,
-        tSymbolSize OpSize) {
+        tSymbolSize operand_size) {
     Boolean  OK;
     LongWord Addr;
     Byte     BitPos;
 
-    BitPos = EvalBitPosition(pBitArg, &OK, OpSize);
+    BitPos = EvalBitPosition(pBitArg, &OK, operand_size);
     if (!OK) {
         return False;
     }
@@ -1621,7 +1621,7 @@ static Boolean DecodeBitArg2(
         return False;
     }
 
-    *pResult = AssembleBitSymbol(BitPos, OpSize, Addr);
+    *pResult = AssembleBitSymbol(BitPos, operand_size, Addr);
 
     return True;
 }
@@ -1632,11 +1632,11 @@ static Boolean DecodeBitArg2(
  * \param  pResult resulting encoded bit
  * \param  Start first argument
  * \param  Stop last argument
- * \param  OpSize register size (0/1/2 = 8/16/32 bit)
+ * \param  operand_size register size (0/1/2 = 8/16/32 bit)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize OpSize) {
+static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize operand_size) {
     *pResult = 0;
 
     /* Just one argument -> parse as bit argument */
@@ -1655,7 +1655,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize 
        use same argument positions as for machine instructions */
 
     else if (Stop == Start + 1) {
-        return DecodeBitArg2(pResult, &ArgStr[Stop], &ArgStr[Start], OpSize);
+        return DecodeBitArg2(pResult, &ArgStr[Stop], &ArgStr[Start], operand_size);
     }
 
     /* other # of arguments not allowed */

@@ -857,19 +857,19 @@ static void DecodeMOVX(Word Code) {
 
     if (ChkArgCnt(2, 2) && ChkCPUFlags(eCPUFlagXMem)) {
         tStrComp const *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
-        Byte            Code = 0x80;
+        Byte            code = 0x80;
 
         if (!as_strcasecmp(pArg2->str.p_str, "A")) {
             pArg2 = &ArgStr[1];
             pArg1 = &ArgStr[2];
-            Code += 0x10;
+            code += 0x10;
         }
         if (as_strcasecmp(pArg1->str.p_str, "A")) {
             WrStrErrorPos(ErrNum_InvAddrMode, pArg1);
         } else {
             adr_vals_t adr_vals;
             if (DecodeAdr(pArg2, &adr_vals, MModInd) == ModInd) {
-                BAsmCode[CodeLen++] = Code + adr_vals.value;
+                BAsmCode[CodeLen++] = code + adr_vals.value;
             }
         }
     }

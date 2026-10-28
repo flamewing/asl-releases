@@ -80,7 +80,7 @@ static void ParseCPUArgs(tStrComp const* pArgs, tCPUArg const* pCPUArgs) {
     tStrComp       Args, Remainder = {0}, NameComp, ValueComp;
     LongInt        VarValue;
     Boolean        OK;
-    String         ArgStr;
+    String         arg_str;
 
     /* always reset to defaults, also when no user arguments are given */
 
@@ -94,7 +94,7 @@ static void ParseCPUArgs(tStrComp const* pArgs, tCPUArg const* pCPUArgs) {
     if (!pArgs || !*pArgs->str.p_str) {
         return;
     }
-    StrCompMkTemp(&Args, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&Args, arg_str, sizeof(arg_str));
     StrCompCopy(&Args, pArgs);
     do {
         pNext = strchr(Args.str.p_str, ':');

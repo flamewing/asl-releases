@@ -628,17 +628,17 @@ static Boolean DecodeAdr(
 
     if ((*pArg->str.p_str == '[') && (pArg->str.p_str[ArgLen - 1] == ']')) {
         tStrComp Comp;
-        Boolean  OK;
+        Boolean  ok;
 
         StrCompRefRight(&Comp, pArg, 1);
         Comp.str.p_str[ArgLen - 2] = '\0';
         Comp.Pos.Len--;
-        OK = DecideIndirectSize(
+        ok = DecideIndirectSize(
                 &Comp, mode_or_none(Mask, eModIAbs8), mode_or_none(Mask, eModIAbs16),
                 mode_or_none(Mask, eModI16Abs16), mode_or_none(Mask, eModI16Abs24), 0xb,
                 0xc, 0xc, 0xb, pAdrVals);
         Comp.str.p_str[ArgLen - 2] = ']';
-        if (OK) {
+        if (ok) {
             AddPrefix((pAdrVals->Mode == eModI16Abs16) ? 0x72 : 0x92);
         }
         goto chk;
@@ -748,14 +748,14 @@ chk:
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ConstructMask(LongWord TotMask, tSymbolSize OpSize)
+ * \fn     ConstructMask(LongWord TotMask, tSymbolSize operand_size)
  * \brief  construct actual bit mask of allowed addressing modes from overall list
  * \param  TotMask overall list
- * \param  OpSize operand size in use (8/16/unknown)
+ * \param  operand_size operand size in use (8/16/unknown)
  * \return actual mask
  * ------------------------------------------------------------------------ */
 
-static LongWord ConstructMask(LongWord TotMask, tSymbolSize OpSize) {
+static LongWord ConstructMask(LongWord TotMask, tSymbolSize operand_size) {
     if (pCurrCPUProps->Core == eCoreST7) {
         /* not present on ST7 */
 
@@ -765,7 +765,7 @@ static LongWord ConstructMask(LongWord TotMask, tSymbolSize OpSize) {
 
         /* SP/X/Y are 8 bits wide on ST7 */
 
-        if (OpSize == eSymbolSize16Bit) {
+        if (operand_size == eSymbolSize16Bit) {
             TotMask &= ~(MModX | MModY | MModS);
         }
     }
@@ -777,7 +777,7 @@ static LongWord ConstructMask(LongWord TotMask, tSymbolSize OpSize) {
 
         /* SP/X/Y changed to 16 bits on STM8 */
 
-        if (OpSize == eSymbolSize8Bit) {
+        if (operand_size == eSymbolSize8Bit) {
             TotMask &= ~(MModX | MModY | MModS);
         }
     }

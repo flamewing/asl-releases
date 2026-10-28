@@ -748,18 +748,18 @@ static void DecodeLD(Word Code) {
             }
             break;
         case ModReg16: {
-            Word Mask = MModImm;
+            Word src_mode_mask = MModImm;
 
             if (dest_adr_vals.values[0] == HLReg) {
-                Mask |= MModAbs;
+                src_mode_mask |= MModAbs;
                 if (MomCPU == CPU8085U) {
-                    Mask |= MModIReg16;
+                    src_mode_mask |= MModIReg16;
                 }
             }
             if (dest_adr_vals.values[0] == SPReg) {
-                Mask |= MModReg16;
+                src_mode_mask |= MModReg16;
             }
-            switch (DecodeAdr_Z80(&ArgStr[2], &src_adr_vals, Mask, eSyntaxZ80)) {
+            switch (DecodeAdr_Z80(&ArgStr[2], &src_adr_vals, src_mode_mask, eSyntaxZ80)) {
             case ModImm:
                 BAsmCode[CodeLen++] = 0x01 | (dest_adr_vals.values[0] << 4);
                 append_adr_vals(&src_adr_vals);
@@ -788,15 +788,15 @@ static void DecodeLD(Word Code) {
             break;
         }
         case ModIReg16: {
-            Word Mask = MModReg8;
+            Word src_mode_mask = MModReg8;
 
             if (dest_adr_vals.values[0] == HLReg) {
-                Mask |= MModImm;
+                src_mode_mask |= MModImm;
             }
             if ((dest_adr_vals.values[0] == DEReg) && (MomCPU == CPU8085U)) {
-                Mask |= MModReg16;
+                src_mode_mask |= MModReg16;
             }
-            switch (DecodeAdr_Z80(&ArgStr[2], &src_adr_vals, Mask, eSyntaxZ80)) {
+            switch (DecodeAdr_Z80(&ArgStr[2], &src_adr_vals, src_mode_mask, eSyntaxZ80)) {
             case ModReg8:
                 if (dest_adr_vals.values[0] == HLReg) {
                     BAsmCode[CodeLen++] = 0x70 | src_adr_vals.values[0];

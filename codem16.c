@@ -935,12 +935,12 @@ static Word RMask(Word No, Boolean Turn) {
 }
 
 static Boolean DecodeRegList(tStrComp const* pArg, Word* pResult, Boolean Turn) {
-    String   ArgStr;
+    String   arg_str;
     tStrComp Arg, Remainder = {0}, From, To;
     char *   p, *p1, *p2, *p3;
     Word     r1, r2, z;
 
-    StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&Arg, arg_str, sizeof(arg_str));
     StrCompCopy(&Arg, pArg);
     if (IsIndirect(Arg.str.p_str)) {
         StrCompShorten(&Arg, 1);

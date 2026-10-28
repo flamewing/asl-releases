@@ -660,19 +660,19 @@ static LongWord EvalBitPosition(tStrComp const* pArg, tSymbolSize Size, Boolean*
 }
 
 /*!------------------------------------------------------------------------
- * \fn     AssembleBitSymbol(Byte BitPos, LongWord Address, tSymbolSize OpSize, tSymbolSize AddrSize)
+ * \fn     AssembleBitSymbol(Byte BitPos, LongWord Address, tSymbolSize operand_size, tSymbolSize AddrSize)
  * \brief  build the compact internal representation of a bit symbol
  * \param  BitPos bit position in word
  * \param  Address register address
- * \param  OpSize memory operand size
+ * \param  operand_size memory operand size
  * \param  AddrSize address length
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
 static LongWord AssembleBitSymbol(
-        Byte BitPos, Word Address, tSymbolSize OpSize, tSymbolSize AddrSize) {
-    return (CodeOpSize(OpSize) << 30) | (CodeOpSize(AddrSize) << 28)
-           | (Address << ((OpSize == eSymbolSize8Bit) ? 3 : 4)) | (BitPos << 0);
+        Byte BitPos, Word Address, tSymbolSize operand_size, tSymbolSize AddrSize) {
+    return (CodeOpSize(operand_size) << 30) | (CodeOpSize(AddrSize) << 28)
+           | (Address << ((operand_size == eSymbolSize8Bit) ? 3 : 4)) | (BitPos << 0);
 }
 
 /*!------------------------------------------------------------------------
@@ -777,16 +777,16 @@ static Boolean DissectBitSymbol(
 static void DissectBit_H8_5(char* pDest, size_t DestSize, LargeWord Inp) {
     Byte        BitPos;
     LongWord    Address;
-    tSymbolSize OpSize, AddrSize;
+    tSymbolSize operand_size, AddrSize;
 
-    DissectBitSymbol(Inp, &Address, &BitPos, &OpSize, &AddrSize);
+    DissectBitSymbol(Inp, &Address, &BitPos, &operand_size, &AddrSize);
 
     as_snprintf(pDest, DestSize, "#%u,$%lllx", BitPos, (LargeWord)Address);
     if (AddrSize != eSymbolSizeUnknown) {
         as_snprcatf(pDest, DestSize, ":%x", AddrSize ? 16U : 8U);
     }
-    if (OpSize != eSymbolSizeUnknown) {
-        as_snprcatf(pDest, DestSize, ".%c", "BW"[OpSize]);
+    if (operand_size != eSymbolSizeUnknown) {
+        as_snprcatf(pDest, DestSize, ".%c", "BW"[operand_size]);
     }
 }
 
@@ -811,11 +811,11 @@ static void ExpandBit_H8_5(
         pElem->Offset = Address;
         AddStructElem(pInnermostNamedStruct->StructRec, pElem);
     } else {
-        tSymbolSize OpSize
+        tSymbolSize operand_size
                 = (pStructElem->OpSize < 0) ? eSymbolSize8Bit : pStructElem->OpSize;
 
         if (!ChkRange(Address, 0, 0xffffff)
-            || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)) {
+            || !ChkRange(pStructElem->BitPos, 0, (8 << operand_size) - 1)) {
             return;
         }
 
@@ -823,7 +823,7 @@ static void ExpandBit_H8_5(
         EnterIntSymbol(
                 pVarName,
                 AssembleBitSymbol(
-                        pStructElem->BitPos, Address, OpSize, eSymbolSizeUnknown),
+                        pStructElem->BitPos, Address, operand_size, eSymbolSizeUnknown),
                 SegBData, False);
         PopLocHandle();
         /* TODO: MakeUseList? */

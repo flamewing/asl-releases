@@ -843,23 +843,23 @@ static void DecodeSFR(Word Code) {
 /*-------------------------------------------------------------------------*/
 
 static void AddX(char const* pOpPart, Word Code, InstProc Proc) {
-    char OpPart[30];
+    char op_part[30];
 
     AddInstTable(InstTable, pOpPart, Code, Proc);
-    as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
-    AddInstTable(InstTable, OpPart, Code | 1, Proc);
+    as_snprintf(op_part, sizeof(op_part), "%sX", pOpPart);
+    AddInstTable(InstTable, op_part, Code | 1, Proc);
 }
 
 static void AddXY(char const* pOpPart, Word Code, InstProc Proc) {
-    char OpPart[30];
+    char op_part[30];
 
     AddInstTable(InstTable, pOpPart, Code, Proc);
-    as_snprintf(OpPart, sizeof(OpPart), "%sX", pOpPart);
-    AddInstTable(InstTable, OpPart, Code | 1, Proc);
-    as_snprintf(OpPart, sizeof(OpPart), "%sY", pOpPart);
-    AddInstTable(InstTable, OpPart, Code | 2, Proc);
-    as_snprintf(OpPart, sizeof(OpPart), "%sXY", pOpPart);
-    AddInstTable(InstTable, OpPart, Code | 3, Proc);
+    as_snprintf(op_part, sizeof(op_part), "%sX", pOpPart);
+    AddInstTable(InstTable, op_part, Code | 1, Proc);
+    as_snprintf(op_part, sizeof(op_part), "%sY", pOpPart);
+    AddInstTable(InstTable, op_part, Code | 2, Proc);
+    as_snprintf(op_part, sizeof(op_part), "%sXY", pOpPart);
+    AddInstTable(InstTable, op_part, Code | 3, Proc);
 }
 
 static void InitFields(void) {

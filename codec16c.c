@@ -446,7 +446,7 @@ static adr_mode_t decode_adr(
         tSymbolSize reg_sizes[2];
         size_t      reg_cnt = 0;
         char*       p_split;
-        Boolean     ok;
+        Boolean     operand_ok;
 
         StrCompSplitRef(&disp_arg, &base_arg, p_arg, p_arg->str.p_str + split_pos);
         KillPostBlanksStrComp(&disp_arg);
@@ -460,13 +460,13 @@ static adr_mode_t decode_adr(
                 return reset_adr_vals(p_vals);
             }
             p_vals->disp_value = EvalStrIntExpressionWithFlags(
-                    &disp_arg, SInt21, &ok, &p_vals->imm_disp_flags);
-            if (!ok) {
+                    &disp_arg, SInt21, &operand_ok, &p_vals->imm_disp_flags);
+            if (!operand_ok) {
                 return reset_adr_vals(p_vals);
             }
         } else {
             p_vals->disp_value     = 0;
-            ok                     = True;
+            operand_ok                     = True;
             p_vals->imm_disp_flags = eSymbolFlag_None;
         }
 

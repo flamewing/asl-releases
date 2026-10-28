@@ -818,7 +818,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
     if (pSplit) {
         tStrComp Left, Mid, Right;
         LongInt  Disp1, Disp2 = 0;
-        Boolean  OK;
+        Boolean  external_ok;
 
         StrCompSplitRef(&Left, &Mid, pArg, pSplit - 1);
         pSplit = FindClosingParenthese(Mid.str.p_str);
@@ -829,17 +829,17 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
             return False;
         }
         StrCompSplitRef(&Mid, &Right, &Mid, pSplit);
-        Disp1 = EvalStrIntExpression(&Mid, Int30, &OK);
-        if (!OK) {
+        Disp1 = EvalStrIntExpression(&Mid, Int30, &external_ok);
+        if (!external_ok) {
             return False;
         }
         *(--Right.str.p_str) = '0';
         Right.Pos.Len++;
         Right.Pos.StartCol--;
         if (*Right.str.p_str) {
-            Disp2 = EvalStrIntExpression(&Right, Int30, &OK);
+            Disp2 = EvalStrIntExpression(&Right, Int30, &external_ok);
         }
-        if (!OK) {
+        if (!external_ok) {
             return False;
         }
 
@@ -855,12 +855,12 @@ static Boolean DecodeAdr(tStrComp const* pArg, tAdrVals* pDest, Boolean AddrMode
 
     if (!strcmp(pArg->str.p_str, "*") || MatchChars(pArg->str.p_str, "* ?", "+-", NULL)) {
         LongInt Disp;
-        Boolean OK;
+        Boolean relative_ok;
 
         *pArg->str.p_str = '0';
-        Disp             = EvalStrIntExpression(pArg, Int30, &OK);
+        Disp             = EvalStrIntExpression(pArg, Int30, &relative_ok);
         *pArg->str.p_str = '*';
-        if (!OK || !EncodeDisplacement(Disp, pDest, ErrNum_OverRange, pArg)) {
+        if (!relative_ok || !EncodeDisplacement(Disp, pDest, ErrNum_OverRange, pArg)) {
             return False;
         }
         pDest->Code = AddrCode_MemSpace + 3;
@@ -1970,12 +1970,12 @@ static void DecodeLFSR_SFSR(Word Code) {
 
 static void DecodeMOVF(Word Code) {
     tAdrVals SrcAdrVals, DestAdrVals;
-    Byte     OpSize = (Code >> 8) & 1;
+    Byte     operand_size = (Code >> 8) & 1;
 
     if (ChkArgCnt(2, 2) && ChkNoAttrPart() && CheckFPUAvail(eFPU16081)
-        && SetFOpSizeFromCode(OpSize)
+        && SetFOpSizeFromCode(operand_size)
         && DecodeAdr(&ArgStr[1], &SrcAdrVals, MAllowReg | MAllowImm) && ResetOpSize()
-        && SetFOpSizeFromCode(OpSize ^ 1)
+        && SetFOpSizeFromCode(operand_size ^ 1)
         && DecodeAdr(&ArgStr[2], &DestAdrVals, MAllowReg)) {
         PutCode((((LongWord)SrcAdrVals.Code) << 19) | (((LongWord)DestAdrVals.Code) << 14)
                         | Code,
@@ -2147,12 +2147,12 @@ static void DecodeCCVic(Word Code) {
 
 static void DecodeCCVcc(Word Code) {
     tAdrVals SrcAdrVals, DestAdrVals;
-    Byte     OpSize = Code & 1;
+    Byte     operand_size = Code & 1;
 
     if (ChkArgCnt(2, 2) && ChkNoAttrPart() && CheckCustomAvail()
-        && SetCOpSizeFromCode(OpSize)
+        && SetCOpSizeFromCode(operand_size)
         && DecodeAdr(&ArgStr[1], &SrcAdrVals, MAllowReg | MAllowImm) && ResetOpSize()
-        && SetCOpSizeFromCode(OpSize ^ 1)
+        && SetCOpSizeFromCode(operand_size ^ 1)
         && DecodeAdr(&ArgStr[2], &DestAdrVals, MAllowReg)) {
         PutCode((((LongWord)SrcAdrVals.Code) << 19) | (((LongWord)DestAdrVals.Code) << 14)
                         | (Code << 10) | 0x36,

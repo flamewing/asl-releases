@@ -301,8 +301,8 @@ static Boolean CheckFloatSize(void) {
     }
 }
 
-static Boolean FloatOpSizeFitsDataReg(tSymbolSize OpSize) {
-    return (OpSize <= eSymbolSize32Bit) || (OpSize == eSymbolSizeFloat32Bit);
+static Boolean FloatOpSizeFitsDataReg(tSymbolSize operand_size) {
+    return (operand_size <= eSymbolSize32Bit) || (operand_size == eSymbolSizeFloat32Bit);
 }
 
 static Boolean ValReg(char Ch) {
@@ -1373,7 +1373,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
     Boolean      ValOK;
     tSymbolFlags symbol_flags;
     Word         SwapField[6];
-    String       ArgStr;
+    String       arg_str;
     tStrComp     Arg;
     String       CReg;
     tStrComp     CRegArg;
@@ -1391,7 +1391,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
     /* some insns decode the same arg twice, so we must keep the original string intact.
      */
 
-    StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&Arg, arg_str, sizeof(arg_str));
     StrCompCopy(&Arg, pArg);
     KillPrefBlanksStrComp(&Arg);
     KillPostBlanksStrComp(&Arg);
@@ -2563,10 +2563,10 @@ static tRegListResult DecodeRegList(tStrComp const* pArg, Word* Erg) {
     tRegListResult status;
     Byte     z;
     char *   p, *p2;
-    String   ArgStr;
+    String   arg_str;
     tStrComp Arg, Remainder = {0}, From, To;
 
-    StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&Arg, arg_str, sizeof(arg_str));
     StrCompCopy(&Arg, pArg);
 
     *Erg = 0;
@@ -4955,12 +4955,12 @@ static tRegListResult DecodeFRegList(tStrComp const* pArg, Byte* pTyp, Byte* pLi
     Word hw, Reg, RegFrom, RegTo;
     Byte z;
     char *p, *p2;
-    String ArgStr;
+    String arg_str;
     tStrComp Arg, Remainder = {0}, From, To;
     tSymbolSize reg_size;
     tRegEvalResult status;
 
-    StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&Arg, arg_str, sizeof(arg_str));
     StrCompCopy(&Arg, pArg);
     *pTyp = eFMovemTypNone;
     if (!*Arg.str.p_str) return eNotRegList;

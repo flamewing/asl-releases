@@ -94,12 +94,12 @@ static String   CTargName;
 static unsigned NumCBlocks;
 
 static void DefStartStopAdr(LongWord SegMask) {
-    Byte Seg;
+    Byte seg;
 
-    for (Seg = 0; Seg < SegCount; Seg++) {
-        if (SegMask & (1 << Seg)) {
-            StartAdr[Seg] = 0;
-            StopAdr[Seg]  = (Seg == SegData) ? 0x1fff : 0x7fff;
+    for (seg = 0; seg < SegCount; seg++) {
+        if (SegMask & (1 << seg)) {
+            StartAdr[seg] = 0;
+            StopAdr[seg]  = (seg == SegData) ? 0x1fff : 0x7fff;
         }
     }
 }
@@ -467,14 +467,14 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     ChkSum = 0;
                     switch (ActFormat) {
                     case eHexFormatMotoS: {
-                        int z;
+                        int item_index;
                         chkio_fprintf(
                                 TargFile, TargName, "S%c%02X", '1' + MotRecType,
                                 Lo(TransLen + 3 + MotRecType));
                         ChkSum += TransLen + 3 + MotRecType;
                         byte_erg_start = record_byte_address(ErgStart, Gran);
-                        for (z = MotRecType + 1; z >= 0; z--) {
-                            Byte digit = (byte_erg_start >> (z * 8)) & 0xff;
+                        for (item_index = MotRecType + 1; item_index >= 0; item_index--) {
+                            Byte digit = (byte_erg_start >> (item_index * 8)) & 0xff;
                             chkio_fprintf(TargFile, TargName, "%02X", digit);
                             ChkSum += digit;
                         }

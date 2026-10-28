@@ -1108,17 +1108,17 @@ static void DecodeJBC_JBS(Word Code) {
             OpSize = eSymbolSize8Bit;
             if (DecodeAdr(&ArgStr[1], &adr_vals, MModDir, False) != ModNone) {
                 LongInt      AdrInt;
-                tSymbolFlags Flags;
+                tSymbolFlags flags;
                 int          Start;
 
                 Start  = append_adr_vals(1, &adr_vals);
-                AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], MemInt, &OK, &Flags)
+                AdrInt = EvalStrIntExpressionWithFlags(&ArgStr[3], MemInt, &OK, &flags)
                          - (EProgCounter() + 3);
                 if (OK) {
-                    if (!mFirstPassUnknownOrQuestionable(Flags) && !IsByteBranch(AdrInt)) {
+                    if (!mFirstPassUnknownOrQuestionable(flags) && !IsByteBranch(AdrInt)) {
                         WrBranchRange(&ArgStr[3], AdrInt, -128, 127, EProgCounter() + 3);
                     } else {
-                        set_b_guessed(Flags, Start, 1, 0xff);
+                        set_b_guessed(flags, Start, 1, 0xff);
                         BAsmCode[Start] = AdrInt & 0xff;
                         CodeLen         = Start + 1;
                     }

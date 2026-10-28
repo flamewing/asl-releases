@@ -212,10 +212,10 @@ static Boolean DecodeAdr(tStrComp const* pArg, Boolean MayInc, Byte PCDisp, Byte
     Boolean      OK;
     int          l, SplitPos;
     tSymbolFlags Flags;
-    String       ArgStr;
+    String       arg_str;
     tStrComp     ArgCopy;
 
-    StrCompMkTemp(&ArgCopy, ArgStr, sizeof(ArgStr));
+    StrCompMkTemp(&ArgCopy, arg_str, sizeof(arg_str));
     StrCompCopy(&ArgCopy, pArg);
     if (((SplitPos = FindDispBaseSplit(ArgCopy.str.p_str, &l)) >= 0) && (l >= 4)) {
         tStrComp Left, Right;

@@ -403,12 +403,12 @@ static Boolean DecodeAdr(
         ExecAssumeByte();
         if ((OpSize >= 0) && (OpSize < 3)) {
             static IntType const IntTypes[3] = {Int8, Int16, Int24};
-            Boolean              OK;
-            LongWord Value = EvalStrIntExpressionOffs(pArg, 1, IntTypes[OpSize], &OK);
-            if (OK) {
-                ShortInt z;
+            Boolean              immediate_ok;
+            LongWord Value = EvalStrIntExpressionOffs(pArg, 1, IntTypes[OpSize], &immediate_ok);
+            if (immediate_ok) {
+                ShortInt byte_index;
 
-                for (z = 0; z <= OpSize; z++) {
+                for (byte_index = 0; byte_index <= OpSize; byte_index++) {
                     pAddress->AdrVals[pAddress->AdrCnt++] = Value & 0xff;
                     Value >>= 8;
                 }
@@ -447,7 +447,7 @@ static Boolean DecodeAdr(
             static char const Modes[][5]
                     = {"TDE+", "WHL+", "TDE-", "WHL-", "TDE", "WHL", "VVP", "UUP",
                        "RG6+", "RG7+", "RG6-", "RG7-", "RG6", "RG7", "RG4", "RG5"};
-            unsigned z;
+            unsigned mode_index;
             char *   pSep, Save;
             tStrComp Base, Remainder;
 
@@ -457,11 +457,11 @@ static Boolean DecodeAdr(
 
             /* simple expression without displacement? */
 
-            for (z = 0; z < sizeof(Modes) / sizeof(*Modes); z++) {
-                if (!as_strcasecmp(Arg.str.p_str, Modes[z])) {
+            for (mode_index = 0; mode_index < sizeof(Modes) / sizeof(*Modes); mode_index++) {
+                if (!as_strcasecmp(Arg.str.p_str, Modes[mode_index])) {
                     pAddress->AdrMode    = ModMem;
                     pAddress->AdrVal     = 0x16;
-                    pAddress->AdrVals[0] = z % (sizeof(Modes) / sizeof(*Modes) / 2);
+                    pAddress->AdrVals[0] = mode_index % (sizeof(Modes) / sizeof(*Modes) / 2);
                     pAddress->AdrCnt     = 1;
                     goto AdrFound;
                 }

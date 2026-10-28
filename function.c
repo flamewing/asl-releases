@@ -35,10 +35,10 @@
 
 static as_float_t log_max, log2_max, log10_max;
 
-static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     int cnt = pArgs[0].Contents.str.len - pArgs[1].Contents.Int.Value;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
     if ((pArgs[2].Contents.Int.Value != 0) && (pArgs[2].Contents.Int.Value < cnt)) {
         cnt = pArgs[2].Contents.Int.Value;
     }
@@ -53,8 +53,8 @@ static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned
     return True;
 }
 
-static Boolean FuncSTRSTR(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSTRSTR(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_int(
             pResult, as_nonz_dynstr_find(&pArgs[0].Contents.str, &pArgs[1].Contents.str));
@@ -63,8 +63,8 @@ static Boolean FuncSTRSTR(TempResult* pResult, TempResult const* pArgs, unsigned
 }
 
 static Boolean FuncCHARFROMSTR(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_int(
             pResult,
@@ -77,12 +77,12 @@ static Boolean FuncCHARFROMSTR(
 }
 
 static Boolean FuncCODEPAGE_VAL(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     PTransTable p_table;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
-    if (ArgCnt >= 2) {
+    if (arg_cnt >= 2) {
         String name;
 
         as_nonz_dynstr_to_c_str(name, &pArgs[1].Contents.str, sizeof(name));
@@ -109,8 +109,8 @@ static Boolean FuncCODEPAGE_VAL(
 }
 
 static Boolean FuncEXPRTYPE(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     switch (pArgs[0].Typ) {
     case TempInt:
@@ -132,10 +132,10 @@ static Boolean FuncEXPRTYPE(
 /* in Grossbuchstaben wandeln */
 
 static Boolean FuncUPSTRING(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     char* pRun;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     as_tempres_set_str(pResult, &pArgs[0].Contents.str);
     for (pRun = pResult->Contents.str.p_str;
@@ -149,10 +149,10 @@ static Boolean FuncUPSTRING(
 /* in Kleinbuchstaben wandeln */
 
 static Boolean FuncLOWSTRING(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     char* pRun;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     as_tempres_set_str(pResult, &pArgs[0].Contents.str);
     for (pRun = pResult->Contents.str.p_str;
@@ -165,8 +165,8 @@ static Boolean FuncLOWSTRING(
 
 /* Laenge ermitteln */
 
-static Boolean FuncSTRLEN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSTRLEN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_int(pResult, pArgs[0].Contents.str.len);
 
@@ -175,10 +175,10 @@ static Boolean FuncSTRLEN(TempResult* pResult, TempResult const* pArgs, unsigned
 
 /* Parser aufrufen */
 
-static Boolean FuncVAL(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncVAL(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     String Tmp;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     as_nonz_dynstr_to_c_str(Tmp, &pArgs[0].Contents.str, sizeof(Tmp));
     EvalExpression(Tmp, pResult);
@@ -194,8 +194,8 @@ static void report_character_argument_range(char const* name, LargeInt value) {
 }
 
 static Boolean FuncTOUPPER(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if ((pArgs[0].Contents.Int.Value < 0) || (pArgs[0].Contents.Int.Value > 255)) {
         report_character_argument_range("TOUPPER", pArgs[0].Contents.Int.Value);
@@ -207,8 +207,8 @@ static Boolean FuncTOUPPER(
 }
 
 static Boolean FuncTOLOWER(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if ((pArgs[0].Contents.Int.Value < 0) || (pArgs[0].Contents.Int.Value > 255)) {
         report_character_argument_range("TOLOWER", pArgs[0].Contents.Int.Value);
@@ -219,11 +219,11 @@ static Boolean FuncTOLOWER(
     return True;
 }
 
-static Boolean FuncBITCNT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncBITCNT(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     int      z;
     LargeInt in = pArgs[0].Contents.Int.Value, out = 0;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     out = 0;
     for (z = 0; z < LARGEBITS; z++) {
@@ -236,11 +236,11 @@ static Boolean FuncBITCNT(TempResult* pResult, TempResult const* pArgs, unsigned
 }
 
 static Boolean FuncFIRSTBIT(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     LargeInt in = pArgs[0].Contents.Int.Value;
     int      out;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     out = 0;
     do {
@@ -255,11 +255,11 @@ static Boolean FuncFIRSTBIT(
 }
 
 static Boolean FuncLASTBIT(
-        TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+        TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     int      z, out;
     LargeInt in = pArgs[0].Contents.Int.Value;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     out = -1;
     for (z = 0; z < LARGEBITS; z++) {
@@ -273,10 +273,10 @@ static Boolean FuncLASTBIT(
     return True;
 }
 
-static Boolean FuncBITPOS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncBITPOS(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     LargeInt out;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     pResult->Typ = TempInt;
     if (!SingleBit(pArgs[0].Contents.Int.Value, &out)) {
@@ -288,8 +288,8 @@ static Boolean FuncBITPOS(TempResult* pResult, TempResult const* pArgs, unsigned
     return True;
 }
 
-static Boolean FuncABS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncABS(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     switch (pArgs[0].Typ) {
     case TempInt:
@@ -307,8 +307,8 @@ static Boolean FuncABS(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncSGN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSGN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     switch (pArgs[0].Typ) {
     case TempInt:
@@ -330,8 +330,8 @@ static Boolean FuncSGN(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncINT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncINT(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_fabs(pArgs[0].Contents.Float) > IntTypeDefs[LargeSIntType].Max) {
         as_tempres_set_none(pResult);
@@ -347,8 +347,8 @@ static Boolean FuncINT(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncSQRT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSQRT(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float < 0) {
         as_tempres_set_none(pResult);
@@ -362,24 +362,24 @@ static Boolean FuncSQRT(TempResult* pResult, TempResult const* pArgs, unsigned A
 
 /* trigonometrische Funktionen */
 
-static Boolean FuncSIN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSIN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_float(pResult, as_sin(pArgs[0].Contents.Float));
 
     return True;
 }
 
-static Boolean FuncCOS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncCOS(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_float(pResult, as_cos(pArgs[0].Contents.Float));
 
     return True;
 }
 
-static Boolean FuncTAN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncTAN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_float_equal_exact(as_cos(pArgs[0].Contents.Float), 0)) {
         as_tempres_set_none(pResult);
@@ -391,9 +391,9 @@ static Boolean FuncTAN(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     as_float_t FVal = as_sin(pArgs[0].Contents.Float);
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     if (as_float_equal_exact(FVal, 0)) {
         as_tempres_set_none(pResult);
@@ -407,8 +407,8 @@ static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 
 /* inverse trigonometrische Funktionen */
 
-static Boolean FuncASIN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncASIN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_fabs(pArgs[0].Contents.Float) > 1) {
         as_tempres_set_none(pResult);
@@ -420,8 +420,8 @@ static Boolean FuncASIN(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncACOS(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncACOS(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_fabs(pArgs[0].Contents.Float) > 1) {
         as_tempres_set_none(pResult);
@@ -433,24 +433,24 @@ static Boolean FuncACOS(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncATAN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncATAN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_float(pResult, as_atan(pArgs[0].Contents.Float));
 
     return True;
 }
 
-static Boolean FuncACOT(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncACOT(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_float(pResult, M_PI / 2 - as_atan(pArgs[0].Contents.Float));
 
     return True;
 }
 
-static Boolean FuncEXP(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncEXP(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
@@ -462,8 +462,8 @@ static Boolean FuncEXP(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncALOG(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncALOG(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log10_max) {
         as_tempres_set_none(pResult);
@@ -475,8 +475,8 @@ static Boolean FuncALOG(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncALD(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncALD(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log2_max) {
         as_tempres_set_none(pResult);
@@ -488,8 +488,8 @@ static Boolean FuncALD(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncSINH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncSINH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
@@ -501,8 +501,8 @@ static Boolean FuncSINH(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncCOSH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncCOSH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
@@ -514,8 +514,8 @@ static Boolean FuncCOSH(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncTANH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncTANH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
@@ -527,10 +527,10 @@ static Boolean FuncTANH(TempResult* pResult, TempResult const* pArgs, unsigned A
     return True;
 }
 
-static Boolean FuncCOTH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
+static Boolean FuncCOTH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
     as_float_t FVal;
 
-    UNUSED(ArgCnt);
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
@@ -547,8 +547,8 @@ static Boolean FuncCOTH(TempResult* pResult, TempResult const* pArgs, unsigned A
 
 /* logarithmische & inverse hyperbolische Funktionen */
 
-static Boolean FuncLN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncLN(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float <= 0) {
         as_tempres_set_none(pResult);
@@ -560,8 +560,8 @@ static Boolean FuncLN(TempResult* pResult, TempResult const* pArgs, unsigned Arg
     return True;
 }
 
-static Boolean FuncLOG(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncLOG(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float <= 0) {
         as_tempres_set_none(pResult);
@@ -573,8 +573,8 @@ static Boolean FuncLOG(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     return True;
 }
 
-static Boolean FuncLD(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncLD(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float <= 0) {
         as_tempres_set_none(pResult);
@@ -586,8 +586,8 @@ static Boolean FuncLD(TempResult* pResult, TempResult const* pArgs, unsigned Arg
     return True;
 }
 
-static Boolean FuncASINH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncASINH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     as_tempres_set_float(
             pResult,
@@ -597,8 +597,8 @@ static Boolean FuncASINH(TempResult* pResult, TempResult const* pArgs, unsigned 
     return True;
 }
 
-static Boolean FuncACOSH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncACOSH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (pArgs[0].Contents.Float < 1) {
         as_tempres_set_none(pResult);
@@ -613,8 +613,8 @@ static Boolean FuncACOSH(TempResult* pResult, TempResult const* pArgs, unsigned 
     return True;
 }
 
-static Boolean FuncATANH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncATANH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_fabs(pArgs[0].Contents.Float) >= 1) {
         as_tempres_set_none(pResult);
@@ -630,8 +630,8 @@ static Boolean FuncATANH(TempResult* pResult, TempResult const* pArgs, unsigned 
     return True;
 }
 
-static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
-    UNUSED(ArgCnt);
+static Boolean FuncACOTH(TempResult* pResult, TempResult const* pArgs, unsigned arg_cnt) {
+    UNUSED(arg_cnt);
 
     if (as_fabs(pArgs[0].Contents.Float) <= 1) {
         as_tempres_set_none(pResult);

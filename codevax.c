@@ -1229,13 +1229,13 @@ static void add_fixed(char const* p_name, Word code) {
 }
 
 static void add_one_op(
-        char const* p_name, tSymbolSize op_size, Boolean allow_dest_immediate,
+        char const* p_name, tSymbolSize operand_size, Boolean allow_dest_immediate,
         Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     p_order->arg_cnt          = 1;
     p_order->adr_mode_mask[0] = get_adr_mode_mask(allow_dest_immediate ? 'r' : 'w');
-    p_order->op_size[0]       = op_size;
+    p_order->op_size[0]       = operand_size;
     AddInstTable(InstTable, p_name, InstrZ++, decode_gen);
 }
 
@@ -1254,42 +1254,42 @@ static int add_two_op_size(
 }
 
 static int add_two_op(
-        char const* p_name, tSymbolSize op_size, Boolean allow_dest_immediate,
+        char const* p_name, tSymbolSize operand_size, Boolean allow_dest_immediate,
         Word code) {
-    return add_two_op_size(p_name, op_size, op_size, allow_dest_immediate, code);
+    return add_two_op_size(p_name, operand_size, operand_size, allow_dest_immediate, code);
 }
 
-static int add_three_op(char const* p_name, tSymbolSize op_size, Word code) {
+static int add_three_op(char const* p_name, tSymbolSize operand_size, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     p_order->arg_cnt          = 3;
     p_order->adr_mode_mask[0] = p_order->adr_mode_mask[1] = get_adr_mode_mask('r');
     p_order->adr_mode_mask[2]                             = get_adr_mode_mask('w');
-    p_order->op_size[0] = p_order->op_size[1] = p_order->op_size[2] = op_size;
+    p_order->op_size[0] = p_order->op_size[1] = p_order->op_size[2] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
-static void add_two_three_op(char const* p_name, tSymbolSize op_size, Word code) {
+static void add_two_three_op(char const* p_name, tSymbolSize operand_size, Word code) {
     char             name[20];
     var_arg_order_t* p_order = rsv_var_arg_order();
 
     as_snprintf(name, sizeof(name), "%s2", p_name);
-    p_order->gen_indices[0] = add_two_op(name, op_size, False, code);
+    p_order->gen_indices[0] = add_two_op(name, operand_size, False, code);
     as_snprintf(name, sizeof(name), "%s3", p_name);
     p_order->gen_indices[1]
-            = add_three_op(name, op_size, Hi(code) ? (code + 0x100) : (code + 1));
+            = add_three_op(name, operand_size, Hi(code) ? (code + 0x100) : (code + 1));
     AddInstTable(InstTable, p_name, var_arg_op_cnt++, decode_var_arg);
 }
 
-static void add_byte_two_op(char const* p_name, tSymbolSize op_size, Word code) {
+static void add_byte_two_op(char const* p_name, tSymbolSize operand_size, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     p_order->arg_cnt          = 3;
     p_order->adr_mode_mask[0] = p_order->adr_mode_mask[1] = get_adr_mode_mask('r');
     p_order->adr_mode_mask[2]                             = get_adr_mode_mask('w');
     p_order->op_size[0]                                   = eSymbolSize8Bit;
-    p_order->op_size[1] = p_order->op_size[2] = op_size;
+    p_order->op_size[1] = p_order->op_size[2] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ++, decode_gen);
 }
 

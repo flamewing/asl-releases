@@ -623,15 +623,15 @@ static void FillAbsAddr(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FillImmVal(tAdrVals *pAdrVals, LongWord Value, tSymbolSize OpSize)
+ * \fn     FillImmVal(tAdrVals *pAdrVals, LongWord Value, tSymbolSize operand_size)
  * \brief  fill address values from immediate value
  * \param  pAdrVals dest buffer
  * \param  Value value to fill in
- * \param  OpSize used operand size
+ * \param  operand_size used operand size
  * ------------------------------------------------------------------------ */
 
-static void FillImmVal(tAdrVals* pAdrVals, LongWord Value, tSymbolSize OpSize) {
-    switch ((int)OpSize) {
+static void FillImmVal(tAdrVals* pAdrVals, LongWord Value, tSymbolSize operand_size) {
+    switch ((int)operand_size) {
     case eSymbolSize3Bit:
         pAdrVals->Val = Value & 7;
         break;
@@ -970,18 +970,18 @@ chk:
  */
 
 /*!------------------------------------------------------------------------
- * \fn     AssembleBitSymbol(Byte BitPos, tSymbolSize OpSize, LongWord Address, Boolean ForceShort)
+ * \fn     AssembleBitSymbol(Byte BitPos, tSymbolSize operand_size, LongWord Address, Boolean ForceShort)
  * \brief  build the compact internal representation of a bit symbol
  * \param  BitPos bit position in word
- * \param  OpSize operand size (8/16)
+ * \param  operand_size operand size (8/16)
  * \param  Address memory address
  * \param  ForceShort force short address in segmented mode
  * \return compact representation
  * ------------------------------------------------------------------------ */
 
 static LongWord AssembleBitSymbol(
-        Byte BitPos, tSymbolSize OpSize, LongWord Address, Boolean ForceShort) {
-    LongWord CodeOpSize = (OpSize == eSymbolSize16Bit) ? 1 : 0;
+        Byte BitPos, tSymbolSize operand_size, LongWord Address, Boolean ForceShort) {
+    LongWord CodeOpSize = (operand_size == eSymbolSize16Bit) ? 1 : 0;
     int      AddrShift  = CodeOpSize + 3;
 
     return BitPos | ((Address & 0x7fffff) << AddrShift) | (CodeOpSize << 28)
@@ -989,18 +989,18 @@ static LongWord AssembleBitSymbol(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const char *pBitArg, Boolean *pOK, ShortInt OpSize)
+ * \fn     EvalBitPosition(const char *pBitArg, Boolean *pOK, ShortInt operand_size)
  * \brief  evaluate constant bit position, with bit range depending on operand size
  * \param  pBitArg bit position argument
  * \param  pOK returns True if OK
- * \param  OpSize operand size (0,1,2 -> 8,16,32 bits)
+ * \param  operand_size operand size (0,1,2 -> 8,16,32 bits)
  * \return bit position as number
  * ------------------------------------------------------------------------ */
 
-static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize OpSize) {
+static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize operand_size) {
     IntType Type;
 
-    switch (OpSize) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         Type = UInt3;
         goto common;
@@ -1018,24 +1018,24 @@ static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize O
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pMemArg, const tStrComp *pBitArg, tSymbolSize OpSize)
+ * \fn     DecodeBitArg2(LongWord *pResult, const tStrComp *pMemArg, const tStrComp *pBitArg, tSymbolSize operand_size)
  * \brief  encode a bit symbol, address & bit position separated
  * \param  pResult resulting encoded bit
  * \param  pMemArg register argument
  * \param  pBitArg bit argument
- * \param  OpSize register size (0/1 = 8/16 bit)
+ * \param  operand_size register size (0/1 = 8/16 bit)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeBitArg2(
         LongWord* pResult, tStrComp const* pMemArg, tStrComp const* pBitArg,
-        tSymbolSize OpSize) {
+        tSymbolSize operand_size) {
     tEvalResult EvalResult;
     LongWord    Addr;
     Byte        BitPos;
     Boolean     ForceShort;
 
-    BitPos = EvalBitPosition(pBitArg, &EvalResult.OK, OpSize);
+    BitPos = EvalBitPosition(pBitArg, &EvalResult.OK, operand_size);
     if (!EvalResult.OK) {
         return False;
     }
@@ -1045,22 +1045,22 @@ static Boolean DecodeBitArg2(
         return False;
     }
 
-    *pResult = AssembleBitSymbol(BitPos, OpSize, Addr, ForceShort);
+    *pResult = AssembleBitSymbol(BitPos, operand_size, Addr, ForceShort);
 
     return True;
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop, tSymbolSize OpSize)
+ * \fn     DecodeBitArg(LongWord *pResult, int Start, int Stop, tSymbolSize operand_size)
  * \brief  encode a bit symbol from instruction argument(s)
  * \param  pResult resulting encoded bit
  * \param  Start first argument
  * \param  Stop last argument
- * \param  OpSize register size (0/1 = 8/16 bit)
+ * \param  operand_size register size (0/1 = 8/16 bit)
  * \return True if success
  * ------------------------------------------------------------------------ */
 
-static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize OpSize) {
+static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize operand_size) {
     *pResult = 0;
 
     /* Just one argument -> parse as bit argument */
@@ -1078,7 +1078,7 @@ static Boolean DecodeBitArg(LongWord* pResult, int Start, int Stop, tSymbolSize 
     /* register & bit position are given as separate arguments */
 
     else if (Stop == Start + 1) {
-        return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop], OpSize);
+        return DecodeBitArg2(pResult, &ArgStr[Start], &ArgStr[Stop], operand_size);
     }
 
     /* other # of arguments not allowed */
@@ -1131,12 +1131,12 @@ static Boolean DissectBitSymbol(
 static void DissectBit_Z8000(char* pDest, size_t DestSize, LargeWord Inp) {
     Byte        BitPos;
     LongWord    Address;
-    tSymbolSize OpSize;
+    tSymbolSize operand_size;
     Boolean     ForceShort;
     char        Attribute;
 
-    DissectBitSymbol(Inp, &Address, &BitPos, &OpSize, &ForceShort);
-    Attribute = "bw"[OpSize];
+    DissectBitSymbol(Inp, &Address, &BitPos, &operand_size, &ForceShort);
+    Attribute = "bw"[operand_size];
     if (HexStartCharacter == 'A') {
         Attribute = as_toupper(Attribute);
     }
@@ -1169,18 +1169,18 @@ static void ExpandZ8000Bit(
         pElem->Offset = Address;
         AddStructElem(pInnermostNamedStruct->StructRec, pElem);
     } else {
-        tSymbolSize OpSize = (pStructElem->OpSize == eSymbolSizeUnknown)
+        tSymbolSize operand_size = (pStructElem->OpSize == eSymbolSizeUnknown)
                                      ? eSymbolSize8Bit
                                      : pStructElem->OpSize;
 
         if (!ChkRange(Address, 0, 0x7fffff)
-            || !ChkRange(pStructElem->BitPos, 0, (8 << OpSize) - 1)) {
+            || !ChkRange(pStructElem->BitPos, 0, (8 << operand_size) - 1)) {
             return;
         }
 
         PushLocHandle(-1);
         EnterIntSymbol(
-                pVarName, AssembleBitSymbol(pStructElem->BitPos, OpSize, Address, False),
+                pVarName, AssembleBitSymbol(pStructElem->BitPos, operand_size, Address, False),
                 SegBData, False);
         PopLocHandle();
         /* TODO: MakeUseList? */

@@ -3260,7 +3260,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(
 
     if (pDupFnd) {
         LongInt       DupCnt;
-        char *        pSep, *pRun;
+        char *        pSep, *p_run;
         String        CopyStr;
         tStrComp      Copy, DupArg, RemArg, ThisRemArg = {0};
         tCurrCodeFill DUPStartFill, DUPEndFill;
@@ -3314,10 +3314,10 @@ static Boolean DecodeIntelPseudo_LayoutMult(
         do {
             pSep  = NULL;
             Quote = Depth = 0;
-            for (pRun = RemArg.str.p_str; *pRun; pRun++) {
-                DecodeIntelPseudo_HandleQuote(&Depth, &Quote, *pRun);
-                if (!Depth && !Quote && (*pRun == ',')) {
-                    pSep = pRun;
+            for (p_run = RemArg.str.p_str; *p_run; p_run++) {
+                DecodeIntelPseudo_HandleQuote(&Depth, &Quote, *p_run);
+                if (!Depth && !Quote && (*p_run == ',')) {
+                    pSep = p_run;
                     break;
                 }
             }

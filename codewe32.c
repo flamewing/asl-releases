@@ -313,22 +313,22 @@ static Boolean check_mode_mask(
 }
 
 static void append_adr_vals_int(
-        adr_vals_t* p_result, LongWord value, tSymbolSize op_size) {
+        adr_vals_t* p_result, LongWord value, tSymbolSize operand_size) {
     unsigned z;
 
     p_result->val_offset = p_result->count;
-    for (z = 0; z < GetSymbolSizeBytes(op_size); z++) {
+    for (z = 0; z < GetSymbolSizeBytes(operand_size); z++) {
         p_result->vals[p_result->count++] = value & 0xff;
         value >>= 8;
     }
 }
 
-static Boolean is_literal(LongWord value, tSymbolSize op_size, Byte* p_mode_field) {
+static Boolean is_literal(LongWord value, tSymbolSize operand_size, Byte* p_mode_field) {
     if (value <= 63) {
         *p_mode_field = value & 63;
         return True;
     }
-    switch (op_size) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         if ((value & 0xff) >= 0xf0) {
             goto is_lit;
@@ -623,14 +623,14 @@ static Boolean decode_adr(
     /* absolute */
 
     if (*arg.str.p_str == '$') {
-        LongWord address = EvalStrIntExpressionOffsWithFlags(
+        LongWord operand_address = EvalStrIntExpressionOffsWithFlags(
                 &arg, 1, UInt32, &ok, &p_result->val_flags);
 
         if (!ok) {
             return False;
         }
         p_result->vals[p_result->count++] = deferred ? 0xef : 0x7f;
-        append_adr_vals_int(p_result, address, eSymbolSize32Bit);
+        append_adr_vals_int(p_result, operand_address, eSymbolSize32Bit);
         return check_mode_mask(mode_mask, ModMem, p_arg, p_result);
     }
 
@@ -935,14 +935,14 @@ static void append_opcode(Word op_code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     encode_f_size(tSymbolSize op_size)
+ * \fn     encode_f_size(tSymbolSize operand_size)
  * \brief  convert floating point symbol size to MAU command op size
- * \param  op_size symbol size
+ * \param  operand_size symbol size
  * \return 0..2
  * ------------------------------------------------------------------------ */
 
-static LongWord encode_f_size(tSymbolSize op_size) {
-    switch (op_size) {
+static LongWord encode_f_size(tSymbolSize operand_size) {
+    switch (operand_size) {
     case eSymbolSizeFloat32Bit:
         return 0;
     case eSymbolSizeFloat64Bit:
@@ -1041,16 +1041,16 @@ static void set_mau_reg_bank(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     set_mau_command_op_reg(LongWord *p_command, unsigned op_index, unsigned reg_num, tSymbolSize op_size)
+ * \fn     set_mau_command_op_reg(LongWord *p_command, unsigned op_index, unsigned reg_num, tSymbolSize operand_size)
  * \brief  set op1/op2/op3 field im MAU command word to MAU register
  * \param  p_command command word to update
  * \param  op_index 0/1/2 for op1/op2/op3
  * \param  reg_num register #
- * \param  op_size register's size (32/64/96 bit)
+ * \param  operand_size register's size (32/64/96 bit)
  * ------------------------------------------------------------------------ */
 
 static void set_mau_command_op_reg(
-        LongWord* p_command, unsigned op_index, unsigned reg_num, tSymbolSize op_size) {
+        LongWord* p_command, unsigned op_index, unsigned reg_num, tSymbolSize operand_size) {
     switch (op_index) {
     case 0:
     case 1:
@@ -1058,24 +1058,24 @@ static void set_mau_command_op_reg(
         break;
     case 2:
         set_mau_command_op(
-                p_command, op_index, (encode_f_size(op_size) << 2) | (reg_num & 3));
+                p_command, op_index, (encode_f_size(operand_size) << 2) | (reg_num & 3));
     }
     set_mau_reg_bank(p_command, op_index, (reg_num >> 2) & 1);
 }
 
 /*!------------------------------------------------------------------------
- * \fn     set_mau_command_op_mem(LongWord *p_command, unsigned op_index, tSymbolSize op_size)
+ * \fn     set_mau_command_op_mem(LongWord *p_command, unsigned op_index, tSymbolSize operand_size)
  * \brief  set op1/op2/op3 field im MAU command word to memory operand
  * \param  p_command command word to update
  * \param  op_index 0/1/2 for op1/op2/op3
- * \param  op_size memory operand's size (32/64/96 bit)
+ * \param  operand_size memory operand's size (32/64/96 bit)
  * ------------------------------------------------------------------------ */
 
 static void set_mau_command_op_mem(
-        LongWord* p_command, unsigned op_index, tSymbolSize op_size) {
+        LongWord* p_command, unsigned op_index, tSymbolSize operand_size) {
     set_mau_command_op(
             p_command, op_index,
-            ((2 == op_index) ? 0x0c : 0x04) | encode_f_size(op_size));
+            ((2 == op_index) ? 0x0c : 0x04) | encode_f_size(operand_size));
 }
 
 /*!------------------------------------------------------------------------
@@ -1434,7 +1434,7 @@ static void decode_mau_op_core(Word code, replace_dest_t replace_dest) {
     Byte        op_used   = (code >> 13) & 7, mem_op_mask;
     LongWord    command   = (((code >> 8) & 0x1f) << 10) | (MAU_ID << 24);
     Boolean     req_32200 = !!(code & 0x80);
-    tSymbolSize op_size   = (tSymbolSize)(code & 0x7f);
+    tSymbolSize operand_size   = (tSymbolSize)(code & 0x7f);
     unsigned    num_args  = as_bit_count(op_used);
     int         arg_index, arg_indices[3], op_index;
     adr_vals_t  op_adr_vals[3];
@@ -1515,11 +1515,11 @@ static void decode_mau_op_core(Word code, replace_dest_t replace_dest) {
 
         /* Construct MOVE from src2 to implicit register: */
 
-        append_mau_opcode(1 << 0, op_size);
+        append_mau_opcode(1 << 0, operand_size);
         set_mau_command_op_from_adr_vals(
-                &move_command, 0, &op_adr_vals[1], op_size);           /* op1 = src2 */
+                &move_command, 0, &op_adr_vals[1], operand_size);           /* op1 = src2 */
         set_mau_command_op_none(&move_command, 1);                     /* op2 = none */
-        set_mau_command_op_reg(&move_command, 2, f_implicit, op_size); /* op3 = tmp reg */
+        set_mau_command_op_reg(&move_command, 2, f_implicit, operand_size); /* op3 = tmp reg */
         append_copro_command(move_command);
         append_adr_vals(&op_adr_vals[1]);
 
@@ -1549,7 +1549,7 @@ static void decode_mau_op_core(Word code, replace_dest_t replace_dest) {
     for (op_index = 0; op_index < 3; op_index++) {
         if (op_used & (1 << op_index)) {
             set_mau_command_op_from_adr_vals(
-                    &command, op_index, &op_adr_vals[op_index], op_size);
+                    &command, op_index, &op_adr_vals[op_index], operand_size);
             if (op_adr_vals[op_index].mode == ModMem) {
                 mem_op_mask |= 1 << op_index;
             }
@@ -1560,7 +1560,7 @@ static void decode_mau_op_core(Word code, replace_dest_t replace_dest) {
 
     /* write out opcode, command word and address operands: */
 
-    append_mau_opcode(mem_op_mask, op_size);
+    append_mau_opcode(mem_op_mask, operand_size);
     append_copro_command(command);
     for (op_index = 0; op_index < 3; op_index++) {
         if (mem_op_mask & (1 << op_index)) {
@@ -1588,7 +1588,7 @@ static void decode_mau_op_without_dest(Word code) {
  * ------------------------------------------------------------------------ */
 
 static void decode_mau_move(Word code) {
-    tSymbolSize op_size[2];
+    tSymbolSize operand_sizes[2];
     LongWord    op_code = (code >> 11) & 31;
     adr_vals_t  op_adr_vals[2];
     unsigned    op_index, mem_op_mask;
@@ -1601,8 +1601,8 @@ static void decode_mau_move(Word code) {
         return;
     }
 
-    op_size[0] = (tSymbolSize)((code >> 5) & 31);
-    op_size[1] = (tSymbolSize)((code >> 0) & 31);
+    operand_sizes[0] = (tSymbolSize)((code >> 5) & 31);
+    operand_sizes[1] = (tSymbolSize)((code >> 0) & 31);
     for (op_index = 0; op_index < 2; op_index++) {
         /* Source arguments may be evaluated more than once. Since decode_adr() destroys
            source, work with copies: */
@@ -1611,7 +1611,7 @@ static void decode_mau_move(Word code) {
                     MModMem | MModFReg)) {
             return;
         }
-        if (!is_symbol_size_float(op_size[op_index])
+        if (!is_symbol_size_float(operand_sizes[op_index])
             && (op_adr_vals[op_index].mode == ModFReg)) {
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[op_index + 1]);
             return;
@@ -1619,11 +1619,11 @@ static void decode_mau_move(Word code) {
     }
 
     if ((op_adr_vals[0].mode == ModMem) && (op_adr_vals[1].mode == ModMem)
-        && (GetSymbolSizeBytes(op_size[0]) != GetSymbolSizeBytes(op_size[1]))) {
+        && (GetSymbolSizeBytes(operand_sizes[0]) != GetSymbolSizeBytes(operand_sizes[1]))) {
         LongWord command;
 
         command = (MAU_ID << 24);
-        switch (op_size[0]) {
+        switch (operand_sizes[0]) {
         case eSymbolSizeFloatDec96Bit:
             command = (MAU_OPCODE_DTOF << 10);
             break;
@@ -1634,10 +1634,10 @@ static void decode_mau_move(Word code) {
             command = (MAU_OPCODE_MOVE << 10);
             break;
         }
-        set_mau_command_op_from_adr_vals(&command, 0, &op_adr_vals[0], op_size[0]);
+        set_mau_command_op_from_adr_vals(&command, 0, &op_adr_vals[0], operand_sizes[0]);
         set_mau_command_op_none(&command, 1);
         set_mau_command_op_reg(&command, 2, DEF_F_IMPLICIT, eSymbolSizeFloat96Bit);
-        append_mau_opcode(0x01, op_size[0]);
+        append_mau_opcode(0x01, operand_sizes[0]);
         append_copro_command(command);
         append_adr_vals(&op_adr_vals[0]);
 
@@ -1645,7 +1645,7 @@ static void decode_mau_move(Word code) {
                 &ArgStr[2], &op_adr_vals[1], EProgCounter() + CodeLen,
                 MModMem | MModFReg);
         command = (MAU_ID << 24);
-        switch (op_size[1]) {
+        switch (operand_sizes[1]) {
         case eSymbolSizeFloatDec96Bit:
             command = (MAU_OPCODE_FTOD << 10);
             break;
@@ -1658,22 +1658,22 @@ static void decode_mau_move(Word code) {
         }
         set_mau_command_op_reg(&command, 0, DEF_F_IMPLICIT, eSymbolSizeFloat96Bit);
         set_mau_command_op_none(&command, 1);
-        set_mau_command_op_from_adr_vals(&command, 2, &op_adr_vals[1], op_size[1]);
-        append_mau_opcode(0x04, op_size[1]);
+        set_mau_command_op_from_adr_vals(&command, 2, &op_adr_vals[1], operand_sizes[1]);
+        append_mau_opcode(0x04, operand_sizes[1]);
         append_copro_command(command);
         append_adr_vals(&op_adr_vals[1]);
     } else {
         LongWord    command      = (op_code << 10) | (MAU_ID << 24);
-        tSymbolSize spop_op_size = op_size[0];
+        tSymbolSize spop_op_size = operand_sizes[0];
 
         mem_op_mask = 0;
         set_mau_command_op_none(&command, 1);
         for (op_index = 0; op_index < 2; op_index++) {
             set_mau_command_op_from_adr_vals(
-                    &command, op_index * 2, &op_adr_vals[op_index], op_size[op_index]);
+                    &command, op_index * 2, &op_adr_vals[op_index], operand_sizes[op_index]);
             if (op_adr_vals[op_index].mode == ModMem) {
                 mem_op_mask |= 1 << (op_index * 2);
-                spop_op_size = op_size[op_index];
+                spop_op_size = operand_sizes[op_index];
             }
         }
         append_mau_opcode(mem_op_mask, spop_op_size);
@@ -1835,72 +1835,72 @@ static void add_fixed(char const* p_name, char const* p_format, Word code) {
 }
 
 static int add_one_op_size(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     handle_order_format(p_order, p_format);
     assert(p_order->arg_cnt == 1);
-    p_order->op_size[0] = op_size;
+    p_order->op_size[0] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
 static int add_two_op(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     handle_order_format(p_order, p_format);
     assert(p_order->arg_cnt == 2);
-    p_order->op_size[0] = p_order->op_size[1] = op_size;
+    p_order->op_size[0] = p_order->op_size[1] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
 static int add_three_op(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     handle_order_format(p_order, p_format);
     assert(p_order->arg_cnt == 3);
     p_order->arg_cnt    = 3;
-    p_order->op_size[0] = p_order->op_size[1] = p_order->op_size[2] = op_size;
+    p_order->op_size[0] = p_order->op_size[1] = p_order->op_size[2] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
 static int add_four_op(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     handle_order_format(p_order, p_format);
     assert(p_order->arg_cnt == 4);
     p_order->op_size[0] = p_order->op_size[1] = p_order->op_size[2] = eSymbolSize32Bit;
-    p_order->op_size[3]                                             = op_size;
+    p_order->op_size[3]                                             = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
 static int add_three_op_shift(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     gen_order_t* p_order = rsv_gen_order(code);
 
     handle_order_format(p_order, p_format);
     assert(p_order->arg_cnt == 3);
     p_order->op_size[0] = eSymbolSize32Bit;
-    p_order->op_size[1] = p_order->op_size[2] = op_size;
+    p_order->op_size[1] = p_order->op_size[2] = operand_size;
     AddInstTable(InstTable, p_name, InstrZ, decode_gen);
     return InstrZ++;
 }
 
 static int add_two_three_op(
-        char const* p_name, tSymbolSize op_size, char const* p_format, Word code) {
+        char const* p_name, tSymbolSize operand_size, char const* p_format, Word code) {
     char             name[20];
     var_arg_order_t* p_order = rsv_var_arg_order();
 
     as_snprintf(name, sizeof(name), "%s2", p_name);
-    p_order->gen_indices[0] = add_two_op(name, op_size, "rw", code);
+    p_order->gen_indices[0] = add_two_op(name, operand_size, "rw", code);
     as_snprintf(name, sizeof(name), "%s3", p_name);
-    p_order->gen_indices[1] = add_three_op(name, op_size, p_format, code + 0x40);
+    p_order->gen_indices[1] = add_three_op(name, operand_size, p_format, code + 0x40);
     AddInstTable(InstTable, p_name, var_arg_op_cnt++, decode_var_arg);
     return 0;
 }
@@ -1920,9 +1920,9 @@ static void add_allsize(
     add_fnc(name, eSymbolSize32Bit, p_format, code - 3);
 }
 
-static void add_branch_core(char const* p_name, tSymbolSize op_size, Word code) {
+static void add_branch_core(char const* p_name, tSymbolSize operand_size, Word code) {
     AddInstTable(
-            InstTable, p_name, (((Word)(op_size & 0xff)) << 8) | code, decode_branch);
+            InstTable, p_name, (((Word)(operand_size & 0xff)) << 8) | code, decode_branch);
 }
 
 static void add_branch(char const* p_name, Word code) {
@@ -1936,9 +1936,9 @@ static void add_branch(char const* p_name, Word code) {
 }
 
 static void add_decrement_branch_core(
-        char const* p_name, tSymbolSize op_size, Word code) {
+        char const* p_name, tSymbolSize operand_size, Word code) {
     AddInstTable(
-            InstTable, p_name, (((Word)(op_size & 0xff)) << 8) | code,
+            InstTable, p_name, (((Word)(operand_size & 0xff)) << 8) | code,
             decode_decrement_branch);
 }
 

@@ -2021,12 +2021,12 @@ static void DecodeFCLR_FSET(Word Code) {
 static void DecodeJMP(Word Code) {
     LongInt      AdrLong, Diff;
     Boolean      OK;
-    tSymbolFlags Flags;
+    tSymbolFlags flags;
 
     UNUSED(Code);
 
     if (ChkArgCnt(1, 1)) {
-        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &Flags);
+        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &flags);
         Diff    = AdrLong - EProgCounter();
 
         /* RMS 12: Repaired JMP.S forward-label as follows:
@@ -2043,7 +2043,7 @@ static void DecodeJMP(Word Code) {
                    would cause a "phase error" forcing another pass.
         */
 
-        if (mFirstPassUnknown(Flags) && (Diff == 0)) {
+        if (mFirstPassUnknown(flags) && (Diff == 0)) {
             Diff = 1;
         }
 
@@ -2085,7 +2085,7 @@ static void DecodeJMP(Word Code) {
         }
         switch (OpSize) {
         case 4:
-            if (((Diff < 1) || (Diff > 9)) && !mSymbolQuestionable(Flags)) {
+            if (((Diff < 1) || (Diff > 9)) && !mSymbolQuestionable(flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 if (Diff
@@ -2099,7 +2099,7 @@ static void DecodeJMP(Word Code) {
             }
             break;
         case 0:
-            if (((Diff < -127) || (Diff > 128)) && !mSymbolQuestionable(Flags)) {
+            if (((Diff < -127) || (Diff > 128)) && !mSymbolQuestionable(flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 BAsmCode[0] = 0xfe;
@@ -2108,7 +2108,7 @@ static void DecodeJMP(Word Code) {
             }
             break;
         case 1:
-            if (((Diff < -32767) || (Diff > 32768)) && !mSymbolQuestionable(Flags)) {
+            if (((Diff < -32767) || (Diff > 32768)) && !mSymbolQuestionable(flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 BAsmCode[0] = 0xf4;
@@ -2134,19 +2134,19 @@ static void DecodeJMP(Word Code) {
 static void DecodeJSR(Word Code) {
     LongInt      AdrLong, Diff;
     Boolean      OK;
-    tSymbolFlags Flags;
+    tSymbolFlags flags;
 
     UNUSED(Code);
 
     if (ChkArgCnt(1, 1)) {
-        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &Flags);
+        AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &flags);
         Diff    = AdrLong - EProgCounter();
         if (OpSize == eSymbolSizeUnknown) {
             OpSize = ((Diff >= -32767) && (Diff <= 32768)) ? 1 : 7;
         }
         switch (OpSize) {
         case 1:
-            if (((Diff < -32767) || (Diff > 32768)) && !mSymbolQuestionable(Flags)) {
+            if (((Diff < -32767) || (Diff > 32768)) && !mSymbolQuestionable(flags)) {
                 WrError(ErrNum_JmpDistTooBig);
             } else {
                 BAsmCode[0] = 0xf5;
@@ -2256,14 +2256,14 @@ static void DecodeADJNZ_SBJNZ(Word IsSBJNZ) {
                 if (ChkRange(Num1, -8, 7)) {
                     LongInt      AdrLong;
                     Boolean      OK;
-                    tSymbolFlags Flags;
+                    tSymbolFlags flags;
 
                     AdrLong = EvalStrIntExpressionWithFlags(
-                                      &ArgStr[3], UInt20, &OK, &Flags)
+                                      &ArgStr[3], UInt20, &OK, &flags)
                               - (EProgCounter() + 2);
                     if (OK) {
                         if (((AdrLong < -128) || (AdrLong > 127))
-                            && !mSymbolQuestionable(Flags)) {
+                            && !mSymbolQuestionable(flags)) {
                             WrError(ErrNum_JmpDistTooBig);
                         } else {
                             BAsmCode[0] = 0xf8 + OpSize2;
@@ -2331,12 +2331,12 @@ static void DecodeJ(Word Code) {
         WrError(ErrNum_InvFormat);
     } else {
         Boolean      OK;
-        tSymbolFlags Flags;
-        LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &Flags)
+        tSymbolFlags flags;
+        LongInt AdrLong = EvalStrIntExpressionWithFlags(&ArgStr[1], UInt20, &OK, &flags)
                           - (EProgCounter() + Num1);
 
         if (OK) {
-            if (!mSymbolQuestionable(Flags) && ((AdrLong > 127) || (AdrLong < -128))) {
+            if (!mSymbolQuestionable(flags) && ((AdrLong > 127) || (AdrLong < -128))) {
                 WrError(ErrNum_JmpDistTooBig);
             } else if (Code >= 8) {
                 BAsmCode[0] = 0x7d;

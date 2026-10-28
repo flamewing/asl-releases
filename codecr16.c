@@ -401,10 +401,10 @@ static adr_mode_t decode_adr(
         p_vals->mode = e_mode_reg;
         goto check;
     default: {
-        Boolean  ok;
+        Boolean  operand_ok;
         LongWord address
-                = EvalStrIntExpressionWithFlags(p_arg, UInt18, &ok, &p_vals->disp_flags);
-        if (ok) {
+                = EvalStrIntExpressionWithFlags(p_arg, UInt18, &operand_ok, &p_vals->disp_flags);
+        if (operand_ok) {
             p_vals->vals[p_vals->val_cnt++] = address & 0xffff;
             p_vals->vals[p_vals->val_cnt++] = (address >> 16) & 0x0003;
             p_vals->mode                    = e_mode_abs;

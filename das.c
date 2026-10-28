@@ -465,10 +465,10 @@ static as_cmd_result_t CMD_EntryAddress(Boolean Negate, char const* pArg) {
             AddChunk(&UsedDataChunks, VectorAddress, AddrLen, True);
 
             if (pName && *pName) {
-                String Str;
+                String str;
 
-                as_snprintf(Str, sizeof(Str), "Vector_2_%s", pName);
-                AddInvSymbol(Str, VectorAddress);
+                as_snprintf(str, sizeof(str), "Vector_2_%s", pName);
+                AddInvSymbol(str, VectorAddress);
             }
         } else {
             Address = ParseCommandInteger(pArg, &OK);

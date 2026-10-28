@@ -1419,18 +1419,18 @@ static Boolean ExpandIRPN(void) {
         return False;
     }
 
-    int ArgCnt = Context.ArgCnt - 1 - Context.ParamCnt;
+    int arg_cnt = Context.ArgCnt - 1 - Context.ParamCnt;
 
-    int Remainder = (Context.ParamCnt - (ArgCnt % Context.ParamCnt)) % Context.ParamCnt;
+    int Remainder = (Context.ParamCnt - (arg_cnt % Context.ParamCnt)) % Context.ParamCnt;
     for (int ParZ = 0; ParZ < Remainder; ParZ++) {
         AddStringListLast(&(Context.Params), "");
     }
-    ArgCnt += Remainder;
+    arg_cnt += Remainder;
 
     /* 2. Tag erzeugen */
 
     Tag                     = GenerateProcessor();
-    Tag->ParCnt             = ArgCnt;
+    Tag->ParCnt             = arg_cnt;
     Tag->Params             = Context.Params;
     Tag->Processor          = IRP_Processor;
     Tag->Restorer           = MACRO_Restorer;

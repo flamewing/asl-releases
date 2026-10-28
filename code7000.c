@@ -840,8 +840,8 @@ static Boolean decode_s_reg(char const* p_arg, Word* p_ret) {
 /*-------------------------------------------------------------------------*/
 /* Adressparsing */
 
-static LongInt ext_op(LongInt Inp, tSymbolSize op_size, Boolean Signed) {
-    switch (op_size) {
+static LongInt ext_op(LongInt Inp, tSymbolSize operand_size, Boolean Signed) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         Inp &= 0xff;
         break;
@@ -852,12 +852,12 @@ static LongInt ext_op(LongInt Inp, tSymbolSize op_size, Boolean Signed) {
         break;
     }
     if (Signed) {
-        if (op_size < eSymbolSize16Bit) {
+        if (operand_size < eSymbolSize16Bit) {
             if ((Inp & 0x80) == 0x80) {
                 Inp += 0xff00;
             }
         }
-        if (op_size < eSymbolSize32Bit) {
+        if (operand_size < eSymbolSize32Bit) {
             if ((Inp & 0x8000) == 0x8000) {
                 Inp += 0xffff0000;
             }
@@ -866,8 +866,8 @@ static LongInt ext_op(LongInt Inp, tSymbolSize op_size, Boolean Signed) {
     return Inp;
 }
 
-static LongInt op_mask(ShortInt op_size) {
-    switch (op_size) {
+static LongInt op_mask(ShortInt operand_size) {
+    switch (operand_size) {
     case eSymbolSize8Bit:
         return 0xff;
     case eSymbolSize16Bit:
@@ -1212,7 +1212,7 @@ static adr_mode_t decode_adr(
                 tSymbolSize lit_size;
                 Byte        data_offset = 0;
                 LongInt     displacement;
-                Boolean     ok;
+                Boolean     operand_ok;
 
                 StrCompMkTemp(&LStrComp, LStr, sizeof(LStr));
 
@@ -1223,9 +1223,9 @@ static adr_mode_t decode_adr(
                 /* Distanz abfragen - im naechsten Pass... */
 
                 displacement = EvalStrIntExpressionWithFlags(
-                                       &LStrComp, Int32, &ok, &p_vals->part_flags)
+                                       &LStrComp, Int32, &operand_ok, &p_vals->part_flags)
                                + data_offset;
-                if (ok) {
+                if (operand_ok) {
                     if (mFirstPassUnknown(p_vals->part_flags)) {
                         displacement = 0;
                     } else if (lit_size == eSymbolSize32Bit) {

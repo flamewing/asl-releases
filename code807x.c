@@ -78,13 +78,13 @@ static Boolean SetOpSize(int NewSize, tStrComp const* pArg) {
     return Result;
 }
 
-static Boolean GetReg16(char* Asc, Byte* AdrPart) {
+static Boolean GetReg16(char* Asc, Byte* adr_part) {
     int               z;
     static char const Reg16Names[4][3] = {"PC", "SP", "P2", "P3"};
 
     for (z = 0; z < 4; z++) {
         if (!as_strcasecmp(Asc, Reg16Names[z])) {
-            *AdrPart = z;
+            *adr_part = z;
             return True;
         }
     }

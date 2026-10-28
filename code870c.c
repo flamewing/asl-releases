@@ -328,11 +328,11 @@ chk:
     }
 }
 
-static Byte MakeDestMode(Byte AdrMode) {
-    if ((AdrMode & 0xf0) == 0xe0) {
-        return AdrMode + 0x10;
+static Byte MakeDestMode(Byte adr_mode) {
+    if ((adr_mode & 0xf0) == 0xe0) {
+        return adr_mode + 0x10;
     } else {
-        return AdrMode - 0x80;
+        return adr_mode - 0x80;
     }
 }
 

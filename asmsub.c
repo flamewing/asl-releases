@@ -1583,13 +1583,13 @@ static int ReplaceToken(
 
 static int ReplaceLine(
         as_dynstr_t* p_str, char const* pSearch, char const* pReplace,
-        Boolean CaseSensitive) {
+        Boolean case_sensitive) {
     int const   SearchLen  = strlen(pSearch);
     int const   ReplaceLen = strlen(pReplace);
     int const   DeltaLen   = ReplaceLen - SearchLen;
     int         StrLen     = strlen(p_str->p_str);
     int         NumReplace = 0;
-    tCompareFnc Compare    = CaseSensitive ? strncmp : as_strncasecmp;
+    tCompareFnc Compare    = case_sensitive ? strncmp : as_strncasecmp;
 
     int Pos = 0;
     while (Pos <= StrLen - SearchLen) {
@@ -1621,13 +1621,13 @@ static int ReplaceLine(
 
 static int ReplaceLineUnchecked(
         as_dynstr_t* p_str, char const* pSearch, char const* pReplace,
-        Boolean CaseSensitive) {
+        Boolean case_sensitive) {
     int const   SearchLen  = strlen(pSearch);
     int const   ReplaceLen = strlen(pReplace);
     int const   DeltaLen   = ReplaceLen - SearchLen;
     int         StrLen     = strlen(p_str->p_str);
     int         NumReplace = 0;
-    tCompareFnc Compare    = CaseSensitive ? strncmp : as_strncasecmp;
+    tCompareFnc Compare    = case_sensitive ? strncmp : as_strncasecmp;
 
     int Pos = 0;
     while (Pos <= StrLen - SearchLen) {

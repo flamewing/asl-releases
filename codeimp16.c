@@ -264,16 +264,16 @@ static Boolean decode_mem_arg(
        to the common code handling absolute addresses: */
 
     if (*arg.str.p_str == '#') {
-        tEvalResult eval_result;
+        tEvalResult operand_eval_result;
         Word        value;
         Boolean     critical;
 
-        value = EvalStrIntExpressionOffsWithResult(&arg, 1, Int16, &eval_result);
-        if (!eval_result.OK) {
+        value = EvalStrIntExpressionOffsWithResult(&arg, 1, Int16, &operand_eval_result);
+        if (!operand_eval_result.OK) {
             return False;
         }
-        critical = mFirstPassUnknown(eval_result.Flags)
-                   || mUsesForwards(eval_result.Flags);
+        critical = mFirstPassUnknown(operand_eval_result.Flags)
+                   || mUsesForwards(operand_eval_result.Flags);
 
         StrCompMkTemp(&arg, l_str, sizeof(l_str));
         literal_make(&arg, NULL, value, eSymbolSize16Bit, critical);
@@ -392,7 +392,7 @@ static Boolean decode_long_mem_arg(
        to the common code handling absolute addresses: */
 
     if (*arg.str.p_str == '#') {
-        tEvalResult eval_result;
+        tEvalResult operand_eval_result;
         Word        value;
         Boolean     critical;
 
@@ -401,12 +401,12 @@ static Boolean decode_long_mem_arg(
             return False;
         }
 
-        value = EvalStrIntExpressionOffsWithResult(&arg, 1, Int16, &eval_result);
-        if (!eval_result.OK) {
+        value = EvalStrIntExpressionOffsWithResult(&arg, 1, Int16, &operand_eval_result);
+        if (!operand_eval_result.OK) {
             return False;
         }
-        critical = mFirstPassUnknown(eval_result.Flags)
-                   || mUsesForwards(eval_result.Flags);
+        critical = mFirstPassUnknown(operand_eval_result.Flags)
+                   || mUsesForwards(operand_eval_result.Flags);
 
         StrCompMkTemp(&arg, l_str, sizeof(l_str));
         literal_make(&arg, NULL, value, eSymbolSize16Bit, critical);

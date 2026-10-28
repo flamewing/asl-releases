@@ -561,10 +561,10 @@ int main(int argc, char** argv) {
     }
 
     if ((msg_level >= e_msg_level_verbose) || cmd_results.write_version_exit) {
-        String Ver;
+        String ver;
 
-        as_snprintf(Ver, sizeof(Ver), "ALINK V%s", Version);
-        WrCopyRight(Ver);
+        as_snprintf(ver, sizeof(ver), "ALINK V%s", Version);
+        WrCopyRight(ver);
     }
 
     if (cmd_results.write_help_exit) {

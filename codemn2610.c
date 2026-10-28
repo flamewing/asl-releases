@@ -443,17 +443,17 @@ static Boolean DecodeMem(tStrComp* pArg, Word* pResult) {
         }
         case 2:
         case2: {
-            LongInt Disp = Addr - EProgCounter();
+            LongInt disp = Addr - EProgCounter();
 
             if (!mFirstPassUnknownOrQuestionable(Flags)
-                && ((Disp > 127) || (Disp < -128))) {
+                && ((disp > 127) || (disp < -128))) {
                 char detail[240];
                 as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressDispRangePC),
-                            (LargeInt)Disp, (LargeInt)-128, (LargeInt)127, (LargeWord)EProgCounter());
+                            (LargeInt)disp, (LargeInt)-128, (LargeInt)127, (LargeWord)EProgCounter());
                 WrXErrorPos(ErrNum_DistTooBig, detail, &pArg->Pos);
                 return False;
             } else {
-                *pResult = (1 << 11) | (Disp & 0xff);
+                *pResult = (1 << 11) | (disp & 0xff);
                 return True;
             }
         }
