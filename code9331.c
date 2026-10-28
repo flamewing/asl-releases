@@ -28,7 +28,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU9331;
 
 static char const* pFNames[] = {"ZF",  "SF",  "V0F",  "V1F",  "LRF",  "GF0", "GF1",
                                 "GF2", "GF3", "IFF0", "IFF1", "IFF2", NULL};
@@ -648,5 +647,5 @@ static void SwitchTo_9331(void) {
 }
 
 extern void code9331_init(void) {
-    CPU9331 = AddCPU("TC9331", SwitchTo_9331);
+    AddCPU("TC9331", SwitchTo_9331);
 }

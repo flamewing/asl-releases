@@ -118,7 +118,6 @@ static LongWord CaseMasks[CaseCnt]
            (1l << InstrALU) | (1l << InstrMove) | (1l << InstrRPS),
            (1l << InstrALU) | (1l << InstrMove) | (1l << InstrNAL)};
 
-static CPUVar    CPU77230;
 static LongWord  InstrMask;
 static Boolean   Error;
 static LongWord *InstrComps, *InstrDefs;
@@ -1254,5 +1253,5 @@ static void SwitchTo_77230(void) {
 /* Initialisierung */
 
 void code77230_init(void) {
-    CPU77230 = AddCPU("77230", SwitchTo_77230);
+    AddCPU("77230", SwitchTo_77230);
 }

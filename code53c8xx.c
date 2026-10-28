@@ -36,7 +36,7 @@ typedef struct {
     Word        Mask;
 } TReg, *PReg;
 
-static CPUVar CPU53C810, CPU53C860, CPU53C815, CPU53C825, CPU53C875, CPU53C895;
+static CPUVar CPU53C810, CPU53C815, CPU53C825, CPU53C875, CPU53C895;
 
 #define M_53C810 0x0001
 #define M_53C860 0x0002
@@ -1146,7 +1146,7 @@ static void SwitchTo_53c8xx(void) {
 
 void code53c8xx_init(void) {
     CPU53C810 = AddCPU("SYM53C810", SwitchTo_53c8xx);
-    CPU53C860 = AddCPU("SYM53C860", SwitchTo_53c8xx);
+    AddCPU("SYM53C860", SwitchTo_53c8xx);
     CPU53C815 = AddCPU("SYM53C815", SwitchTo_53c8xx);
     CPU53C825 = AddCPU("SYM53C825", SwitchTo_53c8xx);
     CPU53C875 = AddCPU("SYM53C875", SwitchTo_53c8xx);

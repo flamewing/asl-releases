@@ -59,7 +59,6 @@ typedef struct {
     Word       value;
 } adr_vals_t;
 
-static CPUVar  cpu_5100, cpu_5110, cpu_5120;
 static Boolean last_was_skip, this_was_skip;
 
 /*--------------------------------------------------------------------------*/
@@ -1637,7 +1636,7 @@ static void switch_to_palm(void) {
  * ------------------------------------------------------------------------ */
 
 void codepalm_init(void) {
-    cpu_5100 = AddCPU("IBM5100", switch_to_palm);
-    cpu_5110 = AddCPU("IBM5110", switch_to_palm);
-    cpu_5120 = AddCPU("IBM5120", switch_to_palm);
+    AddCPU("IBM5100", switch_to_palm);
+    AddCPU("IBM5110", switch_to_palm);
+    AddCPU("IBM5120", switch_to_palm);
 }

@@ -35,7 +35,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUNANO;
 
 /*---------------------------------------------------------------------------*/
 
@@ -356,7 +355,7 @@ static void SwitchTo_NANO(void) {
 }
 
 void codenano_init(void) {
-    CPUNANO = AddCPU("NANO", SwitchTo_NANO);
+    AddCPU("NANO", SwitchTo_NANO);
 
     AddCopyright("HP Nanoprocessor Generator (C) 2022 Haruo Asano");
 }

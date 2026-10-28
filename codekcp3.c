@@ -37,7 +37,6 @@ typedef struct {
 
 static FixedOrder *RegOrders, *ALUOrders;
 
-static CPUVar CPUKCPSM3;
 
 /*--------------------------------------------------------------------------
  * Address Expression Parsing
@@ -485,5 +484,5 @@ static void SwitchTo_KCPSM3(void) {
  *--------------------------------------------------------------------------*/
 
 void codekcpsm3_init(void) {
-    CPUKCPSM3 = AddCPU("KCPSM3", SwitchTo_KCPSM3);
+    AddCPU("KCPSM3", SwitchTo_KCPSM3);
 }

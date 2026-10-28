@@ -97,8 +97,7 @@ static FixedOrder* FixedOrders;
 static NormOrder*  NormOrders;
 static CondOrder*  CondOrders;
 
-static CPUVar CPU6502, CPU65SC02, CPU65C02, CPU65CE02, CPUW65C02S, CPU65C19, CPUM740,
-        CPUHUC6280, CPU6502U;
+static CPUVar CPU6502, CPU65C02, CPU65CE02, CPU65C19, CPUM740, CPUHUC6280;
 static LongInt SpecPage, RegB, MPR[8];
 
 /*---------------------------------------------------------------------------*/
@@ -3089,14 +3088,14 @@ static void SwitchTo_65(void) {
 
 void code65_init(void) {
     CPU6502    = AddCPU("6502", SwitchTo_65);
-    CPU65SC02  = AddCPU("65SC02", SwitchTo_65);
+    AddCPU("65SC02", SwitchTo_65);
     CPU65C02   = AddCPU("65C02", SwitchTo_65);
     CPU65CE02  = AddCPU("65CE02", SwitchTo_65);
-    CPUW65C02S = AddCPU("W65C02S", SwitchTo_65);
+    AddCPU("W65C02S", SwitchTo_65);
     CPU65C19   = AddCPU("65C19", SwitchTo_65);
     CPUM740    = AddCPU("MELPS740", SwitchTo_65);
     CPUHUC6280 = AddCPU("HUC6280", SwitchTo_65);
-    CPU6502U   = AddCPU("6502UNDOC", SwitchTo_65);
+    AddCPU("6502UNDOC", SwitchTo_65);
 
     AddInitPassProc(InitCode_65);
 }

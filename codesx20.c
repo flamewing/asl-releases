@@ -34,7 +34,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUSX20, CPUSX28;
 
 static LongInt Reg_FSR, Reg_STATUS;
 
@@ -657,6 +656,6 @@ static void SwitchTo_SX20(void) {
 }
 
 void codesx20_init(void) {
-    CPUSX20 = AddCPU("SX20", SwitchTo_SX20);
-    CPUSX28 = AddCPU("SX28", SwitchTo_SX20);
+    AddCPU("SX20", SwitchTo_SX20);
+    AddCPU("SX28", SwitchTo_SX20);
 }

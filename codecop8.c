@@ -55,7 +55,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUCOP87L84;
 
 typedef struct {
     ShortInt     Mode;
@@ -691,5 +690,5 @@ static void SwitchTo_COP8(void) {
 }
 
 void codecop8_init(void) {
-    CPUCOP87L84 = AddCPU("COP87L84", SwitchTo_COP8);
+    AddCPU("COP87L84", SwitchTo_COP8);
 }

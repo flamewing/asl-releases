@@ -38,7 +38,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUXGate;
 
 /*--------------------------------------------------------------------------*/
 /* Address Decoders */
@@ -731,5 +730,5 @@ static void SwitchTo_XGATE(void) {
 /* Initialisierung */
 
 void codexgate_init(void) {
-    CPUXGate = AddCPU("XGATE", SwitchTo_XGATE);
+    AddCPU("XGATE", SwitchTo_XGATE);
 }

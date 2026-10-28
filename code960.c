@@ -99,7 +99,6 @@ static SpecReg const SpecRegs[] = {
         {"RIP",  2}
 };
 
-static CPUVar CPU80960;
 
 /*--------------------------------------------------------------------------*/
 
@@ -1050,5 +1049,5 @@ static void SwitchTo_960(void) {
 }
 
 void code960_init(void) {
-    CPU80960 = AddCPU("80960", SwitchTo_960);
+    AddCPU("80960", SwitchTo_960);
 }

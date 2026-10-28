@@ -80,8 +80,6 @@ static Word AdrMode;
 
 static CPUVar CPU320203;
 static CPUVar CPU32050;
-static CPUVar CPU32051;
-static CPUVar CPU32053;
 
 /* ---------------------------------------------------------------------- */
 
@@ -1251,8 +1249,8 @@ static void SwitchTo_3205x(void) {
 void code3205x_init(void) {
     CPU320203 = AddCPU("320C203", SwitchTo_3205x);
     CPU32050  = AddCPU("320C50", SwitchTo_3205x);
-    CPU32051  = AddCPU("320C51", SwitchTo_3205x);
-    CPU32053  = AddCPU("320C53", SwitchTo_3205x);
+    AddCPU("320C51", SwitchTo_3205x);
+    AddCPU("320C53", SwitchTo_3205x);
 
     AddCopyright("TMS320C5x-Generator (C) 1995/96 Thomas Sailer");
 }

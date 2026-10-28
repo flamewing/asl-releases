@@ -65,7 +65,7 @@ typedef struct {
 
 static char const Flags[] = "CDZSBOIU";
 
-static CPUVar CPUM16C, CPUM30600M8, CPUM30610, CPUM30620;
+static CPUVar CPUM16C, CPUM30600M8;
 
 static char*    Format;
 static Byte     FormatCode;
@@ -2748,8 +2748,8 @@ static void SwitchTo_M16C(void) {
 void codem16c_init(void) {
     CPUM16C     = AddCPU("M16C", SwitchTo_M16C);
     CPUM30600M8 = AddCPU("M30600M8", SwitchTo_M16C);
-    CPUM30610   = AddCPU("M30610", SwitchTo_M16C);
-    CPUM30620   = AddCPU("M30620", SwitchTo_M16C);
+    AddCPU("M30610", SwitchTo_M16C);
+    AddCPU("M30620", SwitchTo_M16C);
 
     AddCopyright("Mitsubishi M16C-Generator also (C) 1999 RMS");
 }

@@ -30,7 +30,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUVector;
 
 /*--------------------------------------------------------------------------
  * Operand Parsers
@@ -329,5 +328,5 @@ static void SwitchTo_Vector(void) {
  *--------------------------------------------------------------------------*/
 
 void codevector_init(void) {
-    CPUVector = AddCPU("ATARI_VECTOR", SwitchTo_Vector);
+    AddCPU("ATARI_VECTOR", SwitchTo_Vector);
 }

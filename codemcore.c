@@ -54,7 +54,6 @@ typedef struct {
     Word        Code;
 } CReg;
 
-static CPUVar      CPUMCORE;
 static tSymbolSize OpSize;
 
 static FixedOrder* FixedOrders;
@@ -1083,5 +1082,5 @@ static void SwitchTo_MCORE(void) {
 /* Initialisierung */
 
 void codemcore_init(void) {
-    CPUMCORE = AddCPU("MCORE", SwitchTo_MCORE);
+    AddCPU("MCORE", SwitchTo_MCORE);
 }

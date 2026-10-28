@@ -111,7 +111,6 @@ enum {
 
 static ShortInt AdrMode;
 
-static CPUVar CPU32060;
 
 static Boolean  ThisPar, ThisCross, ThisStore, ThisAbsBranch;
 static Byte     ThisAddr, ThisLong;
@@ -2894,5 +2893,5 @@ static void SwitchTo_3206X(void) {
 }
 
 void code3206x_init(void) {
-    CPU32060 = AddCPU("32060", SwitchTo_3206X);
+    AddCPU("32060", SwitchTo_3206X);
 }

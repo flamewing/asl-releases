@@ -64,7 +64,6 @@ enum {
 #define MModPS    (1 << ModPS)
 #define MModImm   (1 << ModImm)
 
-static CPUVar CPU89190;
 
 static int  AdrMode;
 static Byte AdrPart, AdrVals[2];
@@ -985,5 +984,5 @@ static void SwitchTo_F2MC8(void) {
 /* Initialisierung */
 
 void codef2mc8_init(void) {
-    CPU89190 = AddCPU("MB89190", SwitchTo_F2MC8);
+    AddCPU("MB89190", SwitchTo_F2MC8);
 }

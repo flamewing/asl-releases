@@ -45,7 +45,7 @@ typedef struct {
 static Word    AdrMode;
 static Boolean AdrOK;
 
-static CPUVar CPU32010, CPU32015;
+static CPUVar CPU32010;
 
 static AdrShiftOrder* AdrShiftOrders;
 static ImmOrder*      ImmOrders;
@@ -516,5 +516,5 @@ static void SwitchTo_3201X(void) {
 
 void code3201x_init(void) {
     CPU32010 = AddCPU("32010", SwitchTo_3201X);
-    CPU32015 = AddCPU("32015", SwitchTo_3201X);
+    AddCPU("32015", SwitchTo_3201X);
 }

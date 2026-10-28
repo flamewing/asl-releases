@@ -38,7 +38,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUMN1610;
 static CPUVar CPUMN1613;
 
 static tStrComp Inner;
@@ -1915,7 +1914,7 @@ static void SwitchTo_MN1610(void) {
 }
 
 void codemn1610_init(void) {
-    CPUMN1610 = AddCPU("MN1610", SwitchTo_MN1610);
+    AddCPU("MN1610", SwitchTo_MN1610);
     CPUMN1613 = AddCPU("MN1613", SwitchTo_MN1610);
 
     AddCopyright("Panafacom MN1610/1613-Generator (C) 2019 Haruo Asano");

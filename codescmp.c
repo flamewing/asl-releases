@@ -39,7 +39,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUSCMP;
 
 /*---------------------------------------------------------------------------*/
 
@@ -577,5 +576,5 @@ static void SwitchTo_SCMP(void) {
 }
 
 void codescmp_init(void) {
-    CPUSCMP = AddCPU("SC/MP", SwitchTo_SCMP);
+    AddCPU("SC/MP", SwitchTo_SCMP);
 }

@@ -72,7 +72,6 @@ static Boolean  MinOneIs0;
 
 static Condition* Conditions;
 
-static CPUVar CPU90C141;
 
 /*---------------------------------------------------------------------------*/
 
@@ -1474,5 +1473,5 @@ static void SwitchTo_90C141(void) {
 }
 
 void code90c141_init(void) {
-    CPU90C141 = AddCPU("90C141", SwitchTo_90C141);
+    AddCPU("90C141", SwitchTo_90C141);
 }

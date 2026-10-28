@@ -43,7 +43,7 @@ typedef struct {
     Word Code;
 } FixedOrder;
 
-static CPUVar  CPUCOP410, CPUCOP420, CPUCOP440, CPUCOP444;
+static CPUVar CPUCOP410, CPUCOP420, CPUCOP440;
 static IntType AdrInt;
 
 static FixedOrder *FixedOrders, *ImmOrders;
@@ -503,5 +503,5 @@ void codecop4_init(void) {
     CPUCOP410 = AddCPU("COP410", SwitchTo_COP4);
     CPUCOP420 = AddCPU("COP420", SwitchTo_COP4);
     CPUCOP440 = AddCPU("COP440", SwitchTo_COP4);
-    CPUCOP444 = AddCPU("COP444", SwitchTo_COP4);
+    AddCPU("COP444", SwitchTo_COP4);
 }

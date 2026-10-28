@@ -30,7 +30,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU17C42;
 
 /*---------------------------------------------------------------------------*/
 
@@ -369,5 +368,5 @@ static void SwitchTo_17c4x(void) {
 }
 
 void code17c4x_init(void) {
-    CPU17C42 = AddCPU("17C42", SwitchTo_17c4x);
+    AddCPU("17C42", SwitchTo_17c4x);
 }

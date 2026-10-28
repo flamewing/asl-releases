@@ -289,7 +289,6 @@ static Boolean InREGDefinition;
 
 static void DecodeREG_Z80(Word Index);
 
-static int     Reg16Cnt;
 static LongInt Reg_CBAR, Reg_BBR, Reg_CBR, Reg_ADL, Reg_MBASE;
 
 /*--------------------------------------------------------------------------*/
@@ -6721,14 +6720,12 @@ static void SwitchTo_Z80(void const* p_user) {
      * as normal symbols: */
 
     if (is_sharp()) {
-        Reg16Cnt = 4;
     } else {
         ValidSegs |= 1 << SegIO;
         Grans[SegIO]     = 1;
         ListGrans[SegIO] = 1;
         SegInits[SegIO]  = 0;
         SegLimits[SegIO] = IntTypeDefs[PortIntType()].Max;
-        Reg16Cnt         = 6;
     }
 
     MakeCode     = MakeCode_Z80;

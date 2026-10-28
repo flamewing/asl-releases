@@ -42,7 +42,6 @@ typedef struct {
 /*--------------------------------------------------------------------------*/
 /* Variables */
 
-static CPUVar CPUXS1;
 
 static lr2r_Order* lr2r_Orders;
 
@@ -792,5 +791,5 @@ static void SwitchTo_XCore(void) {
 /* Initialisation */
 
 void codexcore_init(void) {
-    CPUXS1 = AddCPU("XS1", SwitchTo_XCore);
+    AddCPU("XS1", SwitchTo_XCore);
 }

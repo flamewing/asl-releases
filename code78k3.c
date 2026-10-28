@@ -64,7 +64,6 @@ enum {
 
 /*-------------------------------------------------------------------------*/
 
-static CPUVar CPU78310;
 
 typedef struct {
     ShortInt     Mode, Val;
@@ -2023,5 +2022,5 @@ static void SwitchTo_78K3(void) {
 }
 
 void code78k3_init(void) {
-    CPU78310 = AddCPU("78310", SwitchTo_78K3);
+    AddCPU("78310", SwitchTo_78K3);
 }

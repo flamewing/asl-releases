@@ -21,7 +21,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU87C00;
 
 static char const  Reg8Names[]  = "awcbedlh";
 static char const* Reg16Names[] = {"wa", "bc", "de", "hl"};
@@ -1575,5 +1574,5 @@ static void SwitchTo_87C800(void) {
 }
 
 void deco87c800_init(void) {
-    CPU87C00 = AddCPU("87C00", SwitchTo_87C800);
+    AddCPU("87C00", SwitchTo_87C800);
 }

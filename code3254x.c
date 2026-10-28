@@ -87,7 +87,6 @@ static FixedOrder *FixedOrders, *AccOrders, *Acc2Orders, *MemOrders, *XYOrders,
 static MemConstOrder* MemConstOrders;
 static Condition*     Conditions;
 
-static CPUVar CPU320C541;
 
 static IntType  OpSize;
 static ShortInt AdrMode;
@@ -2832,7 +2831,7 @@ static void SwitchTo_32054x(void) {
 /* Global Interface */
 
 void code32054x_init(void) {
-    CPU320C541 = AddCPU("320C541", SwitchTo_32054x);
+    AddCPU("320C541", SwitchTo_32054x);
 
     AddInitPassProc(InitCode_32054x);
 }

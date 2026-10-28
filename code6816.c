@@ -75,7 +75,6 @@ static LongInt Reg_EK;
 static GenOrder* GenOrders;
 static EmuOrder* EmuOrders;
 
-static CPUVar CPU6816;
 
 static char const Regs[][4] = {"D", "E", "X", "Y", "Z", "K", "CCR"};
 
@@ -1270,7 +1269,7 @@ static void SwitchTo_6816(void) {
 }
 
 void code6816_init(void) {
-    CPU6816 = AddCPU("68HC16", SwitchTo_6816);
+    AddCPU("68HC16", SwitchTo_6816);
 
     AddInitPassProc(InitCode_6816);
 }

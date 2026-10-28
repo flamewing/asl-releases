@@ -49,7 +49,6 @@ enum {
 static ShortInt AdrMode;
 static Byte     AdrVal;
 
-static CPUVar CPU6804;
 
 static BaseOrder* FixedOrders;
 
@@ -463,5 +462,5 @@ static void SwitchTo_6804(void) {
 }
 
 void code6804_init(void) {
-    CPU6804 = AddCPU("6804", SwitchTo_6804);
+    AddCPU("6804", SwitchTo_6804);
 }

@@ -92,7 +92,6 @@ static tAdrModeMask const MModImm = (1UL << ModImm), MModReg8 = (1UL << ModReg8)
 
 /*-------------------------------------------------------------------------*/
 
-static CPUVar CPU784026;
 
 typedef struct {
     tAdrMode     AdrMode;
@@ -3470,5 +3469,5 @@ static void SwitchTo_78K4(void) {
 }
 
 void code78k4_init(void) {
-    CPU784026 = AddCPU("784026", SwitchTo_78K4);
+    AddCPU("784026", SwitchTo_78K4);
 }

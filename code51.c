@@ -103,8 +103,7 @@ static LongInt     bit_seg_size;
 
 static Boolean SrcMode;
 
-static CPUVar CPU87C750, CPU8051, CPU8052, CPU80C320, CPU80501, CPU80502, CPU80504,
-        CPU80515, CPU80517, CPU80C390, CPU80251, CPU80251T;
+static CPUVar CPU87C750, CPU8051, CPU80504, CPU80C390, CPU80251;
 
 /*-------------------------------------------------------------------------*/
 /* Adressparser */
@@ -2661,14 +2660,14 @@ void code51_init(void) {
 
     CPU87C750 = AddCPUUserWithArgs("87C750", SwitchTo_51, NULL, NULL, mcs51_args);
     CPU8051   = AddCPUUserWithArgs("8051", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU8052   = AddCPUUserWithArgs("8052", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80C320 = AddCPUUserWithArgs("80C320", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80501  = AddCPUUserWithArgs("80C501", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80502  = AddCPUUserWithArgs("80C502", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("8052", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80C320", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80C501", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80C502", SwitchTo_51, NULL, NULL, mcs51_args);
     CPU80504  = AddCPUUserWithArgs("80C504", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80515  = AddCPUUserWithArgs("80515", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80517  = AddCPUUserWithArgs("80517", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80515", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80517", SwitchTo_51, NULL, NULL, mcs51_args);
     CPU80C390 = AddCPUUserWithArgs("80C390", SwitchTo_51, NULL, NULL, mcs51_args);
     CPU80251  = AddCPUUserWithArgs("80C251", SwitchTo_51, NULL, NULL, mcs51_args);
-    CPU80251T = AddCPUUserWithArgs("80C251T", SwitchTo_51, NULL, NULL, mcs51_args);
+    AddCPUUserWithArgs("80C251T", SwitchTo_51, NULL, NULL, mcs51_args);
 }

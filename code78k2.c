@@ -65,7 +65,6 @@ enum {
 
 /*-------------------------------------------------------------------------*/
 
-static CPUVar CPU78214;
 
 typedef struct {
     ShortInt     Mode, Val;
@@ -1632,7 +1631,7 @@ static void SwitchTo_78K2(void) {
 }
 
 void code78k2_init(void) {
-    CPU78214 = AddCPU("78214", SwitchTo_78K2);
+    AddCPU("78214", SwitchTo_78K2);
 
     AddInitPassProc(InitCode_78K2);
 }

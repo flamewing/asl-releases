@@ -35,7 +35,7 @@
 
 #include "c_implementation.h"
 
-static CPUVar cpu_34010, cpu_34020;
+static CPUVar cpu_34020;
 
 static Boolean    coproc_set;
 static Word       coproc;
@@ -2614,7 +2614,7 @@ static void init_pass_340xx(void) {
  * ------------------------------------------------------------------------ */
 
 void code340xx_init(void) {
-    cpu_34010 = AddCPU("34010", switch_to_340xx);
+    AddCPU("34010", switch_to_340xx);
     cpu_34020 = AddCPU("34020", switch_to_340xx);
     AddInitPassProc(init_pass_340xx);
 }

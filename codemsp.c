@@ -89,7 +89,7 @@ typedef struct {
 /*  float exp (8bit bias 128) sign mant (impl. norm.)
    double exp (8bit bias 128) sign mant (impl. norm.) */
 
-static CPUVar CPUMSP430, CPUMSP430X;
+static CPUVar CPUMSP430X;
 
 static OneOpOrder* OneOpOrders;
 
@@ -1650,6 +1650,6 @@ static void SwitchTo_MSP(void) {
 }
 
 void codemsp_init(void) {
-    CPUMSP430  = AddCPU("MSP430", SwitchTo_MSP);
+    AddCPU("MSP430", SwitchTo_MSP);
     CPUMSP430X = AddCPU("MSP430X", SwitchTo_MSP);
 }

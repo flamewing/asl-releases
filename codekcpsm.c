@@ -63,7 +63,6 @@ static Word     AdrMode, AdrIndex;
 
 static Condition* Conditions;
 
-static CPUVar CPUKCPSM;
 
 /*--------------------------------------------------------------------------*/
 /* Code Helpers */
@@ -626,7 +625,7 @@ static void SwitchTo_KCPSM(void) {
 }
 
 void codekcpsm_init(void) {
-    CPUKCPSM = AddCPU("KCPSM", SwitchTo_KCPSM);
+    AddCPU("KCPSM", SwitchTo_KCPSM);
 
     AddCopyright("XILINX KCPSM(Picoblaze)-Generator (C) 2003 Andreas Wassatsch");
 }

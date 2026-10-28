@@ -58,7 +58,6 @@ enum {
 #define Reg8Cnt 8
 static char const Reg8Names[] = "AWCBEDLH";
 
-static CPUVar   CPU87C00, CPU87C20, CPU87C40, CPU87C70;
 static ShortInt OpSize;
 static Byte     AdrVals[4];
 static ShortInt AdrType;
@@ -1429,8 +1428,8 @@ static void SwitchTo_87C800(void) {
 }
 
 void code87c800_init(void) {
-    CPU87C00 = AddCPU("87C00", SwitchTo_87C800);
-    CPU87C20 = AddCPU("87C20", SwitchTo_87C800);
-    CPU87C40 = AddCPU("87C40", SwitchTo_87C800);
-    CPU87C70 = AddCPU("87C70", SwitchTo_87C800);
+    AddCPU("87C00", SwitchTo_87C800);
+    AddCPU("87C20", SwitchTo_87C800);
+    AddCPU("87C40", SwitchTo_87C800);
+    AddCPU("87C70", SwitchTo_87C800);
 }

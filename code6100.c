@@ -41,7 +41,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU6100;
 static CPUVar CPU6120;
 
 static Boolean BaseInst;
@@ -761,7 +760,7 @@ static void SwitchTo_6100(void) {
 }
 
 void code6100_init(void) {
-    CPU6100 = AddCPU("6100", SwitchTo_6100);
+    AddCPU("6100", SwitchTo_6100);
     CPU6120 = AddCPU("6120", SwitchTo_6100);
 
     AddInitPassProc(InitCode_6100);

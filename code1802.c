@@ -41,7 +41,7 @@ typedef struct {
 static tOrder *FixedOrders, *RegOrders, *RegNoZeroOrders, *RegImm16Orders,
         *RegLBranchOrders, *ImmOrders, *SBranchOrders, *LBranchOrders, *IOOrders;
 
-static CPUVar CPU1802, CPU1804, CPU1805, CPU1806, CPU1804A, CPU1805A, CPU1806A;
+static CPUVar CPU1802, CPU1804, CPU1804A;
 
 /*-------------------------------------------------------------------------*/
 /* Subroutines */
@@ -548,9 +548,9 @@ static void SwitchTo_1802(void) {
 void code1802_init(void) {
     CPU1802  = AddCPU("1802", SwitchTo_1802);
     CPU1804  = AddCPU("1804", SwitchTo_1802);
-    CPU1805  = AddCPU("1805", SwitchTo_1802);
-    CPU1806  = AddCPU("1806", SwitchTo_1802);
+    AddCPU("1805", SwitchTo_1802);
+    AddCPU("1806", SwitchTo_1802);
     CPU1804A = AddCPU("1804A", SwitchTo_1802);
-    CPU1805A = AddCPU("1805A", SwitchTo_1802);
-    CPU1806A = AddCPU("1806A", SwitchTo_1802);
+    AddCPU("1805A", SwitchTo_1802);
+    AddCPU("1806A", SwitchTo_1802);
 }

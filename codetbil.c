@@ -384,9 +384,8 @@ static void SwitchTo_TBIL(void) {
     InitFields();
 }
 
-static CPUVar CPUTBIL;
 
 void codetbil_init(void) {
-    CPUTBIL = AddCPU("tbil", SwitchTo_TBIL);
+    AddCPU("tbil", SwitchTo_TBIL);
     AddCopyright("Tiny BASIC Intermediate Language Generator also (C) 2026 Jeff Epler");
 }

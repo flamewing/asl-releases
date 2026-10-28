@@ -37,7 +37,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar  CPU2650;
 static Boolean splitted_arg;
 
 /*--------------------------------------------------------------------------*/
@@ -717,5 +716,5 @@ static void SwitchTo_2650(void) {
 /* Initialisierung */
 
 void code2650_init(void) {
-    CPU2650 = AddCPU("2650", SwitchTo_2650);
+    AddCPU("2650", SwitchTo_2650);
 }

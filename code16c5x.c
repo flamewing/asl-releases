@@ -30,7 +30,7 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU16C54, CPU16C55, CPU16C56, CPU16C57;
+static CPUVar CPU16C56, CPU16C57;
 
 /*-------------------------------------------------------------------------*/
 
@@ -320,8 +320,8 @@ static void SwitchTo_16C5X(void) {
 }
 
 void code16c5x_init(void) {
-    CPU16C54 = AddCPU("16C54", SwitchTo_16C5X);
-    CPU16C55 = AddCPU("16C55", SwitchTo_16C5X);
+    AddCPU("16C54", SwitchTo_16C5X);
+    AddCPU("16C55", SwitchTo_16C5X);
     CPU16C56 = AddCPU("16C56", SwitchTo_16C5X);
     CPU16C57 = AddCPU("16C57", SwitchTo_16C5X);
 }

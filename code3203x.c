@@ -63,7 +63,7 @@ typedef struct {
     Word            Src2Part, Src1Part, DestPart;
 } tGenOrderInfo;
 
-static CPUVar CPU32030, CPU32031, CPU32040, CPU32044;
+static CPUVar CPU32030, CPU32040, CPU32044;
 
 static Boolean       NextPar, ThisPar;
 static Byte          PrevARs, ARs;
@@ -2056,7 +2056,7 @@ static void SwitchTo_3203X(void) {
 
 void code3203x_init(void) {
     CPU32030 = AddCPU("320C30", SwitchTo_3203X);
-    CPU32031 = AddCPU("320C31", SwitchTo_3203X);
+    AddCPU("320C31", SwitchTo_3203X);
     CPU32040 = AddCPU("320C40", SwitchTo_3203X);
     CPU32044 = AddCPU("320C44", SwitchTo_3203X);
 

@@ -60,7 +60,6 @@ static ShiftOrder* ShiftOrders;
 static int  OpSize, AdrMode;
 static Byte AdrVals[2], AdrPart;
 
-static CPUVar CPU8070;
 
 /*---------------------------------------------------------------------------*/
 
@@ -802,5 +801,5 @@ static void SwitchTo_807x(void) {
 /*---------------------------------------------------------------------------*/
 
 void code807x_init(void) {
-    CPU8070 = AddCPU("8070", SwitchTo_807x);
+    AddCPU("8070", SwitchTo_807x);
 }

@@ -103,7 +103,7 @@ typedef enum {
     replace_dest_always
 } replace_dest_t;
 
-static CPUVar cpu_32100, cpu_32200;
+static CPUVar cpu_32200;
 
 static gen_order_t*     gen_orders;
 static var_arg_order_t* var_arg_orders;
@@ -2338,7 +2338,7 @@ static void initpass_we32(void) {
  * ------------------------------------------------------------------------ */
 
 void codewe32_init(void) {
-    cpu_32100 = AddCPU("WE32100", switch_to_we32);
+    AddCPU("WE32100", switch_to_we32);
     cpu_32200 = AddCPU("WE32200", switch_to_we32);
     AddInitPassProc(initpass_we32);
 }

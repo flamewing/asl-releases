@@ -74,7 +74,7 @@ static Word        AdrVals[6]; /* Adressargument */
 
 static CPUVar  CPUH8_300L;
 static CPUVar  CPU6413308, CPUH8_300;
-static CPUVar  CPU6413309, CPUH8_300H;
+static CPUVar CPU6413309;
 static Boolean CPU16; /* keine 32-Bit-Register */
 
 /*-------------------------------------------------------------------------*/
@@ -2208,5 +2208,5 @@ void codeh8_3_init(void) {
     CPU6413308 = AddCPU("HD6413308", SwitchTo_H8_3);
     CPUH8_300  = AddCPU("H8/300", SwitchTo_H8_3);
     CPU6413309 = AddCPU("HD6413309", SwitchTo_H8_3);
-    CPUH8_300H = AddCPU("H8/300H", SwitchTo_H8_3);
+    AddCPU("H8/300H", SwitchTo_H8_3);
 }

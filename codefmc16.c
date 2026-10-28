@@ -74,7 +74,6 @@ typedef struct {
 
 #define ABSMODE 0x1f
 
-static CPUVar CPU90500;
 
 static MulDivOrder* MulDivOrders;
 
@@ -2183,7 +2182,7 @@ static void SwitchTo_F2MC16(void) {
 /* Initialisierung */
 
 void codef2mc16_init(void) {
-    CPU90500 = AddCPU("MB90500", SwitchTo_F2MC16);
+    AddCPU("MB90500", SwitchTo_F2MC16);
 
     AddInitPassProc(InitCode_F2MC16);
 }

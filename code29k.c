@@ -62,7 +62,7 @@ static StdOrder* FixedOrders;
 static StdOrder* MemOrders;
 static SPReg*    SPRegs;
 
-static CPUVar     CPU29000, CPU29240, CPU29243, CPU29245;
+static CPUVar CPU29000, CPU29243, CPU29245;
 static LongInt    Reg_RBP;
 static StringList Emulations;
 
@@ -1101,7 +1101,7 @@ static void SwitchTo_29K(void) {
 void code29k_init(void) {
     CPU29245 = AddCPU("AM29245", SwitchTo_29K);
     CPU29243 = AddCPU("AM29243", SwitchTo_29K);
-    CPU29240 = AddCPU("AM29240", SwitchTo_29K);
+    AddCPU("AM29240", SwitchTo_29K);
     CPU29000 = AddCPU("AM29000", SwitchTo_29K);
 
     Emulations = NULL;

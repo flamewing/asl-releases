@@ -104,7 +104,7 @@ static ShortInt AdrType;
 static RelOrder* RelOrders;
 static XYOrder*  XYOrders;
 
-static CPUVar CPU65816, CPUM7700, CPUM7750, CPUM7751;
+static CPUVar CPU65816, CPUM7700, CPUM7750;
 
 static as_assume_rec_t ASSUME7700s[] = {
         { "PG",  &Reg_PG, 0,   0xff,   0x100, NULL},
@@ -1471,7 +1471,7 @@ void code7700_init(void) {
     CPU65816 = AddCPU("65816", SwitchTo_7700);
     CPUM7700 = AddCPU("MELPS7700", SwitchTo_7700);
     CPUM7750 = AddCPU("MELPS7750", SwitchTo_7700);
-    CPUM7751 = AddCPU("MELPS7751", SwitchTo_7700);
+    AddCPU("MELPS7751", SwitchTo_7700);
 
     AddInitPassProc(InitCode_7700);
 }

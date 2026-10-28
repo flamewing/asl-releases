@@ -102,7 +102,6 @@ typedef struct {
     char const* p_name;
 } condition_t;
 
-static CPUVar CPUM16;
 
 static char*    Format;
 static Byte     FormatCode;
@@ -3185,5 +3184,5 @@ static void SwitchTo_M16(void) {
 }
 
 void codem16_init(void) {
-    CPUM16 = AddCPU("M16", SwitchTo_M16);
+    AddCPU("M16", SwitchTo_M16);
 }

@@ -38,7 +38,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUSC62015;
 
 /*---------------------------------------------------------------------------*/
 
@@ -1888,5 +1887,5 @@ static void SwitchTo_SC62015(void) {
 }
 
 void code62015_init(void) {
-    CPUSC62015 = AddCPU("SC62015", SwitchTo_SC62015);
+    AddCPU("SC62015", SwitchTo_SC62015);
 }

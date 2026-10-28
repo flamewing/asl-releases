@@ -50,7 +50,7 @@ typedef enum {
     RetField
 } OpComps;
 
-static CPUVar CPU7720, CPU7725;
+static CPUVar CPU7725;
 
 static LongWord ActCode;
 static Boolean  InOp;
@@ -682,6 +682,6 @@ static void SwitchTo_7720(void) {
 /* Initialisierung */
 
 void code7720_init(void) {
-    CPU7720 = AddCPU("7720", SwitchTo_7720);
+    AddCPU("7720", SwitchTo_7720);
     CPU7725 = AddCPU("7725", SwitchTo_7720);
 }

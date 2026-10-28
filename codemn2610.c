@@ -58,7 +58,6 @@ enum {
 };
 
 static CPUVar      CPUMN1610, CPUMN1613;
-static tSymbolSize OpSize;
 static LongInt     BaseRegVals[4];
 
 static as_assume_rec_t ASSUMEMN1613[] = {
@@ -1250,8 +1249,6 @@ static Boolean DecodeAttrPart_MN1610_Alt(void) {
 }
 
 static void MakeCode_MN1610_Alt(void) {
-    OpSize = (AttrPartOpSize[0] != eSymbolSizeUnknown) ? AttrPartOpSize[0]
-                                                       : eSymbolSize16Bit;
 
     if (!LookupInstTable(InstTable, OpPart.str.p_str)) {
         WrStrErrorPos(ErrNum_UnknownInstruction, &OpPart);

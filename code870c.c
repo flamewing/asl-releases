@@ -60,7 +60,6 @@ enum {
 #define Reg8Cnt 8
 static char const Reg8Names[] = "AWCBEDLH";
 
-static CPUVar   CPU870C;
 static ShortInt OpSize;
 static Byte     AdrVals[4];
 static ShortInt AdrType;
@@ -1380,5 +1379,5 @@ static void SwitchTo_870C(void) {
 }
 
 void code870c_init(void) {
-    CPU870C = AddCPU("TLCS-870/C", SwitchTo_870C);
+    AddCPU("TLCS-870/C", SwitchTo_870C);
 }

@@ -80,7 +80,6 @@ typedef struct {
 #define ModDisp16RReg   18
 #define MModDisp16RReg  (1l << ModDisp16RReg) /* d16(RRn) */
 
-static CPUVar CPUST9020, CPUST9030, CPUST9040, CPUST9050;
 
 static ShortInt AdrMode, AbsSeg;
 static Byte     AdrPart, OpSize;
@@ -2065,9 +2064,9 @@ static void SwitchTo_ST9(void) {
 }
 
 void codest9_init(void) {
-    CPUST9020 = AddCPU("ST9020", SwitchTo_ST9);
-    CPUST9030 = AddCPU("ST9030", SwitchTo_ST9);
-    CPUST9040 = AddCPU("ST9040", SwitchTo_ST9);
-    CPUST9050 = AddCPU("ST9050", SwitchTo_ST9);
+    AddCPU("ST9020", SwitchTo_ST9);
+    AddCPU("ST9030", SwitchTo_ST9);
+    AddCPU("ST9040", SwitchTo_ST9);
+    AddCPU("ST9050", SwitchTo_ST9);
     AddInitPassProc(InitCode_ST9);
 }

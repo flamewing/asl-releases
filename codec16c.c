@@ -37,7 +37,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar cpu_cr16c;
 
 typedef struct {
     Word code_reg, code_imm4_16, code_imm20, code_imm32;
@@ -2269,6 +2268,6 @@ static void init_code_cr16c(void) {
  * ------------------------------------------------------------------------ */
 
 void codecr16c_init(void) {
-    cpu_cr16c = AddCPU("CR16C", switch_to_cr16c);
+    AddCPU("CR16C", switch_to_cr16c);
     AddInitPassProc(init_code_cr16c);
 }

@@ -40,7 +40,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUCP1600;
 
 static Word    Bits;
 static Word    Mask;
@@ -1023,7 +1022,7 @@ static void SwitchTo_CP1600(void) {
 }
 
 void codecp1600_init(void) {
-    CPUCP1600 = AddCPU("CP-1600", SwitchTo_CP1600);
+    AddCPU("CP-1600", SwitchTo_CP1600);
 
     AddCopyright("GI CP-1600-Generator (C) 2021 Haruo Asano");
 }

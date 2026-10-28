@@ -51,8 +51,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPU70C40, CPU70C20, CPU70C00, CPU70CT40, CPU70CT20, CPU70C82, CPU70C42,
-        CPU70C02, CPU70C48, CPU70C08;
 
 static Byte     OpSize;
 static ShortInt AdrType;
@@ -1102,14 +1100,14 @@ static void SwitchTo_TMS7(void) {
 }
 
 void codetms7_init(void) {
-    CPU70C00  = AddCPU("TMS70C00", SwitchTo_TMS7);
-    CPU70C20  = AddCPU("TMS70C20", SwitchTo_TMS7);
-    CPU70C40  = AddCPU("TMS70C40", SwitchTo_TMS7);
-    CPU70CT20 = AddCPU("TMS70CT20", SwitchTo_TMS7);
-    CPU70CT40 = AddCPU("TMS70CT40", SwitchTo_TMS7);
-    CPU70C02  = AddCPU("TMS70C02", SwitchTo_TMS7);
-    CPU70C42  = AddCPU("TMS70C42", SwitchTo_TMS7);
-    CPU70C82  = AddCPU("TMS70C82", SwitchTo_TMS7);
-    CPU70C08  = AddCPU("TMS70C08", SwitchTo_TMS7);
-    CPU70C48  = AddCPU("TMS70C48", SwitchTo_TMS7);
+    AddCPU("TMS70C00", SwitchTo_TMS7);
+    AddCPU("TMS70C20", SwitchTo_TMS7);
+    AddCPU("TMS70C40", SwitchTo_TMS7);
+    AddCPU("TMS70CT20", SwitchTo_TMS7);
+    AddCPU("TMS70CT40", SwitchTo_TMS7);
+    AddCPU("TMS70C02", SwitchTo_TMS7);
+    AddCPU("TMS70C42", SwitchTo_TMS7);
+    AddCPU("TMS70C82", SwitchTo_TMS7);
+    AddCPU("TMS70C08", SwitchTo_TMS7);
+    AddCPU("TMS70C48", SwitchTo_TMS7);
 }

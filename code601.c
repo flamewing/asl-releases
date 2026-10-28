@@ -62,7 +62,7 @@ static BaseOrder* Reg2ImmOrders;
 static BaseOrder* Imm16Orders;
 static BaseOrder* Imm16SwapOrders;
 
-static CPUVar CPU403, CPU403C, CPU505, CPU601, CPU821, CPU6000;
+static CPUVar CPU403, CPU403C, CPU505, CPU821, CPU6000;
 
 #define M_403  0x01
 #define M_403C 0x02
@@ -2207,7 +2207,7 @@ void code601_init(void) {
     CPU403  = AddCPU("PPC403", SwitchTo_601);
     CPU403C = AddCPU("PPC403GC", SwitchTo_601);
     CPU505  = AddCPU("MPC505", SwitchTo_601);
-    CPU601  = AddCPU("MPC601", SwitchTo_601);
+    AddCPU("MPC601", SwitchTo_601);
     CPU821  = AddCPU("MPC821", SwitchTo_601);
     CPU6000 = AddCPU("RS6000", SwitchTo_601);
 

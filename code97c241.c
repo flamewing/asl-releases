@@ -38,7 +38,6 @@ typedef struct {
     Byte Mask; /* B0..2=OpSizes, B4=-MayImm, B5=-MayReg */
 } RMWOrder;
 
-static CPUVar CPU97C241;
 
 static int     OpSize, OpSize2;
 static Integer LowLim4, LowLim8;
@@ -2411,5 +2410,5 @@ static void SwitchTo_97C241(void) {
 }
 
 void code97c241_init(void) {
-    CPU97C241 = AddCPU("97C241", SwitchTo_97C241);
+    AddCPU("97C241", SwitchTo_97C241);
 }

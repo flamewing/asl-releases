@@ -74,7 +74,6 @@ typedef struct {
     tSymbolFlags flags;
 } adr_vals_t;
 
-static CPUVar CPU37010, CPU37020, CPU37030, CPU37040, CPU37050;
 
 static tSymbolSize OpSize;
 
@@ -1317,9 +1316,9 @@ static void SwitchTo_370(void) {
 }
 
 void code370_init(void) {
-    CPU37010 = AddCPU("370C010", SwitchTo_370);
-    CPU37020 = AddCPU("370C020", SwitchTo_370);
-    CPU37030 = AddCPU("370C030", SwitchTo_370);
-    CPU37040 = AddCPU("370C040", SwitchTo_370);
-    CPU37050 = AddCPU("370C050", SwitchTo_370);
+    AddCPU("370C010", SwitchTo_370);
+    AddCPU("370C020", SwitchTo_370);
+    AddCPU("370C030", SwitchTo_370);
+    AddCPU("370C040", SwitchTo_370);
+    AddCPU("370C050", SwitchTo_370);
 }

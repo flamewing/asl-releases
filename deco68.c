@@ -23,7 +23,6 @@
 
 static unsigned nData;
 
-static CPUVar CPU6800, CPU6802;
 
 typedef enum {
     eUnknown,
@@ -736,6 +735,6 @@ static void SwitchTo_68(void) {
 }
 
 void deco68_init(void) {
-    CPU6800 = AddCPU("6800", SwitchTo_68);
-    CPU6802 = AddCPU("6802", SwitchTo_68);
+    AddCPU("6800", SwitchTo_68);
+    AddCPU("6802", SwitchTo_68);
 }

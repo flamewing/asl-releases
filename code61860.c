@@ -39,7 +39,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar CPUSC61860;
 
 #define JR_PLUS  0x0100
 #define JR_MINUS 0x0200
@@ -445,5 +444,5 @@ static void SwitchTo_SC61860(void) {
 }
 
 void code61860_init(void) {
-    CPUSC61860 = AddCPU("SC61860", SwitchTo_SC61860);
+    AddCPU("SC61860", SwitchTo_SC61860);
 }

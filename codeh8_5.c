@@ -69,7 +69,6 @@ typedef struct {
     tSymbolSize DefSize;
 } OneOrder;
 
-static CPUVar CPU532, CPU534, CPU536, CPU538;
 
 static tSymbolSize OpSize;
 static char*       Format;
@@ -82,7 +81,6 @@ static tSymbolSize ImmSize;
 static ShortInt    Adr2Mode;
 static Byte        Adr2Byte, Adr2Cnt;
 static Byte        Adr2Vals[3];
-static tSymbolSize Imm2Size;
 
 static LongInt Reg_DP, Reg_EP, Reg_TP, Reg_BR;
 
@@ -882,7 +880,6 @@ static void CopyAdr(void) {
     Adr2Mode = AdrMode;
     Adr2Byte = AdrByte;
     Adr2Cnt  = AdrCnt;
-    Imm2Size = ImmSize;
     memcpy(Adr2Vals, AdrVals, AdrCnt);
 }
 
@@ -2139,10 +2136,10 @@ static void SwitchTo_H8_5(void) {
 }
 
 void codeh8_5_init(void) {
-    CPU532 = AddCPU("HD6475328", SwitchTo_H8_5);
-    CPU534 = AddCPU("HD6475348", SwitchTo_H8_5);
-    CPU536 = AddCPU("HD6475368", SwitchTo_H8_5);
-    CPU538 = AddCPU("HD6475388", SwitchTo_H8_5);
+    AddCPU("HD6475328", SwitchTo_H8_5);
+    AddCPU("HD6475348", SwitchTo_H8_5);
+    AddCPU("HD6475368", SwitchTo_H8_5);
+    AddCPU("HD6475388", SwitchTo_H8_5);
 
     AddInitPassProc(InitCode_H8_5);
 }

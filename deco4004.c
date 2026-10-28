@@ -42,7 +42,6 @@ typedef struct {
 
 static unsigned nData;
 
-static CPUVar CPU4004;
 
 static tOpcodeList const OpcodeList[256] = {
         /* 0x00 */ {eImplicit, 0, 1, "nop"},
@@ -759,5 +758,5 @@ static void SwitchTo_4004(void) {
 }
 
 void deco4004_init(void) {
-    CPU4004 = AddCPU("4004", SwitchTo_4004);
+    AddCPU("4004", SwitchTo_4004);
 }

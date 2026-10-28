@@ -29,7 +29,6 @@ typedef struct {
     IntType Max;
 } ConstOrder;
 
-static CPUVar CPU4500;
 
 static ConstOrder* ConstOrders;
 
@@ -364,5 +363,5 @@ static void SwitchTo_4500(void) {
 }
 
 void code4500_init(void) {
-    CPU4500 = AddCPU("MELPS4500", SwitchTo_4500);
+    AddCPU("MELPS4500", SwitchTo_4500);
 }

@@ -58,7 +58,6 @@ static Byte     OpSize, AdrPart;
 static Byte     AdrVals[2];
 static ShortInt AdrMode;
 
-static CPUVar CPU78070;
 
 /*-------------------------------------------------------------------------*/
 /* Adressausdruck parsen */
@@ -1340,5 +1339,5 @@ static void SwitchTo_78K0(void) {
 }
 
 void code78k0_init(void) {
-    CPU78070 = AddCPU("78070", SwitchTo_78K0);
+    AddCPU("78070", SwitchTo_78K0);
 }

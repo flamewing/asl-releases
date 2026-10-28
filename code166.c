@@ -47,7 +47,7 @@ typedef struct {
 #define DPPCount 4
 static char const RegNames[6][5] = {"DPP0", "DPP1", "DPP2", "DPP3", "CP", "SP"};
 
-static CPUVar CPU80C166, CPU80C167, CPU80C167CS;
+static CPUVar CPU80C166, CPU80C167;
 
 static BaseOrder* FixedOrders;
 static Condition* Conditions;
@@ -2082,7 +2082,7 @@ static void SwitchTo_166(void) {
 void code166_init(void) {
     CPU80C166   = AddCPU("80C166", SwitchTo_166);
     CPU80C167   = AddCPU("80C167", SwitchTo_166);
-    CPU80C167CS = AddCPU("80C167CS", SwitchTo_166);
+    AddCPU("80C167CS", SwitchTo_166);
 
     AddInitPassProc(InitCode_166);
 }

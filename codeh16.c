@@ -34,7 +34,6 @@
 
 #include "c_implementation.h"
 
-static CPUVar      CPU641016;
 static tSymbolSize OpSize;
 static tStrComp    FormatPart;
 
@@ -3140,5 +3139,5 @@ static void SwitchTo_H16(void) {
  * ------------------------------------------------------------------------ */
 
 void codeh16_init(void) {
-    CPU641016 = AddCPU("HD641016", SwitchTo_H16);
+    AddCPU("HD641016", SwitchTo_H16);
 }

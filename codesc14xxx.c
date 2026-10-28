@@ -41,10 +41,8 @@ typedef struct {
     Byte Code, MinArg, MaxArg;
 } FixedOrder;
 
-static CPUVar CPU14400, CPU14401, CPU14402, CPU14404, CPU14405, CPU14420, CPU14421,
-        CPU14422, CPU14424;
+static CPUVar CPU14400;
 static FixedOrder* FixedOrders;
-static Word        CurrMask;
 
 /*---------------------------------------------------------------------------*/
 
@@ -774,19 +772,18 @@ static void SwitchTo_sc14xxx(void) {
     SwitchFrom = SwitchFrom_sc14xxx;
 
     InitFields();
-    CurrMask = 1 << (MomCPU - CPU14400);
 }
 
 /*---------------------------------------------------------------------------*/
 
 void codesc14xxx_init(void) {
     CPU14400 = AddCPU("SC14400", SwitchTo_sc14xxx);
-    CPU14401 = AddCPU("SC14401", SwitchTo_sc14xxx);
-    CPU14402 = AddCPU("SC14402", SwitchTo_sc14xxx);
-    CPU14404 = AddCPU("SC14404", SwitchTo_sc14xxx);
-    CPU14405 = AddCPU("SC14405", SwitchTo_sc14xxx);
-    CPU14420 = AddCPU("SC14420", SwitchTo_sc14xxx);
-    CPU14421 = AddCPU("SC14421", SwitchTo_sc14xxx);
-    CPU14422 = AddCPU("SC14422", SwitchTo_sc14xxx);
-    CPU14424 = AddCPU("SC14424", SwitchTo_sc14xxx);
+    AddCPU("SC14401", SwitchTo_sc14xxx);
+    AddCPU("SC14402", SwitchTo_sc14xxx);
+    AddCPU("SC14404", SwitchTo_sc14xxx);
+    AddCPU("SC14405", SwitchTo_sc14xxx);
+    AddCPU("SC14420", SwitchTo_sc14xxx);
+    AddCPU("SC14421", SwitchTo_sc14xxx);
+    AddCPU("SC14422", SwitchTo_sc14xxx);
+    AddCPU("SC14424", SwitchTo_sc14xxx);
 }

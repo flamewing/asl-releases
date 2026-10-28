@@ -47,7 +47,6 @@ typedef struct {
     Word        Code;
 } tCondition;
 
-static CPUVar CPU1750;
 static Word   AdrReg, AdrWord;
 
 /*-------------------------------------------------------------------------*/
@@ -796,6 +795,6 @@ static void SwitchTo_1750(void) {
 }
 
 void code1750_init(void) {
-    CPU1750 = AddCPU("1750", SwitchTo_1750);
+    AddCPU("1750", SwitchTo_1750);
     AddCopyright("MIL-STD 1750 Generator also (C) 2019 Oliver Kellogg");
 }

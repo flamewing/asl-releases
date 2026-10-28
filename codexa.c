@@ -66,7 +66,6 @@ typedef struct {
     Byte        Inversion;
 } InvOrder;
 
-static CPUVar CPUXAG1, CPUXAG2, CPUXAG3;
 
 static InvOrder* JBitOrders;
 static RegOrder* RegOrders;
@@ -2134,9 +2133,9 @@ static void SwitchTo_XA(void) {
 }
 
 void codexa_init(void) {
-    CPUXAG1 = AddCPU("XAG1", SwitchTo_XA);
-    CPUXAG2 = AddCPU("XAG2", SwitchTo_XA);
-    CPUXAG3 = AddCPU("XAG3", SwitchTo_XA);
+    AddCPU("XAG1", SwitchTo_XA);
+    AddCPU("XAG2", SwitchTo_XA);
+    AddCPU("XAG3", SwitchTo_XA);
 
     AddInitPassProc(InitCode_XA);
 }
