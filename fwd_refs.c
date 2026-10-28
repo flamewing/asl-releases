@@ -27,6 +27,11 @@ typedef struct as_forward_ref_entry {
     Boolean resolved;
 } as_forward_ref_entry_t;
 
+typedef struct {
+    char* owned_name;
+    as_forward_ref_entry_t* entries;
+} as_forward_ref_bucket_t;
+
 static oh_size_t forward_ref_hash(char const* name) {
     oh_size_t hash = 5381;
     unsigned char const* p;
@@ -40,7 +45,7 @@ static int forward_ref_equal(char const* a, char const* b) {
     return !strcmp(a, b);
 }
 
-DEFINE_OPENHASH(forwardrefs, char const*, as_forward_ref_entry_t*, 1,
+DEFINE_OPENHASH(forwardrefs, char const*, as_forward_ref_bucket_t, 1,
                 forward_ref_hash, forward_ref_equal)
 
 static openhash_t(forwardrefs) forward_refs;
@@ -73,12 +78,12 @@ void as_forward_ref_add(char const* p_expanded_name) {
             abort();
         }
         openhash_key(&forward_refs, it) = name;
-        openhash_value(&forward_refs, it) = NULL;
+        openhash_value(&forward_refs, it) = (as_forward_ref_bucket_t){name, NULL};
     }
     /* Local handles normally increase between macro invocations. Descending
        order makes a fresh handle or a duplicate of the current one a head
        operation, while retaining arbitrary section/handle insertion order. */
-    link = &openhash_value(&forward_refs, it);
+    link = &openhash_value(&forward_refs, it).entries;
     while (*link && (*link)->attribute > attribute) {
         link = &(*link)->next;
     }
@@ -100,13 +105,13 @@ static void clear_forward_refs(void) {
     oh_iter_t it;
     for (it = openhash_begin(&forward_refs); it < openhash_end(&forward_refs); ++it) {
         if (openhash_exist(&forward_refs, it)) {
-            as_forward_ref_entry_t* entry = openhash_value(&forward_refs, it);
+            as_forward_ref_entry_t* entry = openhash_value(&forward_refs, it).entries;
             while (entry) {
                 as_forward_ref_entry_t* next = entry->next;
                 free(entry);
                 entry = next;
             }
-            free((void*)openhash_key(&forward_refs, it));
+            free(openhash_value(&forward_refs, it).owned_name);
         }
     }
     free(forward_refs.flags);
@@ -134,7 +139,7 @@ Boolean as_forward_ref_search_and_mark(char const* p_name, LongInt attribute) {
     if (it == openhash_end(&forward_refs)) {
         return False;
     }
-    p_entry = openhash_value(&forward_refs, it);
+    p_entry = openhash_value(&forward_refs, it).entries;
     /* A macro-local definition can resolve only its own handle. There is
        no need to visit other scopes once the ordered search reaches it. */
     if (attribute >= LOC_HANDLE_OFFSET) {

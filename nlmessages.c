@@ -36,9 +36,9 @@ static char const* EAllocMsg = "out of memory";
 static TMsgCat DefaultCatalog = {NULL, NULL, 0};
 
 typedef struct {
-    Byte*   p_data;
+    Byte const* p_data;
+    Byte* owned_data;
     size_t  data_length, rd_ptr;
-    Boolean data_allocated;
 } as_raw_msg_struct_t;
 
 /*!------------------------------------------------------------------------
@@ -49,11 +49,9 @@ typedef struct {
 
 static void free_raw(as_raw_msg_struct_t* p_raw) {
     if (p_raw) {
-        if (p_raw->p_data && p_raw->data_allocated) {
-            free(p_raw->p_data);
-        }
+        free(p_raw->owned_data);
         p_raw->p_data         = NULL;
-        p_raw->data_allocated = False;
+        p_raw->owned_data = NULL;
         p_raw->data_length = p_raw->rd_ptr = 0;
         free(p_raw);
     }
@@ -173,12 +171,12 @@ static as_raw_msg_struct_t* create_raw_file(char const* p_file_name) {
         goto func_exit;
     }
 
-    p_result->p_data = (Byte*)malloc(p_result->data_length);
-    if (p_result->data_length && !p_result->p_data) {
+    p_result->owned_data = (Byte*)malloc(p_result->data_length);
+    p_result->p_data = p_result->owned_data;
+    if (p_result->data_length && !p_result->owned_data) {
         goto func_exit;
     }
-    p_result->data_allocated = True;
-    if (fread(p_result->p_data, 1, p_result->data_length, p_file)
+    if (fread(p_result->owned_data, 1, p_result->data_length, p_file)
         != p_result->data_length) {
         goto func_exit;
     }
@@ -546,8 +544,7 @@ void msg_catalog_open_buffer(
     if (!p_raw) {
         error(EAllocMsg);
     }
-    p_raw->p_data         = (Byte*)p_buffer;
-    p_raw->data_allocated = False;
+    p_raw->p_data         = p_buffer;
     p_raw->data_length    = buffer_size;
     p_raw->rd_ptr         = 0;
 

@@ -20,17 +20,19 @@ typedef void (*InstProc)(Word Index);
 typedef Boolean (*inst_fnc_t)(Word index);
 
 typedef struct tag_TInstTableEntry {
-    InstProc Procs[2];
-    char*    Name;
-    Word     Indices[2];
-    int      Coll;
+    InstProc    Procs[2];
+    char const* Name;
+    char*       OwnedName;
+    Word        Indices[2];
+    int         Coll;
 } TInstTableEntry, *PInstTableEntry;
 
 typedef struct inst_fnc_table_entry {
-    inst_fnc_t fnc;
-    char*      p_name;
-    Word       index;
-    int        coll;
+    inst_fnc_t  fnc;
+    char const* p_name;
+    char*       owned_name;
+    Word        index;
+    int         coll;
 } inst_fnc_table_entry_t;
 
 struct sInstTable {

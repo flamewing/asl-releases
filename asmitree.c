@@ -23,10 +23,10 @@
 /*---------------------------------------------------------------------------*/
 
 static int GetKey(char const* Name, LongWord TableSize) {
-    register unsigned char* p;
+    unsigned char const* p;
     LongWord                tmp = 0;
 
-    for (p = (unsigned char*)Name; *p != '\0'; p++) {
+    for (p = (unsigned char const*)Name; *p != '\0'; p++) {
         tmp = (tmp << 2) + ((LongWord)*p);
     }
     return tmp % TableSize;
@@ -40,6 +40,7 @@ PInstTable CreateInstTable(int TableSize) {
     tmp = (PInstTableEntry)malloc(sizeof(TInstTableEntry) * TableSize);
     for (z = 0; z < TableSize; z++) {
         tmp[z].Name = NULL;
+        tmp[z].OwnedName = NULL;
     }
     tab                    = (PInstTable)malloc(sizeof(TInstTable));
     tab->Fill              = 0;
@@ -92,6 +93,17 @@ void SetDynamicInstTable(PInstTable Table) {
     Table->Dynamic = TRUE;
 }
 
+void inst_fnc_table_destroy(inst_fnc_table_t* table) {
+    if (!table) {
+        return;
+    }
+    for (int index = 0; index < table->size; index++) {
+        free(table->p_entries[index].owned_name);
+    }
+    free(table->p_entries);
+    free(table);
+}
+
 void DestroyInstTable(PInstTable tab) {
     int z;
 
@@ -99,10 +111,8 @@ void DestroyInstTable(PInstTable tab) {
         return;
     }
 
-    if (tab->Dynamic) {
-        for (z = 0; z < tab->Size; z++) {
-            free(tab->Entries[z].Name);
-        }
+    for (z = 0; z < tab->Size; z++) {
+        free(tab->Entries[z].OwnedName);
     }
 
     free(tab->Entries);
@@ -121,7 +131,8 @@ void AddInstTable(PInstTable tab, char const* Name, Word Index, InstProc Proc) {
     while (1) {
         if (!tab->Entries[h0].Name) {
             int dest_index        = 0;
-            tab->Entries[h0].Name = (tab->Dynamic) ? as_strdup(Name) : (char*)Name;
+            tab->Entries[h0].OwnedName = tab->Dynamic ? as_strdup(Name) : NULL;
+            tab->Entries[h0].Name = tab->Dynamic ? tab->Entries[h0].OwnedName : Name;
             memset(tab->Entries[h0].Procs, 0, sizeof(tab->Entries[h0].Procs));
             if (tab->prefix_proc) {
                 tab->Entries[h0].Procs[dest_index]     = tab->prefix_proc;
@@ -171,8 +182,10 @@ void inst_fnc_table_add(
     }
     while (1) {
         if (!p_table->p_entries[tab_index].p_name) {
-            p_table->p_entries[tab_index].p_name
-                    = (p_table->dynamic) ? as_strdup(p_name) : (char*)p_name;
+            p_table->p_entries[tab_index].owned_name
+                    = p_table->dynamic ? as_strdup(p_name) : NULL;
+            p_table->p_entries[tab_index].p_name = p_table->dynamic
+                    ? p_table->p_entries[tab_index].owned_name : p_name;
             p_table->p_entries[tab_index].fnc   = fnc;
             p_table->p_entries[tab_index].index = index;
             p_table->p_entries[tab_index].coll  = num_coll;
@@ -197,6 +210,8 @@ void RemoveInstTable(PInstTable tab, char const* Name) {
         if (!tab->Entries[h0].Name) {
             return;
         } else if (!strcmp(tab->Entries[h0].Name, Name)) {
+            free(tab->Entries[h0].OwnedName);
+            tab->Entries[h0].OwnedName = NULL;
             tab->Entries[h0].Name = NULL;
             memset(tab->Entries[h0].Procs, 0, sizeof(tab->Entries[h0].Procs));
             tab->Fill--;
