@@ -317,7 +317,7 @@ static void DumpDebugInfo_NOICE(void) {
     Integer       ActFile;
     FILE*         MAPFile;
     String        MAPName, Tmp1, Tmp2;
-    LargeWord     Start, End;
+    LargeWord     Start = 0, End = 0;
     Boolean       HadLines;
 
     strmaxcpy(MAPName, SourceFile, STRINGSIZE);

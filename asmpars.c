@@ -1916,7 +1916,7 @@ static void EvalExpressionView(
     as_operator_t const*      p_run_op;
     char const*               p_arg_split_pos;
     PFunction                 ValFunc;
-    tStrComp                  CopyComp, STempComp;
+    tStrComp                  CopyComp = {0}, STempComp = {0};
     tFunction const*          pFunction;
     PRelocEntry               TReloc;
     tSymbolFlags              PromotedFlags;
@@ -2317,6 +2317,8 @@ integer_result:
         if (ValFunc) {
             tStrComp                func_def_arg;
             function_eval_cb_data_t fnc_cb_data;
+            size_t                 definition_len;
+            as_strcomp_view_t      definition;
 
             as_eval_cb_data_ini(&fnc_cb_data.cb_data, function_eval_cb);
             fnc_cb_data.p_function = ValFunc;
@@ -2380,9 +2382,9 @@ integer_result:
                         ValFunc->ArguCnt, ValFunc->ArguCnt + 1, True);
                 LEAVE2;
             }
-            size_t definition_len = strlen(ValFunc->Definition);
+            definition_len = strlen(ValFunc->Definition);
             StrCompMkTemp(&func_def_arg, ValFunc->Definition, definition_len);
-            as_strcomp_view_t definition = as_strcomp_view_from(
+            definition = as_strcomp_view_from(
                     &func_def_arg, definition_len);
             EvalExpressionView(&definition, pErg, eval_flags, &fnc_cb_data.cb_data);
             pErg->Flags |= PromotedFlags;

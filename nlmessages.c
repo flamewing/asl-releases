@@ -274,7 +274,7 @@ as_raw_msg_struct_t* open_raw_file_and_check(
  * ------------------------------------------------------------------------ */
 
 static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
-    LongInt  DefPos = -1, MomPos, DefLength = 0, MomLength, z, StrStart, CtryCnt,
+    LongInt  DefPos = -1, MomPos = -1, DefLength = 0, MomLength = 0, z, StrStart, CtryCnt,
              Ctrys[100];
     unsigned StrCap;
     Boolean  fi, Gotcha;

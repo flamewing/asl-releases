@@ -189,7 +189,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
     Boolean  doit, write_intel_bank_record = False;
     Boolean  CDataLower = !!strchr(CFormat, 'd'), CDataUpper = !!strchr(CFormat, 'D');
     Byte     Buffer[MaxLineLen];
-    LongWord ErgStart, byte_erg_start, ErgStop = 0xfffffffful, byte_erg_stop,
+    LongWord ErgStart = 0, byte_erg_start, ErgStop = 0xfffffffful, byte_erg_stop,
                                        target_word_intel_offset = 0,
                                        byte_intel_offset        = 0, MaxAdr;
     LongInt  NextPos;

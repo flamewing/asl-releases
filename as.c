@@ -2472,8 +2472,8 @@ void WriteCode(void) {
 }
 
 static void Produce_Code(void) {
-    PMacroRec       OneMacro;
-    PStructRec      OneStruct;
+    PMacroRec       OneMacro = NULL;
+    PStructRec      OneStruct = NULL;
     Boolean         SearchMacros, IsMacro = False, IsStruct = False;
     tStrComp        non_upper_case_op_part;
     String          non_upper_case_op_part_buf;

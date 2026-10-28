@@ -73,6 +73,7 @@ static int catalog(char const* mode) {
     size_t     length_pos, count_pos, table_pos, string_pos;
     TMsgCat    cat = {NULL, NULL, 0};
     int        result = 1;
+    char*      fallback;
 
     memcpy(data, ident, pos);
     put32(data + pos, 1234);
@@ -132,7 +133,7 @@ static int catalog(char const* mode) {
         || strcmp(catgetmessage(&cat, 1), "world")) {
         goto cleanup;
     }
-    char* fallback = catgetmessage(&cat, -1);
+    fallback = catgetmessage(&cat, -1);
     if (!strstr(fallback, "-1") || !memchr(fallback, '\0', STRINGSIZE)
         || catgetmessage(&cat, cat.MsgCount) != fallback
         || !strstr(fallback, "2") || strcmp(catgetmessage(&cat, 0), "hello")) {

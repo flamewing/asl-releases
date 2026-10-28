@@ -1894,7 +1894,7 @@ static Boolean Put48I_To_1(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* p
 
 static Boolean Put48I_To_4(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     unsigned z;
-    Byte *   p_dest, highest_src;
+    Byte *   p_dest, highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 12)) {
         return False;
@@ -2334,7 +2334,7 @@ static Boolean Put64F_To_16(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
 
 static Boolean Put64I_To_32(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int      z;
-    LongWord highest_src;
+    LongWord highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 2)) {
         return False;
@@ -2822,7 +2822,7 @@ func_exit:
  *****************************************************************************/
 
 static Boolean Put128I_To_1(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
-    Word w[8], highest_src;
+    Word w[8], highest_src = 0;
     int  z;
 
     for (z = 0; z < min(8, LARGEBITS / 16); z++, l >>= 16) {
@@ -2860,7 +2860,7 @@ static Boolean Put128F_To_1(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
 
 static Boolean Put128I_To_4(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int  z;
-    Byte highest_src;
+    Byte highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 32)) {
         return False;
@@ -2938,7 +2938,7 @@ static Boolean Put128F_To_4(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
 
 static Boolean Put128I_To_8(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int  z;
-    Byte highest_src;
+    Byte highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 16)) {
         return False;
@@ -2985,7 +2985,7 @@ static Boolean Put128F_To_8(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
 
 static Boolean Put128I_To_16(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int  z;
-    Word highest_src;
+    Word highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 8)) {
         return False;
@@ -3038,7 +3038,7 @@ static Boolean Put128F_To_16(as_float_t t, tSymbolFlags flags, struct sLayoutCtx
 
 static Boolean Put128I_To_32(LargeWord l, tSymbolFlags flags, struct sLayoutCtx* pCtx) {
     int      z;
-    LongWord highest_src;
+    LongWord highest_src = 0;
 
     if (!IncMaxCodeLen(pCtx, 4)) {
         return False;

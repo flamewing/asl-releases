@@ -194,7 +194,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
     LongWord InpStart, SumLen;
     Word     InpLen, TransLen, ResLen;
     Boolean  doit;
-    LongWord ErgStart, ErgStop;
+    LongWord ErgStart = 0, ErgStop;
     LongInt  NextPos;
     Word     ErgLen = 0;
     Byte     Gran;

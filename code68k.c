@@ -1362,7 +1362,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
     AdrComp     AdrComps[3], OneComp;
     Byte        CompCnt;
     tSymbolSize OutDispLen = eSymbolSizeUnknown;
-    Boolean     PreInd;
+    Boolean     PreInd, haveBrackets;
 
     LongInt      HVal;
     Integer      HVal16;
@@ -1577,7 +1577,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
       Plus variants with PC instead of aN, and missing some fields
      */
 
-    Boolean haveBrackets = FALSE;
+    haveBrackets = FALSE;
     for (tPos = ArgLen - 1; tPos >= 0 && lParenPos == -1; tPos--) {
         char token = Arg.str.p_str[tPos];
         switch (token) {
