@@ -140,6 +140,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Weverything)
         # Layout and optimizer heuristics are advisory, not routine CI diagnostics.
         add_compile_options(-Wno-padded -Wno-aggregate-return -Wno-inline)
+        # C11 uses GNU unused for functions that some generated APIs may use.
+        # Clang treats calls to these maybe-unused functions as an advisory.
+        add_compile_options(-Wno-used-but-marked-unused)
         # Retain -Wswitch and covered-default checks for deliberate partial switches.
         add_compile_options(-Wno-switch-default -Wno-switch-enum)
         # C11 is the minimum; compatibility with earlier C standards is not a goal.

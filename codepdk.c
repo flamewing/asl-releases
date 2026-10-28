@@ -484,7 +484,7 @@ static Word ImmCode(Word Code13) {
  * \fn     AMCode(Word Code13, Boolean AccDest)
  * \brief  translate PDK13 arithmetic op code to actual code code for Acc<->[M]
  * \param  Code13 PDK13 code
- * \param  AccDest: true if A<-M
+ * \param  AccDest true if A<-M
  * \return Opcode
  * ------------------------------------------------------------------------ */
 
