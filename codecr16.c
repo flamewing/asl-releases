@@ -207,15 +207,6 @@ static tRegEvalResult decode_reg(
     return decode_reg_with_flags(p_arg, p_result, must_be_reg, NULL);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, IntType imm_int_type)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_vals parse result
- * \param  imm_int_type data range for immediate arguments
- * \return deduced address mode
- * ------------------------------------------------------------------------ */
-
 typedef enum {
     e_mode_none             = -1,
     e_mode_reg              = 0,
@@ -266,6 +257,15 @@ static LongInt get_displacement(adr_vals_t const* p_vals) {
         return 0;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, IntType imm_int_type)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_vals parse result
+ * \param  imm_int_type data range for immediate arguments
+ * \return deduced address mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t decode_adr(
         tStrComp const* p_arg, adr_vals_t* p_vals, IntType imm_int_type) {
@@ -530,6 +530,11 @@ static Boolean decode_14(tStrComp const* p_arg, Word* p_result, tSymbolFlags* p_
     return ok;
 }
 
+typedef struct {
+    char name[4];
+    Byte num;
+} vector_t;
+
 /*!------------------------------------------------------------------------
  * \fn     decode_cr16_vector(const tStrComp *p_arg, Word *p_dest, cr16_gen_t gen)
  * \brief  parse exception vector name
@@ -538,11 +543,6 @@ static Boolean decode_14(tStrComp const* p_arg, Word* p_result, tSymbolFlags* p_
  * \param  gen CR16 core generation (A, B, C)
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
-
-typedef struct {
-    char name[4];
-    Byte num;
-} vector_t;
 
 Boolean decode_cr16_vector(tStrComp const* p_arg, Word* p_dest, cr16_gen_t gen) {
     static vector_t const vectors[] = {
@@ -583,6 +583,11 @@ Boolean decode_cr16_vector(tStrComp const* p_arg, Word* p_dest, cr16_gen_t gen) 
     return False;
 }
 
+typedef struct {
+    char name[9];
+    Byte num;
+} cpu_reg_t;
+
 /*!------------------------------------------------------------------------
  * \fn     decode_cpu_reg(const tStrComp *p_arg, Word *p_dest, cr16_gen_t gen)
  * \brief  parse CPU register name
@@ -591,11 +596,6 @@ Boolean decode_cr16_vector(tStrComp const* p_arg, Word* p_dest, cr16_gen_t gen) 
  * \param  gen CR16 core generation (A, B, C)
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
-
-typedef struct {
-    char name[9];
-    Byte num;
-} cpu_reg_t;
 
 static Boolean decode_cpu_reg(tStrComp const* p_arg, Word* p_dest, cr16_gen_t gen) {
     static cpu_reg_t const cpu_regs[] = {

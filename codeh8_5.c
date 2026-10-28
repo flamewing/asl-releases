@@ -647,9 +647,9 @@ static tSymbolSize DecodeOpSize(Byte SizeCode) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const tStrComp *pArg, tSymbolSize Size, Boolean *pOK)
- * \brief  evaluate bit position
- * \param  bit position argument (with or without #)
+ * \fn     EvalBitPosition(tStrComp const* pArg, tSymbolSize Size, Boolean* pOK)
+  * \brief  evaluate bit position
+ * \param  pArg bit position argument (with or without #)
  * \param  Size operand size (8/16/unknown)
  * \param  pOK parsing OK?
  * \return numeric bit position

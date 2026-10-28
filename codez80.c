@@ -710,22 +710,11 @@ static Boolean get_logical_prog_counter(LongWord* p_log_pc, LongInt pcrel_offset
 #define EncIYReg ((IYPrefix & 0xf0) | HLReg)
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeReg16Core(const char *p_asc, Byte *p_ret)
- * \brief  parse 16 bit register
- * \param  p_asc source argument
- * \param  p_ret return buffer
+ * \fn     DecodeRegCore(char const* pArg, tZ80Reg* pReg)
+  * \brief  parse a built-in register name
+ * \param  pArg source argument
+ * \param  pReg return buffer
  * \return true if valid register name
- * ------------------------------------------------------------------------ */
-
-/*!------------------------------------------------------------------------
- * \fn     DecodeReg(const tStrComp *p_arg, Byte *p_ret, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
- * \brief  check whether argument is a CPU register or user-defined register alias
- * \param  p_arg argument
- * \param  p_value resulting register # if yes
- * \param  p_size resulting register size if yes
- * \param  req_size requested register size
- * \param  must_be_reg expecting register or maybe not?
- * \return reg eval result
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeRegCore(char const* pArg, tZ80Reg* pReg) {
@@ -900,6 +889,17 @@ static Boolean ParAFPair(void) {
 static Boolean chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
     return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(tStrComp const* p_arg, Byte* p_ret, tSymbolSize* p_size, tSymbolSize req_size, Boolean must_be_reg)
+  * \brief  check whether argument is a CPU register or user-defined register alias
+ * \param  p_arg argument
+ * \param  p_ret resulting register # if yes
+ * \param  p_size resulting register size if yes
+ * \param  req_size requested register size
+ * \param  must_be_reg expecting register or maybe not?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult DecodeReg(
         tStrComp const* p_arg, Byte* p_ret, tSymbolSize* p_size, tSymbolSize req_size,
@@ -1723,17 +1723,17 @@ static Boolean DecodeAdr_DEHL(tStrComp const* p_arg) {
     }
 }
 
+typedef struct {
+    Byte    cnt, value;
+    Boolean present;
+} prefix_store_t;
+
 /*!------------------------------------------------------------------------
  * \fn     store_prefix(prefix_store_t *p_store, Byte old_prefix_cnt)
  * \brief  check whether another (index) prefix was added, and store it
  * \param  p_store place to store
  * \param  old_prefix_cnt prefix count before possible addition
  * ------------------------------------------------------------------------ */
-
-typedef struct {
-    Byte    cnt, value;
-    Boolean present;
-} prefix_store_t;
 
 static void store_prefix(prefix_store_t* p_store, Byte old_prefix_cnt) {
     p_store->cnt     = PrefixCnt;
@@ -1742,13 +1742,13 @@ static void store_prefix(prefix_store_t* p_store, Byte old_prefix_cnt) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeAdrWithF(const tStrComp *pArg, adr_vals_t *p_vals, LongWord ModeMask, LongInt pcrel_offset, Boolean AllowF)
- * \brief  Handle address expression, treating F as 8th register
+ * \fn     DecodeAdrWithF(tStrComp const* pArg, adr_vals_t* p_vals, LongWord ModeMask, LongInt pcrel_offset, Boolean AllowF)
+  * \brief  Handle address expression, treating F as 8th register
  * \param  pArg source argument
  * \param  p_vals dest buffer for decoded result
  * \param  ModeMask bit mask of allowed modes
  * \param  pcrel_offset PC offset for RA mode
- * \param  allow 'F' at all?
+ * \param  AllowF allow 'F' at all?
  * ------------------------------------------------------------------------ */
 
 static ShortInt DecodeAdrWithF(
@@ -1819,8 +1819,8 @@ static Boolean ImmIsS8(adr_vals_t const* p_vals) {
 
 /*!------------------------------------------------------------------------
  * \fn     append_opcode(Byte opcode)
- * \brief  append 8 bit opcode to prefixes and set CodeLen
- * \param  code code to append
+  * \brief  append 8 bit opcode to prefixes and set CodeLen
+ * \param  opcode code to append
  * ------------------------------------------------------------------------ */
 
 static void append_opcode(Byte opcode) {
@@ -1829,9 +1829,9 @@ static void append_opcode(Byte opcode) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     append_opcode16(Byte opcode)
- * \brief  append 8/16 bit opcode to prefixes and set CodeLen
- * \param  code code to append (2 bytes if MSB != 0)
+ * \fn     append_opcode16(Word opcode)
+  * \brief  append 8/16 bit opcode to prefixes and set CodeLen
+ * \param  opcode code to append (2 bytes if MSB != 0)
  * ------------------------------------------------------------------------ */
 
 static void append_opcode16(Word opcode) {
@@ -1969,12 +1969,6 @@ static IntType PortIntType(void) {
 /*==========================================================================*/
 /* instruction decoders */
 
-/*!------------------------------------------------------------------------
- * \fn     chk_addr_core_mask(unsigned core_mask)
- * \brief  check for CPU core and report invalid addressing mode if not
- * \return True if condition given
- * ------------------------------------------------------------------------ */
-
 static void core_mask_2_str(char* p_dest, size_t dest_cap, unsigned core_mask) {
     static char const sep[2] = "/";
 
@@ -1989,6 +1983,12 @@ static void core_mask_2_str(char* p_dest, size_t dest_cap, unsigned core_mask) {
         as_snprcatf(p_dest, dest_cap, "%s%s", sep + !*p_dest, "Z380");
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     chk_addr_core_mask(unsigned core_mask)
+ * \brief  check for CPU core and report invalid addressing mode if not
+ * \return True if condition given
+ * ------------------------------------------------------------------------ */
 
 static Boolean chk_addr_core_mask(unsigned core_mask) {
     if (!((core_mask >> p_curr_cpu_props->core) & 1)) {
@@ -6626,8 +6626,8 @@ static Boolean QualifyQuote_Z80(char const* pStart, char const* pQuotePos) {
 /*!------------------------------------------------------------------------
  * \fn     InternSymbol_Z80(char *p_arg, TempResult *p_result)
  * \brief  handle built-in (register) symbols for Z80
- * \param  p_arg source argument
- * \param  p_result result buffer
+ * \param  pArg source argument
+ * \param  pResult result buffer
  * ------------------------------------------------------------------------ */
 
 static void InternSymbol_Z80(char* pArg, TempResult* pResult) {

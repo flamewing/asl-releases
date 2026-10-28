@@ -71,11 +71,11 @@ static void decode_lit3u(Word code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     str_arg(tStrComp *p_arg, as_nonz_dynstr_t *p_str, tEvalResult *p_eval_result)
- * \brief  evalate string arg, and interprete caret notation
+ * \fn     str_arg(tStrComp* p_arg, as_nonz_dynstr_t* p_str, tEvalResult* p_eval_result)
+  * \brief  evalate string arg, and interprete caret notation
  * \param  p_arg source argument
  * \param  p_str return buffer
- * \param  evaluation attributes return buffer
+ * \param  p_eval_result evaluation attributes return buffer
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
 

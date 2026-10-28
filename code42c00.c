@@ -87,14 +87,7 @@ static char const mode_strings[][4]
 
 static cpu_props_t const* p_curr_cpu_props;
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(adr_vals_t *p_vals, const tStrComp *p_arg, Word mode_mask)
- * \brief  decode operand/addressing mode expreesion
- * \param  p_vals destination for decoded expression
- * \param  p_arg source argument
- * \param  mode_mask bit mask of allowed modes
- * \return deduced addressing mode
- * ------------------------------------------------------------------------ */
+
 
 static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->mode  = e_mod_none;
@@ -127,6 +120,15 @@ static void report_address_forms(Word mask, tStrComp const* operand) {
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), forms);
     WrXErrorPos(ErrNum_InvAddrMode, detail, &operand->Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(adr_vals_t *p_vals, const tStrComp *p_arg, Word mode_mask)
+ * \brief  decode operand/addressing mode expreesion
+ * \param  p_vals destination for decoded expression
+ * \param  p_arg source argument
+ * \param  mode_mask bit mask of allowed modes
+ * \return deduced addressing mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t decode_adr(adr_vals_t* p_vals, tStrComp const* p_arg, Word mode_mask) {
     tEvalResult eval_result;
@@ -691,15 +693,17 @@ static void switch_from_42c00(void) {
     p_curr_cpu_props = NULL;
 }
 
+
+
+static Boolean TrueFnc(void) {
+    return True;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     switch_to_42c00(void *p_user)
  * \brief  switch to target
  * \param  p_user target properties
  * ------------------------------------------------------------------------ */
-
-static Boolean TrueFnc(void) {
-    return True;
-}
 
 static void switch_to_42c00(void const* p_user) {
     TFamilyDescr const* p_descr = FindFamilyByName("TLCS-42xx");

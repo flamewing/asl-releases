@@ -146,12 +146,12 @@ static void DissectReg_29K(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     compare_reg_29k(tRegInt reg1_num, tSymbolSize reg1_size, tRegInt reg2_num, tRegInt reg2_size)
- * \brief  compare two register symbols
+ * \fn     compare_reg_29k(tRegInt reg1_num, tSymbolSize size1, tRegInt reg2_num, tSymbolSize size2)
+  * \brief  compare two register symbols
  * \param  reg1_num 1st register's number
- * \param  reg1_size 1st register's data size
+ * \param  size1 1st register's data size
  * \param  reg2_num 2nd register's number
- * \param  reg2_size 2nd register's data size
+ * \param  size2 2nd register's data size
  * \return 0, -1, 1, -2
  * ------------------------------------------------------------------------ */
 

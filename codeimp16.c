@@ -133,11 +133,11 @@ static void dissect_reg_imp16(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     decode_reg(const tStrComp *p_arg, Word *p_result)
- * \brief  check whether argument is a CPU register or register alias
+ * \fn     decode_reg(tStrComp const* p_arg, Word* p_result, Boolean* p_unknown)
+  * \brief  check whether argument is a CPU register or register alias
  * \param  p_arg argument to check
  * \param  p_result numeric register value if yes
- * \param  must_be_reg argument is expected to be a register
+ * \param  p_unknown returns whether the value is unknown in this pass
  * ------------------------------------------------------------------------ */
 
 static tRegEvalResult decode_reg(tStrComp const* p_arg, Word* p_result, Boolean* p_unknown) {
@@ -1378,9 +1378,9 @@ static Boolean is_def_imp16(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     switch_to_imp16(void *p_user)
- * \brief  switch to target
- * \param  properties descriptor
+ * \fn     switch_to_imp16(void const* p_user)
+  * \brief  switch to target
+ * \param  p_user CPU properties descriptor
  * ------------------------------------------------------------------------ */
 
 static void switch_to_imp16(void const* p_user) {

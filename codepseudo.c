@@ -72,15 +72,7 @@ Boolean IsIndirect(char const* Asc) {
     return IsIndirectGen(Asc, "()");
 }
 
-/*!------------------------------------------------------------------------
- * \fn     FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier, const char *pBracks)
- * \brief  check for argument of type xxx(yyyy)
- * \param  pArg argument to check
- * \param  pArgLen returns argument length
- * \param  Qualifier possible qualifier to allow more positive decisions
- * \param  pBracks Opening/Closing Parentheses
- * \return index to opening parenthese or -1 if not like pattern
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -142,6 +134,16 @@ static int disp_base_split_cb(
     }
     return 0;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     FindDispBaseSplitWithQualifier(const char *pArg, int *pArgLen, tDispBaseSplitQualifier Qualifier, const char *pBracks)
+ * \brief  check for argument of type xxx(yyyy)
+ * \param  pArg argument to check
+ * \param  pArgLen returns argument length
+ * \param  Qualifier possible qualifier to allow more positive decisions
+ * \param  pBracks Opening/Closing Parentheses
+ * \return index to opening parenthese or -1 if not like pattern
+ * ------------------------------------------------------------------------ */
 
 int FindDispBaseSplitWithQualifier(
         char const* pArg, int* pArgLen, tDispBaseSplitQualifier Qualifier,
@@ -358,15 +360,17 @@ Boolean QualifyQuote_SingleQuoteConstant(char const* pStart, char const* pQuoteP
 declare_string_2_xasm_code(string_2_dasm_code, LongWord, DAsmCode)
         declare_string_2_xasm_code(string_2_wasm_code, Word, WAsmCode)
 
-        /*!------------------------------------------------------------------------
-         * \fn     add_null_pseudo(struct sInstTable *p_inst_table)
-         * \brief  add handle to ignore empty instruction
-         * \param  p_inst_table table to augment
-         * ------------------------------------------------------------------------ */
+
 
         void decode_null(Word code) {
     UNUSED(code);
 }
+
+/*!------------------------------------------------------------------------
+         * \fn     add_null_pseudo(struct sInstTable *p_inst_table)
+         * \brief  add handle to ignore empty instruction
+         * \param  p_inst_table table to augment
+         * ------------------------------------------------------------------------ */
 
 void add_null_pseudo(struct sInstTable* p_inst_table) {
     AddInstTable(p_inst_table, "", 0, decode_null);

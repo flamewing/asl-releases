@@ -88,6 +88,16 @@ static Boolean DecodeRegCore(char const* p_arg, tRegInt* p_result, tSymbolSize* 
     return False;
 }
 
+static void WrOperandChoices(Word id, tStrComp const* operand, char const* choices) {
+    char detail[240];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
+    WrXErrorPos(id, detail, &operand->Pos);
+}
+
+static Boolean ChkRegSize(tSymbolSize req_size, tSymbolSize act_size) {
+    return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeReg(const tStrComp *p_arg, Byte *p_value, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
  * \brief  check whether argument is a CPU register
@@ -98,16 +108,6 @@ static Boolean DecodeRegCore(char const* p_arg, tRegInt* p_result, tSymbolSize* 
  * \param  must_be_reg is a register argument expected?
  * \return eval result
  * ------------------------------------------------------------------------ */
-
-static void WrOperandChoices(Word id, tStrComp const* operand, char const* choices) {
-    char detail[240];
-    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
-    WrXErrorPos(id, detail, &operand->Pos);
-}
-
-static Boolean ChkRegSize(tSymbolSize req_size, tSymbolSize act_size) {
-    return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
-}
 
 static tRegEvalResult DecodeReg(
         tStrComp const* p_arg, Byte* p_value, tSymbolSize* p_size, tSymbolSize req_size,
@@ -368,8 +368,7 @@ static void DecodeJmp(Word Index) {
 
 /*!------------------------------------------------------------------------
  * \fn     decode_js(Word Index)
- * \brief  decode JS (macro) instruction
- * \return
+  * \brief  decode JS (macro) instruction
  * ------------------------------------------------------------------------ */
 
 static void decode_js(Word Index) {

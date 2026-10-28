@@ -62,10 +62,10 @@ static char const Regs[5] = "ABXP";
 /*---------------------------------------------------------------------------*/
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeRegCore(const char *pArg, Byte *pResult)
- * \brief  check whether argument describes a CPU register
+ * \fn     DecodeRegCore(char const* pArg, Byte* pResult)
+  * \brief  check whether argument describes a CPU register
  * \param  pArg argument
- * \param  pValue resulting register # if yes
+ * \param  pResult resulting register # if yes
  * \return true if argument is a register
  * ------------------------------------------------------------------------ */
 
@@ -189,15 +189,6 @@ static Boolean DecodeRegWithMemOpt(tStrComp const* pArg, Byte* pResult, Word Reg
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, tAdrData *pAdrData, Word ModeMask)
- * \brief  decode address expression
- * \param  pArg1 1st argument
- * \param  pArg1 optional 2nd argument (may be NULL)
- * \param  pAdrData result buffer
- * \return true if successfully decoded
- * ------------------------------------------------------------------------ */
-
 static Boolean ChkMode(Word ModeMask, tAdrData* pAdrData, tStrComp const* operand) {
     if ((ModeMask >> pAdrData->Mode) & 1) {
         return True;
@@ -226,6 +217,15 @@ static Boolean ChkMode(Word ModeMask, tAdrData* pAdrData, tStrComp const* operan
         return False;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(tStrComp* pArg1, tStrComp* pArg2, tAdrData* pAdrData, Word ModeMask)
+  * \brief  decode address expression
+ * \param  pArg1 1st argument
+ * \param  pArg2 optional 2nd argument (may be NULL)
+ * \param  pAdrData result buffer
+ * \return true if successfully decoded
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeAdr(
         tStrComp* pArg1, tStrComp* pArg2, tAdrData* pAdrData, Word ModeMask) {
@@ -316,9 +316,9 @@ static Boolean DecodeAddrKeyword(char const* pKeyword, Byte* pMode) {
  */
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
- * \brief  evaluate bit position
- * \param  bit position argument (with or without #)
+ * \fn     EvalBitPosition(tStrComp const* pArg, Boolean* pOK)
+  * \brief  evaluate bit position
+ * \param  pArg bit position argument (with or without #)
  * \param  pOK parsing OK?
  * \return numeric bit position
  * ------------------------------------------------------------------------ */

@@ -145,16 +145,7 @@ static void dissect_reg_340xx(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_reg(const tStrComp *p_arg, Word *p_result, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
- * \brief  decode register argument
- * \param  p_arg source argument
- * \param  p_result returns register #
- * \param  p_size actual operand size of register
- * \param  req_size requested register operand size
- * \param  must_be_reg argument must be  a register
- * \return OK/No/Abort
- * ------------------------------------------------------------------------ */
+
 
 static tErrorNum chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
     /* 'any size' or exact match */
@@ -174,6 +165,17 @@ static tErrorNum chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
                        : ErrNum_FloatButInt;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_reg(const tStrComp *p_arg, Word *p_result, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
+ * \brief  decode register argument
+ * \param  p_arg source argument
+ * \param  p_result returns register #
+ * \param  p_size actual operand size of register
+ * \param  req_size requested register operand size
+ * \param  must_be_reg argument must be  a register
+ * \return OK/No/Abort
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult decode_reg(
         tStrComp const* p_arg, Word* p_result, tSymbolSize* p_size, tSymbolSize req_size,
@@ -322,13 +324,7 @@ static void append_adr_vals(adr_vals_t const* p_vals) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_vals parse result
- * \return deduced address mode
- * ------------------------------------------------------------------------ */
+
 
 static Boolean is_pre_decrement(
         tStrComp const* p_arg, Word* p_result, tRegEvalResult* p_reg_eval_result) {
@@ -365,6 +361,14 @@ static Boolean is_post_increment(
     *p_reg_eval_result = decode_reg(&reg_comp, p_result, NULL, eSymbolSize32Bit, False);
     return (*p_reg_eval_result != eIsNoReg);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_vals parse result
+ * \return deduced address mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t decode_adr(tStrComp const* p_arg, adr_vals_t* p_vals) {
     tRegEvalResult reg_eval_result;
@@ -1551,11 +1555,7 @@ static void decode_swapf(Word code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_cexec(Word code)
- * \brief  handle CEXEC instruction
- * \param  code machine code
- * ------------------------------------------------------------------------ */
+
 
 static Boolean decode_coproc_id(tStrComp const* p_arg, Boolean* p_ok) {
     if (p_arg->str.p_str[0]) {
@@ -1565,6 +1565,12 @@ static Boolean decode_coproc_id(tStrComp const* p_arg, Boolean* p_ok) {
         return coproc;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_cexec(Word code)
+ * \brief  handle CEXEC instruction
+ * \param  code machine code
+ * ------------------------------------------------------------------------ */
 
 static void decode_cexec(Word code) {
     Word     size, id = coproc;
@@ -1609,11 +1615,7 @@ static void decode_cexec(Word code) {
     append_opcode(((command >> 8) & 0x1fffu) | (id << 13));
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_cmovcg(Word code)
- * \brief  handle CMOVCG instruction
- * \param  code machine code
- * ------------------------------------------------------------------------ */
+
 
 /* Variants:
    CMOVCG Rd1,command
@@ -1632,6 +1634,12 @@ static LongWord eval_cmovcg_command(tStrComp const* p_arg, Boolean* p_ok) {
         return 0;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_cmovcg(Word code)
+ * \brief  handle CMOVCG instruction
+ * \param  code machine code
+ * ------------------------------------------------------------------------ */
 
 static void decode_cmovcg(Word code) {
     Word     Rd1, Rd2 = 0, size = 0, id = coproc;
@@ -1734,11 +1742,7 @@ static void decode_cmovcg(Word code) {
     append_opcode((id << 13) | ((command >> 8) & 0x1fff));
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_cmovcm(Word code)
- * \brief  handle CMOVCM instruction
- * \param  code machine code
- * ------------------------------------------------------------------------ */
+
 
 static Word decode_coproc_mem_count(tStrComp const* p_arg, Word size, Boolean* p_ok) {
     tEvalResult eval_result;
@@ -1766,6 +1770,12 @@ static Word decode_coproc_mem_count(tStrComp const* p_arg, Word size, Boolean* p
     }
     return count;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_cmovcm(Word code)
+ * \brief  handle CMOVCM instruction
+ * \param  code machine code
+ * ------------------------------------------------------------------------ */
 
 static void decode_cmovcm(Word code) {
     adr_vals_t rd_vals;

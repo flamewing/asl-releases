@@ -45,7 +45,7 @@ static CPUVar CPU4004, CPU4040;
  * \fn     RegVal(const char *pInp, int l)
  * \brief  decode numeric part of register name - either single hex digit or two dec digits
  * \param  pInp numberic value from argument
- * \param  length of numberic value from argument
+ * \param  l length of numeric value from argument
  * \return register number or 0xff if invalid
  * ------------------------------------------------------------------------ */
 
@@ -78,10 +78,10 @@ static Byte RegVal(char const* pInp, int l) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeRegCore(const char *pArg, Byte *pValue, int l)
- * \brief  decode 4 bit register
- * \param  pArg potential register argument
- * \param  pValue register # if it's a register
+ * \fn     DecodeRegCore(char const* pAsc, Byte* pErg, int l)
+  * \brief  decode 4 bit register
+ * \param  pAsc potential register argument
+ * \param  pErg register # if it's a register
  * \param  l length of argument
  * \return True if it's a register
  * ------------------------------------------------------------------------ */

@@ -211,15 +211,6 @@ static Boolean DecodeCondition(char const* p_arg, LongWord* p_result) {
     return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, tAdrVals *pResult, unsigned ModeMask)
- * \brief  decode address expression
- * \param  pArg source argument
- * \param  pResult result buffer
- * \param  MayImm allow immediate?
- * \return True if successfully decoded
- * ------------------------------------------------------------------------ */
-
 static Boolean check_mode_mask(
         tStrComp const* p_arg, tAdrMode address_mode, unsigned mode_mask) {
     if ((mode_mask >> address_mode) & 1) {
@@ -371,6 +362,15 @@ static Boolean DeduceAndCheckDispSize(
     }
     return False;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask)
+  * \brief  decode address expression
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * \param  ModeMask bit mask of allowed addressing modes
+ * \return True if successfully decoded
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
     int         IndexSplitPos, OuterDispSplitPos, ArgLen;
@@ -863,9 +863,9 @@ static Boolean IsIndirectDisplacement(tAdrVals const* p_vals) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     IsImmediate(const tAdrVals *p_adr_vals, LongWord *p_imm_value)
- * \brief  check whether encoded address expression is immediate
- * \param  p_vals encoded address expression
+ * \fn     IsImmediate(tAdrVals const* p_adr_vals, LongWord* p_imm_value)
+  * \brief  check whether encoded address expression is immediate
+ * \param  p_adr_vals encoded address expression
  * \param  p_imm_value return buffer for immediate value
  * \return True if immediate
  * ------------------------------------------------------------------------ */
@@ -920,14 +920,6 @@ static Boolean IsIndexed(tAdrVals const* p_adr_vals, Byte* p_reg) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeBitAdr(tStrComp *p_arg, tAdrVals *p_result, unsigned ModeMask)
- * \brief  parse bit address expression
- * \param  p_arg source argument
- * \param  p_result result buffer
- * \return True if success
- * ------------------------------------------------------------------------ */
-
 static void insert_index(tAdrVals* p_result, Byte index_reg) {
     memmove(p_result->vals + 1, p_result->vals, p_result->count);
     p_result->vals[0] = 0xc0 | index_reg;
@@ -954,6 +946,14 @@ static void extend_adrvals_size(
         }
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBitAdr(tStrComp *p_arg, tAdrVals *p_result, unsigned ModeMask)
+ * \brief  parse bit address expression
+ * \param  p_arg source argument
+ * \param  p_result result buffer
+ * \return True if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeBitAdr(tStrComp* p_arg, tAdrVals* p_result, unsigned ModeMask) {
     char*       p_sep;
@@ -1493,9 +1493,9 @@ static void chk_imm_bitfield_range(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     chk_imm_value_range(const tStrComp *p_src_arg, const tAdrVals *p_adr_vals, const char *p_name, unsigned max_value)
- * \brief  check whether immediate value is in range
- * \param  p_arg source argument of value
+ * \fn     chk_imm_value_range(tStrComp const* p_src_arg, tAdrVals const* p_adr_vals, char const* p_name, unsigned max_value)
+  * \brief  check whether immediate value is in range
+ * \param  p_src_arg source argument of value
  * \param  p_adr_vals encoded value of value
  * ------------------------------------------------------------------------ */
 
@@ -1656,12 +1656,6 @@ static void DecodeSETF(Word code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeShift(Word code)
- * \brief  handle shift instructions
- * \param  code machine code for 8 bit in LSB
- * ------------------------------------------------------------------------ */
-
 static Boolean DecodeShiftCnt(tStrComp* p_arg, tAdrVals* p_adr_vals) {
     tSymbolSize save_size;
     Boolean     ret;
@@ -1672,6 +1666,12 @@ static Boolean DecodeShiftCnt(tStrComp* p_arg, tAdrVals* p_adr_vals) {
     OpSize    = save_size;
     return ret;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeShift(Word code)
+ * \brief  handle shift instructions
+ * \param  code machine code for 8 bit in LSB
+ * ------------------------------------------------------------------------ */
 
 static void DecodeShift(Word code) {
     tAdrVals shift_adr_vals, dest_adr_vals;
@@ -2830,9 +2830,8 @@ static void SwitchFrom_V60(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     SwitchTo_V60(void *pUser)
- * \brief  prepare to assemble code for this target
- * \param  pUser CPU properties
+ * \fn     SwitchTo_V60(void)
+  * \brief  prepare to assemble code for this target
  * ------------------------------------------------------------------------ */
 
 static void SwitchTo_V60(void) {

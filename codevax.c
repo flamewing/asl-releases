@@ -262,15 +262,7 @@ static void append_adr_vals_int(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, Word pc_value, unsigned mode_mask)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_result parsed result
- * \param  pc_value value of PC to be used in PC-relative calculation
- * \param  mode_mask bit mask of allowed addressing modes
- * \return True if success
- * ------------------------------------------------------------------------ */
+
 
 static void wr_address_forms(tStrComp const* p_arg, char const* forms) {
     char detail[500];
@@ -374,6 +366,16 @@ static int index_qualifier(char const* p_arg, int last_non_blank_pos, int split_
                       : -1;
     return ret;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, Word pc_value, unsigned mode_mask)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_result parsed result
+ * \param  pc_value value of PC to be used in PC-relative calculation
+ * \param  mode_mask bit mask of allowed addressing modes
+ * \return True if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean decode_adr(
         tStrComp* p_arg, adr_vals_t* p_result, LongWord pc_value, unsigned mode_mask) {

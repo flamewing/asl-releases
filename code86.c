@@ -255,6 +255,10 @@ static void dissect_reg_86(
     }
 }
 
+static Boolean chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
+    return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     decode_reg(const tStrComp *p_arg, Byte *p_reg_num, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
  * \brief  check whether argument is a CPU register or user-defined register alias
@@ -265,10 +269,6 @@ static void dissect_reg_86(
  * \param  must_be_reg expecting register or maybe not?
  * \return reg eval result
  * ------------------------------------------------------------------------ */
-
-static Boolean chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
-    return (req_size == eSymbolSizeUnknown) || (req_size == act_size);
-}
 
 static tRegEvalResult decode_reg(
         tStrComp const* p_arg, Byte* p_reg_num, tSymbolSize* p_size, tSymbolSize req_size,
@@ -424,14 +424,6 @@ static void ChkOpSize(tSymbolSize NewSize) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     ChkSpaces(ShortInt SegBuffer, Byte MomSegment, const tStrComp *p_arg)
- * \brief  check for matching address space of memory argument
- * \param  SegBuffer index into segment assume table
- * \param  MomSegment current segment being used
- * \param  p_arg source argument for error reporting
- * ------------------------------------------------------------------------ */
-
 static void ChkSingleSpace(
         Byte Seg, Byte EffSeg, Byte MomSegment, tStrComp const* p_arg) {
     Byte z;
@@ -469,6 +461,14 @@ static void ChkSingleSpace(
     }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     ChkSpaces(ShortInt SegBuffer, Byte MomSegment, const tStrComp *p_arg)
+ * \brief  check for matching address space of memory argument
+ * \param  SegBuffer index into segment assume table
+ * \param  MomSegment current segment being used
+ * \param  p_arg source argument for error reporting
+ * ------------------------------------------------------------------------ */
+
 static void ChkSpaces(ShortInt SegBuffer, Byte MomSegment, tStrComp const* p_arg) {
     Byte EffSeg;
 
@@ -486,14 +486,6 @@ static void ChkSpaces(ShortInt SegBuffer, Byte MomSegment, tStrComp const* p_arg
     ChkSingleSpace(SegXData, EffSeg, MomSegment, p_arg);
     ChkSingleSpace(SegData, EffSeg, MomSegment, p_arg);
 }
-
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, unsigned type_mask)
- * \brief  parse addressing mode argument
- * \param  pArg source argument
- * \param  type_mask bit mask of allowed addressing modes
- * \return resulting addressing mode
- * ------------------------------------------------------------------------ */
 
 typedef struct {
     as_eval_cb_data_t cb_data;
@@ -570,6 +562,14 @@ DECLARE_AS_EVAL_CB(x86_eval_cb) {
     as_tempres_set_int(p_res, 0);
     return e_eval_ok;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(const tStrComp *pArg, unsigned type_mask)
+ * \brief  parse addressing mode argument
+ * \param  pArg source argument
+ * \param  type_mask bit mask of allowed addressing modes
+ * \return resulting addressing mode
+ * ------------------------------------------------------------------------ */
 
 static tAdrType DecodeAdr(tStrComp const* pArg, unsigned type_mask) {
     static Byte const RMCodes[8] = {11, 12, 21, 22, 1, 2, 20, 10};
@@ -942,9 +942,9 @@ static Boolean check_core_mask(Byte instr_core_mask) {
 
 /*!------------------------------------------------------------------------
  * \fn     decode_mod_reg_core(Word code, Boolean no_seg_check, int start_index)
- * \brief  decode/append mod/reg instruction
+  * \brief  decode/append mod/reg instruction
  * \param  code instruction's machine code
- * \param  no_seg_check
+ * \param  no_seg_check skip segment compatibility checks
  * \param  start_index position of first argument
  * ------------------------------------------------------------------------ */
 

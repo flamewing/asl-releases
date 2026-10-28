@@ -55,19 +55,19 @@ static Boolean DecodeReg(char const* pAsc, Byte* pRes) {
     return Result;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeCondition(const tStrComp *p_arg, Byte *p_ret)
- * \brief  decode condition code
- * \param  p_arg source argument
- * \param  p_ret binary encoded argument
- * \return true if success
- * ------------------------------------------------------------------------ */
-
 static void WrOperandChoices(tStrComp const* arg, tErrorNum number, char const* choices) {
     char detail[180];
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
     WrXErrorPos(number, detail, &arg->Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeCondition(tStrComp const* p_arg, Byte* p_ret)
+  * \brief  decode condition code
+ * \param  p_arg source argument
+ * \param  p_ret binary encoded argument
+ * \return true if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeCondition(tStrComp const* p_arg, Byte* p_ret) {
     char const* p_asc = p_arg->str.p_str;

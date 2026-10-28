@@ -84,14 +84,7 @@ static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->value = 0;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, unsigned mask, tSymbolSize op_size)
- * \brief  decode address expression
- * \param  p_arg source argument
- * \param  p_vals encoded mode
- * \param  mask bit mask of allowed modes
- * \return deduced address mode
- * ------------------------------------------------------------------------ */
+
 
 static int chk_xy(char const* p_arg, char const* p_pattern, Byte* p_reg) {
     for (; *p_arg && *p_pattern; p_arg++, p_pattern++) {
@@ -112,6 +105,15 @@ static int chk_xy(char const* p_arg, char const* p_pattern, Byte* p_reg) {
     }
     return !(!*p_arg && !*p_pattern);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, unsigned mask, tSymbolSize op_size)
+ * \brief  decode address expression
+ * \param  p_arg source argument
+ * \param  p_vals encoded mode
+ * \param  mask bit mask of allowed modes
+ * \return deduced address mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t decode_adr(
         tStrComp const* p_arg, adr_vals_t* p_vals, unsigned mask, tSymbolSize op_size) {

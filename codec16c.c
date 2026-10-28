@@ -176,15 +176,6 @@ static Boolean decode_reg_core(char const* p_arg, Word* p_result, tSymbolSize* p
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     dissect_reg_cr16c(char *p_dest, size_t dest_size, tRegInt value, tSymbolSize inp_size)
- * \brief  translate register # back to textual form
- * \param  p_dest destination text buffer
- * \param  dest_size capacity of buffer
- * \param  value register #
- * \param  inp_size register's operand size
- * ------------------------------------------------------------------------ */
-
 static void pr_reg(char* p_dest, size_t dest_size, tRegInt value, char const* p_suffix) {
     switch (value) {
     case REG_SP:
@@ -197,6 +188,15 @@ static void pr_reg(char* p_dest, size_t dest_size, tRegInt value, char const* p_
         as_snprintf(p_dest, dest_size, "R%u%s", (unsigned)value, p_suffix);
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     dissect_reg_cr16c(char *p_dest, size_t dest_size, tRegInt value, tSymbolSize inp_size)
+ * \brief  translate register # back to textual form
+ * \param  p_dest destination text buffer
+ * \param  dest_size capacity of buffer
+ * \param  value register #
+ * \param  inp_size register's operand size
+ * ------------------------------------------------------------------------ */
 
 static void dissect_reg_cr16c(
         char* p_dest, size_t dest_size, tRegInt value, tSymbolSize inp_size) {
@@ -315,18 +315,6 @@ static IntType op_size_int_type(tSymbolSize op_size) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, tSymbolSize op_size,
- Boolean mem_op)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_vals parse result
- * \param  op_size operand size (8/16/32 bit)
- * \param  mem_op (r32) or (r16+1,r16) is memory operand and may have displacement,
-           otherwise register pair resp. single 32 bit register
- * \return deduced address mode
- * ------------------------------------------------------------------------ */
-
 static void check_rrp_rp(adr_vals_t* p_vals, tStrComp const* p_arg) {
     if (!p_vals->index_reg) {
         p_vals->mode = e_mode_disp_rp;
@@ -348,6 +336,18 @@ static void check_rrp_rp(adr_vals_t* p_vals, tStrComp const* p_arg) {
         p_vals->mode = e_mode_disp_rrp;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(const tStrComp *p_arg, adr_vals_t *p_vals, tSymbolSize op_size,
+ Boolean mem_op)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_vals parse result
+ * \param  op_size operand size (8/16/32 bit)
+ * \param  mem_op (r32) or (r16+1,r16) is memory operand and may have displacement,
+           otherwise register pair resp. single 32 bit register
+ * \return deduced address mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t decode_adr(
         tStrComp const* p_arg, adr_vals_t* p_vals, tSymbolSize op_size, Boolean mem_op) {
@@ -674,6 +674,11 @@ static Boolean is_abs20(LongWord address) {
     return (address <= 0xefffful) || ((address >= 0xff0000ul) && (address <= 0xfffffful));
 }
 
+typedef struct {
+    char name[9];
+    Byte num;
+} cpu_reg_t;
+
 /*!------------------------------------------------------------------------
  * \fn     decode_cpu_reg(const tStrComp *p_arg, Word *p_dest, tSymbolSize size)
  * \brief  parse CPU register name
@@ -682,11 +687,6 @@ static Boolean is_abs20(LongWord address) {
  * \param  size 16/32 bits
  * \return True if parsing succeeded
  * ------------------------------------------------------------------------ */
-
-typedef struct {
-    char name[9];
-    Byte num;
-} cpu_reg_t;
 
 static Boolean decode_cpu_reg(tStrComp const* p_arg, Word* p_dest, tSymbolSize size) {
     static cpu_reg_t const cpu_regs_16[] =
@@ -1182,9 +1182,9 @@ static void decode_alu_8_16(Word code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     decode_alu_32(Word code)
- * \brief  handle 32 bit instructions rp,rp or imm,rp
- * \param  code machine code
+ * \fn     decode_alu_32(Word index)
+  * \brief  handle 32 bit instructions rp,rp or imm,rp
+ * \param  index machine code
  * ------------------------------------------------------------------------ */
 
 static void decode_alu_32(Word index) {
@@ -1426,12 +1426,6 @@ static void decode_push_pop(Word code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_shift(Word index)
- * \brief  handle shift orders
- * \param  index index into insn table
- * ------------------------------------------------------------------------ */
-
 typedef struct {
     Word        code_reg, code_left_imm, code_right_imm;
     tSymbolSize op_size;
@@ -1439,6 +1433,12 @@ typedef struct {
 } shift_order_t;
 
 static shift_order_t* shift_orders;
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_shift(Word index)
+ * \brief  handle shift orders
+ * \param  index index into insn table
+ * ------------------------------------------------------------------------ */
 
 static void decode_shift(Word index) {
     shift_order_t const* p_order = &shift_orders[index];
@@ -1489,12 +1489,6 @@ static void decode_shift(Word index) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_load_store(Word index)
- * \brief  handle load_store orders
- * \param  index index into insn table
- * ------------------------------------------------------------------------ */
-
 typedef struct {
     Word        code4, code7, code8, code8_abs, code10;
     tSymbolSize op_size;
@@ -1502,6 +1496,12 @@ typedef struct {
 } load_store_order_t;
 
 static load_store_order_t* load_store_orders;
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_load_store(Word index)
+ * \brief  handle load_store orders
+ * \param  index index into insn table
+ * ------------------------------------------------------------------------ */
 
 static void decode_load_store(Word index) {
     load_store_order_t const* p_order = &load_store_orders[index];

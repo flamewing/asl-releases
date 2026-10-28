@@ -94,10 +94,10 @@ static void DissectReg_XCore(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     ParseArgReg(int Index, unsigned *pResult, Boolean MustBeReg)
- * \brief  check whether argument is a CPU register or register alias
+ * \fn     ParseArgReg(int Index, unsigned* pResult, Boolean MustBeReg)
+  * \brief  check whether argument is a CPU register or register alias
  * \param  Index index of argument
- * \param  register number if yes
+ * \param  pResult register number if yes
  * \param  MustBeReg expecting register as argument
  * \return register eval result
  * ------------------------------------------------------------------------ */

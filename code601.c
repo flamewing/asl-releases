@@ -246,6 +246,14 @@ static Boolean DecodeCondBit(
     return OK;
 }
 
+
+
+static void ReportDispBaseForm(tStrComp const* pArg) {
+    char detail[200];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "displacement(R0..R31)");
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeRegDisp(tStrComp *p_comp, LongWord *p_ret, LongWord *p_guess_mask)
  * \brief  parse register/displacement argument
@@ -254,12 +262,6 @@ static Boolean DecodeCondBit(
  * \param  p_guess_mask associated guess flag bits
  * \return True if parsing OK
  * ------------------------------------------------------------------------ */
-
-static void ReportDispBaseForm(tStrComp const* pArg) {
-    char detail[200];
-    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "displacement(R0..R31)");
-    WrXErrorPos(ErrNum_InvAddrMode, detail, &pArg->Pos);
-}
 
 static Boolean DecodeRegDisp(tStrComp* p_comp, LongWord* p_ret, LongWord* p_guess_mask) {
     char*        p;

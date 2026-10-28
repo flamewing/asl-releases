@@ -221,6 +221,10 @@ static void AppendRegPrefix(tAdrVals* pAdrVals, Byte RegPrefix) {
     }
 }
 
+static unsigned GetH16SymbolSizeBytes(tSymbolSize Size) {
+    return (Size <= eSymbolSize5Bit) ? 1 : GetSymbolSizeBytes(Size);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     AppendBySize(Byte *pDest, LongInt Value, tSymbolSize OpSize)
  * \brief  append an integer value to byte array, BE order
@@ -229,10 +233,6 @@ static void AppendRegPrefix(tAdrVals* pAdrVals, Byte RegPrefix) {
  * \param  OpSize operand size of value (3/4/5/8/16/32 bits)
  * \return # of bytes appended
  * ------------------------------------------------------------------------ */
-
-static unsigned GetH16SymbolSizeBytes(tSymbolSize Size) {
-    return (Size <= eSymbolSize5Bit) ? 1 : GetSymbolSizeBytes(Size);
-}
 
 static unsigned AppendBySize(Byte* pDest, LongInt Value, tSymbolSize OpSize) {
     unsigned Cnt = GetH16SymbolSizeBytes(OpSize);
@@ -303,6 +303,8 @@ static Boolean SplitOpSize(tStrComp* pArg, tSymbolSize* pSize) {
     return False;
 }
 
+static char const ScaleSuffixes[][3] = {"*1", "*2", "*4", "*8"};
+
 /*!------------------------------------------------------------------------
  * \fn     SplitScale(tStrComp *pArg, Byte *pScale)
  * \brief  split off scaling option from (register) argument
@@ -310,8 +312,6 @@ static Boolean SplitOpSize(tStrComp* pArg, tSymbolSize* pSize) {
  * \param  pScale resulting scale if suffix was present
  * \return True if a suffix was split off
  * ------------------------------------------------------------------------ */
-
-static char const ScaleSuffixes[][3] = {"*1", "*2", "*4", "*8"};
 
 static char SplitScale(tStrComp* pArg, Byte* pScale) {
     int      l = strlen(pArg->str.p_str);
@@ -410,12 +410,12 @@ static void DissectReg_H16(char* pDest, size_t DestSize, tRegInt Reg, tSymbolSiz
 }
 
 /*!------------------------------------------------------------------------
- * \fn     compare_reg_h16(tRegInt reg1_num, tSymbolSize reg1_size, tRegInt reg2_num, tRegInt reg2_size)
- * \brief  compare two register symbols
+ * \fn     compare_reg_h16(tRegInt reg1_num, tSymbolSize size1, tRegInt reg2_num, tSymbolSize size2)
+  * \brief  compare two register symbols
  * \param  reg1_num 1st register's number
- * \param  reg1_size 1st register's data size
+ * \param  size1 1st register's data size
  * \param  reg2_num 2nd register's number
- * \param  reg2_size 2nd register's data size
+ * \param  size2 2nd register's data size
  * \return 0, -1, 1, -2
  * ------------------------------------------------------------------------ */
 
@@ -565,14 +565,6 @@ static Boolean CheckSup(tStrComp const* pArg) {
     return True;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeCReg(const tStrComp *pArg, Byte *pResult)
- * \brief  check whether argument id a control register
- * \param  pArg argument to check
- * \param  pResult control register # if argument is a control register
- * \return True if argument is a control register
- * ------------------------------------------------------------------------ */
-
 typedef struct {
     char const* pName;
     Byte        Code;
@@ -593,6 +585,14 @@ static tCReg const CRegs[] = {
         { "IBR", 0xc3,   eSymbolSize32Bit},
         {  NULL, 0x00, eSymbolSizeUnknown},
 };
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeCReg(const tStrComp *pArg, Byte *pResult)
+ * \brief  check whether argument id a control register
+ * \param  pArg argument to check
+ * \param  pResult control register # if argument is a control register
+ * \return True if argument is a control register
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeCReg(tStrComp const* pArg, Byte* pResult) {
     tCReg const* pReg;
@@ -1500,9 +1500,8 @@ static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, tSymbolSize O
 
 /*!------------------------------------------------------------------------
  * \fn     AssembleBitSymbol(Byte BitPos, tSymbolSize OpSize, LongWord Address)
- * \brief  build the compact internal representation of a bit field symbol
+  * \brief  build the compact internal representation of a bit field symbol
  * \param  BitPos bit position in word
- * \param  Width width of bit field
  * \param  OpSize operand size (8/16/32 bit)
  * \param  Address register address
  * \return compact representation

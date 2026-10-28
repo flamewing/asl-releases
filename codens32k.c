@@ -296,11 +296,11 @@ static char const MemRegNames[][3] = {"FP", "SP", "SB"};
 #define MemRegCount (sizeof(MemRegNames) / sizeof(*MemRegNames))
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeRegCore(const char *pArg, Word *pValue, tSymbolSize *pSize)
- * \brief  check whether argument describes a register
+ * \fn     DecodeRegCore(char const* pArg, Word* pRegNum, tSymbolSize* pRegSize)
+  * \brief  check whether argument describes a register
  * \param  pArg source argument
- * \param  pValue register number if yes
- * \param  pSize register size if yes
+ * \param  pRegNum register number if yes
+ * \param  pRegSize register size if yes
  * \return True if it is
  * ------------------------------------------------------------------------ */
 
@@ -368,21 +368,21 @@ static void DissectReg_NS32K(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeReg(const tStrComp *pArg, Word *pValue, tSymbolSize *pSize, tSymbolSize ChkRegSize, Boolean MustBeReg)
- * \brief  check whether argument is a CPU register or user-defined register alias
- * \param  pArg argument
- * \param  pValue resulting register # if yes
- * \param  pSize resulting register size if yes
- * \param  ChkReqSize explicitly request certain register size
- * \param  MustBeReg expecting register or maybe not?
- * \return reg eval result
- * ------------------------------------------------------------------------ */
-
 static Boolean MatchRegSize(tSymbolSize IsSize, tSymbolSize ReqSize) {
     return (ReqSize == eSymbolSizeUnknown) || (IsSize == ReqSize)
            || ((ReqSize == eSymbolSizeFloat64Bit) && (IsSize == eSymbolSizeFloat32Bit));
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(tStrComp const* pArg, Word* pValue, tSymbolSize* pSize, tSymbolSize ChkRegSize, Boolean MustBeReg)
+  * \brief  check whether argument is a CPU register or user-defined register alias
+ * \param  pArg argument
+ * \param  pValue resulting register # if yes
+ * \param  pSize resulting register size if yes
+ * \param  ChkRegSize explicitly request certain register size
+ * \param  MustBeReg expecting register or maybe not?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult DecodeReg(
         tStrComp const* pArg, Word* pValue, tSymbolSize* pSize, tSymbolSize ChkRegSize,
@@ -3175,15 +3175,15 @@ static Boolean IsDef_NS32K(void) {
     return Memo("REG");
 }
 
+static Boolean ChkMoreZeroArg(void) {
+    return (ArgCnt > 0);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     SwitchTo_NS32K(void *pUser)
  * \brief  prepare to assemble code for this target
  * \param  pUser CPU properties
  * ------------------------------------------------------------------------ */
-
-static Boolean ChkMoreZeroArg(void) {
-    return (ArgCnt > 0);
-}
 
 static void SwitchTo_NS32K(void const* pUser) {
     TFamilyDescr const* pDescr = FindFamilyByName("NS32000");
@@ -3233,8 +3233,6 @@ static void SwitchTo_NS32K(void const* pUser) {
  * \fn     codens32000_init(void)
  * \brief  register target to AS
  * ------------------------------------------------------------------------ */
-
-
 
 void codens32k_init(void) {
     tCPUProps const* pRun;

@@ -77,17 +77,7 @@ static Boolean decode_cpu_reg(char const* p_asc, Byte* p_ret) {
     return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(int ArgStartIdx, int ArgEndIdx,
-                     tSymbolSize op_size, unsigned mode_mask, adr_vals_t *p_vals)
- * \brief  decode/evaluate address expression
- * \param  ArgStartIdx 1st argument of expression
- * \param  ArgEndIdx last argument of expression
- * \param  op_size operand size (8/16)
- * \param  mode_mask bit mask of allowed modes
- * \param  p_vals dest buffer
- * \return encoded addressing mode
- * ------------------------------------------------------------------------ */
+
 
 static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->mode = e_adr_mode_none;
@@ -174,6 +164,18 @@ static void report_direct_page(tStrComp const* p_arg, Word address) {
                 (LargeWord)DPRValue << 8, ((LargeWord)DPRValue << 8) | 0xff);
     WrXErrorPos(ErrNum_NoShortAddr, detail, &p_arg->Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(int ArgStartIdx, int ArgEndIdx,
+                     tSymbolSize op_size, unsigned mode_mask, adr_vals_t *p_vals)
+ * \brief  decode/evaluate address expression
+ * \param  ArgStartIdx 1st argument of expression
+ * \param  ArgEndIdx last argument of expression
+ * \param  op_size operand size (8/16)
+ * \param  mode_mask bit mask of allowed modes
+ * \param  p_vals dest buffer
+ * \return encoded addressing mode
+ * ------------------------------------------------------------------------ */
 
 static adr_mode_t DecodeAdr(
         int ArgStartIdx, int ArgEndIdx, tSymbolSize op_size, unsigned mode_mask,

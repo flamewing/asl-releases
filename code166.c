@@ -177,6 +177,16 @@ static void DissectReg_166(
     }
 }
 
+
+
+/* NOTE: If requester register size is 8 bits, R0..R15 is allowed as
+   alias for R0L,R0H,R1L,...,R7H: */
+
+static Boolean ChkRegSize(tSymbolSize ReqSize, tSymbolSize ActSize) {
+    return (ReqSize == eSymbolSizeUnknown) || (ReqSize == ActSize)
+           || ((ReqSize == eSymbolSize8Bit) && (ActSize == eSymbolSize16Bit));
+}
+
 /*!------------------------------------------------------------------------
  * \fn     IsReg(const tStrComp *pArg, Byte *pValue, tSymbolSize *pSize, tSymbolSize ReqSize, Boolean MustBeReg)
  * \brief  check whether argument is a CPU register or user-defined register alias
@@ -187,14 +197,6 @@ static void DissectReg_166(
  * \param  MustBeReg expecting register or maybe not?
  * \return reg eval result
  * ------------------------------------------------------------------------ */
-
-/* NOTE: If requester register size is 8 bits, R0..R15 is allowed as
-   alias for R0L,R0H,R1L,...,R7H: */
-
-static Boolean ChkRegSize(tSymbolSize ReqSize, tSymbolSize ActSize) {
-    return (ReqSize == eSymbolSizeUnknown) || (ReqSize == ActSize)
-           || ((ReqSize == eSymbolSize8Bit) && (ActSize == eSymbolSize16Bit));
-}
 
 static tRegEvalResult IsReg(
         tStrComp const* pArg, Byte* pValue, tSymbolSize* pSize, tSymbolSize ReqSize,

@@ -795,9 +795,9 @@ static LongWord ConstructMask(LongWord TotMask, tSymbolSize OpSize) {
  */
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
- * \brief  evaluate bit position
- * \param  bit position argument (with or without #)
+ * \fn     EvalBitPosition(tStrComp const* pArg, Boolean* pOK)
+  * \brief  evaluate bit position
+ * \param  pArg bit position argument (with or without #)
  * \param  pOK parsing OK?
  * \return numeric bit position
  * ------------------------------------------------------------------------ */
@@ -1047,8 +1047,8 @@ static void WriteMOV(tAdrVals* pDestAdrVals, tAdrVals* pSrcAdrVals) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeFixed(Word Code)
- * \brief  decode instructions without argument
- * \param  per-instruction context
+  * \brief  decode instructions without argument
+ * \param  Code per-instruction context
  * ------------------------------------------------------------------------ */
 
 static void DecodeFixed(Word Code) {
@@ -2064,12 +2064,6 @@ static void DecodeBitOp(Word Code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeBTJF_BTJT(Word Code)
- * \brief  decode BTJF/BTJT instructions
- * \param  Code instruction code
- * ------------------------------------------------------------------------ */
-
 static LargeInt eval_branch_distance(tStrComp const* target, unsigned length,
         Boolean* ok, tSymbolFlags* flags) {
     LargeInt address = EvalStrIntExpressionWithFlags(
@@ -2090,6 +2084,12 @@ static void report_branch_distance(LargeInt distance, unsigned target, unsigned 
             (LargeWord)(EProgCounter() + length));
     WrXErrorPos(ErrNum_JmpDistTooBig, detail, &ArgStr[target].Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeBTJF_BTJT(Word Code)
+ * \brief  decode BTJF/BTJT instructions
+ * \param  Code instruction code
+ * ------------------------------------------------------------------------ */
 
 static void DecodeBTJF_BTJT(Word Code) {
     Byte     BitPos;
@@ -2173,8 +2173,8 @@ static void DecodeJPF_CALLF(Word Code) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeRel(Word Code)
- * \brief  decode relative branch instructions
- * \param  instruction code
+  * \brief  decode relative branch instructions
+ * \param  Code instruction code
  * ------------------------------------------------------------------------ */
 
 static void DecodeRel(Word Code) {

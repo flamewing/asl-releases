@@ -307,14 +307,6 @@ static Boolean decode_reg16(char* p_arg, Byte* p_res, Boolean allow_single_lette
     return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     Decode_rp(char *Asc, Byte *Erg)
- * \brief  decode rp2 argument (SP/BC/DE/HL/EA)
- * \param  Asc source argument
- * \param  Erg resulting register #
- * \return True if success
- * ------------------------------------------------------------------------ */
-
 static Boolean Decode_rp2(char* p_arg, Byte* p_res) {
     return decode_reg16(p_arg, p_res, True);
 }
@@ -322,6 +314,14 @@ static Boolean Decode_rp2(char* p_arg, Byte* p_res) {
 /*!------------------------------------------------------------------------
  * \fn     Decode_rp(char *Asc, Byte *Erg)
  * \brief  decode rp argument (SP/BC/DE/HL)
+ * \param  Asc source argument
+ * \param  Erg resulting register #
+ * \return True if success
+ * ------------------------------------------------------------------------ */
+
+/*!------------------------------------------------------------------------
+ * \fn     Decode_rp(char *Asc, Byte *Erg)
+ * \brief  decode rp2 argument (SP/BC/DE/HL/EA)
  * \param  Asc source argument
  * \param  Erg resulting register #
  * \return True if success
@@ -368,17 +368,6 @@ static Boolean Decode_rp3(char* Asc, Byte* Erg) {
     }
     return ((*Erg < 4) && (*Erg > 0));
 }
-
-/*!------------------------------------------------------------------------
- * \fn     parse_rpa(const tStrComp *p_arg, z80_adr_vals_t *p_vals, unsigned mode_mask, int *p_auto_val, Boolean force)
- * \brief  parse indirect address expression
- * \param  p_arg source argument
- * \param  p_vals buffer for parse result
- * \param  mode_mask allowed addressing modes
- * \param  p_auto_val returns auto-in/decrement value
- * \param  force assume expression is indirect, even without outer (...)
- * \return True if expression was detected as indirect (parsing may still have failed)
- * ------------------------------------------------------------------------ */
 
 static int split_auto_val(tStrComp* p_arg) {
     int l = strlen(p_arg->str.p_str);
@@ -609,6 +598,17 @@ static void parse_indirect_list(
     }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     parse_rpa(const tStrComp *p_arg, z80_adr_vals_t *p_vals, unsigned mode_mask, int *p_auto_val, Boolean force)
+ * \brief  parse indirect address expression
+ * \param  p_arg source argument
+ * \param  p_vals buffer for parse result
+ * \param  mode_mask allowed addressing modes
+ * \param  p_auto_val returns auto-in/decrement value
+ * \param  force assume expression is indirect, even without outer (...)
+ * \return True if expression was detected as indirect (parsing may still have failed)
+ * ------------------------------------------------------------------------ */
+
 static Boolean parse_rpa(
         tStrComp const* p_arg, z80_adr_vals_t* p_vals, unsigned mode_mask,
         int* p_auto_val, Boolean force) {
@@ -690,6 +690,10 @@ static Boolean Decode_rpa2(tStrComp const* pArg, Byte* Erg, Byte* Disp) {
     }
 }
 
+static Boolean is_rpa(Byte value) {
+    return (value >= 1) && (value <= 7);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     Decode_rpa(const tStrComp *pArg, Byte *Erg)
  * \brief  Decode rpa argument (indirect 8 bit argument in memory, without index)
@@ -697,10 +701,6 @@ static Boolean Decode_rpa2(tStrComp const* pArg, Byte* Erg, Byte* Disp) {
  * \param  Erg resulting addressing mode
  * \return True if success
  * ------------------------------------------------------------------------ */
-
-static Boolean is_rpa(Byte value) {
-    return (value >= 1) && (value <= 7);
-}
 
 static Boolean Decode_rpa(tStrComp const* pArg, Byte* Erg) {
     Byte Dummy;
@@ -715,6 +715,10 @@ static Boolean Decode_rpa(tStrComp const* pArg, Byte* Erg) {
     return True;
 }
 
+static Boolean is_rpa1(Byte value) {
+    return (value >= 1) && (value <= 3);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     Decode_rpa1(const tStrComp *pArg, Byte *Erg)
  * \brief  Decode rpa1 argument (indirect 8 bit argument in memory, without index or auto-in/decrement)
@@ -722,10 +726,6 @@ static Boolean Decode_rpa(tStrComp const* pArg, Byte* Erg) {
  * \param  Erg resulting addressing mode
  * \return True if success
  * ------------------------------------------------------------------------ */
-
-static Boolean is_rpa1(Byte value) {
-    return (value >= 1) && (value <= 3);
-}
 
 static Boolean Decode_rpa1(tStrComp const* pArg, Byte* Erg) {
     Byte Dummy;
@@ -740,6 +740,10 @@ static Boolean Decode_rpa1(tStrComp const* pArg, Byte* Erg) {
     return True;
 }
 
+static Boolean is_rpa3(Byte value) {
+    return ((value >= 2) && (value <= 5)) || ((value >= 11) && (value <= 15));
+}
+
 /*!------------------------------------------------------------------------
  * \fn     Decode_rpa3(const tStrComp *pArg, Byte *Erg, ShortInt *Disp)
  * \brief  Decode rpa3 argument (indirect 16 bit argument in memory)
@@ -748,10 +752,6 @@ static Boolean Decode_rpa1(tStrComp const* pArg, Byte* Erg) {
  * \param  Disp resulting addressing displacement
  * \return True if success
  * ------------------------------------------------------------------------ */
-
-static Boolean is_rpa3(Byte value) {
-    return ((value >= 2) && (value <= 5)) || ((value >= 11) && (value <= 15));
-}
 
 static Boolean Decode_rpa3(tStrComp const* pArg, Byte* Erg, Byte* Disp) {
     z80_adr_vals_t vals;
@@ -1084,7 +1084,7 @@ static void append_adr_vals(z80_adr_vals_t const* p_vals) {
 /*!------------------------------------------------------------------------
  * \fn     eval_bit_position(const tStrComp *p_arg, Boolean *p_ok)
  * \brief  evaluate bit position
- * \param  bit position argument
+ * \param  p_arg bit position argument
  * \param  p_ok parsing OK?
  * \return numeric bit position
  * ------------------------------------------------------------------------ */
@@ -1318,9 +1318,9 @@ static void PutCode(Word Code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     decode_bit_7807_core(const tStrComp *p_arg, Byte code)
- * \brief  core routine for uPD7807 bit-oriented instructions
- * \param  p_arg source bit argument
+ * \fn     decode_bit_7807_core(int arg_idx, Byte code)
+  * \brief  core routine for uPD7807 bit-oriented instructions
+ * \param  arg_idx index of the source bit argument
  * \param  code machine code of instruction
  * ------------------------------------------------------------------------ */
 

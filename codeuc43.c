@@ -543,9 +543,9 @@ static void switch_from_uc43(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     switch_to_uc43(void *p_user)
- * \brief  set up for uCOM-43 target
- * \param  points to selected properties
+ * \fn     switch_to_uc43(void const* p_user)
+  * \brief  set up for uCOM-43 target
+ * \param  p_user points to selected properties
  * ------------------------------------------------------------------------ */
 
 static void switch_to_uc43(void const* p_user) {

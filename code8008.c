@@ -100,14 +100,6 @@ static Boolean DecodeReg16(char* Asc, Byte* pErg) {
     return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeCondition_Z80(const tStrComp *pArg, Byte *pResult)
- * \brief  decode Z80-style conditions for JP CALL RET
- * \param  pAsc source argument
- * \param  dest buffer
- * \return True if success
- * ------------------------------------------------------------------------ */
-
 static char const Conditions[][4] = {"NC", "NZ", "P", "PO", "C", "Z", "M", "PE"};
 
 static void WrChoices(tStrComp const* arg, tErrorNum number, char const* choices) {
@@ -115,6 +107,14 @@ static void WrChoices(tStrComp const* arg, tErrorNum number, char const* choices
     as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgOperandChoices), choices);
     WrXErrorPos(number, detail, &arg->Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult)
+  * \brief  decode Z80-style conditions for JP CALL RET
+ * \param  pArg source argument
+ * \param  pResult result buffer
+ * \return True if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult) {
     for (*pResult = 0; *pResult < sizeof(Conditions) / sizeof(*Conditions);
@@ -131,6 +131,11 @@ static Boolean DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult) {
     return False;
 }
 
+static void ResetAdrVals(tAdrVals* pVals) {
+    pVals->Mode = eModNone;
+    pVals->Val  = 0;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeAdr_Z80(const tStrComp *pArg, Word Mask, tAdrVals *pVals)
  * \brief  decode address expression in Z80 style syntax
@@ -139,11 +144,6 @@ static Boolean DecodeCondition_Z80(tStrComp const* pArg, Byte* pResult) {
  * \param  pVals dest buffer
  * \return resulting addressing mode
  * ------------------------------------------------------------------------ */
-
-static void ResetAdrVals(tAdrVals* pVals) {
-    pVals->Mode = eModNone;
-    pVals->Val  = 0;
-}
 
 static tAdrMode DecodeAdr_Z80(tStrComp const* pArg, Word Mask, tAdrVals* pVals) {
     Boolean OK;
@@ -225,8 +225,8 @@ static Boolean CheckAcc_Z80(tStrComp const* pArg) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeFixed(Word Code)
- * \brief  handle instructions without argument
- * \param  Word instruction code & syntax flag
+  * \brief  handle instructions without argument
+ * \param  Code instruction code & syntax flag
  * ------------------------------------------------------------------------ */
 
 static void DecodeFixed(Word Code) {
@@ -237,9 +237,9 @@ static void DecodeFixed(Word Code) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DecodeFixed(Word Code)
- * \brief  handle instructions with one (8 bit) immediate argument
- * \param  Index machine code
+ * \fn     DecodeImm(Word Code)
+  * \brief  handle instructions with one (8 bit) immediate argument
+ * \param  Code machine code
  * ------------------------------------------------------------------------ */
 
 static void DecodeImm(Word Code) {
@@ -254,12 +254,6 @@ static void DecodeImm(Word Code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeJmp(Word Index)
- * \brief  decode jump/call instructions taking one address argument
- * \param  Index machine code
- * ------------------------------------------------------------------------ */
-
 static void DecodeJmpCore(Byte Code) {
     tEvalResult EvalResult;
     Word        AdrWord;
@@ -273,6 +267,12 @@ static void DecodeJmpCore(Byte Code) {
         ChkSpace(SegCode, EvalResult.AddrSpaceMask);
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeJmp(Word Index)
+ * \brief  decode jump/call instructions taking one address argument
+ * \param  Index machine code
+ * ------------------------------------------------------------------------ */
 
 static void DecodeJmp(Word Index) {
     if (ChkArgCnt(1, 1) && ChkZ80Syntax(eSyntax808x)) {

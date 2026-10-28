@@ -315,17 +315,6 @@ static int ChkRegOverlap(Word FirstReg, int FirstSize, ...) {
 /*--------------------------------------------------------------------------*/
 /* Address Parsing */
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeReg(const tStrComp *pArg, Word *pValue, tSymbolSize *pSize, tChkRegSize ChkRegSize, Boolean MustBeReg)
- * \brief  check whether argument is a CPU register or user-defined register alias
- * \param  pArg argument
- * \param  pValue resulting register # if yes
- * \param  pSize resulting register size if yes
- * \param  ChkReqSize optional check callback for register size
- * \param  MustBeReg expecting register or maybe not?
- * \return reg eval result
- * ------------------------------------------------------------------------ */
-
 typedef Boolean (*tChkRegSize)(tStrComp const* pArg, tSymbolSize ActSize);
 
 static Boolean ChkRegSize_Idx(tStrComp const* pArg, tSymbolSize ActSize) {
@@ -366,6 +355,17 @@ static Boolean ChkRegSize_MemAddr(tStrComp const* pArg, tSymbolSize ActSize) {
     }
     return True;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(tStrComp const* pArg, Word* pValue, tSymbolSize* pSize, tChkRegSize ChkRegSize, Boolean MustBeReg)
+  * \brief  check whether argument is a CPU register or user-defined register alias
+ * \param  pArg argument
+ * \param  pValue resulting register # if yes
+ * \param  pSize resulting register size if yes
+ * \param  ChkRegSize optional check callback for register size
+ * \param  MustBeReg expecting register or maybe not?
+ * \return reg eval result
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult DecodeReg(
         tStrComp const* pArg, Word* pValue, tSymbolSize* pSize, tChkRegSize ChkRegSize,
@@ -450,19 +450,6 @@ static IntType GetImmIntType(tSymbolSize Size) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAddrPartNum(const tStrComp *pArg, LongInt Disp, tEvalResult *pEvalResult, Boolean IsDirect, Boolean IsIO, Boolean *pForceShortt, Boolean *pIsDirect)
- * \brief  decode address part, for direct/immediate or indexed mode
- * \param  pArg source argument
- * \param  Disp displacement to add to value
- * \param  pAdrVals binary coding of addressing mode
- * \param  IsDirect force treatment as direct address mode
- * \param  IsIO I/O space instead of memory space
- * \param  pForceShort short coding required?
- * \param  pIsDirect classified as direct addressing?
- * \return True if success
- * ------------------------------------------------------------------------ */
-
 typedef struct {
     as_quoted_iterator_cb_data_t data;
     int                          nest;
@@ -498,6 +485,19 @@ static int split_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) 
     }
     return 0;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAddrPartNum(tStrComp const* pArg, LongInt Disp, tEvalResult* pEvalResult, Boolean IsDirect, Boolean IsIO, Boolean* pForceShort, Boolean* pIsDirect)
+  * \brief  decode address part, for direct/immediate or indexed mode
+ * \param  pArg source argument
+ * \param  Disp displacement to add to value
+ * \param  pEvalResult expression evaluation status and flags
+ * \param  IsDirect force treatment as direct address mode
+ * \param  IsIO I/O space instead of memory space
+ * \param  pForceShort short coding required?
+ * \param  pIsDirect classified as direct addressing?
+ * \return numeric address part; status is returned through pEvalResult
+ * ------------------------------------------------------------------------ */
 
 static LongWord DecodeAddrPartNum(
         tStrComp const* pArg, LongInt Disp, tEvalResult* pEvalResult, Boolean IsDirect,
@@ -597,14 +597,12 @@ static LongWord DecodeAddrPartNum(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     FillAbsAddr(tAdrVals *pAdrVals, LongWord Address, Boolean IsDirect, Boolean IsIO, Boolean ForceShort, Boolean *pIsDirect)
- * \brief  pack absolute addess into instruction extension word(s)
+ * \fn     FillAbsAddr(tAdrVals* pAdrVals, LongWord Address, Boolean IsIO, Boolean ForceShort)
+  * \brief  pack absolute addess into instruction extension word(s)
  * \param  pAdrVals destination buffer
  * \param  Address address to pack
- * \param  IsDirect force treatment as direct address mode
  * \param  IsIO I/O (16b) or memory (23/16b) address?
  * \param  ForceShort force short encoding
- * \param  pIsDirect classified as direct addressing?
  * ------------------------------------------------------------------------ */
 
 static void FillAbsAddr(
@@ -689,15 +687,6 @@ static Boolean DecodeAddrPart(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAdrVals)
- * \brief  decode address expression
- * \param  pArg source argument
- * \param  ModeMask bit mask of allowed addressing modes
- * \param  pAdrVals binary coding of addressing mode
- * \return decoded mode
- * ------------------------------------------------------------------------ */
-
 /* This is necessary to find the split position when a short address is used as
    base, i.e. |addr|(rn).  | is also the OR operator, and I don't want to get
    false positives on other targets on stuff like (...)|(...): */
@@ -715,6 +704,15 @@ static int ShortQualifier(char const* pArg, int LastNonBlankPos, int SplitPos) {
                    ? SplitPos
                    : -1;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(const tStrComp *pArg, unsigned ModeMask, tAdrVals *pAdrVals)
+ * \brief  decode address expression
+ * \param  pArg source argument
+ * \param  ModeMask bit mask of allowed addressing modes
+ * \param  pAdrVals binary coding of addressing mode
+ * \return decoded mode
+ * ------------------------------------------------------------------------ */
 
 static tAdrMode DecodeAdr(tStrComp const* pArg, unsigned ModeMask, tAdrVals* pAdrVals) {
     tSymbolSize ArgSize;
@@ -1203,8 +1201,8 @@ static Boolean SetOpSizeFromCode(Word Code) {
 
 /*!------------------------------------------------------------------------
  * \fn     AppendCode(Word Code)
- * \brief  append instruction word
- * \param  pVals code word to append
+  * \brief  append instruction word
+ * \param  Code code word to append
  * ------------------------------------------------------------------------ */
 
 static void AppendCode(Word Code) {
@@ -1986,8 +1984,8 @@ static void DecodeBitOp(Word Code) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeCALL_JP(Word Code)
- * \brief  decode jump/call instructions
- * \param  instruction code
+  * \brief  decode jump/call instructions
+ * \param  Code instruction code
  * ------------------------------------------------------------------------ */
 
 static void DecodeCALL_JP(Word Code) {
@@ -2086,8 +2084,8 @@ static void DecodeJR(Word Code) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeDJNZ(Word Code)
- * \brief  decode DJNZ instructions
- * \param  size spec
+  * \brief  decode DJNZ instructions
+ * \param  Code size spec
  * ------------------------------------------------------------------------ */
 
 static void DecodeDJNZ(Word Code) {
@@ -2358,8 +2356,8 @@ static void DecodeDAB(Word Code) {
 
 /*!------------------------------------------------------------------------
  * \fn     DecodeFLG(Word Code)
- * \brief  decode flag set/reset/complement instructions
- * \param  machine code
+  * \brief  decode flag set/reset/complement instructions
+ * \param  Code machine code
  * ------------------------------------------------------------------------ */
 
 static void DecodeFLG(Word Code) {
@@ -3410,15 +3408,15 @@ static as_operator_t const z8000_operators[] = {
         {NULL, 0, e_op_monadic, 0,                     {0, 0, 0, 0, 0},         NULL}
 };
 
+static Boolean TrueFnc(void) {
+    return True;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     SwitchTo_Z8000(void *pUser)
  * \brief  prepare to assemble code for this target
  * \param  pUser CPU properties
  * ------------------------------------------------------------------------ */
-
-static Boolean TrueFnc(void) {
-    return True;
-}
 
 static void SwitchTo_Z8000(void const* pUser) {
     TFamilyDescr const* pDescr = FindFamilyByName("Z8000");

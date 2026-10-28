@@ -167,9 +167,9 @@ static Byte MirrBit(Byte inp) {
  */
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
- * \brief  evaluate bit position
- * \param  bit position argument (with or without #)
+ * \fn     EvalBitPosition(tStrComp const* pArg, Boolean* pOK)
+  * \brief  evaluate bit position
+ * \param  pArg bit position argument (with or without #)
  * \param  pOK parsing OK?
  * \return numeric bit position
  * ------------------------------------------------------------------------ */
@@ -827,9 +827,9 @@ static Boolean TrueFnc(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     InternSymbol_ST6(char *pArg, TempResult *pErg)
- * \brief  check for built-in symbols
- * \param  pAsc ASCII repr. of symbol
+ * \fn     InternSymbol_ST6(char* pArg, TempResult* pErg)
+  * \brief  check for built-in symbols
+ * \param  pArg ASCII repr. of symbol
  * \param  pErg result buffer
  * ------------------------------------------------------------------------ */
 

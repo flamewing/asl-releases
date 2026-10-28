@@ -202,12 +202,6 @@ static void dissect_reg_pdp11(
 /*--------------------------------------------------------------------------*/
 /* PDP-11 specific flags */
 
-/*!------------------------------------------------------------------------
- * \fn     onoff_ext_add(Boolean def_value)
- * \brief  register on/off command for specific instruction set extension
- * \param  def_value default value of flag upon first use
- * ------------------------------------------------------------------------ */
-
 static Byte ext_registered = 0;
 
 unsigned ext_test_and_set(unsigned mask) {
@@ -223,6 +217,12 @@ static Boolean    ext_avail[e_ext_opt_cnt];
 /* default value setting only upon first registration, similar to scheme in
    onoff_common.c: */
 
+/*!------------------------------------------------------------------------
+ * \fn     onoff_ext_add(Boolean def_value)
+ * \brief  register on/off command for specific instruction set extension
+ * \param  def_value default value of flag upon first use
+ * ------------------------------------------------------------------------ */
+
 static void onoff_ext_add(unsigned ext, Boolean def_value) {
     Byte ext_mask = 1 << ext;
 
@@ -232,14 +232,14 @@ static void onoff_ext_add(unsigned ext, Boolean def_value) {
     AddONOFF(ext_names[ext], &ext_avail[ext], ext_names[ext], False);
 }
 
+static void wr_cpu_extension_error(unsigned ext);
+
 /*!------------------------------------------------------------------------
  * \fn     check_cpu_ext(unsigned ext)
  * \brief  check whether instruction is allowed on CPU
  * \param  ext request instruction set extension
  * \return True if usage is OK
  * ------------------------------------------------------------------------ */
-
-static void wr_cpu_extension_error(unsigned ext);
 
 static Boolean check_cpu_ext(unsigned ext) {
     unsigned mask = 1 << ext;
@@ -284,17 +284,6 @@ static void reset_adr_vals(adr_vals_t* p_vals) {
     p_vals->vals[0] = 0;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_reg(const tStrComp *p_arg, Word *p_result, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
- * \brief  check whether argument is a CPU register or register alias
- * \param  p_arg argument to check
- * \param  p_result numeric register value if yes
- * \param  p_size returns operand size of register (I16 or F64)
- * \param  req_size request specific operand/register size
- * \param  must_be_reg argument is expected to be a register
- * \return RegEvalResult
- * ------------------------------------------------------------------------ */
-
 static tErrorNum chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
     if ((act_size == eSymbolSizeUnknown) || (req_size == eSymbolSizeUnknown)
         || (req_size == act_size)) {
@@ -307,6 +296,17 @@ static tErrorNum chk_reg_size(tSymbolSize req_size, tSymbolSize act_size) {
         return ErrNum_InvOpSize;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_reg(const tStrComp *p_arg, Word *p_result, tSymbolSize *p_size, tSymbolSize req_size, Boolean must_be_reg)
+ * \brief  check whether argument is a CPU register or register alias
+ * \param  p_arg argument to check
+ * \param  p_result numeric register value if yes
+ * \param  p_size returns operand size of register (I16 or F64)
+ * \param  req_size request specific operand/register size
+ * \param  must_be_reg argument is expected to be a register
+ * \return RegEvalResult
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult decode_reg(
         tStrComp const* p_arg, Word* p_result, tSymbolSize* p_size, tSymbolSize req_size,
@@ -352,16 +352,6 @@ static Boolean decode_reg_or_const(tStrComp const* p_arg, Word* p_result) {
         return False;
     }
 }
-
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, Word pc_value, unsigned mode_mask)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_result parsed result
- * \param  pc_value value of PC to be used in PC-relative calculation
- * \param  mode_mask bit mask of allowed addressing modes
- * \return True if success
- * ------------------------------------------------------------------------ */
 
 static Boolean is_pre_decrement(
         tStrComp const* p_arg, Word* p_result, tRegEvalResult* p_reg_eval_result) {
@@ -448,6 +438,16 @@ static Boolean check_mode_mask(unsigned mode_mask, unsigned act_mask, tStrComp* 
         return True;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, Word pc_value, unsigned mode_mask)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_result parsed result
+ * \param  pc_value value of PC to be used in PC-relative calculation
+ * \param  mode_mask bit mask of allowed addressing modes
+ * \return True if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean decode_adr(
         tStrComp* p_arg, adr_vals_t* p_result, Word pc_value, unsigned mode_mask) {
@@ -1525,12 +1525,6 @@ static void decode_lcc(Word code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_format11(Word code)
- * \brief  handle format 11 instructions
- * \param  code machine code
- * ------------------------------------------------------------------------ */
-
 static Boolean decode_adr_01(tStrComp* p_arg, adr_vals_t* p_vals) {
     if (!decode_adr(p_arg, p_vals, EProgCounter() + 2, MModReg | MModMem)) {
         return False;
@@ -1557,6 +1551,12 @@ static Boolean decode_adr_01(tStrComp* p_arg, adr_vals_t* p_vals) {
     }
     return True;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_format11(Word code)
+ * \brief  handle format 11 instructions
+ * \param  code machine code
+ * ------------------------------------------------------------------------ */
 
 static void decode_format11(Word code) {
     adr_vals_t src_adr_vals, dest_adr_vals;

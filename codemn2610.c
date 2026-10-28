@@ -277,15 +277,6 @@ static Boolean DecodeHReg(tStrComp const* pArg, Word* pResult, Boolean IsWrite) 
     return Result;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     Word ChkPage(LongWord Addr, Word Base, const tStrComp *pArg, bool Warn)
- * \brief  check whether a linear address is reachable via the given segment register, and compute offset
- * \param  Addr linear address in 64/256K space
- * \param  Base index of segment register to be used
- * \param  pArg textual argument for warnings (may be NULL)
- * \return resulting offset
- * ------------------------------------------------------------------------ */
-
 static void WrSegmentOffset(LongWord address, LongWord offset, Word base, LongWord max,
                             tErrorNum number, tStrComp const* arg) {
     char detail[320];
@@ -295,6 +286,15 @@ static void WrSegmentOffset(LongWord address, LongWord offset, Word base, LongWo
                 (LargeWord)(BaseRegVals[base] << 14));
     WrXErrorPos(number, detail, &arg->Pos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     ChkPage(LongWord Addr, Word Base, tStrComp const* pArg)
+  * \brief  check whether a linear address is reachable via the given segment register, and compute offset
+ * \param  Addr linear address in 64/256K space
+ * \param  Base index of segment register to be used
+ * \param  pArg textual argument for warnings (may be NULL)
+ * \return resulting offset
+ * ------------------------------------------------------------------------ */
 
 static Word ChkPage(LongWord Addr, Word Base, tStrComp const* pArg) {
     LongWord OriginalAddr = Addr;

@@ -285,9 +285,9 @@ static Boolean CoreMask(Word Mask) {
  */
 
 /*!------------------------------------------------------------------------
- * \fn     EvalBitPosition(const tStrComp *pArg, Boolean *pOK)
- * \brief  evaluate bit position
- * \param  bit position argument (with or without #)
+ * \fn     EvalBitPosition(tStrComp const* pArg, Boolean* pOK)
+  * \brief  evaluate bit position
+ * \param  pArg bit position argument (with or without #)
  * \param  pOK parsing OK?
  * \return numeric bit position
  * ------------------------------------------------------------------------ */

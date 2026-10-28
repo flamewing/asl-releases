@@ -231,15 +231,7 @@ static int append_adr_vals(int pos, adr_vals_t const* p_vals) {
     return pos + p_vals->val_cnt;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, adr_vals_t *p_vals, Byte Mask, Boolean AddrWide)
- * \brief  decode/parse address expression
- * \param  pArg source argument
- * \param  p_vals dest buffer for decoded address
- * \param  Mask bit mask of allowed addressing modes
- * \param  AddrWide extended address space?
- * \return deduced addressing mode
- * ------------------------------------------------------------------------ */
+
 
 static tAdrType ChkAdr(
         tAdrType adr_type, adr_vals_t* p_vals, Byte Mask, tStrComp const* pArg) {
@@ -268,6 +260,16 @@ static int SplitForceSize(char const* pArg, tForceSize* pForceSize) {
         return 0;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(const tStrComp *pArg, adr_vals_t *p_vals, Byte Mask, Boolean AddrWide)
+ * \brief  decode/parse address expression
+ * \param  pArg source argument
+ * \param  p_vals dest buffer for decoded address
+ * \param  Mask bit mask of allowed addressing modes
+ * \param  AddrWide extended address space?
+ * \return deduced addressing mode
+ * ------------------------------------------------------------------------ */
 
 static tAdrType DecodeAdr(
         tStrComp const* pArg, adr_vals_t* p_vals, Byte Mask, Boolean AddrWide) {

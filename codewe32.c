@@ -302,16 +302,6 @@ static Boolean reset_adr_vals(adr_vals_t* p_vals) {
     return False;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, LongWord pc_value, unsigned mode_mask)
- * \brief  parse address expression
- * \param  p_arg source argument
- * \param  p_result parsed result
- * \param  pc_value value of PC to be used in PC-relative calculation
- * \param  mode_mask bit mask of allowed addressing modes
- * \return True if success
- * ------------------------------------------------------------------------ */
-
 static Boolean check_mode_mask(
         unsigned mode_mask, adr_mode_t act_mode, tStrComp* p_arg, adr_vals_t* p_result) {
     if (!(mode_mask & (1 << act_mode))) {
@@ -456,6 +446,16 @@ static Boolean is_post_excrement(
     *p_reg_eval_result = decode_reg(&reg_comp, p_result, NULL, eSymbolSize32Bit, False);
     return (*p_reg_eval_result != eIsNoReg);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_adr(tStrComp *p_arg, adr_vals_t *p_result, LongWord pc_value, unsigned mode_mask)
+ * \brief  parse address expression
+ * \param  p_arg source argument
+ * \param  p_result parsed result
+ * \param  pc_value value of PC to be used in PC-relative calculation
+ * \param  mode_mask bit mask of allowed addressing modes
+ * \return True if success
+ * ------------------------------------------------------------------------ */
 
 static Boolean decode_adr(
         tStrComp* p_arg, adr_vals_t* p_result, LongWord pc_value, unsigned mode_mask) {
@@ -1029,15 +1029,6 @@ static void set_mau_command_op(
     *p_command |= ((LongWord)op_value & op_mask) << op_shift;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     set_mau_command_op_reg(LongWord *p_command, unsigned op_index, unsigned reg_num, tSymbolSize op_size)
- * \brief  set op1/op2/op3 field im MAU command word to MAU register
- * \param  p_command command word to update
- * \param  op_index 0/1/2 for op1/op2/op3
- * \param  reg_num register #
- * \param  op_size register's size (32/64/96 bit)
- * ------------------------------------------------------------------------ */
-
 static void set_mau_reg_bank(
         LongWord* p_command, unsigned op_index, unsigned bank_value) {
     unsigned op_shift;
@@ -1049,6 +1040,15 @@ static void set_mau_reg_bank(
     *p_command &= ~(1 << op_shift);
     *p_command |= ((LongWord)bank_value & 1) << op_shift;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     set_mau_command_op_reg(LongWord *p_command, unsigned op_index, unsigned reg_num, tSymbolSize op_size)
+ * \brief  set op1/op2/op3 field im MAU command word to MAU register
+ * \param  p_command command word to update
+ * \param  op_index 0/1/2 for op1/op2/op3
+ * \param  reg_num register #
+ * \param  op_size register's size (32/64/96 bit)
+ * ------------------------------------------------------------------------ */
 
 static void set_mau_command_op_reg(
         LongWord* p_command, unsigned op_index, unsigned reg_num, tSymbolSize op_size) {
@@ -1310,9 +1310,9 @@ static void decode_branch(Word index) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     decode_decrement_branch(Word index)
- * \brief  handle [Tcc]DT<B|H> instructions
- * \param  index opcode & displacement size
+ * \fn     decode_decrement_branch(Word code)
+  * \brief  handle [Tcc]DT<B|H> instructions
+ * \param  code opcode & displacement size
  * ------------------------------------------------------------------------ */
 
 static void decode_decrement_branch(Word code) {

@@ -335,14 +335,6 @@ static Boolean CorrMode12(Word Mask, ShortInt Old, ShortInt New) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     ChkAdr(Word Mask, const tStrComp *pArg)
- * \brief  check for validity of decoded addressing mode
- * \param  Mask bit mask of allowed addressing modes
- * \param  pArg original expression
- * \return true if OK
- * ------------------------------------------------------------------------ */
-
 static void report_address_choices(Word mask, tStrComp const* p_arg) {
     static int const messages[] = {
         Num_ErrMsgZ8WorkingRegister, Num_ErrMsgZ8GeneralRegister,
@@ -367,6 +359,14 @@ static void report_address_choices(Word mask, tStrComp const* p_arg) {
     WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     ChkAdr(Word Mask, const tStrComp *pArg)
+ * \brief  check for validity of decoded addressing mode
+ * \param  Mask bit mask of allowed addressing modes
+ * \param  pArg original expression
+ * \return true if OK
+ * ------------------------------------------------------------------------ */
+
 static Boolean ChkAdr(Word Mask, tStrComp const* pArg) {
     CorrMode8(Mask, ModWReg, ModReg);
     CorrMode12(Mask, ModWReg, ModXReg);
@@ -380,15 +380,6 @@ static Boolean ChkAdr(Word Mask, tStrComp const* pArg) {
     return True;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     IsWRegAddress(Word Address, Byte *pWorkReg)
- * \brief  check whether data address is accessible as work register
- * \param  Address data address in 8/12 bit data space
- * \param  pWorkReg resulting work register # if yes
- * \param  FirstPassUnknown flag about questionable value
- * \return true if accessible as work register
- * ------------------------------------------------------------------------ */
-
 static Boolean ChkInRange(Word Address, Word Base, Word Length, Byte* pOffset) {
     if ((Address >= Base) && (Address < Base + Length)) {
         *pOffset = Address - Base;
@@ -396,6 +387,14 @@ static Boolean ChkInRange(Word Address, Word Base, Word Length, Byte* pOffset) {
     }
     return False;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     IsWRegAddress(Word Address, Byte* pWorkReg)
+  * \brief  check whether data address is accessible as work register
+ * \param  Address data address in 8/12 bit data space
+ * \param  pWorkReg resulting work register # if yes
+ * \return true if accessible as work register
+ * ------------------------------------------------------------------------ */
 
 static Boolean IsWRegAddress(Word Address, Byte* pWorkReg) {
     if (mIsSuper8()) {
@@ -436,14 +435,6 @@ static Boolean IsRegAddress(Word Address) {
     }
     return ((RPVal <= 0xff) && (Hi(Address) == (RPVal & 15)));
 }
-
-/*!------------------------------------------------------------------------
- * \fn     DecodeAdr(const tStrComp *pArg, Word Mask)
- * \brief  decode address expression
- * \param  pArg expression in source code
- * \param  Mask bit mask of allowed modes
- * \return True if successfully decoded to an allowed mode
- * ------------------------------------------------------------------------ */
 
 int GetForceLen(char const* pArg) {
     int Result = 0;
@@ -532,6 +523,14 @@ static ShortInt IsWRegWithRP(
     report_work_window(ErrNum_InvReg, Address, pComp);
     return eSymbolSizeUnknown;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeAdr(const tStrComp *pArg, Word Mask)
+ * \brief  decode address expression
+ * \param  pArg expression in source code
+ * \param  Mask bit mask of allowed modes
+ * \return True if successfully decoded to an allowed mode
+ * ------------------------------------------------------------------------ */
 
 static Boolean DecodeAdr(tStrComp const* pArg, Word Mask) {
     Boolean     OK;
@@ -832,9 +831,8 @@ static Byte EvalBitPosition(tStrComp const* pBitArg, Boolean* pOK, ShortInt OpSi
 
 /*!------------------------------------------------------------------------
  * \fn     AssembleBitSymbol(Byte BitPos, ShortInt OpSize, Word Address)
- * \brief  build the compact internal representation of a bit field symbol
+  * \brief  build the compact internal representation of a bit field symbol
  * \param  BitPos bit position in word
- * \param  Width width of bit field
  * \param  OpSize operand size (0..2)
  * \param  Address register address
  * \return compact representation
@@ -973,12 +971,11 @@ static void ExpandZ8Bit(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     DissectBitSymbol(LongWord BitSymbol, Word *pAddress, Byte *pBitPos, ShortInt *pOpSize)
- * \brief  transform compact represenation of bit (field) symbol into components
+ * \fn     DissectBitSymbol(LongWord BitSymbol, Word* pAddress, Byte* pBitPos, ShortInt* pOpSize)
+  * \brief  transform compact represenation of bit (field) symbol into components
  * \param  BitSymbol compact storage
  * \param  pAddress (I/O) register address
  * \param  pBitPos (start) bit position
- * \param  pWidth pWidth width of bit field, always one for individual bit
  * \param  pOpSize returns register size (0 for 8 bits)
  * \return constant True
  * ------------------------------------------------------------------------ */
@@ -991,6 +988,14 @@ static Boolean DissectBitSymbol(
     return True;
 }
 
+static void report_bit_window(Word address, tStrComp const* p_arg) {
+    char detail[220];
+    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8BitWindow),
+            (LargeWord)address, (LargeWord)pCurrCPUProps->WorkOfs,
+            (LargeWord)(pCurrCPUProps->WorkOfs + 15));
+    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     DecodeWRBitArg(int StartArg, int EndArg, Byte *pResult)
  * \brief  decode bit argument in working register
@@ -999,14 +1004,6 @@ static Boolean DissectBitSymbol(
  * \param  pResult resulting encoded bit
  * \return TRUE if successfully decoded
  * ------------------------------------------------------------------------ */
-
-static void report_bit_window(Word address, tStrComp const* p_arg) {
-    char detail[220];
-    as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgZ8BitWindow),
-            (LargeWord)address, (LargeWord)pCurrCPUProps->WorkOfs,
-            (LargeWord)(pCurrCPUProps->WorkOfs + 15));
-    WrXErrorPos(ErrNum_InvAddrMode, detail, &p_arg->Pos);
-}
 
 static Boolean DecodeWRBitArg(int StartArg, int EndArg, Byte* pResult) {
     LongWord Result;

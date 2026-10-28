@@ -1335,7 +1335,7 @@ static void set_code(Word code) {
 /*!------------------------------------------------------------------------
  * \fn     set_double_code(Word code1, Word code2)
  * \brief  set double word machine code
- * \param  code1, code2 machine codes to set
+ * \param  code1 code2 machine codes to set
  * ------------------------------------------------------------------------ */
 
 static void set_double_code(Word code1, Word code2) {
@@ -1447,8 +1447,8 @@ static Boolean chk_min_core(core_t min_core) {
 
 /*!------------------------------------------------------------------------
  * \fn     chk_core_mask(core_mask_t core_mask)
- * \brief  check instruction-specific CPU core list
- * \param  min_core min CPU core enum
+  * \brief  check instruction-specific CPU core list
+ * \param  core_mask bit mask of allowed CPU cores
  * \return True if fulfilled
  * ------------------------------------------------------------------------ */
 
@@ -2493,13 +2493,13 @@ static void decode_jsr_n(Word code) {
     }
 }
 
+static void make_code_sh_core(void);
+
 /*!------------------------------------------------------------------------
  * \fn     decode_dct_dcf(word condition)
  * \brief  handle DSP condition prefix
  * \param  condition actual condition
  * ------------------------------------------------------------------------ */
-
-static void make_code_sh_core(void);
 
 static void decode_dct_dcf(Word condition) {
     char* pos;
@@ -2649,12 +2649,6 @@ static void decode_sh2a_bit(Word code) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_one_f_reg(Word code)
- * \brief  handle instructions with one FRn register as argument
- * \param  code machine code
- * ------------------------------------------------------------------------ */
-
 static Word get_freg_mode_mask(Boolean allow64) {
     return MModFReg
            | (((get_act_cpu_flags() & e_core_flag_fpu64) && allow64) ? MModDReg : 0);
@@ -2668,6 +2662,12 @@ static Boolean chk_no_xd_reg(Word reg_num, tStrComp const* p_arg) {
         return True;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_one_f_reg(Word code)
+ * \brief  handle instructions with one FRn register as argument
+ * \param  code machine code
+ * ------------------------------------------------------------------------ */
 
 static void decode_one_f_reg(Word code) {
     if (ChkArgCnt(1, 1) && chk_fpu(e_core_flag_fpu32)) {

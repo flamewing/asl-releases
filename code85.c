@@ -67,6 +67,14 @@ static tSymbolSize OpSize;
 
 /*---------------------------------------------------------------------------*/
 
+enum {
+    HReg   = 4,
+    MReg   = 6,
+    AccReg = 7
+};
+
+static char const Reg8Names[] = "BCDEHLMA";
+
 /*!------------------------------------------------------------------------
  * \fn     decode_reg8_core(const char *p_arg, tZ80Syntax syntax, Byte *p_ret)
  * \brief  decode built-in 8 bit register names
@@ -75,14 +83,6 @@ static tSymbolSize OpSize;
  * \param  p_ret encoded register
  * \return True if valid register
  * ------------------------------------------------------------------------ */
-
-enum {
-    HReg   = 4,
-    MReg   = 6,
-    AccReg = 7
-};
-
-static char const Reg8Names[] = "BCDEHLMA";
 
 static Boolean decode_reg8_core(char const* p_arg, tZ80Syntax syntax, Byte* p_ret) {
     if (strlen(p_arg) != 1) {
@@ -101,15 +101,6 @@ static Boolean decode_reg8_core(char const* p_arg, tZ80Syntax syntax, Byte* p_re
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     decode_reg16_core(const char *p_arg, tZ80Syntax syntax, Byte *p_ret)
- * \brief  decode built-in 16 bit register names
- * \param  p_arg source argument
- * \param  syntax 808x and/or Z80 syntax?
- * \param  p_ret encoded register
- * \return True if valid register
- * ------------------------------------------------------------------------ */
-
 enum {
     BCReg = 0,
     DEReg = 1,
@@ -118,6 +109,15 @@ enum {
 };
 
 static char const Reg16Names[7][3] = {"B", "D", "H", "SP", "BC", "DE", "HL"};
+
+/*!------------------------------------------------------------------------
+ * \fn     decode_reg16_core(const char *p_arg, tZ80Syntax syntax, Byte *p_ret)
+ * \brief  decode built-in 16 bit register names
+ * \param  p_arg source argument
+ * \param  syntax 808x and/or Z80 syntax?
+ * \param  p_ret encoded register
+ * \return True if valid register
+ * ------------------------------------------------------------------------ */
 
 static Boolean decode_reg16_core(char* p_arg, tZ80Syntax syntax, Byte* p_ret) {
     for (*p_ret = (syntax & eSyntax808x) ? 0 : 3;
@@ -179,12 +179,12 @@ static Boolean reg_8_to_16(tRegInt* p_reg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     compare_reg_85(tRegInt reg1_num, tSymbolSize reg1_size, tRegInt reg2_num, tRegInt reg2_size)
- * \brief  compare two register symbols
+ * \fn     compare_reg_85(tRegInt reg1_num, tSymbolSize size1, tRegInt reg2_num, tSymbolSize size2)
+  * \brief  compare two register symbols
  * \param  reg1_num 1st register's number
- * \param  reg1_size 1st register's data size
+ * \param  size1 1st register's data size
  * \param  reg2_num 2nd register's number
- * \param  reg2_size 2nd register's data size
+ * \param  size2 2nd register's data size
  * \return 0, -1, 1, -2
  * ------------------------------------------------------------------------ */
 

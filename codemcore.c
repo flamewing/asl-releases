@@ -125,16 +125,6 @@ static void DissectReg_MCORE(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     DecodeReg(const tStrComp *pArg, Word *pResult, Word Mask, Boolean MustBeReg)
- * \brief  check whether argument is a CPU register or register alias
- * \param  pArg argument
- * \param  pResult register number if it is
- * \param  Mask bit mask of allowed registers
- * \param  MustBeReg operand is expected to be a register
- * \return True if it is an allowed register
- * ------------------------------------------------------------------------ */
-
 static void register_choices(char* choices, size_t size, Word mask) {
     unsigned reg;
     choices[0] = '\0';
@@ -158,6 +148,16 @@ static void register_choices(char* choices, size_t size, Word mask) {
         }
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     DecodeReg(tStrComp const* pArg, Word* pResult, Word Mask, Boolean MustBeReg)
+  * \brief  check whether argument is a CPU register or register alias
+ * \param  pArg argument
+ * \param  pResult register number if it is
+ * \param  Mask bit mask of allowed registers
+ * \param  MustBeReg operand is expected to be a register
+ * \return True if it is an allowed register
+ * ------------------------------------------------------------------------ */
 
 static tRegEvalResult DecodeReg(
         tStrComp const* pArg, Word* pResult, Word Mask, Boolean MustBeReg) {
