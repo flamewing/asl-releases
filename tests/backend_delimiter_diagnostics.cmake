@@ -102,7 +102,8 @@ check_bytes(valid-9900 TMS9900 " mov @1234h(r6),r1" "c0661234")
 check_bytes(valid-tms7 TMS70C08 " lda @1234h(b)" "aa1234")
 check_bytes(valid-ns32k NS32016 " absd ext(1000)+2000,r0" "4e33b083e887d0")
 check_bytes(valid-960 80960 " ld 12(r3)[r4*2],r5" "84fc28900c000000")
-check_bytes(valid-kcpsm KCPSM " input s0,12(s1)" "b010")
+# Nonzero displacements are rejected: KCPSM has no displacement field.
+check_bytes(valid-kcpsm KCPSM " input s0,0(s1)" "b010")
 check_bytes(valid-vector ATARI_VECTOR " labs (1,2),s0" "02a00100")
 
 file(WRITE "${TEST_DIR}/good.inc" " db 12h\n")
