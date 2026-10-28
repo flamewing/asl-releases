@@ -123,6 +123,9 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
                 AdrVals[1] = Hi(AdrWord);
             }
             break;
+        default:
+            WrStrErrorPos(ErrNum_InvOpSize, pArg);
+            return;
         }
         if (OK) {
             AdrMode = ModImm;

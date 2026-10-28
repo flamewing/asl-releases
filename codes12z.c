@@ -331,7 +331,7 @@ static Boolean DecodeAdr(int ArgIndex, unsigned ModeMask, tAdrVals* pVals) {
         Byte     DataReg = 0, AdrReg = 0, AdrIncReg = 0;
         Boolean  AdrRegPresent = False, DataRegPresent = False, HasDisp = False;
         tIncMode IncMode = eIncModeNone;
-        tStrComp Right, RunComp;
+        tStrComp Right = {0}, RunComp;
 
         CopyIndirect(&Comp, &ArgStr[ArgIndex]);
         StrCompRefRight(&RunComp, &Comp, 0);
@@ -1520,7 +1520,7 @@ static void DecodeBitField(Word Code) {
         }
     } else {
         Byte     ParamReg, SizeCode;
-        Word     ParamImm;
+        Word     ParamImm = 0;
         tAdrVals SrcAdrVals, DestAdrVals;
 
         if (*ArgStr[3].str.p_str == '#') {

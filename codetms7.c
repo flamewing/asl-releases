@@ -172,6 +172,9 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
                 AdrVals[0] = Hi(HVal);
                 AdrVals[1] = Lo(HVal);
                 break;
+            default:
+                WrStrErrorPos(ErrNum_InvOpSize, pArg);
+                return;
             }
             if (OK) {
                 AdrCnt  = 1 + OpSize;

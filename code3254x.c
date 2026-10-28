@@ -140,7 +140,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
             {"ARx",    "ARx-",    "ARx+",     "+ARx",   "ARx-0B", "ARx-0",
              "ARx+0",  "ARx+0B",  "ARx-%",    "ARx-0%", "ARx+%",  "ARx+0%",
              "ARx(n)", "+ARx(n)", "+ARx(n)%", "(n)"};
-    Boolean OK;
+    Boolean OK = False;
 
     AdrArg = pArg;
     AdrMode = ModNone;
@@ -177,8 +177,8 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
 
     if (*pArg->str.p_str == '*') {
         int   z;
-        Word  RegNum;
-        char *pConstStart, *pConstEnd;
+        Word  RegNum = 0;
+        char *pConstStart = NULL, *pConstEnd = NULL;
 
         /* check all possible patterns */
 

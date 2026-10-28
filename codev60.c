@@ -404,8 +404,7 @@ static Boolean DecodeAdr(tStrComp* pArg, tAdrVals* pResult, unsigned ModeMask) {
                 break;
             default:
                 WrStrErrorPos(ErrNum_InvOpSize, pArg);
-                EvalResult.OK = False;
-                break;
+                return False;
             }
         }
         if (!EvalResult.OK) {

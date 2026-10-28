@@ -2632,7 +2632,7 @@ static void DecodeMOVA(Word Code) {
 static void DecodeString(Word Code) {
     int      ExpectArgCnt = (Code & 0x80) ? 4 : 3;
     unsigned SrcMask, DestMask = MModeReg | ((Code & 0x40) ? MModePre : MModePost);
-    Byte     SrcReg, DestReg, CntReg, FinalReg, Prefix;
+    Byte     SrcReg, DestReg, CntReg, FinalReg = 0, Prefix;
 
     SrcMask = MModeReg;
     if (Code & 0x30) { /* SCMP/SMOV */

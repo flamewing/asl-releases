@@ -5123,7 +5123,7 @@ static void encode_jr_core(
 
 static void DecodeJR(Word Code) {
     Boolean     OK;
-    int         Condition;
+    int         Condition = 3;
     LongWord    dest;
     tEvalResult EvalResult;
     LongInt     dist;
@@ -5133,7 +5133,6 @@ static void DecodeJR(Word Code) {
 
     switch (ArgCnt) {
     case 1:
-        Condition = 3;
         OK        = True;
         break;
     case 2:
@@ -5272,13 +5271,12 @@ static void decode_jaf_jar(Word code) {
 
 static void DecodeCALR(Word Code) {
     Boolean OK;
-    int     Condition;
+    int     Condition = 9;
 
     UNUSED(Code);
 
     switch (ArgCnt) {
     case 1:
-        Condition = 9;
         OK        = True;
         break;
     case 2:

@@ -679,7 +679,7 @@ static void DecodeBTxx(Word Index) {
 }
 
 static void DecodeALU8(Word Code) {
-    Byte    acc_reg;
+    Byte    acc_reg = 0;
     Boolean acc_set   = False;
     int     MinArgCnt = Hi(Code) & 3, start_arg = 1;
 

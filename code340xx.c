@@ -1919,7 +1919,7 @@ static void decode_cmovgc(Word code) {
 
 static void decode_cmovmc(Word code) {
     adr_vals_t rs_vals;
-    Word       count, size, id = coproc;
+    Word       count = 0, size, id = coproc;
     LongWord   command;
     Boolean    ok, imm_count;
 

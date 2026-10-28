@@ -318,7 +318,7 @@ static void DecodeAdr(Word Index) {
     int       idx;
     Boolean   indirect;
     tStrComp  Left, Right;
-    Word      preg;
+    Word      preg = 0;
     Boolean   index;
     tStrComp* sc;
     Word      reg  = 0;

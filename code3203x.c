@@ -172,7 +172,7 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl, Boolean ImmFloat) {
     char*      p;
     int        l;
     as_float_t f;
-    Word       fi;
+    Word       fi = 0;
     LongInt    AdrLong;
     Boolean    BitRev, Circ;
     Boolean    OK;
@@ -574,7 +574,7 @@ static Boolean Is4xArDisp(ShortInt ThisAdrMode, LongWord ThisAdrPart) {
 }
 
 static void DecodeGen(Word Index) {
-    Byte            HReg, HReg2, Sum;
+    Byte            HReg = 0, HReg2 = 0, Sum;
     String          Form;
     tGenOrderInfo   CurrGenInfo;
     LongWord        T21_22 = 0, T28 = 0;

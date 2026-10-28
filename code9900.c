@@ -382,7 +382,7 @@ static void DecodeType11a(Word Index) {
 
 static void DecodeType12(Word Index) {
     tOrder const* pOrder = &Type12Orders[Index];
-    Word          AdrCnt1, Count, Ckpt;
+    Word          AdrCnt1, Count, Ckpt = DefCkpt;
     Boolean       OK;
 
     if (!ChkArgCnt(2, 4) || !CheckCore(pOrder->Flags & eCoreAll)
@@ -416,7 +416,6 @@ static void DecodeType12(Word Index) {
             WrError(ErrNum_NoDefCkptReg);
             OK = False;
         } else {
-            Ckpt = DefCkpt;
             OK   = True;
         }
     } else {

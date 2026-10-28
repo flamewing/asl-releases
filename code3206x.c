@@ -1588,7 +1588,7 @@ static void DecodeNEG(Word Index) {
 }
 
 static void DecodeLogic(Word Index) {
-    LongWord S1Reg, S2Reg, DReg;
+    LongWord S1Reg, S2Reg = 0, DReg;
     LongWord Code1, Code2;
     Boolean  OK, WithImm;
 
