@@ -135,6 +135,9 @@ static Boolean DecodeReg(tStrComp const* pArg, Byte* pResult, tRegType type) {
     int         i;
     int         num = 16;
 
+    if ((unsigned)type > eDCRn) {
+        return False;
+    }
     switch (type) {
     case eRn:
         if (as_strncasecmp(str, "R", 1)) {
@@ -173,8 +176,6 @@ static Boolean DecodeReg(tStrComp const* pArg, Byte* pResult, tRegType type) {
         i   = 3;
         num = 4;
         break;
-    default:
-        return False;
     }
     *pResult = 0;
     for (; i < len; i++) {

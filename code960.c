@@ -34,6 +34,7 @@
 
 /*--------------------------------------------------------------------------*/
 
+#include "as_float.h"
 #include "c_implementation.h"
 
 enum {
@@ -327,9 +328,9 @@ static Boolean DecodeAdr(
             if (mFirstPassUnknown(EvalResult.Flags)) {
                 FVal = 0.0;
             }
-            if (FVal == 0.0) {
+            if (as_float_equal_exact(FVal, 0)) {
                 *Erg = 16;
-            } else if (FVal == 1.0) {
+            } else if (as_float_equal_exact(FVal, 1)) {
                 *Erg = 22;
             } else {
                 char value[80], detail[180];

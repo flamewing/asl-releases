@@ -752,21 +752,20 @@ void NLS_CurrencyString(double inp, char* erg, size_t DestSize) {
     switch (NLSInfo.CurrFmt) {
     case CurrFormatPreNoBlank:
         as_snprintf(erg, DestSize, "%s%s", NLSInfo.Currency, s);
-        break;
+        return;
     case CurrFormatPreBlank:
         as_snprintf(erg, DestSize, "%s %s", NLSInfo.Currency, s);
-        break;
+        return;
     case CurrFormatPostNoBlank:
         as_snprintf(erg, DestSize, "%s%s", s, NLSInfo.Currency);
-        break;
+        return;
     case CurrFormatPostBlank:
         as_snprintf(erg, DestSize, "%s %s", s, NLSInfo.Currency);
-        break;
-    default:
-        *p = '\0';
-        as_snprintf(
-                erg, DestSize, "%s%s%s", s, NLSInfo.Currency, p + strlen(NLSInfo.DecSep));
+        return;
     }
+    *p = '\0';
+    as_snprintf(
+            erg, DestSize, "%s%s%s", s, NLSInfo.Currency, p + strlen(NLSInfo.DecSep));
 }
 
 char Upcase(char inp) {

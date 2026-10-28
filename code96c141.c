@@ -537,9 +537,8 @@ DECLARE_AS_EVAL_CB(tlcs900_eval_cb) {
         }
         as_tempres_set_int(p_res, 0);
         return e_eval_ok;
-    default:
-        return e_eval_none;
     }
+    return e_eval_none;
 }
 
 static Boolean force_op_size(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {

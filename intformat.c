@@ -306,6 +306,7 @@ Boolean ModifyIntConstModeByMask(LongWord ANDMask, LongWord ORMask) {
 
 void SetIntConstMode(tIntConstMode Mode) {
     IntConstMode = Mode;
+    NativeIntConstModeMask = 0;
     switch (Mode) {
     case eIntConstModeC:
         NativeIntConstModeMask = eIntFormatMaskC;
@@ -325,8 +326,6 @@ void SetIntConstMode(tIntConstMode Mode) {
         OtherIntConstModeMask
                 = eIntFormatMaskC | eIntFormatMaskIntel | eIntFormatMaskMoto;
         break;
-    default:
-        NativeIntConstModeMask = 0;
     }
     NativeIntConstModeMask |= (1ul << eIntFormatDefRadix);
     SetIntConstModeByMask(

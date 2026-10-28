@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "as_float.h"
 #include "c_implementation.h"
 
 PIfSave FirstIfSave;
@@ -366,8 +367,8 @@ static void CodeCASE(Word code) {
                                   == FirstIfSave->SaveExpr.Contents.Int.Value);
                             break;
                         case TempFloat:
-                            eq = (t.Contents.Float
-                                  == FirstIfSave->SaveExpr.Contents.Float);
+                            eq = (as_float_equal_exact(
+                                    t.Contents.Float, FirstIfSave->SaveExpr.Contents.Float));
                             break;
                         case TempString:
                             eq = (as_nonz_dynstr_cmp(

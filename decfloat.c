@@ -230,7 +230,7 @@ extern int as_float_2_dec_lit(as_float_t inp, Byte* p_dest) {
             continue;
         }
         fract_part = modf(inp, &nonfract_part);
-        if (fract_part != 0.0) {
+        if (!as_float_equal_exact(fract_part, 0)) {
             return -EBADF;
         }
         int_part = (int)nonfract_part;

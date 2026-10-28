@@ -30,6 +30,7 @@
 #include <float.h>
 #include <string.h>
 
+#include "as_float.h"
 #include "c_implementation.h"
 
 static as_float_t log_max, log2_max, log10_max;
@@ -380,7 +381,7 @@ static Boolean FuncCOS(TempResult* pResult, TempResult const* pArgs, unsigned Ar
 static Boolean FuncTAN(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {
     UNUSED(ArgCnt);
 
-    if (as_cos(pArgs[0].Contents.Float) == 0.0) {
+    if (as_float_equal_exact(as_cos(pArgs[0].Contents.Float), 0)) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
@@ -394,7 +395,7 @@ static Boolean FuncCOT(TempResult* pResult, TempResult const* pArgs, unsigned Ar
     as_float_t FVal = as_sin(pArgs[0].Contents.Float);
     UNUSED(ArgCnt);
 
-    if (FVal == 0.0) {
+    if (as_float_equal_exact(FVal, 0)) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {
@@ -534,7 +535,7 @@ static Boolean FuncCOTH(TempResult* pResult, TempResult const* pArgs, unsigned A
     if (pArgs[0].Contents.Float > log_max) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_FloatOverflow);
-    } else if ((FVal = as_tanh(pArgs[0].Contents.Float)) == 0.0) {
+    } else if (as_float_equal_exact((FVal = as_tanh(pArgs[0].Contents.Float)), 0)) {
         as_tempres_set_none(pResult);
         WrError(ErrNum_InvFuncArg);
     } else {

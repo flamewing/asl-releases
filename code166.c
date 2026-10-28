@@ -301,9 +301,8 @@ static Boolean CalcPage(LongInt* Adr, Boolean DoAnyway) {
         } else {
             return True;
         }
-    default:
-        return False;
     }
+    return False;
 }
 
 static void DecideAbsolute(LongInt DispAcc, Word Mask, tAdrResult* pResult) {

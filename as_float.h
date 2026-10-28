@@ -14,6 +14,19 @@
 
 #include <stdio.h>
 
+/* Language equality, exact encoding choices and zero/infinity sentinels require
+   exact comparison. Keep approximate numerical comparisons at their call sites. */
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+static inline Boolean as_float_equal_exact(as_float_t left, as_float_t right) {
+    return left == right;
+}
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
+
 typedef enum {
     AS_FP_NORMAL,
     AS_FP_SUBNORMAL,

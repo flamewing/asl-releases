@@ -1199,9 +1199,9 @@ static as_float_t ConstFloatVal(char const* pExpr, Boolean* pResult, int* p_outo
         else {
             Erg      = as_strtof(pExpr, &pEnd);
             *pResult = (*pEnd == '\0');
-            if ((Erg == AS_HUGE_VAL) && (errno == ERANGE) && *pResult) {
+            if ((as_float_equal_exact(Erg, AS_HUGE_VAL)) && (errno == ERANGE) && *pResult) {
                 *p_outof_range = 1;
-            } else if ((Erg == -AS_HUGE_VAL) && (errno == ERANGE) && *pResult) {
+            } else if ((as_float_equal_exact(Erg, -AS_HUGE_VAL)) && (errno == ERANGE) && *pResult) {
                 *p_outof_range = -1;
             } else {
                 *p_outof_range = 0;

@@ -165,7 +165,7 @@ static void DecodeMR(Word Index) {
             case 'L':
                 Literal = True;
                 break;
-            default:
+            default: {
                 char detail[200];
                 tStrComp component;
                 StrCompRefRight(&component, &ArgStr[1], i);
@@ -174,6 +174,7 @@ static void DecodeMR(Word Index) {
                             ArgStr[1].str.p_str[i]);
                 WrXErrorPos(ErrNum_InvAddrMode, detail, &component.Pos);
                 return;
+            }
             }
         }
         if (!CurrPage && Literal) {

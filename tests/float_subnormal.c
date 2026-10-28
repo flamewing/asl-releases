@@ -5,6 +5,8 @@
 #include "bfloat.h"
 #include "ieeefloat.h"
 
+#include <float.h>
+
 #include "c_implementation.h"
 
 static int check16(
@@ -71,6 +73,13 @@ static int check_precision(unsigned bits, Integer minimum) {
 }
 
 int main(void) {
+    if (!as_float_equal_exact(0, -0.0) || !as_float_equal_exact(1, 1)
+        || as_float_equal_exact(1, 1 + DBL_EPSILON)
+        || !as_float_equal_exact(INFINITY, INFINITY)
+        || as_float_equal_exact(INFINITY, -INFINITY)
+        || as_float_equal_exact(NAN, NAN) || as_float_equal_exact(NAN, 0)) {
+        return 1;
+    }
     if (check_subnormals(as_float_2_bfloat16, 128, -133)
         || check_subnormals(as_float_2_ieee2, 1024, -24)
         || check16(as_float_2_bfloat16, (as_float_t)1, 0x3f80)

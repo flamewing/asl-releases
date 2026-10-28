@@ -1204,9 +1204,6 @@ static void decode_move(Word code) {
             break;
         case e_mode_none:
             return;
-        default:
-            WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[2]);
-            return;
         }
         break;
     case e_mode_ireg:
@@ -1330,9 +1327,6 @@ static void decode_move(Word code) {
         }
         break;
     case e_mode_none:
-        return;
-    default:
-        WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
         return;
     }
     append_adr_vals(&src_adr_vals);

@@ -74,6 +74,7 @@
  *         -2 : unequal, but no smaller/greater relation can be given
  * ------------------------------------------------------------------------ */
 
+#include "as_float.h"
 #include "c_implementation.h"
 
 int reg_cmp(TempResult const* p_val1, TempResult const* p_val2) {
@@ -237,15 +238,15 @@ static Boolean PotOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         }
         break;
     case TempFloat:
-        if (pRVal->Contents.Float == 0.0) {
+        if (as_float_equal_exact(pRVal->Contents.Float, 0)) {
             as_tempres_set_float(pErg, 1.0);
-        } else if (pLVal->Contents.Float == 0.0) {
+        } else if (as_float_equal_exact(pLVal->Contents.Float, 0)) {
             as_tempres_set_float(pErg, 0.0);
         } else if (pLVal->Contents.Float > 0) {
             as_tempres_set_float(pErg, pow(pLVal->Contents.Float, pRVal->Contents.Float));
         } else if (
                 (as_fabs(pRVal->Contents.Float) <= ((as_float_t)MaxLongInt))
-                && (floor(pRVal->Contents.Float) == pRVal->Contents.Float)) {
+                && (as_float_equal_exact(floor(pRVal->Contents.Float), pRVal->Contents.Float))) {
             as_float_t Base = pLVal->Contents.Float, Result;
 
             HVal = (LongInt)floor(pRVal->Contents.Float + 0.5);
@@ -309,7 +310,7 @@ static Boolean DivOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         }
         break;
     case TempFloat:
-        if (pRVal->Contents.Float == 0.0) {
+        if (as_float_equal_exact(pRVal->Contents.Float, 0)) {
             WrError(ErrNum_DivByZero);
         } else {
             as_tempres_set_float(pErg, pLVal->Contents.Float / pRVal->Contents.Float);
@@ -544,7 +545,7 @@ static Boolean EqOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     case TempFloat:
         as_tempres_set_int(
-                pErg, (pLVal->Contents.Float == pRVal->Contents.Float) ? 1 : 0);
+                pErg, (as_float_equal_exact(pLVal->Contents.Float, pRVal->Contents.Float)) ? 1 : 0);
         break;
     case TempString:
         as_tempres_set_int(
@@ -699,7 +700,7 @@ static Boolean UneqOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         break;
     case TempFloat:
         as_tempres_set_int(
-                pErg, (pLVal->Contents.Float != pRVal->Contents.Float) ? 1 : 0);
+                pErg, (!as_float_equal_exact(pLVal->Contents.Float, pRVal->Contents.Float)) ? 1 : 0);
         break;
     case TempString:
         as_tempres_set_int(

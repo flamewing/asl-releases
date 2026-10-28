@@ -5,6 +5,7 @@
 #include <string.h>
 
 /* The assembler-only string formatter is outside this conversion test. */
+#include "as_float.h"
 #include "c_implementation.h"
 
 AS_NORETURN void KillBlanks(char* str) {
@@ -26,7 +27,7 @@ static int check_int(LargeInt value) {
 #endif
                     value;
     return TempResultToFloat(&result) != 0 || result.Typ != TempFloat
-           || result.Contents.Float != expected
+           || !as_float_equal_exact(result.Contents.Float, expected)
            || result.Flags != (tSymbolFlags)0x55 || result.AddrSpaceMask != 3
            || result.DataSize != eSymbolSize16Bit
            || result.Relocs != (struct sRelocEntry*)&result;

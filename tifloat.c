@@ -60,7 +60,7 @@ int as_float_2_ti2(as_float_t inp, Word* p_dest) {
     LongInt  exponent;
     LongWord mantissa;
 
-    if (inp == 0) {
+    if (as_float_equal_exact(inp, 0)) {
         *p_dest = 0x8000;
         return 0;
     }
@@ -88,7 +88,7 @@ int as_float_2_ti4(as_float_t inp, LongWord* p_dest) {
     LongInt  exponent;
     LongWord mantissa;
 
-    if (inp == 0) {
+    if (as_float_equal_exact(inp, 0)) {
         *p_dest = 0x80000000;
         return 0;
     }
@@ -116,7 +116,7 @@ int as_float_2_ti5(as_float_t inp, LongWord* p_dest_l, LongWord* p_dest_h) {
     int     ret;
     LongInt exponent;
 
-    if (inp == 0) {
+    if (as_float_equal_exact(inp, 0)) {
         *p_dest_h = 0x80;
         *p_dest_l = 0x00000000;
         return 0;
