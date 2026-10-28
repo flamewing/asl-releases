@@ -12,11 +12,6 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* #define LITTLE_ENDIAN * This should be #define'd already, if true. */
-/* #define SHA1HANDSOFF * Copies data before messing with it. */
-
-#define SHA1HANDSOFF
-
 #include "sha1.h"
 
 #include <string.h>
@@ -25,19 +20,11 @@ A million repetitions of "a"
 
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
-#if BYTE_ORDER == LITTLE_ENDIAN
-#    define blk0(i)  \
-        (block->l[i] \
-         = (rol(block->l[i], 24) & 0xFF00FF00) | (rol(block->l[i], 8) & 0x00FF00FF))
-#elif BYTE_ORDER == BIG_ENDIAN
-#    define blk0(i) block->l[i]
-#else
-#    error "Endianness not defined!"
-#endif
+#define blk0(i) block[i]
 #define blk(i)                                                                       \
-    (block->l[i & 15]                                                                \
-     = rol(block->l[(i + 13) & 15] ^ block->l[(i + 8) & 15] ^ block->l[(i + 2) & 15] \
-                   ^ block->l[i & 15],                                               \
+    (block[i & 15]                                                                \
+     = rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] \
+                   ^ block[i & 15],                                               \
            1))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
@@ -64,23 +51,15 @@ A million repetitions of "a"
 void SHA1Transform(Card32 state[5], unsigned char const buffer[64]) {
     Card32 a, b, c, d, e;
 
-    typedef union {
-        unsigned char c[64];
-        Card32        l[16];
-    } CHAR64LONG16;
+    Card32 block[16];
 
-#ifdef SHA1HANDSOFF
-    CHAR64LONG16 block[1]; /* use array to appear as a pointer */
-
-    memcpy(block, buffer, 64);
-#else
-    /* The following had better never be used because it causes the
-     * pointer-to-const buffer to be cast into a pointer to non-const.
-     * And the result is written through.  I threw a "const" in, hoping
-     * this will cause a diagnostic.
-     */
-    CHAR64LONG16* block = (const CHAR64LONG16*)buffer;
-#endif
+    /* SHA-1 message words are big-endian, independently of host byte order. */
+    for (unsigned i = 0; i < 16; ++i) {
+        block[i] = ((Card32)buffer[4 * i] << 24)
+                   | ((Card32)buffer[4 * i + 1] << 16)
+                   | ((Card32)buffer[4 * i + 2] << 8)
+                   | (Card32)buffer[4 * i + 3];
+    }
     /* Copy context->state[] to working vars */
     a = state[0];
     b = state[1];
@@ -176,9 +155,7 @@ void SHA1Transform(Card32 state[5], unsigned char const buffer[64]) {
     state[4] += e;
     /* Wipe variables */
     a = b = c = d = e = 0;
-#ifdef SHA1HANDSOFF
     memset(block, '\0', sizeof(block));
-#endif
 }
 
 /* SHA1Init - Initialize new context */
@@ -284,5 +261,5 @@ void SHA1ToHexString(unsigned char digest[20], char* hexstring) {
         hexstring[hashByte << 1]       = hexDigits[(digest[hashByte] >> 4) & 0xf];
         hexstring[(hashByte << 1) + 1] = hexDigits[digest[hashByte] & 0xf];
     }
-    hexstring[20] = '\0';
+    hexstring[40] = '\0';
 }

@@ -1773,6 +1773,9 @@ define_executable(test_forward_refs
 )
 add_test(NAME forward_refs COMMAND test_forward_refs)
 
+define_executable(test_sha1 tests/sha1.c sha1.c)
+add_test(NAME sha1 COMMAND test_sha1)
+
 define_executable(test_cpu_registry tests/cpu_registry.c cpulist.c strutil.c dynstr.c)
 add_test(NAME cpu_registry COMMAND test_cpu_registry)
 
