@@ -195,26 +195,8 @@ jobs:
           executables=({alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }})
           runtime_dlls=()
           if [[ '${{ matrix.architecture }}' == win64 ]]; then
-            runtime_root=$(cygpath -m "$MSYSTEM_PREFIX")
-            declare -A seen_dlls=()
-            for executable in "${executables[@]}"; do
-              dependencies=$(ntldd -R -D "$(cygpath -w "$MSYSTEM_PREFIX/lib")" "$executable")
-              while IFS= read -r line; do
-                if [[ "$line" =~ =[\>][[:space:]]+(.+)[[:space:]]+\(0x[[:xdigit:]]+\) ]]; then
-                  dependency=${BASH_REMATCH[1]//\\//}
-                  # Bundle toolchain DLLs, excluding Windows system libraries.
-                  if [[ "${dependency,,}" == "${runtime_root,,}/bin/"* || "${dependency,,}" == "${runtime_root,,}/lib/"* ]]; then
-                    dependency=$(cygpath -u "$dependency")
-                    dll=$(basename "$dependency")
-                    if [[ ! -v seen_dlls["${dll,,}"] ]]; then
-                      cp "$dependency" .
-                      runtime_dlls+=("$dll")
-                      seen_dlls["${dll,,}"]=1
-                    fi
-                  fi
-                fi
-              done <<< "$dependencies"
-            done
+            # Keep newer Bash syntax out of the script parsed by macOS Bash 3.2.
+            source ../.github/scripts/collect_windows_runtime.sh
           fi
           "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt "${executables[@]}" "${runtime_dlls[@]}"
       - name: Create package (MSVC Win32)
