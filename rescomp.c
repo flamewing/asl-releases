@@ -122,7 +122,7 @@ static void GetLine(char* Dest) {
 
 /*****************************************************************************/
 
-static void SynError(char const* LinePart) {
+static _Noreturn void SynError(char const* LinePart) {
     fprintf(stderr, "syntax error : %s\n", LinePart);
     exit(10);
 }
@@ -130,9 +130,10 @@ static void SynError(char const* LinePart) {
 /*---------------------------------------------------------------------------*/
 
 static void Process_LANGS(char const* Line) {
-    char    NLine[1024], *p, *p2, *p3, *end, z, Part[1024];
+    char    NLine[1024], *p, *p2, *p3, *end, Part[1024];
     PMsgCat PCat;
     int     num;
+    LongInt z;
 
     strmaxcpy(NLine, Line, 1024);
     KillPrefBlanks(NLine);
@@ -148,8 +149,12 @@ static void Process_LANGS(char const* Line) {
         z++;
     }
 
-    MsgCats = (PMsgCat)malloc(sizeof(TMsgCat) * (CatCount = z));
-    p       = NLine;
+    if (!z) {
+        SynError("empty LANGS list");
+    }
+    CatCount = z;
+    MsgCats  = (PMsgCat)malloc(sizeof(TMsgCat) * CatCount);
+    p        = NLine;
     for (z = 0, PCat = MsgCats; z < CatCount; z++, PCat++) {
         PCat->Messages    = NULL;
         PCat->TotLength   = 0;
@@ -161,8 +166,8 @@ static void Process_LANGS(char const* Line) {
         } else {
             *p2 = '\0';
             strcpy(Part, p);
-            for (p = p2 + 1; *p && as_isspace(*p2); p++)
-                ; /* TODO: p instead of p2? */
+            for (p = p2 + 1; *p && as_isspace(*p); p++)
+                ;
         }
         if ((!*Part) || (Part[strlen(Part) - 1] != ')')) {
             SynError(Part);
@@ -178,20 +183,12 @@ static void Process_LANGS(char const* Line) {
         do {
             for (p3 = p2; ((*p3) && (*p3 != ',')); p3++)
                 ;
-            switch (*p3) {
-            case '\0':
-                num = strtol(p2, &end, 10);
-                p2  = p3;
-                break;
-            case ',':
+            char* next = *p3 ? p3 + 1 : p3;
+            if (*p3) {
                 *p3 = '\0';
-                num = strtol(p2, &end, 10);
-                p2  = p3 + 1;
-                break;
-            default:
-                num = 0;
-                break;
             }
+            num = strtol(p2, &end, 10);
+            p2  = next;
             if (*end) {
                 SynError("numeric format");
             }
