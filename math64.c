@@ -73,7 +73,7 @@ static void from16(t64* pOut, Word const* pIn) {
  * \fn     mulmnu(Word w[], Word u[], Word v[], int m, int n)
  * \brief  unsigned multi-precision multiply (taken from Hacker's Delight)
  * \param  w result buffer
- * \param  u, v numbers to multiply
+ * \param  u v numbers to multiply
  * \param  m length of u in words
  * \param  n length of v in words
  * ------------------------------------------------------------------------ */
@@ -216,7 +216,7 @@ static int divmnu(Word q[], Word r[], Word const u[], Word const v[], int m, int
  * \fn     add64(t64 *pRes, const t64 *pA, const t64 *pB)
  * \brief  add two values
  * \param  pRes sum buffer
- * \param  pA, pB values to add
+ * \param  pA pB values to add
  * ------------------------------------------------------------------------ */
 
 void add64(t64* pRes, t64 const* pA, t64 const* pB) {
@@ -228,7 +228,7 @@ void add64(t64* pRes, t64 const* pA, t64 const* pB) {
  * \fn     sub64(t64 *pRes, const t64 *pA, const t64 *pB)
  * \brief  subtract two values
  * \param  pRes difference buffer
- * \param  pA, pB values to subtract
+ * \param  pA pB values to subtract
  * ------------------------------------------------------------------------ */
 
 void sub64(t64* pRes, t64 const* pA, t64 const* pB) {
@@ -240,7 +240,7 @@ void sub64(t64* pRes, t64 const* pA, t64 const* pB) {
  * \fn     mul64(t64 *pRes, const t64 *pA, const t64 *pB)
  * \brief  multiply two values
  * \param  pRes product buffer
- * \param  pA, pB values to multiply
+ * \param  pA pB values to multiply
  * ------------------------------------------------------------------------ */
 
 void mul64(t64* pRes, t64 const* pA, t64 const* pB) {
@@ -255,7 +255,7 @@ void mul64(t64* pRes, t64 const* pA, t64 const* pB) {
  * \fn     div64(t64 *pRes, const t64 *pA, const t64 *pB)
  * \brief  divide two values
  * \param  pRes quotient buffer
- * \param  pA, pB values to divide
+ * \param  pA pB values to divide
  * ------------------------------------------------------------------------ */
 
 void div64(t64* pRes, t64 const* pA, t64 const* pB) {
@@ -271,7 +271,7 @@ void div64(t64* pRes, t64 const* pA, t64 const* pB) {
  * \fn     mod64(t64 *pRes, const t64 *pA, const t64 *pB)
  * \brief  modulo-divide two values
  * \param  pRes remainder buffer
- * \param  pA, pB values to divide
+ * \param  pA pB values to divide
  * ------------------------------------------------------------------------ */
 
 void mod64(t64* pRes, t64 const* pA, t64 const* pB) {
@@ -288,7 +288,7 @@ void mod64(t64* pRes, t64 const* pA, t64 const* pB) {
  * \brief  divide two values, and return also remainder
  * \param  pQuot quotient buffer
  * \param  pRem remainder buffer
- * \param  pA, pB values to divide
+ * \param  pA pB values to divide
  * ------------------------------------------------------------------------ */
 
 void mod_div64(t64* pQuot, t64* pRem, t64 const* pA, t64 const* pB) {

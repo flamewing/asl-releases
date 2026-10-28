@@ -154,9 +154,9 @@ static Boolean SetDSFlag(struct sLayoutCtx* pCtx, tDSFlag Flag) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     IncMaxCodeLen(struct sLayoutCtx *pCtx, LongWord NumFullWords)
- * \brief  assure xAsmCode has space for at least n more full words
- * \param  pCtxcontext
+ * \fn     IncMaxCodeLen(struct sLayoutCtx* pCtx, LongWord NumFullWords)
+  * \brief  assure xAsmCode has space for at least n more full words
+ * \param  pCtx context
  * \param  NumFullWords # of additional words intended to write
  * \return True if success
  * ------------------------------------------------------------------------ */
@@ -255,7 +255,7 @@ static Word WordFromDWord(LongWord d, int Pos) {
  * \fn     SubCodeFill
  * \brief  perform 'c = a - b' on tCurrCodeFill structures
  * \param  c result
- * \param  b, c arguments
+ * \param  b c arguments
  * ------------------------------------------------------------------------ */
 
 static void SubCodeFill(

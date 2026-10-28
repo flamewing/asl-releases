@@ -318,14 +318,7 @@ static int tree_dbg_printf(char const* p_fmt, ...) {
 
 #endif /* DBG_FIND_TREE */
 
-/*!------------------------------------------------------------------------
- * \fn     find_tree_first(TTree *p_tree, const char *p_name, as_tree_path_t *p_path)
- * \brief  find first occurence of symbol with given name
- * \param  p_tree tree to search
- * \param  p_name symbol name to search
- * \param  p_path tracks path in tree for find_tree_next()
- * \return * to first entry or NULL if not found
- * ------------------------------------------------------------------------ */
+
 
 static void add_path(as_tree_path_t* p_path, TTree* p_tree, int state) {
     assert(p_path->length < as_array_size(p_path->path));
@@ -395,6 +388,15 @@ static TTree* find_min_for_iterative(
     return p_ret;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     find_tree_first(TTree *p_tree, const char *p_name, as_tree_path_t *p_path)
+ * \brief  find first occurence of symbol with given name
+ * \param  p_tree tree to search
+ * \param  p_name symbol name to search
+ * \param  p_path tracks path in tree for find_tree_next()
+ * \return * to first entry or NULL if not found
+ * ------------------------------------------------------------------------ */
+
 TTree* find_tree_first(TTree* p_tree, char const* p_name, as_tree_path_t* p_path) {
     TTree* p_ret;
 
@@ -428,13 +430,7 @@ TTree* find_tree_first(TTree* p_tree, char const* p_name, as_tree_path_t* p_path
     return p_ret;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     find_tree_next(const char *p_name, as_tree_path_t *p_path)
- * \brief  retrieve successor element in tree
- * \param  p_name selector name
- * \param  p_path current position in tree
- * \return next element or NULL if end of tree or no more symbols of given name
- * ------------------------------------------------------------------------ */
+
 
 static TTree* find_tree_next_sub(TTree* p_sub AS_LIFETIMEBOUND, as_tree_path_t* p_path) {
     if (!p_sub) {
@@ -448,6 +444,14 @@ static TTree* find_tree_next_sub(TTree* p_sub AS_LIFETIMEBOUND, as_tree_path_t* 
         return p_sub;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     find_tree_next(const char *p_name, as_tree_path_t *p_path)
+ * \brief  retrieve successor element in tree
+ * \param  p_name selector name
+ * \param  p_path current position in tree
+ * \return next element or NULL if end of tree or no more symbols of given name
+ * ------------------------------------------------------------------------ */
 
 TTree* find_tree_next(char const* p_name, as_tree_path_t* p_path) {
     TTree* p_ret;

@@ -531,6 +531,10 @@ void code_len_reset(void) {
     DontPrint                  = False;
 }
 
+typedef struct {
+    unsigned byte_offs, bit_offs, bit_count;
+} bitfield_fragment_ctx_t;
+
 /*!------------------------------------------------------------------------
  * \fn     compute_bitfield_fragment(bitfield_fragment_ctx_t *p_ctx, unsigned
  bitfield_start, unsigned field_length, Boolean big_endian)
@@ -545,10 +549,6 @@ void code_len_reset(void) {
  * \param  field_length length of bit field in bits
  * \param  big_endian current bit field in big endian order?
  * ------------------------------------------------------------------------ */
-
-typedef struct {
-    unsigned byte_offs, bit_offs, bit_count;
-} bitfield_fragment_ctx_t;
 
 static void compute_bitfield_fragment(
         bitfield_fragment_ctx_t* p_ctx, unsigned bitfield_start, unsigned field_length,
@@ -867,9 +867,9 @@ static void extend_zero_dasmcode_guessed_len(LongWord new_len) {
 
 /*!------------------------------------------------------------------------
  * \fn     set_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length)
- * \brief  set guessed mask of bit field in bytes, little endian version
+  * \brief  set guessed mask of bit field in bytes, little endian version
  * \param  start start index of bit field
- * \param  count # of bits to set
+ * \param  field_length # of bits to set
  * ------------------------------------------------------------------------ */
 
 void set_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length) {
@@ -883,9 +883,9 @@ void set_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length) {
 
 /*!------------------------------------------------------------------------
  * \fn     get_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length)
- * \brief  get guessed mask of bit field in bytes, little endian version
+  * \brief  get guessed mask of bit field in bytes, little endian version
  * \param  start start index of bit field
- * \param  count # of bits to get
+ * \param  field_length # of bits to get
  * \return guess bits in bit field
  * ------------------------------------------------------------------------ */
 
@@ -897,9 +897,9 @@ LongWord get_basmcode_guessed_bit_field_le(unsigned start, unsigned field_length
 
 /*!------------------------------------------------------------------------
  * \fn     set_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length)
- * \brief  set guessed mask of bit field in bytes, big endian version
+  * \brief  set guessed mask of bit field in bytes, big endian version
  * \param  start start index of bit field
- * \param  count # of bits to set
+ * \param  field_length # of bits to set
  * ------------------------------------------------------------------------ */
 
 void set_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length) {
@@ -913,9 +913,9 @@ void set_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length) {
 
 /*!------------------------------------------------------------------------
  * \fn     get_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length)
- * \brief  get guessed mask of bit field in bytes, big endian version
+  * \brief  get guessed mask of bit field in bytes, big endian version
  * \param  start start index of bit field
- * \param  count # of bits to get
+ * \param  field_length # of bits to get
  * \return guess bits in bit field
  * ------------------------------------------------------------------------ */
 
@@ -927,9 +927,9 @@ LongWord get_basmcode_guessed_bit_field_be(unsigned start, unsigned field_length
 
 /*!------------------------------------------------------------------------
  * \fn     set_basmcode_guessed_bit_field_ve(unsigned start, unsigned field_length, Boolean big_endian)
- * \brief  set guessed mask of bit field in bytes, variable endianess version
+  * \brief  set guessed mask of bit field in bytes, variable endianess version
  * \param  start start index of bit field
- * \param  count # of bits to set
+ * \param  field_length # of bits to set
  * \param  big_endian big endian order?
  * ------------------------------------------------------------------------ */
 
@@ -944,9 +944,9 @@ void set_basmcode_guessed_bit_field_ve(
 
 /*!------------------------------------------------------------------------
  * \fn     get_basmcode_guessed_bit_field_ve(unsigned start, unsigned field_length, Boolean big_endian)
- * \brief  get guessed mask of bit field in bytes, variable endianess version
+  * \brief  get guessed mask of bit field in bytes, variable endianess version
  * \param  start start index of bit field
- * \param  count # of bits to get
+ * \param  field_length # of bits to get
  * \param  big_endian big endian order?
  * \return guess bits in bit field
  * ------------------------------------------------------------------------ */
@@ -1094,9 +1094,9 @@ Word get_wasmcode_guessed(LongWord index) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     dump_wasmcode_guessed(const char *p_title)
- * \brief  dump guessed masks as 16-bit values
- * \param  p_titleoptional dump title
+ * \fn     dump_wasmcode_guessed(char const* p_title)
+  * \brief  dump guessed masks as 16-bit values
+ * \param  p_title optional dump title
  * ------------------------------------------------------------------------ */
 
 void dump_wasmcode_guessed(char const* p_title) {

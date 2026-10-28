@@ -123,10 +123,10 @@ static void clear_forward_refs(void) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_forward_ref_search_and_mark(const char *p_name, LongInt attribute)
- * \brief  search list of forward refs for entries matching freshly defined symbols
+ * \fn     as_forward_ref_search_and_mark(char const* p_name, LongInt attribute)
+  * \brief  search list of forward refs for entries matching freshly defined symbols
  * \param  p_name symbol's name
- * \param  attribute's macro local handle
+ * \param  attribute macro local handle
  * \return True if any references existed
  * ------------------------------------------------------------------------ */
 

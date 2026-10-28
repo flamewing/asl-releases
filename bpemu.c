@@ -175,16 +175,7 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
     strmaxcat(p_dest, Copy, dest_size);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
- * \brief  search for file in given path(s)
- * \param  pDest where to put result
- * \param  DestSize size of result buffer
- * \param  pFileToSearch file to search for
- * \param  pCurrFileName file this file was referenced from
- * \param  pSearchPath list of directories to search
- * \return 0 if found or error code
- * ------------------------------------------------------------------------ */
+
 
 static int AssembleAndCheck(
         char* pDest, size_t DestSize, char const* pPath, unsigned PathLen,
@@ -215,6 +206,17 @@ static int AssembleAndCheck(
         return 2;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     FSearch(char *pDest, size_t DestSize, const char *pFileToSearch, const char *pCurrFileName, const char *pSearchPath)
+ * \brief  search for file in given path(s)
+ * \param  pDest where to put result
+ * \param  DestSize size of result buffer
+ * \param  pFileToSearch file to search for
+ * \param  pCurrFileName file this file was referenced from
+ * \param  pSearchPath list of directories to search
+ * \return 0 if found or error code
+ * ------------------------------------------------------------------------ */
 
 int FSearch(
         char* pDest, size_t DestSize, char const* pFileToSearch,

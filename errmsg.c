@@ -322,14 +322,6 @@ extern Boolean ChkExactCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum) {
     return True;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
- * \brief  check whether currently selected CPU is NOT given one and issue error if not
- * \param  MatchCPU disallowed CPU
- * \param  ErrorNum error to issue if not OK (0 = default message)
- * \return TRUE if currently selected CPU is OK and no error
- * ------------------------------------------------------------------------ */
-
 typedef struct {
     tCPUDef const* pExcludeCPUDef;
     tCPUDef const* pLastCPUDef;
@@ -366,6 +358,14 @@ static void IterateExclude(tCPUDef const* pThisCPUDef, void* pUser) {
     }
     pContext->pLastCPUDef = pThisCPUDef;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum)
+ * \brief  check whether currently selected CPU is NOT given one and issue error if not
+ * \param  MatchCPU disallowed CPU
+ * \param  ErrorNum error to issue if not OK (0 = default message)
+ * \return TRUE if currently selected CPU is OK and no error
+ * ------------------------------------------------------------------------ */
 
 extern Boolean ChkExcludeCPUExt(CPUVar MatchCPU, tErrorNum ErrorNum) {
     tExcludeContext Context;
@@ -523,11 +523,10 @@ extern int ChkExactCPUList(int ErrorNum, ...) {
 
 /*!------------------------------------------------------------------------
  * \fn     ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum)
- * \brief  check whether currently selected CPU is one of the given ones and issue error if not
+  * \brief  check whether currently selected CPU is one of the given ones and issue error if not
  * \param  CPUMask bit mask of allowed CPUs
- * \param  CPUVar CPU corresponding to bit 0 in mask
+ * \param  FirstCPU CPU corresponding to bit 0 in mask
  * \param  ErrorNum error to issue if not OK (0 = default message)
- * \param  ... List of CPUs terminated by CPUNone
  * \return Index (0...) of matching CPU or -1 if current CPU does not match
  * ------------------------------------------------------------------------ */
 
@@ -568,7 +567,7 @@ int ChkExactCPUMaskExt(Word CPUMask, CPUVar FirstCPU, tErrorNum ErrorNum) {
 /*!------------------------------------------------------------------------
  * \fn     ChkSamePagePos(CurrAddr, DestAddr, PageBits, DestFlags, p_comp)
  * \brief  check whether two addresses are of same page
- * \param  CurrAddr, DestAddr addresses to check
+ * \param  CurrAddr DestAddr addresses to check
  * \param  PageBits page size in bits
  * \param  DestFlags symbol flags of DestAddr
  * \param  p_comp optional source component for the diagnostic

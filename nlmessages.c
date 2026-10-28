@@ -223,7 +223,7 @@ char* getmessage(int Num) {
  * \fn     check_header_raw(as_raw_msg_struct_t *p_raw, LongInt msg_id1, LongInt msg_id2)
  * \brief  check raw msg file for correct header
  * \param  p_raw file to check
- * \param  msg_id1, msg_id2 expected identifiers
+ * \param  msg_id1 msg_id2 expected identifiers
  * \return True if file OK
  * ------------------------------------------------------------------------ */
 
@@ -243,7 +243,7 @@ static Boolean check_header_raw(
  * \fn     open_raw_file_and_check(const char *name, LongInt MsgId1, LongInt MsgId2)
  * \brief  open raw msg file from file and check header
  * \param  name file's name & path
- * \param  MsgId1, MsgId2, expected identifiers
+ * \param  MsgId1 MsgId2, expected identifiers
  * \return * to raw file or NULL if failed
  * ------------------------------------------------------------------------ */
 
@@ -267,10 +267,10 @@ as_raw_msg_struct_t* open_raw_file_and_check(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     parse_raw_msg_file(PMsgCat p_cat, as_raw_msg_struct_t *p_msg_raw)
- * \brief  parse raw message catalog into runtime structure
+ * \fn     parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw)
+  * \brief  parse raw message catalog into runtime structure
  * \param  p_cat where to store result
- * \param  p_raw raw catalog to parse
+ * \param  p_msg_raw raw catalog to parse
  * ------------------------------------------------------------------------ */
 
 static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
@@ -427,12 +427,13 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
 #define MSGPATHNAME "AS_MSGPATH"
 
 /*!------------------------------------------------------------------------
- * \fn     msg_catalog_open_file(PMsgCat p_catalog, const char *p_file_name, const char *p_exe_path, LongInt msg_id1, LongInt msg_id2)
- * \brief  open message catalog from file
+ * \fn     msg_catalog_open_file(PMsgCat p_catalog, char const* p_file_name, char const* p_exe_path, LongInt msg_id1, LongInt msg_id2)
+  * \brief  open message catalog from file
  * \param  p_catalog catalog to fill
  * \param  p_file_name catalog's file name
  * \param  p_exe_path executable's path
- * \param  file_msg_id1, file_msg_id1 file magic values to expect
+ * \param  msg_id1 first file magic value to expect
+ * \param  msg_id2 second file magic value to expect
  * ------------------------------------------------------------------------ */
 
 void msg_catalog_open_file(
@@ -535,7 +536,7 @@ void msg_catalog_open_file(
  * \param  p_catalog catalog to fill
  * \param  p_buffer buffer containing catalog
  * \param  buffer_size buffer's size
- * \param  msg_id1, msg_id1 file magic values to expect
+ * \param  msg_id1 msg_id1 file magic values to expect
  * ------------------------------------------------------------------------ */
 
 void msg_catalog_open_buffer(
@@ -565,7 +566,7 @@ void msg_catalog_open_buffer(
  * \brief  module initialization, load default catalog from file
  * \param  p_file_name catalog's file name
  * \param  p_exe_path executable's path
- * \param  msg_id1, msg_id2 catalog file magic to expect
+ * \param  msg_id1 msg_id2 catalog file magic to expect
  * ------------------------------------------------------------------------ */
 
 void nlmessages_init_file(
@@ -579,7 +580,7 @@ void nlmessages_init_file(
  * \brief  module initialization, load default catalog from buffer
  * \param  p_buffer buffer containing catalog
  * \param  buffer_size buffer's size
- * \param  msg_id1, msg_id2 catalog file magic to expect
+ * \param  msg_id1 msg_id2 catalog file magic to expect
  * ------------------------------------------------------------------------ */
 
 void nlmessages_init_buffer(

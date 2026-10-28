@@ -221,7 +221,7 @@ void as_tempres_copy(TempResult* p_dest, TempResult const* p_src) {
 /*!------------------------------------------------------------------------
  * \fn     as_tempres_cmp(const TempResult *p_res1, const TempResult *p_res2)
  * \brief  compare two values
- * \param  p_res1, p_res2 values to compare
+ * \param  p_res1 p_res2 values to compare
  * \return -1/0/+1 for p_res1 </=/> p_res2
  * ------------------------------------------------------------------------ */
 

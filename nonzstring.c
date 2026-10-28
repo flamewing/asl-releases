@@ -147,7 +147,7 @@ size_t as_nonz_dynstr_copy(as_nonz_dynstr_t* p_dest, as_nonz_dynstr_t const* p_s
 /*!------------------------------------------------------------------------
  * \fn     as_nonz_dynstr_swap(as_nonz_dynstr_t *p_str1, as_nonz_dynstr_t *p_str2)
  * \brief  exchange contents of two strings
- * \param  p_str1, p_str2 strings to swap contents
+ * \param  p_str1 p_str2 strings to swap contents
  * ------------------------------------------------------------------------ */
 
 void as_nonz_dynstr_swap(as_nonz_dynstr_t* p_str1, as_nonz_dynstr_t* p_str2) {
@@ -240,7 +240,7 @@ size_t as_nonz_dynstr_append(as_nonz_dynstr_t* p_dest, as_nonz_dynstr_t const* p
 /*!------------------------------------------------------------------------
  * \fn     as_nonz_dynstr_cmp(const as_nonz_dynstr_t *p_str1, const as_nonz_dynstr_t *p_str2)
  * \brief  compare two strings
- * \param  p_str1, p_str2 strings to compare
+ * \param  p_str1 p_str2 strings to compare
  * \return -1/0/+1 if Str1 </==/> Str2
  * ------------------------------------------------------------------------ */
 

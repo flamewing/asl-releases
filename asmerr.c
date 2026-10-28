@@ -89,16 +89,16 @@ Boolean FindAndTakeExpectError(tErrorNum Num) {
     return False;
 }
 
+enum {
+    e_onoff_reg_warn_relative = 1 << 0
+};
+
 /*!------------------------------------------------------------------------
  * \fn     registered_test_and_set(unsigned mask)
  * \brief  check whether on/off insn is registered first time during pass
  * \param  mask insn to test
  * \return mask if first time, otherwise 0
  * ------------------------------------------------------------------------ */
-
-enum {
-    e_onoff_reg_warn_relative = 1 << 0
-};
 
 static unsigned registered_test_and_set(unsigned mask) {
     unsigned curr = warn_registered;
@@ -1444,10 +1444,10 @@ void WrError(tErrorNum Num) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     WrXError(tErrorNum Num, const char *pExtError)
- * \brief  write number-coded error message with extended explanation
+ * \fn     WrXError(tErrorNum Num, char const* pExtError)
+  * \brief  write number-coded error message with extended explanation
  * \param  Num error number
- * \param  pExtendError extended error explanation
+ * \param  pExtError extended error explanation
  * ------------------------------------------------------------------------ */
 
 void WrXError(tErrorNum Num, char const* pExtError) {
@@ -1475,7 +1475,7 @@ void ChkIO(tErrorNum ErrNo) {
  * \fn     ChkXIO(tErrorNum ErrNo, char *pExtError)
  * \brief  check for I/O error and report given error if yes
  * \param  ErrNo error number to report if error occured
- * \param  pExtError, file name, as plain string
+ * \param  pExtError file name, as plain string
  * ------------------------------------------------------------------------ */
 
 void ChkXIO(tErrorNum ErrNo, char* pExtError) {
@@ -1489,7 +1489,7 @@ void ChkXIO(tErrorNum ErrNo, char* pExtError) {
  * \fn     void ChkIO(tErrorNum ErrNo)
  * \brief  check for I/O error and report given error if yes
  * \param  ErrNo error number to report if error occured
- * \param  pComp, file name, as string component with position
+ * \param  pComp file name, as string component with position
  * ------------------------------------------------------------------------ */
 
 void ChkStrIO(tErrorNum ErrNo, const struct sStrComp* pComp) {

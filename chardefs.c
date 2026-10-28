@@ -424,12 +424,7 @@ char const* CharTab_GetNULTermString(
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     UTF8ToUnicode(const char* *ppChr)
- * \brief  convert UTF-8 encoded char to Unicode
- * \param  ppChr * to character (points afterwards to next character)
- * \return Unicode value
- * ------------------------------------------------------------------------ */
+
 
 static int CheckOneUTF8(unsigned char Val, unsigned char Mask, LongWord* pPart) {
     if ((Val & Mask) == ((Mask << 1) & 0xff)) {
@@ -439,6 +434,13 @@ static int CheckOneUTF8(unsigned char Val, unsigned char Mask, LongWord* pPart) 
         return 0;
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     UTF8ToUnicode(const char* *ppChr)
+ * \brief  convert UTF-8 encoded char to Unicode
+ * \param  ppChr * to character (points afterwards to next character)
+ * \return Unicode value
+ * ------------------------------------------------------------------------ */
 
 LongWord UTF8ToUnicode(char const** ppChr) {
     LongWord Part1, Part2, Part3, Part4;

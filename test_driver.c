@@ -210,14 +210,7 @@ static void dump_file(char const* data, size_t size) {
     printf("\n");
 }
 
-/**
- * Compares actual output file to expected output file to see if they match.
- *
- * @param source_dir The test's source directory.
- * @param output_dir The test's output directory.
- * @param test_name The name of the test.
- * @return Returns true if the files are identical, false otherwise.
- */
+
 static bool read_binary_file(FILE* file, char const* name, char** data, size_t* size) {
     long length;
     if (fseek(file, 0, SEEK_END) != 0 || (length = ftell(file)) < 0
@@ -238,6 +231,14 @@ static bool read_binary_file(FILE* file, char const* name, char** data, size_t* 
     return true;
 }
 
+/**
+ * Compares actual output file to expected output file to see if they match.
+ *
+ * @param source_dir The test's source directory.
+ * @param output_dir The test's output directory.
+ * @param test_name The name of the test.
+ * @return Returns true if the files are identical, false otherwise.
+ */
 static bool compare_files(
         char const* source_dir, char const* output_dir, char const* test_name) {
     char ori_file[PATH_BUFFER_SIZE];

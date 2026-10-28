@@ -261,7 +261,7 @@ static as_cmd_result_t DecodeLine(
                        as_cmd_results_t *p_results)
  * \brief  process arguments from file
  * \param  Name_O file's name
- * \param  p_cmd_recs, cmd_rec_cnt argument defintions
+ * \param  p_cmd_recs cmd_rec_cnt argument defintions
  * \param  p_results result buffer
  * \return e_cmd_ok or e_cmd_err
  * ------------------------------------------------------------------------ */
@@ -312,7 +312,7 @@ static int cmd_compare(void const* p1, void const* p2) {
 /*!------------------------------------------------------------------------
  * \fn     as_cmd_register(const as_cmd_rec_t *p_add_recs, size_t add_rec_cnt)
  * \brief  extend command record list
- * \param  p_add_recs, add_rec_cnt records to add
+ * \param  p_add_recs add_rec_cnt records to add
  * ------------------------------------------------------------------------ */
 
 void as_cmd_register(as_cmd_rec_t const* p_add_recs, size_t add_rec_cnt) {
@@ -425,18 +425,17 @@ long as_cmd_strtol(char const* p_inp, char const** pp_end) {
     return ret;
 }
 
+char const* argv0;
+
 /*!------------------------------------------------------------------------
- * \fn     as_cmd_process(int argc, char **argv,
-                          const char *p_env_name, as_cmd_results_t *p_results)
- * \brief  arguments from command line and environment
+ * \fn     as_cmd_process(int argc, char** argv, char const* p_env_name, as_cmd_results_t* p_results)
+  * \brief  arguments from command line and environment
  * \param  argc command line arg count as handed to main()
  * \param  argv command line args as handed to main()
  * \param  p_env_name environment variable to draw additional args from
- * \param  p_file_arg_list gets populated with file arguments
+ * \param  p_results receives parsed options and file arguments
  * \return e_cmd_ok, or e_cmd_err on faulty arg
  * ------------------------------------------------------------------------ */
-
-char const* argv0;
 
 as_cmd_result_t as_cmd_process(
         int argc, char** argv, char const* p_env_name, as_cmd_results_t* p_results) {

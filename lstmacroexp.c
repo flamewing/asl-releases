@@ -71,7 +71,7 @@ tLstMacroExp GetLstMacroExp(void) {
 /*!------------------------------------------------------------------------
  * \fn     Inverse(Byte Mod1, Byte Mod2)
  * \brief  check whether one modifier is the exact inverse of another modifier
- * \param  Mod1, Mod2 modifiers to be analyzed
+ * \param  Mod1 Mod2 modifiers to be analyzed
  * \return True of Mod1 is the exact inverse of Mod2
  * ------------------------------------------------------------------------ */
 

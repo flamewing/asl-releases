@@ -2245,9 +2245,9 @@ static Boolean code_set_cond(Word may_change) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     code_save_cond(Word may_change)
- * \brief  process SAVE pseudo statement if no machine instruction
- * \param  may_change fixed 0 for SAVE
+ * \fn     code_save_cond(Word arg)
+  * \brief  process SAVE pseudo statement if no machine instruction
+ * \param  arg fixed 0 for SAVE
  * \return True if instruction was processed
  * ------------------------------------------------------------------------ */
 
@@ -2261,9 +2261,9 @@ static Boolean code_save_cond(Word arg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     code_page_cond(Word may_change)
- * \brief  process PAGE pseudo statement if no machine instruction
- * \param  may_change fixed 0 for PAGE
+ * \fn     code_page_cond(Word arg)
+  * \brief  process PAGE pseudo statement if no machine instruction
+ * \param  arg fixed 0 for PAGE
  * \return True if instruction was processed
  * ------------------------------------------------------------------------ */
 
@@ -2277,9 +2277,9 @@ static Boolean code_page_cond(Word arg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     code_pagesize_cond(Word may_change)
- * \brief  process PAGESIZE pseudo statement if PAGE is a machine instruction
- * \param  may_change fixed 0 for PAGESIZE
+ * \fn     code_pagesize_cond(Word arg)
+  * \brief  process PAGESIZE pseudo statement if PAGE is a machine instruction
+ * \param  arg fixed 0 for PAGESIZE
  * \return True if instruction was processed
  * ------------------------------------------------------------------------ */
 
@@ -2293,9 +2293,9 @@ static Boolean code_pagesize_cond(Word arg) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     code_restore_cond(Word may_change)
- * \brief  process RESTORE pseudo statement if no machine instruction
- * \param  may_change fixed 0 for RESTORE
+ * \fn     code_restore_cond(Word arg)
+  * \brief  process RESTORE pseudo statement if no machine instruction
+ * \param  arg fixed 0 for RESTORE
  * \return True if instruction was processed
  * ------------------------------------------------------------------------ */
 

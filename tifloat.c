@@ -48,10 +48,10 @@ static int split_exp(as_float_t inp, LongInt* p_exponent, LongWord* p_mantissa) 
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_float_2_ti2(as_float_t inp, Word *p_dest)
- * \brief  convert host float to C3x/4x short (16 bits)
+ * \fn     as_float_2_ti2(as_float_t inp, Word* p_dest)
+  * \brief  convert host float to C3x/4x short (16 bits)
  * \param  inp float input (host format)
- * \param  result buffer
+ * \param  p_dest result buffer
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
@@ -76,10 +76,10 @@ int as_float_2_ti2(as_float_t inp, Word* p_dest) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_float_2_ti4(as_float_t inp, LongWord *p_dest)
- * \brief  convert host float to C3x/4x single (32 bits)
+ * \fn     as_float_2_ti4(as_float_t inp, LongWord* p_dest)
+  * \brief  convert host float to C3x/4x single (32 bits)
  * \param  inp float input (host format)
- * \param  result buffer
+ * \param  p_dest result buffer
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 

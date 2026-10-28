@@ -54,22 +54,7 @@ char const* Blanks(int cnt) {
     return BlkStr + (BlkStrLen - cnt);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     SysString(char *pDest, size_t DestSize,
-                     LargeWord Num, int System, Boolean is_signed,
-                     int Digits, Boolean ForceLeadZero, char StartCharacter, char
- SplitCharacter)
- * \brief  convert number to string in given number system, leading zeros
- * \param  pDest where to write
- * \param  DestSize size of dest buffer
- * \param  Num number to convert
- * \param  System number system
- * \param  is_signed treat as signed?
- * \param  Digits minimum length of output
- * \param  ForceLeadZero prepend zero if first character is no number
- * \param  StartCharacter 'a' or 'A' for hex digits
- * \param  SplitCharacter split bytes if not NUL
- * ------------------------------------------------------------------------ */
+
 
 char* SysStringCore(
         char* pDest, char* pDestCurr AS_LIFETIMEBOUND, LargeWord Num, int System, int Digits,
@@ -91,6 +76,23 @@ char* SysStringCore(
     } while ((Digits > 0) || Num);
     return pDestCurr;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     SysString(char *pDest, size_t DestSize,
+                     LargeWord Num, int System, Boolean is_signed,
+                     int Digits, Boolean ForceLeadZero, char StartCharacter, char
+ SplitCharacter)
+ * \brief  convert number to string in given number system, leading zeros
+ * \param  pDest where to write
+ * \param  DestSize size of dest buffer
+ * \param  Num number to convert
+ * \param  System number system
+ * \param  is_signed treat as signed?
+ * \param  Digits minimum length of output
+ * \param  ForceLeadZero prepend zero if first character is no number
+ * \param  StartCharacter 'a' or 'A' for hex digits
+ * \param  SplitCharacter split bytes if not NUL
+ * ------------------------------------------------------------------------ */
 
 int SysString(
         char* pDest, size_t DestSize, LargeWord Num, int System, Boolean is_signed,
@@ -828,8 +830,8 @@ char* strstr(char const* haystack, char const* needle) {
 /*!------------------------------------------------------------------------
  * \fn     strmultchr(const char *haystack, const char *needles)
  * \brief  find the first occurence of either character in string
- * \param  haystack string to search in
- * \param  needles characters to search for
+ * \param  p_haystack string to search in
+ * \param  p_needles characters to search for
  * \return last occurence or NULL
  * ------------------------------------------------------------------------ */
 
@@ -1011,7 +1013,6 @@ size_t as_strnlen(char const* pStr, size_t MaxLen) {
  * \brief  replaces all occurences of From to To in Haystack
  * \param  pHaystack string to search in
  * \param  pFrom what to find
- * \param  pFrom what to find
  * \param  pTo what to replace it with
  * \param  ToMaxLen if not -1, max. length of pTo (not NUL-terminated)
  * \param  HaystackSize buffer capacity
@@ -1128,7 +1129,7 @@ static void dump(const char *pLine, unsigned Cnt)
  * \fn     ReadLnCont(FILE *Datei, as_dynstr_t *p_line)
  * \brief  read line, regarding \ continuation characters
  * \param  Datei where to read from
- * \param  pLine dest buffer
+ * \param  p_line dest buffer
  * \return # of lines read
  * ------------------------------------------------------------------------ */
 

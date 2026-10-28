@@ -2040,16 +2040,16 @@ static void ExpandWHILE(Word code) {
     ResetLastLabel = False;
 }
 
+static void ExpandIRPNInstruction(Word code) {
+    UNUSED(code);
+    ResetLastLabel = !ExpandIRPN();
+}
+
 /*!------------------------------------------------------------------------
  * \fn     MacroStart(void)
  * \brief  check whether the current instruction will open another macro nesting level
  * \return True if yes
  * ------------------------------------------------------------------------ */
-
-static void ExpandIRPNInstruction(Word code) {
-    UNUSED(code);
-    ResetLastLabel = !ExpandIRPN();
-}
 
 static Boolean MacroStart(void) {
     TInstTableEntry const* p_entry = inst_table_search(

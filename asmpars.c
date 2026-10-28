@@ -2881,12 +2881,11 @@ void EvalStrStringExpression(
 }
 
 /*!------------------------------------------------------------------------
- * \fn     EvalStrRegExpressionWithResult(const struct sStrComp *pExpr, struct sRegDescr *pResult, struct sEvalResult *pEvalResult, Boolean IssueErrors)
- * \brief  retrieve/evaluate register expression
+ * \fn     EvalStrRegExpressionWithResult(const struct sStrComp* pExpr, tRegDescr* pResult, tEvalResult* pEvalResult)
+  * \brief  retrieve/evaluate register expression
  * \param  pExpr source code expression
  * \param  pResult retrieved register
  * \param  pEvalResult success flag, symbol size & flags
- * \param  IssueErrors print errors at all?
  * \return occured error
  * ------------------------------------------------------------------------ */
 
@@ -3274,6 +3273,16 @@ func_exit:
     return pNeu;
 }
 
+static Boolean symbol_name_reserved(char const* p_name) {
+    if (inf_reserved) {
+        if (*p_name == '-') {
+            p_name++;
+        }
+        return !as_strcasecmp(p_name, inf_name);
+    }
+    return False;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     EnterIntSymbolWithFlagsAndWidth(const tStrComp *p_name, LargeInt value, Integer num_bits, as_addrspace_t addrspace, Boolean may_change, tSymbolFlags flags)
  * \brief  add integer symbol to symbol table
@@ -3285,16 +3294,6 @@ func_exit:
  * \param  flags additional flags
  * \return * to newly created entry in tree
  * ------------------------------------------------------------------------ */
-
-static Boolean symbol_name_reserved(char const* p_name) {
-    if (inf_reserved) {
-        if (*p_name == '-') {
-            p_name++;
-        }
-        return !as_strcasecmp(p_name, inf_name);
-    }
-    return False;
-}
 
 PSymbolEntry EnterIntSymbolWithFlagsAndWidth(
         tStrComp const* p_name, LargeInt value, Integer num_bits,
@@ -3336,7 +3335,7 @@ PSymbolEntry EnterIntSymbolWithFlagsAndWidth(
  * \brief  create extended symbol
  * \param  pName unexpanded name
  * \param  Wert symbol value
- * \param  AddrSpace symbol's address space
+ * \param  addrspace symbol's address space
  * \param  MayChange variable or constant?
  * ------------------------------------------------------------------------ */
 
@@ -3449,7 +3448,7 @@ void EnterFloatSymbol(tStrComp const* pName, as_float_t Wert, Boolean MayChange)
  * \fn     EnterNonZStringSymbolWithFlags(const tStrComp *pName, const as_nonz_dynstr_t *p_value, Boolean MayChange, tSymbolFlags Flags)
  * \brief  enter string symbol
  * \param  pName unexpanded name
- * \param  pValue symbol value
+ * \param  p_value symbol value
  * \param  MayChange variable or constant?
  * \param  Flags special symbol flags to store
  * ------------------------------------------------------------------------ */
@@ -3763,17 +3762,6 @@ static PSymbolEntry FindNode(
     return p_result;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     ExpandAndFindNode(const struct sStrComp *pName, TempType SearchType, Boolean SearchLocal, expand_chk_t chk, lookup_symbol_error_t *p_lookup_error)
- * \brief  expand, optionally check and find node in global and/or local symbol table
- * \param  pComp name of symbol to expand & search
- * \param  SearchType data type to search for
- * \param  SearchLocal search in local table as well
- * \param  chk preliminary checks to perform
- * \param  p_lookup_error may return != e_lookup_error_none if NULL due to symbol syntax error
- * \return * to node or NULL
- * ------------------------------------------------------------------------ */
-
 PSymbolEntry ExpandAndFindNodeRet(
         const struct sStrComp* pName, struct sStrComp* p_exp_name, TempType SearchType,
         Boolean SearchLocal, expand_chk_t chk, lookup_symbol_error_t* p_lookup_error) {
@@ -3806,6 +3794,17 @@ PSymbolEntry ExpandAndFindNodeRet(
 
     return FindNode(p_exp_name_ret, SearchType, SearchLocal, p_lookup_error);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     ExpandAndFindNode(const struct sStrComp* pName, TempType SearchType, Boolean SearchLocal, expand_chk_t chk, lookup_symbol_error_t* p_lookup_error)
+  * \brief  expand, optionally check and find node in global and/or local symbol table
+ * \param  pName name of symbol to expand & search
+ * \param  SearchType data type to search for
+ * \param  SearchLocal search in local table as well
+ * \param  chk preliminary checks to perform
+ * \param  p_lookup_error may return != e_lookup_error_none if NULL due to symbol syntax error
+ * \return * to node or NULL
+ * ------------------------------------------------------------------------ */
 
 PSymbolEntry ExpandAndFindNode(
         const struct sStrComp* pName, TempType SearchType, Boolean SearchLocal,
@@ -4043,13 +4042,6 @@ Boolean IsSymbolUsed(const struct sStrComp* pName) {
     return pEntry && update_and_get_used(pEntry);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     GetSymbolType(const struct sStrComp *pName)
- * \brief  retrieve type (int/float/string) of symbol
- * \param  pName unexpanded name
- * \return type or -1 if non-existent
- * ------------------------------------------------------------------------ */
-
 as_addrspace_t addrspace_from_mask(unsigned mask) {
     as_addrspace_t space;
 
@@ -4060,6 +4052,13 @@ as_addrspace_t addrspace_from_mask(unsigned mask) {
     }
     return SegNone;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     GetSymbolType(const struct sStrComp *pName)
+ * \brief  retrieve type (int/float/string) of symbol
+ * \param  pName unexpanded name
+ * \return type or -1 if non-existent
+ * ------------------------------------------------------------------------ */
 
 Integer GetSymbolType(const struct sStrComp* pName) {
     PSymbolEntry pEntry
@@ -4929,11 +4928,10 @@ void ClearSectionList(void) {
 /*---------------------------------------------------------------------------------*/
 
 /*!------------------------------------------------------------------------
- * \fn     PrintCrossList_PNode(PTree Node, void *pData)
- * \brief  printf cross refence list of a single symbol table entry
+ * \fn     PrintCrossList_PNode(PTree Node, void* pData)
+  * \brief  printf cross refence list of a single symbol table entry
  * \param  Node node base object
  * \param  pData actual symbol entry
- * \return
  * ------------------------------------------------------------------------ */
 
 static void PrintCrossList_PNode(PTree Node, void* pData) {

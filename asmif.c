@@ -453,9 +453,7 @@ static void CodeENDCASE(Word code) {
 
 /*!------------------------------------------------------------------------
  * \fn     as_if_augment_main_inst_tables(void)
- * \brief  augment instruction tables by conditional assembly instructions
- * \param  p_inst_table_no_leading_dot hash table if no leading dot was stripped
- * \param  p_inst_table_leading_dot hash table if leading dot was stripped
+  * \brief  augment instruction tables by conditional assembly instructions
  * ------------------------------------------------------------------------ */
 
 extern void as_if_augment_main_inst_tables(void) {

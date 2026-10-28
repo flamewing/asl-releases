@@ -60,8 +60,8 @@ as_literal_t* literals_new(void) {
 
 /*!------------------------------------------------------------------------
  * \fn     literals_free(as_literal_t* p_literal)
- * \brief  destroy literal
- * \param   p_literalliteral to free
+  * \brief  destroy literal
+ * \param   p_literal literal to free
  * ------------------------------------------------------------------------ */
 
 void literals_free(as_literal_t* p_literal) {

@@ -72,14 +72,7 @@ void WriteCopyrights(void (*PrintProc)(char const*)) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     QuotMultPosQualify(const char *s, const char *pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc)
- * \brief  find first occurence in non-quoted areas of string
- * \param  s string to search in
- * \param  pSearch search test function (returns 0 for match)
- * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
- * \return first occurence or NULL if not found
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -146,18 +139,20 @@ static char const* QuotPosCore(
     return data.p_result;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     QuotMultPosQualify(const char *s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc)
- * \brief  find first occurence of characters in non-quoted areas of string
- * \param  s string to search in
- * \param  Zeichen characters to search for
- * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
- * \return first occurence or NULL if not found
- * ------------------------------------------------------------------------ */
+
 
 static int SearchMultChar(char const* pPos, char const* pSearch) {
     return !strchr(pSearch, *pPos);
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     QuotMultPosQualify(const char *s, const char *pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc)
+ * \brief  find first occurence in non-quoted areas of string
+ * \param  s string to search in
+ * \param  pSearch characters to search for
+ * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
+ * \return first occurence or NULL if not found
+ * ------------------------------------------------------------------------ */
 
 char* QuotMultPosQualify(
         char* s, char const* pSearch, as_qualify_quote_fnc_t QualifyQuoteFnc) {
@@ -169,6 +164,12 @@ char const* QuotMultPosConstQualify(
     return QuotPosCore(s, SearchMultChar, pSearch, QualifyQuoteFnc);
 }
 
+
+
+static int SearchSingleChar(char const* pPos, char const* pSearch) {
+    return ((int)*pSearch) - ((int)*pPos);
+}
+
 /*!------------------------------------------------------------------------
  * \fn     QuotPosQualify(const char *s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc)
  * \brief  find first occurence of character in non-quoted areas of string
@@ -177,10 +178,6 @@ char const* QuotMultPosConstQualify(
  * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
  * \return first occurence or NULL if not found
  * ------------------------------------------------------------------------ */
-
-static int SearchSingleChar(char const* pPos, char const* pSearch) {
-    return ((int)*pSearch) - ((int)*pPos);
-}
 
 char* QuotPosQualify(char* s, char Zeichen, as_qualify_quote_fnc_t QualifyQuoteFnc) {
     return MutablePosition(s, QuotPosConstQualify(s, Zeichen, QualifyQuoteFnc));
@@ -194,14 +191,7 @@ char const* QuotPosConstQualify(
     return QuotPosCore(s, SearchSingleChar, &Zeichen, QualifyQuoteFnc);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     QuotSMultPosQualify(const char *s, const char *pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc)
- * \brief  find first occurence of strings in non-quoted areas of string
- * \param  s string to search in
- * \param  pStrs strings to search for (continuous list, terminated by empty string)
- * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
- * \return first occurence or NULL if not found
- * ------------------------------------------------------------------------ */
+
 
 static int SearchMultString(char const* pPos, char const* pSearch) {
     int len;
@@ -217,6 +207,15 @@ static int SearchMultString(char const* pPos, char const* pSearch) {
     }
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     QuotSMultPosQualify(const char *s, const char *pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc)
+ * \brief  find first occurence of strings in non-quoted areas of string
+ * \param  s string to search in
+ * \param  pStrs strings to search for (continuous list, terminated by empty string)
+ * \param  QualifyQuoteFnc checks whether single quote actually begins quoted area
+ * \return first occurence or NULL if not found
+ * ------------------------------------------------------------------------ */
+
 char* QuotSMultPosQualify(
         char* s, char const* pStrs, as_qualify_quote_fnc_t QualifyQuoteFnc) {
     return MutablePosition(s, QuotSMultPosConstQualify(s, pStrs, QualifyQuoteFnc));
@@ -231,13 +230,7 @@ char const* QuotSMultPosConstQualify(
     return QuotPosCore(s, SearchMultString, pStrs, QualifyQuoteFnc);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     RQuotPos(char *s, char Zeichen)
- * \brief  find last occurence of character, skipping quoted/parenthized parts
- * \param  s string to search
- * \param  Zeichen character to search for
- * \return last occurence or NULL if not found at all
- * ------------------------------------------------------------------------ */
+
 
 /* NOTE: Though we search for the last occurence, it is not wise to search
    the string in backward direction.  Character escaping can only be tracked
@@ -286,6 +279,14 @@ static int rquot_search_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb
     return 0;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     RQuotPos(char *s, char Zeichen)
+ * \brief  find last occurence of character, skipping quoted/parenthized parts
+ * \param  s string to search
+ * \param  Zeichen character to search for
+ * \return last occurence or NULL if not found at all
+ * ------------------------------------------------------------------------ */
+
 char* RQuotPos(char* s, char Zeichen) {
     rquot_search_cb_data data;
 
@@ -299,14 +300,7 @@ char* RQuotPos(char* s, char Zeichen) {
     return MutablePosition(s, data.p_result);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     CopyNoBlanks(char *pDest, const char *pSrc, size_t MaxLen)
- * \brief  copy string, excluding spaces in non-quoted areas
- * \param  pDest destination buffer
- * \param  pSrc copy source
- * \param  MaxLen capacity of dest buffer
- * \return # of copied characters, excluding NUL
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -327,6 +321,15 @@ static int copy_no_blanks_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_
     }
     return 0;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     CopyNoBlanks(char *pDest, const char *pSrc, size_t MaxLen)
+ * \brief  copy string, excluding spaces in non-quoted areas
+ * \param  pDest destination buffer
+ * \param  pSrc copy source
+ * \param  MaxLen capacity of dest buffer
+ * \return # of copied characters, excluding NUL
+ * ------------------------------------------------------------------------ */
 
 int CopyNoBlanks(char* pDest, char const* pSrc, size_t MaxLen) {
     copy_cb_data_t data;
@@ -397,11 +400,7 @@ void SplitString(char* Source, char* Left, char* Right, char* Trenner) {
     }
 }
 
-/*!------------------------------------------------------------------------
- * \fn     UpString(char *s)
- * \brief  convert string to upper case, excluding quoted areas
- * \param  s string to convert
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -413,6 +412,12 @@ static int upstring_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_dat
     data->buffer[p_pos - p_cb_data->p_str] = UpCaseTable[(int)*p_pos];
     return 0;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     UpString(char *s)
+ * \brief  convert string to upper case, excluding quoted areas
+ * \param  s string to convert
+ * ------------------------------------------------------------------------ */
 
 void UpString(char* s) {
     upstring_cb_data_t data;
@@ -520,12 +525,7 @@ func_exit:
     return pResult;
 }
 
-/*!------------------------------------------------------------------------
- * \fn     FindClosingParenthese(char *pStr)
- * \brief  find matching closing parenthese
- * \param  pStr * to string right after opening parenthese
- * \return * to closing parenthese or NULL
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -550,6 +550,13 @@ static int close_par_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_da
     return 0;
 }
 
+/*!------------------------------------------------------------------------
+ * \fn     FindClosingParenthese(char *pStr)
+ * \brief  find matching closing parenthese
+ * \param  pStr * to string right after opening parenthese
+ * \return * to closing parenthese or NULL
+ * ------------------------------------------------------------------------ */
+
 char* FindClosingParenthese(char* pStr) {
     close_par_cb_data_t data;
 
@@ -563,14 +570,7 @@ char* FindClosingParenthese(char* pStr) {
     return MutablePosition(pStr, data.p_ret);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     FindOpeningParenthese(char *pStrBegin, const char *pStrEnd, const char Bracks[2])
- * \brief  find matching opening parenthese in string
- * \param  pStrBegin start of string
- * \param  pStrEnd end of string, preceding closing parenthese in question
- * \param  Bracks opening & closing parenthese
- * \return * to opening parenthese or NULL if not found
- * ------------------------------------------------------------------------ */
+
 
 typedef struct {
     as_quoted_iterator_cb_data_t data;
@@ -597,6 +597,15 @@ static int open_par_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_dat
 
     return ((p_pos + 1) < p_data->p_str_end) ? 0 : -1;
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     FindOpeningParenthese(char *pStrBegin, const char *pStrEnd, const char Bracks[2])
+ * \brief  find matching opening parenthese in string
+ * \param  pStrBegin start of string
+ * \param  pStrEnd end of string, preceding closing parenthese in question
+ * \param  Bracks opening & closing parenthese
+ * \return * to opening parenthese or NULL if not found
+ * ------------------------------------------------------------------------ */
 
 char* FindOpeningParenthese(char* pStrBegin, char const* pStrEnd, char const Bracks[2]) {
     open_par_cb_data_t data;
@@ -1113,6 +1122,13 @@ void SetListLineVal(TempResult* t) {
     as_dynstr_free(&str);
 }
 
+
+
+static Boolean CompMatch(int Col, const struct sLineComp* pComp) {
+    return (pComp && (pComp->StartCol >= 0) && (Col >= pComp->StartCol)
+            && (Col < pComp->StartCol + (int)pComp->Len));
+}
+
 /*!------------------------------------------------------------------------
  * \fn     PrintOneLineMuted(FILE *pFile, const char *pLine,
                              const struct sLineComp *pMuteComponent,
@@ -1122,11 +1138,6 @@ void SetListLineVal(TempResult* t) {
  * \param  pLine line to print
  * \param  pMuteComponent component to mute in printout
  * ------------------------------------------------------------------------ */
-
-static Boolean CompMatch(int Col, const struct sLineComp* pComp) {
-    return (pComp && (pComp->StartCol >= 0) && (Col >= pComp->StartCol)
-            && (Col < pComp->StartCol + (int)pComp->Len));
-}
 
 void PrintOneLineMuted(
         FILE* pFile, char const* pLine, const struct sLineComp* pMuteComponent,

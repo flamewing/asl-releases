@@ -87,12 +87,7 @@ void DestroyStructRec(PStructRec StructRec) {
     free(StructRec);
 }
 
-/*!------------------------------------------------------------------------
- * \fn     CreateStructElem(const char *pElemName)
- * \brief  create a new entry for a structure definition
- * \param  pElemName name of the structure element
- * \return * to element or NULL if allocation failed
- * ------------------------------------------------------------------------ */
+
 
 void ExpandStructStd(
         tStrComp const* pVarName, const struct sStructElem* pStructElem, LargeWord Base) {
@@ -109,6 +104,13 @@ void ExpandStructStd(
         }
     }
 }
+
+/*!------------------------------------------------------------------------
+ * \fn     CreateStructElem(const char *pElemName)
+ * \brief  create a new entry for a structure definition
+ * \param  pElemName name of the structure element
+ * \return * to element or NULL if allocation failed
+ * ------------------------------------------------------------------------ */
 
 PStructElem CreateStructElem(tStrComp const* pElemName) {
     String          ext_name_buf;

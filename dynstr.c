@@ -25,10 +25,10 @@ static void check_dynamic(as_dynstr_t const* p_str) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_dynstr_ini(as_dynstr_t *p_str, size_t AllocLen)
- * \brief  initialize empty string with given capacity
+ * \fn     as_dynstr_ini(as_dynstr_t* p_str, size_t ini_capacity)
+  * \brief  initialize empty string with given capacity
  * \param  p_str string to initialize
- * \param  AllocLen initial alloc length
+ * \param  ini_capacity initial alloc length
  * ------------------------------------------------------------------------ */
 
 void as_dynstr_ini(as_dynstr_t* p_str, size_t ini_capacity) {
@@ -123,9 +123,9 @@ void as_dynstr_free(as_dynstr_t* p_str) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_dynstr_copy(as_dynstr_t *p_dest, const as_dynstr_t *p_src)
- * \brief  set string from other string
- * \param  p_str string to set
+ * \fn     as_dynstr_copy(as_dynstr_t* p_dest, as_dynstr_t const* p_src)
+  * \brief  set string from other string
+ * \param  p_dest string to set
  * \param  p_src init source
  * \return actual # of characters copied
  * ------------------------------------------------------------------------ */
@@ -135,9 +135,9 @@ size_t as_dynstr_copy(as_dynstr_t* p_dest, as_dynstr_t const* p_src) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_dynstr_copy_c_str(as_dynstr_t *p_dest, const char *p_src)
- * \brief  set string from C string
- * \param  p_str string to set
+ * \fn     as_dynstr_copy_c_str(as_dynstr_t* p_dest, char const* p_src)
+  * \brief  set string from C string
+ * \param  p_dest string to set
  * \param  p_src init source
  * \return actual # of characters copied
  * ------------------------------------------------------------------------ */
@@ -147,9 +147,9 @@ size_t as_dynstr_copy_c_str(as_dynstr_t* p_dest, char const* p_src) {
 }
 
 /*!------------------------------------------------------------------------
- * \fn     as_dynstr_copy_raw_str(as_dynstr_t *p_dest, const char *p_src, size_t len)
- * \brief  set string from raw string
- * \param  p_str string to set
+ * \fn     as_dynstr_copy_raw_str(as_dynstr_t* p_dest, char const* p_src, size_t len)
+  * \brief  set string from raw string
+ * \param  p_dest string to set
  * \param  p_src init source
  * \param  len source length
  * \return actual # of characters copied
