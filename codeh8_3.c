@@ -464,7 +464,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
         }
 
         if (IsIndirect(Arg.str.p_str)) {
-            tStrComp Part, Remainder;
+            tStrComp Part, Remainder = {0};
 
             StrCompRefRight(&Part, &Arg, 1);
             StrCompShorten(&Part, 1);

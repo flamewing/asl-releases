@@ -1079,7 +1079,7 @@ static Boolean ClassCompList(tAdrComps* pComps, tStrComp* pArg) {
 
     if (IsIndirect(pArg->str.p_str)) {
         char*    pSplit;
-        tStrComp Remainder;
+        tStrComp Remainder = {0};
 
         StrCompIncRefLeft(pArg, 1);
         StrCompShorten(pArg, 1);

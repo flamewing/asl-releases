@@ -494,7 +494,7 @@ error: {
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeRegList(tStrComp const* pArg, Boolean BitRev, Byte* pResult) {
-    tStrComp Part, Remainder;
+    tStrComp Part, Remainder = {0};
     int      l = strlen(pArg->str.p_str);
     Word     Reg;
     char*    pSep;
@@ -540,7 +540,7 @@ static Boolean DecodeRegList(tStrComp const* pArg, Boolean BitRev, Byte* pResult
  * ------------------------------------------------------------------------ */
 
 static Boolean DecodeCfgList(tStrComp const* pArg, Byte* pResult) {
-    tStrComp   Part, Remainder;
+    tStrComp   Part, Remainder = {0};
     int        l = strlen(pArg->str.p_str);
     char*      pSep;
     char const Opts[] = "IFMC", *pOpt;

@@ -75,7 +75,7 @@ static Boolean DefChkPC(LargeWord Addr) {
 static void ParseCPUArgs(tStrComp const* pArgs, tCPUArg const* pCPUArgs) {
     tCPUArg const* pCPUArg;
     char *         pNext, *pSep;
-    tStrComp       Args, Remainder, NameComp, ValueComp;
+    tStrComp       Args, Remainder = {0}, NameComp, ValueComp;
     LongInt        VarValue;
     Boolean        OK;
     String         ArgStr;

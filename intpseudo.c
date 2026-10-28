@@ -3260,7 +3260,7 @@ static Boolean DecodeIntelPseudo_LayoutMult(
         LongInt       DupCnt;
         char *        pSep, *pRun;
         String        CopyStr;
-        tStrComp      Copy, DupArg, RemArg, ThisRemArg;
+        tStrComp      Copy, DupArg, RemArg, ThisRemArg = {0};
         tCurrCodeFill DUPStartFill, DUPEndFill;
         tSymbolFlags  Flags;
 

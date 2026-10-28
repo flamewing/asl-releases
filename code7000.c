@@ -952,7 +952,7 @@ static adr_mode_t decode_adr(
 
         StrCompRefRight(&Arg, pArg, num_indir);
         if (IsIndirect(Arg.str.p_str)) {
-            tStrComp Remainder;
+            tStrComp Remainder = {0};
             char*    pos;
             Word     base_reg = IREG_NONE, ind_reg = IREG_NONE;
             LongInt  disp_acc = 0;

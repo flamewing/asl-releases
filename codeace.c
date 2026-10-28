@@ -146,7 +146,7 @@ static void DecodeAdr(tStrComp const* pArg, Word Mask) {
         if (pArg->str.p_str[ArgLen - 1] != ']') {
             WrBracketError(pArg, "()[]{}", True);
         } else {
-            tStrComp Arg, Remainder;
+            tStrComp Arg, Remainder = {0};
 
             StrCompRefRight(&Arg, pArg, 1);
             StrCompShorten(&Arg, 1);

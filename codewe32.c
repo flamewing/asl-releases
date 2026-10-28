@@ -655,7 +655,7 @@ static Boolean decode_adr(
 
     split_pos = FindDispBaseSplitWithQualifier(arg.str.p_str, &arg_len, NULL, "()");
     if (split_pos >= 0) {
-        tStrComp disp_arg, reg_arg, reg_arg_remainder;
+        tStrComp disp_arg, reg_arg, reg_arg_remainder = {0};
         char*    p_reg_sep;
         Byte     lo_reg = NO_REG, hi_reg = NO_REG, *p_dest_reg;
 

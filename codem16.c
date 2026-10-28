@@ -291,7 +291,7 @@ static PChainRec DecodeChain(tStrComp* pArg) {
     int            z;
     char *         pCompSplit, *pScaleSplit;
     String         SRegStr;
-    tStrComp       Arg, Remainder, ScaleArg, SReg;
+    tStrComp       Arg, Remainder = {0}, ScaleArg, SReg;
     Boolean        OK;
     Byte           Scale;
     tRegEvalResult RegEvalResult;
@@ -938,7 +938,7 @@ static Word RMask(Word No, Boolean Turn) {
 
 static Boolean DecodeRegList(tStrComp const* pArg, Word* pResult, Boolean Turn) {
     String   ArgStr;
-    tStrComp Arg, Remainder, From, To;
+    tStrComp Arg, Remainder = {0}, From, To;
     char *   p, *p1, *p2, *p3;
     Word     r1, r2, z;
 

@@ -1216,7 +1216,7 @@ static as_float_t ConstFloatVal(char const* pExpr, Boolean* pResult, int* p_outo
  *****************************************************************************/
 
 static void ConstStringVal(tStrComp const* pExpr, TempResult* pDest, Boolean* pResult) {
-    tStrComp Raw, Copy, Remainder;
+    tStrComp Raw, Copy, Remainder = {0};
     char *   pPos, QuoteChar;
     int      l, TLen;
 
@@ -2285,7 +2285,7 @@ integer_result:
 
     if (operator_search_data.l_klamm != 0) {
         tStrComp FName;
-        as_strcomp_view_t FArg, Remainder;
+        as_strcomp_view_t FArg, Remainder = {0};
         char*    p_opening_pos;
 
         /* erste Klammer suchen, Funktionsnamen abtrennen */

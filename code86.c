@@ -697,7 +697,7 @@ static tAdrType DecodeAdr(tStrComp const* pArg, unsigned type_mask) {
         /* no address expr or outer displacement: */
 
         if (!pIndirStart || (pIndirStart != Arg.str.p_str)) {
-            tStrComp Remainder;
+            tStrComp Remainder = {0};
 
             if (pIndirStart) {
                 StrCompSplitRef(&Arg, &Remainder, &Arg, pIndirStart);

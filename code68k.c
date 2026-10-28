@@ -2516,7 +2516,7 @@ static Boolean DecodeMACReg(char const* pArg, Word* pResult) {
 
 static Boolean unresolved_list_name(tStrComp const* arg) {
     String buffer;
-    tStrComp part, remainder;
+    tStrComp part, remainder = {0};
     Word reg;
     tRegDescr reg_descr;
     tEvalResult eval_result;
@@ -2563,7 +2563,7 @@ static tRegListResult DecodeRegList(tStrComp const* pArg, Word* Erg) {
     Byte     z;
     char *   p, *p2;
     String   ArgStr;
-    tStrComp Arg, Remainder, From, To;
+    tStrComp Arg, Remainder = {0}, From, To;
 
     StrCompMkTemp(&Arg, ArgStr, sizeof(ArgStr));
     StrCompCopy(&Arg, pArg);
@@ -4955,7 +4955,7 @@ static tRegListResult DecodeFRegList(tStrComp const* pArg, Byte* pTyp, Byte* pLi
     Byte z;
     char *p, *p2;
     String ArgStr;
-    tStrComp Arg, Remainder, From, To;
+    tStrComp Arg, Remainder = {0}, From, To;
     tSymbolSize reg_size;
     tRegEvalResult status;
 

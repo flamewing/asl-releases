@@ -227,7 +227,7 @@ static adr_mode_t DecodeAdr(
 
     if ((*pStartArg->str.p_str == '[')
         && (pStartArg->str.p_str[strlen(pStartArg->str.p_str) - 1] == ']')) {
-        tStrComp Arg, Remainder;
+        tStrComp Arg, Remainder = {0};
 
         if (AdrArgCnt != 1) {
             WrXErrorPos(ErrNum_InvAddrMode,

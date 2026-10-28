@@ -341,7 +341,7 @@ static adr_mode_t decode_adr(
         }
 
         do {
-            tStrComp base_arg_remainder;
+            tStrComp base_arg_remainder = {0};
             tSymbolFlags reg_flags;
 
             p_split = QuotPos(base_arg.str.p_str, ',');

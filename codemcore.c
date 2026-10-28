@@ -295,7 +295,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, Word* Erg) {
     Boolean      OK, FirstFlag = False;
     tSymbolFlags Flags;
     char*        Pos;
-    tStrComp     Arg, Remainder;
+    tStrComp     Arg, Remainder = {0};
 
     if ((OpSize < eSymbolSize8Bit) || (OpSize > eSymbolSize32Bit)) {
         report_operand_sizes();

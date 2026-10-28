@@ -182,7 +182,7 @@ static tRegEvalResult DecodeReg(tStrComp const* pArg, Byte* pResult, Boolean Mus
 }
 
 static Boolean DecodeRegList(tStrComp* pArg, Byte* pResult) {
-    tStrComp Arg, Remainder;
+    tStrComp Arg, Remainder = {0};
     Byte     Reg1, Reg2, z;
     char *   p, *p2;
 
@@ -396,7 +396,7 @@ static void DecodeAdr(tStrComp* pArg, Word Mask) {
     /* indirekt ? */
 
     if (*pArg->str.p_str == '@') {
-        tStrComp Arg, Remainder;
+        tStrComp Arg, Remainder = {0};
 
         StrCompRefRight(&Arg, pArg, 1);
         if (IsIndirect(Arg.str.p_str)) {
