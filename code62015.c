@@ -47,19 +47,15 @@
 #define RegI   3
 #define RegX   4
 #define RegY   5
-#define RegU   6
 #define RegS   7
 #define RegB   8
-#define RegIH  9
 #define RegPS  10
-#define RegPC  11
 #define RegF   12
 #define RegIMR 13
 
 #define IsR1(reg) ((reg) == RegA || (reg) == RegIL)
 #define IsR2(reg) ((reg) == RegBA || (reg) == RegI)
 #define IsR3(reg) ((reg) >= RegX && (reg) <= RegS)
-#define IsR4(reg) ((reg) >= RegX && (reg) <= RegU)
 
 #define IsWP(index)  ((index) == 0 || (index) == 1)
 #define IsWPL(index) ((index) == 0 || (index) == 1 || (index) == 2)

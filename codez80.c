@@ -99,7 +99,6 @@ typedef struct {
     cpu_core_flags_t core_flags;
 } cpu_props_t;
 
-#define LWordFlagName "INLWORDMODE"
 
 #define ModNone     (-1)
 #define ModReg8     1
@@ -268,12 +267,6 @@ typedef LongWord tZ80RegMask;
     (Z80REGMASK(eZ80RegB) | Z80REGMASK(eZ80RegC) | Z80REGMASK(eZ80RegD)   \
      | Z80REGMASK(eZ80RegE) | Z80REGMASK(eZ80RegH) | Z80REGMASK(eZ80RegL) \
      | Z80REGMASK(eZ80RegA))
-#define MZ80Reg16                                                          \
-    (Z80REGMASK(eZ80RegBC) | Z80REGMASK(eZ80RegDE) | Z80REGMASK(eZ80RegHL) \
-     | Z80REGMASK(eZ80RegSP) | Z80REGMASK(eZ80RegIX) | Z80REGMASK(eZ80RegIY))
-#define MZ80RegIndex8                                                         \
-    (Z80REGMASK(eZ80RegIXH) | Z80REGMASK(eZ80RegIXL) | Z80REGMASK(eZ80RegIYH) \
-     | Z80REGMASK(eZ80RegIYL) | Z80REGMASK(eZ80RegIXU) | Z80REGMASK(eZ80RegIYU))
 #define MZ80RegSFR                                                           \
     (Z80REGMASK(eZ80RegSR) | Z80REGMASK(eZ80RegXSR) | Z80REGMASK(eZ80RegDSR) \
      | Z80REGMASK(eZ80RegYSR))

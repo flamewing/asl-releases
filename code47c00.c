@@ -27,7 +27,6 @@
 
 #include <string.h>
 
-#define BitOrderCnt 4
 
 #include "c_implementation.h"
 

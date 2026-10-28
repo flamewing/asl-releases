@@ -51,7 +51,6 @@
 #define DirPrefix 0xbd
 #define BReg      0xfe
 
-#define BitOrderCnt 3
 
 #include "c_implementation.h"
 

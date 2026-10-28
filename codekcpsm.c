@@ -40,11 +40,9 @@ typedef struct {
     Word        Code;
 } Condition;
 
-#define WorkOfs 0xe0
 
 #define COND_CODE_TRUE 0
 
-#define IOopCnt 2
 
 #define ModNone   (-1)
 #define ModWReg   0
@@ -53,8 +51,6 @@ typedef struct {
 #define MModAbs   (1 << ModAbs)
 #define ModImm    4
 #define MModImm   (1 << ModImm)
-#define ModIRReg  6
-#define MModIRReg (1 << ModIRReg)
 #define ModInd    7
 #define MModInd   (1 << ModInd)
 

@@ -32,7 +32,6 @@
 /*--------------------------------------------------------------------------*/
 /* Definitionen */
 
-#define AccOrderCnt    2
 #define MulDivOrderCnt 8
 
 #include "c_implementation.h"

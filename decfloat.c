@@ -20,11 +20,11 @@
 #include <math.h>
 #include <string.h>
 
-#define DBG_FLOAT 0
-
 #include "c_implementation.h"
 
 #ifdef AS_DECFLOAT
+
+#    define DBG_FLOAT 0
 
 #    ifdef __GFLOAT
 /* Some VAX compilers internally seem to use D float

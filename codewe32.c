@@ -129,7 +129,6 @@ static char const exec_mode_name[] = "EXECMODE";
 #define REG_FP   9
 #define REG_AP   10
 #define REG_PSW  11
-#define REG_SP   12
 #define REG_PCBP 13
 #define REG_ISP  14
 #define REG_PC   15

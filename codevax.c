@@ -53,7 +53,6 @@ typedef enum {
 #define e_cpu_cap_all_no_vector                                               \
     (e_cpu_cap_float_g | e_cpu_cap_float_h | e_cpu_cap_string | e_cpu_cap_crc \
      | e_cpu_cap_packed | e_cpu_cap_edit)
-#define e_cpu_cap_all_vector (e_cpu_cap_all_no_vector | e_cpu_cap_vector)
 
 
 typedef struct {
@@ -138,8 +137,6 @@ static char const         access_mode_name[] = "ACCMODE";
  * ------------------------------------------------------------------------ */
 
 #define REG_AP 12
-#define REG_FP 13
-#define REG_SP 14
 #define REG_PC 15
 
 static char const xtra_reg_names[8] = {'A', 'P', 'F', 'P', 'S', 'P', 'P', 'C'};

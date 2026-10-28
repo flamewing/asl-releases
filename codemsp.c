@@ -50,8 +50,6 @@ typedef enum {
     eModeNone        = 0xff
 } tMode;
 
-#define MModeReg         (1 << eModeReg)
-#define MModeRegDisp     (1 << eModeRegDisp)
 #define MModeIReg        (1 << eModeIReg)
 #define MModeIRegAutoInc (1 << eModeIRegAutoInc)
 #define MModeAs          15
@@ -72,7 +70,6 @@ typedef enum {
 
 #define RegPC  0
 #define RegSP  1
-#define RegSR  2
 #define RegCG1 2
 #define RegCG2 3
 

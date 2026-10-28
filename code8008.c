@@ -45,7 +45,6 @@ typedef enum {
 #define AccReg 0
 
 #define MModReg8  (1 << eModReg8)
-#define MModReg16 (1 << eModReg16)
 #define MModImm   (1 << eModImm)
 #define MModIHL   (1 << eModIHL)
 #define MModReg16 (1 << eModReg16)

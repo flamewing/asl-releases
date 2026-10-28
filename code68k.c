@@ -136,7 +136,6 @@ typedef struct {
     Word        Code;
 } PMMUReg;
 
-#define EMACAvailName "HASEMAC"
 
 #define REG_SP     15
 #define REG_FPCTRL 8

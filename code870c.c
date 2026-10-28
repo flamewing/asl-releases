@@ -49,11 +49,9 @@ enum {
 #define MModReg8  (1 << ModReg8)
 #define MModReg16 (1 << ModReg16)
 #define MModImm   (1 << ModImm)
-#define MModAbs   (1 << ModAbs)
 #define MModMem   (1 << ModMem)
 
 #define AccReg 0
-#define WAReg  0
 
 #define COND_CODE_TRUE 0xde
 

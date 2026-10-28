@@ -31,7 +31,6 @@
 /*---------------------------------------------------------------------------*/
 
 #define ShiftOrderCnt  5
-#define BranchOrderCnt 5
 
 #define ModNone (-1)
 #define ModReg  0

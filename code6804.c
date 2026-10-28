@@ -42,9 +42,6 @@ enum {
     ModImm  = 2
 };
 
-#define MModInd (1 << ModInd)
-#define MModDir (1 << ModDir)
-#define MModImm (1 << ModImm)
 
 static ShortInt AdrMode;
 static Byte     AdrVal;

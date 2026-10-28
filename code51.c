@@ -72,8 +72,6 @@ enum {
 #define MModDir8   (1 << ModDir8)
 #define MModDir16  (1 << ModDir16)
 #define MModAcc    (1 << ModAcc)
-#define MModBit51  (1 << ModBit51)
-#define MModBit251 (1 << ModBit251)
 
 #define MMod51  (MModReg | MModIReg8 | MModImm | MModAcc | MModDir8)
 #define MMod251 (MModIReg | MModInd | MModImmEx | MModDir16)

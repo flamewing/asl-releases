@@ -62,14 +62,11 @@
 #define ModAbsChain  13
 #define MModAbsChain (1 << ModAbsChain)
 
-#define Mask_RegOnly (MModReg)
 #define Mask_AllShort                                                                \
     (MModReg | MModIReg | MModDisp16 | MModImm | MModAbs16 | MModAbs32 | MModPCRel16 \
      | MModPCRel32 | MModPop | MModPush | MModPCChain | MModAbsChain)
 #define Mask_AllGen     (Mask_AllShort | MModDisp32 | MModRegChain)
-#define Mask_NoImmShort (Mask_AllShort & ~MModImm)
 #define Mask_NoImmGen   (Mask_AllGen & ~MModImm)
-#define Mask_MemShort   (Mask_NoImmShort & ~MModReg)
 #define Mask_MemGen     (Mask_NoImmGen & ~MModReg)
 
 #define Mask_Source   (Mask_AllGen & ~MModPush)
