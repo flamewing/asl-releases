@@ -3,6 +3,8 @@ Control-flow and memory warning resolution, 2026-10-28
 
 Baseline: b2803d77, as inventoried in the local ci-warning-inventory-20261028.json. This document records the follow-up commits and the limits of verification. It does not replace the original inventory or claim that successful tests prove every memory access safe.
 
+Disposition: complete for the agreed warning-triage scope. The 87 baseline control-flow file/line/flag entries and 31 non-migration memory entries have been handled by the batches below. The remaining 19,231 memory entries are classified separately as migration advisories, following the user's explicit choice. They are not classified as demonstrated defects or as individually proved false positives. The original inventory remains a historical baseline.
+
 Completed batches
 =================
 
@@ -35,8 +37,8 @@ Clang 23.1.3 and GCC 16.2 were used to compile the affected sources separately, 
 
 Additional compile checks with both -fsigned-char and -funsigned-char verify that ShortInt remains signed, retains int8_t storage size and supports numeric indexing with -Werror=char-subscripts. Strict Clang/GCC cast-alignment checks pass for the symbol and disassembler changes.
 
-Pending scope decision: -Wunsafe-buffer-usage
-==========================================
+Separate migration advisories: -Wunsafe-buffer-usage
+==================================================
 
 The baseline records 19,231 distinct file/line/flag entries for this category. A fresh local scan emits 21,368 observations across 210 translation units, including repeated header diagnostics. These are different counting populations; the numbers are not a warning-regression comparison.
 
@@ -44,7 +46,7 @@ Clang describes this diagnostic as identifying raw indexing, pointer arithmetic 
 
 Source: https://clang.llvm.org/docs/SafeBuffers.html, sections Pre-Requisites and Buffer operations should never be performed over raw pointers, inspected 2026-10-28.
 
-These migration diagnostics have not been blanket-classified as false positives. Their existence does not establish an out-of-bounds access; their syntactic nature also does not prove the underlying accesses safe. No warning flags or pragmas were disabled. An individual bounds-proof audit of every original site remains distinct from classifying this diagnostic as a C++ migration advisory. The user has been asked which scope is intended; until answered, all sites except the individually proved cases below remain open.
+The user explicitly selected "Classify migration advisories separately" on 2026-10-28. Accordingly, this category is separated from the completed control-flow and concrete memory-warning work. Its existence does not establish an out-of-bounds access; its syntactic nature also does not prove the underlying accesses safe. No warning flags or pragmas were disabled. A comprehensive bounds-proof audit or adoption of another buffer-access model would be separate work, rather than an outstanding requirement of this triage. The five individually proved cases below remain useful supporting evidence; their proofs are not generalized to other sites.
 
 Individually reviewed bounded operations
 =======================================

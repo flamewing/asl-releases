@@ -1,0 +1,156 @@
+CI warning triage, 2026-10-28
+
+Follow-up disposition
+====================
+
+The control-flow and concrete memory-warning work is complete under the agreed scope. All 87 baseline control-flow file/line/flag entries and the 31 non-migration memory entries have been handled in committed batches. Per the user's explicit choice, the 19,231 -Wunsafe-buffer-usage entries are classified separately as C++ migration advisories, without claiming an individual bounds proof for every access. Warning flags remain unchanged. See doc/ci-control-memory-resolution-20261028.txt for commits, proofs and validation: all 436 tests pass, and local Clang/GCC scans across 210 translation units are clear of the targeted categories apart from the separate migration advisories. Hosted CI has not been rerun.
+
+The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory recommendations are superseded by the resolution report.
+
+Scope and result
+===============
+
+Repository: flamewing/asl-releases
+Commit: b2803d77b610522ae85c46ded89b8c15460381d5
+Reviewed: latest eight ci-* workflow runs plus snapshots run 40652165221, all at this commit. All nine workflows and all 28 jobs completed successfully. Coverity findings and older failed runs are outside this warning census. No production source, workflow settings, hosted issues or triage fields were changed.
+
+The extraction found 293,845 flagged warning/deprecation observations across 82 diagnostic categories, including 282,969 with a recoverable source location. Deduplicating by source basename, line and diagnostic flag yields 35,316 located line/flag entries. These are not distinct bugs: header inclusion, multiple targets, host/target builds, matrix jobs and MSBuild's repeated summaries multiply the output. Compiler-specific flags remain separate; a line with several flags has several entries. The JSON inventory records runs, job URLs, buckets, per-flag counts and the located entries with a representative message and contributing jobs.
+
+Some highly parallel Clang logs contain interleaved source text and diagnostics. The 10,876 observations without a recoverable location are retained in flag totals, not assigned guessed locations. Even located messages can contain fragments of another compiler process's output. Counts are an observed baseline and an aid to selecting work, not a complete or exact issue census. Generic git hints, tar options, warning-summary lines, Homebrew already-installed notices and SSH known-host notices are excluded from the flagged totals.
+
+Actionable buckets
+==================
+
+Priority Bucket           Observed    Sites  Scope
+P1     control-flow          746       87  Initialization, null paths, allocation and jumps
+P1/P2  numeric            108345    11238  Numeric narrowing, signedness and enum contracts
+P1/P2  memory             116832    19262  Buffer bounds, alignment and character indexes
+P1/P2  formatting           9537      898  Custom formatter contract and real printf calls
+P2     const-api            1371       60  Const correctness across lookup and string APIs
+P2/P3  warning-policy      42655     2538  Language, ABI and advisory compiler policy
+P2/P3  cleanup             13210     1232  Declarations, documentation and local cleanup
+P2/P3  toolchain            1149        1  Endian configuration, include paths and tool deprecations
+
+P1 means review for correctness first, not that a defect is confirmed. P2 means a focused API/portability or semantic review; P3 means cleanup or an explicit warning-policy decision. Numeric and memory buckets together account for 76.6% of flagged observations.
+
+1. Control flow and initialization: review by shared pattern
+==========================================================
+
+Start with the four GCC maybe-uninitialized locations:
+- asmpars.c:2047, int_outof_range, also reported by Clang at 2025.
+- asmallg.c:1387-1388, AlignValue.
+- codeh8_3.c:1694, z.
+- code3206x.c:642-643, dword_index.
+
+Do not initialize every variable merely to silence the warning. In the inspected H8 decoder, z is assigned on both successful operand paths before the final if (OK). In CodeALIGN, reaching the second if (OK) requires the expression assignment in the first if (OK). In the C6x DOUBLE path, dword_index is assigned before the float conversion and only consumed after success. These examples suggest lost path correlation; confirm callees' output contracts before marking them false positives. asmpars.c needs its integer-probe/materialization and out-of-range output contracts traced separately.
+
+Clang's larger list contains many Remainder/OK/output-parameter patterns. Review these as one helper-contract batch, then handle backend-specific cases separately. The inventory contains the full located list.
+
+codepdk.c:1255: the default core switch branch assigns p_descr = NULL before p_descr->Id is read. Even normal branches depend on FindFamilyByName succeeding. Audit CPU registration and lookup invariants; either prove the invalid state unreachable or reject it before dereference. This is a concrete null path in the local function, not yet a demonstrated user-triggerable crash.
+
+rescomp.c:151: malloc receives zero when no language categories are parsed. Decide whether an empty LANGS list is invalid and diagnose it, or define the empty allocation behavior. rescomp.c:195 also warns about end: the preceding scan stops only at NUL or comma, and both corresponding switch arms assign end; that warning has a local path-correlation explanation.
+
+Validation for fixes: malformed operands and missing arguments, failed expression/conversion calls, empty resource language input, and Padauk registration/lookup invariants. Use targeted regressions for behavior changes.
+
+2. Numeric narrowing, signedness and enum contracts
+=================================================
+
+The largest categories are implicit integer conversion, sign conversion and 64-to-32 shortening. Split by purpose:
+- Backend instruction emission: verify the operand range/mask before narrowing to Byte/Word. Encode a deliberate conversion only after the proof.
+- Host sizes, indexes, allocation lengths and counts: preserve size_t/oh_size_t until a checked boundary; exercise 32-bit builds.
+- Enum values and flag sets: distinguish sentinel/bitmask conventions from actual out-of-domain states.
+- Floating conversions: preserve the configured as_float_t precision and check integer conversion bounds.
+
+Do not apply a repository-wide cast sweep. It can hide precisely the truncation and signedness defects this bucket should detect. The always-false comparisons at das.c:195 and codechunks.c:119 compare LargeWord lengths against SIZE_MAX: they can be redundant on one ABI but useful on a narrower size_t ABI. Retain the portability check or make the conditional intent explicit.
+
+Validation: boundary operands, negative values, maximum address/length values, x86 and x64, and configurations with different large-integer/float widths.
+
+3. Buffer bounds and alignment
+==============================
+
+-Wunsafe-buffer-usage dominates raw output: 116,677 observations, of which 111,664 have a parsed location, collapsing to 19,231 line/flag entries. Treat this as a separate bounds-contract audit. Start with shared string/span/dynamic-buffer primitives and then their callers; require a concrete capacity/lifetime invariant or failing input before filing a defect.
+
+The smaller -Wcast-align family is a better immediate review target:
+- p2hex.c:191-192 creates a Word* into a Byte stack array and later reads through it. Check both alignment and effective-type/aliasing requirements; explicit byte decoding or memcpy into a Word avoids relying on incidental stack alignment.
+- das.c:228-229 aliases chunk byte storage as wider words. Trace allocation alignment and how the wider pointers are consumed.
+- asmpars.c:3000 and related tree-to-symbol casts increase alignment requirements. Verify the tree is the embedded member of an allocated TSymbolEntry and the conversion preserves the original object address.
+
+Also review the char-subscript warnings: cast/normalize character values before indexing where negative char values are possible. Validation should include non-ASCII bytes and alignment/undefined-behavior sanitizers where applicable.
+
+4. Custom formatter contract
+===========================
+
+strutil.h:62-74 annotates as_snprintf/as_snprcatf/as_sdprintf/as_sdprcatf as standard printf functions via sysdefs.h's PRINTF_FORMAT_ATTR. The implementation supports extensions that standard printf checking cannot describe. This explains why invalid-specifier and extra-argument diagnostics must be triaged together with actual argument mismatches, rather than fixed by blindly editing the format strings.
+
+Reuse the existing untracked doc/printf-format-audit.md and doc/printf-format-inventory.json as reference material; this triage did not modify them. Separate:
+- Custom grammar, including large-integer formats and radix conventions.
+- Real libc/chkio_fprintf type mismatches and nonliteral formats.
+- Catalog/message-derived formats and wrapper annotations.
+
+If replacing the formatter, preserve configured radix, hexadecimal case, large-integer width, byte separators, floating behavior and append/truncation semantics. If retaining it, adopt a checking strategy that understands its grammar while retaining useful checks on standard printf calls. Validation: formatter tests plus localized/catalog output and representative assembler listings.
+
+5. Const correctness across APIs
+================================
+
+The two MSVC C4090 sites are asmpars.c:3630 and 3681. Both pass a const name into SearchSymbolHashTable, whose pName parameter at 327 is mutable and is stored in the temporary Key.Tree.Name. GCC/Clang report the same mismatch under different flags. Across nine MSVC jobs, each warning is printed again in the build summary: 36 raw lines represent two call sites.
+
+Review the lookup key's borrowing/read-only contract, then fix the helper/data model consistently. Do not just cast away const at the two callers. Audit remaining -Wcast-qual sites separately, distinguishing borrowed read-only keys from APIs that genuinely mutate storage. Validation: global/local symbol lookup, case sensitivity and symbol table lifecycle.
+
+6. Compiler policy, language and ABI advisories
+==============================================
+
+CMakeLists.txt:26 requires C11, while line 140 enables Clang -Weverything. Existing exclusions do not prevent -Wpre-c11-compat reports on _Noreturn, atomics and other C11 features. These are contradictions with the project's declared minimum, not reasons to remove C11 constructs.
+
+Make explicit policy decisions for:
+- Pre-C11/C99 compatibility and C++ compatibility in C-only implementation files, while preserving any real public-header C++ requirement.
+- -Wpadded, -Waggregate-return and optimization/attribute suggestions: performance/ABI review, not automatic correctness fixes.
+- -Wswitch-enum/-Wswitch-default/-Wcovered-switch-default: decide exhaustive switches versus deliberate sentinel/partial switches. Adding a default solely to silence a warning can hide newly added enum values.
+- Float equality: distinguish sentinel/exact-format cases from approximate numerical comparisons.
+- Lifetime annotation suggestions: evaluate separately from runtime lifetime defects. The dangling-global-in-main warning refers to tests/intconst_span.c assigning the local table to CurrTransTable for the duration of main; inspect teardown before treating it as a use-after-return.
+
+Use a stable warning set for routine CI and, if useful, a separate advisory build for broader diagnostics. Do not globally suppress numeric, bounds, format or uninitialized diagnostics as part of this policy cleanup.
+
+7. Declarations, documentation and local cleanup
+===============================================
+
+Batch documentation parameter mismatches, missing prototypes/extern declarations, reserved identifiers, extra semicolons, unused symbols and shadowing by shared header or subsystem. Correct shared headers first because one edit can remove many repeated observations.
+
+Keep potentially behavioral warnings distinct within this bucket: fallthrough, unreachable code, comma operators, string-plus-int and duplicated branches need a quick semantic check. Mark intentional fallthrough explicitly; remove dead code only after checking configuration branches. Unused parameters in callback signatures may be intentional; missing prototypes often mean internal functions should be static.
+
+Validation: normal build matrix after mechanical edits; focused regressions where control flow changes.
+
+8. Endian configuration and toolchain maintenance
+================================================
+
+First: sha1.c:28 compares BYTE_ORDER and LITTLE_ENDIAN while both are undefined in the affected Clang builds. The preprocessor treats both as zero, selecting the little-endian branch and bypassing the intended unknown-endian error. This can happen to work on current little-endian runners but is a portability defect in detection. Use the project's explicit endian configuration or defined compiler endian macros and add known-answer SHA-1 tests. Check a big-endian build/emulator where available. Two macro warnings on one source line constitute one fix.
+
+macOS: -Wpoison-system-directories repeats 1,080 times across four jobs for /usr/local/include. Trace the actual include path injection through generated compile commands, CMake modules and dependency environment; do not assume it comes from a particular workflow line. Remove the host-only path from cross/SDK-targeted compilation or make its target compatibility explicit. It is a configuration task, not 1,080 source fixes.
+
+Pandoc: both active HTML commands in CMakeLists.txt:1129 and 1145 use --self-contained --standalone. Replace the deprecated option with --embed-resources, retaining --standalone. Fifty observations across 25 jobs reduce to two CMake call sites. Verify generated HTML embeds its resources.
+
+Node DEP0005: one Buffer() deprecation occurs in snapshot finish-release during Download snapshot packages, using actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333. The location in the step points to the action/dependency path; it does not identify the exact package. Track an upstream action fix or collect a deprecation stack before selecting a replacement pin.
+
+Suggested work order
+====================
+
+A. Correct endian detection; review Padauk null path and p2hex alignment.
+B. Resolve the small uninitialized-value set with helper-contract proofs and targeted tests where behavior changes.
+C. Fix the shared const lookup contract; settle formatter checking as its own work item.
+D. Clean the C11 warning policy and the macOS include path; update Pandoc options.
+E. Work through narrowing/bounds by shared API and backend, keeping semantic fixes separate from mechanical documentation/declaration cleanup.
+F. Re-run the same matrix, compare normalized line/flag entries, and gate newly introduced actionable warnings after the baseline is understood.
+
+Evidence
+========
+
+Latest snapshots: https://github.com/flamewing/asl-releases/actions/runs/40652165221
+Latest Linux: https://github.com/flamewing/asl-releases/actions/runs/40651978750
+Latest macOS: https://github.com/flamewing/asl-releases/actions/runs/40651978702
+Latest Android: https://github.com/flamewing/asl-releases/actions/runs/40651978696
+Latest FreeBSD: https://github.com/flamewing/asl-releases/actions/runs/40651978675
+Latest Emscripten: https://github.com/flamewing/asl-releases/actions/runs/40651978666
+Latest MinGW: https://github.com/flamewing/asl-releases/actions/runs/40651978635
+Latest MSVC: https://github.com/flamewing/asl-releases/actions/runs/40651978621
+Latest OmniOS: https://github.com/flamewing/asl-releases/actions/runs/40651978535
+
+Machine-readable companion: doc/ci-warning-inventory-20261028.json. Validation of this report consists of fetching all 28 job logs, reconciling bucket/flag/site totals and inspecting representative source paths. No build or test suite was run for this documentation-only triage.
