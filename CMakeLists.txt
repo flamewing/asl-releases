@@ -1712,6 +1712,16 @@ define_executable(test_coverity_inputs
     $<TARGET_OBJECTS:ADDRSPACE_COMMON>
 )
 target_link_libm(test_coverity_inputs)
+add_test(NAME p2hex_words COMMAND ${CMAKE_COMMAND}
+    "-DTEST_PROGRAM=$<TARGET_FILE:test_coverity_inputs>"
+    "-DP2HEX_PROGRAM=$<TARGET_FILE:p2hex>"
+    "-DTEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+    "-DTEST_DIR=${CMAKE_BINARY_DIR}/Testing/P2HexWords"
+    -P "${CMAKE_SOURCE_DIR}/tests/p2hex_words.cmake"
+)
+set_tests_properties(p2hex_words PROPERTIES
+    ENVIRONMENT "AS_MSGPATH=${CMAKE_BINARY_DIR};LC_ALL=C"
+)
 asl_test_available(coverity_inputs can_run REQUIRES 6812 96 M16 M16C MSP RX Z80)
 if(can_run)
     add_test(NAME coverity_inputs COMMAND ${CMAKE_COMMAND}

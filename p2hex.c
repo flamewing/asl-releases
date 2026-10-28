@@ -189,7 +189,6 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
     Boolean  doit, write_intel_bank_record = False;
     Boolean  CDataLower = !!strchr(CFormat, 'd'), CDataUpper = !!strchr(CFormat, 'D');
     Byte     Buffer[MaxLineLen];
-    Word*    WBuffer = (Word*)Buffer;
     LongWord ErgStart, byte_erg_start, ErgStop = 0xfffffffful, byte_erg_stop,
                                        target_word_intel_offset = 0,
                                        byte_intel_offset        = 0, MaxAdr;
@@ -559,27 +558,26 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     }
                     switch (ActFormat) {
                     case eHexFormatTiDSK:
-                        WSwapLittleEndianToHost(WBuffer, TransLen);
                         for (z = 0; z < (TransLen / 2); z++) {
+                            Word value = MRead2L(Buffer + 2 * z);
                             if (((ErgStart + z >= StartAdr[SegData])
                                  && (ErgStart + z <= StopAdr[SegData]))
                                 || (InpSegment == SegData)) {
-                                chkio_fprintf(
-                                        TargFile, TargName, "M%04X", LoWord(WBuffer[z]));
+                                chkio_fprintf(TargFile, TargName, "M%04X", LoWord(value));
                             } else {
-                                chkio_fprintf(
-                                        TargFile, TargName, "B%04X", LoWord(WBuffer[z]));
+                                chkio_fprintf(TargFile, TargName, "B%04X", LoWord(value));
                             }
-                            ChkSum += WBuffer[z];
+                            ChkSum += value;
                             SumLen += Gran;
                         }
                         break;
                     case eHexFormatAtmel:
                         if (TransLen >= 2) {
-                            chkio_fprintf(TargFile, TargName, "%04X", LoWord(WBuffer[0]));
+                            chkio_fprintf(
+                                    TargFile, TargName, "%04X", LoWord(MRead2L(Buffer)));
                             SumLen += 2;
                         } else if (TransLen >= 1) {
-                            chkio_fprintf(TargFile, TargName, "%04X", Lo(WBuffer[0]));
+                            chkio_fprintf(TargFile, TargName, "%04X", Lo(Buffer[0]));
                             SumLen++;
                         }
                         break;
