@@ -59,7 +59,7 @@ typedef struct {
 #define MModInd   (1 << ModInd)
 
 static ShortInt AdrType;
-static Word     AdrMode, AdrIndex;
+static Word     AdrMode;
 
 static Condition* Conditions;
 
@@ -188,10 +188,15 @@ static void DecodeAdr(tStrComp const* pArg, Byte Mask, int Segment) {
             StrCompShorten(&RegComp, 1);
             if (IsWReg(&RegComp, &AdrMode, True) == eIsReg) {
                 if (DispComp.str.p_str[0]) {
-                    AdrIndex = EvalStrIntExpressionWithResult(
+                    Word displacement = EvalStrIntExpressionWithResult(
                             &DispComp, UInt8, &EvalResult);
+                    if (EvalResult.OK
+                        && !mFirstPassUnknownOrQuestionable(EvalResult.Flags)
+                        && displacement != 0) {
+                        WrStrErrorPos(ErrNum_InvAddrMode, &DispComp);
+                        return;
+                    }
                 } else {
-                    AdrIndex                 = 0;
                     EvalResult.OK            = True;
                     EvalResult.AddrSpaceMask = 0;
                 }
@@ -228,7 +233,7 @@ chk:
             strmaxcat(forms, "expr, ", sizeof(forms));
         }
         if (Mask & MModInd) {
-            strmaxcat(forms, "(S0..S15), expr(S0..S15), ", sizeof(forms));
+            strmaxcat(forms, "(S0..S15), 0(S0..S15), ", sizeof(forms));
         }
         if (*forms) {
             forms[strlen(forms) - 2] = '\0';
