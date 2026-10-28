@@ -1190,7 +1190,7 @@ static as_float_t ConstFloatVal(char const* pExpr, Boolean* pResult, int* p_outo
            have been parsed before by const_int_val(), or not, then we don't want the
            constant be stored as float either. */
 
-        if ((strlen(pExpr) >= 2) && (pExpr[0] == '0') && (toupper(pExpr[1]) == 'X')) {
+        if ((strlen(pExpr) >= 2) && (pExpr[0] == '0') && (as_toupper(pExpr[1]) == 'X')) {
             Erg            = 0;
             *p_outof_range = 0;
             *pResult       = False;

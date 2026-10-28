@@ -57,7 +57,7 @@ static void PutCode(Word Code) {
 }
 
 static Boolean DecodeReg(char const* pAsc, Word* pResult) {
-    if (toupper(*pAsc) != 'R') {
+    if (as_toupper(*pAsc) != 'R') {
         return False;
     }
     pAsc++;
@@ -77,7 +77,7 @@ static Boolean DecodeReg(char const* pAsc, Word* pResult) {
 }
 
 static Boolean DecodeBaseReg(char const* pAsc, Word* pResult) {
-    if ((toupper(*pAsc) != 'R') && (toupper(*pAsc) != 'B')) {
+    if ((as_toupper(*pAsc) != 'R') && (as_toupper(*pAsc) != 'B')) {
         return False;
     }
     pAsc++;

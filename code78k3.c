@@ -132,7 +132,7 @@ static ShortInt DecodeReg8(char const* pAsc) {
     }
 
     case 2: {
-        if ((toupper(pAsc[0]) == 'R') && isdigit(pAsc[1])) {
+        if ((as_toupper(pAsc[0]) == 'R') && isdigit(pAsc[1])) {
             Result = pAsc[1] - '0';
         }
 
@@ -175,7 +175,7 @@ static ShortInt DecodeReg16(char const* pAsc) {
     }
 
     case 3: {
-        if ((toupper(pAsc[0]) == 'R') && (toupper(pAsc[1]) == 'P') && (pAsc[2] >= '0')
+        if ((as_toupper(pAsc[0]) == 'R') && (as_toupper(pAsc[1]) == 'P') && (pAsc[2] >= '0')
             && (pAsc[2] <= '7')) {
             Result = pAsc[2] - '0';
         }
@@ -201,7 +201,7 @@ static ShortInt DecodeIndReg16(char const* pAsc) {
 }
 
 static ShortInt DecodeRegBank(char const* pAsc) {
-    if ((strlen(pAsc) == 3) && (toupper(pAsc[0]) == 'R') && (toupper(pAsc[1]) == 'B')
+    if ((strlen(pAsc) == 3) && (as_toupper(pAsc[0]) == 'R') && (as_toupper(pAsc[1]) == 'B')
         && (pAsc[2] >= '0') && (pAsc[2] <= '7')) {
         return pAsc[2] - '0';
     } else {

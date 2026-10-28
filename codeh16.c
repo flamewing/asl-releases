@@ -1129,7 +1129,7 @@ static Boolean DecodeAdr(
             || !as_strncasecmp(Arg.str.p_str, "<PRn>", 5)) {
             AppendAdrVals(
                     pAdrVals,
-                    (toupper(Arg.str.p_str[1]) == 'C') ? PREFIX_CRn : PREFIX_PRn);
+                    (as_toupper(Arg.str.p_str[1]) == 'C') ? PREFIX_CRn : PREFIX_PRn);
             StrCompIncRefLeft(&Arg, 5);
             KillPrefBlanksStrCompRef(&Arg);
         } else {

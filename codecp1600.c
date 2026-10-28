@@ -60,15 +60,15 @@ static Boolean decode_reg_core(char const* p_arg, Word* p_reg) {
         return False;
     }
 
-    if (toupper(p_arg[0]) == 'S' && toupper(p_arg[1]) == 'P') {
+    if (as_toupper(p_arg[0]) == 'S' && as_toupper(p_arg[1]) == 'P') {
         *p_reg = REG_SP | REGSYM_FLAG_ALIAS;
         return True;
     }
-    if (toupper(p_arg[0]) == 'P' && toupper(p_arg[1]) == 'C') {
+    if (as_toupper(p_arg[0]) == 'P' && as_toupper(p_arg[1]) == 'C') {
         *p_reg = REG_PC | REGSYM_FLAG_ALIAS;
         return True;
     }
-    if (toupper(p_arg[0]) == 'R' && p_arg[1] >= '0' && p_arg[1] <= '7') {
+    if (as_toupper(p_arg[0]) == 'R' && p_arg[1] >= '0' && p_arg[1] <= '7') {
         *p_reg = p_arg[1] - '0';
         return True;
     }

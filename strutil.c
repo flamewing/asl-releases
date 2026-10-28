@@ -391,7 +391,7 @@ static int FloatConvert(
     (void)TruncateTrailingZeros;
     strcpy(Format, "%0.*" XPRIas_float_t);
     l           = strlen(Format);
-    Format[l++] = (HexStartCharacter == 'a') ? FormatType : toupper(FormatType);
+    Format[l++] = (HexStartCharacter == 'a') ? FormatType : as_toupper(FormatType);
     Format[l]   = '\0';
     snprintf(pDest, DestSize, Format, Digits, Src);
     return strlen(pDest);
@@ -782,14 +782,14 @@ int as_strcasecmp(char const* src1, char const* src2) {
     if (!src2) {
         src2 = "";
     }
-    while (tolower(*src1) == tolower(*src2)) {
+    while (as_tolower(*src1) == as_tolower(*src2)) {
         if ((!*src1) && (!*src2)) {
             return 0;
         }
         src1++;
         src2++;
     }
-    return ((int)tolower(*src1)) - ((int)tolower(*src2));
+    return ((int)as_tolower(*src1)) - ((int)as_tolower(*src2));
 }
 
 int as_strncasecmp(char const* src1, char const* src2, size_t len) {
@@ -799,7 +799,7 @@ int as_strncasecmp(char const* src1, char const* src2, size_t len) {
     if (!src2) {
         src2 = "";
     }
-    while (tolower(*src1) == tolower(*src2)) {
+    while (as_tolower(*src1) == as_tolower(*src2)) {
         if (--len == 0) {
             return 0;
         }
@@ -809,7 +809,7 @@ int as_strncasecmp(char const* src1, char const* src2, size_t len) {
         src1++;
         src2++;
     }
-    return ((int)tolower(*src1)) - ((int)tolower(*src2));
+    return ((int)as_tolower(*src1)) - ((int)as_tolower(*src2));
 }
 
 #ifdef NEEDS_STRSTR

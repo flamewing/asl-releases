@@ -129,8 +129,9 @@ extern void strutil_init(void);
 #include <ctype.h>    // IWYU pragma: export
 
 #define chartouint(c) (((unsigned int)(c)) & 0xff)
-#define as_toupper(c) (toupper(chartouint(c)))
-#define as_tolower(c) (tolower(chartouint(c)))
+/* Explicit function calls avoid self-referential libc macro expansions. */
+#define as_toupper(c) ((toupper)((int)chartouint(c)))
+#define as_tolower(c) ((tolower)((int)chartouint(c)))
 
 /* Initialized for the C locale; strutil_init refreshes a changed LC_CTYPE. */
 extern unsigned char as_space_class[256];

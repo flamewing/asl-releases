@@ -175,12 +175,12 @@ static Boolean DecReg(tStrComp const* arg, Word* pErg, Boolean errMsg) {
         return False;
     }
 
-    if (toupper(pAsc[0]) == 'R' && pAsc[1] >= '0' && pAsc[1] <= '4') {
+    if (as_toupper(pAsc[0]) == 'R' && pAsc[1] >= '0' && pAsc[1] <= '4') {
         *pErg = pAsc[1] - '0';
         return True;
     }
 
-    if (toupper(pAsc[0]) == 'X' && pAsc[1] >= '0' && pAsc[1] <= '1') {
+    if (as_toupper(pAsc[0]) == 'X' && pAsc[1] >= '0' && pAsc[1] <= '1') {
         *pErg = pAsc[1] - '0' + 3;
         return True;
     }
@@ -235,7 +235,7 @@ static Boolean DecRIndirect(tStrComp const* arg, Word* mm, Word* ii, Boolean bAu
     StrCompRefRight(&reg_arg, arg, rp);
     reg_arg.Pos.Len = 2;
 
-    switch (toupper(pAsc[rp])) {
+    switch (as_toupper(pAsc[rp])) {
     case 'R':
         MinReg  = '1';
         MaxReg  = '4';
@@ -268,7 +268,7 @@ static Boolean DecC(tStrComp const* arg, Word* pErg, Boolean errMsg) {
             *pErg = 0;
             return True;
         }
-        if (pAsc[0] == '1' || toupper(pAsc[0]) == 'C') {
+        if (pAsc[0] == '1' || as_toupper(pAsc[0]) == 'C') {
             *pErg = 1;
             return True;
         }

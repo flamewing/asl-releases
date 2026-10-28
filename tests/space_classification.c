@@ -9,6 +9,11 @@
 static int check_bytes(void) {
     int c;
     for (c = -512; c < 768; c++) {
+        int byte = (int)chartouint(c);
+        if (as_toupper(c) != (toupper)(byte) || as_tolower(c) != (tolower)(byte)) {
+            fprintf(stderr, "Incorrect case conversion for byte %u\n", chartouint(c));
+            return 1;
+        }
         if (as_isspace(c) != !!isspace(chartouint(c))) {
             fprintf(stderr, "Incorrect whitespace classification for byte %u\n",
                     chartouint(c));

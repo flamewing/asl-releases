@@ -68,7 +68,7 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
             DrvPart[1] = '\0';
             DrvNum++;
         } else {
-            DrvNum = toupper(*DrvPart) - '@';
+            DrvNum = as_toupper(*DrvPart) - '@';
         }
         getcurdir(DrvNum, p_dest);
     }
@@ -81,7 +81,7 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
             *DrvPart   = DrvNum + '@';
             DrvPart[1] = '\0';
         } else {
-            DrvNum = toupper(*DrvPart) - '@';
+            DrvNum = as_toupper(*DrvPart) - '@';
         }
         Dummy = 255;
         DosQueryCurrentDir(DrvNum, (PBYTE)p_dest, &Dummy);
@@ -98,7 +98,7 @@ void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
             *DrvPart   = DrvNum + '@';
             DrvPart[1] = '\0';
         } else {
-            DrvNum = toupper(*DrvPart) - '@';
+            DrvNum = as_toupper(*DrvPart) - '@';
         }
         if (!_getdcwd(DrvNum, p_dest, dest_size)) {
             *p_dest = '\0';

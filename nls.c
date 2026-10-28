@@ -176,8 +176,8 @@ static void UpCaseFromCodeTable(void) {
     int z;
 
     for (z = 0; z < 128; z++) {
-        UpCaseTable[z]  = toupper(z);
-        LowCaseTable[z] = tolower(z);
+        UpCaseTable[z]  = as_toupper(z);
+        LowCaseTable[z] = as_tolower(z);
     }
     for (; z < 256; z++) {
         UpCaseTable[z]  = z;
@@ -487,7 +487,7 @@ static void QueryInfo(void) {
         CollateTable[z] = z;
     }
     for (z = 'a'; z <= 'z'; z++) {
-        CollateTable[z] = toupper(z);
+        CollateTable[z] = as_toupper(z);
     }
 }
 
@@ -598,7 +598,7 @@ static void QueryInfo(void) {
         CollateTable[z] = z;
     }
     for (z = 'a'; z <= 'z'; z++) {
-        CollateTable[z] = toupper(z);
+        CollateTable[z] = as_toupper(z);
     }
 }
 
@@ -634,7 +634,7 @@ static void QueryInfo(void) {
         CollateTable[z] = z;
     }
     for (z = 'a'; z <= 'z'; z++) {
-        CollateTable[z] = toupper(z);
+        CollateTable[z] = as_toupper(z);
     }
 }
 

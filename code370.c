@@ -402,7 +402,7 @@ static Boolean DecodeBitExpr(int Start, int Stop, LongWord* pResult) {
 
         if ((!as_strcasecmp(ArgStr[Stop].str.p_str, "A"))
             || (!as_strcasecmp(ArgStr[Stop].str.p_str, "B"))) {
-            Addr = toupper(*ArgStr[Stop].str.p_str) - 'A';
+            Addr = as_toupper(*ArgStr[Stop].str.p_str) - 'A';
             OK   = True;
         } else {
             tSymbolFlags Flags;

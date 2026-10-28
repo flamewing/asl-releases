@@ -467,7 +467,7 @@ static void DecodeAdr(tAdrResult* pResult, NormOrder const* pOrder) {
                 && (!as_strcasecmp(ArgStr[2].str.p_str, "X")
                     || !as_strcasecmp(ArgStr[2].str.p_str, "Y")
                     || !as_strcasecmp(ArgStr[2].str.p_str, "Z"))) {
-            int      Mode = toupper(ArgStr[2].str.p_str[0]) - 'X';
+            int      Mode = as_toupper(ArgStr[2].str.p_str[0]) - 'X';
             tStrComp AddrArg;
 
             StrCompRefRight(&AddrArg, &ArgStr[1], 1);

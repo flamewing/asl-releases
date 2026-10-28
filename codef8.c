@@ -63,14 +63,14 @@ static Boolean DecodeAux(char const* pArg, Byte* pResult) {
     }
     *pResult = 0;
 
-    if (toupper(pArg[0]) == 'Q') {
+    if (as_toupper(pArg[0]) == 'Q') {
         *pResult |= 2;
-    } else if (toupper(pArg[0]) != 'K') {
+    } else if (as_toupper(pArg[0]) != 'K') {
         return False;
     }
-    if (toupper(pArg[1]) == 'L') {
+    if (as_toupper(pArg[1]) == 'L') {
         *pResult |= 1;
-    } else if (toupper(pArg[1]) != 'U') {
+    } else if (as_toupper(pArg[1]) != 'U') {
         return False;
     }
     return True;

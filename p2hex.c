@@ -169,9 +169,9 @@ static void PrCData(
         char const* pCBlockName, LongWord Value) {
     char const* pFormat;
 
-    if (strchr(CFormat, toupper(Ident))) {
+    if (strchr(CFormat, as_toupper(Ident))) {
         pFormat = "ul";
-    } else if (strchr(CFormat, tolower(Ident))) {
+    } else if (strchr(CFormat, as_tolower(Ident))) {
         pFormat = "u";
     } else {
         return;
@@ -1076,7 +1076,7 @@ static as_cmd_result_t CMD_CFormat(Boolean Negate, char const* pArg) {
         char const* pFormat;
 
         for (pFormat = pArg; *pFormat; pFormat++) {
-            switch (toupper(*pFormat)) {
+            switch (as_toupper(*pFormat)) {
             case 'S':
                 NumStart++;
                 break;
@@ -1428,7 +1428,7 @@ int main(int argc, char** argv) {
             chkio_fprintf(TargFile, TargName, "  {");
             for (pFormat = CFormat; *pFormat; pFormat++) {
                 chkio_fprintf(TargFile, TargName, (pFormat != CFormat) ? ", " : " ");
-                switch (toupper(*pFormat)) {
+                switch (as_toupper(*pFormat)) {
                 case 'D':
                     chkio_fprintf(TargFile, TargName, "%s%s_data", CTargName, CBlockName);
                     break;

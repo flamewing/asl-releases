@@ -98,7 +98,7 @@ static void AppendAdrVals(tAdrVals const* pVals) {
 }
 
 static Boolean DecodeRegStr(char const* pArg, Byte* pRes) {
-    if ((strlen(pArg) == 2) && (toupper(*pArg) == 'D')
+    if ((strlen(pArg) == 2) && (as_toupper(*pArg) == 'D')
         && ((pArg[1] >= '0') && (pArg[1] <= '7'))) {
         static Byte const RegCodes[8] = {4, 5, 0, 1, 2, 3, 6, 7};
 

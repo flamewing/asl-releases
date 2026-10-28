@@ -105,7 +105,7 @@ static ShortInt DecodeReg8(char* pAsc) {
         }
     }
 
-    else if ((l == 2) && (toupper(pAsc[0]) == 'R')) {
+    else if ((l == 2) && (as_toupper(pAsc[0]) == 'R')) {
         if ((pAsc[1] >= '0') && (pAsc[1] <= '7')) {
             Result = pAsc[1] - '0';
         }
@@ -130,7 +130,7 @@ static ShortInt DecodeReg16(char* pAsc) {
         }
     }
 
-    else if ((l == 3) && (toupper(pAsc[0]) == 'R') && (toupper(pAsc[1]) == 'P')) {
+    else if ((l == 3) && (as_toupper(pAsc[0]) == 'R') && (as_toupper(pAsc[1]) == 'P')) {
         if ((pAsc[2] >= '0') && (pAsc[2] <= '3')) {
             Result = pAsc[2] - '0';
         }

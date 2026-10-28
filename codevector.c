@@ -53,7 +53,7 @@ static Boolean DecodeScale(tStrComp* pArg, Word* pResult) {
     KillPrefBlanksStrComp(pArg);
     KillPostBlanksStrComp(pArg);
 
-    if ((toupper(*pArg->str.p_str) == 'S') && (Is4(pArg->str.p_str + 1, pResult))) {
+    if ((as_toupper(*pArg->str.p_str) == 'S') && (Is4(pArg->str.p_str + 1, pResult))) {
         return True;
     }
 
@@ -67,7 +67,7 @@ static Boolean DecodeBright(tStrComp* pArg, Word* pResult) {
     KillPrefBlanksStrComp(pArg);
     KillPostBlanksStrComp(pArg);
 
-    if ((toupper(*pArg->str.p_str) == 'Z') && (Is4(pArg->str.p_str + 1, pResult))) {
+    if ((as_toupper(*pArg->str.p_str) == 'Z') && (Is4(pArg->str.p_str + 1, pResult))) {
         return True;
     }
 

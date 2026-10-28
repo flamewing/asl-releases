@@ -391,7 +391,7 @@ static Boolean SplitBit(tStrComp* pArg, Byte* Erg) {
     } else if ((*BitArg.str.p_str >= '0') && (*BitArg.str.p_str <= '7')) {
         *Erg = *BitArg.str.p_str - '0';
         return True;
-    } else if (toupper(*BitArg.str.p_str) == 'A') {
+    } else if (as_toupper(*BitArg.str.p_str) == 'A') {
         *Erg = 8;
         return True;
     } else {
