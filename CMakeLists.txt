@@ -1008,7 +1008,21 @@ if(ASL_TEST_USE_LIBRARY)
     target_link_libraries(test_driver PRIVATE asl_library)
 endif()
 
-file(GLOB_RECURSE ALL_SOURCE_FILES *.c *.h *.hpp)
+# Formatting and analysis must not descend into generated build/tool trees.
+file(GLOB ALL_SOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+)
+file(GLOB_RECURSE ASL_AUX_SOURCE_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/ulib/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ulib/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ulib/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.hpp"
+)
+list(APPEND ALL_SOURCE_FILES ${ASL_AUX_SOURCE_FILES})
 
 add_custom_target(
     asl-format
