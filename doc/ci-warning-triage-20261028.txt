@@ -7,9 +7,11 @@ The control-flow and concrete memory-warning work is complete under the agreed s
 
 The const-api bucket has also been handled through explicit read-only CPU callbacks and symbol keys, separate allocation owners, writable text copies and const-preserving search APIs. See doc/ci-const-resolution-20261028.txt for the five implementation batches and validation. All 439 tests pass, and local Clang/GCC qualifier scans across all 230 configured C translation units are clean.
 
+The warning-policy bucket is complete under the agreed C11, header-compatibility, advisory and switch policies. Three implementation commits handle the policy, lifetime/allocator contracts, exact comparisons and exhaustive-switch/C11 cleanup. All 439 tests pass; GCC and Clang scans of all 232 configured C source paths are clear of the retained policy diagnostics, including an explicitly enabled C lifetime audit. See doc/ci-warning-policy-resolution-20261028.txt for the choices, contracts and validation.
+
 At the user's direction, custom-format warnings are deferred to a future snprintf change: render custom literals through a dedicated function, then pass the resulting buffer with %s to standard snprintf. The existing untracked printf audit and inventory remain unchanged.
 
-The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory and const-API recommendations are superseded by the resolution reports.
+The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory, const-API and warning-policy recommendations are superseded by the resolution reports.
 
 Scope and result
 ===============

@@ -1,0 +1,57 @@
+Warning-policy resolution, 2026-10-28
+=====================================
+
+Baseline: b2803d77, as inventoried in ci-warning-inventory-20261028.json. The warning-policy bucket contains 42,655 observations and 2,538 source-line/diagnostic-flag entries. Repeated compiler output and different flags at the same location are not distinct defects. The original inventory and printf audits remain unchanged.
+
+Disposition: complete for this baseline. Policy changes cover 2,478 baseline entries; the remaining 60 entries are addressed by explicit contracts, exact-comparison intent and C11/exhaustive-switch cleanup, including the resource-parser noreturn declaration already fixed during the control-flow work. No format, conversion, bounds, alignment or initialization warning was disabled. Hosted CI has not been rerun or pushed.
+
+40dcc9e: C11 and implementation/header policy
+===========================================
+
+Pre-C11 and pre-C99 compatibility requirements are disabled, including Clang's pre-C11 and declaration-after-statement diagnostics. Existing C99 compatibility exclusions remain in place. Clang's pre-C11 option is capability-checked; older compilers need not recognize the newer spelling. Genuine C11 grammar requirements remain enforced.
+
+C++ compatibility diagnostics remain enabled for declaration headers. Each C implementation includes c_implementation.h after its declaration headers, before its implementation body; that boundary disables only -Wc++-compat. Header-only translation units need no boundary. Later implementation-template includes inherit the implementation policy. The clang-format include category keeps this boundary after other headers when includes are regrouped. New C implementation files should follow the same convention.
+
+GCC and Clang probes confirm that the same implicit void-pointer conversion is allowed in a C implementation body but still diagnosed in a declaration header under -Werror=c++-compat. The formatting configuration also preserves that ordering in the probe.
+
+At the user's explicit choice, routine builds disable padding, aggregate-return, failed-inlining and suggested pure/const attribute advisories. No record layouts or calling conventions were changed to satisfy these suggestions. Unsuffixed-floating-literal advisories are also disabled: double is the intended default type, and C11 provides no explicit double suffix. The existing conversion and promotion warning policy is unchanged.
+
+Also at the user's explicit choice, -Wswitch-default and -Wswitch-enum are disabled. -Wswitch remains enabled through the normal warning sets, and Clang retains -Wcovered-switch-default. A partial switch with an intentional fallback need not enumerate unrelated values; an exhaustive enum switch without a default still reports newly added cases.
+
+The library fatal callback, catalog fatal error and two deliberately aborting test stubs now use AS_NORETURN. Their implementations call longjmp, the noreturn runtime exit routine or abort. The resource-parser SynError declaration had already been corrected in the earlier control-flow batch.
+
+b51b646: lifetime and allocation contracts
+=========================================
+
+The self-contained as_attributes.h defines capability-gated AS_LIFETIMEBOUND and allocator attributes, plus the existing C/C++ noreturn abstraction. Unsupported annotations expand to nothing. Standalone test_driver.c can use the attributes without importing assembler configuration or platform definitions.
+
+Thirty-eight parameters now express returned-pointer borrowing: string searches and writable positions, symbol/tree/forward-symbol lookup, character-table or caller-buffer results, expression destinations, disassembler buffers and backend table/format cursors. Annotations are on public declarations where callers need them and on private definitions otherwise. Each identifies storage that the returned value actually references; no runtime ownership or lifetime was extended by annotation.
+
+literals_new is marked as returning a fresh allocation. The counted calloc wrapper in the forward-reference test also declares its fresh allocation and size arguments; its only extra effect is allocation counting. Both ultimately return calloc storage, with NULL permitted on failure. The integer-constant span test clears CurrTransTable before its local table leaves scope, making its existing temporary borrow explicit.
+
+The initial lifetime pass annotated 27 parameters. A full scan and propagation follow-up identified 11 further borrowing relationships. The final scan has no lifetime suggestions, annotation-validation warnings or dangling-global warning.
+
+7b523f2: exact comparisons, exhaustive switches and C11 grammar
+============================================================
+
+as_float_equal_exact states the intent at all 19 baseline float-equality sites: assembler language equality/inequality, zero and overflow sentinels, integral-exponent checks and exact encodable constants. It preserves ordinary C equality, including signed zeros, NaNs and infinities. It does not introduce a tolerance. Only this helper's comparison has a scoped -Wfloat-equal exclusion; direct unreviewed comparisons still warn, as verified with both compilers. Tests cover adjacent finite values, signed zero, infinities and NaNs in addition to the existing conversion and expression regressions.
+
+All seven covered-default sites are handled. Return-based switches retain their invalid-value fallback after the switch. Integer-format selection initializes the fallback mask before its exhaustive switch. RX validates its contiguous register-kind enum range before decoding. The two TMS340xx switches remove defaults unreachable for the addressing modes their decoder can return. NLS retains its fallback for platform currency-format values outside the named enum cases. These changes preserve supported-input behavior and retain missing-enumerator diagnostics when the enums grow.
+
+The IM6100 address-option diagnostic puts declarations in a scoped default block, satisfying C11's label grammar without changing the diagnostic path.
+
+Verification
+============
+
+The native GCC build succeeds and all 439 CTest tests pass in the final serial run. An earlier parallel run encountered four subprocess timeouts (MN1610, ST9, MELPS7700 and MCS96); all four pass in the final run. Focused integer-span, allocation-wrapper and floating-comparison runtime checks also pass.
+
+Optimized GCC 16.2 object compilation and Clang 23.1.3 syntax/analysis checks cover all 232 distinct configured C source paths, including production and test files sharing a basename. Both scans are clear of the retained bucket diagnostics. A missing float.h include detected in the new comparison test was corrected and that source rechecked with both compilers. Clang's audit explicitly enables its experimental C lifetime analysis (-Xclang -fexperimental-lifetime-safety-c), so the lifetime checks actually run on this host.
+
+Clang's additional initialization/control-flow scan is clean across the seven sources whose switches or label scopes changed. GCC's normal build also reports no retained policy diagnostics. A separate Clang CMake configuration succeeds and verifies the capability-checked warning options. Header/body compatibility probes and scoped float-equality probes pass with both compilers. No hosted build matrix or cross-platform runtime execution is claimed.
+
+References
+==========
+
+Clang lifetime contracts and annotation inference: https://clang.llvm.org/docs/LifetimeSafety.html and https://clang.llvm.org/docs/AttributeReference.html#lifetimebound (inspected 2026-10-28). Compiler behavior and C support were verified locally rather than inferred from the C++ examples in the documentation.
+
+Clang warning policy and diagnostic scoping: https://clang.llvm.org/docs/UsersManual.html#enabling-all-diagnostics and https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html (inspected 2026-10-28). A portable implementation boundary was chosen instead of requiring Clang-only suppression mappings.
