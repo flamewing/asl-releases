@@ -60,6 +60,8 @@
      | MModAbs16 | MModImm)
 #define MModNoImm (MModAll & ~MModImm)
 
+#include "c_implementation.h"
+
 typedef struct {
     char*       Name;
     Word        Code;

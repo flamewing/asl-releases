@@ -31,6 +31,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     eModNone = -1,
     eModImm  = 0,  /* #byte */

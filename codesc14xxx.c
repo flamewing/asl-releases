@@ -34,6 +34,8 @@
 #define M_14422 (1 << 7)
 #define M_14424 (1 << 8)
 
+#include "c_implementation.h"
+
 typedef struct {
     Word CPUMask;
     Byte Code, MinArg, MaxArg;

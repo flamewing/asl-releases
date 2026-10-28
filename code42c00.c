@@ -30,6 +30,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     e_cpu_flag_none   = 0,
     e_cpu_flag_cmos   = 1 << 0,

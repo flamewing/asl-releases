@@ -26,6 +26,8 @@
 
 /*****************************************************************************/
 
+#include "c_implementation.h"
+
 static char const* IdentString = "AS Message Catalog - not readable\n\032\004";
 
 static char const* EOpenMsg = "cannot open msg file";
@@ -196,7 +198,7 @@ func_exit:
 
 /*****************************************************************************/
 
-static void error(char const* Msg) {
+AS_NORETURN static void error(char const* Msg) {
     fprintf(stderr, "message catalog handling: %s - program terminated\n", Msg);
     as_runtime_exit(255);
 }

@@ -34,6 +34,8 @@
 
 /****************************************************************************/
 
+#include "c_implementation.h"
+
 static Boolean DoFilter;
 static int     FilterCnt;
 static Byte    FilterBytes[100];

@@ -33,6 +33,8 @@
 #define LISTLINE_PREFIX_TOTAL 40
 
 #define system_list_len_max 32
+#include "c_implementation.h"
+
 static unsigned* p_system_list_len;
 
 static as_dynstr_t list_buf;

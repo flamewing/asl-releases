@@ -36,6 +36,8 @@
 #    endif
 #endif
 
+#include "c_implementation.h"
+
 TRedirected Redirected;
 
 static void AssignHandle(FILE** ppFile, Word Num) {

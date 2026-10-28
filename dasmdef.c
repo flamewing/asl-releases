@@ -12,6 +12,8 @@
 
 #include "dasmdef.h"
 
+#include "c_implementation.h"
+
 tCodeChunkList CodeChunks;
 ChunkList      UsedCodeChunks, UsedDataChunks;
 

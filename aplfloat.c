@@ -28,6 +28,8 @@
  * \return 0 or error code (<0)
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 int as_float_2_apl4(as_float_t inp, Word* p_dest) {
     Boolean            round_up;
     as_float_dissect_t dissect;

@@ -33,6 +33,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     Boolean  MustSup;
     CPUVar   MinCPU;

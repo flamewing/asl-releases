@@ -21,6 +21,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 char SrcSuffix[] = ".asm"; /* Standardendungen: Hauptdatei */
 char IncSuffix[] = ".inc"; /* Includedatei */
 char PrgSuffix[] = ".p";   /* Programmdatei */

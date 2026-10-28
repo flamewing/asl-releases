@@ -43,6 +43,8 @@
 /****************************************************************************/
 /* Types */
 
+#include "c_implementation.h"
+
 typedef struct sPart {
     struct sPart* Next;
     int           FileNum, RecNum;

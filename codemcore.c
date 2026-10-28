@@ -37,6 +37,8 @@
 #define REG_SP 0
 #define REG_LR 15
 
+#include "c_implementation.h"
+
 typedef struct {
     Word    Code;
     Boolean Priv;

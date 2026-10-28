@@ -35,6 +35,8 @@
 
 /* ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static CPUVar cpu_cr16c;
 
 typedef struct {

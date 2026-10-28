@@ -49,6 +49,8 @@
 #define ModImmBRel  8
 #define MModImmBRel (1 << ModImmBRel) /* #nnnn(b) */
 
+#include "c_implementation.h"
+
 static CPUVar CPU70C40, CPU70C20, CPU70C00, CPU70CT40, CPU70CT20, CPU70C82, CPU70C42,
         CPU70C02, CPU70C48, CPU70C08;
 

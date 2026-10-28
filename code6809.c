@@ -39,6 +39,8 @@
 #define plain_base_mode_sym_name "PLAINBASE"
 #define plain_base_mode_cmd_name "PLAINBASE"
 
+#include "c_implementation.h"
+
 typedef struct {
     char*  Name;
     Word   Code;

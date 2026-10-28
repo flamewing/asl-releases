@@ -7,11 +7,13 @@
 #include "asmsub.h"
 
 /* State needed by the expression wrappers; mapping tests use the public API. */
+#include "c_implementation.h"
+
 as_addrspace_t ActPC;
 LargeWord*     SegLimits;
 
 /* The assembler-only string formatter is outside this mapping test. */
-void KillBlanks(char* str) {
+AS_NORETURN void KillBlanks(char* str) {
     UNUSED(str);
     as_abort("Unexpected call to the assembler string formatter\n");
 }

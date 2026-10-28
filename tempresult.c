@@ -26,6 +26,8 @@
  * \param  p_res buffer to initialize
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 void as_tempres_ini(TempResult* p_res) {
     p_res->Typ           = TempNone;
     p_res->Flags         = eSymbolFlag_None;

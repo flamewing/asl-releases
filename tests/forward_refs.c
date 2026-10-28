@@ -8,6 +8,8 @@
 
 /* Include the real implementation and count scope/name allocations. Hash
    collisions, growth and cleanup exercise the production table implementation. */
+#include "c_implementation.h"
+
 static unsigned entry_allocations, name_allocations;
 static void* counted_calloc(size_t count, size_t size) {
     entry_allocations++;

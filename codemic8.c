@@ -35,6 +35,8 @@
 #define CodeAddrInt UInt12
 #define DataAddrInt UInt5
 
+#include "c_implementation.h"
+
 typedef struct {
     LongWord Code;
 } FixedOrder;

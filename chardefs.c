@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static tNLSCharacterTab const Tab8859_1 = {
         {'\344', '\0'}, /* eCH_ae */
         {'\353', '\0'}, /* eCH_ee */

@@ -42,6 +42,8 @@
 
 #define APR_COUNT 8
 
+#include "c_implementation.h"
+
 typedef enum {
     ModReg = 0,
     ModImm = 1,

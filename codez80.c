@@ -40,6 +40,8 @@
 /*-------------------------------------------------------------------------*/
 /* Praefixtyp */
 
+#include "c_implementation.h"
+
 typedef enum {
     ePrefixNone,
     ePrefixN,  /* default processing */

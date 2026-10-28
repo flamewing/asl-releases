@@ -24,6 +24,8 @@
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static int split_exp(as_float_t inp, LongInt* p_exponent, LongWord* p_mantissa) {
     as_float_dissect_t dissect;
 

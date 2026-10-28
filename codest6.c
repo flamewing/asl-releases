@@ -40,6 +40,8 @@
 #define ModInd  2
 #define MModInd (1 << ModInd)
 
+#include "c_implementation.h"
+
 static Byte     AdrMode;
 static ShortInt AdrType;
 static Byte     AdrVal;

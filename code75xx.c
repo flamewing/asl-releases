@@ -27,6 +27,8 @@
 #include "intpseudo.h"
 #include "strutil.h"
 
+#include "c_implementation.h"
+
 static CPUVar  CPU7566, CPU7508;
 static IntType CodeIntType, DataIntType;
 

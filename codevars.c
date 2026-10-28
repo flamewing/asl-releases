@@ -15,6 +15,8 @@
 #include "asmdef.h"
 #include "asmitree.h"
 
+#include "c_implementation.h"
+
 int                InstrZ;
 int                AdrCnt;
 struct sInstTable *InstTable, *main_inst_table_no_leading_dot,

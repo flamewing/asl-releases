@@ -33,6 +33,8 @@
 /*---------------------------------------------------------------------------*/
 /* Address Decoders */
 
+#include "c_implementation.h"
+
 typedef enum {
     e_mode_none      = -1,
     e_mode_a         = 0,

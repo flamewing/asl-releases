@@ -30,6 +30,8 @@
 #include <float.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static as_float_t log_max, log2_max, log10_max;
 
 static Boolean FuncSUBSTR(TempResult* pResult, TempResult const* pArgs, unsigned ArgCnt) {

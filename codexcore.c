@@ -33,6 +33,8 @@
 /*--------------------------------------------------------------------------*/
 /* Types */
 
+#include "c_implementation.h"
+
 typedef struct {
     Word Opcode1, Opcode2;
 } lr2r_Order;

@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static Word const BaseVals[4] = {2, 8, 16, 256};
 
 LongWord        NativeIntConstModeMask, OtherIntConstModeMask;

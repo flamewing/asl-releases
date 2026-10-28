@@ -38,6 +38,8 @@
 
 #define CKPT_NOTHING 16
 
+#include "c_implementation.h"
+
 enum {
     eCoreNone   = 0,
     eCore990_10 = 1 << 0,

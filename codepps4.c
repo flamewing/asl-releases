@@ -36,6 +36,8 @@
  * \param  code machine code
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static void decode_fixed(Word code) {
     if (ChkArgCnt(0, 0)) {
         BAsmCode[0] = code;

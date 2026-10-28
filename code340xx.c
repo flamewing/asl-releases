@@ -33,6 +33,8 @@
 
 /* ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static CPUVar cpu_34010, cpu_34020;
 
 static Boolean    coproc_set;

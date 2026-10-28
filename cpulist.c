@@ -16,6 +16,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static tpCPUDef FirstCPUDef; /* Liste mit Prozessordefinitionen */
 static CPUVar   CPUCnt;      /* Gesamtzahl Prozessoren */
 static int      MaxNameLen = 0;

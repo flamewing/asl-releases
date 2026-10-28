@@ -33,6 +33,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     eCoreNone     = 0,
     eCoreZ8NMOS   = 1 << 0,

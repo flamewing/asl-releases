@@ -30,6 +30,8 @@
 
 /* --------------------------------------------------------------- */
 
+#include "c_implementation.h"
+
 TMsgCat MsgCat;
 
 static as_cmd_rec_t* sum_cmd_recs    = NULL;

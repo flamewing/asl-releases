@@ -28,6 +28,8 @@
  * Local Variables
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static PStructElem          pLabelElement;
 static struct sSymbolEntry* pLabelEntry;
 static LargeWord            LabelValue;

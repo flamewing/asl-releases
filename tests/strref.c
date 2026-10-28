@@ -2,6 +2,8 @@
 #include "strref.h"
 #include <stdio.h>
 
+#include "c_implementation.h"
+
 int main(void) {
     /* Nonterminated input with nonblank bytes immediately outside each view. */
     static char const source[] = {'X', ' ', '\t', 'a', 'b', ' ', '\r', 'Y'};

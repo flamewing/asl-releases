@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static unsigned calls;
 
 static void instruction(Word index) {

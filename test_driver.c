@@ -15,6 +15,8 @@
 
 #define PATH_BUFFER_SIZE 4096
 
+#include "c_implementation.h"
+
 static char io_buffer[32768];
 
 static bool remove_output(char const* name) {

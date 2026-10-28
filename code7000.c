@@ -32,6 +32,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     ModReg          = 0,
     ModIReg         = 1,

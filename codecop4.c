@@ -36,6 +36,8 @@
 #define M_CPUCOP440 (1 << 2)
 #define M_CPUCOP444 (1 << 3)
 
+#include "c_implementation.h"
+
 typedef struct {
     Word CPUMask;
     Word Code;

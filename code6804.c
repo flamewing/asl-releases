@@ -28,6 +28,8 @@
 #include "motpseudo.h"
 #include "strutil.h"
 
+#include "c_implementation.h"
+
 typedef struct {
     char*   Name;
     LongInt Code;

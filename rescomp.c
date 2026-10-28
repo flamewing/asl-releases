@@ -22,6 +22,8 @@
 
 /*****************************************************************************/
 
+#include "c_implementation.h"
+
 typedef struct tag_TMsgList {
     struct tag_TMsgList* Next;
     LongInt              Position;

@@ -44,6 +44,8 @@
  * Local Functions
  *****************************************************************************/
 
+#include "c_implementation.h"
+
 static Boolean CutRep(
         tStrComp* pDest, tStrComp const* pSrc, LongInt* pErg, tSymbolFlags* pFlags) {
     tStrComp Src;

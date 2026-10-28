@@ -22,6 +22,8 @@
 
 #define DBG_FLOAT 0
 
+#include "c_implementation.h"
+
 #ifdef AS_DECFLOAT
 
 #    ifdef __GFLOAT

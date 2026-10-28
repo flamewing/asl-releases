@@ -49,6 +49,8 @@
 #define ModT    6
 #define MModT   (1 << ModT)
 
+#include "c_implementation.h"
+
 typedef struct {
     Byte Code, Code16;
 } ShiftOrder;

@@ -74,6 +74,8 @@
  *         -2 : unequal, but no smaller/greater relation can be given
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 int reg_cmp(TempResult const* p_val1, TempResult const* p_val2) {
     tRegInt num1, num2;
 

@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "c_implementation.h"
+
 static as_exit_handler_t exit_handler;
 
 as_exit_handler_t as_set_exit_handler(as_exit_handler_t handler) {

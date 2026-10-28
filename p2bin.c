@@ -38,6 +38,8 @@
 
 #define BinSuffix ".bin"
 
+#include "c_implementation.h"
+
 typedef void (*ProcessProc)(char const* FileName, LongWord Offset);
 
 static FILE*  TargFile;

@@ -5,6 +5,8 @@
 #include "bfloat.h"
 #include "ieeefloat.h"
 
+#include "c_implementation.h"
+
 static int check16(
         int (*convert)(as_float_t, Byte*, Boolean), as_float_t value, unsigned expected) {
     unsigned sign, big;

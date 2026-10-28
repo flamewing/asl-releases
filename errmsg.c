@@ -21,6 +21,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static tErrorNum GetDefaultCPUErrorNum(tErrorNum ThisNum) {
     return ThisNum ? ThisNum : ErrNum_InstructionNotSupported;
 }

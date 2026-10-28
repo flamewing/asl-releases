@@ -30,6 +30,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static CPUVar CPUSX20, CPUSX28;
 
 static LongInt Reg_FSR, Reg_STATUS;

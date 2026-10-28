@@ -26,6 +26,8 @@
  * \return >0 for number of words used (1) or <0 for error code
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 int as_float_2_nec_4(as_float_t inp, LongWord* p_dest) {
     Boolean            round_up;
     as_float_dissect_t dissect;

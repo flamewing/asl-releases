@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 int main(void) {
     as_nonz_dynstr_t empty, dest;
     char text[8] = "dirty";

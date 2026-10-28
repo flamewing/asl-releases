@@ -12,6 +12,8 @@
 
 #include "msg_level.h"
 
+#include "c_implementation.h"
+
 unsigned msg_level       = e_msg_level_normal;
 ShortInt msg_quiet_depth = 0;
 

@@ -19,6 +19,8 @@
 
 #include <ctype.h>
 
+#include "c_implementation.h"
+
 static CPUVar CPU87C00;
 
 static char const  Reg8Names[]  = "awcbedlh";

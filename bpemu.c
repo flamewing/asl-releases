@@ -32,6 +32,8 @@
 #    include <direct.h>
 #endif
 
+#include "c_implementation.h"
+
 void FExpand(char* p_dest, size_t dest_size, char const* p_src) {
     String Copy;
 #ifdef DRSEP

@@ -65,6 +65,8 @@
 
 #define REG_SP 7
 
+#include "c_implementation.h"
+
 static tSymbolSize OpSize, MomSize;
 static ShortInt    AdrMode;    /* Ergebnisadressmodus */
 static Byte        AdrPart;    /* Adressierungsmodusbits im Opcode */

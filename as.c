@@ -72,6 +72,8 @@
 #include <string.h>
 /**          Code21xx};**/
 
+#include "c_implementation.h"
+
 static long     StartTime, StopTime;
 static Boolean  GlobErrFlag, ResetLastLabel;
 static unsigned MacroNestLevel = 0;
@@ -4705,7 +4707,7 @@ static int assemble_command(int argc, char** argv) {
     return GlobErrFlag ? 2 : 0;
 }
 
-static void library_fatal(int status) {
+AS_NORETURN static void library_fatal(int status) {
     active_call->status = status;
     longjmp(active_call->escape, 1);
 }

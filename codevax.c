@@ -33,6 +33,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     e_cpu_cap_none    = 0,
     e_cpu_cap_float_g = 1 << 0,

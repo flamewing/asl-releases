@@ -39,6 +39,8 @@
 
 #define INSTINFO_COUNT 76
 
+#include "c_implementation.h"
+
 static CPUVar CPU6100;
 static CPUVar CPU6120;
 

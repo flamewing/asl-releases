@@ -21,6 +21,8 @@
  * \return # of leading zeros
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static int nlz16(Word n) {
     unsigned z;
     for (z = 0; z < 16; z++) {

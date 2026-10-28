@@ -32,6 +32,8 @@
  * \return 0 or error code
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 int as_float_2_ibm_float(Word* pDest, as_float_t Src, Boolean ToDouble) {
     as_float_dissect_t dissect;
     unsigned           dest_num_bits;

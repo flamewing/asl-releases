@@ -10,6 +10,8 @@
 
 #include "stdinc.h"
 
+#include "c_implementation.h"
+
 char const* Version    = "1.42 Beta [Bld 313]";
 char const* DebVersion = "1.42bld313-1";
 LongInt     VerNo      = 0x142f;

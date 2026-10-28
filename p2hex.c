@@ -37,6 +37,8 @@
 #include "strutil.h"
 #include "toolutils.h"
 
+#include "c_implementation.h"
+
 static char const* HexSuffix = ".hex";
 #define MaxLineLen     254
 #define AVRLEN_DEFAULT 3

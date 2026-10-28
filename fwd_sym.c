@@ -20,6 +20,8 @@
  * \return * to created entry
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 as_fwd_sym_t* as_fwd_sym_create(void) {
     as_fwd_sym_t* p_ret;
 

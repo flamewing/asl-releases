@@ -33,6 +33,8 @@
 
 #define AddCodeSpace 0x300
 
+#include "c_implementation.h"
+
 static CPUVar CPU16C64, CPU16C84, CPU16C873, CPU16C874, CPU16C876, CPU16C877;
 
 /*--------------------------------------------------------------------------*/

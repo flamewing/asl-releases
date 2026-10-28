@@ -36,6 +36,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static CPUVar CPUMN1610;
 static CPUVar CPUMN1613;
 

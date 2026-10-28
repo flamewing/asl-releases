@@ -5,7 +5,9 @@
 #include <string.h>
 
 /* The assembler-only string formatter is outside this conversion test. */
-void KillBlanks(char* str) {
+#include "c_implementation.h"
+
+AS_NORETURN void KillBlanks(char* str) {
     UNUSED(str);
     as_abort("Unexpected call to the assembler string formatter\n");
 }

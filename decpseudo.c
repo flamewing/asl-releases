@@ -33,6 +33,8 @@
  * \brief  encode number or decimal string in packed decimal format
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static void append_digit(Byte digit, Boolean* p_half) {
     if (*p_half) {
         BAsmCode[CodeLen] |= (digit & 15);

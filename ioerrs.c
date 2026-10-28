@@ -23,6 +23,8 @@
 #endif
 #include "ioerrs.h"
 
+#include "c_implementation.h"
+
 typedef struct {
     int Code;
     int Msg;

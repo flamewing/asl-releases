@@ -33,6 +33,8 @@
 
 #undef DEBUG_PRINTF
 
+#include "c_implementation.h"
+
 typedef struct {
     char const* Name;
     Word        Code;

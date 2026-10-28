@@ -18,6 +18,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 LargeWord none_target_seglimit;
 
 /*-------------------------------------------------------------------------*/

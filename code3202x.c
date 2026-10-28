@@ -31,6 +31,8 @@
 
 /* ---------------------------------------------------------------------- */
 
+#include "c_implementation.h"
+
 typedef struct {
     Word    Code;
     Boolean Must1;

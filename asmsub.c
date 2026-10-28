@@ -40,6 +40,8 @@
 #define VALID_M1 4
 #define VALID_MN 8
 
+#include "c_implementation.h"
+
 static StringList CopyrightList, OutList, ShareOutList, ListOutList;
 
 static unsigned ValidSymCharLen;

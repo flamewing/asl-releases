@@ -45,6 +45,8 @@
 
 #define DISSECT_MAU_COMMAND 0
 
+#include "c_implementation.h"
+
 typedef enum {
     ModNone   = -1,
     ModReg    = 0,

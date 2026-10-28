@@ -7,6 +7,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int check(int mismatch, int line) {
     if (mismatch) {
         fprintf(stderr, "String contract mismatch at line %d\n", line);

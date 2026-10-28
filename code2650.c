@@ -35,6 +35,8 @@
 /*--------------------------------------------------------------------------*/
 /* Local Variables */
 
+#include "c_implementation.h"
+
 static CPUVar  CPU2650;
 static Boolean splitted_arg;
 

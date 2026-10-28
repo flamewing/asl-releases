@@ -21,6 +21,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct sFileNode {
     Integer            Name;
     Integer            Len;

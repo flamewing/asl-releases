@@ -31,6 +31,8 @@
 
 /* Format is similar to IEEE FP16, however with 8 exponent and 7 mantissa bits: */
 
+#include "c_implementation.h"
+
 int as_float_2_bfloat16(as_float_t inp, Byte* pDest, Boolean NeedsBig) {
     as_float_dissect_t dissect;
     as_float_round_t   round_type;

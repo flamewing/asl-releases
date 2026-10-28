@@ -17,6 +17,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static void check_capacity(tStrComp const* pComp) {
     if (!pComp->str.capacity) {
         fprintf(stderr, "copy to zero-capacity StrComp\n");

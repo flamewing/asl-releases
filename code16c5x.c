@@ -28,6 +28,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static CPUVar CPU16C54, CPU16C55, CPU16C56, CPU16C57;
 
 /*-------------------------------------------------------------------------*/

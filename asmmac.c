@@ -25,6 +25,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 PInputTag  FirstInputTag;
 POutputTag FirstOutputTag;
 

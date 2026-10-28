@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     Boolean  InMacro;
     LongInt  LineNum;

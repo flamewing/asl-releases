@@ -33,6 +33,8 @@
 
 /* ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 static CPUVar  cpu_cr16a, cpu_cr16b;
 static IntType addr_int_type, code_int_type;
 static LongInt memory_model;

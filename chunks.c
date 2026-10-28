@@ -18,6 +18,8 @@
 /*--------------------------------------------------------------------------*/
 /* eine Chunkliste initialisieren */
 
+#include "c_implementation.h"
+
 void InitChunk(ChunkList* NChunk) {
     NChunk->RealLen  = 0;
     NChunk->AllocLen = 0;

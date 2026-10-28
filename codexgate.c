@@ -36,6 +36,8 @@
 
 #define FixedOrderCnt 2
 
+#include "c_implementation.h"
+
 static CPUVar CPUXGate;
 
 /*--------------------------------------------------------------------------*/

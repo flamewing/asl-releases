@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int  selected, freed, lines;
 static char listing[1024];
 

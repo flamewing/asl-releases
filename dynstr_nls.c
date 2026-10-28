@@ -25,6 +25,8 @@
  * \return actual # of bytes transferred
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 size_t as_dynstr_append_upr(as_dynstr_t* p_dest, char const* p_src, size_t src_len) {
     size_t dest_len = strlen(p_dest->p_str), dest_cap;
 

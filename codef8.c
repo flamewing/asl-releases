@@ -34,6 +34,8 @@
 #define Flg_Code (1 << 9)
 #define Flg_CMOS (1 << 10)
 
+#include "c_implementation.h"
+
 static IntType CodeIntType;
 static Word    MomCPUFlags;
 

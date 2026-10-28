@@ -58,6 +58,8 @@
 
 /* Mask, Min & Max are computed at initialization */
 
+#include "c_implementation.h"
+
 tIntTypeDef IntTypeDefs[IntTypeCnt] = {
         {0x0000, 0, 0, 0}, /* UInt0 */
         {0x0001, 0, 0, 0}, /* UInt1 */

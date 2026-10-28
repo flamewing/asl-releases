@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int check(size_t capacity, char const* expected, char const* format, ...) {
     unsigned char storage[130];
     va_list args;

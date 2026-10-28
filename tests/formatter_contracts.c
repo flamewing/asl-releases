@@ -4,6 +4,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int vformat(int append, char* dest, size_t capacity, char const* format, ...) {
     va_list ap;
     va_start(ap, format);

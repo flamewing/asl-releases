@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int Check(char const* prefix, char const* original, size_t capacity,
                  char const* expected) {
     unsigned char storage[96], before[96];

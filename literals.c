@@ -23,6 +23,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 as_literal_t* p_first_literal;
 
 LongInt literal_forward_count;

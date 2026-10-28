@@ -24,6 +24,8 @@
  * \param  p_rec record to free
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 void InitStringList(StringList* List) {
     *List = NULL;
 }

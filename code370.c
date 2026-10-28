@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     char* Name;
     Word  Code;

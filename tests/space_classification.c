@@ -4,6 +4,8 @@
 #include <locale.h>
 #include <stdio.h>
 
+#include "c_implementation.h"
+
 static int check_bytes(void) {
     int c;
     for (c = -512; c < 768; c++) {

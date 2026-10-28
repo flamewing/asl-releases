@@ -17,6 +17,8 @@
  * \return log2 if arg is a power of 2, otherwise zero
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 unsigned as_log2(unsigned arg) {
     int ret = 0;
     while (arg) {

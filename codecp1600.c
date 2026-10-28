@@ -38,6 +38,8 @@
 #define REG_PC      7
 #define REG_SP      6
 
+#include "c_implementation.h"
+
 static CPUVar CPUCP1600;
 
 static Word    Bits;

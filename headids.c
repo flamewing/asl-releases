@@ -16,6 +16,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static Word get_granularity_default(as_addrspace_t addr_space) {
     UNUSED(addr_space);
     return 1;

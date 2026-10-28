@@ -14,6 +14,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "c_implementation.h"
+
 static void put32(Byte* dest, LongWord value) {
     for (int z = 0; z < 4; z++, value >>= 8) {
         dest[z] = value & 255;

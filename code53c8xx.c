@@ -28,6 +28,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     char const* Name;
     LongWord    Code;

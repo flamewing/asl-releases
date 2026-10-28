@@ -3,6 +3,8 @@
 #include "../test_driver.c"
 #undef main
 
+#include "c_implementation.h"
+
 int main(int argc, char** argv) {
     if (argc != 2) {
         return 1;

@@ -77,6 +77,8 @@
 #define Mask_PureDest (Mask_NoImmGen & ~(MModPush | MModPop))
 #define Mask_PureMem  (Mask_MemGen & ~(MModPush | MModPop))
 
+#include "c_implementation.h"
+
 typedef struct {
     Word Mask;
     Byte OpMask;

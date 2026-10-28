@@ -19,6 +19,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static unsigned nData;
 
 static CPUVar CPU6800, CPU6802;

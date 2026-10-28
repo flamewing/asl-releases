@@ -31,6 +31,8 @@
 
 /*-------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef enum {
     ModNone = -1,
     ModImm  = 0,

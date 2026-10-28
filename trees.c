@@ -22,6 +22,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 Boolean BalanceTrees;
 
 static ShortInt StrCmp(char const* s1, char const* s2, LongInt Hand1, LongInt Hand2) {

@@ -29,6 +29,8 @@
 
 #define BitOrderCnt 4
 
+#include "c_implementation.h"
+
 enum {
     ModNone = -1,
     ModAcc  = 0,

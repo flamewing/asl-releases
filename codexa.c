@@ -52,6 +52,8 @@
 #define eSymbolSizeSigned4Bit ((tSymbolSize) - 3)
 #define eSymbolSize4Bit       ((tSymbolSize) - 2)
 
+#include "c_implementation.h"
+
 typedef struct {
     Byte SizeMask;
     Byte Code;

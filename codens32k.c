@@ -31,6 +31,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     eCoreNone,
     eCoreGen1,

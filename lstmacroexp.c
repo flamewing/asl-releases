@@ -20,6 +20,8 @@
 #define MODIFIER_CLR    0x80
 #define LstMacroExpName "MACEXP" /* expandierte Makros anzeigen */
 
+#include "c_implementation.h"
+
 static tLstMacroExp LstMacroExp;
 
 /*!------------------------------------------------------------------------

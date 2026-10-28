@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 enum {
     ModNone = -1,
     ModReg4 = 0,

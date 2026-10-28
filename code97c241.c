@@ -31,6 +31,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     Byte Code;
     Byte Mask; /* B0..2=OpSizes, B4=-MayImm, B5=-MayReg */

@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     ModA    = 0,
     ModDPL  = 1,

@@ -31,6 +31,8 @@
 /*-------------------------------------------------------------------------*/
 /* Variables */
 
+#include "c_implementation.h"
+
 typedef struct {
     Word   Code;
     CPUVar MinCPU;

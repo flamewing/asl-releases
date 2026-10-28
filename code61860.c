@@ -37,6 +37,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static CPUVar CPUSC61860;
 
 #define JR_PLUS  0x0100

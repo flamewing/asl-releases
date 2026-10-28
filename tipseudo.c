@@ -43,6 +43,8 @@
  * Local Functions
  *****************************************************************************/
 
+#include "c_implementation.h"
+
 static void define_untyped_label(void) {
     if (LabPart.str.p_str[0]) {
         PushLocHandle(-1);

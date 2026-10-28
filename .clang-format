@@ -66,6 +66,11 @@ EmptyLineBeforeAccessModifier: LogicalBlock
 FixNamespaceComments: true
 IncludeBlocks: Regroup
 IncludeCategories:
+  # The C-only warning boundary must follow every declaration header.
+  - Regex: '"c_implementation\.h"'
+    Priority: 100
+    SortPriority: 100
+    CaseSensitive: false
   # stdinc.h must come first.
   - Regex: '["<]stdinc.h[>"]'
     Priority: -2

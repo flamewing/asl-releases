@@ -30,6 +30,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static CPUVar   CPU614023, CPU614043, CPU614081;
 static IntType  CodeIntType, DataIntType, OpSizeType;
 static ShortInt AdrMode;

@@ -32,6 +32,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static CPUVar      CPU641016;
 static tSymbolSize OpSize;
 static tStrComp    FormatPart;

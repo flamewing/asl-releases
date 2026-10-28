@@ -53,6 +53,8 @@
 
 #define BitOrderCnt 3
 
+#include "c_implementation.h"
+
 static CPUVar CPUCOP87L84;
 
 typedef struct {

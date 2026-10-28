@@ -32,6 +32,8 @@
 /*---------------------------------------------------------------------------*/
 /* Types */
 
+#include "c_implementation.h"
+
 typedef enum {
     eModNone  = 0,
     eModReg8  = 1,

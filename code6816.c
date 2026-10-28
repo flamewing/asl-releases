@@ -33,6 +33,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     tSymbolSize Size;
     Word        Code, ExtCode;

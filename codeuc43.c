@@ -38,6 +38,8 @@
 #define OPCODE_JTB 0x1c
 #define OPCODE_NAA 0x45
 
+#include "c_implementation.h"
+
 typedef enum {
     e_ucom_45,
     e_ucom_44,

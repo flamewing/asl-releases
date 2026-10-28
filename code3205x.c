@@ -30,6 +30,8 @@
 
 /* ---------------------------------------------------------------------- */
 
+#include "c_implementation.h"
+
 typedef struct {
     CPUVar MinCPU;
     Word   Code;

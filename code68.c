@@ -36,6 +36,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     CPUVar MinCPU, MaxCPU;
     Word   Code;

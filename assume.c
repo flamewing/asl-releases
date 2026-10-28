@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static size_t                 assume_rec_cnt;
 static as_assume_rec_t const* p_assume_recs;
 

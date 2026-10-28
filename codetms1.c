@@ -23,6 +23,8 @@
 #include "headids.h"
 #include "intpseudo.h"
 
+#include "c_implementation.h"
+
 static CPUVar  CPU1000, CPU1100, CPU1200, CPU1300;
 static IntType CodeAdrIntType, DataAdrIntType;
 

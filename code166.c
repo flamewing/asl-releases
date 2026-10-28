@@ -30,6 +30,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     CPUVar MinCPU;
     Word   Code1, Code2;

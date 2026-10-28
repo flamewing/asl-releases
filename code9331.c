@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static CPUVar CPU9331;
 
 static char const* pFNames[] = {"ZF",  "SF",  "V0F",  "V1F",  "LRF",  "GF0", "GF1",

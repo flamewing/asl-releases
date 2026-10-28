@@ -34,6 +34,8 @@
 
 #define ModNone (-1)
 
+#include "c_implementation.h"
+
 enum {
     ModAcc,
     ModDir,

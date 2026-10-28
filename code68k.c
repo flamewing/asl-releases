@@ -55,6 +55,8 @@
 
 #define AN_DISPTYPE_32 Int32
 
+#include "c_implementation.h"
+
 typedef enum {
     e68KGen1a, /* 68008/68000 */
     e68KGen1b, /* 68010/68012 */

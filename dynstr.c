@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static void check_dynamic(as_dynstr_t const* p_str) {
     if (!p_str->dynamic) {
         fprintf(stderr, "attemt to resize non-dynamic string\n");

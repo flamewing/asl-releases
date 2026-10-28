@@ -59,6 +59,8 @@ A million repetitions of "a"
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
+#include "c_implementation.h"
+
 void SHA1Transform(Card32 state[5], unsigned char const buffer[64]) {
     Card32 a, b, c, d, e;
 

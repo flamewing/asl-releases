@@ -18,6 +18,8 @@
 #include "asmsub.h"
 #include "cmdarg.h"
 
+#include "c_implementation.h"
+
 Boolean FPUAvail,        /* floating point co processor instructions allowed? */
         PMMUAvail,       /* PMMU instructions allowed? */
         SupAllowed,      /* supervisor mode enabled */

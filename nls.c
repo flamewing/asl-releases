@@ -23,6 +23,8 @@
 
 /*-------------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     Word      Country;  /* = internationale Vorwahl */
     tCodepage Codepage; /* mom. gewaehlter Zeichensatz */

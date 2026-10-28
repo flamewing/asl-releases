@@ -10,6 +10,8 @@
 
 #include "striter.h"
 
+#include "c_implementation.h"
+
 #if defined(_MSC_VER)
 /* Preserve the original MSVC iterator implementation and code layout. */
 typedef struct {

@@ -34,6 +34,8 @@
 
 /* do not change enum values, they match the machine codings: */
 
+#include "c_implementation.h"
+
 enum {
     ModNone            = 0,
     ModImm             = 3,

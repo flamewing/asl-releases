@@ -37,6 +37,8 @@
 #define REG_PC 0
 #define REG_E  0x80
 
+#include "c_implementation.h"
+
 static CPUVar CPUSCMP;
 
 /*---------------------------------------------------------------------------*/

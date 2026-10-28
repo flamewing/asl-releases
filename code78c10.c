@@ -31,6 +31,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     char const* p_name;
     Byte        code;

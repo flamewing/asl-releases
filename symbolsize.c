@@ -14,6 +14,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     tSymbolSize Size;
     char const  Name[5];

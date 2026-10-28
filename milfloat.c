@@ -24,6 +24,8 @@
  * \return # of words written or < 0 if error
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 int as_float_2_mil1750(as_float_t inp, Word* p_dest, Boolean extended) {
     as_float_dissect_t dissect;
     Word               or_sum;

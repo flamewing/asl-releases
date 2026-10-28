@@ -20,6 +20,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     LargeWord cpu_start, cpu_end;
     LargeWord phys_start, phys_end;

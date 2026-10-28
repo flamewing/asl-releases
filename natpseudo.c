@@ -31,6 +31,8 @@
  * Global Functions
  *****************************************************************************/
 
+#include "c_implementation.h"
+
 static void DecodeSFR(Word Code) {
     UNUSED(Code);
     code_equate_type(SegData, UInt8);

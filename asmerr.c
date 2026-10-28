@@ -30,6 +30,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct sExpectError {
     struct sExpectError* pNext;
     tErrorNum            Num;

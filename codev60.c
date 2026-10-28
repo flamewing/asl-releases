@@ -39,6 +39,8 @@
 #define CODE_FLAG_OP2_IMM (1 << 14)
 #define CODE_FLAG_LIM32   (1 << 13)
 
+#include "c_implementation.h"
+
 typedef enum {
     ModReg = 0,
     ModImm = 1,

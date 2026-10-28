@@ -49,6 +49,8 @@
 #define ModSPRel   7
 #define MModSPRel  (1 << ModSPRel)
 
+#include "c_implementation.h"
+
 typedef struct {
     Byte Code1, Code2, Code3;
 } Gen2Order;

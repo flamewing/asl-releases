@@ -33,6 +33,8 @@
 
 #define BufferSize 8192
 
+#include "c_implementation.h"
+
 static char const* Creator = "BIND 1.42";
 
 static FILE*  TargFile;

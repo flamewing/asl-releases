@@ -31,6 +31,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     ModACC  = 0,
     ModAP   = 1,

@@ -42,6 +42,8 @@
  * Result:      TRUE if indirect
  *****************************************************************************/
 
+#include "c_implementation.h"
+
 Boolean IsIndirectGen(char const* Asc, char const* pBeginEnd) {
     int z, Level, l;
 

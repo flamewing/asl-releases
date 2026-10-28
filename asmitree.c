@@ -22,6 +22,8 @@
 
 /*---------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static int GetKey(char const* Name, LongWord TableSize) {
     unsigned char const* p;
     LongWord                tmp = 0;

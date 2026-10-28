@@ -24,6 +24,8 @@
 
 #define DBG_FLOAT 0
 
+#include "c_implementation.h"
+
 #ifdef AS_IEEEFLOAT_8_DOUBLE
 /*!------------------------------------------------------------------------
  * \fn     as_float_dissect(as_float_dissect_t *p_dest, as_float_t num)

@@ -21,6 +21,8 @@
 #include <string.h>
 #undef strlen /* VORSICHT, Rekursion!!! */
 
+#include "c_implementation.h"
+
 char HexStartCharacter;  /* characters to use for 10,11,...35 */
 char SplitByteCharacter; /* output large numbers per-byte with given split char */
 

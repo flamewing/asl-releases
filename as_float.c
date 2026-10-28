@@ -17,6 +17,8 @@
 #define DBG_MANT_APPEND 0
 #define DBG_MANT_ADD    0
 
+#include "c_implementation.h"
+
 static as_float_mant_word_t MASK(unsigned n) {
     if (n < AS_FLOAT_MANT_WORD_BITS) {
         return ((as_float_mant_word_t)((1ul << (n)) - 1));

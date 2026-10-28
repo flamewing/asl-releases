@@ -52,6 +52,8 @@
 
 /*--------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 static PInstTable        PseudoTable = NULL, ONOFFTable = NULL;
 static inst_fnc_table_t* pseudo_inst_fnc_table = NULL;
 

@@ -23,6 +23,8 @@
  * \param  ini_capacity initial capacity
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 void as_nonz_dynstr_ini(as_nonz_dynstr_t* p_str, size_t ini_capacity) {
     if (ini_capacity > 0) {
         p_str->p_str    = (char*)calloc(1, ini_capacity);

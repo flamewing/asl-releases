@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static int check(tStrComp const* dest, char const* text, int column) {
     if (strcmp(dest->str.p_str, text) || dest->Pos.StartCol != column
         || dest->Pos.Len != strlen(text)) {

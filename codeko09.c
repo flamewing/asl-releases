@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     e_adr_mode_none = -1,
     e_adr_mode_imm  = 1,

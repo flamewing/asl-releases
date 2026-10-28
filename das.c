@@ -26,6 +26,8 @@
 
 #define TABSIZE 8
 
+#include "c_implementation.h"
+
 char const* pEnvName = "DASCMD";
 
 void WrCopyRight(char const* Msg) {

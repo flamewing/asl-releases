@@ -21,6 +21,8 @@
 
 /* A name can have references in several sections or macro invocations.
    Resolution visits all of that name's scopes, without sorted traversal. */
+#include "c_implementation.h"
+
 typedef struct as_forward_ref_entry {
     struct as_forward_ref_entry* next;
     LongInt attribute;

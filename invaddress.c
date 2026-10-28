@@ -17,6 +17,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     TTree Tree;
     char* pSymbolName;

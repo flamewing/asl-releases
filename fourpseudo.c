@@ -28,6 +28,8 @@
 #include "chartrans.h"
 #include "errmsg.h"
 
+#include "c_implementation.h"
+
 void DecodeRES(Word Code) {
     UNUSED(Code);
 

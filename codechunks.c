@@ -14,6 +14,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 static void SetCodePtr(tCodeChunk* pChunk, void* pCode, unsigned Granularity) {
     switch ((pChunk->Granularity = Granularity)) {
     case 4:

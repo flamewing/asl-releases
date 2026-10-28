@@ -18,6 +18,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 static void clr_mapped(as_chartrans_table_t* p_table, unsigned code) {
     p_table->mapped[code >> 3] &= ~(1 << (code & 7));
 }

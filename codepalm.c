@@ -33,6 +33,8 @@
 
 #define MODIFIER_0 8
 
+#include "c_implementation.h"
+
 typedef enum {
     ModReg   = 0, /* Rn */
     ModIReg  = 1, /* (Rn), (Rn)-, (Rn)+ */

@@ -35,6 +35,8 @@
 #define AccOrderCnt    2
 #define MulDivOrderCnt 8
 
+#include "c_implementation.h"
+
 typedef struct {
     Byte Code;
     Word AccCode;

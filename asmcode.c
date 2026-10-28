@@ -31,6 +31,8 @@
 
 #define CodeBufferSize 512
 
+#include "c_implementation.h"
+
 static Word    LenSoFar;
 static long RecPos, LenPos;
 static Boolean ThisRel;

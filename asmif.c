@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 PIfSave FirstIfSave;
 Boolean IfAsm; /* FALSE: in einer neg. IF-Sequenz-->kein Code */
 

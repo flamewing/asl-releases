@@ -43,6 +43,8 @@
 
 #define CaseCnt 17
 
+#include "c_implementation.h"
+
 typedef struct {
     LongWord Code;
 } FixedOrder;

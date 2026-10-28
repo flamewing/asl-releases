@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 /* Oracle follows the existing QuotPos callback and shared quote iterator. */
+#include "c_implementation.h"
+
 typedef struct {
     as_quoted_iterator_cb_data_t quote;
     ShortInt parentheses, brackets;

@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include "c_implementation.h"
+
 Boolean force_restricted_extension_digits = False;
 PTransTable CurrTransTable;
 static unsigned translation_reads, unmapped_errors;

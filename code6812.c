@@ -33,6 +33,8 @@
 
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef struct {
     Word   Code;
     CPUVar MinCPU;

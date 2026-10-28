@@ -14,6 +14,8 @@
 
 #include "strutil.h"
 
+#include "c_implementation.h"
+
 typedef struct sEntryAddress {
     struct sEntryAddress* pNext;
     LargeWord             Address;

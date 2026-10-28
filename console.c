@@ -21,6 +21,8 @@
  * \param  NewLine start new line or jump back to current line?
  * ------------------------------------------------------------------------ */
 
+#include "c_implementation.h"
+
 void WrConsoleLine(char const* pLine, Boolean NewLine) {
     static size_t LastLength;
     size_t        ThisLength = strlen(pLine);

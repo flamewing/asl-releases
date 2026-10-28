@@ -41,6 +41,8 @@
 #define BitFlag_Data 0x800000ul
 #define BitFlag_IO   0x400000ul
 
+#include "c_implementation.h"
+
 typedef enum {
     eCoreNone,
     eCoreMinTiny,

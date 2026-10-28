@@ -43,6 +43,8 @@
  * Local Types
  *****************************************************************************/
 
+#include "c_implementation.h"
+
 struct sLayoutCtx;
 
 typedef Boolean (*TLayoutFunc)(tStrComp const* pArg, struct sLayoutCtx* pCtx);

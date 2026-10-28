@@ -12,6 +12,8 @@
 
 #include "strutil.h"
 
+#include "c_implementation.h"
+
 char const* SegNames[SegCountPlusStruct]
         = {"NOTHING", "CODE", "DATA", "IDATA",   "XDATA",  "YDATA",
            "BITDATA", "IO",   "REG",  "ROMDATA", "EEDATA", "STRUCT"};

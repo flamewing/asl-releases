@@ -20,6 +20,8 @@
 #include "fourpseudo.h"
 #include "headids.h"
 
+#include "c_implementation.h"
+
 typedef struct {
     Word    Code;
     IntType Max;

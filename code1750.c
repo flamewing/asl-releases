@@ -40,6 +40,8 @@
 
 /*-------------------------------------------------------------------------*/
 
+#include "c_implementation.h"
+
 typedef struct {
     char const* pName;
     Word        Code;

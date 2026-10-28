@@ -20,6 +20,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "c_implementation.h"
+
 typedef enum {
     eUnknown,
     eImplicit,

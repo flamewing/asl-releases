@@ -47,6 +47,8 @@
 #define MacOrderCnt      3
 #define ConditionCnt     23
 
+#include "c_implementation.h"
+
 typedef struct {
     Word    Code;
     Boolean IsRepeatable;
