@@ -126,13 +126,9 @@ jobs:
             exe_ext: ""
             as: asl
           - architecture: win32
-            os: windows-latest
-            shell: msys2
-            msystem: MINGW32
+            os: windows-2022
+            shell: pwsh
             package: asl-windows-i686
-            p7zip: "/c/Program Files/7-Zip/7z.exe"
-            exe_ext: ".exe"
-            as: asw
           - architecture: win64
             os: windows-latest
             shell: msys2
@@ -156,16 +152,14 @@ jobs:
         run: |
           brew install cmake ninja
       - name: Install dependencies (Windows)
-        if: ${{ startsWith(matrix.architecture, 'win') }}
+        if: ${{ matrix.architecture == 'win64' }}
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         with:
           msystem: ${{ matrix.msystem }}
-          # Keep the 32-bit snapshot while the MINGW32 toolchain is available.
-          suppress-deprecation-warnings: msystem-mingw32
           install: >-
             base-devel git
           pacboy: >-
-            toolchain:p binutils:p cmake:p ninja:p
+            toolchain:p binutils:p cmake:p ninja:p ntldd:p
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
@@ -175,23 +169,62 @@ jobs:
         with:
           persist-credentials: false
       - name: Configure
+        if: ${{ matrix.architecture != 'win32' }}
         env:
           MSYS2_PATH_TYPE: inherit
         run: |
           cmake -S . -B build -G Ninja -DASL_EMBED_MESSAGES=ON "-DCMAKE_C_FLAGS=${{ matrix.cflags }}"
+      - name: Configure (MSVC Win32)
+        if: ${{ matrix.architecture == 'win32' }}
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A Win32 -DASL_EMBED_MESSAGES=ON -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
       - name: Build
         env:
           MSYS2_PATH_TYPE: inherit
         run: |
-          cmake --build build -j
+          cmake --build build --config Release -j
       - name: Test
         run: |
-          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120
+          ctest --test-dir build --parallel --output-on-failure --no-tests=error --timeout 120 -C Release
       - name: Create package
+        if: ${{ matrix.architecture != 'win32' }}
         run: |
+          set -eo pipefail
           cp COPYING build/
           cd build
-          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt {alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }}
+          executables=({alink,dasl,p2bin,p2hex,pbind,plist}${{ matrix.exe_ext }} ${{ matrix.as }}${{ matrix.exe_ext }})
+          runtime_dlls=()
+          if [[ '${{ matrix.architecture }}' == win64 ]]; then
+            runtime_root=$(cygpath -m "$MSYSTEM_PREFIX")
+            declare -A seen_dlls=()
+            for executable in "${executables[@]}"; do
+              dependencies=$(ntldd -R -D "$(cygpath -w "$MSYSTEM_PREFIX/lib")" "$executable")
+              while IFS= read -r line; do
+                if [[ "$line" =~ =[\>][[:space:]]+(.+)[[:space:]]+\(0x[[:xdigit:]]+\) ]]; then
+                  dependency=${BASH_REMATCH[1]//\\//}
+                  # Bundle toolchain DLLs, excluding Windows system libraries.
+                  if [[ "${dependency,,}" == "${runtime_root,,}/bin/"* || "${dependency,,}" == "${runtime_root,,}/lib/"* ]]; then
+                    dependency=$(cygpath -u "$dependency")
+                    dll=$(basename "$dependency")
+                    if [[ ! -v seen_dlls["${dll,,}"] ]]; then
+                      cp "$dependency" .
+                      runtime_dlls+=("$dll")
+                      seen_dlls["${dll,,}"]=1
+                    fi
+                  fi
+                fi
+              done <<< "$dependencies"
+            done
+          fi
+          "${{ matrix.p7zip }}" -tzip a ../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt "${executables[@]}" "${runtime_dlls[@]}"
+      - name: Create package (MSVC Win32)
+        if: ${{ matrix.architecture == 'win32' }}
+        run: |
+          # Preserve the Windows assembler name used by existing snapshots.
+          Copy-Item build/Release/asl.exe build/Release/asw.exe
+          Copy-Item COPYING, build/asl.html, build/asl.odt -Destination build/Release/
+          Set-Location build/Release
+          & 'C:/Program Files/7-Zip/7z.exe' -tzip a ../../${{ matrix.package }}-${{ needs.activity-check.outputs.build_id }}.zip -mx9 -mmt COPYING asl.html asl.odt alink.exe dasl.exe p2bin.exe p2hex.exe pbind.exe plist.exe asw.exe
       - name: Store snapshot package
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

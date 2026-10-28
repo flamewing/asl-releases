@@ -55,11 +55,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # generator: [make, msys]
-        architecture: [i686, x86_64]
+        architecture: [x86_64]
         include:
-          - architecture: i686
-            msystem: MINGW32
           - architecture: x86_64
             msystem: UCRT64
     defaults:
@@ -70,8 +67,6 @@ jobs:
         uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         with:
           msystem: ${{ matrix.msystem }}
-          # Keep 32-bit coverage while the MINGW32 toolchain is available.
-          suppress-deprecation-warnings: msystem-mingw32
           install: >-
             base-devel git
           pacboy: >-

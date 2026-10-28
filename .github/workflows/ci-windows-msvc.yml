@@ -54,24 +54,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        name: [vs2022, latest]
+        architecture: [Win32, x64]
+        configuration: [Debug, Release]
         include:
           - name: vs2022
             runs_on: windows-2022
             cmake_generator: Visual Studio 17 2022
-            configuration: Debug
-          - name: vs2022
-            runs_on: windows-2022
-            cmake_generator: Visual Studio 17 2022
-            configuration: Release
           - name: latest
             runs_on: windows-latest
             cmake_generator: ''
-            configuration: Debug
-          - name: latest
-            runs_on: windows-latest
-            cmake_generator: ''
-            configuration: Release
-    name: ci-windows-msvc (${{ matrix.name }}, ${{ matrix.configuration }})
+    name: ci-windows-msvc (${{ matrix.name }}, ${{ matrix.architecture }}, ${{ matrix.configuration }})
     runs-on: ${{ matrix.runs_on }}
     steps:
       - name: Install Pandoc
@@ -105,7 +98,7 @@ jobs:
           Write-Host "Selected CMake generator: $generator"
       - name: Configure
         run: |
-          cmake -S . -B build -A x64 -G "$env:CMAKE_GENERATOR"
+          cmake -S . -B build -A ${{ matrix.architecture }} -G "$env:CMAKE_GENERATOR"
       - name: Build
         run: |
           cmake --build build --config ${{ matrix.configuration }} --parallel
