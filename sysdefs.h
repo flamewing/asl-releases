@@ -88,8 +88,9 @@
 #    define IEEEFLOAT_8_DOUBLE
 #endif
 
-// Note: SunOS and derived incorrectly defines int8_t as 'char'.
-typedef int8_t   as_int8_t;
+/* Some systems typedef int8_t to plain char. Keep signed arithmetic/index
+   values distinct from character data, regardless of plain-char signedness. */
+typedef signed char as_int8_t;
 typedef uint8_t  as_uint8_t;
 typedef int16_t  as_int16_t;
 typedef uint16_t as_uint16_t;
