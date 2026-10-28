@@ -1,0 +1,33 @@
+Const-correctness warning resolution, 2026-10-28
+==============================================
+
+Baseline: b2803d77, as recorded in ci-warning-inventory-20261028.json. The const-api bucket contains 1,371 warning observations and 60 source-line/diagnostic-flag entries. Several compilers diagnose the same source contract under different flags; these counts are not distinct defects.
+
+Disposition: the baseline const-API sites have been changed to express their ownership and mutability contracts without discarding qualifiers. No warning flags, diagnostic pragmas or blanket suppression macros were added. The original inventory remains a historical baseline.
+
+Completed batches
+=================
+
+75a1de7: CPU registration distinguishes borrowed const property records from mutable callback data with an optional destructor. Const callbacks, CPU aliases and family-listing comparisons retain that distinction. The registry test exercises both callback forms, aliases and exactly-once destruction of owned callback data.
+
+f221add: symbol lookup uses a separate borrowed key containing a const name and its attribute. Lookup no longer constructs a mutable symbol record around a const name. Stored symbol entries retain their existing ownership and replacement behavior; symbol hash and equality semantics are unchanged.
+
+39bc883: instruction tables, forward-reference buckets and message catalogs retain the mutable allocation pointer separately from borrowed const lookup/text views. Destruction frees the allocation owner directly. Instruction-table tests exercise static and dynamic names, removal, mixed ownership, prefix callbacks and function-table cleanup.
+
+126aa7e: expression views and fixed mode names no longer masquerade as mutable string components. StrCompCopyRaw copies a bounded, possibly nonterminated source into genuine writable storage; expression evaluation consumes its read-only view directly. Tests cover truncated/growing copies, empty NULL input and source position. Fixed numeric operands use writable local storage. Quote-splitting and comment edits recover positions within the caller's writable buffer.
+
+07a97db: quoted searches have explicit const-returning entry points for read-only input, while writable-returning entry points require writable input. Name validators and reverse multi-character searches return const positions. Iterator callbacks preserve the original writable buffer when an edit is required; they do not cast the iterator's const position. Include-list edits similarly retain their writable owner. The remaining IMP16 property cast and disassembler environment-name declaration preserve const qualification.
+
+The same review exposed empty-input boundary defects: reverse searches could form pointers before the buffer, and wildcard matching could accept or read beyond an empty string. Reverse scans now use half-open ranges and wildcard matching rejects exhausted input. The const_strings test covers immutable and mutable quoted searches, quote qualification, uppercasing outside quotes, missing delimiters, empty reverse searches and wildcard captures.
+
+Verification
+============
+
+Independent optimized native Clang 23.1.3 and GCC 16.2 scans compiled all 230 C translation units in the configured compilation database successfully. Neither scan emitted a qualifier warning. Clang enabled -Wcast-qual and -Wincompatible-pointer-types-discards-qualifiers; GCC enabled -Wcast-qual and -Wdiscarded-qualifiers. These scans also cover callers outside the baseline warning sites. The normal GCC build enables its existing warning policy, including string-literal qualification checks.
+
+The final native GCC build and all 439 CTest tests pass. Each earlier batch also passed the complete suite before its commit. Verification is local to the Windows/UCRT64 host; hosted CI has not been rerun or pushed.
+
+Formatting deferral
+===================
+
+The custom-format warnings are deferred to a future snprintf change at the user's direction. The intended approach is a dedicated renderer for custom literals, passing its formatted buffer through %s to standard snprintf. That work must preserve the custom radix, integer-width, byte-separator, floating-point and truncation/append contracts. The existing untracked printf audit and inventory were left unchanged.

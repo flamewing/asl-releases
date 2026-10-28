@@ -5,7 +5,11 @@ Follow-up disposition
 
 The control-flow and concrete memory-warning work is complete under the agreed scope. All 87 baseline control-flow file/line/flag entries and the 31 non-migration memory entries have been handled in committed batches. Per the user's explicit choice, the 19,231 -Wunsafe-buffer-usage entries are classified separately as C++ migration advisories, without claiming an individual bounds proof for every access. Warning flags remain unchanged. See doc/ci-control-memory-resolution-20261028.txt for commits, proofs and validation: all 436 tests pass, and local Clang/GCC scans across 210 translation units are clear of the targeted categories apart from the separate migration advisories. Hosted CI has not been rerun.
 
-The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory recommendations are superseded by the resolution report.
+The const-api bucket has also been handled through explicit read-only CPU callbacks and symbol keys, separate allocation owners, writable text copies and const-preserving search APIs. See doc/ci-const-resolution-20261028.txt for the five implementation batches and validation. All 439 tests pass, and local Clang/GCC qualifier scans across all 230 configured C translation units are clean.
+
+At the user's direction, custom-format warnings are deferred to a future snprintf change: render custom literals through a dedicated function, then pass the resulting buffer with %s to standard snprintf. The existing untracked printf audit and inventory remain unchanged.
+
+The counts and findings below preserve the original b2803d77 baseline and its initial suggested work order; completed control-flow/memory and const-API recommendations are superseded by the resolution reports.
 
 Scope and result
 ===============
