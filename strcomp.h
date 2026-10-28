@@ -59,6 +59,9 @@ extern void StrCompMkTemp(tStrComp* pComp, char* pStr, size_t Capacity);
 extern void StrCompRefRight(tStrComp* pDest, tStrComp const* pSrc, size_t StartOffs);
 
 extern void StrCompCopy(tStrComp* pDest, tStrComp const* pSrc);
+/* Copy a physically bounded read-only span into the destination's storage. */
+extern void StrCompCopyRaw(
+        tStrComp* pDest, char const* text, size_t length, tLineComp position);
 
 extern void StrCompCopySub(
         tStrComp* pDest, tStrComp const* pSrc, size_t Start, size_t Count);

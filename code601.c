@@ -714,12 +714,13 @@ static void DecodeLSWI_STSWI(Word Code) {
 }
 
 static void DecodeMTFB_MTTB(Word Code) {
+    char            text[4] = "";
     LongWord        LCode = Code, Src1, Dest;
     Boolean         OK;
     tStrComp const *pArg1 = &ArgStr[1], *pArg2 = &ArgStr[2];
     tStrComp        TmpComp = {
             {-1, 0},
-            {0, NULL, 0}
+            {sizeof(text), text, 0}
     };
 
     if (ChkExactCPUList(ErrNum_InstructionNotSupported, CPU821, CPU505, CPUNone) < 0)
@@ -727,13 +728,13 @@ static void DecodeMTFB_MTTB(Word Code) {
     else if (ArgCnt == 1) {
         pArg1 = &ArgStr[1];
         if ((Memo("MFTB")) || (Memo("MFTBL"))) {
-            TmpComp.str.p_str = (char*)"268";
+            strcpy(text, "268");
         } else if (Memo("MFTBU")) {
-            TmpComp.str.p_str = (char*)"269";
+            strcpy(text, "269");
         } else if ((Memo("MTTB")) || (Memo("MTTBL"))) {
-            TmpComp.str.p_str = (char*)"284";
+            strcpy(text, "284");
         } else if (Memo("MTTBU")) {
-            TmpComp.str.p_str = (char*)"285";
+            strcpy(text, "285");
         }
         pArg2 = &TmpComp;
         /* already swapped */

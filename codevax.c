@@ -878,11 +878,13 @@ static void append_adr_vals(adr_vals_t const* p_vals) {
 
 static void set_access_mode(unsigned new_access_mode) {
     tStrComp tmp_comp;
+    char name[sizeof(access_mode_name)];
 
     curr_access_mode_set = True;
     curr_access_mode     = new_access_mode;
     PushLocHandle(-1);
-    StrCompMkTemp(&tmp_comp, (char*)access_mode_name, 0);
+    memcpy(name, access_mode_name, sizeof(name));
+    StrCompMkTemp(&tmp_comp, name, sizeof(name));
     EnterIntSymbol(&tmp_comp, curr_access_mode, SegNone, True);
     PopLocHandle();
 }

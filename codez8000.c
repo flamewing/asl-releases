@@ -464,7 +464,7 @@ static IntType GetImmIntType(tSymbolSize Size) {
 typedef struct {
     as_quoted_iterator_cb_data_t data;
     int                          nest;
-    char*                        p_split_pos;
+    char const*                  p_split_pos;
 } split_cb_data_t;
 
 static int split_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) {
@@ -479,7 +479,7 @@ static int split_cb(char const* p_pos, as_quoted_iterator_cb_data_t* p_cb_data) 
         break;
     case '>':
         if (!p_data->nest && (p_pos[1] == '>')) {
-            p_data->p_split_pos = (char*)p_pos;
+            p_data->p_split_pos = p_pos;
         }
         break;
     default:
@@ -537,8 +537,10 @@ static LongWord DecodeAddrPartNum(
 
             if (split_data.p_split_pos) {
                 tStrComp SegArg;
+                char* split = CopyComp.str.p_str
+                        + (split_data.p_split_pos - CopyComp.str.p_str);
 
-                StrCompSplitRef(&SegArg, &CopyComp, &CopyComp, split_data.p_split_pos);
+                StrCompSplitRef(&SegArg, &CopyComp, &CopyComp, split);
                 StrCompIncRefLeft(&CopyComp, 1);
                 SegNum = EvalStrIntExpressionOffsWithResult(
                         &SegArg, 2, UInt7, pEvalResult);

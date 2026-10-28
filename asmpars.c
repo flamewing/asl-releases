@@ -1873,12 +1873,7 @@ DECLARE_AS_EVAL_CB(function_eval_cb) {
 
 /* Terminated, writable adapters are confined to legacy interface boundaries. */
 static inline void MaterializeExpressionView(tStrComp* dest, as_strcomp_view_t source) {
-    tStrComp component;
-    component.str.p_str = (char*)source.text.data;
-    component.str.capacity = 0;
-    component.str.dynamic = 0;
-    component.Pos = source.pos;
-    StrCompCopySubKnown(dest, &component, 0, source.text.len);
+    StrCompCopyRaw(dest, source.text.data, source.text.len, source.pos);
 }
 
 static void WrExpressionViewError(tErrorNum error, as_strcomp_view_t source) {
@@ -2633,10 +2628,10 @@ void EvalStrExpression(tStrComp const* pExpr, TempResult* pErg) {
 }
 
 void EvalExpression(char const* pExpr, TempResult* pErg) {
-    tStrComp Expr;
-
-    StrCompMkTemp(&Expr, (char*)pExpr, 0);
-    EvalStrExpression(&Expr, pErg);
+    as_strcomp_view_t expression = {{pExpr, strlen(pExpr)}, {-1, 0}};
+    as_eval_cb_data_t cb_data;
+    as_eval_cb_data_ini(&cb_data, NULL);
+    EvalExpressionView(&expression, pErg, e_eval_flag_none, &cb_data);
 }
 
 static LargeInt eval_str_int_expr_with_range_check(
@@ -4631,10 +4626,12 @@ void SetFlag(Boolean* Flag, char const* Name, Boolean Wert) {
     tStrComp TmpComp;
 
     *Flag = Wert;
-    StrCompMkTemp(&TmpComp, (char*)Name, 0);
+    StrCompAlloc(&TmpComp, strlen(Name) + 1);
+    as_dynstr_copy_c_str(&TmpComp.str, Name);
     PushLocHandle(-1);
     EnterIntSymbol(&TmpComp, *Flag ? 1 : 0, SegNone, True);
     PopLocHandle();
+    StrCompFree(&TmpComp);
 }
 
 void AddDefSymbol(char* Name, TempResult* Value) {

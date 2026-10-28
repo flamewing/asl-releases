@@ -444,11 +444,13 @@ static adr_mode_t decode_adr(tStrComp const* p_arg, adr_vals_t* p_vals) {
 
 static void set_coproc(unsigned new_coproc) {
     tStrComp tmp_comp;
+    char name[sizeof(coproc_name)];
 
     coproc_set = True;
     coproc     = new_coproc;
     PushLocHandle(-1);
-    StrCompMkTemp(&tmp_comp, (char*)coproc_name, 0);
+    memcpy(name, coproc_name, sizeof(name));
+    StrCompMkTemp(&tmp_comp, name, sizeof(name));
     EnterIntSymbol(&tmp_comp, coproc, SegNone, True);
     PopLocHandle();
 }

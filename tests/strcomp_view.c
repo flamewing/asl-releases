@@ -26,7 +26,7 @@ static int reference_callback(char const* p, as_quoted_iterator_cb_data_t* cb) {
 
 int main(void) {
     static char const alphabet[] = "a,'\"\\()[]";
-    static char const bytes[] = {'X', ' ', 'a', ' ', 'Y'};
+    static char bytes[] = {'X', ' ', 'a', ' ', 'Y'};
     as_strcomp_view_t view = {{bytes + 1, 3}, {17, 999}};
     as_strcomp_view_t trimmed, slice;
     tStrComp source;
@@ -35,7 +35,7 @@ int main(void) {
     int failed = 0;
     strutil_init();
     source.Pos = view.pos;
-    source.str.p_str = (char*)view.text.data;
+    source.str.p_str = bytes + 1;
     view = as_strcomp_view_from(&source, 3);
     trimmed = as_strcomp_view_trim(view);
     failed |= trimmed.text.data != bytes + 2 || trimmed.text.len != 1

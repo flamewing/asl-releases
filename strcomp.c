@@ -41,6 +41,17 @@ static size_t check_realloc(as_dynstr_t* p_str, size_t req_count) {
     return req_count;
 }
 
+void StrCompCopyRaw(tStrComp* dest, char const* text, size_t length, tLineComp position) {
+    check_capacity(dest);
+    length = check_realloc(&dest->str, length);
+    if (length) {
+        memcpy(dest->str.p_str, text, length);
+    }
+    dest->str.p_str[length] = '\0';
+    dest->Pos = position;
+    dest->Pos.Len = length;
+}
+
 /*!------------------------------------------------------------------------
  * \fn     StrCompAlloc(tStrComp *pComp, size_t capacity)
  * \brief  initialize string component with dynamic buffer

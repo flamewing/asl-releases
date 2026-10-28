@@ -900,11 +900,13 @@ static Byte extract_reg_num(adr_vals_t const* p_vals) {
 
 static void set_exec_mode(unsigned new_exec_mode) {
     tStrComp tmp_comp;
+    char name[sizeof(exec_mode_name)];
 
     curr_exec_mode_set = True;
     curr_exec_mode     = new_exec_mode;
     PushLocHandle(-1);
-    StrCompMkTemp(&tmp_comp, (char*)exec_mode_name, 0);
+    memcpy(name, exec_mode_name, sizeof(name));
+    StrCompMkTemp(&tmp_comp, name, sizeof(name));
     EnterIntSymbol(&tmp_comp, curr_exec_mode, SegNone, True);
     PopLocHandle();
 }

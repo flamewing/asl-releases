@@ -2889,12 +2889,13 @@ static void SplitLine(void) {
             if (extra_comments) {
                 char const  blanks[] = {' ', '\0', '\t', '\0', '\0'};
                 char const* p_arg_term;
-                char        save;
+                char* comment = SrcLine.str.p_str
+                        + (p_comment_start - SrcLine.str.p_str);
+                char save = *comment;
 
-                save                      = *p_comment_start;
-                *((char*)p_comment_start) = '\0';
+                *comment = '\0';
                 p_arg_term                = QuotSMultPos(pRun, blanks);
-                *((char*)p_comment_start) = save;
+                *comment = save;
                 if (p_arg_term) {
                     p_comment_start = p_arg_term;
                 }

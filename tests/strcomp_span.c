@@ -37,6 +37,16 @@ int main(void) {
     StrCompRefRight(&ref, &src, 5);
     StrCompCopySubKnown(&dynamic, &ref, 2, 3);
     failed |= check(&dynamic, "789", 107);
+    {
+        static char const raw[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
+        StrCompCopyRaw(&dynamic, raw, sizeof(raw), (tLineComp){29, 999});
+        failed |= check(&dynamic, "abcdefghi", 29);
+        StrCompCopyRaw(&fixed, raw, sizeof(raw), (tLineComp){31, 999});
+        failed |= check(&fixed, "abcdefg", 31);
+        failed |= storage[0] != 0x5a || storage[9] != 0x5a;
+        StrCompCopyRaw(&dynamic, NULL, 0, (tLineComp){41, 999});
+        failed |= check(&dynamic, "", 41);
+    }
     StrCompFree(&dynamic);
     {
         char high_byte[] = {' ', '\t', (char)0xe9, '\0'};
