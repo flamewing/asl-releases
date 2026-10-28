@@ -13,6 +13,7 @@
 #include "p2bin.rsc"
 
 #include "addrspace.h"
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "bpemu.h"
 #include "chunks.h"
@@ -509,7 +510,7 @@ static as_cmd_result_t CMD_StartHeader(Boolean Negate, char const* Arg) {
         switch (as_toupper(*Arg)) {
         case 'B':
             Sgn = -1;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case 'L':
             Arg++;
         }

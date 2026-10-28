@@ -12,6 +12,7 @@
 
 #include "codec16c.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -587,8 +588,6 @@ static adr_mode_t decode_adr(
         goto check;
     }
     }
-
-    WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
 
 check:
     return p_vals->mode;
@@ -1389,7 +1388,7 @@ static void decode_push_pop(Word code) {
             return;
         }
         ra = 1;
-        /* fall-thru */
+        AS_FALLTHROUGH;
     case 2: {
         Boolean ok;
         if (!decode_adr_reg(&ArgStr[2], &start_reg, eSymbolSize24Bit)) {

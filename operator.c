@@ -315,6 +315,7 @@ static Boolean DivOp(TempResult* pErg, TempResult* pLVal, TempResult* pRVal) {
         } else {
             as_tempres_set_float(pErg, pLVal->Contents.Float / pRVal->Contents.Float);
         }
+        break;
     default:
         break;
     }

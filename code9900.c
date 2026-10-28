@@ -13,8 +13,7 @@
 #include "code9900.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -22,7 +21,6 @@
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
-#include "as_endian.h"
 #include "bpemu.h"
 #include "chartrans.h"
 #include "chunks.h"
@@ -31,6 +29,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "ibmfloat.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -824,7 +823,7 @@ static void DecodeBYTE(Word Code) {
                 break;
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
             }

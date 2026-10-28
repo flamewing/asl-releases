@@ -17,6 +17,7 @@
 #include "motpseudo.h"
 
 #include "aplfloat.h"
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "as_float.h"
 #include "asmallg.h"
@@ -391,7 +392,7 @@ static void DecodeMotoDCM(Word flags) {
                     break;
                 case TempString:
                     WrStrErrorPos(ErrNum_FloatButString, &Arg);
-                    /* fall-through */
+                    AS_FALLTHROUGH;
                 default:
                     Res.Typ = TempNone;
                     break;
@@ -599,7 +600,7 @@ int ConvertMotoFloatDec(as_float_t F, Byte* pDest, Boolean NeedsBig) {
     switch (dissect.fp_class) {
     case AS_FP_NAN:
         pDest[7] = 0x80;
-        /* FALL-THRU */
+        AS_FALLTHROUGH;
     case AS_FP_INFINITE:
         pDest[11] = dissect.negative ? 0xff : 0x7f;
         pDest[10] = 0xff;
@@ -1188,9 +1189,11 @@ void DecodeMotoDC(Word flags) {
                         asmerr_check_fp_dispose_result(ret, pArg);
                         OK = False;
                     } else {
-                        if (HostBigEndian && Swap) {
+#if HostBigEndian
+                        if (Swap) {
                             Swap((void*)TurnField, WSize);
                         }
+#endif
                         for (z2 = 0; z2 < Rep; z2++) {
                             EnterFloat(TurnField, t.Flags, big_endian);
                         }

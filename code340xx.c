@@ -12,6 +12,7 @@
 
 #include "code340xx.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -1106,7 +1107,7 @@ static void decode_movb(Word code) {
         case e_mode_ireg: /* MOVB *Rs(offs),*Rd -> MOVB *Rs(offs),*Rd(0) */
             dest_adr_vals.mode                          = e_mode_ireg_offs;
             dest_adr_vals.vals[dest_adr_vals.val_cnt++] = 0;
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case e_mode_ireg_offs:
             if (!decode_two_reg_core(0xbc00, src_adr_vals.reg, dest_adr_vals.reg)) {
                 return;
@@ -1298,7 +1299,7 @@ static void decode_move(Word code) {
         case e_mode_ireg: /* encode *Rd as *Rd(0) */
             dest_adr_vals.vals[dest_adr_vals.val_cnt++] = 0;
             dest_adr_vals.mode                          = e_mode_ireg_offs;
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case e_mode_ireg_offs:
             if (!decode_two_reg_core(
                         0xb800 | (F << 9), src_adr_vals.reg, dest_adr_vals.reg)) {
@@ -1368,6 +1369,7 @@ static void decode_pixt(Word code) {
             if (!is_xy[z]) {
                 break; /* FALL-THRU */
             }
+            AS_FALLTHROUGH;
         default:
             WrStrErrorPos(ErrNum_InvAddrMode, p_arg);
             return;

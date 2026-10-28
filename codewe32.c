@@ -17,6 +17,7 @@
 
 #include "codewe32.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -597,7 +598,7 @@ static Boolean decode_adr(
                     break;
                 imm16:
                     imm_op_size = eSymbolSize16Bit;
-                    /* FALL-THRU */
+                    AS_FALLTHROUGH;
                 case eSymbolSize16Bit:
                     if (byte_2_halfword_extendable(imm_value)) {
                         goto imm8;
@@ -606,7 +607,7 @@ static Boolean decode_adr(
                     break;
                 imm8:
                     imm_op_size = eSymbolSize8Bit;
-                    /* FALL-THRU */
+                    AS_FALLTHROUGH;
                 case eSymbolSize8Bit:
                     p_result->vals[p_result->count++] = 0x6f;
                     break;
@@ -1773,7 +1774,6 @@ static unsigned get_adr_mode_mask(char specifier) {
         return MModReg;
     default:
         abort();
-        return 0;
     }
 }
 

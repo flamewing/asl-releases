@@ -168,7 +168,7 @@ static void InitFields(void) {
         AddInstTable(InstTable, "MNEA", 0x00, DecodeFixed);
     }
     AddInstTable(InstTable, "MNEZ", Is1100 ? 0x3f : 0x26, DecodeFixed);
-    AddInstTable(InstTable, "YNEA", Is1100 ? 0x02 : 0x02, DecodeFixed);
+    AddInstTable(InstTable, "YNEA", 0x02, DecodeFixed);
     AddInstTable(InstTable, "YNEC", 0x50, DecodeConst4);
 
     AddInstTable(InstTable, "SBIT", 0x30, DecodeConst2);

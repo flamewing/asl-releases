@@ -142,11 +142,11 @@ enum {
 
 static Boolean DecodeReg(char const* pAsc, Byte* pErg) {
     Boolean Result;
-    String  Reg;
+    String  reg;
 
-    strmaxcpy(Reg, pAsc, STRINGSIZE);
-    UpString(Reg);
-    Result = LookupInstTable(RegTable, Reg) && (ActReg != eNoReg);
+    strmaxcpy(reg, pAsc, STRINGSIZE);
+    UpString(reg);
+    Result = LookupInstTable(RegTable, reg) && (ActReg != eNoReg);
 
     if (Result) {
         *pErg = ActReg;
@@ -341,13 +341,13 @@ static void CutShort(char* Asc, Integer* ShortMode) {
 }
 
 static Boolean DistFits(
-        Byte Reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max,
+        Byte reg, Integer Dist, Integer Offs, LongInt Min, LongInt Max,
         tSymbolFlags Flags) {
-    if (Reg == eBaseRegPC) {
+    if (reg == eBaseRegPC) {
         Dist -= Offs;
     }
     return (((Dist >= Min) && (Dist <= Max))
-            || ((Reg == eBaseRegPC) && mSymbolQuestionable(Flags)));
+            || ((reg == eBaseRegPC) && mSymbolQuestionable(Flags)));
 }
 
 static void reset_adr_vals(adr_vals_t* p_adr_vals) {

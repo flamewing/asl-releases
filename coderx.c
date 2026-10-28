@@ -395,9 +395,9 @@ static Boolean DecodeFloat(tStrComp const* pArg, LongInt* pResult) {
     case TempFloat:
         as_float_2_ieee4(temp.Contents.Float, (unsigned char*)pResult, False);
         /* TODO: rework this - we should better pass in a byte array as pResult */
-        if (HostBigEndian) {
-            DSwap(pResult, 4);
-        }
+#if HostBigEndian
+        DSwap(pResult, 4);
+#endif
         break;
     default:
         Result = False;

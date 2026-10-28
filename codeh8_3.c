@@ -1334,6 +1334,7 @@ static void DecodeCMP(Word Code) {
                             CodeLen = 6;
                             memcpy(WAsmCode + 1, AdrVals, 4);
                             WAsmCode[0] = 0x7a20 + HReg;
+                            break;
                         default:
                             break;
                         }

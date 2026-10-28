@@ -9,16 +9,17 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include "codepseudo.h"
 
 #include "code78k4.h"
 
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
 #include "assume.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -599,7 +600,7 @@ static Boolean DecodeAdr(
                         pAddress->AdrVals[0] = tmp - 2;
                         goto AdrFound;
                     }
-                    /* fall-through */
+                    AS_FALLTHROUGH;
                 default:
                     WrError(ErrNum_InvAddrMode);
                     goto AdrFound;
@@ -828,7 +829,7 @@ static LongWord GetAbsVal(tEncodedAddress const* pAddress) {
     case ModAbs24:
     case ModAbs20:
         Result |= (((LongWord)pAddress->AdrVals[2]) << 16);
-        /* fall-through */
+        AS_FALLTHROUGH;
     case ModAbs16:
         Result |= (((LongWord)pAddress->AdrVals[1]) << 8);
         Result |= (((LongWord)pAddress->AdrVals[0]) << 0);
@@ -988,7 +989,7 @@ static void DecodeBitOpCore2(LongWord BitAddr, Word Code) {
         break;
     case eBitTypeSAddr1:
         BAsmCode[CodeLen++] = 0x3c;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eBitTypeSAddr2_SFR:
         BAsmCode[CodeLen++] = 0x08;
         BAsmCode[CodeLen++] = Code | ((BitAddr >> 24) & 15);
@@ -1093,7 +1094,7 @@ static void DecodeSET1_CLR1(Word Code) {
         switch ((BitAddr >> 28) & 15) {
         case eBitTypeSAddr1:
             BAsmCode[CodeLen++] = 0x3c;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case eBitTypeSAddr2_SFR:
             if (!(BitAddr & Bit27)) {
                 BAsmCode[CodeLen++] = (0x130 - Code) | ((BitAddr >> 24) & 7);
@@ -1101,6 +1102,7 @@ static void DecodeSET1_CLR1(Word Code) {
                 break;
             }
             /* else fall-through */ /* SFR is regularly coded for SET1/CLR1 */
+            AS_FALLTHROUGH;
         default:
             DecodeBitOpCore2(BitAddr, Code);
         }
@@ -1299,7 +1301,7 @@ static void DecodeMOV(Word ForceOpSize) {
             break;
         case ModShortIndir1_16:
             BAsmCode[CodeLen++] = 0x3c;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case ModShortIndir2_16:
             BAsmCode[CodeLen++] = 0x07;
             BAsmCode[CodeLen++] = 0x21;
@@ -1307,7 +1309,7 @@ static void DecodeMOV(Word ForceOpSize) {
             break;
         case ModShortIndir1_24:
             BAsmCode[CodeLen++] = 0x3c;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case ModShortIndir2_24:
             BAsmCode[CodeLen++] = 0x07;
             BAsmCode[CodeLen++] = 0x31;
@@ -1354,7 +1356,7 @@ static void DecodeMOV(Word ForceOpSize) {
             break;
         case ModShortIndir1_24:
             BAsmCode[CodeLen++] = 0x3c;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case ModShortIndir2_24:
             BAsmCode[CodeLen++] = 0x07;
             BAsmCode[CodeLen++] = 0x32;
@@ -1832,7 +1834,7 @@ static void DecodeXCH(Word ForceOpSize) {
                 BAsmCode[CodeLen++] = Src.AdrVals[0];
                 break;
             }
-            /* fall-through */
+            AS_FALLTHROUGH;
         case ModShort1:
         case ModSFR:
             BAsmCode[CodeLen++] = 0x39;
@@ -1888,7 +1890,7 @@ static void DecodeXCH(Word ForceOpSize) {
                 BAsmCode[CodeLen++] = Src.AdrVals[0];
                 break;
             }
-            /* fall-through */
+            AS_FALLTHROUGH;
         case ModShort1:
         case ModSFR:
             BAsmCode[CodeLen++] = 0x39;
@@ -2227,7 +2229,7 @@ static void DecodeALU(Word Code) {
                 BAsmCode[CodeLen++] = Src.AdrVals[0];
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         case ModShort1:
         case ModSFR:
             BAsmCode[CodeLen++] = 0x78 | Code;
@@ -2285,7 +2287,7 @@ static void DecodeALU(Word Code) {
                 BAsmCode[CodeLen++] = Src.AdrVals[0];
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         case ModShort1:
         case ModSFR:
             BAsmCode[CodeLen++] = 0x78 | Code16;
@@ -2710,7 +2712,7 @@ static void DecodeINCDEC(Word Code) {
         break;
     case ModShort1:
         BAsmCode[CodeLen++] = 0x3c;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case ModShort2:
         ExecAssumeByte();
         if (OpSize) {
@@ -2812,7 +2814,8 @@ static void DecodePUSH_POP(Word Code) {
     }
 
     Code = (Code >> 4) & 0xff;
-    IsU = (Code == 0x37) || (Code == 0x36), IsPUSH = (Code == 0x35);
+    IsU    = (Code == 0x37) || (Code == 0x36);
+    IsPUSH = (Code == 0x35);
 
     if (!ChkArgCnt(1, ArgCntMax)) {
         return;
@@ -3118,7 +3121,7 @@ static void DecodeDBNZ(Word Code) {
     switch (Addr.AdrMode) {
     case ModShort1:
         BAsmCode[CodeLen++] = 0x3c;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case ModShort2:
         BAsmCode[CodeLen++] = 0x3b;
         BAsmCode[CodeLen++] = Addr.AdrVals[0];

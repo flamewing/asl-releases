@@ -3,6 +3,8 @@
 #define INTCONST_CORE_H
 
 #include "stdinc.h"
+
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmerr.h"
 #include "int_type.h"
@@ -41,7 +43,7 @@ static inline Boolean const_int_val_ref(
     case '-':
         neg_flag = True;
         acc_max  = (acc_max >> 1) + 1;
-        /* else fall-through */
+        AS_FALLTHROUGH;
     case '+':
         p_expr++;
         expr.len--;

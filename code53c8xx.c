@@ -12,6 +12,7 @@
 
 #include "code53c8xx.h"
 
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -557,7 +558,7 @@ static void DecodeMOVE(Word Index) {
                     switch (DecodeComp(&Parts[2], &ImmVal)) {
                     case SFBR:
                         ImmVal = 8;
-                        /* fall-through */
+                        AS_FALLTHROUGH;
                     case REGISTER: /* --> 0x00 OR SFBR to reg */
                         DAsmCode[0] += 0x2a000000 + (ImmVal << 16);
                         CodeLen = 8;
@@ -589,7 +590,7 @@ static void DecodeMOVE(Word Index) {
                     switch (DecodeComp(&Parts[2], &DReg)) {
                     case SFBR:
                         DReg = 8;
-                        /* fall-through */
+                        AS_FALLTHROUGH;
                     case REGISTER: /* --> imm to reg */
                         DAsmCode[0] += 0x38000000 + (DReg << 16) + (ImmVal << 8);
                         CodeLen = 8;
@@ -612,7 +613,7 @@ static void DecodeMOVE(Word Index) {
                     switch (DecodeComp(&Parts[2], &DReg)) {
                     case SFBR:
                         DReg = 8;
-                        /* fall-through */
+                        AS_FALLTHROUGH;
                     case REGISTER:
                         DAsmCode[0] += 0x28000000 + (AriOp << 24) + (DReg << 16);
                         CodeLen = 8;
@@ -677,7 +678,7 @@ static void DecodeMOVE(Word Index) {
                             switch (DecodeComp(&Parts[4], &ImmVal)) {
                             case SFBR:
                                 ImmVal = 8;
-                                /* fall-through */
+                                AS_FALLTHROUGH;
                             case REGISTER:
                                 if (ChkExactCPUMask(BigCPUMask, CPU53C810) >= 0) {
                                     DAsmCode[0] |= 0x28800000 + (ImmVal << 16);
@@ -692,7 +693,7 @@ static void DecodeMOVE(Word Index) {
                             switch (DecodeComp(&Parts[4], &DReg)) {
                             case SFBR:
                                 DReg = 8;
-                                /* fall-through */
+                                AS_FALLTHROUGH;
                             case REGISTER:
                                 DAsmCode[0] |= 0x28000000 + (DReg << 16) + (ImmVal << 8);
                                 CodeLen = 8;

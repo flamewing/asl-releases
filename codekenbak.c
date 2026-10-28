@@ -13,8 +13,7 @@
 #include "codekenbak.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -26,6 +25,7 @@
 #include "headids.h"
 #include "intformat.h"
 #include "intpseudo.h"
+#include "nlmessages.h"
 #include "strutil.h"
 
 #include <string.h>
@@ -99,7 +99,7 @@ static void DissectReg_KENBAK(
             as_snprintf(pDest, DestSize, "%c", Regs[Value]);
             break;
         }
-        /* else fall-thru */
+        AS_FALLTHROUGH;
     default:
         as_snprintf(pDest, DestSize, "%d-%u", (int)InpSize, (unsigned)Value);
     }

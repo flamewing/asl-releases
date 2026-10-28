@@ -13,8 +13,7 @@
 #include "codeavr.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -28,6 +27,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -538,7 +538,7 @@ static void DecodeDATA_AVR(Word Index) {
                 break;
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
             }

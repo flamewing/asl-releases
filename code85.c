@@ -12,6 +12,7 @@
 
 #include "code85.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -351,7 +352,7 @@ static tAdrMode DecodeAdr_Z80(
     case eIsReg:
         AdrMode = (reg_size == eSymbolSize16Bit) ? ModReg16 : ModReg8;
         OpSize  = reg_size;
-        /* FALL-TRHU */
+        AS_FALLTHROUGH;
     case eRegAbort:
         goto AdrFound;
     default:
@@ -1167,7 +1168,7 @@ static void DecodeALU8_Z80(Word Code) {
             if (adr_vals.values[0] == AccReg) {
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         default:
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
             return;
@@ -1213,6 +1214,7 @@ static void DecodeINCDEC(Word Code) {
             } else {
                 BAsmCode[CodeLen++] = 0x34 | Code;
             }
+            break;
         default:
             break;
         }
@@ -1240,7 +1242,7 @@ static void DecodeCP(Word Code) {
             if (adr_vals.values[0] == AccReg) {
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         default:
             WrStrErrorPos(ErrNum_InvAddrMode, &ArgStr[1]);
             return;
@@ -1323,6 +1325,7 @@ static void DecodeJP(Word Code) {
     case ModImm:
         BAsmCode[CodeLen++] = (0xff == Condition) ? 0xc3 : 0xc2 + Condition;
         append_adr_vals(&adr_vals);
+        break;
     default:
         break;
     }
@@ -1372,6 +1375,7 @@ static void DecodeJ(Word Code) {
     case ModImm:
         BAsmCode[CodeLen++] = 0xc2 + Condition;
         append_adr_vals(&adr_vals);
+        break;
     default:
         break;
     }
@@ -1401,6 +1405,7 @@ static void DecodeCALL(Word Code) {
     case ModImm:
         BAsmCode[CodeLen++] = (1 == ArgCnt) ? 0xcd : 0xc4 | Condition;
         append_adr_vals(&adr_vals);
+        break;
     default:
         break;
     }

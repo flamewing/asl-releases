@@ -16,6 +16,7 @@
 
 #include "intpseudo.h"
 
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -1341,7 +1342,7 @@ static Boolean LayoutWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         } else {
             TempResultToFloat(&t);
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         if (!allow_float) {
             WrStrErrorPos(
@@ -1504,7 +1505,7 @@ static Boolean LayoutPointer(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
             Result = True;
             break;
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         WrStrErrorPos(ErrNum_IntButFloat, pExpr);
         break;
@@ -1665,9 +1666,11 @@ static Boolean Put32F_To_8(as_float_t t, tSymbolFlags flags, struct sLayoutCtx* 
         Word* p_dest = WAsmCode + (pCtx->CurrCodeFill.FullWordCnt / 2);
 
         ret = as_float_2_dec_f(t, p_dest);
-        if ((ret >= 0) && (HostBigEndian && (ListGran() == 1))) {
+#if HostBigEndian
+        if ((ret >= 0) && (ListGran() == 1)) {
             WSwap(p_dest, 4);
         }
+#endif
     } else {
         ret = as_float_2_ieee4(
                 t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
@@ -1805,7 +1808,7 @@ static Boolean LayoutDoubleWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) 
         } else {
             TempResultToFloat(&t);
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         if (!allow_float) {
             WrStrErrorPos(
@@ -2076,7 +2079,7 @@ static Boolean LayoutMacAddr(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         } else {
             TempResultToFloat(&t);
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         if (!pCtx->Put48F) {
             WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
@@ -2271,9 +2274,11 @@ static Boolean Put64F_To_8(as_float_t t, tSymbolFlags flags, struct sLayoutCtx* 
         Word* p_dest = WAsmCode + (pCtx->CurrCodeFill.FullWordCnt / 2);
         ret = (pCtx->flags & eIntPseudoFlag_DECGFormat) ? as_float_2_dec_g(t, p_dest)
                                                         : as_float_2_dec_d(t, p_dest);
-        if ((ret >= 0) && (HostBigEndian && (ListGran() == 1))) {
+#if HostBigEndian
+        if ((ret >= 0) && (ListGran() == 1)) {
             WSwap(p_dest, 8);
         }
+#endif
     } else {
         ret = as_float_2_ieee8(
                 t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
@@ -2405,7 +2410,7 @@ static Boolean LayoutQuadWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         } else {
             TempResultToFloat(&t);
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         if (!allow_float) {
             WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);
@@ -2967,9 +2972,11 @@ static Boolean Put128F_To_8(as_float_t t, tSymbolFlags flags, struct sLayoutCtx*
     if (pCtx->flags & eIntPseudoFlag_DECFormats) {
         Word* p_dest = WAsmCode + (pCtx->CurrCodeFill.FullWordCnt / 2);
         ret          = as_float_2_dec_h(t, p_dest);
-        if ((ret >= 0) && (HostBigEndian && (ListGran() == 1))) {
+#if HostBigEndian
+        if ((ret >= 0) && (ListGran() == 1)) {
             WSwap(p_dest, 16);
         }
+#endif
     } else {
         ret = as_float_2_ieee16(
                 t, BAsmCode + pCtx->CurrCodeFill.FullWordCnt, !!pCtx->LoHiMap);
@@ -3115,7 +3122,7 @@ static Boolean LayoutOctaWord(tStrComp const* pExpr, struct sLayoutCtx* pCtx) {
         } else {
             TempResultToFloat(&t);
         }
-        /* fall-through */
+        AS_FALLTHROUGH;
     case TempFloat:
         if (!allow_float) {
             WrStrErrorPos(ErrNum_StringOrIntButFloat, pExpr);

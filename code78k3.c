@@ -9,16 +9,17 @@
 /*****************************************************************************/
 
 #include "stdinc.h"
-#include "codepseudo.h"
 
 #include "code78k3.h"
 
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
 #include "asmsub.h"
 #include "assume.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -440,7 +441,7 @@ static ShortInt DecodeAdr(tStrComp const* pArg, Word Mask, tAdrResult* pResult) 
                         pResult->Vals[0] = tmp - 2;
                         goto AdrFound;
                     }
-                    /* fall-through */
+                    AS_FALLTHROUGH;
                 default:
                     WrError(ErrNum_InvAddrMode);
                     goto AdrFound;

@@ -13,8 +13,7 @@
 #include "codepdp11.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -32,6 +31,7 @@
 #include "headids.h"
 #include "intpseudo.h"
 #include "motpseudo.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -1540,7 +1540,7 @@ static Boolean decode_adr_01(tStrComp* p_arg, adr_vals_t* p_vals) {
             p_vals->mode  = (p_vals->mode & 007) | 010;
             break;
         }
-        /* else fall-through */
+        AS_FALLTHROUGH;
     default: {
         char detail[180];
         as_snprintf(detail, sizeof(detail), getmessage(Num_ErrMsgAddressForms), "(Rn) / @(Rn) / @0(Rn)");

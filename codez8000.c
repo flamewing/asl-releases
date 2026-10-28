@@ -12,6 +12,7 @@
 
 #include "codez8000.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -1548,7 +1549,7 @@ static void DecodeLDR(Word Code) {
                 return;
             }
             Code |= 2;
-            /* fall-thru */
+            AS_FALLTHROUGH;
         case eIsReg: {
             tEvalResult EvalResult;
             LongWord    Addr;

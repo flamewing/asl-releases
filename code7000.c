@@ -13,6 +13,7 @@
 #include "code7000.h"
 
 #include "as.h"
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -2678,7 +2679,7 @@ static void decode_one_f_reg(Word code) {
             if (!chk_no_xd_reg(adr_vals.part, &ArgStr[1])) {
                 return;
             }
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case ModFReg:
             if (set_opsize(adr_vals.part_op_size, &AttrPart)) {
                 set_code((code & 0xf0ffu) | (adr_vals.part << 8));
@@ -2712,7 +2713,7 @@ static void decode_two_f_reg(Word code) {
             if (!chk_no_xd_reg(adr_vals.part, &ArgStr[1])) {
                 return;
             }
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case ModFReg:
             if (set_opsize(adr_vals.part_op_size, &AttrPart)) {
                 code |= adr_vals.part << 4;
@@ -2721,7 +2722,7 @@ static void decode_two_f_reg(Word code) {
                     if (!chk_no_xd_reg(adr_vals.part, &ArgStr[2])) {
                         return;
                     }
-                    /* FALL-THRU */
+                    AS_FALLTHROUGH;
                 case ModFReg:
                     set_code((code & 0xf0ffu) | (adr_vals.part << 8));
                     break;
@@ -2729,6 +2730,7 @@ static void decode_two_f_reg(Word code) {
                     break;
                 }
             }
+            break;
         default:
             break;
         }
@@ -2865,6 +2867,7 @@ static void decode_fmov(Word code) {
                     set_double_code(
                             0x3001 | ((dest_adr_vals.part >> 4) & 0x0f00),
                             0x3000 | (dest_adr_vals.part & 0x0fff));
+                    break;
                 default:
                     break;
                 }

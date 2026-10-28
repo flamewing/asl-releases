@@ -13,6 +13,7 @@
 #include "code86.h"
 
 #include "as.rsc"
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -2438,6 +2439,7 @@ static void DecodeFADDP_FMULP(Word Code) {
                     BAsmCode[CodeLen]     = 0xde;
                     BAsmCode[CodeLen + 1] = 0xc0 + AdrMode + Code;
                     CodeLen += 2;
+                    break;
                 default:
                     break;
                 }
@@ -2777,7 +2779,7 @@ static void DecodeMul(Word Index) {
                 switch (DecodeAdr(pArg2, MTypeReg16 | MTypeMem)) {
                 case TypeReg16:
                     AdrMode += 0xc0;
-                    /* FALL-THRU */
+                    AS_FALLTHROUGH;
                 case TypeMem:
                     BAsmCode[CodeLen + 1] += AdrMode;
                     copy_adr_vals(2);
@@ -2920,7 +2922,7 @@ static void DecodeBit1(Word Index) {
         case TypeReg8:
         case TypeReg16:
             AdrMode += 0xc0;
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case TypeMem:
             MinOneIs0();
             if (OpSize == eSymbolSizeUnknown) {
@@ -2978,7 +2980,7 @@ static void DecodeBSCH(Word code) {
         case TypeReg8:
         case TypeReg16:
             AdrMode += 0xc0;
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case TypeMem:
             MinOneIs0();
             if (OpSize == eSymbolSizeUnknown) {

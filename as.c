@@ -4029,9 +4029,7 @@ static as_cmd_result_t cmd_int_syntax(Boolean negate, char const* p_arg) {
         *def_int_syntax.p_str = '\0';
         return e_cmd_ok;
     } else {
-        as_sdprcatf(
-                &def_int_syntax, "%s%s",
-                "," + !*def_int_syntax.p_str, p_arg);
+        as_sdprcatf(&def_int_syntax, "%s%s", *def_int_syntax.p_str ? "," : "", p_arg);
         return e_cmd_arg;
     }
 }

@@ -12,6 +12,7 @@
 
 #include "codes12z.h"
 
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -591,7 +592,7 @@ static Boolean IsImmediate(tAdrVals const* pVals, ShortInt operand_size, Byte* p
             }
             return True;
         }
-        /* else fall-through */
+        AS_FALLTHROUGH;
     default:
         *pImmVal = 0;
         return False;
@@ -620,7 +621,7 @@ static Boolean IsReg(tAdrVals const* pVals, Byte* pReg) {
             *pReg = pVals->Arg & 7;
             return True;
         }
-        /* else fall-through */
+        AS_FALLTHROUGH;
     default:
         *pReg = 0;
         return False;
@@ -935,10 +936,11 @@ static Boolean DissectBitSymbol(
         break;
     case 3:
         *pOpSize = eSymbolSize24Bit;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eSymbolSize32Bit:
         *pAddress = (BitSymbol >> 5) & 0xfff;
         *pBitPos  = BitSymbol & 31;
+        break;
     default:
         break;
     }
@@ -2274,7 +2276,7 @@ static void DecodeTRAP(Word Code) {
             if ((AdrVals.Vals[0] & 0x0f) >= 2) {
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         default:
         warn:
             WrError(ErrNum_TrapValidInstruction);

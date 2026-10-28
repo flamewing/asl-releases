@@ -13,8 +13,7 @@
 #include "code7720.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -26,6 +25,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
+#include "nlmessages.h"
 #include "nls.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -184,7 +184,7 @@ static void DecodeDATA_7720(Word Index) {
                 break;
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
             }

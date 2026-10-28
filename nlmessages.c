@@ -138,9 +138,9 @@ static Boolean read_raw_4(as_raw_msg_struct_t* p_raw, LongInt* p_dest) {
     if (read_raw(p_dest, 4, 1, p_raw) != 1) {
         return False;
     }
-    if (HostBigEndian) {
-        DSwap(p_dest, 4);
-    }
+#if HostBigEndian
+    DSwap(p_dest, 4);
+#endif
     return True;
 }
 
@@ -382,9 +382,9 @@ static void parse_raw_file(PMsgCat p_cat, as_raw_msg_struct_t* p_msg_raw) {
         != p_cat->MsgCount) {
         error(ERdMsg);
     }
-    if (HostBigEndian) {
-        DSwap(p_cat->StrPosis + 1, (p_cat->MsgCount - 1) << 2);
-    }
+#if HostBigEndian
+    DSwap(p_cat->StrPosis + 1, (p_cat->MsgCount - 1) << 2);
+#endif
     for (z = 1; z < p_cat->MsgCount; z++) {
         if ((p_cat->StrPosis[z] < StrStart)
             || (p_cat->StrPosis[z] - StrStart >= MomLength)) {

@@ -12,6 +12,7 @@
 
 #include "code56k.h"
 
+#include "as_attributes.h"
 #include "asmcode.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -1057,7 +1058,7 @@ static void DecodeDC(Word Code) {
                 break;
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
             }
@@ -1389,7 +1390,7 @@ static void DecodeImmMac(Word Code) {
         switch (*LeftComp.str.p_str) {
         case '-':
             h = 4;
-            /* fall-through */
+            AS_FALLTHROUGH;
         case '+':
             StrCompRefRight(&LeftArg, &LeftComp, 1);
         }

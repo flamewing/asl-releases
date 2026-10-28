@@ -2642,6 +2642,7 @@ static void decode_ld(Word code) {
                                           | ((dest_adr_vals.val & 0x08) << 4);
                     BAsmCode[CodeLen++] = src_adr_vals.vals[0];
                 }
+                break;
             default:
                 break;
             }
@@ -2839,14 +2840,6 @@ static void InitFields(void) {
     AddFixed("PER", 0x483c, core_mask_7800);
     if (pCurrCPUProps->Flags & eFlagCMOS) {
         AddFixed("STOP", 0x48bb, core_mask_all);
-    }
-
-    if (is_7807_781x) {
-        if (Is781x) {
-        } else {
-        }
-        /* 0x28 eFlagSR ? */
-    } else {
     }
 
     InstrZ = 0;

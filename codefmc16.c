@@ -9,10 +9,10 @@
 /****************************************************************************/
 
 #include "stdinc.h"
-#include "codepseudo.h"
 
 #include "codefmc16.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -20,6 +20,7 @@
 #include "asmsub.h"
 #include "assume.h"
 #include "bpemu.h"
+#include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
@@ -325,7 +326,7 @@ static Boolean DecodeAdr(tStrComp const* pArg, int Mask) {
                     }
                     break;
                 } /* run into disp part otherwise*/
-                /* else fall-through */
+                AS_FALLTHROUGH;
             case ' ':
             case '\t':
             case '-':

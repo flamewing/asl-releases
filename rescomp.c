@@ -335,13 +335,13 @@ static void write_dual(void const* p_v_data, size_t data_len) {
 }
 
 static void write_dual_4_le(LongInt* p_lword) {
-    if (HostBigEndian) {
-        DSwap(p_lword, 4);
-    }
+#if HostBigEndian
+    DSwap(p_lword, 4);
+#endif
     write_dual(p_lword, 4);
-    if (HostBigEndian) {
-        DSwap(p_lword, 4);
-    }
+#if HostBigEndian
+    DSwap(p_lword, 4);
+#endif
 }
 
 /*---------------------------------------------------------------------------*/

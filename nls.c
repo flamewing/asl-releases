@@ -14,6 +14,7 @@
 
 #include "nls.h"
 
+#include "as_attributes.h"
 #include "as_runtime.h"
 #include "strutil.h"
 
@@ -214,7 +215,7 @@ static void UpCaseFromCodeTable(void) {
         SetLoUp(0xec, 0xed); /* &yacute; */
         SetLoUp(0x9b, 0x9d); /* &oslash; */
         SetLoUp(0xe8, 0xe7); /* &thorn; */
-                             /* fall-through */
+        AS_FALLTHROUGH;
     case eCodepage437:
         SetLoUp(0x80, 0x87); /* &ccedil; */
         SetLoUp(0x84, 0x8e); /* &auml; */
@@ -252,7 +253,7 @@ static void UpCaseFromCodeTable(void) {
         SetLoUp(0xa8, 0xa6); /* &scaron */
         SetLoUp(0xb8, 0xb4); /* &zcaron; */
         SetLoUp(0xbd, 0xbc); /* &oelog; */
-                             /* fall-through */
+        AS_FALLTHROUGH;
     case eCodepageISO8859_1:
     case eCodepageUTF8:
     iso8859_1:
@@ -291,6 +292,7 @@ static void UpCaseFromCodeTable(void) {
         for (z = 0xc0; z <= 0xdf; z++) {
             SetLoUp(z, z + 0x20);
         }
+        break;
     default:
         break;
     }

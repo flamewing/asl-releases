@@ -8,6 +8,16 @@
 #    define AS_NORETURN _Noreturn
 #endif
 
+/* Explicitly mark intentional transitions between switch cases. */
+#if defined(__has_attribute)
+#    if __has_attribute(fallthrough)
+#        define AS_FALLTHROUGH __attribute__((fallthrough))
+#    endif
+#endif
+#ifndef AS_FALLTHROUGH
+#    define AS_FALLTHROUGH ((void)0)
+#endif
+
 /* A returned pointer/view borrows storage reachable through this parameter. */
 #if defined(__has_attribute)
 #    if __has_attribute(lifetimebound)

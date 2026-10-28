@@ -12,6 +12,7 @@
 
 #include "codesc14xxx.h"
 
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -175,7 +176,7 @@ static void DecodeDC(Word Code) {
                 break;
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
             }

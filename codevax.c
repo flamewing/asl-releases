@@ -13,7 +13,7 @@
 #include "codevax.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -28,6 +28,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "nlmessages.h"
 #include "strutil.h"
 
 #include <assert.h>
@@ -671,7 +672,7 @@ static Boolean decode_adr(
                 break;
             case 'L':
                 size = eSymbolSize32Bit;
-                /* FALL-THRU */
+                AS_FALLTHROUGH;
             case '\0':
                 eval_int_type = SInt32;
                 break;

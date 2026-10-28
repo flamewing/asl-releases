@@ -13,6 +13,7 @@
 #include "codez80.h"
 
 #include "as.rsc"
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -3190,7 +3191,7 @@ static void DecodeALU16(Word Code) {
         if (is_z280()) {
             Code = 0xe;
         }
-        /* FALL-THRU */
+        AS_FALLTHROUGH;
     case 7:
         core_mask |= e_core_mask_z280;
         break;
@@ -4106,6 +4107,7 @@ static void DecodeMULT_DIV_32_Z280(Word code) {
         append_prefix(0xed);
         append_opcode(0xf0 | code);
         append_adr_vals(&adr_vals);
+        break;
     default:
         break;
     }
@@ -5004,21 +5006,21 @@ static void DecodeJP(Word Code) {
 }
 
 static void DecodeCALL(Word Code) {
-    int        Condition;
+    int        condition;
     adr_vals_t adr_vals;
 
     UNUSED(Code);
 
     switch (ArgCnt) {
     case 1:
-        Condition = 9;
+        condition = 9;
         break;
     case 2:
-        if (!DecodeCondition(ArgStr[1].str.p_str, &Condition)) {
+        if (!DecodeCondition(ArgStr[1].str.p_str, &condition)) {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
             return;
         }
-        Condition <<= 3;
+        condition <<= 3;
         break;
     default:
         (void)ChkArgCnt(1, 2);
@@ -5054,7 +5056,7 @@ static void DecodeCALL(Word Code) {
         goto common;
     case ModAbs:
     common:
-        append_opcode(0xc4 + Condition);
+        append_opcode(0xc4 + condition);
         append_adr_vals(&adr_vals);
         break;
     }
@@ -5093,7 +5095,7 @@ static void encode_jr_core(
 
 static void DecodeJR(Word Code) {
     Boolean     OK;
-    int         Condition = 3;
+    int         condition = 3;
     LongWord    dest;
     tEvalResult EvalResult;
     LongInt     dist;
@@ -5106,12 +5108,12 @@ static void DecodeJR(Word Code) {
         OK        = True;
         break;
     case 2:
-        OK = DecodeCondition(ArgStr[1].str.p_str, &Condition);
-        if (OK && (Condition > 3)) {
+        OK = DecodeCondition(ArgStr[1].str.p_str, &condition);
+        if (OK && (condition > 3)) {
             OK = False;
         }
         if (OK) {
-            Condition += 4;
+            condition += 4;
         } else {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         }
@@ -5143,7 +5145,7 @@ static void DecodeJR(Word Code) {
         }
     }
 
-    encode_jr_core(dist_type, Condition, dist, EvalResult.Flags);
+    encode_jr_core(dist_type, condition, dist, EvalResult.Flags);
 }
 
 static void DecodeJ(Word Code) {
@@ -5241,7 +5243,7 @@ static void decode_jaf_jar(Word code) {
 
 static void DecodeCALR(Word Code) {
     Boolean OK;
-    int     Condition = 9;
+    int     condition = 9;
 
     UNUSED(Code);
 
@@ -5250,9 +5252,9 @@ static void DecodeCALR(Word Code) {
         OK        = True;
         break;
     case 2:
-        OK = DecodeCondition(ArgStr[1].str.p_str, &Condition);
+        OK = DecodeCondition(ArgStr[1].str.p_str, &condition);
         if (OK) {
-            Condition <<= 3;
+            condition <<= 3;
         } else {
             WrStrErrorPos(ErrNum_UndefCond, &ArgStr[1]);
         }
@@ -5273,7 +5275,7 @@ static void DecodeCALR(Word Code) {
                 if ((dist <= 0x7fl) && (dist >= -0x80l)) {
                     CodeLen     = 3;
                     BAsmCode[0] = 0xed;
-                    BAsmCode[1] = 0xc4 | Condition;
+                    BAsmCode[1] = 0xc4 | condition;
                     set_b_guessed(EvalResult.Flags, 2, 1, 0xff);
                     BAsmCode[2] = dist & 0xff;
                 } else {
@@ -5281,7 +5283,7 @@ static void DecodeCALR(Word Code) {
                     if ((dist <= 0x7fffl) && (dist >= -0x8000l)) {
                         CodeLen     = 4;
                         BAsmCode[0] = 0xdd;
-                        BAsmCode[1] = 0xc4 + Condition;
+                        BAsmCode[1] = 0xc4 + condition;
                         set_b_guessed(EvalResult.Flags, 2, 2, 0xff);
                         BAsmCode[2] = dist & 0xff;
                         BAsmCode[3] = (dist >> 8) & 0xff;
@@ -5290,7 +5292,7 @@ static void DecodeCALR(Word Code) {
                         if ((dist <= 0x7fffffl) && (dist >= -0x800000l)) {
                             CodeLen     = 5;
                             BAsmCode[0] = 0xfd;
-                            BAsmCode[1] = 0xc4 + Condition;
+                            BAsmCode[1] = 0xc4 + condition;
                             set_b_guessed(EvalResult.Flags, 2, 3, 0xff);
                             BAsmCode[2] = dist & 0xff;
                             BAsmCode[3] = (dist >> 8) & 0xff;

@@ -13,6 +13,7 @@
 #include "asmpars.h"
 
 #include "as.rsc"
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "as_float.h"
 #include "asmdef.h"
@@ -31,8 +32,8 @@
 #include "function.h"
 #include "fwd_refs.h"
 #include "fwd_sym.h"
-#include "intformat.h"
 #include "intconst_core.h"
+#include "intformat.h"
 #include "nlmessages.h"
 #include "nls.h"
 #include "operator.h"
@@ -591,7 +592,7 @@ static Boolean ProcessBk(char** Start, char* Erg, tStrComp const* p_escape) {
     case 'X':
         System = 16;
         (*Start)++;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case '0':
     case '1':
     case '2':
@@ -1242,7 +1243,7 @@ static void ConstStringVal(tStrComp const* pExpr, TempResult* pDest, Boolean* pR
             }
             break;
         }
-        /* conditional fall-through */
+        AS_FALLTHROUGH;
     default:
         return;
     }
@@ -2073,7 +2074,7 @@ integer_result:
             break;
         case e_eval_fail:
             as_tempres_set_none(pErg);
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case e_eval_ok:
             LEAVE;
         }

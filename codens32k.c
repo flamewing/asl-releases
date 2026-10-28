@@ -13,8 +13,7 @@
 #include "codens32k.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-#include "symbolsize.h"
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -26,8 +25,10 @@
 #include "headids.h"
 #include "ieeefloat.h"
 #include "intpseudo.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
+#include "symbolsize.h"
 
 #include <string.h>
 
@@ -571,7 +572,7 @@ static Boolean DecodeCfgList(tStrComp const* pArg, Byte* pResult) {
                 *pResult |= 1 << (pOpt - Opts);
                 break;
             }
-            /* else fall-through */
+            AS_FALLTHROUGH;
         default:
             WrStrErrorPos(ErrNum_InvCfgList, &Part);
             return False;

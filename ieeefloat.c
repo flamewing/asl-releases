@@ -43,9 +43,9 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
     /* binary representation, little endian: */
 
     memcpy(buf, &num, 8);
-    if (HostBigEndian) {
-        QSwap(buf, 8);
-    }
+#    if HostBigEndian
+    QSwap(buf, 8);
+#    endif
 
 #    if DBG_FLOAT
     fprintf(stdout, "%0.15f\n", num);
@@ -119,9 +119,9 @@ void as_float_dissect(as_float_dissect_t* p_dest, as_float_t num) {
     /* binary representation, little endian: */
 
     memcpy(buf, &num, 10);
-    if (HostBigEndian) {
-        TSwap(buf, 10);
-    }
+#    if HostBigEndian
+    TSwap(buf, 10);
+#    endif
 
 #    if DBG_FLOAT
     fprintf(stdout, "%0.15Lf\n", num);

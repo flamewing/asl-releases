@@ -13,8 +13,7 @@
 #include "codemsp.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "asmallg.h"
 #include "asmcode.h"
@@ -29,6 +28,7 @@
 #include "codevars.h"
 #include "errmsg.h"
 #include "headids.h"
+#include "nlmessages.h"
 #include "nls.h"
 #include "onoff_common.h"
 #include "strutil.h"
@@ -973,7 +973,7 @@ static void DecodeMOVA(Word Code) {
             case eModeIReg:
                 AdrParts.Mode = eModeRegDisp;
                 AdrParts.Val  = 0;
-                /* fall-thru */
+                AS_FALLTHROUGH;
             case eModeRegDisp:
                 if (ChkRange(AdrParts.Val, 0, 0xffff)
                     && (DecodeReg(&ArgStr[1], &WAsmCode[0], True) == eIsReg)) {
@@ -1229,7 +1229,7 @@ static void DecodeBYTE(Word Index) {
             }
             case TempFloat:
                 WrStrErrorPos(ErrNum_StringOrIntButFloat, pArg);
-                /* fall-through */
+                AS_FALLTHROUGH;
             default:
                 OK = False;
                 break;
@@ -1573,7 +1573,7 @@ static Boolean DecodeAttrPart_MSP(void) {
             AttrPartOpSize[0] = eSymbolSize24Bit; /* TODO: should be 20 bits */
             break;
         }
-        /* else fall-through */
+        AS_FALLTHROUGH;
     default:
         WrStrErrorPos(ErrNum_UndefAttr, &AttrPart);
         return False;

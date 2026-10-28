@@ -13,8 +13,7 @@
 #include "codepalm.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmcode.h"
 #include "asmdef.h"
@@ -26,6 +25,7 @@
 #include "codevars.h"
 #include "headids.h"
 #include "intpseudo.h"
+#include "nlmessages.h"
 #include "onoff_common.h"
 #include "strutil.h"
 
@@ -93,7 +93,7 @@ static Boolean decode_reg_core(char const* p_arg, Word* p_result, tSymbolSize* p
         }
         *p_result += 10;
         p_arg++;
-        /* FALL-THRU */
+        AS_FALLTHROUGH;
     case 1:
         if (!as_isdigit(*p_arg)) {
             return False;

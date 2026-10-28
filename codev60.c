@@ -12,6 +12,7 @@
 
 #include "codev60.h"
 
+#include "as_attributes.h"
 #include "asmallg.h"
 #include "asmdef.h"
 #include "asmitree.h"
@@ -937,7 +938,7 @@ static void extend_adrvals_size(
         switch (*p_curr_size) {
         case eSymbolSize32Bit:
             p_result->vals[p_result->count++] = ext;
-            /* FALL-THRU */
+            AS_FALLTHROUGH;
         case eSymbolSize16Bit:
             p_result->vals[p_result->count++] = ext;
             break;

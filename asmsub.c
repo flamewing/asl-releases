@@ -13,6 +13,7 @@
 #include "asmsub.h"
 
 #include "as.rsc"
+#include "as_attributes.h"
 #include "as_endian.h"
 #include "asmdebug.h"
 #include "asmdef.h"
@@ -2071,7 +2072,7 @@ static void reset_options(void) {
         SetValidSymChars(0xd0, 0xd9, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChar(0xde, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChars(0xe0, 0xed, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eCodepage437:
         SetValidSymChars(128, 165, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChar(225, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
@@ -2088,7 +2089,7 @@ static void reset_options(void) {
         SetValidSymChar(0xbc, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChar(0xbd, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChar(0xbe, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eCodepageISO8859_1:
     iso8859_1:
         SetValidSymChar(0xa1, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
@@ -2133,7 +2134,7 @@ static void reset_options(void) {
 
         SetValidSymChars(0x400, 0x481, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
         SetValidSymChars(0x48a, 0x4ff, VALID_S1 | VALID_SN | VALID_M1 | VALID_MN);
-    }
+    } break;
     default:
         break;
     }

@@ -13,8 +13,7 @@
 #include "codest7.h"
 
 #include "as.rsc"
-#include "nlmessages.h"
-
+#include "as_attributes.h"
 #include "asmdef.h"
 #include "asmitree.h"
 #include "asmpars.h"
@@ -26,6 +25,7 @@
 #include "errmsg.h"
 #include "headids.h"
 #include "motpseudo.h"
+#include "nlmessages.h"
 #include "strutil.h"
 
 #include <assert.h>
@@ -150,13 +150,13 @@ static void FillAdrVals(tAdrVals* pAdrVals, LongWord Value, tSymbolSize Size) {
     switch (Size) {
     case eSymbolSize24Bit:
         pAdrVals->Vals[pAdrVals->Cnt++] = (Value >> 16) & 255;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eSymbolSize16Bit:
         pAdrVals->Vals[pAdrVals->Cnt++] = (Value >> 8) & 255;
-        /* fall-through */
+        AS_FALLTHROUGH;
     case eSymbolSize8Bit:
         pAdrVals->Vals[pAdrVals->Cnt++] = Value & 255;
-        /* fall-through */
+        break;
     default:
         break;
     }
@@ -1421,7 +1421,7 @@ static void DecodeLDW(Word Code) {
                     case eModIAbs16:
                         PrefixCnt = 0;
                         AddPrefix(0x91);
-                        /* fall-through */
+                        AS_FALLTHROUGH;
                     default:
                         BAsmCode[PrefixCnt] = 0x0e | (SrcAdrVals.Part << 4);
                     common_x:
@@ -1455,7 +1455,7 @@ static void DecodeLDW(Word Code) {
                         if (eModY == SrcAdrVals.Mode) {
                             AddPrefix(0x90);
                         }
-                        /* fall-through */
+                        AS_FALLTHROUGH;
                     default:
                     common_y2:
                         BAsmCode[PrefixCnt] = 0x0f | (DestAdrVals.Part << 4);
@@ -1829,6 +1829,7 @@ static void DecodeAri(Word Code) {
             case eModY:
                 PrefixCnt = 0;
                 DecodeAri16(Code16);
+                break;
             default:
                 break;
             }
