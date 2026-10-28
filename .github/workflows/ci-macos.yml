@@ -71,7 +71,7 @@ jobs:
           persist-credentials: false
       - name: Configure
         run: |
-          cmake -S . -B build -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=Debug
+          cmake -S . -B build -G ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_SYSROOT=macosx
       - name: Build
         run: |
           cmake --build build -j

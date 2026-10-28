@@ -1130,7 +1130,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         -c doc/asl.css
         -L doc/convert-links.lua
         --metadata title="Flamewing's Enhanced AS" --metadata lang="en"
-        --self-contained --standalone
+        --embed-resources --standalone
     )
     add_document(
         TARGET odt_document
@@ -1146,7 +1146,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
         -c doc/asl.css
         -L doc/convert-links.lua
         --metadata title="Flamewing's Enhanced AS" --metadata lang="en"
-        --self-contained --standalone
+        --standalone
         --reference-doc=doc/asl-template.odt
     )
     # Both the wrapper and the product target can copy shared document inputs.
@@ -1182,7 +1182,7 @@ if(EXISTS ${PANDOC_EXECUTABLE})
 # ##        --syntax-definition=doc/dosbat.xml
 # ##        -c doc/asl.css
 # ##        -L doc/convert-links.lua
-# ##        --self-contained --standalone
+# ##        --embed-resources --standalone
 # ##        --pdf-engine=lualatex
 # ##        --metadata title="Flamewing's Enhanced AS" --variable lang="en"
 # ##        --variable fontsize="12pt"
