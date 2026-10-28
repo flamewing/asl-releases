@@ -491,7 +491,7 @@ again:
                 "-> was on right subtree, node exhausted, reduce path length to %u\n",
                 (unsigned)p_path->length);
         goto again;
-        ;
+
     }
 
     /* Successor in tree, but carrying different name: end of list of symbols

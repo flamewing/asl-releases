@@ -183,7 +183,7 @@ static void DumpDebugInfo_MAP(void) {
             errno = 0;
             fprintf(MAPFile, "File %s\n", GetFileName(Run->Contents.FileName));
             ChkIO(ErrNum_FileWriteError);
-        };
+        }
         errno = 0;
         as_snprintf(Tmp, sizeof(Tmp), "%" PRId32, Run->Contents.LineNum);
         HexString(Tmp2, sizeof(Tmp2), Run->Contents.Address, 8);

@@ -1402,7 +1402,7 @@ static void DecodeLDC(Word Index) {
                 BAsmCode[1] = HReg;
                 BAsmCode[2] = 0x2f;
                 BAsmCode[3] = AdrMode;
-            };
+            }
             break;
         case ModCReg:
             DecodeAdr(&ArgStr[2], MModReg | MModXReg);
@@ -1808,7 +1808,7 @@ static void DecodeALU2(Word Code) {
                 BAsmCode[1 + HReg] = 0x38 + Lo(Code);
                 memcpy(BAsmCode + 2 + HReg, AdrVals, AdrCnt);
                 break;
-            };
+            }
             break;
         }
         }

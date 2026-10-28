@@ -703,7 +703,7 @@ static void ProcessFile(char const* FileName, LongWord Offset) {
                     break;
                 default:
                     break;
-                };
+                }
             }
             if (fseek(SrcFile, NextPos, SEEK_SET) == -1) {
                 ChkIO(FileName);

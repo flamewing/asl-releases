@@ -21,28 +21,38 @@ A million repetitions of "a"
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
 #define blk0(i) block[i]
-#define blk(i)                                                                       \
-    (block[i & 15]                                                                \
+#define blk(i)                                                              \
+    (block[i & 15]                                                          \
      = rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] \
-                   ^ block[i & 15],                                               \
+                   ^ block[i & 15],                                         \
            1))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-#define R0(v, w, x, y, z, i)                                     \
-    z += ((w & (x ^ y)) ^ y) + blk0(i) + 0x5A827999 + rol(v, 5); \
-    w = rol(w, 30);
-#define R1(v, w, x, y, z, i)                                    \
-    z += ((w & (x ^ y)) ^ y) + blk(i) + 0x5A827999 + rol(v, 5); \
-    w = rol(w, 30);
-#define R2(v, w, x, y, z, i)                            \
-    z += (w ^ x ^ y) + blk(i) + 0x6ED9EBA1 + rol(v, 5); \
-    w = rol(w, 30);
-#define R3(v, w, x, y, z, i)                                          \
-    z += (((w | x) & y) | (w & x)) + blk(i) + 0x8F1BBCDC + rol(v, 5); \
-    w = rol(w, 30);
-#define R4(v, w, x, y, z, i)                            \
-    z += (w ^ x ^ y) + blk(i) + 0xCA62C1D6 + rol(v, 5); \
-    w = rol(w, 30);
+#define R0(v, w, x, y, z, i)                                         \
+    do {                                                             \
+        z += ((w & (x ^ y)) ^ y) + blk0(i) + 0x5A827999 + rol(v, 5); \
+        w = rol(w, 30);                                              \
+    } while (0)
+#define R1(v, w, x, y, z, i)                                        \
+    do {                                                            \
+        z += ((w & (x ^ y)) ^ y) + blk(i) + 0x5A827999 + rol(v, 5); \
+        w = rol(w, 30);                                             \
+    } while (0)
+#define R2(v, w, x, y, z, i)                                \
+    do {                                                    \
+        z += (w ^ x ^ y) + blk(i) + 0x6ED9EBA1 + rol(v, 5); \
+        w = rol(w, 30);                                     \
+    } while (0)
+#define R3(v, w, x, y, z, i)                                              \
+    do {                                                                  \
+        z += (((w | x) & y) | (w & x)) + blk(i) + 0x8F1BBCDC + rol(v, 5); \
+        w = rol(w, 30);                                                   \
+    } while (0)
+#define R4(v, w, x, y, z, i)                                \
+    do {                                                    \
+        z += (w ^ x ^ y) + blk(i) + 0xCA62C1D6 + rol(v, 5); \
+        w = rol(w, 30);                                     \
+    } while (0)
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 

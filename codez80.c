@@ -1853,7 +1853,7 @@ static void append_adr_vals_count(adr_vals_t const* p_adr_vals, unsigned count) 
 }
 
 #define append_adr_vals(p_adr_vals) \
-    append_adr_vals_count(p_adr_vals, (p_adr_vals)->count);
+    append_adr_vals_count(p_adr_vals, (p_adr_vals)->count)
 
 static Boolean ParPair(char const* Name1, char const* Name2) {
     return (((!as_strcasecmp(ArgStr[1].str.p_str, Name1))
@@ -3733,7 +3733,7 @@ static void DecodeINC_DEC(Word Index) {
                 append_adr_vals(&adr_vals);
             } else {
                 append_z280(&adr_vals, True, 0x04 | IsDEC, 3);
-            };
+            }
             break;
         case ModX:
         is_modx:

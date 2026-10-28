@@ -28,9 +28,12 @@
 
 #include <string.h>
 
-#define set_guessed(flags, offs, len, value)    \
-    if (mFirstPassUnknownOrQuestionable(flags)) \
-        set_basmcode_guessed(offs, len, value);
+#define set_guessed(flags, offs, len, value)          \
+    do {                                              \
+        if (mFirstPassUnknownOrQuestionable(flags)) { \
+            set_basmcode_guessed(offs, len, value);   \
+        }                                             \
+    } while (0)
 
 /*--------------------------------------------------------------------------------------------------*/
 

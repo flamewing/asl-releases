@@ -99,6 +99,6 @@ void PrintEntryAddress(FILE* pFile) {
     fprintf(pFile, ")\n");
 }
 
-void entryaddress_init() {
+void entryaddress_init(void) {
     pFirstEntryAddress = NULL;
 }

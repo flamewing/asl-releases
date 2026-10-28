@@ -1172,7 +1172,7 @@ static char GetMatchingBrace(char token) {
         return '"';
     case '\'':
         return '\'';
-    };
+    }
     return '\0';
 }
 
@@ -1733,7 +1733,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                     /* Push into stack */
                     tokenStack[++locStack] = token;
                     break;
-                };
+                }
             }
 
             if (*pCompSplit == '\0') {
@@ -2224,7 +2224,7 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
                         /* Push into stack */
                         tokenStack[++locStack] = token;
                         break;
-                    };
+                    }
                 }
 
                 if (*pCompSplit == '\0') {

@@ -92,15 +92,11 @@ static void        discard_incomplete_definitions(void);
 /*=== Zeilen einlesen ======================================================*/
 
 #if 0
-#    define dbgentry(str) printf("***enter %s\n", str);
-#    define dbgexit(str)  printf("***exit %s\n", str);
+#    define dbgentry(str) printf("***enter %s\n", str)
+#    define dbgexit(str)  printf("***exit %s\n", str)
 #else
-#    define dbgentry(str) \
-        {                 \
-        }
-#    define dbgexit(str) \
-        {                \
-        }
+#    define dbgentry(str) ((void)0)
+#    define dbgexit(str)  ((void)0)
 #endif
 
 #define LEAVE goto func_exit

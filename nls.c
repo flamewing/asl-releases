@@ -740,7 +740,7 @@ void NLS_CurrencyString(double inp, char* erg, size_t DestSize) {
         strins(s, NLSInfo.ThouSep, z - s - 3);
         z -= 3;
         p += strlen(NLSInfo.ThouSep);
-    };
+    }
 
     /* Schritt 4: Komma anpassen */
 

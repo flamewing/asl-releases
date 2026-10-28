@@ -48,7 +48,7 @@ static void EnterDefine(char* Name, char* Definition) {
     if (!ChkSymbName(Name)) {
         WrXError(ErrNum_InvSymName, Name);
         return;
-    };
+    }
 
     Neu = FirstDefine;
     while (Neu) {

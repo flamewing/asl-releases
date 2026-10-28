@@ -1497,7 +1497,7 @@ static void DecodeTEST(Word Index) {
                 break;
             default:
                 break;
-                ;
+
             }
             break;
         case TypeMem:

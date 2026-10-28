@@ -351,7 +351,7 @@ static void DecodeDOUBLE(Word Code) {
         }
         if ((ret = as_float_2_ieee8(fval, Dest, False)) < 0) {
             asmerr_check_fp_dispose_result(ret, pArg);
-            ;
+
             ok = False;
             break;
         }

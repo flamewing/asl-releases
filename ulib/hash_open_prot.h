@@ -32,11 +32,11 @@
 #include <stdlib.h>    // IWYU pragma: export
 #include <string.h>    // IWYU pragma: export
 
-#define _swap(type, a, b)   \
-    do {                    \
-        type __tmp = (a);   \
-        (a)        = (b);   \
-        (b)        = __tmp; \
+#define OH_SWAP(type, a, b)             \
+    do {                                \
+        type oh_swap_tmp = (a);         \
+        (a)              = (b);         \
+        (b)              = oh_swap_tmp; \
     } while (0)
 
 #if INTPTR_MAX == INT64_MAX
@@ -97,7 +97,7 @@ enum {
         val_t*     vals;                                                          \
     } openhash_##name##_t;                                                        \
                                                                                   \
-    static inline openhash_##name##_t* openhash_init_##name() {                   \
+    static inline openhash_##name##_t* openhash_init_##name(void) {                   \
         return (openhash_##name##_t*)calloc(1, sizeof(openhash_##name##_t));      \
     }                                                                             \
                                                                                   \
@@ -184,9 +184,9 @@ enum {
                         i = (i + ++step) & mask;                                  \
                     OH_CLEAR_EMPTY(flags, i);                                     \
                     if (i < h->nbucket && OH_ISEITHER(h->flags, i) == 0) {        \
-                        _swap(key_t, h->keys[i], key);                            \
+                        OH_SWAP(key_t, h->keys[i], key);                            \
                         if (ismap)                                                \
-                            _swap(val_t, h->vals[i], val);                        \
+                            OH_SWAP(val_t, h->vals[i], val);                        \
                         OH_SET_DEL(h->flags, i);                                  \
                     } else {                                                      \
                         h->keys[i] = key;                                         \

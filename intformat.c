@@ -209,7 +209,7 @@ char const* GetIntConstCPrefix(unsigned Radix) {
         if (Radix == BaseVals[BaseIdx]) {
             return BaseIds[BaseIdx];
         }
-    };
+    }
     return "";
 }
 

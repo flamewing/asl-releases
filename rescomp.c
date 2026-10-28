@@ -292,10 +292,13 @@ static char* make_sym_name(char const* p_file_name, int include_guard) {
     if ((p_base = strrchr(p_file_name, '/'))) {
         p_file_name = p_base + 1;
     }
-    l     = strlen(p_file_name);
-    p_run = p_ret = (char*)malloc(!!include_guard + l + 1);
-    if (include_guard) {
-        *p_run++ = '_';
+    static char const guard_prefix[] = "AS_RESOURCE_";
+    size_t            prefix_len     = include_guard ? sizeof(guard_prefix) - 1 : 0;
+    l                                = strlen(p_file_name);
+    p_run = p_ret = (char*)malloc(prefix_len + l + 1);
+    if (prefix_len) {
+        memcpy(p_run, guard_prefix, prefix_len);
+        p_run += prefix_len;
     }
     for (; *p_file_name; p_file_name++) {
         no_replace

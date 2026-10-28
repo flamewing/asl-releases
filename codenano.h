@@ -1,5 +1,5 @@
-#ifndef _CODENANO_H
-#define _CODENANO_H
+#ifndef CODENANO_H
+#define CODENANO_H
 /* codenano.h */
 /*****************************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only                     */
@@ -11,4 +11,4 @@
 /*****************************************************************************/
 
 extern void codenano_init(void);
-#endif /* _CODENANO_H */
+#endif /* CODENANO_H */

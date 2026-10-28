@@ -239,11 +239,11 @@ static Boolean DecodeSpReg(char* Asc_O, LongWord* Erg) {
         if (!strcmp(Asc, SPRegs[z].Name)) {
             *Erg = SPRegs[z].Code;
             return True;
-            ;
+
         }
     }
     return False;
-    ;
+
 }
 
 static Boolean DecodeArgSpReg(int ArgIndex, LongWord* pRes) {

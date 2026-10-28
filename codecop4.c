@@ -115,7 +115,7 @@ static void DecodeReg(Word Index) {
         Reg = EvalStrIntExpression(&ArgStr[1], UInt2, &OK);
         if (OK) {
             BAsmCode[CodeLen++] = Index | ((Reg & 3) << 4);
-            ;
+
         }
     }
 }

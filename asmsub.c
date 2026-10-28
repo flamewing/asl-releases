@@ -1951,14 +1951,14 @@ long GTime(void) {
         return acc.low;
     }
 #    else /* AS_HAS_LONGLONG */
-#        define _W32_FT_OFFSET (116444736000000000ULL)
+#        define AS_W32_FILETIME_OFFSET (116444736000000000ULL)
     unsigned long long time_tot;
     /* time since 1 Jan 1601 in 100ns units */
     time_tot = ((unsigned long long)ft.dwLowDateTime);
     time_tot += ((unsigned long long)ft.dwHighDateTime) << 32;
 
     /* -> time since 1 Jan 1970 in 100ns units */
-    time_tot -= _W32_FT_OFFSET;
+    time_tot -= AS_W32_FILETIME_OFFSET;
     /* -> time since 1 Jan 1970 in 10ms units */
     time_tot /= 100000ULL;
     /* -> time since 0:00:00.0 in 10ms units */

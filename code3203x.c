@@ -211,7 +211,7 @@ static void DecodeAdr(tStrComp const* pArg, Byte Erl, Boolean ImmFloat) {
         /* II.1. Erkennungszeichen entfernen */
 
         StrCompIncRefLeft(&Arg, 1);
-        ;
+
 
         /* II.2. Extrawuerste erledigen */
 

@@ -692,7 +692,7 @@ static void DecodeXCH(Word Code) {
 
 static void DecodeCLR(Word Code) {
     Byte HReg;
-    ;
+
 
     UNUSED(Code);
 
