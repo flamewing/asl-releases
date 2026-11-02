@@ -226,8 +226,13 @@ check_diagnostic(quoted-address-letter 68020 " move.w 'A',d1" 1350
     "likely missing # for an immediate operand" 3 9)
 check_diagnostic(quoted-address-parenthesized 68020 " move.w (']'),d1" 1350
     "likely missing # for an immediate operand" 3 10)
-check_diagnostic(quoted-address-displacement 68020 " move.w (',',a0),d1" 1350
-    "likely missing # for an immediate operand" 3 10)
+check_diagnostic(quoted-address-escaped 68000 " move.w \"A\\\"B\",d1" 1350
+    "likely missing # for an immediate operand" 3 9)
+check_diagnostic(quoted-jump-address 68000 " jmp \"JmpTo_Target\"" 1350
+    "likely missing # for an immediate operand" 3 6)
+check_bytes(string-function-addresses 68000
+    "Target equ $1234\nextractJmpToName function name,val(substr(name, strstr(name, \"_\") + 1, strlen(name)))\n jmp extractJmpToName(\"JmpTo_Target\")\n jmp (extractJmpToName(\"JmpTo_Target\")).l\n jsr extractJmpToName(\"JmpTo_Target\")\n lea extractJmpToName(\"JmpTo_Target\"),a0\n move.w val(\"Target\")(a0),d0\n move.w (val(\"Target\"),a0),d0\n move.w 'A'+1,d1\n move.w 'B'-'A',d1"
+    "4ef812344ef9000012344eb8123441f8123430281234302812343238004232380001")
 check_bytes(quoted-immediates 68000
     " move.w #')',d1\n move.w #\"(\",d1\n move.w #'[',d1\n move.w #']',d1\n move.w #'}',d1\n move.w #'A'+1,d1"
     "323c0029323c0028323c005b323c005d323c007d323c0042")

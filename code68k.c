@@ -1354,6 +1354,40 @@ static Boolean is_function_call_split(tStrComp const* arg, int split_pos) {
     return IsFunction(name);
 }
 
+/* Recognize a complete string literal, optionally enclosed in parentheses.
+   Quotes inside function arguments or larger expressions are not address
+   literals and must be left to the expression parser. */
+static char const* whole_operand_string(char const* text) {
+    char const* quote;
+    unsigned parentheses = 0;
+    Boolean escaped = False;
+
+    while (*text == '(') {
+        parentheses++;
+        do { text++; } while (as_isspace(*text));
+    }
+    if (*text != '\'' && *text != '"') {
+        return NULL;
+    }
+    quote = text++;
+    while (*text && (*text != *quote || escaped)) {
+        escaped = *text == '\\' && !escaped;
+        text++;
+    }
+    if (!*text) {
+        return NULL;
+    }
+    text++;
+    while (parentheses) {
+        while (as_isspace(*text)) text++;
+        if (*text != ')') return NULL;
+        text++;
+        parentheses--;
+    }
+    while (as_isspace(*text)) text++;
+    return *text ? NULL : quote;
+}
+
 static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
     Byte  i;
     int   ArgLen;
@@ -1523,16 +1557,14 @@ static Byte DecodeAdr(tStrComp const* pArg, Word Erl, tAdrResult* pResult) {
         goto chk;
     }
 
-    /* Quoted literals in an address operand usually mean a missing immediate
-       marker. Diagnose them before the bracket/component scanners. */
-    for (p = Arg.str.p_str; *p; p++) {
-        if (((*p == '\'') || (*p == '"'))
-            && (!QualifyQuote || QualifyQuote(Arg.str.p_str, p))) {
-            tStrComp quote;
-            StrCompRefRight(&quote, &Arg, p - Arg.str.p_str);
-            report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgM68KQuotedAddress, &quote);
-            return ModNone;
-        }
+    /* Only a whole string operand suggests a missing immediate marker.
+       In particular, numeric functions may take quoted string arguments. */
+    char const* string_operand = whole_operand_string(Arg.str.p_str);
+    if (string_operand) {
+        tStrComp quote;
+        StrCompRefRight(&quote, &Arg, string_operand - Arg.str.p_str);
+        report_m68k_detail(ErrNum_InvAddrMode, Num_ErrMsgM68KQuotedAddress, &quote);
+        return ModNone;
     }
 
     /* CPU/FPU-Register direkt: */
