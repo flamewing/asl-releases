@@ -163,6 +163,37 @@ if(warning_pos EQUAL -1)
     message(FATAL_ERROR "Zero BRA still requires the NOP warning: ${assembly_diagnostic}")
 endif()
 check_bytes(bsr-next-label 68000 " bsr target\ntarget: nop" "610000024e71")
+
+# Growing an earlier branch must invalidate forward addresses before the next
+# instruction reads them (asl-releases #26). The transient zero displacement
+# of BEQ must neither warn nor survive in the final code.
+check_bytes(branch-growth-repass 68000
+    " bhs far\n beq.s next\n addq.w #8,d0\nnext: rts\nfar equ $1100"
+    "640000fe670250404e75" -n -x)
+if(assembly_diagnostic MATCHES "warning #[0-9]+:")
+    message(FATAL_ERROR "Branch growth emitted a transient warning: ${assembly_diagnostic}")
+endif()
+
+# Expanded instances must retain separate lengths, and a genuine zero branch
+# must still warn once the changed layout settles.
+check_bytes(branch-growth-macro 68000
+    "emit macro\n bhs far\n beq.s next\n addq.w #8,d0\nnext: rts\n endm\n emit\n emit\nfar equ $1100"
+    "640000fe670250404e75640000f4670250404e75" -n -x)
+if(assembly_diagnostic MATCHES "warning #[0-9]+:")
+    message(FATAL_ERROR "Expanded branch growth emitted a warning: ${assembly_diagnostic}")
+endif()
+check_bytes(branch-growth-real-zero 68000
+    " bhs far\n beq.s next\nnext: rts\nfar equ $1100" "640000fe4e714e75" -n)
+if(NOT assembly_diagnostic MATCHES "warning #60:")
+    message(FATAL_ERROR "Settled zero branch lost its warning: ${assembly_diagnostic}")
+endif()
+
+# No following label is available to discover this length change. Encode the
+# pass number to verify that the write itself requests the third pass.
+check_bytes(length-change-without-label 68000
+    "force equ forward\nforward equ 1\n if mompass=1\n dc.b mompass\n else\n dc.w mompass\n endif"
+    "0003")
+
 check_bytes(branch-long 68020 " bra.x *+32770" "60ff00008000")
 check_bytes(shifts-known 68000 " lsl.w #1,d0\n lsl.w #8,d0\n lsl.w #1,(a0)" "e348e148e3d0")
 check_bytes(shifts-forward 68000

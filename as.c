@@ -79,6 +79,42 @@ static Boolean  GlobErrFlag, ResetLastLabel;
 static unsigned MacroNestLevel = 0;
 static Boolean  library_initialized, file_active, pass_active;
 
+/* Compare the expanded stream of writes, including reservations and padding.
+   A changed conditional or macro expansion can shift the entries; comparing
+   their lengths conservatively requests another pass until the stream settles. */
+static LongInt* previous_code_lengths;
+static size_t code_lengths_count, code_lengths_capacity, code_lengths_cursor;
+
+static void clear_code_lengths(void) {
+    free(previous_code_lengths);
+    previous_code_lengths = NULL;
+    code_lengths_count = code_lengths_capacity = code_lengths_cursor = 0;
+}
+
+static void track_code_length(void) {
+    if (PassNo > 1
+        && (code_lengths_cursor >= code_lengths_count
+            || previous_code_lengths[code_lengths_cursor] != CodeLen)) {
+        Repass = True;
+    }
+    if (code_lengths_cursor == code_lengths_capacity) {
+        size_t capacity = code_lengths_capacity ? code_lengths_capacity * 2 : 256;
+        LongInt* lengths;
+
+        if (capacity <= code_lengths_capacity
+            || capacity > SIZE_MAX / sizeof(*lengths)) {
+            abort();
+        }
+        lengths = (LongInt*)realloc(previous_code_lengths, capacity * sizeof(*lengths));
+        if (!lengths) {
+            abort();
+        }
+        previous_code_lengths = lengths;
+        code_lengths_capacity = capacity;
+    }
+    previous_code_lengths[code_lengths_cursor++] = CodeLen;
+}
+
 typedef struct {
     jmp_buf          escape;
     int              status;
@@ -2464,6 +2500,7 @@ void WriteCode(void) {
         }
         PCs[ActPC] = NewPC;
     }
+    track_code_length();
 }
 
 static void Produce_Code(void) {
@@ -3236,6 +3273,7 @@ static void AssembleFile_InitPass(void) {
     AfterBSRAddr = 0;
 
     Repass = False;
+    code_lengths_cursor = 0;
     PassNo++;
 
 #ifdef PROFILE_MEMO
@@ -3250,6 +3288,11 @@ static void AssembleFile_ExitPass(void) {
     pass_active = False;
     tSavePhase* pSavePhase;
     int         z;
+
+    if (PassNo > 1 && code_lengths_cursor != code_lengths_count) {
+        Repass = True;
+    }
+    code_lengths_count = code_lengths_cursor;
 
 #if 0
   if CurrIncludeLevel)
@@ -3725,6 +3768,7 @@ static void AssembleFile(char* Name) {
     ClearDefineList();
     ClearFileList();
     ClearStructList();
+    clear_code_lengths();
     file_active = False;
 
     dbgentry("AssembleFile");
@@ -4790,6 +4834,7 @@ static void finish_library_call(Boolean failed) {
         }
         file_active = pass_active = False;
     }
+    clear_code_lengths();
     CloseIfOpen(&ErrorFile);
     CloseIfOpen(&LstFile);
     CloseIfOpen(&PrgFile);

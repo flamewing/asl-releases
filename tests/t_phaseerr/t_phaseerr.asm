@@ -7,10 +7,8 @@
 	jsr	sub
 	endm
 
-	; Currently needed to trigger the "repass anyway needed because symbol changed"
-        ; condition before the first branch is evaluated.  In a typical program, there
-        ; is always some label present to trigger it.
-dummy:
+	; Length changes must request another pass before the first branch is
+	; evaluated, even without an intervening label to detect the shifted PC.
 
 	; without detection mechanism, the values of PC in pass 2 and of 'skip' from
         ; pass 1 are so much apart that we would get an out-of-branch condition:

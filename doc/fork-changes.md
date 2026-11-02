@@ -214,6 +214,8 @@ Report malformed operand delimiters before an instruction's operand-count error 
 
 Restrict the M68K missing-immediate-marker diagnostic to whole string literals, including parenthesized literals. Allow quoted arguments in numeric address functions and character constants within larger numeric expressions, restoring Sonic 2's generated jump destinations.
 
+Track generated lengths across assembly passes and request another pass as soon as a length changes, before following instructions use stale forward-label addresses. This prevents transient zero-distance M68K branch warnings and removes the need for an intervening label to detect a changed layout.
+
 ## Updating this document
 
 Keep the snapshot tag boundaries and comparison links. Summarize changes to assembler or utility behavior, compatibility, performance and bug fixes, distinguishing upstream additions from fork changes. Group related fixes rather than listing individual commits. Keep paragraphs and list items on one physical line and rely on editor or previewer word wrapping.
