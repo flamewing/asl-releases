@@ -49,6 +49,7 @@ typedef struct tag_TInputTag {
     Integer               IfLevel, IncludeLevel;
     Boolean               First;
     Boolean               GlobalSymbols;
+    Boolean               LocalScopeActive; /* this input pushed a local scope */
     tLstMacroExp          OrigDoLst;
     LongInt               StartLine;
     Boolean (*Processor)(struct tag_TInputTag* P, struct sStrComp* p_dest);

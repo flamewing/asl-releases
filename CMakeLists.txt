@@ -1324,6 +1324,11 @@ asl_add_script_test(m68k_diagnostics
     REQUIRES AVR M68K
 )
 
+asl_add_script_test(macro_scopes
+    DIRECTORY MacroScopes
+    REQUIRES M68K Z80
+)
+
 asl_add_script_test(numeric_diagnostics
     DIRECTORY NumericDiagnostics
     REQUIRES 51 601 6812 M6800 PPS4

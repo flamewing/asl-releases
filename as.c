@@ -185,6 +185,7 @@ static PInputTag GenerateProcessor(void) {
     PInp->SaveAttr[0]   = '\0';
     PInp->SaveLabel[0]  = '\0';
     PInp->GlobalSymbols = False;
+    PInp->LocalScopeActive = False;
     PInp->UsesNumArgs = PInp->UsesAllArgs = False;
     PInp->Replacements                    = NULL;
     PInp->SequentialTokens                = False;
@@ -540,6 +541,7 @@ static Boolean MACRO_Processor(PInputTag PInp, tStrComp* p_dest) {
 
     if ((PInp->LineZ == 1) && (!PInp->GlobalSymbols)) {
         PushLocHandle(PInp->LocHandle);
+        PInp->LocalScopeActive = True;
     }
 
     /* signal the end of the macro */
@@ -788,10 +790,11 @@ static Boolean MACRO_GetPos(
 }
 
 static void MACRO_Restorer(PInputTag PInp) {
-    /* discard the local symbol space */
+    /* Discard only a scope this expansion opened. Empty bodies never push. */
 
-    if (!PInp->GlobalSymbols) {
+    if (PInp->LocalScopeActive) {
         PopLocHandle();
+        PInp->LocalScopeActive = False;
     }
 
     /* undo the recursion counter by one */
@@ -1083,6 +1086,7 @@ static Boolean IRP_Processor(PInputTag PInp, tStrComp* p_dest) {
                 PopLocHandle();
             }
             PushLocHandle(GetLocHandle());
+            PInp->LocalScopeActive = True;
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
@@ -1126,7 +1130,7 @@ static void IRP_Cleanup(PInputTag PInp) {
 
     /* letzten Parameter sichern, wird evtl. noch fuer GetPos gebraucht!
        ... SaveAttr ist aber frei */
-    if (PInp->Processor == IRP_Processor) {
+    if ((PInp->Processor == IRP_Processor) && PInp->Params) {
         for (Lauf = PInp->Params; Lauf->Next; Lauf = Lauf->Next) { /* empty */
         }
         strmaxcpy(PInp->SaveAttr, Lauf->Content, STRINGSIZE);
@@ -1513,6 +1517,7 @@ static Boolean IRPC_Processor(PInputTag PInp, tStrComp* p_dest) {
                 PopLocHandle();
             }
             PushLocHandle(GetLocHandle());
+            PInp->LocalScopeActive = True;
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
@@ -1699,6 +1704,7 @@ static Boolean REPT_Processor(PInputTag PInp, tStrComp* p_dest) {
                 PopLocHandle();
             }
             PushLocHandle(GetLocHandle());
+            PInp->LocalScopeActive = True;
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
@@ -1898,6 +1904,7 @@ static Boolean WHILE_Processor(PInputTag PInp, tStrComp* p_dest) {
                 PopLocHandle();
             }
             PushLocHandle(GetLocHandle());
+            PInp->LocalScopeActive = True;
         }
         PInp->First   = False;
         PInp->LineRun = PInp->Lines;
