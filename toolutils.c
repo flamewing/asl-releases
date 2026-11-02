@@ -58,7 +58,7 @@ void DelSuffix(char* Name) {
 
     p = NULL;
     for (z = Name; *z != '\0'; z++) {
-        if (*z == '\\') {
+        if (*z == PATHSEP) {
             p = z;
         }
     }
@@ -74,7 +74,7 @@ void AddSuffix(char* pName, unsigned NameSize, char const* Suff) {
 
     p = NULL;
     for (z = pName; *z != '\0'; z++) {
-        if (*z == '\\') {
+        if (*z == PATHSEP) {
             p = z;
         }
     }
