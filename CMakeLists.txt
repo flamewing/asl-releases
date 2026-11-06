@@ -1245,6 +1245,12 @@ target_link_libraries(test_asl_library PRIVATE asl_library)
 define_executable(test_const_strings tests/const_strings.c)
 target_link_libraries(test_const_strings PRIVATE asl_library)
 add_test(NAME const_strings COMMAND test_const_strings)
+asl_test_available(dsp56k_operand can_run REQUIRES 56K)
+if(can_run)
+    define_executable(test_dsp56k_operand tests/dsp56k_operand.c)
+    target_link_libraries(test_dsp56k_operand PRIVATE asl_library)
+    add_test(NAME dsp56k_operand COMMAND test_dsp56k_operand)
+endif()
 asl_test_available(library_lifecycle can_run REQUIRES M68K Z80)
 if(can_run)
     add_test(NAME library_lifecycle COMMAND ${CMAKE_COMMAND}
@@ -1813,6 +1819,12 @@ add_test(NAME strmaxprep2 COMMAND test_strmaxprep2)
 
 define_executable(test_formatter_contracts tests/formatter_contracts.c strutil.c dynstr.c)
 add_test(NAME formatter_contracts COMMAND test_formatter_contracts)
+
+define_executable(test_78k_mem_count tests/78k_mem_count.c code78k_common.c)
+add_test(NAME 78k_mem_count COMMAND test_78k_mem_count)
+foreach(invalid_count zero four min max)
+    add_test(NAME 78k_mem_count_${invalid_count} COMMAND test_78k_mem_count ${invalid_count})
+endforeach()
 
 define_executable(test_strcomp_span
     tests/strcomp_span.c

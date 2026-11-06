@@ -22,6 +22,23 @@ void __coverity_tainted_data_transitive__(void* dest, const void* source);
 void __coverity_tainted_data_transitive_vararg_inbound__(unsigned dest, unsigned first);
 #endif
 
+unsigned as_78k_mem_tail_count(int count) {
+    /* The real helper rejects broken decoder invariants in every build.
+       Enumerate its exact results: model constraints do not support
+       arithmetic, and there are only three valid input counts. */
+    if (count == 1) {
+        return 0;
+    }
+    if (count == 2) {
+        return 1;
+    }
+    if (count == 3) {
+        return 2;
+    }
+    __coverity_panic__();
+    return 0;
+}
+
 int as_snprintf(char* dest, size_t capacity, const char* format, ...) {
     /* An uninitialized scalar represents an unknown value in model source.
        This is deliberately not an executable replacement implementation. */

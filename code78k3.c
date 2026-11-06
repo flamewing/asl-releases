@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "assume.h"
 #include "bpemu.h"
+#include "code78k_common.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -695,9 +696,9 @@ static void DecodeMOV(Word Is16) {
                 } else {
                     BAsmCode[CodeLen++] = 0x00 | SrcAdrResult.Val;
                     BAsmCode[CodeLen++] = 0x00 | (SrcAdrResult.Vals[0] << 4);
-                    memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1,
-                           SrcAdrResult.Cnt - 1);
-                    CodeLen += SrcAdrResult.Cnt - 1;
+                    unsigned const tail_count = as_78k_mem_tail_count(SrcAdrResult.Cnt);
+                    memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1, tail_count);
+                    CodeLen += tail_count;
                 }
                 break;
             case ModAbs:
@@ -888,9 +889,9 @@ static void DecodeMOV(Word Is16) {
                 } else {
                     BAsmCode[CodeLen++] = 0x00 | DestAdrResult.Val;
                     BAsmCode[CodeLen++] = 0x80 | (DestAdrResult.Vals[0] << 4);
-                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1,
-                           DestAdrResult.Cnt - 1);
-                    CodeLen += DestAdrResult.Cnt - 1;
+                    unsigned const tail_count = as_78k_mem_tail_count(DestAdrResult.Cnt);
+                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1, tail_count);
+                    CodeLen += tail_count;
                 }
                 break;
                 /* ModImm? */
@@ -973,12 +974,14 @@ static void DecodeXCH(Word Is16) {
                     WrError(ErrNum_InvRegPair);
                 }
                 break;
-            case ModMem:
+            case ModMem: {
                 BAsmCode[CodeLen++] = 0x00 | SrcAdrResult.Val;
                 BAsmCode[CodeLen++] = 0x04 | (SrcAdrResult.Vals[0] << 4);
-                memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1, SrcAdrResult.Cnt - 1);
-                CodeLen += SrcAdrResult.Cnt - 1;
+                unsigned const tail_count = as_78k_mem_tail_count(SrcAdrResult.Cnt);
+                memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1, tail_count);
+                CodeLen += tail_count;
                 break;
+            }
             case ModShort:
                 BAsmCode[CodeLen++] = 0x21;
                 BAsmCode[CodeLen++] = SrcAdrResult.Vals[0];
@@ -1084,9 +1087,9 @@ static void DecodeXCH(Word Is16) {
                 } else {
                     BAsmCode[CodeLen++] = 0x00 | DestAdrResult.Val;
                     BAsmCode[CodeLen++] = 0x04 | (DestAdrResult.Vals[0] << 4);
-                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1,
-                           DestAdrResult.Cnt - 1);
-                    CodeLen += DestAdrResult.Cnt - 1;
+                    unsigned const tail_count = as_78k_mem_tail_count(DestAdrResult.Cnt);
+                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1, tail_count);
+                    CodeLen += tail_count;
                 }
                 break;
             }
@@ -1155,12 +1158,14 @@ static void DecodeALU(Word Props) {
                 BAsmCode[CodeLen++] = 0x98 | Code8;
                 BAsmCode[CodeLen++] = SrcAdrResult.Vals[0];
                 break;
-            case ModMem:
+            case ModMem: {
                 BAsmCode[CodeLen++] = 0x00 | SrcAdrResult.Val;
                 BAsmCode[CodeLen++] = 0x08 | Code8 | (SrcAdrResult.Vals[0] << 4);
-                memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1, SrcAdrResult.Cnt - 1);
-                CodeLen += SrcAdrResult.Cnt - 1;
+                unsigned const tail_count = as_78k_mem_tail_count(SrcAdrResult.Cnt);
+                memcpy(BAsmCode + CodeLen, SrcAdrResult.Vals + 1, tail_count);
+                CodeLen += tail_count;
                 break;
+            }
             case ModImm:
                 BAsmCode[CodeLen++] = 0xa8 | Code8;
                 BAsmCode[CodeLen++] = SrcAdrResult.Vals[0];
@@ -1246,9 +1251,9 @@ static void DecodeALU(Word Props) {
                 } else {
                     BAsmCode[CodeLen++] = 0x00 | DestAdrResult.Val;
                     BAsmCode[CodeLen++] = 0x88 | Code8 | (DestAdrResult.Vals[0] << 4);
-                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1,
-                           DestAdrResult.Cnt - 1);
-                    CodeLen += DestAdrResult.Cnt - 1;
+                    unsigned const tail_count = as_78k_mem_tail_count(DestAdrResult.Cnt);
+                    memcpy(BAsmCode + CodeLen, DestAdrResult.Vals + 1, tail_count);
+                    CodeLen += tail_count;
                 }
                 break;
             }

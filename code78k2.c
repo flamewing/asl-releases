@@ -19,6 +19,7 @@
 #include "asmsub.h"
 #include "assume.h"
 #include "bpemu.h"
+#include "code78k_common.h"
 #include "codepseudo.h"
 #include "codevars.h"
 #include "errmsg.h"
@@ -527,8 +528,9 @@ static void DecodeMOV(Word Index) {
                 } else {
                     BAsmCode[CodeLen++] = 0x00 | SrcResult.Val;
                     BAsmCode[CodeLen++] = *SrcResult.Vals << 4;
-                    memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, SrcResult.Cnt - 1);
-                    CodeLen += SrcResult.Cnt - 1;
+                    unsigned const tail_count = as_78k_mem_tail_count(SrcResult.Cnt);
+                    memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, tail_count);
+                    CodeLen += tail_count;
                 }
                 break;
             case ModPSW:
@@ -633,8 +635,9 @@ static void DecodeMOV(Word Index) {
             } else {
                 BAsmCode[CodeLen++] = 0x00 | DestResult.Val;
                 BAsmCode[CodeLen++] = 0x80 | (*DestResult.Vals << 4);
-                memcpy(&BAsmCode[CodeLen], DestResult.Vals + 1, DestResult.Cnt - 1);
-                CodeLen += DestResult.Cnt - 1;
+                unsigned const tail_count = as_78k_mem_tail_count(DestResult.Cnt);
+                memcpy(&BAsmCode[CodeLen], DestResult.Vals + 1, tail_count);
+                CodeLen += tail_count;
             }
             if (!ChkAcc(&ArgStr[2])) {
                 CodeLen = 0;
@@ -701,8 +704,9 @@ static void DecodeXCH(Word Index) {
                 }
                 BAsmCode[CodeLen++] = SrcResult.Val;
                 BAsmCode[CodeLen++] = (*SrcResult.Vals << 4) | 0x04;
-                memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, SrcResult.Cnt - 1);
-                CodeLen += SrcResult.Cnt - 1;
+                unsigned const tail_count = as_78k_mem_tail_count(SrcResult.Cnt);
+                memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, tail_count);
+                CodeLen += tail_count;
                 break;
             }
             break;
@@ -743,8 +747,9 @@ static void DecodeXCH(Word Index) {
             }
             BAsmCode[CodeLen++] = DestResult.Val;
             BAsmCode[CodeLen++] = (*DestResult.Vals << 4) | 0x04;
-            memcpy(&BAsmCode[CodeLen], DestResult.Vals + 1, DestResult.Cnt - 1);
-            CodeLen += DestResult.Cnt - 1;
+            unsigned const tail_count = as_78k_mem_tail_count(DestResult.Cnt);
+            memcpy(&BAsmCode[CodeLen], DestResult.Vals + 1, tail_count);
+            CodeLen += tail_count;
             if (!ChkAcc(&ArgStr[2])) {
                 CodeLen = 0;
             }
@@ -928,8 +933,9 @@ static void DecodeALU(Word Index) {
                 }
                 BAsmCode[CodeLen++] = 0x00 | SrcResult.Val;
                 BAsmCode[CodeLen++] = 0x08 | (*SrcResult.Vals << 4) | Index;
-                memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, SrcResult.Cnt - 1);
-                CodeLen += SrcResult.Cnt - 1;
+                unsigned const tail_count = as_78k_mem_tail_count(SrcResult.Cnt);
+                memcpy(&BAsmCode[CodeLen], SrcResult.Vals + 1, tail_count);
+                CodeLen += tail_count;
                 break;
             }
             break;

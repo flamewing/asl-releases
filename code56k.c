@@ -667,14 +667,16 @@ static Boolean DecodeMOVE_1(int Start) {
         }
         c                          = ArgStr[Start].str.p_str[l];
         ArgStr[Start].str.p_str[l] = '\0';
-        if (DecodeCondition(ArgStr[Start].str.p_str + 2, &Condition)) {
+        Boolean const condition_ok
+                = DecodeCondition(ArgStr[Start].str.p_str + 2, &Condition);
+        ArgStr[Start].str.p_str[l] = c;
+        if (condition_ok) {
             if (ChkMinCPUExt(CPU56300, ErrNum_AddrModeNotSupported)) {
                 DAsmCode[0] = 0x202000 + (Condition << 8) + RegErg;
                 CodeLen     = 1;
                 return True;
             }
         }
-        ArgStr[Start].str.p_str[l] = c;
     }
 
     SplitArg(&ArgStr[Start], &LeftComp, &RightComp);
