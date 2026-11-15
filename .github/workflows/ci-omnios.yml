@@ -59,7 +59,7 @@ jobs:
           persist-credentials: false
       - name: Build and test in OmniOS
         id: ci-omnios
-        uses: vmactions/omnios-vm@9576f0b6d15e7696548409baa533bc0a339caf42 # v1
+        uses: vmactions/omnios-vm@aeee92416495d9685b2997d954f6b063ae5b832d # v1
         with:
           usesh: true
           sync: rsync
